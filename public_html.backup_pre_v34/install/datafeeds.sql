@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS nsec_datafeeds (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  feed_key VARCHAR(64) NOT NULL,
+  source VARCHAR(255) NOT NULL,
+  last_updated DATETIME DEFAULT NULL,
+  checksum CHAR(64) DEFAULT NULL,
+  status VARCHAR(32) DEFAULT 'idle'
+);
+
+CREATE TABLE IF NOT EXISTS nsec_datafeed_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  feed_key VARCHAR(64),
+  event VARCHAR(64),
+  details TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);

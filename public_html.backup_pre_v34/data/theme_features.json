@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "themes": {
+    "x-halo": {
+      "ticker_enabled": false,
+      "ticker_text": "Welcome to PHP-Nuke CE \u2014 nukeCE under the hood.",
+      "collapsible_blocks": false
+    },
+    "nukegold": {
+      "collapsible_blocks": false
+    },
+    "evolution": {
+      "collapsible_blocks": false
+    },
+    "subsilver": {
+      "collapsible_blocks": false
+    }
+  }
+}

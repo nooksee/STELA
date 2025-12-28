@@ -1,0 +1,14 @@
+{
+  "name": "Evolution",
+  "slug": "evolution",
+  "version": "1.0.0",
+  "author": "nukeCE project",
+  "license": "GPL-2.0",
+  "supports": {
+    "blocks": true,
+    "rtl": false,
+    "dark_mode": false,
+    "admin": false
+  },
+  "notes": "Classic Nuke Evolution-inspired layout recreated clean-room for nukeCE (no original Evo assets included)."
+}

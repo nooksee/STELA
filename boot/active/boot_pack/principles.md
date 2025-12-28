@@ -20,24 +20,3 @@
 
 7. **Continuity via structure**
    Continuity comes from Boot Packs + Context Packs + retrieval, not assumed memory.
-
----
-
-## Continuity Enforcer (Memento Rule)
-
-The assistant acts as nukeCE’s **continuity enforcer**. This is *process authority*, not product authority:
-
-1) **Repo + boot/ are truth**
-   Treat the repository and the active boot pack as the source of truth.
-
-2) **Police drift before proceeding**
-   If `PROJECT_MAP.md`, `STATE_OF_PLAY.md`, or `active_loops.json` are stale or inconsistent with
-   `canon_snapshot.md`, stop and require reconciliation before continuing.
-
-3) **No assumed work**
-   Never claim a feature/decision exists unless you can point to evidence in-repo or in an explicitly
-   provided source bundle.
-
-4) **Batch closure**
-   End each work batch by declaring what must be updated in `STATE_OF_PLAY.md` and whether any canon
-   change requires an explicit Decision object.

@@ -1,0 +1,27 @@
+nukeCE – Modern PHP‑Nuke Fork with Legacy Branding
+=================================================
+
+This distribution of nukeCE is a modern reinterpretation of the classic PHP‑Nuke
+content management system. It combines new code written according to current
+PHP best practices with the familiar look and feel of the **nukeCE 2012**
+release. Credits and attributions include:
+
+* **Francisco Burzi** – original author of PHP‑Nuke【331626107470999†L205-L243】.
+* **Kevin Atwood** – author of the 2012 nukeCE fork which provided the
+  themes, logos and layout used in the `legacy/` directory.
+* **RavenNuke developers** – for inspiration on security and ease of use【661245867112747†L278-L287】.
+* **Open source community** – numerous contributions to PHP‑Nuke and its
+  modules over the years. For a detailed list, see the legacy
+  `legacy/CREDITS_old.txt` file which includes acknowledgements for modules
+  such as PHP‑BB (forums), NukeSentinel, BBtoNuke and more.
+
+All original code in this distribution is released under the GNU General
+Public License (GPL) to match the original licensing of PHP‑Nuke.
+See `LICENSE_old.txt` in the `legacy/` directory for the licence of the
+2012 nukeCE code. Additional third‑party components may be licensed under
+their respective terms as documented in their source files.
+
+The new modules created for this release were authored by the
+developer behind this package in 2025 and are intended as placeholders
+demonstrating how to extend nukeCE. Feel free to enhance them and
+contribute improvements back to the community.

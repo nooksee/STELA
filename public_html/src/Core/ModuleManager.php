@@ -23,6 +23,11 @@ final class ModuleManager
         $name = strtolower(preg_replace('/[^a-z0-9_\-]/i', '', $name) ?? $name);
         if ($name === '') $name = 'home';
 
+        // Enforce module allowlist (prevents "ghost modules" + preserves clean installs).
+        if (!ModulePolicy::isEnabled($name) && $name !== 'admin_login') {
+            throw new RuntimeException("Module '$name' is disabled");
+        }
+
         if (isset($this->modules[$name])) {
             return $this->modules[$name];
         }

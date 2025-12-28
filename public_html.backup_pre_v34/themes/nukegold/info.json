@@ -1,0 +1,13 @@
+{
+  "name": "NukeGold",
+  "slug": "nukegold",
+  "version": "1.0.0",
+  "author": "nukeCE Project",
+  "license": "GPL-2.0-or-later",
+  "supports": {
+    "blocks": true,
+    "rtl": false,
+    "dark_mode": false,
+    "admin": false
+  }
+}

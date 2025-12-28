@@ -8,6 +8,7 @@ namespace NukeCE\Core;
 
 use RuntimeException;
 use NukeCE\Security\AuthGate;
+use NukeCE\Core\ModulePolicy;
 
 final class Router
 {
@@ -31,6 +32,15 @@ final class Router
     /** @return array{0:string,1:array} */
     private function resolve(): array
     {
+        // Legacy PHP-Nuke routing ...
+        // - modules.php?name=Web_Links
+        // - index.php?name=Your_Account
+        if (!empty($_GET['name'])) {
+            $legacy = (string)$_GET['name'];
+            $mapped = ModulePolicy::mapLegacy($legacy);
+            return [$this->sanitize((string)$mapped), $_GET];
+        }
+
         if (!empty($_GET['module'])) {
             $m = (string)$_GET['module'];
             return [$this->sanitize($m), $_GET];

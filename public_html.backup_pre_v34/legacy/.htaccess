@@ -1,0 +1,11 @@
+# PHP-Nuke CE (nukeCE)
+# Legacy archive: deny web access by default.
+# If you need these files, access them from the filesystem, not via HTTP.
+
+<IfModule mod_authz_core.c>
+  Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+  Order allow,deny
+  Deny from all
+</IfModule>

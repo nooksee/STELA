@@ -1,28 +1,42 @@
 <?php
-declare(strict_types=1);
 /*
  * PHP-Nuke CE (Community Edition / Custom Edition)
  * Project name in-code: nukeCE
- *
- * NOTE: This is a stub module.
  */
 
 namespace NukeCE\Modules\Recommend;
 
 use NukeCE\Core\ModuleInterface;
-use NukeCE\Core\Layout;
 
-final class RecommendModule implements ModuleInterface
+/**
+ * Recommend module provides a simple form for users to recommend your
+ * site to their friends via email. This example does not send email.
+ */
+class RecommendModule implements ModuleInterface
 {
-    public function getName(): string { return 'recommend'; }
+    public function getName(): string
+    {
+        return 'recommend';
+    }
 
     public function handle(array $params): void
     {
-        Layout::header('Recommend');
-        echo '<h1>Recommend</h1>';
-        echo '<div class="nukece-card">';
-        echo '<p>This feature is shipped as an add-on. Enable/install it from repo-root /addons.</p>';
-        echo '</div>';
-        Layout::footer();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Recommend Us</title></head><body>';
+            echo '<h1>Thank you!</h1>';
+            echo '<p>Your recommendation has been recorded.</p>';
+            echo '<p><a href="/index.php">Back to home</a></p>';
+            echo '</body></html>';
+        } else {
+            echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Recommend Us</title></head><body>';
+            echo '<h1>Recommend Our Site</h1>';
+            echo '<form method="post">';
+            echo '<label>Your Name<br><input type="text" name="name" required></label><br>';
+            echo '<label>Friend\'s Email<br><input type="email" name="friend_email" required></label><br>';
+            echo '<button type="submit">Send Recommendation</button>';
+            echo '</form>';
+            echo '<p><a href="/index.php">Back to home</a></p>';
+            echo '</body></html>';
+        }
     }
 }

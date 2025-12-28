@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<ruleset name="nukeCE">
+  <description>PHP-Nuke CE coding standard (PSR-12 baseline).</description>
+  <rule ref="PSR12"/>
+  <exclude-pattern>legacy/*</exclude-pattern>
+  <exclude-pattern>modules/forums/phpbb2/*</exclude-pattern>
+  <exclude-pattern>windows/*</exclude-pattern>
+  <exclude-pattern>vendor/*</exclude-pattern>
+</ruleset>

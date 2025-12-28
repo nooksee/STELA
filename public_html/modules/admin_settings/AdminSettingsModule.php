@@ -224,6 +224,32 @@ AdminLayout::header('Admin Settings');
         $h .= AdminUi::formRow('Messages', $this->check('mod_messages', (bool)SiteConfig::get('modules.messages.enabled', true)), 'Disabling Messages hides compose/reply surfaces but preserves accounts.');
         $h .= AdminUi::formRow('Editor layer', $this->check('mod_editor', (bool)SiteConfig::get('modules.editor.enabled', true)), 'Rich-text helper layer over classic compose.');
         $h .= "</div>";
+
+        $h .= "<div class='adminui-muted' style='margin-top:10px'>";
+        $h .= "<strong>Module activation:</strong> nukeCE uses a version-controlled allowlist. ";
+        $h .= "To enable/disable whole modules, edit <code>config/modules.php</code> and deploy the change.";
+        $h .= "</div>";
+
+        $cfgFile = dirname(__DIR__, 3) . '/config/modules.php';
+        if (is_file($cfgFile)) {
+            $cfg = include $cfgFile;
+            if (is_array($cfg)) {
+                $enabled = $cfg['enabled'] ?? [];
+                $optional = $cfg['optional'] ?? [];
+                if (is_array($enabled)) {
+                    $h .= "<div class='adminui-card' style='margin-top:12px'>";
+                    $h .= "<div class='adminui-card-title'>Enabled by default</div>";
+                    $h .= "<div class='adminui-muted'>" . htmlspecialchars(implode(', ', $enabled), ENT_QUOTES, 'UTF-8') . "</div>";
+                    $h .= "</div>";
+                }
+                if (is_array($optional)) {
+                    $h .= "<div class='adminui-card' style='margin-top:12px'>";
+                    $h .= "<div class='adminui-card-title'>Present but optional</div>";
+                    $h .= "<div class='adminui-muted'>" . htmlspecialchars(implode(', ', $optional), ENT_QUOTES, 'UTF-8') . "</div>";
+                    $h .= "</div>";
+                }
+            }
+        }
         return AdminUi::group('Modules', 'Feature switches. Disable safely without breaking the rest of the system.', $h);
     }
 

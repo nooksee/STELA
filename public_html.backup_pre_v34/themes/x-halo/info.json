@@ -1,0 +1,14 @@
+{
+  "name": "X-Halo",
+  "slug": "x-halo",
+  "version": "1.0.0",
+  "author": "nukeCE project",
+  "license": "GPL-2.0",
+  "supports": {
+    "blocks": true,
+    "rtl": false,
+    "dark_mode": true,
+    "admin": false
+  },
+  "notes": "Clean-room X-Halo-inspired theme for nukeCE (no original X-Halo assets included)."
+}
