@@ -1,6 +1,6 @@
 # Secure Webroot Option (If You Insist on Everything Under `public_html/`)
 
-**Recommendation:** keep `nukece_meta/` **outside** webroot. This is safer and cleaner.
+**Recommendation:** keep `_meta/` **outside** webroot. This is safer and cleaner.
 
 If you still want a single tree (e.g., for a simple hosting environment), do this:
 
@@ -8,7 +8,7 @@ If you still want a single tree (e.g., for a simple hosting environment), do thi
 ```
 public_html/
   (web files...)
-  _meta/            # move `nukece_meta` here
+  _meta/            # move `_meta` here
 ```
 
 ## Apache (.htaccess)

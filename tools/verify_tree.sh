@@ -10,7 +10,7 @@ warn(){ echo "WARN: $1"; problem_count=$((problem_count+1)); }
 for d in modules admin includes themes; do
   [[ -d "${WEBROOT}/${d}" ]] || warn "Missing expected directory: ${d}/"
 done
-for d in boot patches tools storage releases nukece_meta _meta; do
+for d in boot patches tools storage releases _meta _meta; do
   [[ -d "${WEBROOT}/${d}" ]] && warn "Webroot leak: '${d}/' exists inside public_html (should be repo root)."
 done
 echo

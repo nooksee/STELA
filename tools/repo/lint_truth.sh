@@ -3,8 +3,8 @@ set -euo pipefail
 
 # Fail if deprecated paths are referenced anywhere in tracked files
 bad_patterns=(
-  'nukece_meta'
-  'boot/_upstream_runtime'
+  '_meta'
+  'upstream'
 )
 
 fail=0

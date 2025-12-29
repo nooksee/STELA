@@ -7,10 +7,10 @@ This repo is intentionally split into a **web-served** tree and a **non-web-serv
   Only files that must be publicly served belong here.
 
 ## Non-web support tree (never served)
-- **nukece_meta/**  
+- **_meta/**  
   Project governance + knowledge base + transcripts + tooling live here.
 
-### Key subpaths (inside nukece_meta/)
+### Key subpaths (inside _meta/)
 - canon/ — ratified decisions (binding)
 - reference/ — published reference nodes (explanations)
 - claims/ — explicit claim objects (confidence/status)
@@ -20,6 +20,6 @@ This repo is intentionally split into a **web-served** tree and a **non-web-serv
 
 ## Recommended NetBeans setup
 - **Project 1:** point NetBeans project root at `public_html/`
-- **Project 2 (“support”):** point NetBeans project root at `nukece_meta/`
+- **Project 2 (“support”):** point NetBeans project root at `_meta/`
 
 This keeps secrets/governance/evidence out of the webroot while still visible in the IDE.

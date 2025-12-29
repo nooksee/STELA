@@ -33,9 +33,9 @@ It’s the minimum structure that makes continuity real.
 
 ## Repo layout note (if you uploaded the full bundle)
 - Web server / NetBeans web project: `public_html/`
-- Support project (non-served): `nukece_meta/` (canon, reference, claims, transcripts, docs)
+- Support project (non-served): `_meta/` (canon, reference, claims, transcripts, docs)
 
-If a task touches canon/reference/claims, prefer reading/writing under `nukece_meta/`.
+If a task touches canon/reference/claims, prefer reading/writing under `_meta/`.
 
 
 ## Control Room reboot (copy/paste)
@@ -54,8 +54,8 @@ If a task touches canon/reference/claims, prefer reading/writing under `nukece_m
 3) Paste the following instruction:
 
 > Load `boot_pack_v2` as the active context. Operate strictly within it.  
-> Canon changes require explicit Decision objects under `nukece_meta/canon/decisions/`.  
-> Evidence lives in `nukece_meta/data/transcripts/`.  
-> Reference content lives in `nukece_meta/reference/` and Claims in `nukece_meta/claims/`.  
+> Canon changes require explicit Decision objects under `_meta/canon/decisions/`.  
+> Evidence lives in `_meta/data/transcripts/`.  
+> Reference content lives in `_meta/reference/` and Claims in `_meta/claims/`.  
 > Follow path split rules in `NUKECE_PATHS.md`.
 

@@ -9,11 +9,11 @@ A clean rebootable workflow where:
 
 ## Recommended layout
 - Serve only: `public_html/`
-- Keep governance + evidence outside webroot: `nukece_meta/`
+- Keep governance + evidence outside webroot: `_meta/`
 
 ## NetBeans
 1. Create Project A (Web) → folder: `public_html/`
-2. Create Project B (Support) → folder: `nukece_meta/`
+2. Create Project B (Support) → folder: `_meta/`
 
 ## Fresh chat reboot script (copy/paste)
 1) Start new chat named: **nukeCE Control Room — Active Context Pack**
@@ -32,7 +32,7 @@ Use: boot_pack_v2/context_pack.json as session contract.
 """
 
 ## Integrity
-See: `nukece_meta/docs/integrity/INTEGRITY_REPORT.md`
+See: `_meta/docs/integrity/INTEGRITY_REPORT.md`
 
 
 If you want everything under `public_html/` anyway, read `SECURE_WEBROOT_OPTION.md` and use the `_meta/` deny rules.

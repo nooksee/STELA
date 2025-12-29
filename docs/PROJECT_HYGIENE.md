@@ -10,4 +10,4 @@ Do NOT place these here:
 - boot packs
 - raw documentation dumps
 
-Keep those under `nukece_meta/`.
+Keep those under `_meta/`.

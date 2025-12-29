@@ -7,10 +7,10 @@ This bundle is a **rebootable nukeCE workspace** assembled from:
 
 ## Top-level layout
 - `public_html/` — **web-served application root** (what your web server points at)
-- `nukece_meta/` — **non-served project brain** (canon, reference, claims, transcripts, docs)
+- `_meta/` — **non-served project brain** (canon, reference, claims, transcripts, docs)
 - `boot_pack_v2/` — the current Boot Pack to initialize a fresh Control Room session
 
-## What’s inside `nukece_meta/`
+## What’s inside `_meta/`
 - `canon/` — ratified decisions + indexes (binding project authority)
 - `reference/` — reference nodes (explanations) + indexes
 - `claims/` — explicit claim objects (status + confidence) + indexes
@@ -44,12 +44,12 @@ This bundle is a **rebootable nukeCE workspace** assembled from:
 ## NetBeans layout (practical)
 Recommended:
 - Create/keep **one NetBeans project** pointed at `public_html/` (only web-served files).
-- Add a **second “support” project** pointed at `nukece_meta/` (non-served assets).
+- Add a **second “support” project** pointed at `_meta/` (non-served assets).
 
 This keeps non-public materials out of the webroot while still visible/editable in the IDE.
 
 ## Collaboration profiles (non-clinical)
-- nukece_meta/profiles/user_kevin_thomas.md
-- nukece_meta/profiles/assistant_nukece_mode.md
+- _meta/profiles/user_kevin_thomas.md
+- _meta/profiles/assistant_nukece_mode.md
 
 These are operational working-style notes for continuity; they are not medical or clinical assessments.
