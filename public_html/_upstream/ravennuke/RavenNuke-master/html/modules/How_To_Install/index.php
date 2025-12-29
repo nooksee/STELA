@@ -1,1 +1,0 @@
-<?php header('Location: http://rnwiki.ravennuke.com/wiki/RavenNuke2:Installation'); ?>

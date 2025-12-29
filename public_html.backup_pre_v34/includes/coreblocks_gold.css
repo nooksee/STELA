@@ -1,9 +1,0 @@
-/* Optional baseline styles for Gold blocks. Themes may override. */
-.nukece-block-list { margin: 0; padding-left: 1.1em; }
-.nukece-block-list li { margin: .25em 0; }
-.nukece-input { width: 100%; box-sizing: border-box; }
-.nukece-form-row { margin: .5em 0; }
-.nukece-form-actions { margin-top: .5em; }
-.nukece-btn { cursor: pointer; }
-.nukece-muted { opacity: .8; font-size: .9em; }
-.nukece-badge { display: inline-block; padding: 0 .4em; border-radius: .6em; font-size: .85em; }

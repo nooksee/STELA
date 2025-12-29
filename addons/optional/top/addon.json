@@ -1,9 +1,0 @@
-{
-  "id": "top",
-  "title": "Top",
-  "type": "module",
-  "legacy_names": [
-    "top"
-  ],
-  "notes": "Optional add-on module. Stored outside webroot by design."
-}

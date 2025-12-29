@@ -1,2 +1,0 @@
-PHP-Nuke CE / nukeCE
-Build: gold-polish+ai+reference-ux

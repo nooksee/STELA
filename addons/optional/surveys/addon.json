@@ -1,9 +1,0 @@
-{
-  "id": "surveys",
-  "title": "Surveys / Polls",
-  "type": "module",
-  "legacy_names": [
-    "surveys"
-  ],
-  "notes": "Optional add-on module. Stored outside webroot by design."
-}

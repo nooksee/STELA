@@ -1,9 +1,0 @@
-{
-  "id": "faq",
-  "title": "FAQ",
-  "type": "module",
-  "legacy_names": [
-    "faq"
-  ],
-  "notes": "Optional add-on module. Stored outside webroot by design."
-}

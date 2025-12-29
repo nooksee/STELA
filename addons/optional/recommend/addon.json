@@ -1,9 +1,0 @@
-{
-  "id": "recommend",
-  "title": "Recommend",
-  "type": "module",
-  "legacy_names": [
-    "recommend"
-  ],
-  "notes": "Optional add-on module. Stored outside webroot by design."
-}

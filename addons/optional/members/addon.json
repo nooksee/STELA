@@ -1,9 +1,0 @@
-{
-  "id": "members",
-  "title": "Members",
-  "type": "module",
-  "legacy_names": [
-    "members"
-  ],
-  "notes": "Optional add-on module. Stored outside webroot by design."
-}

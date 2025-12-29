@@ -1,9 +1,0 @@
-{
-  "id": "statistics",
-  "title": "Statistics",
-  "type": "module",
-  "legacy_names": [
-    "statistics"
-  ],
-  "notes": "Optional add-on module. Stored outside webroot by design."
-}
