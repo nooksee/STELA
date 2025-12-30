@@ -19,3 +19,8 @@ cache/
 
 # local scratch
 storage/_scratch/
+
+# IDE/editor noise
+nbproject/
+.idea/
+.vscode/
