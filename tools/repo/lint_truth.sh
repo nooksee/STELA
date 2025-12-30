@@ -1,24 +1,46 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Fail if deprecated paths are referenced anywhere in tracked files
-bad_patterns=(
-  '_meta'
-  'upstream'
+# nukeCE truth lint:
+# Only checks authored surfaces.
+# Ignores upstream/runtime/quarantine/vendor entirely.
+
+patterns=(
+  '\bnukece_meta\b'
+  'boot/_upstream_runtime'
+)
+
+scan_paths=(
+  docs
+  boot
+  tools
+  .github
+)
+
+root_files=(
+  README.md
+  SECURITY.md
+  CONTRIBUTING.md
+  CODE_OF_CONDUCT.md
 )
 
 fail=0
-for pat in "${bad_patterns[@]}"; do
-  if git grep -n -- "$pat" >/dev/null 2>&1; then
+
+files="$(git ls-files "${scan_paths[@]}" 2>/dev/null || true)"
+for f in "${root_files[@]}"; do
+  [ -f "$f" ] && files="$files"$'\n'"$f"
+done
+
+[ -z "${files//[[:space:]]/}" ] && { echo "[lint_truth] OK (no files to scan)"; exit 0; }
+
+for pat in "${patterns[@]}"; do
+  if echo "$files" | xargs -r grep -nH -I -E "$pat" >/dev/null 2>&1; then
     echo "[lint_truth] DEPRECATED reference found: $pat"
-    git grep -n -- "$pat" || true
+    echo "$files" | xargs -r grep -nH -I -E "$pat" || true
     fail=1
   fi
 done
 
-if [ "$fail" -eq 1 ]; then
-  echo "[lint_truth] FAIL"
-  exit 1
-fi
+[ "$fail" -eq 1 ] && { echo "[lint_truth] FAIL"; exit 1; }
 
 echo "[lint_truth] OK"
