@@ -31,6 +31,9 @@ for f in "${root_files[@]}"; do
   [ -f "$f" ] && files="$files"$'\n'"$f"
 done
 
+# Prevent self-matches: this linter contains the patterns by design.
+files="$(printf '%s\n' "$files" | grep -v -x 'tools/repo/lint_truth.sh' || true)"
+
 [ -z "${files//[[:space:]]/}" ] && { echo "[lint_truth] OK (no files to scan)"; exit 0; }
 
 for pat in "${patterns[@]}"; do
