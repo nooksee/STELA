@@ -16,12 +16,28 @@ nukeCE is an explainability-first, provenance-forward CMS program.
 
 ## Development philosophy
 
-nukeCE is built to be explainable on purpose.
+nukeCE is an **explainability-first, provenance-forward** CMS.  
+If a change can’t explain itself, it doesn’t ship. 🔒
 
-- **Explanation-first, not novelty-first.** If we can’t explain it, we don’t ship it.
-- **Provenance-forward.** Upstreams are *donors*, not identity. Imports get notes and context.
-- **No silent magic.** “Where did this come from?” should always have an answer.
-- **Small, reversible changes.** Work happens on `work/*` branches with PR-only merges.
-- **Repo-gates are law.** If CI says “no,” it’s “no” — even for admins.
-- **Visual workflow friendly.** NetBeans-first review; terminal only for surgical moves.
+### What that means in practice
+- **Upstreams are donors, not identity.** We preserve upstream snapshots read-only, and adapt intentionally.
+- **Provenance is a feature.** Imports and major edits should include notes that answer: *where did this come from, why is it here, what changed?*
+- **Epistemic friction, on purpose.** We prefer visible reasoning (docs, truth layers, gates) over “just trust the vibe.”
+- **PR-only governance.** No direct pushes to `main`. Ever. (Yes, even for admins.)
+- **Repo-gates are the front door.** If gates fail, we fix gates or the change — not the rules.
+
+### The quick map (start here)
+- `public_html/` — deployable webroot (what the server serves)
+- `src/` — nukeCE core source (primary development)
+- `packages/` — extracted/imported features adapted into nukeCE
+- `upstream/` — read-only donor snapshots (do not edit)
+- `docs/` — documentation, governance, release process, truth layers
+- `scripts/` — build/sync/release tooling
+
+### Working style (the human layer)
+- NetBeans-first for review and confidence.
+- Terminal commands are **small, deliberate, and one-at-a-time**.
+- Changes land via: `work/*` branch → PR → repo-gates → merge ✅
+
+(Yes, this is disciplined. That’s the point.)
 

@@ -1,29 +1,26 @@
 # Security Policy
 
-If you believe you found a security issue: **thank you**. Please report it responsibly so we can fix it without turning the repo into a tutorial for attackers.
-
-## Please do NOT
-
-- Open a public issue with exploit details
-- Post proof-of-concept payloads publicly
-- “Test in production” (ask first if you’re unsure)
+If you believe you’ve found a security issue: thank you. Seriously. 🙏  
+Now please don’t post it publicly yet.
 
 ## Preferred reporting method
+- Use a **GitHub Security Advisory** for this repository (preferred), or
+- Email the maintainer if an advisory isn’t possible
 
-Use a **GitHub Security Advisory** for this repository.
-
-If that’s not possible, contact the maintainers privately with:
-
+## What to include
 - A clear description of the issue
-- Steps to reproduce (safe + minimal)
-- Affected files/areas
-- Suggested fix if you have one
+- Reproduction steps or a proof-of-concept (safe and minimal)
+- Affected files / versions (if known)
+- Suggested fix or mitigation (optional, but appreciated)
 
-## What happens next
+## Please do not
+- Open a public issue with exploit details
+- Post reproduction steps in Discussions or PR comments
 
-- We’ll acknowledge the report
-- We’ll investigate + reproduce
-- We’ll patch and ship a fix
-- We’ll credit you if you want (optional)
+## Scope notes
+- This project contains legacy surfaces. We prioritize fixes that:
+  - reduce exploitability,
+  - improve containment,
+  - and preserve explainability/provenance.
 
-nukeCE aims to be explainable — and that includes security fixes: clear cause, clear patch, clear provenance.
+We’ll respond as soon as practical, and we’ll aim to coordinate disclosure responsibly.

@@ -1,58 +1,51 @@
-# Contributing
+# Contributing to nukeCE
 
-Welcome. nukeCE is an explainability-first, provenance-forward CMS program.
-That means we care about *how we know what we know*, not just “it works on my machine.” 🙂
+Welcome. You’re allowed to be clever here — but you must also be **traceable**. 😄
 
-## Non-negotiables (the house rules)
+## Non-negotiables
+- **No direct pushes to `main`.** Ever.
+- Work happens on **`work/*` branches** only.
+- Every PR must pass **repo-gates**.
+- Upstream snapshots in `upstream/` are **read-only donor history**.
 
-- **No direct pushes to `main`.** Work happens on `work/*` branches → PR → merge.
-- **Repo gates must pass.** If `repo-gates` is red, we fix the branch — we don’t merge and hope.
-- **Upstreams are donors, not identity.** We preserve upstream snapshots as read-only.
-- **Imports require receipts.** Anything brought in must include provenance notes in `docs/upstreams.md`.
+## The standard workflow (NetBeans-first)
+1) Create a branch
+- Name format: `work/<topic>-YYYY-MM-DD`
+- Examples:
+  - `work/readme-philosophy-2025-12-31`
+  - `work/docs-stylize-2025-12-31`
 
-## Where changes belong
+2) Make changes (small batches)
+- Prefer small, reviewable PRs.
+- Keep “drive-by refactors” out of unrelated changes.
 
-- `public_html/` — deployable webroot (what the server serves)
-- `src/` — nukeCE core development (primary)
-- `packages/` — extracted/imported features adapted into nukeCE
-- `upstream/` — read-only upstream snapshots (do not edit)
-- `docs/` — architecture, ops, governance, release process
-- `scripts/` — build/sync/release tooling
+3) Review changes visually
+- In NetBeans: **Team → Show Changes**
+- Sanity-check: do the changes match the intent?
 
-## The workflow (do this every time)
+4) Commit
+- Use clear, boring commit messages. Boring is good.
+  - `docs: expand development philosophy`
+  - `chore: ignore NetBeans private settings`
 
-1. **Create a branch**
-   - Name format: `work/<topic>-YYYY-MM-DD`
-   - Examples:
-     - `work/readme-philosophy-2025-12-31`
-     - `work/module-x-cleanup-2025-12-31`
+5) Push + PR
+- Push your `work/*` branch
+- Open PR
+- Wait for **repo-gates** ✅
+- Merge
 
-2. **Make changes**
-   - Keep the scope tight.
-   - Prefer small commits with clear messages.
+## Repo hygiene (IDE metadata)
+Do not commit private IDE settings:
+- `nbproject/private/*` should be ignored
+- If you ever accidentally tracked it, remove from index:
+  - `git rm --cached -r nbproject/private`
 
-3. **Run the repo gates (or let CI run them)**
-   - If it fails, fix it on the branch.
+## Provenance expectations
+If you import or adapt external code:
+- Add notes in `docs/upstreams.md` (or the appropriate truth-layer doc)
+- Include: source, purpose, what changed, and any known risks/limits
 
-4. **Open a PR**
-   - Describe *why* and *what changed*.
-   - Link provenance notes if relevant.
-
-5. **Merge only when green**
-   - If CI is red, merging is forbidden (even if it “probably works”).
-
-## Commit message vibe
-
-Keep it boring and specific:
-
-- `docs: clarify release steps`
-- `chore: ignore NetBeans private settings`
-- `ci: add repo gates (verify_tree + lint_truth)`
-
-If you can’t summarize the change in one sentence, the PR is probably too big.
-
-## IDE notes (NetBeans)
-
-NetBeans may generate local metadata under `nbproject/`.
-Private settings (especially `nbproject/private/*`) should **never** be committed.
-If you see them in Git changes, that’s usually a sign your ignore rules need tuning.
+## Using Codex (approved “junior contractor” mode)
+Codex may draft changes **only** on `work/*` branches.
+A human (Kevin) reviews visually in NetBeans before merging.
+Repo-gates must pass. PR-only merges. No exceptions.
