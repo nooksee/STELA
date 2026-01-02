@@ -1,0 +1,50 @@
+name: state-of-play-policing
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  enforce:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce STATE_OF_PLAY update when canon changes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              per_page: 100,
+            });
+
+            const names = files.map(f => f.filename);
+
+            const isStateOfPlayTouched = names.includes("STATE_OF_PLAY.md");
+
+            // "Canon" = anything that changes project meaning, except museum logs.
+            const canonChanged = names.some(n =>
+              n === "PROJECT_TRUTH.md" ||
+              n === "PROJECT_MAP.md" ||
+              n === "CANONICAL_TREE.md" ||
+              n === "README.md" ||
+              n.startsWith("docs/") ||
+              n.startsWith("boot/") ||
+              n === ".github/copilot-instructions.md"
+            );
+
+            // Carve-out: museum log files do not require STATE_OF_PLAY.
+            const onlyMuseumLog = canonChanged && names.every(n =>
+              n.startsWith("docs/ops/log/") || n === "docs/ops/log/.gitkeep"
+            );
+
+            if (canonChanged && !onlyMuseumLog && !isStateOfPlayTouched) {
+              core.setFailed(
+                "Canon changed but STATE_OF_PLAY.md was not updated in this PR. " +
+                "Add a short STATE_OF_PLAY entry (what changed + why) and re-push."
+              );
+            } else {
+              core.info("OK: policing rule satisfied (or changes are museum-log only).");
+            }
