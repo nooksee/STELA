@@ -5,6 +5,7 @@
 - Added Copilot onboarding rules: .github/copilot-instructions.md
 - Added SSOT “save-game” handover file: docs/ops/AI_CONTEXT_SYNC.md
 - Enabled FAIL-mode policing: canon changes require STATE_OF_PLAY update in the same PR
+- Updated docs/ops/DAILY_COCKPIT.md to clarify canon vs log vs rehydration.
 
 ## Active blockers
 - repo-gates (FAIL-mode) blocking PR until this STATE_OF_PLAY update is committed + pushed

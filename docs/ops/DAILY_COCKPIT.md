@@ -1,106 +1,160 @@
-# nukeCE Daily Cockpit Plan
+# Daily Cockpit — YYYY-MM-DD
 
-This is the **NetBeans-first** operating rhythm for nukeCE.
+This file is your daily operating plan + notes. It’s meant to be *pleasant to read* and *useful at a glance*.
 
-Terminal is allowed, but it’s the *gate button*, not the steering wheel.
+---
 
-## Prime directive
+## Canon vs Log (read this once, then ignore it)
 
-- **No direct pushes to `main`.**
-- Work happens on `work/*` branches → PR → **repo-gates green** → merge.
-- If anything feels unclear: stop, screenshot, and review visually in NetBeans.
+**Canon = repo truth.**  
+Anything that must remain true for the project lives in canonical docs (ex: `PROJECT_TRUTH.md`, `PROJECT_MAP.md`, `STATE_OF_PLAY.md`, `docs/00-INDEX.md`, governance/release docs, etc.). If canon changes, it should be reflected in those files and (when required) in `STATE_OF_PLAY.md` **in the same PR**.
 
-## 0) Pre-flight (2 minutes)
+**Log = today’s plan + diary.**  
+This `DAILY_COCKPIT.md` is allowed to be emotional, tactical, messy, and time-bound. It can mention ideas, experiments, and “what we did today,” but it should **not be the only place** a permanent truth exists.
 
-1. **Confirm branch** (top-left project title):
-   - You should *not* be editing on `main`.
+**Rehydration ≠ Log.**  
+- **Rehydration** = onboarding an AI/contractor back into *canon* using `docs/ops/AI_CONTEXT_SYNC.md` + `docs/ops/CONTEXT_PACK.md` (optional but powerful).  
+- **Daily Cockpit** = your daily runbook + notes (always allowed; never the single source of truth).
 
-2. **Pull latest `main`** (safe):
-   - NetBeans: `Team → Remote → Pull…`
-   - (Terminal alternative): `git pull --ff-only`
+---
 
-3. **Open your changes view**
-   - NetBeans: `Team → Show Changes` (this is the reliable “Local Changes” view)
+## Non-negotiables (repo truth)
 
-### Terminal safety habit (every time)
+- **No direct pushes to `main`. Ever.**
+- Work happens on **`work/<topic>-YYYY-MM-DD`** branches.
+- **PR-only merges.**
+- **repo-gates must be green** before merge.
+- If a change affects canon/governance docs, **update `STATE_OF_PLAY.md` in the same PR**.
 
-Commands can take **30–90 seconds**. If there’s no prompt, it’s still running.
+---
 
-- `Ctrl+C` stops a running command.
-- `Ctrl+U` clears the current command line (before Enter).
+## Today’s intent (one sentence)
 
-**Copy/paste rule (use every time):**
-1. Paste into a scratch editor tab first ✅
-2. Eyeball it ✅
-3. Copy → paste into terminal, confirm it’s one line, then press Enter ✅
+> _What is the one outcome that matters today?_  
+- Intent:
 
-## 1) Start work (NetBeans-first)
+---
 
-### Create a work branch
+## Quick status check (2 minutes)
 
-- `Team → Git → Branch → Create Branch…`
-- Naming: `work/<topic>-YYYY-MM-DD`
-- ✅ Checkout branch
+- Current branch:
+- Uncommitted changes? (yes/no)
+- Any open PRs needing review/merge?
+- repo-gates status (last run):
+- “Anxiety level” check (0–10):  
+  - If >6: reduce scope; smallest safe PR slice only.
 
-### Edit normally
+---
 
-- Keep changes small and focused.
-- Prefer editing only what the PR is about.
+## Start work (safe sequence)
 
-### Review diffs
+1) **Sync**
+- Pull latest `main` (no edits on main)
+- Confirm branch protection mindset: PR-only
 
-- Whole project: `Team → Show Changes`
-- One file: right-click file → `Git → Diff`
+2) **Create branch**
+- New branch name: `work/<topic>-YYYY-MM-DD`
 
-## 2) Commit (small, descriptive)
+3) **Open in NetBeans (Truth Cockpit)**
+- Review-first mindset: tree + diffs + intent match
 
-- `Team → Commit…`
-- Stage only what belongs in this PR.
-- Message format:
-  - `docs: ...`
-  - `ci: ...`
-  - `chore: ...`
-  - `feat: ...`
-  - `fix: ...`
+4) **Choose a PR slice (small + boring)**
+- One purpose, minimal files, easy to review
 
-## 3) Run gates (local)
+---
 
-Run these from repo root (NetBeans terminal tab is fine):
+## AI usage (bounded roles)
 
-- `bash tools/verify_tree.sh`
-- `bash tools/repo/lint_truth.sh`
+**Copilot (VS Code) = Junior Implementer / Drafter**
+- Draft diffs, small PR slices, propose edits
+- Output should include: summary, files touched, risks/collisions, suggested PR title
 
-If a gate fails: do not “force it”. Fix the issue, re-run, then commit.
+**Gemini (optional) = Librarian / Impact Analyst**
+- Find call sites, collisions, hidden dependencies
+- Produces risk list + safest path
 
-## 4) Push + PR
+**You (NetBeans) = Integrator / Gatekeeper**
+- Decide what ships
+- Visual review + PR discipline
 
-### Push
+---
 
-- `Team → Remote → Push…`
-- Choose the **current `work/*` branch** only.
+## Work plan (ordered)
 
-If NetBeans asks to “set up remote tracking”: choose **Yes**.
+1.
+2.
+3.
 
-### Open PR on GitHub
+---
 
-- GitHub usually shows **“Compare & pull request”**
-- Title: short and specific
-- Description: what changed + why + how to verify
+## Changes made (what actually happened)
 
-Wait for **repo-gates** to go green, then merge.
+### PR Slice A (name it)
+- Goal:
+- Files touched:
+- Notes:
+- Risks/collisions spotted:
 
-## 5) Post-merge hygiene
+### PR Slice B (if any)
+- Goal:
+- Files touched:
+- Notes:
+- Risks/collisions spotted:
 
-- Switch to `main`
-- Pull latest `main`
-- Close any stale work branches (local + remote) when safe
+---
 
-## Optional: include paths (NetBeans)
+## Review checklist (before commit)
 
-nukeCE’s deployable webroot is `public_html/`. For PHP code completion, include paths typically point to subfolders like:
+In NetBeans:
+- Team → Show Changes (do changes match intent?)
+- No drive-by refactors
+- No accidental IDE/private metadata added
 
-- `public_html/includes`
-- `public_html/modules`
-- `public_html/admin`
+Sanity:
+- Does this change require a `STATE_OF_PLAY.md` update?
+- Are filenames/paths consistent with canon?
+- Are we accidentally editing donor snapshots in `upstream/`? (should be read-only)
 
-Avoid adding `public_html/` itself as an include path if NetBeans warns it’s already part of the project.
+---
+
+## Commit + PR (the only way)
+
+- Commit message (boring is good):
+- Push branch:
+- Open PR:
+- Wait for **repo-gates**:
+- Merge only when green:
+
+---
+
+## Notes / decisions (today-only is fine)
+
+- Decision:
+- Why:
+- Follow-up:
+
+---
+
+## “Nooksee news” (daily log vibe ✅)
+
+- What surprised me:
+- What felt good:
+- What felt sketchy:
+- What I learned:
+
+---
+
+## Next steps (tomorrow’s runway)
+
+1.
+2.
+3.
+
+---
+
+## Contractor / Copilot reminder (un-losable)
+
+If anyone besides “you-in-NetBeans” is touching work:
+- **Prepare a contractor/AI briefing** (scope, rules, PR slice, definition of done)
+- Ensure they reference canon (`PROJECT_TRUTH.md`, `PROJECT_MAP.md`, `docs/00-INDEX.md`)
+- Enforce: `work/*` branches + PR-only + repo-gates
