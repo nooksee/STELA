@@ -8,6 +8,7 @@
 - Updated docs/ops/DAILY_COCKPIT.md to clarify canon vs log vs rehydration.
 - Added ops governance docs: OUTPUT_FORMAT_CONTRACT + Copilot onboarding + Gemini onboarding
 - Updated docs/ops/INDEX.md + docs/00-INDEX.md to link the new ops docs
+- Standardized PROJECT_MAP.md bullets for docs/ops/, upstream/, and .github/workflows/ to clarify roles
 
 ## Active blockers
 - repo-gates (FAIL-mode) blocking PR until this STATE_OF_PLAY update is committed + pushed

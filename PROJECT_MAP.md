@@ -5,13 +5,13 @@ This file is the stable blueprint. Update only when structure or core architectu
 ## Repo layout (what lives where)
 - public_html/      deployable webroot (what the server serves)
 - docs/             public operating docs (start at docs/00-INDEX.md)
-- docs/ops/         operating cockpit zone (daily rhythm, onboarding, templates)
+- docs/ops/ — Operating Cockpit Zone
 - boot/             boot packs (canon snapshots, rules, schemas)
 - tools/            verification + truth checks (support for repo-gates)
 - scripts/          helper scripts (build/sync/release tooling when used)
-- upstream/         read-only donor snapshots (do not edit; history bank)
+- upstream/ — Read-Only Donor Bank
 - patches/          optional patch queue (use only when needed; keep small)
-- .github/workflows/ CI + repo-gates + doc policing
+-.github/workflows/ — repo-gates / CI enforcement location
 - .github/          Copilot instructions + PR templates, etc.
 - addons/           optional legacy/extra modules (not required for core)
 
