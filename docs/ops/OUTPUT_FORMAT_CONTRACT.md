@@ -1,67 +1,48 @@
-# Output Format Contract (Canonical)
+# Output Formatting Contract
 
-Purpose: eliminate ambiguity between “explanation” text and “verbatim copy/paste” payloads.
-If a response violates this contract, treat it as non-authoritative and request a corrected output.
+Objective: Make every AI→Human handoff safe, verifiable, and free of “mystery blobs.”
 
----
+This contract applies to ChatGPT, Gemini, Copilot, contractors, and humans writing instructions.
 
-## Non-negotiables (repo + operator)
+## 1) The Two Modes (always separate them)
+Any response that includes commands, diffs, or file content must be split into:
 
-- No direct pushes to `main`.
-- Work happens only on `work/<topic>-YYYY-MM-DD` branches.
-- PR-only merges.
-- repo-gates must pass before merge.
-- `upstream/` is read-only donor reference.
-- If canon/governance changes, update `STATE_OF_PLAY.md` in the same PR.
-- Operator is visual-first: NetBeans is the Truth Cockpit.
-- Terminal paste can auto-run: commands must be provided in small, labeled blocks; pause after each and request the output.
-- Warn when a command may take time or look “stuck”.
+### A) Explainer (read-only)
+- Purpose: context, reasoning, risk, and scope.
+- Format: short bullets or short paragraphs.
+- Rule: the Operator reads this; it is not meant to be pasted.
 
----
+### B) COPY/PASTE (verbatim payload)
+- Purpose: exact execution or exact file content.
+- Format: fenced code blocks labeled as plain text (preferred) or diff blocks.
+- Rule: must be bounded and copy-safe.
 
-## Required response structure (every time)
+## 2) Copy/Paste Markers (required)
+All pasteable payloads must be bounded with these markers:
 
-### A) What/Why (explainer)
-Human explanation. Not meant to be pasted. Can include rationale, sequencing, and risk notes.
+- Put these markers INSIDE the code fence:
+  - “COPY EVERYTHING BETWEEN THE LINES”
+  - a line of dashes
+  - payload
+  - a line of dashes (or “END COPY BLOCK”)
 
-### B) COPY/PASTE (verbatim)
-Everything in this section must be safe to paste exactly as-is.
-If it contains commands, they must be presented as either:
-- a single command line, or
-- a small block (max ~3–5 lines), clearly labeled (Block 1, Block 2, etc.)
+- Put “STOP COPYING” OUTSIDE the code fence.
 
----
+## 3) Terminal Safety Protocol (operator protection)
+- No mystery blobs: never provide huge chained shell scripts.
+- Small slices: commands in 1–3 line blocks.
+- Label each block: what it does (“Block 1 — status”, “Block 2 — verify tree”).
+- Pause discipline: after each command block, Operator pastes output before proceeding.
+- Syntax-highlighting honesty: do not label a block “yaml” unless it is real YAML.
 
-## Marker rules (hard requirement)
+## 4) File Editing Standard (how to ship patches)
+Preferred order:
+1) Unified diff for small edits.
+2) Full file replacement for new files or heavy refactors.
+3) Never invent file paths; if unsure, point to canon truth docs (PROJECT_MAP.md / CANONICAL_TREE.md).
 
-All verbatim payloads MUST be wrapped like this:
-
-COPY EVERYTHING BETWEEN THE LINES
-<exact payload>
-STOP COPYING
-
-No other text may appear inside the markers.
-
----
-
-## Terminal command rules (Operator safety profile)
-
-When giving terminal commands:
-- Provide one small block at a time.
-- After each block: explicitly request the output before continuing.
-- Prefer “type, don’t paste” when the command is risky or easy to mistype.
-- Include an “it may take a moment” warning for scripts that can run 30–90 seconds.
-- Never provide huge mystery blobs.
-
-Emergency controls to mention when relevant:
-- Ctrl+C stops a running command
-- Ctrl+U clears the current command line
-
----
-
-## File naming note (Daily Cockpit exports)
-
-When generating/exporting the daily operating plan, use:
-- Title: `nukeCE Daily Cockpit — YYYY-MM-DD`
-- If archived in-repo later: prefer `docs/ops/log/YYYY-MM-DD.md` (log) while canon stays in stable docs.
-
+## 5) Verification checklist (minimum)
+- Branch name correct (work/<topic>-YYYY-MM-DD).
+- Only scoped files changed.
+- Forbidden zones untouched (upstream/, .github/, public_html/ unless explicitly instructed).
+- repo-gates are green.

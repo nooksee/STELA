@@ -3,10 +3,11 @@
 This folder contains the public-facing operating docs for the nukeCE repository.
 
 ## Start here
-- **Output format contract (how to read assistant output):** `docs/ops/OUTPUT_FORMAT_CONTRACT.md`
+
 - **Repo overview:** see `README.md` at the repository root.
 - **Daily operating rhythm:** `docs/ops/DAILY_COCKPIT.md`
 - **Ops index:** `docs/ops/INDEX.md`
+- **Output formatting rules (AI/Human safety):** `docs/ops/OUTPUT_FORMAT_CONTRACT.md`
 
 ## Governance and workflows
 
