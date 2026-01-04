@@ -9,7 +9,6 @@
 - Added ops governance docs: OUTPUT_FORMAT_CONTRACT + Copilot onboarding + Gemini onboarding
 - Updated docs/ops/INDEX.md + docs/00-INDEX.md to link the new ops docs
 - Standardized PROJECT_MAP.md bullets for docs/ops/, upstream/, and .github/workflows/ to clarify roles
-- Canonized docs/ops/CONTRACTOR_BRIEF_TEMPLATE.md (standard briefing shape + copy/paste payload boundaries).
 
 ## Active blockers
 - repo-gates (FAIL-mode) blocking PR until this STATE_OF_PLAY update is committed + pushed
