@@ -1,3 +1,16 @@
+## 2026-01-04 — Docs: Guerrilla Metadata Surfaces (always-on)
+
+- Purpose: Make every PR self-documenting; no blank metadata fields.
+- What shipped:
+  - Codified “Guerrilla Metadata Surfaces (always-on)” in `docs/triage/INBOX.md`
+  - Standardized default Markdown structure: Purpose / What shipped / Verification / Risk+Rollback
+- Verification:
+  - repo-gates ✅
+  - state-of-play-policing ✅
+- Risk / rollback:
+  - Risk: docs-only (no runtime behavior changes)
+  - Rollback: revert merge commit
+
 ## 2026-01-04
 
 ### Completed
