@@ -11,6 +11,19 @@
   - Risk: docs-only (no runtime behavior changes)
   - Rollback: revert merge commit
 
+## 2026-01-04 — Docs: INBOX pinned doctrine placement
+
+- Purpose: Keep `docs/triage/INBOX.md` readable (template + pinned rules + inbox list).
+- What shipped:
+  - Moved “Pinned doctrine: Guerrilla Metadata Surfaces (always-on)” above the Inbox items section.
+- Verification:
+  - repo-gates ✅
+  - state-of-play-policing ✅
+  - Manual: INBOX reads top-to-bottom cleanly (template → pinned doctrine → inbox list)
+- Risk / rollback:
+  - Risk: docs-only (no runtime behavior changes)
+  - Rollback: revert this PR’s merge commit
+
 ## 2026-01-04
 
 ### Completed
