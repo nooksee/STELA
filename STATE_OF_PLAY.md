@@ -1,3 +1,16 @@
+## 2026-01-05 — Docs: contractor dispatch brief (canonize worker dispatch)
+
+- Purpose: Canonize contractor dispatch rules so every PR follows governance + metadata requirements.
+- What shipped:
+  - Added `docs/ops/CONTRACTOR_DISPATCH_BRIEF.md` to formalize dispatch rules and cadence.
+  - Linked the new brief from `docs/ops/INDEX.md` and `docs/00-INDEX.md`.
+- Verification:
+  - repo-gates ✅
+  - state-of-play-policing ✅
+- Risk / rollback:
+  - Risk: docs-only (no runtime behavior changes)
+  - Rollback: revert merge commit
+
 ## 2026-01-04 — Docs: Guerrilla Metadata Surfaces (always-on)
 
 - Purpose: Make every PR self-documenting; no blank metadata fields.

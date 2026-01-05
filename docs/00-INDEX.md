@@ -8,6 +8,7 @@
 - [ops/INDEX.md](ops/INDEX.md)
 - [ops/DAILY_COCKPIT.md](ops/DAILY_COCKPIT.md)
 - [ops/RESURRECTION.md](ops/RESURRECTION.md)
+- [ops/CONTRACTOR_DISPATCH_BRIEF.md](ops/CONTRACTOR_DISPATCH_BRIEF.md)
 
 ## Triage (capture ideas without losing them)
 - [triage/INBOX.md](triage/INBOX.md)
