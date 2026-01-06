@@ -1,22 +1,30 @@
-# Docs / ops — index
+# Docs / ops — control room
 
-Convention:
-- Documents in this folder are UPPERCASE with `.md`.
-- Performative/config files may be lowercase (e.g., GitHub templates, JSON, etc.)
+Short index for operators. If a doc is not linked here or captured in `docs/triage/INBOX.md`, it is drift.
 
-## Key ops docs (start here)
+## Start here
 - [DAILY_COCKPIT.md](DAILY_COCKPIT.md)
 - [RESURRECTION.md](RESURRECTION.md)
 - [OUTPUT_FORMAT_CONTRACT.md](OUTPUT_FORMAT_CONTRACT.md)
-- [MEMORY_NUDGE_PROTOCOL.md](MEMORY_NUDGE_PROTOCOL.md)
-- [PR_DESCRIPTION_TEMPLATE.md](PR_DESCRIPTION_TEMPLATE.md)
 
-## Onboarding + workflow
+## Execute
 - [AI_CONTEXT_SYNC.md](AI_CONTEXT_SYNC.md)
 - [CONTEXT_PACK.md](CONTEXT_PACK.md)
-- [CONTRACTOR_DISPATCH_BRIEF.md](CONTRACTOR_DISPATCH_BRIEF.md)
+- [MEMORY_NUDGE_PROTOCOL.md](MEMORY_NUDGE_PROTOCOL.md)
+- [IDE_MIGRATION.md](IDE_MIGRATION.md)
+
+## Templates
+- [PR_DESCRIPTION_TEMPLATE.md](PR_DESCRIPTION_TEMPLATE.md)
 - [CONTRACTOR_BRIEF_TEMPLATE.md](CONTRACTOR_BRIEF_TEMPLATE.md)
 - [CONTRACTOR_REPORT_TEMPLATE.md](CONTRACTOR_REPORT_TEMPLATE.md)
-- [GEMINI_ONBOARDING.md](GEMINI_ONBOARDING.md)
+
+## Staff surfaces
+- [CONTRACTOR_DISPATCH_BRIEF.md](CONTRACTOR_DISPATCH_BRIEF.md)
 - [COPILOT_ONBOARDING.md](COPILOT_ONBOARDING.md)
-- [IDE_MIGRATION.md](IDE_MIGRATION.md)
+- [GEMINI_ONBOARDING.md](GEMINI_ONBOARDING.md)
+
+## Triage
+- [../triage/INBOX.md](../triage/INBOX.md)
+
+## Verification
+- [../../STATE_OF_PLAY.md](../../STATE_OF_PLAY.md)

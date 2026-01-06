@@ -28,6 +28,19 @@ This `DAILY_COCKPIT.md` is allowed to be emotional, tactical, messy, and time-bo
 
 ---
 
+## Preflight checklist (never empty)
+
+- Confirm branch is `work/*` (not `main`).
+- Working tree is clean before starting.
+- Scope is written and matches the intended PR slice.
+- Forbidden zones checked (no edits in `public_html/` or `upstream/`).
+- Verify whether `STATE_OF_PLAY.md` needs an update.
+- Confirm repo-gates/tests to run for this slice.
+- Note any required approvals or escalations.
+- Capture any risks or collisions before editing.
+
+---
+
 ## Today’s intent (one sentence)
 
 > _What is the one outcome that matters today?_  
