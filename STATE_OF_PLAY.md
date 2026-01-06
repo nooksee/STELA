@@ -1,3 +1,16 @@
+## 2026-01-06 — Ops: control room index + preflight (T-OPS-OPS-STREAMLINE)
+
+- Purpose: Make ops docs feel like a control room with a clear start and preflight checklist.
+- What shipped:
+  - Reworked `docs/ops/INDEX.md` into workflow sections with a drift rule reminder.
+  - Added a filled preflight checklist to `docs/ops/DAILY_COCKPIT.md`.
+- Verification:
+  - Not run (worker): `bash tools/verify_tree.sh`
+  - Not run (worker): `bash tools/repo/lint_truth.sh`
+- Risk / rollback:
+  - Risk: docs-only (index + checklist edits).
+  - Rollback: revert this entry and the ops docs changes.
+
 ## 2026-01-06 — Ops: PR template polish (T-OPS-PR-TEMPLATE-POLISH)
 
 - Purpose: Align the GitHub PR template with Metadata Surfaces (always-on) and operator-agnostic workflow.
