@@ -14,6 +14,10 @@ traceable, and merge-safe.
 - Merge commit message and extended description must be filled (never blank).
 - Post-merge “Merge note” comment is required with the same structure.
 
+## No commit / no push (worker rule)
+- Worker delivers changes as a working tree diff only.
+- Operator (Kevin) performs: NetBeans review → repo-gates → commit → push → PR description → merge.
+
 ## Metadata Surfaces (always-on) — required
 Every PR must include the following sections, with no blanks:
 - Purpose
