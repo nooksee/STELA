@@ -1,3 +1,18 @@
+## 2026-01-06 — Docs: onboarding entrypoint alignment (T-DOCS-REFRESH)
+
+- Purpose: Keep Quickstart as the single onboarding entry point across front-door docs.
+- What shipped:
+  - Moved `docs/README_CONTEXT.md` out of the “Start here” section in `docs/00-INDEX.md`.
+  - Kept Quickstart as the only Start Here link while preserving reference access.
+- Verification:
+  - `grep -r "boot_pack_v2" docs/` → no matches ✅
+  - `grep -r "_meta/" docs/` → hits expected in `docs/SECURE_WEBROOT_OPTION.md` + `docs/_archive/boot/NUKECE_PATHS.md` ✅
+  - `bash tools/verify_tree.sh` ✅
+  - `bash tools/repo/lint_truth.sh` ✅
+- Risk / rollback:
+  - Risk: docs-only (index link placement).
+  - Rollback: revert this entry and `docs/00-INDEX.md` change.
+
 ## 2026-01-05 — Ops: no worker commit/push (T-OPS-NO-WORKER-COMMIT)
 
 - Purpose: Enforce “workers draft only; operator commits” across ops templates and contracts.
