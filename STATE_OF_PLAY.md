@@ -1,3 +1,16 @@
+## 2026-01-06 — Ops: PR template polish (T-OPS-PR-TEMPLATE-POLISH)
+
+- Purpose: Align the GitHub PR template with Metadata Surfaces (always-on) and operator-agnostic workflow.
+- What shipped:
+  - Reworked `.github/pull_request_template.md` with the Metadata Surfaces headings and required checklists.
+  - Added explicit operator reminders for merge commit metadata and merge-note comments.
+- Verification:
+  - `bash tools/verify_tree.sh` ✅
+  - `bash tools/repo/lint_truth.sh` ✅
+- Risk / rollback:
+  - Risk: docs-only (PR template formatting).
+  - Rollback: revert this entry and the template update.
+
 ## 2026-01-06 — Docs: onboarding entrypoint alignment (T-DOCS-REFRESH)
 
 - Purpose: Keep Quickstart as the single onboarding entry point across front-door docs.
