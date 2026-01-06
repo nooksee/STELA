@@ -46,3 +46,7 @@ Preferred order:
 - Only scoped files changed.
 - Forbidden zones untouched (upstream/, .github/, public_html/ unless explicitly instructed).
 - repo-gates are green.
+
+## 6) Worker delivery rules
+- Output must include a brief summary + git diff.
+- Never commit or push; operator handles commit/push after review.

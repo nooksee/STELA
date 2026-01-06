@@ -56,8 +56,8 @@ TASK STEPS
    - <bullet 2>
 4) Verify visually in NetBeans (Team → Show Changes).
 5) Run required local checks (if any): <command(s)>
-6) Commit message: <exact commit message>
-7) Push branch and open PR.
+6) Do not commit or push; deliver working tree diff only.
+7) Operator commits/pushes after review.
 
 OUTPUT REQUIRED (you must return these)
 - Unified diff only (no prose inside diff).
@@ -67,5 +67,6 @@ OUTPUT REQUIRED (you must return these)
   [ ] Only scoped files changed
   [ ] No changes to forbidden zones
   [ ] repo-gates pass
+  [ ] Worker did NOT commit/push (operator will handle)
 
 ------------------------------------------------------------

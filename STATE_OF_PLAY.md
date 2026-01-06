@@ -1,3 +1,17 @@
+## 2026-01-05 — Ops: no worker commit/push (T-OPS-NO-WORKER-COMMIT)
+
+- Purpose: Enforce “workers draft only; operator commits” across ops templates and contracts.
+- What shipped:
+  - Added no-commit/no-push rules to contractor dispatch and brief templates.
+  - Added worker delivery rules to output format contract and PR checkbox enforcement.
+- Verification:
+  - grep -r "commit/push" docs/ops .github (hits expected)
+  - bash tools/verify_tree.sh ✅
+  - bash tools/repo/lint_truth.sh ✅
+- Risk / rollback:
+  - Risk: docs-only (no runtime behavior changes)
+  - Rollback: revert merge commit
+
 ## 2026-01-05 — Ops: metadata surfaces templates (T-OPS-METADATA-TEMPLATES)
 
 - Purpose: Institutionalize “Metadata Surfaces (always-on)” templates across PR and contractor workflows.
