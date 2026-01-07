@@ -1,3 +1,17 @@
+## 2026-01-07 — ICL-001C: context pruning + drift detection
+
+- Purpose: Reduce long-session decay and detect filesystem drift early during ICL.
+- What shipped:
+  - Added `ops/init/protocols/CONTEXT_PRUNING_PROTOCOL.md`.
+  - Added `ops/init/tools/context_lint.sh` and updated `ops/init/manifests/CONTEXT_MANIFEST.md`.
+- Verification:
+  - `bash ops/init/tools/context_lint.sh` ✅
+  - `bash tools/verify_tree.sh` ✅
+  - `bash tools/repo/lint_truth.sh` ✅
+- Risk / rollback:
+  - Risk: lint rules may need tuning as ICL canon evolves.
+  - Rollback: remove the new protocol and context linter, and revert manifest edits.
+
 ## 2026-01-07 — ICL-001B — Context packer + trigger hardening
 
 - Purpose: Reduce Operator fatigue and drift risk with a deterministic ICL context packer and hardened triggers.
