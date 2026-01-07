@@ -1,3 +1,17 @@
+## 2026-01-07 — Ops: ICL init skeleton (ICL-001A)
+
+- Purpose: Establish the canonical ops/init skeleton for ICL and role setup.
+- What shipped:
+  - Added `ops/init/` skeleton including `icl/`, `manifests/`, `profiles/`, and `protocols/`.
+  - Created 15 new stub files across the new `ops/init/` subdirectories, all seeded with required metadata headings.
+  - Note: `ops/contracts/` and `ops/templates/` were pre-existing and are referenced by the new ICL skeleton.
+- Verification:
+  - Not run (worker): `bash tools/verify_tree.sh`
+  - Not run (worker): `bash tools/repo/lint_truth.sh`
+- Risk / rollback:
+  - Risk: stub content may require follow-up hardening.
+  - Rollback: remove the new ops/init tree and this entry.
+
 ## 2026-01-06 — Docs: security posture refresh (T-DOCS-SECURITY-REFRESH)
 
 - Purpose: Consolidate security posture guidance and clarify AI/worker boundaries.
