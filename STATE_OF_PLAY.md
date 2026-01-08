@@ -1,3 +1,18 @@
+## 2026-01-07 — ICL-001G: OCL formalized + ticket model
+
+- Purpose: Formalize OCL as the session lifecycle superset of ICL and define the ticket model.
+- What shipped:
+  - Added `ops/init/icl/OCL_OVERVIEW.md`.
+  - Updated `ops/init/manifests/ROLE_MANIFEST.md`.
+  - Updated `ops/init/protocols/SNAPSHOT_PROTOCOL.md`.
+  - Updated `ops/init/protocols/HANDOFF_PROTOCOL.md`.
+- Verification:
+  - `bash tools/verify_tree.sh` ✅
+  - `bash tools/repo/lint_truth.sh` ✅
+- Risk / rollback:
+  - Risk: OCL framing or ticket lifecycle may need tuning as ops canon evolves.
+  - Rollback: revert the OCL overview and protocol/manifest edits.
+
 ## 2026-01-07 — ICL-001E: DP canonized (Work Orders as first-class ICL artifact)
 
 - Purpose: Make Dispatch Packets (DP) the canonical operator-facing work order in ICL.

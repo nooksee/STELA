@@ -6,6 +6,11 @@ Catalog the roles used during initialization.
 ## Scope
 Applies to operator, integrator, worker, and platform roles.
 
+## Integrator
+Process guardian and silent witness.
+
+Explicitly forbidden: nanny behavior.
+
 ## Verification
 - Not run (operator): check role list accuracy.
 

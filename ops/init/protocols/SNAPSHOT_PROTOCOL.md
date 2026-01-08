@@ -4,7 +4,9 @@
 Define when to take a session snapshot and how to capture it.
 
 ## Scope
-Applies at the end of ICL sessions and before handoff. Guidance for an optional PDF snapshot can be used for offline archival.
+Snapshot is the only durable memory across sessions.
+
+Applies at the end of ICL sessions and before handoff. "Save this" and "snapshot" are equivalent operator triggers. Snapshot format is format-agnostic.
 
 ## Verification
 - Not run (operator): confirm snapshot timing and artifacts.
