@@ -4,7 +4,7 @@
   "project": {
     "name": "nukeCE (PHP-Nuke CE)",
     "repo_layout_doc": "docs/REPO_LAYOUT.md",
-    "principles_file": "boot/active/boot_pack/principles.md",
+    "principles_file": "ops/init/icl/boot_pack/principles.md",
     "front_door": "docs/ops/INDEX.md"
   },
   "canon_snapshot": {

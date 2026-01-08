@@ -2,7 +2,7 @@
 
 ## Non-negotiables (the contract)
 1) Repo is truth (paths/files/docs win over chat memory).
-2) `upstream/` and `boot/ (runtime bootpack)/` are read-only.
+2) `upstream/` and `ops/init/icl/boot_pack/` are read-only.
 3) No invention: if a file/path isn’t present, say so and propose options.
 4) Workers don’t merge. They return diffs + notes. Integrator applies + merges.
 5) PR workflow only: `work/* → commit → push → PR → merge` (no direct pushes to main).
@@ -12,7 +12,7 @@ ROLE: Worker. Do NOT change architecture. Do NOT merge. Output a unified diff + 
 
 REPO CONTEXT (canon):
 - Repo is truth. Read required docs first.
-- upstream/ and boot/ (runtime bootpack)/ are read-only.
+- upstream/ and ops/init/icl/boot_pack/ are read-only.
 - No private/local artifacts committed.
 - PR workflow only.
 

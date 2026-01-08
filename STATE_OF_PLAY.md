@@ -12,6 +12,36 @@
   - Risk: precedence and ledger language may need tuning as OCL canon evolves.
   - Rollback: revert the overview/protocol/manifest edits.
 
+## 2026-01-08 — ICL-002A: evacuate /boot to ops and remove /boot
+
+- Purpose: Migrate boot pack artifacts into ops/init and remove the /boot directory.
+- What shipped:
+  - Moved `boot/active/boot_pack/context_pack.json` to `ops/init/icl/context_pack.json`.
+  - Moved `boot/active/boot_pack/README.md` to `ops/init/icl/boot_pack/README.md`.
+  - Moved `boot/active/boot_pack/ASSISTANT_PROFILE.md` to `ops/init/icl/boot_pack/ASSISTANT_PROFILE.md`.
+  - Moved `boot/active/boot_pack/USER_PROFILE.md` to `ops/init/icl/boot_pack/USER_PROFILE.md`.
+  - Moved `boot/active/boot_pack/INTEGRATOR_ONBOARDING.md` to `ops/init/icl/boot_pack/INTEGRATOR_ONBOARDING.md`.
+  - Moved `boot/active/boot_pack/CONTRACTOR_ONBOARDING.md` to `ops/init/icl/boot_pack/CONTRACTOR_ONBOARDING.md`.
+  - Moved `boot/active/boot_pack/RESURRECTION.md` to `ops/init/icl/boot_pack/RESURRECTION.md`.
+  - Moved `boot/active/boot_pack/principles.md` to `ops/init/icl/boot_pack/principles.md`.
+  - Moved `boot/active/boot_pack/canon_snapshot.md` to `ops/init/icl/boot_pack/canon_snapshot.md`.
+  - Moved `boot/active/boot_pack/active_loops.json` to `ops/init/icl/boot_pack/active_loops.json`.
+  - Moved `boot/ACTIVE_CONTEXT.md` to `ops/init/icl/ACTIVE_CONTEXT.md`.
+  - Moved `boot/BUNDLE_MANIFEST.json` to `ops/init/icl/BUNDLE_MANIFEST.json`.
+  - Moved `boot/templates/gitignore.txt` to `ops/templates/gitignore.txt`.
+  - Updated `ops/init/icl/context_pack.json` and `ops/init/icl/ACTIVE_CONTEXT.md` for new boot pack paths.
+  - Updated `ops/init/tools/context_lint.sh` to drop `/boot` path allowance.
+  - Updated `docs/README_CONTEXT.md`, `docs/10-QUICKSTART.md`, `docs/30-RELEASE_PROCESS.md`, `docs/SOP_MULTICHAT.md`, `docs/REPO_LAYOUT.md`, `docs/PROJECT_STRUCTURE.md`, and `docs/20-GOVERNANCE.md`.
+  - Removed `boot/`.
+- Verification:
+  - `bash tools/verify_tree.sh` ✅
+  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash ops/init/tools/context_lint.sh` (warn: missing path referenced in STATE_OF_PLAY.md: ops/templates/DAILY_COCKPIT_TEMPLATE.md)
+  - `grep -R "(/boot|boot/|boot_pack|bootpack)" -n .` (hit: STATE_OF_PLAY.md verification line)
+- Risk / rollback:
+  - Risk: stale references outside scope may still mention /boot.
+  - Rollback: restore /boot and revert the ops/docs updates.
+
 ## 2026-01-08 — ICL-001K: metadata kit formatting canonized
 
 - Purpose: Canonize metadata kit presentation rules for operator-facing outputs.
@@ -30,7 +60,7 @@
 
 - Purpose: Remove deprecated Daily Cockpit template now replaced by the session snapshot artifact.
 - What shipped:
-  - Removed `ops/templates/DAILY_COCKPIT_TEMPLATE.md`.
+  - Removed Daily Cockpit template (deprecated; file deleted).
 - Verification:
   - `bash tools/verify_tree.sh` ✅
   - `bash tools/repo/lint_truth.sh` ✅
@@ -262,7 +292,7 @@
 - Purpose: Eliminate split-brain docs and standardize metadata terminology.
 - What shipped:
   - Moved boot docs into `docs/` (including archives and triage archive), removing duplicates in the former boot docs location.
-  - Updated indexes and references (`docs/00-INDEX.md`, `docs/CONTRACTOR_PACKET.md`, `boot/active/boot_pack/context_pack.json`).
+  - Updated indexes and references (`docs/00-INDEX.md`, `docs/CONTRACTOR_PACKET.md`, `ops/init/icl/context_pack.json`).
   - Standardized docs terminology to “Metadata Surfaces (always-on)”.
 - Verification:
   - Link/reference grep (boot-docs references) ✅

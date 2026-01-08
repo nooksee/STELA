@@ -43,7 +43,7 @@ Examples:
 - `main` = the locked classroom whiteboard
 - `work/*` = your notebook
 - `docs/` = living canonical documentation (contractor-ready)
-- `boot/` = rehydration + bootpacks (portable context bundles)
+- `ops/init/icl/boot_pack/` = rehydration + bootpacks (portable context bundles)
 - `.github/` = governance (repo-gates, PR templates, Copilot instructions)
 
 ## NetBeans-only comfort path (no terminal required)

@@ -30,7 +30,7 @@ extract_backticks() {
 is_known_path() {
   local entry="$1"
   case "$entry" in
-    ops/*|docs/*|tools/*|public_html/*|upstream/*|storage/*|tests/*|scripts/*|boot/*|addons/*|patches/*|nbproject/*|.github/*|README.md|SECURITY.md|CONTRIBUTING.md|STATE_OF_PLAY.md|PROJECT_TRUTH.md|PROJECT_MAP.md|CANONICAL_TREE.md|CHANGELOG.md)
+    ops/*|docs/*|tools/*|public_html/*|upstream/*|storage/*|tests/*|scripts/*|addons/*|patches/*|nbproject/*|.github/*|README.md|SECURITY.md|CONTRIBUTING.md|STATE_OF_PLAY.md|PROJECT_TRUTH.md|PROJECT_MAP.md|CANONICAL_TREE.md|CHANGELOG.md)
       return 0
       ;;
   esac

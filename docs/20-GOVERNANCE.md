@@ -47,8 +47,7 @@ AI contractors should be given:
 - strict instruction: no direct pushes to main, provide commands in small safe chunks
 
 ## Tone lanes (prevents “AI slop”)
-- Ops lane (allowed to be checklist-heavy): `docs/ops/` and `boot/`
+- Ops lane (allowed to be checklist-heavy): `docs/ops/` and `ops/init/icl/`
 - Public-facing lane (must stay human): root README, founders docs
 
 We prefer: clear, explain-first, minimal filler.
-
