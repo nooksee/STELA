@@ -1,3 +1,15 @@
+## 2026-01-07 — ICL-001J: remove deprecated Daily Cockpit template
+
+- Purpose: Remove deprecated Daily Cockpit template now replaced by the session snapshot artifact.
+- What shipped:
+  - Removed `ops/templates/DAILY_COCKPIT_TEMPLATE.md`.
+- Verification:
+  - `bash tools/verify_tree.sh` ✅
+  - `bash tools/repo/lint_truth.sh` ✅
+- Risk / rollback:
+  - Risk: legacy references may linger outside ops scope.
+  - Rollback: restore the template file.
+
 ## 2026-01-07 — ICL-001I: Operator Control Words canonized
 
 - Purpose: Canonize operator control words for snapshot, pause/close, and opine-only behavior.
