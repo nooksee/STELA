@@ -1,3 +1,17 @@
+## 2026-01-07 — ICL-001E: DP canonized (Work Orders as first-class ICL artifact)
+
+- Purpose: Make Dispatch Packets (DP) the canonical operator-facing work order in ICL.
+- What shipped:
+  - Added `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
+  - Added `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
+  - Updated `ops/init/manifests/OUTPUT_MANIFEST.md` to include DP as a required output type.
+- Verification:
+  - Not run (worker): `bash tools/verify_tree.sh`
+  - Not run (worker): `bash tools/repo/lint_truth.sh`
+- Risk / rollback:
+  - Risk: DP requirements may need tuning as ops conventions evolve.
+  - Rollback: revert the DP protocol/template and the output manifest update.
+
 ## 2026-01-07 — ICL-001C: context pruning + drift detection
 
 - Purpose: Reduce long-session decay and detect filesystem drift early during ICL.
