@@ -1,17 +1,48 @@
-# PR Description Template
+# PR Description Template (canonical)
+
+Purpose: Ensure every PR is self-documenting, reviewable, and reversible.
+
+Use this template in:
+- GitHub PR description (auto-filled via .github/pull_request_template.md)
+- Any work handoff to assistants/contractors (copy/paste)
+
+Each section uses a prose line followed by a fenced block for copy/paste.
 
 ## Purpose
-Provide a canonical PR description template.
+- One sentence on the goal or problem.
+```
+<fill>
+```
+
+## What shipped
+- Bullet list of concrete changes (file-level is fine).
+```
+- <fill>
+```
 
 ## Scope
-Applies to all PRs created by operators.
+- Exact paths/files touched.
+```
+- <fill>
+```
 
 ## Verification
-- Not run (operator): confirm template completeness.
+- repo-gates (pass/fail + notes).
+- Manual checks (if any).
+```
+- <fill>
+```
 
 ## Risk+Rollback
-- Risk: incomplete PR metadata.
-- Rollback: update the template.
+- Risk: top risk in one line.
+- Rollback: revert merge commit.
+```
+- Risk: <fill>
+- Rollback: <fill>
+```
 
-## Canon Links
-- ops/contracts/OUTPUT_FORMAT_CONTRACT.md
+## Canon updates
+- Updated `STATE_OF_PLAY.md` when doctrine/governance changes.
+```
+- <fill>
+```

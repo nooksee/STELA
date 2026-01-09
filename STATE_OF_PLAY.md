@@ -1,3 +1,21 @@
+## 2026-01-08 — ICL-002B: output-format unification (contract + protocol + templates)
+
+- Purpose: Unify output-format canon across contract, protocol, and PR template surfaces.
+- What shipped:
+  - Updated `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`.
+  - Updated `ops/init/protocols/OUTPUT_FORMAT_PROTOCOL.md`.
+  - Updated `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
+  - Updated `ops/templates/PR_DESCRIPTION_TEMPLATE.md`.
+  - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
+  - Updated `STATE_OF_PLAY.md`.
+- Verification:
+  - `bash tools/verify_tree.sh` ✅
+  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash ops/init/tools/context_lint.sh` ✅
+- Risk / rollback:
+  - Risk: output-format guidance may need tuning as operators adopt the unified flow.
+  - Rollback: revert the contract/protocol/template updates.
+
 ## 2026-01-08 — ICL-001L: truth precedence + ticket/state alignment
 
 - Purpose: Define truth precedence across artifacts and align ticket state with the canonical ledger.
