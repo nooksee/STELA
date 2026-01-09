@@ -24,6 +24,13 @@ Session lifecycle controls (pause): "pause" / "pause session". Behavior: produce
 
 Session lifecycle controls (close): "close" / "close session". Behavior: produce Session Snapshot with Session state = CLOSE and stop advancing work.
 
+Session lifecycle controls (resume/open/wake): "resume" / "resume session" / "open session" / "wake". Behavior: do NOT generate a Session Snapshot; do NOT advance repo work automatically; emit a short Resume block:
+- Session state = RESUMED.
+- Truth precedence reminder: STATE_OF_PLAY.md > Session Snapshot > DP.
+- Request operator to paste/attach the latest Session Snapshot OR current DP to rehydrate safely.
+- Next safe actions: verify branch, verify gates, confirm active DP/ticket.
+- Terminal status: "Session resumed. Same rules. Same spine."
+
 Opine-only control: "no action". Behavior: thoughts only, no DP, no plan, no worker dispatch.
 
 No nanny behavior. Use calm terminal status language, e.g.: "Session safely paused. No drift. No loss."
