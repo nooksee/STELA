@@ -20,6 +20,9 @@ If a doc is not linked here or captured in `docs/triage/INBOX.md`, it is drift.
 - [Output Format Protocol](../../ops/init/protocols/OUTPUT_FORMAT_PROTOCOL.md)
 - [Dispatch Packet Protocol](../../ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md)
 
+## Playbooks
+- [Paste Surfaces Playbook](../../ops/init/icl/PASTE_SURFACES_PLAYBOOK.md)
+
 ## Templates
 - [PR Description Template](../../ops/templates/PR_DESCRIPTION_TEMPLATE.md)
 - [Contractor Brief Template](../../ops/templates/CONTRACTOR_BRIEF_TEMPLATE.md)

@@ -33,7 +33,7 @@ A DP (Dispatch Packet) is the authoritative, operator-authored work order delive
 - **PR Metadata:** PR titles and descriptions must be filled out completely.
 - **Merge Commit Metadata:** Merge commit messages and extended descriptions must be filled out completely.
 - **Post-Merge Note:** A post-merge “Merge note” comment on the PR is required.
-- **Queue Rule:** STOP AFTER RESULTS applies only when multiple DPs are queued; it does not gate starting work inside a DP.
+- **Queue Rule (Operator-only):** STOP AFTER RESULTS applies only when multiple DPs are queued; workers deliver results and stop.
 
 ## 3. Freshness Gate (Required)
 Before any work starts, the Worker must echo:
@@ -41,7 +41,7 @@ Before any work starts, the Worker must echo:
 - Current HEAD short hash
 - DP id + date
 
-If the DP date, branch, or hash mismatches operator-provided truth, the Worker must STOP and report the mismatch. If all fields match, the Worker proceeds immediately to tasks and does not wait for authorization.
+If the branch or DP id/date mismatches operator-provided truth, the Worker must STOP and report the mismatch. If the operator supplied an expected hash and it mismatches, the Worker must STOP and report the mismatch. If no expected hash was supplied, the Worker notes "hash not verified" and proceeds. If all checks pass, the Worker proceeds immediately to tasks and does not wait for authorization.
 
 ## 4. Worker Delivery Protocol (No Commit/Push)
 - The Worker must deliver all changes as a working tree diff only. The Worker does not commit, push, or merge.
@@ -50,8 +50,8 @@ If the DP date, branch, or hash mismatches operator-provided truth, the Worker m
 ## 5. DP Structure (Required Sections)
 A dispatch packet must contain the following sections to be considered valid:
 - **Freshness Gate:** Required echo fields (branch, HEAD short hash, DP id/date) and stop-if-stale instruction.
-- **Presentation Rules:** Single fenced DP block with copy-safe header/footer; no nested fences.
-- **Queue Rule:** STOP AFTER RESULTS instruction that applies only when multiple DPs are queued, and does not gate starting work inside a DP.
+- **Presentation Rules:** Single fenced DP block with copy-safe header/footer; no nested fences and no stop markers inside templates.
+- **Queue Rule (Operator-only):** STOP AFTER RESULTS applies only when multiple DPs are queued; workers deliver results and stop.
 - **Branch:** The exact branch the work will be performed on.
 - **Role:** The persona the worker should adopt (e.g., "You are Gemini (Reviewer)").
 - **Non-Negotiables:** Core rules the worker must follow.
@@ -64,9 +64,9 @@ A dispatch packet must contain the following sections to be considered valid:
 ## 6. DP Presentation Rules
 - The DP must be delivered as ONE single fenced code block (the DP block).
 - The operator must place a prose header outside the fence: "COPY/PASTE — Dispatch Packet".
-- Optional but recommended: "STOP COPYING" outside the fence after the DP block.
+- The operator may add a prose footer outside the fence after the DP block.
 - No partial fences, no nested fences, no leaking content outside the DP block.
-- Inside the DP block: do not embed additional triple-backtick fences or "COPY EVERYTHING BETWEEN THE LINES" rulers; the fence is the copy boundary.
+- Inside the DP block: do not embed additional triple-backtick fences, dashed rulers, or "COPY EVERYTHING BETWEEN THE LINES"; do not include stop markers inside templates.
 
 ## 7. Metadata Surface Requirements
 Every work cycle that culminates in a PR must generate all required metadata surfaces. The DP must require these surfaces, but the final filled kit is delivered after work results.

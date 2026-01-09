@@ -475,3 +475,21 @@
 - Risk / rollback:
   - Risk: operators may rely on the DP template for footer phrasing cues.
   - Rollback: revert the DP template and STATE_OF_PLAY entry.
+## 2026-01-09 - DP-ICL-002E0: Process lock for TYPE LINE BY LINE + paste surfaces
+
+- Purpose: Standardize operator command safety language, paste surfaces, and DP freshness gate rules.
+- What shipped:
+  - Updated `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`.
+  - Updated `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
+  - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
+  - Added `ops/init/icl/PASTE_SURFACES_PLAYBOOK.md`.
+  - Updated `docs/ops/INDEX.md`.
+  - Updated `STATE_OF_PLAY.md`.
+- Verification:
+  - `bash tools/verify_tree.sh` ✅
+  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash ops/init/tools/context_lint.sh` ✅
+  - `grep -n "STOP COPYING" ops/templates/DISPATCH_PACKET_TEMPLATE.md` ✅
+- Risk / rollback:
+  - Risk: operators may need time to adapt to TYPE LINE BY LINE command blocks.
+  - Rollback: revert the protocol, template, and playbook updates.

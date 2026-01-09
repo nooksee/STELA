@@ -7,6 +7,7 @@ WORK ORDER (DP-XXXX) — Title
 
 PRESENTATION RULES
 - Entire DP block is meant to be copied as a unit.
+- Operator wraps this DP as ONE fenced block when dispatching to a worker.
 - DP body stays inside one fence; no partial or nested fences.
 - Do not use "COPY EVERYTHING BETWEEN THE LINES" or dashed rulers; the fence is the copy boundary.
 - Operator MAY add a prose footer outside the fence after the DP block.
@@ -15,7 +16,8 @@ FRESHNESS GATE (REQUIRED)
 - Active branch name:
 - Current HEAD short hash:
 - DP id + date:
-- STOP if any mismatch vs operator-provided truth. If all match, proceed immediately to tasks; do not wait for authorization.
+- If operator supplied an expected hash, STOP on hash mismatch; if not supplied, note "hash not verified" and proceed.
+- STOP if branch or DP id/date mismatches operator-provided truth. If all checks pass, proceed immediately to tasks; do not wait for authorization.
 
 BRANCH (operator creates first):
 work/<topic>-YYYY-MM-DD
@@ -56,6 +58,6 @@ B) ...
 C) Metadata kit surfaces (header prose + fenced blocks): IDE commit subject, PR title + description (markdown), merge commit subject + plaintext body, merge-note comment (markdown).
 D) ...
 
-STOP AFTER RESULTS applies only when multiple DPs are queued; it does not gate starting work inside a DP.
+Deliver results, then STOP (no commit/push).
 
 ```
