@@ -493,3 +493,18 @@
 - Risk / rollback:
   - Risk: operators may need time to adapt to TYPE LINE BY LINE command blocks.
   - Rollback: revert the protocol, template, and playbook updates.
+## 2026-01-09 - DP-ICL-002E1: banned terms inventory + rename plan drafted
+
+- Purpose: Capture banned-term inventory and draft a rename plan for ICL/OCL artifacts.
+- What shipped:
+  - Added `ops/init/icl/BANNED_TERMS_MAP.md`.
+  - Added `ops/init/icl/RENAME_PLAN_ICL_OCL.md`.
+  - Updated `docs/ops/INDEX.md`.
+  - Updated `STATE_OF_PLAY.md`.
+- Verification:
+  - `grep -RinE "(resurrect|resurrection|bootpack|boot_pack|boot-pack|cockpit|zombie|rebirth|lazarus|aviation|flight)" ops docs *.md 2>/dev/null || true` ✅
+  - `bash tools/verify_tree.sh` ✅
+  - `bash tools/repo/lint_truth.sh` ✅
+- Risk / rollback:
+  - Risk: large rename PRs can break links and references if not updated in lockstep.
+  - Rollback: revert the inventory/plan docs and redo with a narrower rename scope.
