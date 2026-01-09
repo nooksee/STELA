@@ -1,14 +1,21 @@
 # Dispatch Packet (DP) — Work Order Template
 # This is the canonical template for creating a Dispatch Packet.
 
+COPY/PASTE — Dispatch Packet
 ```
 WORK ORDER (DP-XXXX) — Title
+
+PRESENTATION RULES
+- Entire DP block is meant to be copied as a unit.
+- DP body stays inside one fence; no partial or nested fences.
+- Do not use "COPY EVERYTHING BETWEEN THE LINES" or dashed rulers; the fence is the copy boundary.
+- Optional but recommended: add a footer outside the fence after the DP block.
 
 FRESHNESS GATE (REQUIRED)
 - Active branch name:
 - Current HEAD short hash:
 - DP id + date:
-- STOP if any mismatch vs operator-provided truth.
+- STOP if any mismatch vs operator-provided truth. If all match, proceed immediately to tasks; do not wait for authorization.
 
 BRANCH (operator creates first):
 work/<topic>-YYYY-MM-DD
@@ -49,5 +56,6 @@ B) ...
 C) Metadata kit surfaces (header prose + fenced blocks): IDE commit subject, PR title + description (markdown), merge commit subject + plaintext body, merge-note comment (markdown).
 D) ...
 
-STOP COPYING
+STOP AFTER RESULTS applies only when multiple DPs are queued; it does not gate starting work inside a DP.
+
 ```

@@ -446,3 +446,18 @@
 - Risk / rollback:
   - Risk: stricter DP gating may slow work starts if operator-provided truth is stale.
   - Rollback: revert the DP protocol/template changes.
+## 2026-01-09 - DP-ICL-002D3-CLEAN: Freshness Gate proceed-on-match + template stop-marker removal
+
+- Purpose: Clarify Freshness Gate proceed-on-match behavior and remove internal stop markers from the DP template.
+- What shipped:
+  - Updated `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
+  - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
+  - Updated `STATE_OF_PLAY.md`.
+- Verification:
+  - `bash tools/verify_tree.sh` ✅
+  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash ops/init/tools/context_lint.sh` ✅
+  - `grep -R "STOP COPYING" -n ops/templates/DISPATCH_PACKET_TEMPLATE.md` ✅
+- Risk / rollback:
+  - Risk: operators may miss the queue stop rule if they only scan the top of the template.
+  - Rollback: revert the protocol/template edits.
