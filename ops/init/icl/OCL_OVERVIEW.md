@@ -13,7 +13,7 @@ Assistant posture: silent witness, not nanny.
 Applies to all operator-led sessions after initialization, including lifecycle control and ticket flow.
 
 ## Control Words
-Operator-issued control words gate behavior (pause/close/snapshot/no action) and override default execution.
+Operator-issued control words gate behavior (pause/close/snapshot/resume/open/wake/no action) and override default execution.
 
 ## Metadata Kit Presentation Rule
 Headers are prose. Copy/paste material is always fenced. This applies to AI output directed at operators.

@@ -1,3 +1,19 @@
+## 2026-01-08 — ICL-002C: resume/open/wake control word
+
+- Purpose: Canonize resume/open/wake as a first-class operator control word with explicit behavior.
+- What shipped:
+  - Updated `ops/init/protocols/SESSION_CLOSE_PROTOCOL.md`.
+  - Updated `ops/init/icl/OCL_OVERVIEW.md`.
+  - Updated `ops/templates/SESSION_SNAPSHOT_TEMPLATE.md`.
+  - Updated `STATE_OF_PLAY.md`.
+- Verification:
+  - `bash tools/verify_tree.sh` ✅
+  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash ops/init/tools/context_lint.sh` ✅
+- Risk / rollback:
+  - Risk: resume behavior wording may need tuning as control word usage evolves.
+  - Rollback: revert the protocol/overview/template updates.
+
 ## 2026-01-08 — ICL-002B: output-format unification (contract + protocol + templates)
 
 - Purpose: Unify output-format canon across contract, protocol, and PR template surfaces.
