@@ -11,7 +11,7 @@
 ## Review norms
 - Don’t “clean up” unrelated files.
 - Don’t add machine-specific paths/hostnames.
-- If you touch structure: update `PROJECT_MAP.md` or `docs/ops/INDEX.md`.
+- If you touch structure: update `PROJECT_MAP.md` or `CANONICAL_TREE.md` (and `docs/00-INDEX.md` if the manual changes).
 
 ## If you’re unsure
 Stop and ask the Integrator.

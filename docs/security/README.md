@@ -21,8 +21,8 @@ AI workers (Codex, Gemini, Copilot):
 - No direct access to secrets or privileged credentials.
 
 References:
-- `docs/ops/CONTRACTOR_DISPATCH_BRIEF.md`
-- `docs/ops/OUTPUT_FORMAT_CONTRACT.md`
+- `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md`
+- `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`
 
 ## Secrets management
 
@@ -64,5 +64,5 @@ Please include:
 ## Cross-links
 
 - `SECURITY.md` (repo root)
-- `docs/ops/CONTRACTOR_DISPATCH_BRIEF.md`
-- `docs/ops/OUTPUT_FORMAT_CONTRACT.md`
+- `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md`
+- `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`

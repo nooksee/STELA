@@ -6,7 +6,8 @@ This repo root is the developer workspace.
 - `public_html/` is the Apache DocumentRoot.
 
 ## Non-runtime (developer/support)
-- `boot/` boot packs, canon snapshots, schemas, governance docs
+- `ops/` ICL/OCL canon (protocols, contracts, templates, boot pack)
+- `docs/` project manual (points into ops canon)
 - `tools/` scripts (verify, build, apply)
 - `patches/` optional patch queue (small deltas when used)
 - `releases/` release notes/manifests (no embedded zip artifacts in-repo)

@@ -46,8 +46,8 @@ AI contractors should be given:
 - the “single deliverable PR” for the day
 - strict instruction: no direct pushes to main, provide commands in small safe chunks
 
-## Tone lanes (prevents “AI slop”)
-- Ops lane (allowed to be checklist-heavy): `docs/ops/` and `ops/init/icl/`
+## Tone lanes (prevents "AI slop")
+- Ops lane (allowed to be checklist-heavy): `ops/` (including `ops/init/icl/`) and `docs/ops/INDEX.md` (pointer only)
 - Public-facing lane (must stay human): root README, founders docs
 
 We prefer: clear, explain-first, minimal filler.

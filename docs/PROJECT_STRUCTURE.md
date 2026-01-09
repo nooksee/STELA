@@ -5,8 +5,8 @@ This file summarizes the current repo layout. It should match the actual top-lev
 ## Top-level
 - `.github/` - CI workflows, governance templates, and repo policy automation.
 - `addons/` - optional legacy or extra modules not required for core runtime.
-- `ops/` - ops/init/icl/ holds Context Pack materials and resurrection docs; non-runtime.
-- `docs/` - canonical documentation and operating guides.
+- `ops/` - ICL/OCL canon (protocols, contracts, templates, boot pack); non-runtime.
+- `docs/` - project manual that points into ops canon (no duplicated doctrine).
 - `patches/` - optional patch queue; keep small and explicit.
 - `public_html/` - deployable webroot and runtime code/assets.
 - `storage/` - local dev storage; not deployed.

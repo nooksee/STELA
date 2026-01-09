@@ -5,9 +5,12 @@
 
 ## Operating system (ops)
 - [ops/INDEX.md](ops/INDEX.md)
-- [ops/DAILY_COCKPIT.md](ops/DAILY_COCKPIT.md)
-- [ops/RESURRECTION.md](ops/RESURRECTION.md)
-- [ops/CONTRACTOR_DISPATCH_BRIEF.md](ops/CONTRACTOR_DISPATCH_BRIEF.md)
+- [../ops/init/icl/ICL_OVERVIEW.md](../ops/init/icl/ICL_OVERVIEW.md)
+- [../ops/init/icl/OCL_OVERVIEW.md](../ops/init/icl/OCL_OVERVIEW.md)
+- [../ops/init/icl/boot_pack/DAILY_COCKPIT.md](../ops/init/icl/boot_pack/DAILY_COCKPIT.md)
+- [../ops/init/icl/boot_pack/RESURRECTION.md](../ops/init/icl/boot_pack/RESURRECTION.md)
+- [../ops/contracts/OUTPUT_FORMAT_CONTRACT.md](../ops/contracts/OUTPUT_FORMAT_CONTRACT.md)
+- [../ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md](../ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md)
 
 ## Triage (capture ideas without losing them)
 - [triage/INBOX.md](triage/INBOX.md)

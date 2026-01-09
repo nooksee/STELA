@@ -16,4 +16,4 @@ The Context Pack is the minimal, curated set of documents that lets a new operat
 ## What it is not
 - It is not runtime configuration.
 - It is not a deployment artifact.
-- It does not replace canonical docs in `docs/`.
+- It does not replace canon in `ops/` or the Truth-Layer docs.

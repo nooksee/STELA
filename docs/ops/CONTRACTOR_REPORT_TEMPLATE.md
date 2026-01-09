@@ -1,22 +1,4 @@
-# Contractor Report (Gemini) — YYYY-MM-DD
+# Contractor Report Template (moved)
 
-## Repo truth findings
-- 
-
-## Impact analysis (files + why)
-- 
-- 
-
-## Risks / collisions
-- High:
-- Medium:
-- Low:
-
-## Recommended approach (middle path if needed)
-- 
-
-## Minimal PR slicing (recommended sequence)
-1. 
-2. 
-3. 
-
+Canonical version: `ops/templates/CONTRACTOR_REPORT_TEMPLATE.md`.
+This stub remains to preserve legacy links; use the canonical file.

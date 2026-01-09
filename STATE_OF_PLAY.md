@@ -412,3 +412,23 @@
 
 ## Notes
 - This PR is documentation/governance only; no runtime behavior changes intended.
+## 2026-01-09 - ICL-002D: canon dedupe + ICL/OCL spine consolidation
+
+- Purpose: Consolidate ICL/OCL doctrine into ops canon and convert docs/ops into pointer-only manual references.
+- What shipped:
+  - Added `ops/init/icl/boot_pack/DAILY_COCKPIT.md`, `ops/init/icl/boot_pack/AI_CONTEXT_SYNC.md`, `ops/init/icl/boot_pack/CONTEXT_PACK.md`, `ops/init/icl/boot_pack/COPILOT_ONBOARDING.md`, `ops/init/icl/boot_pack/GEMINI_ONBOARDING.md`, `ops/init/icl/boot_pack/IDE_MIGRATION.md`.
+  - Updated `ops/init/icl/boot_pack/RESURRECTION.md` and `ops/init/icl/boot_pack/README.md`.
+  - Updated `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`, `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md`, and `ops/init/protocols/SAVE_THIS_PROTOCOL.md`.
+  - Added `ops/templates/CONTRACTOR_BRIEF_TEMPLATE.md` and `ops/templates/CONTRACTOR_REPORT_TEMPLATE.md`.
+  - Updated `ops/init/icl/context_pack.json` for the new ops canon pointers.
+  - Converted docs/ops duplicates into pointer stubs and refreshed `docs/ops/INDEX.md`.
+  - Updated `PROJECT_MAP.md`, `CANONICAL_TREE.md`, and docs indexes/references (`docs/00-INDEX.md`, `docs/10-QUICKSTART.md`, `docs/CONTRACTOR_PACKET.md`, `docs/REPO_LAYOUT.md`, `docs/PROJECT_STRUCTURE.md`, `docs/20-GOVERNANCE.md`, `docs/README_CONTEXT.md`, `docs/security/README.md`).
+- Verification:
+  - `bash tools/verify_tree.sh` ✅
+  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash ops/init/tools/context_lint.sh` ✅
+  - `bash ops/init/pack.sh --help` ✅
+  - `grep -R \"(boot/|/boot|cockpit|DAILY_COCKPIT|boot_pack|bootpack)\" -n .` ✅
+- Risk / rollback:
+  - Risk: stale references if any downstream doc still expects docs/ops full content.
+  - Rollback: restore prior docs/ops content and revert ops/doc pointer updates.
