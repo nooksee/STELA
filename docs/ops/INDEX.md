@@ -23,6 +23,10 @@ If a doc is not linked here or captured in `docs/triage/INBOX.md`, it is drift.
 ## Playbooks
 - [Paste Surfaces Playbook](../../ops/init/icl/PASTE_SURFACES_PLAYBOOK.md)
 
+## Planning
+- [Banned Terms Map](../../ops/init/icl/BANNED_TERMS_MAP.md)
+- [Rename Plan (ICL/OCL)](../../ops/init/icl/RENAME_PLAN_ICL_OCL.md)
+
 ## Templates
 - [PR Description Template](../../ops/templates/PR_DESCRIPTION_TEMPLATE.md)
 - [Contractor Brief Template](../../ops/templates/CONTRACTOR_BRIEF_TEMPLATE.md)
