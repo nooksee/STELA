@@ -21,9 +21,9 @@ Any fresh AI can rehydrate from:
 
 Optional: Rehydration drill is a test, not a ritual. Run it only when onboarding a new AI surface or debugging drift.
 
-## Daily cockpit (not the truth ledger)
-`ops/init/icl/boot_pack/DAILY_COCKPIT.md` is the operating rhythm checklist.
-No project truth should live only in a cockpit. If something becomes policy/structure, promote it into the truth-layer docs above.
+## Daily console (not the truth ledger)
+`ops/init/icl/launch_pack/DAILY_CONSOLE.md` is the operating rhythm checklist.
+No project truth should live only in a console. If something becomes policy/structure, promote it into the truth-layer docs above.
 
 ## Current deliverable PR
 `work/output-format-contract-2026-01-03` -> merge into `main`

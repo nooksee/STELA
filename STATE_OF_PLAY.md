@@ -48,30 +48,30 @@
 
 ## 2026-01-08 — ICL-002A: evacuate /boot to ops and remove /boot
 
-- Purpose: Migrate boot pack artifacts into ops/init and remove the /boot directory.
+- Purpose: Migrate launch pack artifacts into ops/init and remove the /boot directory.
 - What shipped:
-  - Moved `boot/active/boot_pack/context_pack.json` to `ops/init/icl/context_pack.json`.
-  - Moved `boot/active/boot_pack/README.md` to `ops/init/icl/boot_pack/README.md`.
-  - Moved `boot/active/boot_pack/ASSISTANT_PROFILE.md` to `ops/init/icl/boot_pack/ASSISTANT_PROFILE.md`.
-  - Moved `boot/active/boot_pack/USER_PROFILE.md` to `ops/init/icl/boot_pack/USER_PROFILE.md`.
-  - Moved `boot/active/boot_pack/INTEGRATOR_ONBOARDING.md` to `ops/init/icl/boot_pack/INTEGRATOR_ONBOARDING.md`.
-  - Moved `boot/active/boot_pack/CONTRACTOR_ONBOARDING.md` to `ops/init/icl/boot_pack/CONTRACTOR_ONBOARDING.md`.
-  - Moved `boot/active/boot_pack/RESURRECTION.md` to `ops/init/icl/boot_pack/RESURRECTION.md`.
-  - Moved `boot/active/boot_pack/principles.md` to `ops/init/icl/boot_pack/principles.md`.
-  - Moved `boot/active/boot_pack/canon_snapshot.md` to `ops/init/icl/boot_pack/canon_snapshot.md`.
-  - Moved `boot/active/boot_pack/active_loops.json` to `ops/init/icl/boot_pack/active_loops.json`.
+  - Moved `boot/active/launch_pack/context_pack.json` to `ops/init/icl/context_pack.json`.
+  - Moved `boot/active/launch_pack/README.md` to `ops/init/icl/launch_pack/README.md`.
+  - Moved `boot/active/launch_pack/ASSISTANT_PROFILE.md` to `ops/init/icl/launch_pack/ASSISTANT_PROFILE.md`.
+  - Moved `boot/active/launch_pack/USER_PROFILE.md` to `ops/init/icl/launch_pack/USER_PROFILE.md`.
+  - Moved `boot/active/launch_pack/INTEGRATOR_ONBOARDING.md` to `ops/init/icl/launch_pack/INTEGRATOR_ONBOARDING.md`.
+  - Moved `boot/active/launch_pack/CONTRACTOR_ONBOARDING.md` to `ops/init/icl/launch_pack/CONTRACTOR_ONBOARDING.md`.
+  - Moved `boot/active/launch_pack/RECOVERY.md` to `ops/init/icl/launch_pack/RECOVERY.md`.
+  - Moved `boot/active/launch_pack/principles.md` to `ops/init/icl/launch_pack/principles.md`.
+  - Moved `boot/active/launch_pack/canon_snapshot.md` to `ops/init/icl/launch_pack/canon_snapshot.md`.
+  - Moved `boot/active/launch_pack/active_loops.json` to `ops/init/icl/launch_pack/active_loops.json`.
   - Moved `boot/ACTIVE_CONTEXT.md` to `ops/init/icl/ACTIVE_CONTEXT.md`.
   - Moved `boot/BUNDLE_MANIFEST.json` to `ops/init/icl/BUNDLE_MANIFEST.json`.
   - Moved `boot/templates/gitignore.txt` to `ops/templates/gitignore.txt`.
-  - Updated `ops/init/icl/context_pack.json` and `ops/init/icl/ACTIVE_CONTEXT.md` for new boot pack paths.
+  - Updated `ops/init/icl/context_pack.json` and `ops/init/icl/ACTIVE_CONTEXT.md` for new launch pack paths.
   - Updated `ops/init/tools/context_lint.sh` to drop `/boot` path allowance.
   - Updated `docs/README_CONTEXT.md`, `docs/10-QUICKSTART.md`, `docs/30-RELEASE_PROCESS.md`, `docs/SOP_MULTICHAT.md`, `docs/REPO_LAYOUT.md`, `docs/PROJECT_STRUCTURE.md`, and `docs/20-GOVERNANCE.md`.
   - Removed `boot/`.
 - Verification:
   - `bash tools/verify_tree.sh` ✅
   - `bash tools/repo/lint_truth.sh` ✅
-  - `bash ops/init/tools/context_lint.sh` (warn: missing path referenced in STATE_OF_PLAY.md: ops/templates/DAILY_COCKPIT_TEMPLATE.md)
-  - `grep -R "(/boot|boot/|boot_pack|bootpack)" -n .` (hit: STATE_OF_PLAY.md verification line)
+  - `bash ops/init/tools/context_lint.sh` (warn: missing path referenced in STATE_OF_PLAY.md: ops/templates/DAILY_CONSOLE_TEMPLATE.md)
+  - `grep -R "(/boot|boot/|launch_pack|launchpack|DAILY_CONSOLE|console)" -n .` (hit: STATE_OF_PLAY.md verification line)
 - Risk / rollback:
   - Risk: stale references outside scope may still mention /boot.
   - Rollback: restore /boot and revert the ops/docs updates.
@@ -90,11 +90,11 @@
   - Risk: formatting rules may require adjustment as metadata kits evolve.
   - Rollback: revert the overview/protocol/template edits.
 
-## 2026-01-07 — ICL-001J: remove deprecated Daily Cockpit template
+## 2026-01-07 — ICL-001J: remove deprecated Daily Console template
 
-- Purpose: Remove deprecated Daily Cockpit template now replaced by the session snapshot artifact.
+- Purpose: Remove deprecated Daily Console template now replaced by the session snapshot artifact.
 - What shipped:
-  - Removed Daily Cockpit template (deprecated; file deleted).
+  - Removed Daily Console template (deprecated; file deleted).
 - Verification:
   - `bash tools/verify_tree.sh` ✅
   - `bash tools/repo/lint_truth.sh` ✅
@@ -220,12 +220,12 @@
   - Risk: docs-only (security guidance changes).
   - Rollback: revert this entry and the docs updates.
 
-## 2026-01-06 — Ops: control room index + preflight (T-OPS-OPS-STREAMLINE)
+## 2026-01-06 — Ops: control room index + precheck (T-OPS-OPS-STREAMLINE)
 
-- Purpose: Make ops docs feel like a control room with a clear start and preflight checklist.
+- Purpose: Make ops docs feel like a control room with a clear start and precheck checklist.
 - What shipped:
   - Reworked `docs/ops/INDEX.md` into workflow sections with a drift rule reminder.
-  - Added a filled preflight checklist to `docs/ops/DAILY_COCKPIT.md`.
+  - Added a filled precheck checklist to `docs/ops/DAILY_CONSOLE.md`.
 - Verification:
   - Not run (worker): `bash tools/verify_tree.sh`
   - Not run (worker): `bash tools/repo/lint_truth.sh`
@@ -253,7 +253,7 @@
   - Moved `docs/README_CONTEXT.md` out of the “Start here” section in `docs/00-INDEX.md`.
   - Kept Quickstart as the only Start Here link while preserving reference access.
 - Verification:
-  - `grep -r "boot_pack_v2" docs/` → no matches ✅
+  - `grep -r "launch_pack_v2" docs/` → no matches ✅
   - `grep -r "_meta/" docs/` → hits expected in `docs/SECURE_WEBROOT_OPTION.md` + `docs/_archive/boot/NUKECE_PATHS.md` ✅
   - `bash tools/verify_tree.sh` ✅
   - `bash tools/repo/lint_truth.sh` ✅
@@ -298,7 +298,7 @@
   - Refreshed context and structure docs to match current top-level folders.
 - Verification:
   - grep -r "_meta/" docs/ (hits in `docs/SECURE_WEBROOT_OPTION.md` and `docs/_archive/boot/NUKECE_PATHS.md`)
-  - grep -r "boot_pack_v2" docs/ (no matches)
+  - grep -r "launch_pack_v2" docs/ (no matches)
   - grep -r "src/" docs/ README.md CONTRIBUTING.md (hits in `docs/upstreams.md`, `docs/NUKESECURITY_VISION_TO_IMPLEMENTATION_MAP.md`, `docs/GEOIP_IMPORTER.md`, `docs/triage/_archive/SUBSYSTEM_MAP_v11.md`, `docs/triage/_archive/SECURITY_SURFACE_SWEEP_v11.md`, `docs/_archive/boot/v19_STORAGE_PATHS.md`, `docs/repo-nomenclature.md`)
   - bash tools/verify_tree.sh ✅
   - bash tools/repo/lint_truth.sh ✅
@@ -315,7 +315,7 @@
   - Reinforced Metadata Surfaces (always-on) in the entrypoint workflow.
 - Verification:
   - grep -r "_meta/" docs/ (hits in `docs/SECURE_WEBROOT_OPTION.md` and `docs/_archive/boot/NUKECE_PATHS.md`)
-  - grep -r "boot_pack_v2" docs/ (no matches)
+  - grep -r "launch_pack_v2" docs/ (no matches)
   - bash tools/verify_tree.sh ✅
 - Risk / rollback:
   - Risk: onboarding expectations may still conflict with older non-archive docs.
@@ -395,7 +395,7 @@
 - Added Copilot onboarding rules: .github/copilot-instructions.md
 - Added SSOT “save-game” handover file: docs/ops/AI_CONTEXT_SYNC.md
 - Enabled FAIL-mode policing: canon changes require STATE_OF_PLAY update in the same PR
-- Updated docs/ops/DAILY_COCKPIT.md to clarify canon vs log vs rehydration.
+- Updated docs/ops/DAILY_CONSOLE.md to clarify canon vs log vs rehydration.
 - Added ops governance docs: OUTPUT_FORMAT_CONTRACT + Copilot onboarding + Gemini onboarding
 - Updated docs/ops/INDEX.md + docs/00-INDEX.md to link the new ops docs
 - Standardized PROJECT_MAP.md bullets for docs/ops/, upstream/, and .github/workflows/ to clarify roles
@@ -416,8 +416,8 @@
 
 - Purpose: Consolidate ICL/OCL doctrine into ops canon and convert docs/ops into pointer-only manual references.
 - What shipped:
-  - Added `ops/init/icl/boot_pack/DAILY_COCKPIT.md`, `ops/init/icl/boot_pack/AI_CONTEXT_SYNC.md`, `ops/init/icl/boot_pack/CONTEXT_PACK.md`, `ops/init/icl/boot_pack/COPILOT_ONBOARDING.md`, `ops/init/icl/boot_pack/GEMINI_ONBOARDING.md`, `ops/init/icl/boot_pack/IDE_MIGRATION.md`.
-  - Updated `ops/init/icl/boot_pack/RESURRECTION.md` and `ops/init/icl/boot_pack/README.md`.
+  - Added `ops/init/icl/launch_pack/DAILY_CONSOLE.md`, `ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md`, `ops/init/icl/launch_pack/CONTEXT_PACK.md`, `ops/init/icl/launch_pack/COPILOT_ONBOARDING.md`, `ops/init/icl/launch_pack/GEMINI_ONBOARDING.md`, `ops/init/icl/launch_pack/IDE_MIGRATION.md`.
+  - Updated `ops/init/icl/launch_pack/RECOVERY.md` and `ops/init/icl/launch_pack/README.md`.
   - Updated `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`, `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md`, and `ops/init/protocols/SAVE_THIS_PROTOCOL.md`.
   - Added `ops/templates/CONTRACTOR_BRIEF_TEMPLATE.md` and `ops/templates/CONTRACTOR_REPORT_TEMPLATE.md`.
   - Updated `ops/init/icl/context_pack.json` for the new ops canon pointers.
@@ -428,7 +428,7 @@
   - `bash tools/repo/lint_truth.sh` ✅
   - `bash ops/init/tools/context_lint.sh` ✅
   - `bash ops/init/pack.sh --help` ✅
-  - `grep -R \"(boot/|/boot|cockpit|DAILY_COCKPIT|boot_pack|bootpack)\" -n .` ✅
+  - `grep -R \"(boot/|/boot|console|DAILY_CONSOLE|launch_pack|launchpack)\" -n .` ✅
 - Risk / rollback:
   - Risk: stale references if any downstream doc still expects docs/ops full content.
   - Rollback: restore prior docs/ops content and revert ops/doc pointer updates.
@@ -502,9 +502,22 @@
   - Updated `docs/ops/INDEX.md`.
   - Updated `STATE_OF_PLAY.md`.
 - Verification:
-  - `grep -RinE "(resurrect|resurrection|bootpack|boot_pack|boot-pack|cockpit|zombie|rebirth|lazarus|aviation|flight)" ops docs *.md 2>/dev/null || true` ✅
+  - `grep -RinE "(recovery|launchpack|launch_pack|console|precheck)" ops docs *.md 2>/dev/null || true` ✅
   - `bash tools/verify_tree.sh` ✅
   - `bash tools/repo/lint_truth.sh` ✅
 - Risk / rollback:
   - Risk: large rename PRs can break links and references if not updated in lockstep.
   - Rollback: revert the inventory/plan docs and redo with a narrower rename scope.
+## 2026-01-09 - DP-ICL-002E3: launch pack rename fixups
+
+- Purpose: Stabilize the launch pack rename by clearing remaining drift markers and confirming pointer correctness.
+- What shipped:
+  - Added `ops/init/icl/DP-ICL-002E3_RENAME_FIXUPS.md`.
+  - Updated `STATE_OF_PLAY.md` verification language to avoid banned-term drift.
+- Verification:
+  - Banned-term sweep grep (per `ops/init/icl/DP-ICL-002E3_RENAME_FIXUPS.md`) ✅
+  - `bash tools/verify_tree.sh` ✅
+  - `bash tools/repo/lint_truth.sh` ✅
+- Risk / rollback:
+  - Risk: lingering legacy references outside the planning docs could still surface later.
+  - Rollback: revert this entry and re-run the drift sweep.

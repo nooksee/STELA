@@ -7,7 +7,7 @@ This repo is governed. The fastest way to succeed here is to follow the rules *e
 2) `STATE_OF_PLAY.md`
 3) `PROJECT_MAP.md`
 4) `docs/00-INDEX.md`
-5) `ops/init/icl/boot_pack/DAILY_COCKPIT.md`
+5) `ops/init/icl/launch_pack/DAILY_CONSOLE.md`
 6) `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md`
 
 ## Workflow doctrine (non-negotiable)
@@ -43,8 +43,8 @@ Examples:
 - `main` = the locked classroom whiteboard
 - `work/*` = your notebook
 - `docs/` = project manual that points into ops canon
-- `ops/` = ICL/OCL canon (protocols, contracts, templates, boot pack)
-- `ops/init/icl/boot_pack/` = rehydration + bootpacks (portable context bundles)
+- `ops/` = ICL/OCL canon (protocols, contracts, templates, launch pack)
+- `ops/init/icl/launch_pack/` = rehydration + launch packs (portable context bundles)
 - `.github/` = governance (repo-gates, PR templates, Copilot instructions)
 
 ## NetBeans-only comfort path (no terminal required)

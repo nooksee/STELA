@@ -17,7 +17,7 @@ This pack is the minimum you need to work safely in the nukeCE repository.
 ## Before you start
 
 1. Read:
-   - `ops/init/icl/boot_pack/DAILY_COCKPIT.md`
+   - `ops/init/icl/launch_pack/DAILY_CONSOLE.md`
    - `docs/40-PROJECT_HYGIENE.md`
    - `docs/upstreams.md`
 

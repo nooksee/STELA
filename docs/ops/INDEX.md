@@ -4,10 +4,10 @@ Short index for operators. Ops canon lives in `ops/`; this index points to it.
 If a doc is not linked here or captured in `docs/triage/INBOX.md`, it is drift.
 
 ## Start here
-- [Daily Cockpit](../../ops/init/icl/boot_pack/DAILY_COCKPIT.md)
-- [Resurrection](../../ops/init/icl/boot_pack/RESURRECTION.md)
-- [Context Pack](../../ops/init/icl/boot_pack/CONTEXT_PACK.md)
-- [AI Context Sync](../../ops/init/icl/boot_pack/AI_CONTEXT_SYNC.md)
+- [Daily Console](../../ops/init/icl/launch_pack/DAILY_CONSOLE.md)
+- [Recovery](../../ops/init/icl/launch_pack/RECOVERY.md)
+- [Context Pack](../../ops/init/icl/launch_pack/CONTEXT_PACK.md)
+- [AI Context Sync](../../ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md)
 
 ## Core canon
 - [ICL Overview](../../ops/init/icl/ICL_OVERVIEW.md)
@@ -33,11 +33,11 @@ If a doc is not linked here or captured in `docs/triage/INBOX.md`, it is drift.
 - [Contractor Report Template](../../ops/templates/CONTRACTOR_REPORT_TEMPLATE.md)
 
 ## Staff surfaces
-- [Integrator Onboarding](../../ops/init/icl/boot_pack/INTEGRATOR_ONBOARDING.md)
-- [Contractor Onboarding](../../ops/init/icl/boot_pack/CONTRACTOR_ONBOARDING.md)
-- [Copilot Onboarding](../../ops/init/icl/boot_pack/COPILOT_ONBOARDING.md)
-- [Gemini Onboarding](../../ops/init/icl/boot_pack/GEMINI_ONBOARDING.md)
-- [IDE Migration](../../ops/init/icl/boot_pack/IDE_MIGRATION.md)
+- [Integrator Onboarding](../../ops/init/icl/launch_pack/INTEGRATOR_ONBOARDING.md)
+- [Contractor Onboarding](../../ops/init/icl/launch_pack/CONTRACTOR_ONBOARDING.md)
+- [Copilot Onboarding](../../ops/init/icl/launch_pack/COPILOT_ONBOARDING.md)
+- [Gemini Onboarding](../../ops/init/icl/launch_pack/GEMINI_ONBOARDING.md)
+- [IDE Migration](../../ops/init/icl/launch_pack/IDE_MIGRATION.md)
 
 ## Triage
 - [../triage/INBOX.md](../triage/INBOX.md)

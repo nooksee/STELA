@@ -26,14 +26,14 @@ Typical frequency:
 
 ## How to write a good "Save this"
 A good canonical sentence:
-- names the artifact (Daily Cockpit, PR workflow, etc.)
+- names the artifact (Daily Console, PR workflow, etc.)
 - uses unambiguous language (must/never/only)
 - avoids lore or long explanations
 - stands alone without conversation context
 
 Examples:
 - Save this: Never push directly to `main`; all changes ship via PRs from `work/<topic>-YYYY-MM-DD` branches.
-- Save this: NetBeans is the Truth Cockpit; review diffs there before committing.
+- Save this: NetBeans is the Truth Console; review diffs there before committing.
 - Save this: Any canon change must include a same-PR update to `STATE_OF_PLAY.md`.
 
 ## End-of-session prompt
@@ -53,7 +53,7 @@ Optional: assistant memory as convenience (not the source of truth).
 
 If a rule affects formatting or tooling, also add it to:
 - `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`
-- relevant onboarding docs in `ops/init/icl/boot_pack/`
+- relevant onboarding docs in `ops/init/icl/launch_pack/`
 
 ## Verification
 - Not run (operator): confirm save targets.

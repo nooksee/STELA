@@ -41,4 +41,4 @@ If uncertain: stop and ask ONE clarifying question.
 2) `STATE_OF_PLAY.md`
 3) `PROJECT_MAP.md`
 4) `docs/00-INDEX.md`
-5) `ops/init/icl/boot_pack/AI_CONTEXT_SYNC.md`
+5) `ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md`

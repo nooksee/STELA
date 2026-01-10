@@ -4,7 +4,7 @@ This file is the stable blueprint. Update only when structure or core architectu
 
 ## Repo layout (what lives where)
 - public_html/      deployable webroot (what the server serves)
-- ops/              ICL/OCL canon (protocols, contracts, templates, boot pack)
+- ops/              ICL/OCL canon (protocols, contracts, templates, launch pack)
 - docs/             project manual (start at docs/00-INDEX.md; points into ops canon)
 - docs/ops/         pointer index into ops canon
 - tools/            verification + truth checks (support for repo-gates)
@@ -16,7 +16,7 @@ This file is the stable blueprint. Update only when structure or core architectu
 - addons/           optional legacy/extra modules (not required for core)
 
 ## Ops policy
-- /ops may contain: ICL/OCL doctrine, protocols, contracts, templates, manifests, profiles, and boot pack materials.
+- /ops may contain: ICL/OCL doctrine, protocols, contracts, templates, manifests, profiles, and launch pack materials.
 - /ops must not contain: runtime code, upstream snapshots, or general documentation that belongs in docs/.
 - /docs is the project manual and index; it points into /ops instead of duplicating canon.
 

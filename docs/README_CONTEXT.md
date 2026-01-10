@@ -5,11 +5,11 @@ The Context Pack is the minimal, curated set of documents that lets a new operat
 
 ## Where it lives today
 - `ops/init/icl/context_pack.json` is the index of active pointers.
-- The rest of the pack lives alongside it in `ops/init/icl/boot_pack/`.
+- The rest of the pack lives alongside it in `ops/init/icl/launch_pack/`.
 
 ## How to keep it current
 - When docs move, update `ops/init/icl/context_pack.json` to point at the new locations.
-- Keep `ops/init/icl/boot_pack/RESURRECTION.md` aligned with current workflow and repo-gates.
+- Keep `ops/init/icl/launch_pack/RECOVERY.md` aligned with current workflow and repo-gates.
 - Keep onboarding pointers aligned to `docs/10-QUICKSTART.md`.
 - Keep onboarding docs in the pack in sync with governance and the front-door docs.
 

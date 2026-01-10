@@ -1,4 +1,4 @@
-# Daily Cockpit - YYYY-MM-DD
+# Daily Console - YYYY-MM-DD
 
 This file is your daily operating plan + notes. It is meant to be pleasant to read and useful at a glance.
 
@@ -10,11 +10,11 @@ This file is your daily operating plan + notes. It is meant to be pleasant to re
 Anything that must remain true for the project lives in canonical docs (ex: `PROJECT_TRUTH.md`, `PROJECT_MAP.md`, `STATE_OF_PLAY.md`, `docs/00-INDEX.md`, governance/release docs, etc.). If canon changes, it should be reflected in those files and (when required) in `STATE_OF_PLAY.md` in the same PR.
 
 **Log = today's plan + diary.**
-This `DAILY_COCKPIT.md` is allowed to be emotional, tactical, messy, and time-bound. It can mention ideas, experiments, and "what we did today," but it should not be the only place a permanent truth exists.
+This `DAILY_CONSOLE.md` is allowed to be emotional, tactical, messy, and time-bound. It can mention ideas, experiments, and "what we did today," but it should not be the only place a permanent truth exists.
 
 **Rehydration != Log.**
-- **Rehydration** = onboarding an AI/contractor back into canon using `ops/init/icl/boot_pack/AI_CONTEXT_SYNC.md` + `ops/init/icl/boot_pack/CONTEXT_PACK.md` (optional but powerful).
-- **Daily Cockpit** = your daily runbook + notes (always allowed; never the single source of truth).
+- **Rehydration** = onboarding an AI/contractor back into canon using `ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md` + `ops/init/icl/launch_pack/CONTEXT_PACK.md` (optional but powerful).
+- **Daily Console** = your daily runbook + notes (always allowed; never the single source of truth).
 
 ---
 
@@ -28,7 +28,7 @@ This `DAILY_COCKPIT.md` is allowed to be emotional, tactical, messy, and time-bo
 
 ---
 
-## Preflight checklist (never empty)
+## Precheck checklist (never empty)
 
 - Confirm branch is `work/*` (not `main`).
 - Working tree is clean before starting.
@@ -68,7 +68,7 @@ This `DAILY_COCKPIT.md` is allowed to be emotional, tactical, messy, and time-bo
 2) **Create branch**
 - New branch name: `work/<topic>-YYYY-MM-DD`
 
-3) **Open in NetBeans (Truth Cockpit)**
+3) **Open in NetBeans (Truth Console)**
 - Review-first mindset: tree + diffs + intent match
 
 4) **Choose a PR slice (small + boring)**

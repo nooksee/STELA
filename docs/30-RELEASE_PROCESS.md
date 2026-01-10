@@ -14,7 +14,7 @@ nukeCE uses a **batch-and-ship** release train to keep patch clutter minimal and
 A release bundle is the smallest practical snapshot that makes the system usable by others:
 
 - `public_html/` — deployable webroot
-- `ops/init/icl/boot_pack/` — bootpack / context pack needed to operate the repo safely
+- `ops/init/icl/launch_pack/` — launchpack / context pack needed to operate the repo safely
 - `docs/` — current operating manual
 
 ## Operator checklist (high level)

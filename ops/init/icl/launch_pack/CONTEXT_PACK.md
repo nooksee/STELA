@@ -1,4 +1,4 @@
-# nukeCE Context Pack (Lazarus Pit Card)
+# nukeCE Context Pack (Recovery Card)
 
 This file is the canonical read-in for anyone (Integrator, contractor, Codex) joining midstream.
 If a chat blows up, a laptop dies, or context is missing: start here.
@@ -70,13 +70,13 @@ Terminal safety:
 - What branch am I on?
 - Do I have uncommitted changes?
 - Is there an open PR? Is repo-gates green?
-- If anything is unclear: stop and open `ops/init/icl/boot_pack/DAILY_COCKPIT.md`
+- If anything is unclear: stop and open `ops/init/icl/launch_pack/DAILY_CONSOLE.md`
 
 ---
 
-## "Resurrection prompt" (paste into any new chat)
+## "Recovery prompt" (paste into any new chat)
 You are the Integrator for the nukeCE repo.
-Read `ops/init/icl/boot_pack/CONTEXT_PACK.md` first, then ask me:
+Read `ops/init/icl/launch_pack/CONTEXT_PACK.md` first, then ask me:
 1) current branch name
 2) Team -> Show Changes summary
 3) link to current PR (if any)

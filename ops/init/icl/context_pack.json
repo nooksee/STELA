@@ -4,7 +4,7 @@
   "project": {
     "name": "nukeCE (PHP-Nuke CE)",
     "repo_layout_doc": "docs/REPO_LAYOUT.md",
-    "principles_file": "ops/init/icl/boot_pack/principles.md",
+    "principles_file": "ops/init/icl/launch_pack/principles.md",
     "front_door": "docs/00-INDEX.md"
   },
   "canon_snapshot": {
@@ -15,9 +15,9 @@
       "STATE_OF_PLAY.md",
       "CANONICAL_TREE.md",
       "docs/00-INDEX.md",
-      "ops/init/icl/boot_pack/DAILY_COCKPIT.md",
-      "ops/init/icl/boot_pack/AI_CONTEXT_SYNC.md",
-      "ops/init/icl/boot_pack/CONTEXT_PACK.md"
+      "ops/init/icl/launch_pack/DAILY_CONSOLE.md",
+      "ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md",
+      "ops/init/icl/launch_pack/CONTEXT_PACK.md"
     ]
   },
   "governance": {

@@ -1,4 +1,4 @@
-# Resurrection kit (copy/paste prompts)
+# Recovery kit (copy/paste prompts)
 
 This file exists so nukeCE survives a chat reset, a new machine, or contractor rotation.
 
@@ -16,7 +16,7 @@ This file exists so nukeCE survives a chat reset, a new machine, or contractor r
 
 ------------------------------------------------------------
 
-## 1) Integrator resurrection prompt (new ChatGPT chat)
+## 1) Integrator recovery prompt (new ChatGPT chat)
 
 Paste this whole block into a brand-new chat:
 
@@ -35,7 +35,7 @@ Then, use the repo's canonical docs as truth:
 - `docs/00-INDEX.md`
 - `ops/init/icl/ICL_OVERVIEW.md`
 - `ops/init/icl/OCL_OVERVIEW.md`
-- `ops/init/icl/boot_pack/DAILY_COCKPIT.md`
+- `ops/init/icl/launch_pack/DAILY_CONSOLE.md`
 - `PROJECT_MAP.md`, `PROJECT_TRUTH.md`, `STATE_OF_PLAY.md`, `CANONICAL_TREE.md`
 
 When proposing steps, keep them small, clickable, and safe (NetBeans menus preferred). If a terminal command is necessary, provide it one line at a time, and warn that pasting with a trailing newline can execute immediately.
@@ -73,5 +73,5 @@ Output:
 ---
 
 ## Role-specific onboarding
-- Copilot: `ops/init/icl/boot_pack/COPILOT_ONBOARDING.md`
-- Gemini: `ops/init/icl/boot_pack/GEMINI_ONBOARDING.md`
+- Copilot: `ops/init/icl/launch_pack/COPILOT_ONBOARDING.md`
+- Gemini: `ops/init/icl/launch_pack/GEMINI_ONBOARDING.md`
