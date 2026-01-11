@@ -1,3 +1,15 @@
+## 2026-01-11 — DP-OPS-0006B: Dispatch Packet branch requirement
+
+- Purpose: Require explicit branch declaration in all Dispatch Packets.
+- What shipped:
+  - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
+  - Updated `STATE_OF_PLAY.md`.
+- Verification:
+  - Manual review.
+- Risk / rollback:
+  - Risk: Low; template-only change.
+  - Rollback: revert `ops/templates/DISPATCH_PACKET_TEMPLATE.md` and this entry.
+
 ## 2026-01-11 — DP-OPS-0004: Front Door v1 close snapshot
 
 - Purpose: Add a single-command close script that prints a copy-safe session snapshot receipt.
