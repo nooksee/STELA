@@ -1,3 +1,7 @@
+## 2026-01-11 — delete: delete example screens for template
+
+- deleted shit.
+
 ## 2026-01-08 — ICL-002C: resume/open/wake control word
 
 - Purpose: Canonize resume/open/wake as a first-class operator control word with explicit behavior.
