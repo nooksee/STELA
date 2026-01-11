@@ -17,6 +17,15 @@ public_html is the deployable webroot. It must not contain archive snapshots, le
 ## Philosophy
 Secure by default. Explainable operations. Auditable administration. Confidence over cleverness.
 
+## Minimum Operator Effort
+- Do not ask the operator to open/edit files unless the operator explicitly opts in.
+- Workers draft diffs; integrator/operator reviews, commits, and opens PRs.
+- Prefer "run command X" over "open file Y and edit line Z."
+- Prefer front door scripts (`ops/bin/open`, `ops/bin/close`) over control words.
+- If the operator says "merged + synced main", do not re-explain workflow.
+- Proceed to the next agreed step or handle the reported errors.
+- Do not ask questions you can answer from git state (branch already known).
+
 ## Focus Rule (Operator-Led Flow)
 - If the operator says "merged + synced main", do not re-explain workflow.
 - Proceed to the next agreed step or handle the reported errors.
