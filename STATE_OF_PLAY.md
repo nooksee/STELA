@@ -1,3 +1,16 @@
+## 2026-01-11 — DP-OPS-0004: Front Door v1 close snapshot
+
+- Purpose: Add a single-command close script that prints a copy-safe session snapshot receipt.
+- What shipped:
+  - Added `ops/bin/close` to emit the session snapshot.
+  - Updated `STATE_OF_PLAY.md`.
+- Verification:
+  - `ls -la ops/bin/close`
+  - `bash ops/bin/close | head -n 160`
+- Risk / rollback:
+  - Risk: Low; new ops helper script only.
+  - Rollback: delete `ops/bin/close` and remove this entry.
+
 ## 2026-01-11 — DP-OPS-0003: Front Door v2 open prompt
 
 - Purpose: Auto-fill branch + HEAD in the open prompt, add optional intent/DP fields, and codify the Focus Rule.
