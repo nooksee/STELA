@@ -8,8 +8,9 @@ WORK ORDER (DP-XXXX) — Title
 PRESENTATION RULES
 - Entire DP block is meant to be copied as a unit.
 - Operator wraps this DP as ONE fenced block when dispatching to a worker.
-- DP body stays inside one fence; no partial or nested fences.
-- Do not use "COPY EVERYTHING BETWEEN THE LINES" or dashed rulers; the fence is the copy boundary.
+- DP body stays inside one fence; no partial fences or nested triple-backtick fences.
+- Any internal copy blocks must use triple-tilde fences (~~~), never triple backticks.
+- The outer fence is the copy boundary.
 - Operator MAY add a prose footer outside the fence after the DP block.
 
 FRESHNESS GATE (REQUIRED)
@@ -55,7 +56,47 @@ REQUIRED VERIFICATION (paste outputs)
 REQUIRED OUTPUT BACK TO OPERATOR (in this exact order)
 A) ...
 B) ...
-C) Metadata kit surfaces (header prose + fenced blocks): IDE commit subject, PR title + description (markdown), merge commit subject + plaintext body, merge-note comment (markdown).
+C) Metadata Kit v1 (Canonical)
+(1) IDE "Commit Message" (plain text, one line)
+~~~text
+[fill: one-line commit subject]
+~~~
+
+(2) GitHub PR "Add a title" (plain text, one line)
+~~~text
+[fill: PR title]
+~~~
+
+(3) GitHub PR "Add a description" (markdown)
+~~~md
+## Purpose
+- [fill]
+
+## What changed
+- [fill]
+
+## Verification
+- [fill]
+
+## Risk / rollback
+- [fill]
+~~~
+
+(4) GitHub merge dialog "Commit message" (plain text, one line)
+~~~text
+[fill: merge commit subject]
+~~~
+
+(5) GitHub merge dialog "Extended description" (plain text)
+~~~text
+[fill: merge extended description]
+~~~
+
+(6) GitHub merge page "Add a comment" (Merge Comment Block) (markdown)
+~~~md
+## Merge note
+- [fill]
+~~~
 D) ...
 
 Deliver results, then STOP (no commit/push).

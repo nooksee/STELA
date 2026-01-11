@@ -1,3 +1,62 @@
+## 2026-01-11 — DP-OPS-0001E: Metadata Kit v1 per-surface copy blocks
+
+- Purpose: Make Metadata Kit v1 copy/paste perfect by giving each surface its own dedicated fenced block; remove branch-name helper line; reduce operator friction.
+- What shipped:
+  - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
+  - Updated `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
+  - Updated `STATE_OF_PLAY.md`.
+- Verification:
+  - `git diff --name-only`
+  - `rg -n "```" ops/templates/DISPATCH_PACKET_TEMPLATE.md`
+  - `rg -n "~~~" ops/templates/DISPATCH_PACKET_TEMPLATE.md`
+- Risk / rollback:
+  - Risk: Low; documentation-only adjustments.
+  - Rollback: revert `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, and this entry.
+
+## 2026-01-11 — DP-OPS-0001D: Metadata Kit v1 boundary normalization
+
+- Purpose: Normalize template boundaries and codify fence rules for Metadata Kit v1 and DP presentation.
+- What shipped:
+  - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
+  - Updated `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
+  - Updated `STATE_OF_PLAY.md`.
+- Verification:
+  - Checked diff scope and scanned for copy-boundary markers and triple-backtick leakage in the template.
+  - Verified six metadata surfaces remain in order with ~~~md for markdown fields.
+- Risk / rollback:
+  - Risk: Low; documentation-only adjustments.
+  - Rollback: revert `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, and this entry.
+
+## 2026-01-11 — DP-OPS-0001C: Metadata Kit v1 hygiene + integrator gate
+
+- Purpose: Remove copy-boundary anti-patterns, tighten Metadata Kit v1 hygiene, and codify the Integrator Review Gate.
+- What shipped:
+  - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
+  - Updated `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
+  - Updated `STATE_OF_PLAY.md`.
+- Verification:
+  - Doc-only change; reviewed diff.
+  - Confirmed no STOP COPYING / COPY EVERYTHING markers or triple-backtick fences in the template.
+  - Confirmed six metadata surfaces, correct order, and markdown fences use ~~~md.
+- Risk / rollback:
+  - Risk: Low; documentation-only adjustments.
+  - Rollback: revert `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, and this entry.
+
+## 2026-01-11 — DP-OPS-0001B: Metadata Kit v1 fixups
+
+- Purpose: Fix Metadata Kit v1 so it matches real IDE/GitHub metadata planes; remove sloppy formatting; close governance loop.
+- What shipped:
+  - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md` to add the derived branch line and rewrite Metadata Kit v1 with plain-text vs markdown surfaces and ~~~md blocks.
+  - Updated `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md` to align metadata surfaces/types/order and clarify tilde fence usage.
+  - Updated `STATE_OF_PLAY.md`.
+- Verification:
+  - Doc-only change; reviewed diff.
+  - Scanned template/protocol for "yaml" misuse; none.
+  - Confirmed the kit lists all six surfaces in order with types and no coaching prose inside copy blocks.
+- Risk / rollback:
+  - Risk: Low; minor wording drift possible as operators adopt the kit.
+  - Rollback: revert `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, and this entry.
+
 ## 2026-01-11 — delete: delete example screens for template
 
 - deleted shit.
