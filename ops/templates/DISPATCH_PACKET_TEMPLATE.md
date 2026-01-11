@@ -5,6 +5,14 @@ COPY/PASTE — Dispatch Packet
 ```
 WORK ORDER (DP-XXXX) — Title
 
+Branch (required):
+<exact-branch-name>
+
+Rules:
+- This is not informational.
+- Workers must refuse to proceed if Branch is missing or mismatched.
+- Branch must match Freshness Gate branch.
+
 PRESENTATION RULES
 - Entire DP block is meant to be copied as a unit.
 - Operator wraps this DP as ONE fenced block when dispatching to a worker.

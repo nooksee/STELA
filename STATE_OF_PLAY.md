@@ -1,3 +1,14 @@
+## 2026-01-11 — DP-OPS-0006B: Dispatch Packet branch requirement
+
+- Purpose: Require explicit branch declaration in all Dispatch Packets.
+- What shipped:
+  - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
+  - Updated `STATE_OF_PLAY.md`.
+- Verification:
+  - Manual review.
+- Risk / rollback:
+  - Risk: Low; template-only change.
+  - Rollback: revert `ops/templates/DISPATCH_PACKET_TEMPLATE.md` and this entry.
 ## 2026-01-11 — DP-OPS-0005: Minimum Operator Effort canon
 
 - Purpose: Codify minimum operator effort and no-editor-nagging guidance in canon.
