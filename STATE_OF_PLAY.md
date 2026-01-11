@@ -9,6 +9,18 @@
 - Risk / rollback:
   - Risk: Low; template-only change.
   - Rollback: revert `ops/templates/DISPATCH_PACKET_TEMPLATE.md` and this entry.
+## 2026-01-11 — DP-OPS-0005: Minimum Operator Effort canon
+
+- Purpose: Codify minimum operator effort and no-editor-nagging guidance in canon.
+- What shipped:
+  - Updated `PROJECT_TRUTH.md` with the Minimum Operator Effort section.
+  - Updated `STATE_OF_PLAY.md`.
+- Verification:
+  - `git diff --name-only`
+  - `rg -n "Minimum Operator Effort|Focus Rule" PROJECT_TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`
+- Risk / rollback:
+  - Risk: Low; canon text update only.
+  - Rollback: revert `PROJECT_TRUTH.md` and this entry.
 
 ## 2026-01-11 — DP-OPS-0004: Front Door v1 close snapshot
 
