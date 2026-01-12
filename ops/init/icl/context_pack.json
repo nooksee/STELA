@@ -20,6 +20,10 @@
       "ops/init/icl/launch_pack/CONTEXT_PACK.md"
     ]
   },
+  "snapshot": {
+    "command": "./ops/bin/snapshot --scope=icl --format=chatgpt",
+    "note": "Generate a bounded repo snapshot for AI context (swap --format=gemini|claude as needed)."
+  },
   "governance": {
     "rule": "PR-only merges; no direct pushes to main.",
     "required_check": "repo-gates / gates (pull_request)",

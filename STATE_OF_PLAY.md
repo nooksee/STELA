@@ -1,3 +1,24 @@
+## 2026-01-12 — DP-OPS-0008: Internal repo snapshot tool v1
+
+- Purpose: Bring repo snapshot generation in-house as `ops/bin/snapshot` and wire it into the ICL front door.
+- What shipped:
+  - Added `ops/bin/snapshot` with scope/format flags and deterministic output.
+  - Updated `ops/bin/open` to point to snapshot for full repo context.
+  - Added snapshot pointer to `ops/init/icl/context_pack.json`.
+  - Added snapshot mention to `ops/init/icl/launch_pack/CONTEXT_PACK.md`.
+  - Added repo2txt inspiration note to `PROJECT_TRUTH.md`.
+- Verification:
+  - `git diff --name-only`
+  - `ls -la ops/bin/snapshot`
+  - `bash ops/bin/snapshot --scope=icl --format=chatgpt | head -n 120`
+  - `bash ops/bin/snapshot --scope=icl --format=chatgpt | tail -n 40`
+  - `bash ops/bin/snapshot --scope=full --format=chatgpt | head -n 60`
+  - `bash ops/bin/open --intent="dp-ops-0008 test" --dp="DP-OPS-0008 / 2026-01-12" | head -n 160`
+  - `bash ops/init/tools/context_lint.sh`
+- Risk / rollback:
+  - Risk: snapshot scope or exclude list may need tuning for size.
+  - Rollback: delete `ops/bin/snapshot` and revert the pointer updates.
+
 ## 2026-01-11 — DP-OPS-0007: Doc/ops room cleanup + canon consolidation
 
 - Purpose: Remove redundant doc/ops stubs and keep canon pointers clean.

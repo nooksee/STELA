@@ -1,0 +1,202 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+scope="icl"
+format="chatgpt"
+out_path=""
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/snapshot [--scope=icl|full] [--format=chatgpt|gemini|claude] [--out=path]
+USAGE
+}
+
+die() {
+  echo "ERROR: $*" >&2
+  usage >&2
+  exit 1
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --scope=icl|--scope=full)
+      scope="${arg#--scope=}"
+      ;;
+    --format=chatgpt|--format=gemini|--format=claude)
+      format="${arg#--format=}"
+      ;;
+    --out=*)
+      out_path="${arg#--out=}"
+      if [[ -z "$out_path" ]]; then
+        die "--out requires a path"
+      fi
+      ;;
+    *)
+      die "Unknown argument: $arg"
+      ;;
+  esac
+done
+
+if ! command -v git >/dev/null 2>&1; then
+  die "git is required but was not found on PATH."
+fi
+
+if ! repo_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+  die "git repo not found. Run from repo root."
+fi
+
+if [[ "$(pwd -P)" != "$repo_root" ]]; then
+  die "Run from repo root: $repo_root"
+fi
+
+remote_url="$(git remote get-url origin 2>/dev/null || true)"
+if [[ -n "$remote_url" ]]; then
+  repo_name="$(basename -s .git "$remote_url")"
+else
+  repo_name="$(basename "$repo_root")"
+fi
+
+branch="$(git rev-parse --abbrev-ref HEAD)"
+head_short="$(git rev-parse --short HEAD)"
+
+format_label="$format"
+case "$format" in
+  chatgpt)
+    format_label="ChatGPT"
+    ;;
+  gemini)
+    format_label="Gemini"
+    ;;
+  claude)
+    format_label="Claude"
+    ;;
+esac
+
+ICL_FILES=(
+  "PROJECT_TRUTH.md"
+  "STATE_OF_PLAY.md"
+  "PROJECT_MAP.md"
+  "CANONICAL_TREE.md"
+  "docs/00-INDEX.md"
+  "ops/init/icl/context_pack.json"
+  "ops/init/icl/launch_pack/CONTEXT_PACK.md"
+  "ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md"
+  "ops/bin/open"
+  "ops/bin/close"
+  "ops/bin/snapshot"
+)
+
+is_excluded_path() {
+  case "$1" in
+    .git/*|*/.git/*|storage/*|vendor/*|*/vendor/*|node_modules/*|*/node_modules/*|upstream/*|addons/_bundled_snapshot/*|archives/*|archive/*|docs/_archive/*|docs/archive/*|docs/archives/*|*/_archive/*|*/archives/*|*/archive/*)
+      return 0
+      ;;
+  esac
+  return 1
+}
+
+is_excluded_ext() {
+  local lower
+  lower="$(printf "%s" "$1" | tr '[:upper:]' '[:lower:]')"
+  case "$lower" in
+    *.png|*.jpg|*.jpeg|*.gif|*.svg|*.ico|*.pdf|*.zip|*.tar|*.gz|*.xz|*.tgz|*.7z|*.rar|*.mp3|*.mp4|*.mov|*.avi|*.mkv|*.webm|*.ogg|*.wav|*.woff|*.woff2|*.ttf|*.otf|*.class|*.jar|*.exe|*.dll|*.so|*.dylib|*.psd|*.ai|*.sketch|*.doc|*.docx|*.xls|*.xlsx|*.ppt|*.pptx)
+      return 0
+      ;;
+  esac
+  return 1
+}
+
+collect_files() {
+  local path
+  while IFS= read -r path; do
+    [[ -z "$path" ]] && continue
+    if is_excluded_path "$path"; then
+      continue
+    fi
+    if is_excluded_ext "$path"; then
+      continue
+    fi
+    echo "$path"
+  done
+}
+
+files=()
+if [[ "$scope" == "icl" ]]; then
+  missing=()
+  for path in "${ICL_FILES[@]}"; do
+    if [[ ! -f "$path" ]]; then
+      missing+=("$path")
+    fi
+  done
+  if (( ${#missing[@]} > 0 )); then
+    echo "ERROR: expected files missing. Run from repo root." >&2
+    for path in "${missing[@]}"; do
+      echo "  - $path" >&2
+    done
+    exit 1
+  fi
+  files=("${ICL_FILES[@]}")
+else
+  mapfile -t files < <(git ls-files | collect_files)
+fi
+
+output_target=""
+if [[ -n "$out_path" ]]; then
+  if [[ "$out_path" = /* ]]; then
+    output_target="$out_path"
+  else
+    output_target="$repo_root/$out_path"
+  fi
+  mkdir -p "$(dirname "$output_target")"
+fi
+
+print_file_contents() {
+  local path="$1"
+  local suppress_pipe_errors="$2"
+  if [[ ! -f "$path" ]]; then
+    echo "(missing file)"
+    return 0
+  fi
+  if [[ "$suppress_pipe_errors" -eq 1 ]]; then
+    cat "$path" 2>/dev/null || true
+  else
+    cat "$path"
+  fi
+}
+
+emit_snapshot() {
+  local suppress_pipe_errors=0
+  if [[ -p /proc/$$/fd/1 ]]; then
+    suppress_pipe_errors=1
+    exec 2>/dev/null
+  fi
+
+  echo "===== REPO SNAPSHOT ====="
+  echo "Repo: $repo_name"
+  echo "Branch: $branch"
+  echo "HEAD: $head_short"
+  echo "Scope: $scope"
+  echo "Format: $format_label"
+  echo "Excluded dirs: .git/ storage/ vendor/ node_modules/ upstream/ addons/_bundled_snapshot/ archives/ archive/ docs/_archive/ docs/archive/ docs/archives/ */_archive/ */archive/ */archives/"
+  echo "Excluded types: .png .jpg .jpeg .gif .svg .ico .pdf .zip .tar .gz .xz .tgz .7z .rar .mp3 .mp4 .mov .avi .mkv .webm .ogg .wav .woff .woff2 .ttf .otf .class .jar .exe .dll .so .dylib .psd .ai .sketch .doc .docx .xls .xlsx .ppt .pptx"
+  echo "===== SNAPSHOT PAYLOAD BEGIN ====="
+  echo "[INDEX]"
+  for path in "${files[@]}"; do
+    echo "- $path"
+  done
+  echo ""
+  echo "[FILE CONTENTS]"
+  for path in "${files[@]}"; do
+    echo "<<< FILE BEGIN: $path"
+    print_file_contents "$path" "$suppress_pipe_errors"
+    echo ">>> FILE END: $path"
+    echo ""
+  done
+  echo "===== SNAPSHOT PAYLOAD END ====="
+}
+
+if [[ -n "$output_target" ]]; then
+  emit_snapshot > "$output_target"
+else
+  emit_snapshot
+fi
