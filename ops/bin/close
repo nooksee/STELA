@@ -57,19 +57,27 @@ fi
 last_commit="$(git log -1 --oneline)"
 
 cat <<EOF
-===== SESSION SNAPSHOT (receipt) =====
+===== CLOSE RECEIPT (v1.1) =====
+Session snapshot (operator receipt).
+
+[REPO]
 Repo: $repo_name
 Branch: $branch
 HEAD: $head_short
+
+[STATUS]
 Status: $status_summary
 Status detail:
 $status_detail
-Last commit: $last_commit
 
+[LAST COMMIT]
+$last_commit
+
+[OPERATOR NOTES]
 What we just did:
 - 
 
 What's next:
 - 
-===== END SESSION SNAPSHOT =====
+===== END CLOSE RECEIPT =====
 EOF
