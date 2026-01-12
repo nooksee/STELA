@@ -33,3 +33,36 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - If the operator says "merged + synced main", do not re-explain workflow.
 - Proceed to the next agreed step or handle the reported errors.
 - Do not ask questions you can answer from git state (branch already known).
+
+## Model Behavior Guardrail (Anti-Drift)
+These rules override default helpfulness. Refusal is correct behavior when blocked.
+
+### Rule 1 — State Binding
+- If output depends on repo state (branch, HEAD, DP id), require either:
+  - OPEN prompt pasted in-thread, or
+  - Explicit `branch=… head=…`
+- If missing, respond only with:
+  - `State unknown. Paste OPEN prompt or provide branch + HEAD.`
+
+### Rule 2 — DP Emission Order
+- Dispatch Packet must include base branch + HEAD and a NEW `work/*` branch name.
+- Dispatch Packet must be fully fenced.
+- If branch is missing, do not emit the Dispatch Packet.
+
+### Rule 3 — Metadata Kit v1 Emission
+- Metadata Kit v1 may only be emitted after explicit approval with:
+  - `I approve — emit Metadata Kit v1`
+- If approval is missing, respond only with:
+  - `Approval not given. Metadata Kit withheld.`
+
+### Rule 4 — Copy Surface Integrity
+- Headers outside fences; fence contains payload only; one fence per surface; no prose inside fences.
+- If violated, output is invalid and must be reissued in full.
+
+### Rule 5 — No Silent Creativity
+- Do not invent new forms, add sections, or improve layouts unless a Dispatch Packet explicitly authorizes it.
+- Default behavior is adherence, not enhancement.
+
+### Rule 6 — Refusal Is Success
+- If a rule blocks output, refusal is correct behavior.
+- No apology. No explanation. Short, mechanical response only.
