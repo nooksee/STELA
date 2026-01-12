@@ -11,6 +11,17 @@
 - Risk / rollback:
   - Risk: Low; canon text only.
   - Rollback: revert `PROJECT_TRUTH.md` and `STATE_OF_PLAY.md`.
+## 2026-01-12 — DP-OPS-0011: Anti-Drift Guardrail (Model Refusal Rules)
+
+- Purpose: Eliminate conversational drift and enforce deterministic refusal when required state, structure, or approvals are missing.
+- What shipped:
+  - Added the Model Behavior Guardrail (Anti-Drift) canon section to `PROJECT_TRUTH.md`.
+  - Codified hard refusal rules for state binding, DP emission order, Metadata Kit approval, copy surface integrity, and no silent creativity.
+- Verification:
+  - Manual review of `PROJECT_TRUTH.md` and this entry.
+- Risk / rollback:
+  - Risk: Low; canon text update only.
+  - Rollback: revert `PROJECT_TRUTH.md` and this entry.
 
 ## 2026-01-12 — DP-OPS-0009: Snapshot tool tightening v1.1
 
