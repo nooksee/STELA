@@ -1,3 +1,16 @@
+## 2026-01-12 — DP-OPS-0012: Hard-code DP + Metadata Kit mechanics (fences, ordering, freshness gate)
+
+- Purpose: Canonize DP + Metadata Kit output mechanics so ordering, fences, and refusal behavior are deterministic.
+- What shipped:
+  - Added the Output Mechanics Contract to `PROJECT_TRUTH.md`.
+  - Updated `STATE_OF_PLAY.md`.
+- Verification:
+  - `git diff --name-only`
+  - `rg -n "Output Mechanics Contract" PROJECT_TRUTH.md`
+  - `sed -n '1,80p' STATE_OF_PLAY.md`
+- Risk / rollback:
+  - Risk: Low; canon text only.
+  - Rollback: revert `PROJECT_TRUTH.md` and `STATE_OF_PLAY.md`.
 ## 2026-01-12 — DP-OPS-0011: Anti-Drift Guardrail (Model Refusal Rules)
 
 - Purpose: Eliminate conversational drift and enforce deterministic refusal when required state, structure, or approvals are missing.
