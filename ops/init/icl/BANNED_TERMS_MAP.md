@@ -26,18 +26,6 @@
 | bootpack | docs/30-RELEASE_PROCESS.md | - `ops/init/icl/boot_pack/` — bootpack / context pack needed to operate the repo safely | replace `bootpack` -> `launchpack` | rename word |
 | boot_pack | docs/CONTRACTOR_PACKET.md | - `ops/init/icl/boot_pack/DAILY_COCKPIT.md` | `ops/init/icl/launch_pack/DAILY_CONSOLE.md` | rename word |
 | boot | docs/LESSONS_LEARNED.md | - **Structure beats memory:** docs + boot pack are the source of continuity, not the chat. | replace `boot pack` -> `launch pack` | rename word |
-| boot_pack | docs/ops/AI_CONTEXT_SYNC.md | Canonical version: `ops/init/icl/boot_pack/AI_CONTEXT_SYNC.md`. | `ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md` | rename word |
-| boot_pack | docs/ops/CONTEXT_PACK.md | Canonical version: `ops/init/icl/boot_pack/CONTEXT_PACK.md`. | `ops/init/icl/launch_pack/CONTEXT_PACK.md` | rename word |
-| boot_pack | docs/ops/COPILOT_ONBOARDING.md | Canonical version: `ops/init/icl/boot_pack/COPILOT_ONBOARDING.md`. | `ops/init/icl/launch_pack/COPILOT_ONBOARDING.md` | rename word |
-| cockpit | docs/ops/DAILY_COCKPIT.md | # Daily Cockpit (moved) | `# Daily Console (moved)` | rename file |
-| boot_pack | docs/ops/DAILY_COCKPIT.md | Canonical version: `ops/init/icl/boot_pack/DAILY_COCKPIT.md`. | `ops/init/icl/launch_pack/DAILY_CONSOLE.md` | rename word |
-| boot_pack | docs/ops/GEMINI_ONBOARDING.md | Canonical version: `ops/init/icl/boot_pack/GEMINI_ONBOARDING.md`. | `ops/init/icl/launch_pack/GEMINI_ONBOARDING.md` | rename word |
-| boot_pack | docs/ops/IDE_MIGRATION.md | Canonical version: `ops/init/icl/boot_pack/IDE_MIGRATION.md`. | `ops/init/icl/launch_pack/IDE_MIGRATION.md` | rename word |
-| cockpit | docs/ops/INDEX.md | - [Daily Cockpit](../../ops/init/icl/boot_pack/DAILY_COCKPIT.md) | `Daily Console` + `../../ops/init/icl/launch_pack/DAILY_CONSOLE.md` | rename word |
-| resurrection | docs/ops/INDEX.md | - [Resurrection](../../ops/init/icl/boot_pack/RESURRECTION.md) | `Recovery` + `../../ops/init/icl/launch_pack/RECOVERY.md` | rename word |
-| boot_pack | docs/ops/INDEX.md | - [Context Pack](../../ops/init/icl/boot_pack/CONTEXT_PACK.md) | update all `boot_pack` links to `launch_pack` | rename word |
-| resurrection | docs/ops/RESURRECTION.md | # Resurrection kit (moved) | `# Recovery kit (moved)` | rename file |
-| boot_pack | docs/ops/RESURRECTION.md | Canonical version: `ops/init/icl/boot_pack/RESURRECTION.md`. | `ops/init/icl/launch_pack/RECOVERY.md` | rename word |
 | boot | docs/PROJECT_STRUCTURE.md | - `ops/` - ICL/OCL canon (protocols, contracts, templates, boot pack); non-runtime. | replace `boot pack` -> `launch pack` | rename word |
 | boot_pack | docs/README_CONTEXT.md | The rest of the pack lives alongside it in `ops/init/icl/boot_pack/`. | update path to `ops/init/icl/launch_pack/` | rename word |
 | resurrection | docs/README_CONTEXT.md | Keep `ops/init/icl/boot_pack/RESURRECTION.md` aligned with current workflow and repo-gates. | `ops/init/icl/launch_pack/RECOVERY.md` | rename word |
