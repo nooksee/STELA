@@ -1,3 +1,19 @@
+## 2026-01-11 — DP-OPS-0007: Doc/ops room cleanup + canon consolidation
+
+- Purpose: Remove redundant doc/ops stubs and keep canon pointers clean.
+- What shipped:
+  - Deleted `docs/ops` pointer stubs now covered by ops canon (kept `docs/ops/INDEX.md`).
+  - Updated canon references in `SECURITY.md`, `STATE_OF_PLAY.md`, `ops/init/icl/BANNED_TERMS_MAP.md`, and `ops/init/icl/RENAME_PLAN_ICL_OCL.md`.
+- Verification:
+  - `git diff --name-only`
+  - `bash ops/bin/open --intent="dp-ops-0007 test" --dp="DP-OPS-0007 / 2026-01-11" | head -n 140`
+  - `bash ops/bin/close | head -n 200`
+  - `bash ops/init/tools/context_lint.sh`
+  - `rg -n "docs/ops/" docs/00-INDEX.md docs/** ops/**`
+- Risk / rollback:
+  - Risk: missed reference to removed stubs.
+  - Rollback: restore deleted stubs and revert reference updates.
+
 ## 2026-01-11 — DP-OPS-0006B: Dispatch Packet branch requirement
 
 - Purpose: Require explicit branch declaration in all Dispatch Packets.
@@ -354,7 +370,7 @@
 - Purpose: Make ops docs feel like a control room with a clear start and precheck checklist.
 - What shipped:
   - Reworked `docs/ops/INDEX.md` into workflow sections with a drift rule reminder.
-  - Added a filled precheck checklist to `docs/ops/DAILY_CONSOLE.md`.
+  - Added a filled precheck checklist to `ops/init/icl/launch_pack/DAILY_CONSOLE.md`.
 - Verification:
   - Not run (worker): `bash tools/verify_tree.sh`
   - Not run (worker): `bash tools/repo/lint_truth.sh`
@@ -383,7 +399,7 @@
   - Kept Quickstart as the only Start Here link while preserving reference access.
 - Verification:
   - `grep -r "launch_pack_v2" docs/` → no matches ✅
-  - `grep -r "_meta/" docs/` → hits expected in `docs/SECURE_WEBROOT_OPTION.md` + `docs/_archive/boot/NUKECE_PATHS.md` ✅
+  - `grep -r "_meta/" docs/` → hits expected in `docs/SECURE_WEBROOT_OPTION.md` ✅
   - `bash tools/verify_tree.sh` ✅
   - `bash tools/repo/lint_truth.sh` ✅
 - Risk / rollback:
@@ -408,8 +424,8 @@
 
 - Purpose: Institutionalize “Metadata Surfaces (always-on)” templates across PR and contractor workflows.
 - What shipped:
-  - Updated PR description templates in `docs/ops/PR_DESCRIPTION_TEMPLATE.md` and `.github/pull_request_template.md`.
-  - Hardened contractor dispatch requirements in `docs/ops/CONTRACTOR_DISPATCH_BRIEF.md`.
+  - Updated PR description templates in `ops/templates/PR_DESCRIPTION_TEMPLATE.md` and `.github/pull_request_template.md`.
+  - Hardened contractor dispatch requirements in `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md`.
 - Verification:
   - grep -r "Guerrilla" docs/ .github/ (no matches)
   - bash tools/verify_tree.sh ✅
@@ -426,9 +442,9 @@
   - Replaced `docs/START_HERE.md` with a pointer; updated `README.md`, `CONTRIBUTING.md`, and `docs/00-INDEX.md`.
   - Refreshed context and structure docs to match current top-level folders.
 - Verification:
-  - grep -r "_meta/" docs/ (hits in `docs/SECURE_WEBROOT_OPTION.md` and `docs/_archive/boot/NUKECE_PATHS.md`)
+  - grep -r "_meta/" docs/ (hits in `docs/SECURE_WEBROOT_OPTION.md`)
   - grep -r "launch_pack_v2" docs/ (no matches)
-  - grep -r "src/" docs/ README.md CONTRIBUTING.md (hits in `docs/upstreams.md`, `docs/NUKESECURITY_VISION_TO_IMPLEMENTATION_MAP.md`, `docs/GEOIP_IMPORTER.md`, `docs/triage/_archive/SUBSYSTEM_MAP_v11.md`, `docs/triage/_archive/SECURITY_SURFACE_SWEEP_v11.md`, `docs/_archive/boot/v19_STORAGE_PATHS.md`, `docs/repo-nomenclature.md`)
+  - grep -r "src/" docs/ README.md CONTRIBUTING.md (hits in `docs/upstreams.md`, `docs/NUKESECURITY_VISION_TO_IMPLEMENTATION_MAP.md`, `docs/GEOIP_IMPORTER.md`, `docs/triage/_archive/SUBSYSTEM_MAP_v11.md`, `docs/triage/_archive/SECURITY_SURFACE_SWEEP_v11.md`, `docs/repo-nomenclature.md`)
   - bash tools/verify_tree.sh ✅
   - bash tools/repo/lint_truth.sh ✅
 - Risk / rollback:
@@ -443,7 +459,7 @@
   - Updated project structure and repo layout to match current top-level directories.
   - Reinforced Metadata Surfaces (always-on) in the entrypoint workflow.
 - Verification:
-  - grep -r "_meta/" docs/ (hits in `docs/SECURE_WEBROOT_OPTION.md` and `docs/_archive/boot/NUKECE_PATHS.md`)
+  - grep -r "_meta/" docs/ (hits in `docs/SECURE_WEBROOT_OPTION.md`)
   - grep -r "launch_pack_v2" docs/ (no matches)
   - bash tools/verify_tree.sh ✅
 - Risk / rollback:
@@ -470,7 +486,7 @@
 
 - Purpose: Canonize contractor dispatch rules so every PR follows governance + metadata requirements.
 - What shipped:
-  - Added `docs/ops/CONTRACTOR_DISPATCH_BRIEF.md` to formalize dispatch rules and cadence.
+  - Added `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md` to formalize dispatch rules and cadence.
   - Linked the new brief from `docs/ops/INDEX.md` and `docs/00-INDEX.md`.
 - Verification:
   - repo-gates ✅
@@ -509,7 +525,7 @@
 
 ### Completed
 - Added GitHub PR description automation via `.github/pull_request_template.md`.
-- Added canonical PR description template: `docs/ops/PR_DESCRIPTION_TEMPLATE.md`.
+- Added canonical PR description template: `ops/templates/PR_DESCRIPTION_TEMPLATE.md`.
 - Added triage capture lane: `docs/triage/INBOX.md`.
 - Updated docs indexes to keep ops + triage discoverable.
 
@@ -522,13 +538,13 @@
 ## Completed
 - Docs Family v1 integrated + canon spine created (docs/00-INDEX, 10-QUICKSTART, 20-GOVERNANCE, 30-RELEASE_PROCESS, 40-PROJECT_HYGIENE)
 - Added Copilot onboarding rules: .github/copilot-instructions.md
-- Added SSOT “save-game” handover file: docs/ops/AI_CONTEXT_SYNC.md
+- Added SSOT “save-game” handover file: ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md
 - Enabled FAIL-mode policing: canon changes require STATE_OF_PLAY update in the same PR
-- Updated docs/ops/DAILY_CONSOLE.md to clarify canon vs log vs rehydration.
+- Updated ops/init/icl/launch_pack/DAILY_CONSOLE.md to clarify canon vs log vs rehydration.
 - Added ops governance docs: OUTPUT_FORMAT_CONTRACT + Copilot onboarding + Gemini onboarding
 - Updated docs/ops/INDEX.md + docs/00-INDEX.md to link the new ops docs
 - Standardized PROJECT_MAP.md bullets for docs/ops/, upstream/, and .github/workflows/ to clarify roles
-- 2026-01-03: Canonized Output Formatting Contract (docs/ops/OUTPUT_FORMAT_CONTRACT.md) and linked it in docs indexes.
+- 2026-01-03: Canonized Output Formatting Contract (ops/contracts/OUTPUT_FORMAT_CONTRACT.md) and linked it in docs indexes.
 
 ## Active blockers
 - repo-gates (FAIL-mode) blocking PR until this STATE_OF_PLAY update is committed + pushed

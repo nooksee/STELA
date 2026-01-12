@@ -10,8 +10,6 @@ Directory
 Files with banned terms in names
 - `ops/init/icl/boot_pack/RESURRECTION.md` -> `ops/init/icl/launch_pack/RECOVERY.md`
 - `ops/init/icl/boot_pack/DAILY_COCKPIT.md` -> `ops/init/icl/launch_pack/DAILY_CONSOLE.md`
-- `docs/ops/RESURRECTION.md` -> `docs/ops/RECOVERY.md` (pointer stub rename)
-- `docs/ops/DAILY_COCKPIT.md` -> `docs/ops/DAILY_CONSOLE.md` (pointer stub rename)
 
 Files that keep their base names (dir rename only; content update for banned terms)
 - `ops/init/icl/boot_pack/AI_CONTEXT_SYNC.md` -> `ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md`
@@ -40,13 +38,6 @@ Docs pointers and indexes
 - `docs/REPO_LAYOUT.md`
 - `docs/SOP_MULTICHAT.md`
 - `docs/ops/INDEX.md`
-- `docs/ops/AI_CONTEXT_SYNC.md`
-- `docs/ops/CONTEXT_PACK.md`
-- `docs/ops/COPILOT_ONBOARDING.md`
-- `docs/ops/DAILY_COCKPIT.md` (rename)
-- `docs/ops/GEMINI_ONBOARDING.md`
-- `docs/ops/IDE_MIGRATION.md`
-- `docs/ops/RESURRECTION.md` (rename)
 
 Ops canon references
 - `ops/init/icl/ACTIVE_CONTEXT.md`
