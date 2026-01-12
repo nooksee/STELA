@@ -33,3 +33,11 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - If the operator says "merged + synced main", do not re-explain workflow.
 - Proceed to the next agreed step or handle the reported errors.
 - Do not ask questions you can answer from git state (branch already known).
+
+## Output Mechanics Contract
+- Dispatch Packet (DP) output comes first whenever a DP is requested.
+- DP must be a single fenced block containing: Freshness Gate, required NEW work branch (when changes are requested), Purpose, Scope, Files, Forbidden, Verification, Acceptance.
+- Metadata Kit v1 is only emitted when explicitly requested (e.g., "metakit", "yes please").
+- Metadata Kit v1 must be six separate copy blocks, each with a header line above the fence; each fence contains only the payload for that surface.
+- Ordering: if the operator says "DP first", output only the DP and stop; if Metadata Kit v1 is requested, output it after the DP as six blocks.
+- Refusal: if the Freshness Gate (branch + HEAD) is missing in-thread, respond only with a request to run/paste OPEN or provide branch + HEAD; do not guess.
