@@ -106,6 +106,7 @@ Canon pointers:
 - ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md
 
 If you need full repo context, run: ./ops/bin/snapshot --scope=icl --format=chatgpt (or gemini/claude).
+For a file output: ./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto
 
 Freshness Gate (auto):
 - Active branch name: $branch

@@ -4,10 +4,13 @@ set -euo pipefail
 scope="icl"
 format="chatgpt"
 out_path=""
+max_lines=""
+state_of_play_entry_limit=15
+state_heading_regex='^## [0-9]{4}-[0-9]{2}-[0-9]{2} '
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/snapshot [--scope=icl|full] [--format=chatgpt|gemini|claude] [--out=path]
+Usage: ops/bin/snapshot [--scope=icl|full] [--format=chatgpt|gemini|claude] [--max-lines=n] [--out=path|auto]
 USAGE
 }
 
@@ -25,6 +28,15 @@ for arg in "$@"; do
     --format=chatgpt|--format=gemini|--format=claude)
       format="${arg#--format=}"
       ;;
+    --max-lines=*)
+      max_lines="${arg#--max-lines=}"
+      if [[ -z "$max_lines" ]]; then
+        die "--max-lines requires a value"
+      fi
+      if ! [[ "$max_lines" =~ ^[0-9]+$ ]]; then
+        die "--max-lines must be a non-negative integer"
+      fi
+      ;;
     --out=*)
       out_path="${arg#--out=}"
       if [[ -z "$out_path" ]]; then
@@ -36,6 +48,14 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+if [[ -z "$max_lines" ]]; then
+  if [[ "$scope" == "icl" ]]; then
+    max_lines=400
+  else
+    max_lines=0
+  fi
+fi
 
 if ! command -v git >/dev/null 2>&1; then
   die "git is required but was not found on PATH."
@@ -58,6 +78,7 @@ fi
 
 branch="$(git rev-parse --abbrev-ref HEAD)"
 head_short="$(git rev-parse --short HEAD)"
+branch_safe="${branch//\//-}"
 
 format_label="$format"
 case "$format" in
@@ -142,7 +163,9 @@ fi
 
 output_target=""
 if [[ -n "$out_path" ]]; then
-  if [[ "$out_path" = /* ]]; then
+  if [[ "$out_path" == "auto" ]]; then
+    output_target="$repo_root/storage/snapshots/snapshot-${scope}-${branch_safe}-${head_short}.txt"
+  elif [[ "$out_path" = /* ]]; then
     output_target="$out_path"
   else
     output_target="$repo_root/$out_path"
@@ -150,26 +173,172 @@ if [[ -n "$out_path" ]]; then
   mkdir -p "$(dirname "$output_target")"
 fi
 
-print_file_contents() {
+count_lines() {
+  awk 'END { print NR }' "$1"
+}
+
+count_state_of_play_headings() {
+  LC_ALL=C grep -cE "$state_heading_regex" "$1" || true
+}
+
+count_state_of_play_limited_lines() {
+  awk -v limit="$state_of_play_entry_limit" -v regex="$state_heading_regex" '
+    $0 ~ regex { entry++ }
+    entry == 0 || entry <= limit { lines++ }
+    entry > limit { exit }
+    END { print lines }
+  ' "$1"
+}
+
+emit_file_contents() {
   local path="$1"
   local suppress_pipe_errors="$2"
+  local max="$3"
   if [[ ! -f "$path" ]]; then
     echo "(missing file)"
     return 0
   fi
-  if [[ "$suppress_pipe_errors" -eq 1 ]]; then
-    cat "$path" 2>/dev/null || true
+  if (( max > 0 )); then
+    if [[ "$suppress_pipe_errors" -eq 1 ]]; then
+      awk -v max="$max" '{
+        total++
+        if (total <= max) {
+          print
+        }
+      }
+      END {
+        if (total > max) {
+          print "(...truncated at " max " lines; use --scope=full or --max-lines=0 for complete)"
+        }
+      }' "$path" 2>/dev/null || true
+    else
+      awk -v max="$max" '{
+        total++
+        if (total <= max) {
+          print
+        }
+      }
+      END {
+        if (total > max) {
+          print "(...truncated at " max " lines; use --scope=full or --max-lines=0 for complete)"
+        }
+      }' "$path"
+    fi
   else
-    cat "$path"
+    if [[ "$suppress_pipe_errors" -eq 1 ]]; then
+      cat "$path" 2>/dev/null || true
+    else
+      cat "$path"
+    fi
   fi
+}
+
+emit_state_of_play_contents() {
+  local path="$1"
+  local suppress_pipe_errors="$2"
+  local max="$3"
+  local heading_total
+  if [[ ! -f "$path" ]]; then
+    echo "(missing file)"
+    return 0
+  fi
+  heading_total=$(count_state_of_play_headings "$path")
+  if (( heading_total == 0 )); then
+    emit_file_contents "$path" "$suppress_pipe_errors" "$max"
+    return 0
+  fi
+  if [[ "$suppress_pipe_errors" -eq 1 ]]; then
+    awk -v limit="$state_of_play_entry_limit" -v max="$max" -v regex="$state_heading_regex" '
+      $0 ~ regex { entry++ }
+      entry == 0 || entry <= limit {
+        total++
+        if (max == 0 || total <= max) {
+          print
+        }
+      }
+      entry > limit { exit }
+      END {
+        if (max > 0 && total > max) {
+          print "(...truncated at " max " lines; use --scope=full or --max-lines=0 for complete)"
+        }
+      }
+    ' "$path" 2>/dev/null || true
+  else
+    awk -v limit="$state_of_play_entry_limit" -v max="$max" -v regex="$state_heading_regex" '
+      $0 ~ regex { entry++ }
+      entry == 0 || entry <= limit {
+        total++
+        if (max == 0 || total <= max) {
+          print
+        }
+      }
+      entry > limit { exit }
+      END {
+        if (max > 0 && total > max) {
+          print "(...truncated at " max " lines; use --scope=full or --max-lines=0 for complete)"
+        }
+      }
+    ' "$path"
+  fi
+}
+
+is_file_truncated() {
+  local path="$1"
+  local heading_total
+  local lines
+  local limited_lines
+
+  if [[ ! -f "$path" ]]; then
+    return 1
+  fi
+
+  if [[ "$scope" == "icl" && "$path" == "STATE_OF_PLAY.md" ]]; then
+    heading_total=$(count_state_of_play_headings "$path")
+    if (( heading_total == 0 )); then
+      if (( max_lines > 0 )); then
+        lines=$(count_lines "$path")
+        if (( lines > max_lines )); then
+          return 0
+        fi
+      fi
+      return 1
+    fi
+    if (( heading_total > state_of_play_entry_limit )); then
+      return 0
+    fi
+    if (( max_lines > 0 )); then
+      limited_lines=$(count_state_of_play_limited_lines "$path")
+      if (( limited_lines > max_lines )); then
+        return 0
+      fi
+    fi
+    return 1
+  fi
+
+  if (( max_lines > 0 )); then
+    lines=$(count_lines "$path")
+    if (( lines > max_lines )); then
+      return 0
+    fi
+  fi
+  return 1
 }
 
 emit_snapshot() {
   local suppress_pipe_errors=0
+  local files_count
+  local truncated_files=0
   if [[ -p /proc/$$/fd/1 ]]; then
     suppress_pipe_errors=1
     exec 2>/dev/null
   fi
+
+  files_count=${#files[@]}
+  for path in "${files[@]}"; do
+    if is_file_truncated "$path"; then
+      truncated_files=$((truncated_files + 1))
+    fi
+  done
 
   echo "===== REPO SNAPSHOT ====="
   echo "Repo: $repo_name"
@@ -177,6 +346,8 @@ emit_snapshot() {
   echo "HEAD: $head_short"
   echo "Scope: $scope"
   echo "Format: $format_label"
+  echo "Files included: $files_count"
+  echo "Truncated files: $truncated_files"
   echo "Excluded dirs: .git/ storage/ vendor/ node_modules/ upstream/ addons/_bundled_snapshot/ archives/ archive/ docs/_archive/ docs/archive/ docs/archives/ */_archive/ */archive/ */archives/"
   echo "Excluded types: .png .jpg .jpeg .gif .svg .ico .pdf .zip .tar .gz .xz .tgz .7z .rar .mp3 .mp4 .mov .avi .mkv .webm .ogg .wav .woff .woff2 .ttf .otf .class .jar .exe .dll .so .dylib .psd .ai .sketch .doc .docx .xls .xlsx .ppt .pptx"
   echo "===== SNAPSHOT PAYLOAD BEGIN ====="
@@ -188,7 +359,11 @@ emit_snapshot() {
   echo "[FILE CONTENTS]"
   for path in "${files[@]}"; do
     echo "<<< FILE BEGIN: $path"
-    print_file_contents "$path" "$suppress_pipe_errors"
+    if [[ "$scope" == "icl" && "$path" == "STATE_OF_PLAY.md" ]]; then
+      emit_state_of_play_contents "$path" "$suppress_pipe_errors" "$max_lines"
+    else
+      emit_file_contents "$path" "$suppress_pipe_errors" "$max_lines"
+    fi
     echo ">>> FILE END: $path"
     echo ""
   done

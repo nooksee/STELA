@@ -22,7 +22,7 @@
   },
   "snapshot": {
     "command": "./ops/bin/snapshot --scope=icl --format=chatgpt",
-    "note": "Generate a bounded repo snapshot for AI context (swap --format=gemini|claude as needed)."
+    "note": "Generate a bounded repo snapshot for AI context (swap --format=gemini|claude as needed). Default --max-lines=400 for --scope=icl; use --out=auto for file output."
   },
   "governance": {
     "rule": "PR-only merges; no direct pushes to main.",
