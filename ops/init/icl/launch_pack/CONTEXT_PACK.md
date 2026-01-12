@@ -71,6 +71,7 @@ Terminal safety:
 - Do I have uncommitted changes?
 - Is there an open PR? Is repo-gates green?
 - If anything is unclear: stop and open `ops/init/icl/launch_pack/DAILY_CONSOLE.md`
+- If repo context is still missing, run `./ops/bin/snapshot --scope=icl --format=chatgpt`.
 
 ---
 

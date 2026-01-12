@@ -11,6 +11,9 @@ Historical upstream: php-nuke/php-nuke. Upstream code is pulled intentionally an
 ## Donor code
 Titanium, Evo, Sentinel, and other derivatives are donor banks. We extract specific features and re-implement them with clear provenance.
 
+## Tooling inspiration
+- Snapshot tool inspired by repo2txt (MIT); reimplemented in-repo with no upstream code copied.
+
 ## Runtime hygiene
 public_html is the deployable webroot. It must not contain archive snapshots, legacy graveyards, or development artifacts.
 
