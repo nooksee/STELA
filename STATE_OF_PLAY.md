@@ -1,3 +1,23 @@
+## 2026-01-12 — DP-OPS-0009: Snapshot tool tightening v1.1
+
+- Purpose: Keep ICL snapshots paste-sized with deterministic truncation and add optional file output.
+- What shipped:
+  - Added `--max-lines` with scope defaults, per-file truncation markers, and header counts.
+  - Capped `STATE_OF_PLAY.md` to the top 15 entries for ICL snapshots.
+  - Added `--out=auto` for snapshot file output and updated snapshot pointers.
+- Verification:
+  - `git diff --name-only`
+  - `bash ops/bin/snapshot --scope=icl --format=chatgpt | head -n 80`
+  - `bash ops/bin/snapshot --scope=icl --format=chatgpt | tail -n 40`
+  - `bash ops/bin/snapshot --scope=icl --format=chatgpt --max-lines=50 | head -n 120`
+  - `bash ops/bin/snapshot --scope=icl --format=chatgpt --out=auto`
+  - `ls -la storage/snapshots/ | tail -n 20`
+  - `bash ops/bin/open --intent="dp-ops-0009 test" --dp="DP-OPS-0009 / 2026-01-12" | head -n 180`
+  - `bash ops/init/tools/context_lint.sh`
+- Risk / rollback:
+  - Risk: Truncation may hide needed detail if the cap is too low.
+  - Rollback: revert `ops/bin/snapshot`, `ops/bin/open`, and `ops/init/icl/context_pack.json`.
+
 ## 2026-01-12 — DP-OPS-0008: Internal repo snapshot tool v1
 
 - Purpose: Bring repo snapshot generation in-house as `ops/bin/snapshot` and wire it into the ICL front door.
