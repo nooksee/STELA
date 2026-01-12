@@ -86,17 +86,36 @@ fi
 
 cat <<EOF
 ===== OPEN PROMPT =====
-nukeCE OPEN PROMPT (Front Door v2)
+nukeCE OPEN PROMPT (Front Door v2.1)
 Repo is truth. If a file/path isn't present, say so.
 $mode_line
 
-Constitution (Data Constitution):
+[FRESHNESS GATE]
+- Active branch: $branch
+- HEAD short hash: $head_short
+- DP id/date (if applicable): $dp
+- Today's intent: $intent
+
+[ROLE CONTRACT]
+Integrator (operator): Owns scope, priorities, and approvals.
+Contractor (assistant): Executes tasks, flags risks, asks when blocked.
+AI stance: Canon-first, explicit about unknowns, no invention.
+
+[DO / DON'T]
+Do:
+- PR-only changes; no main edits.
+- Run required gates before close.
+Don't:
+- Edit main directly.
+- Skip gates.
+
+[CONSTITUTION]
 - PROJECT_TRUTH.md
 
-Focus Rule (Operator-Led Flow):
+[FOCUS RULE]
 - PROJECT_TRUTH.md
 
-Canon pointers:
+[CANON POINTERS]
 - ops/init/icl/context_pack.json
 - STATE_OF_PLAY.md
 - PROJECT_MAP.md
@@ -105,19 +124,19 @@ Canon pointers:
 - ops/init/icl/launch_pack/CONTEXT_PACK.md
 - ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md
 
-If you need full repo context, run: ./ops/bin/snapshot --scope=icl --format=chatgpt (or gemini/claude).
-For a file output: ./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto
+[SNAPSHOT]
+- If you need full repo context, run: ./ops/bin/snapshot --scope=icl --format=chatgpt (or gemini/claude).
+- For a file output: ./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto
 
-Freshness Gate (auto):
-- Active branch name: $branch
-- HEAD short hash: $head_short
-- DP id/date (if applicable): $dp
-- Today's intent: $intent
+[NEXT OPERATOR MOVES]
+- git status
+- git log -1 --oneline
+- ./ops/bin/snapshot --scope=icl --format=chatgpt
 
-Metadata Kit instruction:
+[METADATA KIT]
 - After approving work results, tell the assistant you approve and ask for Metadata Kit v1; assistant must emit it immediately.
 
-Operator context (optional):
+[OPERATOR CONTEXT]
 - If any canon pointers are missing, say so.
 ===== END OPEN PROMPT =====
 EOF
