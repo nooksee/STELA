@@ -4,7 +4,7 @@
 # Only entries listed here are approved for ops/bin/help.
 # Keep this list curated; do not add every doc.
 
-manual | Operator Manual (ops index) | docs/ops/INDEX.md
+manual | Operator Manual | docs/library/OPERATOR_MANUAL.md
 quickstart | Quickstart | docs/10-QUICKSTART.md
 docs-index | Docs Index | docs/00-INDEX.md
 context-pack | Context Pack (Recovery Card) | ops/init/icl/launch_pack/CONTEXT_PACK.md
