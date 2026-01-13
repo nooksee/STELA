@@ -34,6 +34,11 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - Proceed to the next agreed step or handle the reported errors.
 - Do not ask questions you can answer from git state (branch already known).
 
+## Docs Library Policy (Curated Surface)
+- The docs library is the approved operator-facing surface. `ops/bin/help` only reads from `docs/library/LIBRARY_INDEX.md`.
+- Nearly any change that ships (scripts, protocols, behavior rules) must add or update a docs library entry.
+- The library is curated; do not list every .md. If it is not in the manifest, help will refuse to open it.
+
 ## Output Mechanics Contract
 - Dispatch Packet (DP) output comes first whenever a DP is requested.
 - DP must be a single fenced block containing: Freshness Gate, required NEW work branch (when changes are requested), Purpose, Scope, Files, Forbidden, Verification, Acceptance.

@@ -1,3 +1,22 @@
+## 2026-01-13 — DP-OPS-0013: Help front door + curated docs library
+
+- Purpose: Add a docs reader front door and formalize the curated docs library surface.
+- What shipped:
+  - Added `ops/bin/help` with manifest-only access and pager output.
+  - Added `docs/library/LIBRARY_INDEX.md` as the curated docs manifest.
+  - Updated `docs/ops/INDEX.md` with help usage and library rules.
+  - Canonized the docs library policy in `PROJECT_TRUTH.md`.
+- Verification:
+  - `git diff --name-only`
+  - `bash ops/bin/help`
+  - `bash ops/bin/help list`
+  - `bash ops/bin/help manual`
+  - `bash ops/bin/help context-pack`
+  - `bash ops/init/tools/context_lint.sh`
+- Risk / rollback:
+  - Risk: Low; new helper script and docs/canon updates only.
+  - Rollback: delete `ops/bin/help`, revert `docs/library/LIBRARY_INDEX.md`, `docs/ops/INDEX.md`, `PROJECT_TRUTH.md`, and this entry.
+
 ## 2026-01-12 — DP-OPS-0012: Hard-code DP + Metadata Kit mechanics (fences, ordering, freshness gate)
 
 - Purpose: Canonize DP + Metadata Kit output mechanics so ordering, fences, and refusal behavior are deterministic.
