@@ -53,7 +53,9 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - DB-PR-META is only emitted when explicitly requested (e.g., "db-pr-meta", "yes please").
 - DB-PR-META must be six separate copy blocks, each with a header line above the fence; each fence contains only the payload for that surface.
 - Ordering: if the operator says "DP first", output only the DP and stop; if DB-PR-META is requested, output it after the DP as six blocks.
-- Worker results must include OPEN output (Freshness Gate lines), `git status --porcelain`, and `git log -1 --oneline`.
+- Worker results must end with an After-Action Bundle (delivery format, not IN-LOOP permission).
+- After-Action Bundle (required, last section): A) OPEN output (full block) B) repo status (`git status --porcelain`) C) last commit (`git log -1 --oneline`) D) optional snapshot pointer used (scope+format+out).
+- Worker may not claim "Freshness unknown" if they can run OPEN themselves.
 - If repo access is unavailable, respond only with: `Repo access unavailable; cannot provide Freshness Gate.`
 - Refusal: if the Freshness Gate (branch + HEAD) is missing in-thread, respond only with a request to run/paste OPEN or provide branch + HEAD; do not guess.
 ## Model Behavior Guardrail (Anti-Drift)

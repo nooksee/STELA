@@ -1,3 +1,16 @@
+## 2026-01-13 — DP-OPS-0019: Worker After-Action Bundle canon
+
+- Purpose: Require workers to end every DP result with a full After-Action Bundle (OPEN output, status, last commit; optional snapshot pointer).
+- What shipped:
+  - Canonized the After-Action Bundle requirement in `PROJECT_TRUTH.md`.
+  - Updated the DP protocol, DP template, and Operator Manual with copy-ready After-Action Bundle headings and end-of-message rule.
+- Verification:
+  - `rg -n "After-Action Bundle" PROJECT_TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md`
+  - `git diff --name-only`
+- Risk / rollback:
+  - Risk: Low; docs-only change.
+  - Rollback: revert the touched docs/templates and this entry.
+
 ## 2026-01-13 — DP-OPS-0018: DB-PR-META rename + Freshness Gate evidence requirement
 
 - Purpose: Normalize operator-facing kit terminology to DB-PR-META and require Freshness Gate evidence in worker outputs.
