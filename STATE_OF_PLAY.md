@@ -1,3 +1,18 @@
+## 2026-01-13 — DP-OPS-0016: Operator Manual fence fix + docs library alignment
+
+- Purpose: Fix Operator Manual fence integrity and align content with curated docs library/help topics.
+- What shipped:
+  - Repaired and expanded `docs/library/OPERATOR_MANUAL.md` with clean fences and current topics.
+  - Confirmed curated docs library and help front door alignment in operator docs.
+- Verification:
+  - `git diff --name-only`
+  - `rg -n "```" docs/library/OPERATOR_MANUAL.md`
+  - `bash ops/bin/help list`
+  - `bash ops/bin/help manual`
+- Risk / rollback:
+  - Risk: Low; docs-only edits.
+  - Rollback: revert `docs/library/OPERATOR_MANUAL.md` and this entry.
+
 ## 2026-01-13 — DP-OPS-0015: Snapshot optional archive output (tar.xz) + Operator Manual
 
 - Purpose: Add optional tar.xz archive output for snapshots and promote a real Operator Manual in the docs library.
