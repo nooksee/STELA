@@ -9,6 +9,7 @@ It is intentionally short and maintained; if it drifts, fix it.
 ./ops/bin/close
 ./ops/bin/snapshot --scope=icl --format=chatgpt
 ./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto
+./ops/bin/snapshot --scope=full --format=chatgpt --out=auto
 ./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --compress=tar.xz
 ./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto.tar.xz
 ./ops/bin/help
@@ -33,6 +34,9 @@ Add a new entry by editing the manifest and keeping the list curated (not every 
 
 ## Snapshot
 `./ops/bin/snapshot` emits a repo snapshot (stdout by default). Use `--out=auto` to write to `storage/snapshots/`.
+Scopes:
+- `--scope=icl` (default, curated operator scope)
+- `--scope=full` (full repo scope)
 
 Optional archive output (tar.xz):
 - `./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --compress=tar.xz`
@@ -46,3 +50,17 @@ Archive behavior:
 `./ops/bin/help` is the operator front door for curated docs.
 - `./ops/bin/help list` shows approved topics from the library manifest.
 - `./ops/bin/help <topic>` opens that doc in `less` (color via `bat` when available).
+
+Current help topics (from the manifest):
+```
+manual
+quickstart
+docs-index
+context-pack
+daily-console
+recovery
+output-format-contract
+contractor-dispatch-contract
+project-truth
+state-of-play
+```
