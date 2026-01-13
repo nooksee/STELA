@@ -18,6 +18,11 @@ Library location:
 - Root: `docs/library/`
 - Manifest: `docs/library/LIBRARY_INDEX.md` (format: `topic | title | path`)
 
+Datasets (manifest-only):
+- Root: `docs/library/datasets/`
+- `./ops/bin/help db-dataset`
+- `./ops/bin/help db-voice-0001`
+
 Add a new library entry:
 - Update `docs/library/LIBRARY_INDEX.md` with a new line; keep it curated (not every .md).
 

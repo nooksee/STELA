@@ -1,3 +1,20 @@
+## 2026-01-13 — DP-OPS-0017: DB-DATASET system + DB-VOICE-0001 (Declarative Mode)
+
+- Purpose: Introduce a manifest-only DB-DATASET library and seed DB-VOICE-0001 (Declarative Mode).
+- What shipped:
+  - Added DB-DATASET and DB-VOICE-0001 dataset docs under `docs/library/datasets/`.
+  - Added dataset topics to `docs/library/LIBRARY_INDEX.md` and updated curated-surface docs.
+  - Canonized DB-DATASET and IN-LOOP meaning in `PROJECT_TRUTH.md`.
+- Verification:
+  - `git diff --name-only`
+  - `bash ops/bin/help list`
+  - `bash ops/bin/help db-dataset`
+  - `bash ops/bin/help db-voice-0001`
+  - `bash ops/init/tools/context_lint.sh`
+- Risk / rollback:
+  - Risk: Low; docs-only changes.
+  - Rollback: revert the docs updates and this entry.
+
 ## 2026-01-13 — DP-OPS-0016: Operator Manual fence fix + docs library alignment
 
 - Purpose: Fix Operator Manual fence integrity and align content with curated docs library/help topics.
