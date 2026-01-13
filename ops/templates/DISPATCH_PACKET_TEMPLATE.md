@@ -64,7 +64,7 @@ REQUIRED VERIFICATION (paste outputs)
 REQUIRED OUTPUT BACK TO OPERATOR (in this exact order)
 A) ...
 B) ...
-C) Metadata Kit v1 (Canonical)
+C) DB-PR-META (Canonical)
 (1) IDE "Commit Message" (plain text, one line)
 ~~~text
 [fill: one-line commit subject]

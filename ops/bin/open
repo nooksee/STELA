@@ -133,8 +133,8 @@ Don't:
 - git log -1 --oneline
 - ./ops/bin/snapshot --scope=icl --format=chatgpt
 
-[METADATA KIT]
-- After approving work results, tell the assistant you approve and ask for Metadata Kit v1; assistant must emit it immediately.
+[DB-PR-META]
+- After approving work results, tell the assistant you approve and ask for DB-PR-META; assistant must emit it immediately.
 
 [OPERATOR CONTEXT]
 - If any canon pointers are missing, say so.

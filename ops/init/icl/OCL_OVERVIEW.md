@@ -15,7 +15,7 @@ Applies to all operator-led sessions after initialization, including lifecycle c
 ## Control Words
 Operator-issued control words gate behavior (pause/close/snapshot/resume/open/wake/no action) and override default execution.
 
-## Metadata Kit Presentation Rule
+## DB-PR-META Presentation Rule
 Headers are prose. Copy/paste material is always fenced. This applies to AI output directed at operators.
 
 ## Truth Precedence

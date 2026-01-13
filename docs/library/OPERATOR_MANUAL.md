@@ -36,6 +36,11 @@ Datasets:
 - `./ops/bin/open` prints the copy-safe Open Prompt with the freshness gate and canon pointers.
 - `./ops/bin/close` prints a copy-safe session receipt.
 
+## DB-PR-META (approval-gated metadata surfaces)
+DB-PR-META is the approval-gated six-surface metadata output used for commits, PRs, and merge notes.
+Approval phrase:
+`I approve — DB-PR-META for <context>`
+
 ## Snapshot
 `./ops/bin/snapshot` emits a repo snapshot (stdout by default). Use `--out=auto` to write to `storage/snapshots/`.
 Scopes:
