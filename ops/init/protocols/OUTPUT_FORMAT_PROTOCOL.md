@@ -1,7 +1,7 @@
 # Output Format Protocol
 
 ## Purpose
-Define how operators and workers structure outputs and metadata surfaces.
+Define how operators and workers structure outputs and DB-PR-META surfaces.
 
 ## Scope
 Applies to all deliverables that culminate in a PR, including DP handoffs and merge metadata.
@@ -21,7 +21,7 @@ Applies to all deliverables that culminate in a PR, including DP handoffs and me
 
 ---
 
-## 1) Metadata kit surfaces (always-on)
+## 1) DB-PR-META surfaces (always-on)
 Required surfaces, in order:
 1) IDE commit subject.
 2) PR title + PR description (markdown).
@@ -30,16 +30,16 @@ Required surfaces, in order:
 PR description headings must be: Purpose / What shipped / Scope / Verification / Risk+Rollback / Canon updates.
 
 ## 2) Formatting rule (header + fenced payload)
-For every metadata surface and any pasteable payload:
+For every DB-PR-META surface and any pasteable payload:
 - Provide a short prose header that describes the content.
 - Place the exact payload inside a fenced code block for copy/paste.
 - Keep prose outside code fences.
 
-## 3) Delivery sequence (DP-first, metadata kit later)
+## 3) Delivery sequence (DP-first, DB-PR-META later)
 - Operator dispatches the DP first.
 - Worker returns work results (summary, diff, verification).
-- After results, the Worker provides the metadata kit surfaces in order.
-- The DP must require metadata surfaces, but the final filled kit comes after work results.
+- After results, the Worker provides the DB-PR-META surfaces in order.
+- The DP must require DB-PR-META surfaces, but the final filled kit comes after work results.
 
 ## 4) Pasteable payloads (general)
 - Commands, diffs, and file content must be fenced.

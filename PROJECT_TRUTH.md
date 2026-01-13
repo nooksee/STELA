@@ -50,9 +50,11 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 ## Output Mechanics Contract
 - Dispatch Packet (DP) output comes first whenever a DP is requested.
 - DP must be a single fenced block containing: Freshness Gate, required NEW work branch (when changes are requested), Purpose, Scope, Files, Forbidden, Verification, Acceptance.
-- Metadata Kit v1 is only emitted when explicitly requested (e.g., "metakit", "yes please").
-- Metadata Kit v1 must be six separate copy blocks, each with a header line above the fence; each fence contains only the payload for that surface.
-- Ordering: if the operator says "DP first", output only the DP and stop; if Metadata Kit v1 is requested, output it after the DP as six blocks.
+- DB-PR-META is only emitted when explicitly requested (e.g., "db-pr-meta", "yes please").
+- DB-PR-META must be six separate copy blocks, each with a header line above the fence; each fence contains only the payload for that surface.
+- Ordering: if the operator says "DP first", output only the DP and stop; if DB-PR-META is requested, output it after the DP as six blocks.
+- Worker results must include OPEN output (Freshness Gate lines), `git status --porcelain`, and `git log -1 --oneline`.
+- If repo access is unavailable, respond only with: `Repo access unavailable; cannot provide Freshness Gate.`
 - Refusal: if the Freshness Gate (branch + HEAD) is missing in-thread, respond only with a request to run/paste OPEN or provide branch + HEAD; do not guess.
 ## Model Behavior Guardrail (Anti-Drift)
 These rules override default helpfulness. Refusal is correct behavior when blocked.
@@ -63,17 +65,19 @@ These rules override default helpfulness. Refusal is correct behavior when block
   - Explicit `branch=… head=…`
 - If missing, respond only with:
   - `State unknown. Paste OPEN prompt or provide branch + HEAD.`
+- If repo access is unavailable, respond only with:
+  - `Repo access unavailable; cannot provide Freshness Gate.`
 
 ### Rule 2 — DP Emission Order
 - Dispatch Packet must include base branch + HEAD and a NEW `work/*` branch name.
 - Dispatch Packet must be fully fenced.
 - If branch is missing, do not emit the Dispatch Packet.
 
-### Rule 3 — Metadata Kit v1 Emission
-- Metadata Kit v1 may only be emitted after explicit approval with:
-  - `I approve — emit Metadata Kit v1`
+### Rule 3 — DB-PR-META Emission
+- DB-PR-META may only be emitted after explicit approval with:
+  - `I approve — DB-PR-META for <context>`
 - If approval is missing, respond only with:
-  - `Approval not given. Metadata Kit withheld.`
+  - `Approval not given. DB-PR-META withheld.`
 
 ### Rule 4 — Copy Surface Integrity
 - Headers outside fences; fence contains payload only; one fence per surface; no prose inside fences.

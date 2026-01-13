@@ -27,4 +27,4 @@ For operator commands: TYPE LINE BY LINE. For metadata: provide the exact payloa
 
 ## Notes
 - Code fences are the copy boundary for metadata payloads.
-- The UI copy button is sufficient for metadata kits.
+- The UI copy button is sufficient for DB-PR-META payloads.

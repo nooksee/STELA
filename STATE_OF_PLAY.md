@@ -1,3 +1,18 @@
+## 2026-01-13 — DP-OPS-0018: DB-PR-META rename + Freshness Gate evidence requirement
+
+- Purpose: Normalize operator-facing kit terminology to DB-PR-META and require Freshness Gate evidence in worker outputs.
+- What shipped:
+  - Renamed kit references to DB-PR-META across canon, templates, and protocols (approval phrase included).
+  - Updated the Open Prompt and Operator Manual to reflect DB-PR-META naming.
+  - Required worker outputs to include OPEN output, `git status --porcelain`, and `git log -1 --oneline`, with a hard stop if repo access is unavailable.
+- Verification:
+  - `git diff --name-only`
+  - `rg -n "DB-PR-META" PROJECT_TRUTH.md docs/library/OPERATOR_MANUAL.md ops/** STATE_OF_PLAY.md`
+  - `bash ops/init/tools/context_lint.sh`
+- Risk / rollback:
+  - Risk: Low; wording-only changes.
+  - Rollback: revert the touched docs/templates and this entry.
+
 ## 2026-01-13 — DP-OPS-0017: DB-DATASET system + DB-VOICE-0001 (Declarative Mode)
 
 - Purpose: Introduce a manifest-only DB-DATASET library and seed DB-VOICE-0001 (Declarative Mode).
