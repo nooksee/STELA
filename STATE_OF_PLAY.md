@@ -1,3 +1,19 @@
+## 2026-01-13 — DP-OPS-0020: Require Worker After-Action Bundle (OPEN + SNAPSHOT)
+
+- Purpose: Require workers to end every DP result with an After-Action Bundle containing OPEN output plus SNAPSHOT output, and treat omission as a hard failure.
+- What shipped:
+  - Updated the After-Action Bundle definition and rejection rule in `PROJECT_TRUTH.md`.
+  - Updated the DP protocol and DP template to mandate the new bundle headings and rule.
+  - Updated `docs/library/OPERATOR_MANUAL.md` to match the new After-Action Bundle format.
+- Verification:
+  - `rg -n "After-Action Bundle" ops/templates/DISPATCH_PACKET_TEMPLATE.md`
+  - `rg -n "After-Action Bundle" ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`
+  - Manual check: bundle appears at end of DP template.
+  - `git diff --name-only`
+- Risk / rollback:
+  - Risk: Low; docs-only wording updates.
+  - Rollback: revert `PROJECT_TRUTH.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
+
 ## 2026-01-13 — DP-OPS-0019: Worker After-Action Bundle canon
 
 - Purpose: Require workers to end every DP result with a full After-Action Bundle (OPEN output, status, last commit; optional snapshot pointer).

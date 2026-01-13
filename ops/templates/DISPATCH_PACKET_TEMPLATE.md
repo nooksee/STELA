@@ -107,10 +107,19 @@ C) DB-PR-META (Canonical)
 ~~~
 D) ...
 E) After-Action Bundle (append at end of result message; required)
-A) OPEN output (full block)
-B) Repo status (`git status --porcelain`)
-C) Last commit (`git log -1 --oneline`)
-D) Optional: snapshot pointer used (scope+format+out)
+Use the exact headings and order below. DPs missing this bundle are incomplete and must be rejected.
+### After-Action Bundle
+### A) OPEN Output
+- Full, unmodified output of `./ops/bin/open`
+- Must include branch name and HEAD short hash used during work
+### B) SNAPSHOT Output (worker discretion)
+- Choose one based on scope:
+  - `./ops/bin/snapshot --scope=icl` (default for doc / ops changes)
+  - `./ops/bin/snapshot --scope=full` (required for structural or wide refactors)
+- Optional:
+  - `--out=auto`
+  - `--compress=tar.xz` for large operations
+- Snapshot may be inline (truncated if necessary) or referenced by generated filename if archived
 Do not claim "Freshness unknown" if you can run OPEN yourself.
 
 Deliver results, then STOP (no commit/push).

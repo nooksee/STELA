@@ -43,10 +43,11 @@ Approval phrase:
 
 ## What workers must return
 Every worker result message must end with the After-Action Bundle (delivery format, not IN-LOOP permission):
-- A) OPEN output (full block)
-- B) Repo status (`git status --porcelain`)
-- C) Last commit (`git log -1 --oneline`)
-- D) Optional: snapshot pointer used (scope+format+out)
+- Use the exact headings and order:
+  - `### After-Action Bundle`
+  - `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work)
+  - `### B) SNAPSHOT Output` (choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--compress=tar.xz`; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived)
+DPs missing this bundle are incomplete and must be rejected.
 Workers may not claim "Freshness unknown" if they can run OPEN themselves.
 
 ## Snapshot
