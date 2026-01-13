@@ -26,6 +26,8 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - Prefer "run command X" over "open file Y and edit line Z."
 - Prefer front door scripts (`ops/bin/open`, `ops/bin/close`) over control words.
 - If the operator says "merged + synced main", do not re-explain workflow.
+- Operator phrases like "main + synced" are status, not canon.
+- Only canonize new terms, labels, or processes when the operator explicitly says "Canonize X" or "Add X to PROJECT_TRUTH".
 - Proceed to the next agreed step or handle the reported errors.
 - Do not ask questions you can answer from git state (branch already known).
 
@@ -51,7 +53,21 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - Dispatch Packet (DP) output comes first whenever a DP is requested.
 - DP must be a single fenced block containing: Freshness Gate, required NEW work branch (when changes are requested), Purpose, Scope, Files, Forbidden, Verification, Acceptance.
 - DB-PR-META is only emitted when explicitly requested (e.g., "db-pr-meta", "yes please").
-- DB-PR-META must be six separate copy blocks, each with a header line above the fence; each fence contains only the payload for that surface.
+- DB-PR-META surfaces (SSOT; exact labels only):
+  - Commit message
+  - Extended description
+  - PR title
+  - PR description (Markdown)
+  - Merge commit message
+  - Merge note (PR comment, Markdown)
+- No alternate labels (e.g., "Commit Subject", "Commit Extended Description") are permitted.
+- Output format: each surface must be emitted as a header line above a single fence; each fence contains only the payload; six blocks only; no extra prose.
+- Default payload style: declarative, minimal, operator-written; no filler.
+- DB-PR-META style:
+  - Prefer verbs + concrete nouns ("Require worker after-action bundle...", "Update DP template...").
+  - Avoid self-referential AI phrasing ("as an AI...", "I think...").
+  - Avoid hype words ("awesome", "fantastic", "super") in metadata surfaces.
+  - Prefer repo nouns (paths, scripts, rules) over vibes.
 - Ordering: if the operator says "DP first", output only the DP and stop; if DB-PR-META is requested, output it after the DP as six blocks.
 - Worker results must end with an After-Action Bundle (delivery format, not IN-LOOP permission).
 - After-Action Bundle (required, last section, exact headings and order): `### After-Action Bundle` `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work) `### B) SNAPSHOT Output` (choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--compress=tar.xz`; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived).

@@ -31,6 +31,7 @@ Add a new entry by editing the manifest and keeping the list curated (not every 
 Datasets:
 - Datasets live under `docs/library/datasets/` and are manifest-only.
 - Use `./ops/bin/help db-dataset` for the dataset library overview.
+- Use `./ops/bin/help db-pr-meta` for DB-PR-META surface rules.
 
 ## Open / Close
 - `./ops/bin/open` prints the copy-safe Open Prompt with the freshness gate and canon pointers.
@@ -40,6 +41,7 @@ Datasets:
 DB-PR-META is the approval-gated six-surface metadata output used for commits, PRs, and merge notes.
 Approval phrase:
 `I approve — DB-PR-META for <context>`
+Dataset reference: `./ops/bin/help db-pr-meta`
 
 ## What workers must return
 Every worker result message must end with the After-Action Bundle (delivery format, not IN-LOOP permission):
@@ -73,6 +75,7 @@ Current help topics (from the manifest):
 ```
 manual
 db-dataset
+db-pr-meta
 db-voice-0001
 quickstart
 docs-index
