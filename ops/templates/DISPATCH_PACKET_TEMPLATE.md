@@ -106,6 +106,12 @@ C) DB-PR-META (Canonical)
 - [fill]
 ~~~
 D) ...
+E) After-Action Bundle (append at end of result message; required)
+A) OPEN output (full block)
+B) Repo status (`git status --porcelain`)
+C) Last commit (`git log -1 --oneline`)
+D) Optional: snapshot pointer used (scope+format+out)
+Do not claim "Freshness unknown" if you can run OPEN yourself.
 
 Deliver results, then STOP (no commit/push).
 

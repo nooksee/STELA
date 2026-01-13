@@ -41,6 +41,14 @@ DB-PR-META is the approval-gated six-surface metadata output used for commits, P
 Approval phrase:
 `I approve — DB-PR-META for <context>`
 
+## What workers must return
+Every worker result message must end with the After-Action Bundle (delivery format, not IN-LOOP permission):
+- A) OPEN output (full block)
+- B) Repo status (`git status --porcelain`)
+- C) Last commit (`git log -1 --oneline`)
+- D) Optional: snapshot pointer used (scope+format+out)
+Workers may not claim "Freshness unknown" if they can run OPEN themselves.
+
 ## Snapshot
 `./ops/bin/snapshot` emits a repo snapshot (stdout by default). Use `--out=auto` to write to `storage/snapshots/`.
 Scopes:
