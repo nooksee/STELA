@@ -1,0 +1,179 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+manifest_rel="docs/library/LIBRARY_INDEX.md"
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/help [list|<topic>]
+USAGE
+}
+
+die() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+trim() {
+  local s="$1"
+  s="${s#"${s%%[![:space:]]*}"}"
+  s="${s%"${s##*[![:space:]]}"}"
+  printf "%s" "$s"
+}
+
+require_repo_root() {
+  if ! command -v git >/dev/null 2>&1; then
+    die "git is required but was not found on PATH."
+  fi
+
+  if ! repo_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+    die "git repo not found. Run from repo root."
+  fi
+
+  if [[ "$(pwd -P)" != "$repo_root" ]]; then
+    die "Run from repo root: $repo_root"
+  fi
+}
+
+require_pager() {
+  if ! command -v less >/dev/null 2>&1; then
+    die "less is required but was not found on PATH."
+  fi
+}
+
+declare -a topics=()
+declare -A topic_titles=()
+declare -A topic_paths=()
+
+load_manifest() {
+  if [[ ! -f "$manifest_rel" ]]; then
+    die "Missing docs library manifest: $manifest_rel"
+  fi
+
+  local line raw_topic raw_title raw_path extra topic title path
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%%$'\r'}"
+    if [[ -z "${line//[[:space:]]/}" ]]; then
+      continue
+    fi
+    if [[ "$line" =~ ^[[:space:]]*# ]]; then
+      continue
+    fi
+
+    IFS='|' read -r raw_topic raw_title raw_path extra <<< "$line"
+    if [[ -n "${extra:-}" ]]; then
+      die "Manifest line has extra fields: $line"
+    fi
+
+    topic="$(trim "${raw_topic:-}")"
+    title="$(trim "${raw_title:-}")"
+    path="$(trim "${raw_path:-}")"
+
+    if [[ -z "$topic" || -z "$title" || -z "$path" ]]; then
+      die "Manifest line missing fields: $line"
+    fi
+    if [[ "$topic" =~ [[:space:]] ]]; then
+      die "Manifest topic must not contain whitespace: $topic"
+    fi
+    if [[ "$path" == /* || "$path" == *".."* ]]; then
+      die "Manifest path must be repo-relative without '..': $path"
+    fi
+    if [[ ! -f "$path" ]]; then
+      die "Manifest path missing: $path"
+    fi
+    if [[ -n "${topic_paths[$topic]:-}" ]]; then
+      die "Duplicate topic in manifest: $topic"
+    fi
+
+    topics+=("$topic")
+    topic_titles["$topic"]="$title"
+    topic_paths["$topic"]="$path"
+  done < "$manifest_rel"
+
+  if (( ${#topics[@]} == 0 )); then
+    die "No topics found in manifest: $manifest_rel"
+  fi
+}
+
+page_text() {
+  less
+}
+
+page_plain_file() {
+  less "$1"
+}
+
+page_color_file() {
+  bat --style=plain --color=always --paging=never "$1" | less -R
+}
+
+show_menu() {
+  cat <<EOF | page_text
+ops/bin/help - docs front door (curated)
+
+Command index:
+  OPEN     ./ops/bin/open --intent="..." --dp="DP-XXXX / YYYY-MM-DD"
+  CLOSE    ./ops/bin/close
+  SNAPSHOT ./ops/bin/snapshot --scope=icl --format=chatgpt
+  HELP     ./ops/bin/help [list|<topic>]
+  GATES    bash ops/init/tools/context_lint.sh
+
+Docs library:
+  ./ops/bin/help list
+  ./ops/bin/help manual
+  ./ops/bin/help <topic>
+
+Library manifest:
+  $manifest_rel
+
+Rule: if a doc is not listed in the manifest, help will refuse to open it.
+EOF
+}
+
+show_list() {
+  {
+    printf "Available docs (from %s):\n\n" "$manifest_rel"
+    for topic in "${topics[@]}"; do
+      printf "  %-28s %s\n" "$topic" "${topic_titles[$topic]}"
+    done
+    printf "\nExample: ./ops/bin/help %s\n" "${topics[0]}"
+  } | page_text
+}
+
+open_topic() {
+  local topic="$1"
+  local path="${topic_paths[$topic]:-}"
+
+  if [[ -z "$path" ]]; then
+    die "Unknown topic: $topic (run: ./ops/bin/help list)"
+  fi
+
+  if command -v bat >/dev/null 2>&1; then
+    page_color_file "$path"
+  else
+    page_plain_file "$path"
+  fi
+}
+
+require_repo_root
+require_pager
+load_manifest
+
+if (( $# > 1 )); then
+  die "Too many arguments."
+fi
+
+case "${1:-}" in
+  "" )
+    show_menu
+    ;;
+  list )
+    show_list
+    ;;
+  -h|--help )
+    usage
+    ;;
+  * )
+    open_topic "$1"
+    ;;
+esac
