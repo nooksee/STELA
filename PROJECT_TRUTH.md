@@ -39,6 +39,14 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - Nearly any change that ships (scripts, protocols, behavior rules) must add or update a docs library entry.
 - The library is curated; do not list every .md. If it is not in the manifest, help will refuse to open it.
 
+## DB-DATASET (Curated Dataset Library)
+- DB-DATASET is the manifest-only dataset library for "mode training" and standards.
+- Datasets are docs-only entries under `docs/library/datasets/`, listed in `docs/library/LIBRARY_INDEX.md`.
+- No runtime behavior is implied; datasets are references only.
+
+## Labels
+- IN-LOOP: human-required step / explicit approval gate.
+
 ## Output Mechanics Contract
 - Dispatch Packet (DP) output comes first whenever a DP is requested.
 - DP must be a single fenced block containing: Freshness Gate, required NEW work branch (when changes are requested), Purpose, Scope, Files, Forbidden, Verification, Acceptance.
