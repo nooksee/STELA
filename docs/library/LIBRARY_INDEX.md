@@ -7,6 +7,7 @@
 manual | Operator Manual | docs/library/OPERATOR_MANUAL.md
 db-dataset | DB-DATASET (Dataset Library) | docs/library/datasets/DB-DATASET.md
 db-voice-0001 | DB-VOICE-0001 (Declarative Mode) | docs/library/datasets/DB-VOICE-0001.md
+db-pr-meta | DB-PR-META (Post-Approval Metadata Surfaces) | docs/library/datasets/DB-PR-META.md
 quickstart | Quickstart | docs/10-QUICKSTART.md
 docs-index | Docs Index | docs/00-INDEX.md
 context-pack | Context Pack (Recovery Card) | ops/init/icl/launch_pack/CONTEXT_PACK.md

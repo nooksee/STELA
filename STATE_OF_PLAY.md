@@ -1,3 +1,19 @@
+## 2026-01-13 — DP-OPS-0021: Lock DB-PR-META surfaces + anti-slop style + operator-idiom guardrail
+
+- Purpose: Lock DB-PR-META surface labels/format, add anti-slop micro-style, and prevent canonizing operator idioms; add dataset entry.
+- What shipped:
+  - Canonized DB-PR-META surface names, output format, and style in `PROJECT_TRUTH.md`.
+  - Added operator-idiom canonization guardrails in `PROJECT_TRUTH.md`.
+  - Added the DB-PR-META dataset doc and wired it into the curated library.
+- Verification:
+  - `git diff --name-only`
+  - `rg -n "DB-PR-META" PROJECT_TRUTH.md docs/library/datasets/DB-PR-META.md docs/library/LIBRARY_INDEX.md docs/library/OPERATOR_MANUAL.md STATE_OF_PLAY.md`
+  - Manual check: DB-PR-META section lists the six exact surface names.
+  - `bash ops/init/tools/context_lint.sh`
+- Risk / rollback:
+  - Risk: Low; docs-only wording updates.
+  - Rollback: revert `PROJECT_TRUTH.md`, `docs/library/datasets/DB-PR-META.md`, `docs/library/LIBRARY_INDEX.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
+
 ## 2026-01-13 — DP-OPS-0020: Require Worker After-Action Bundle (OPEN + SNAPSHOT)
 
 - Purpose: Require workers to end every DP result with an After-Action Bundle containing OPEN output plus SNAPSHOT output, and treat omission as a hard failure.
