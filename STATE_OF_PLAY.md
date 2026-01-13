@@ -1,3 +1,26 @@
+## 2026-01-13 — DP-OPS-0015: Snapshot optional archive output (tar.xz) + Operator Manual
+
+- Purpose: Add optional tar.xz archive output for snapshots and promote a real Operator Manual in the docs library.
+- What shipped:
+  - Added optional tar.xz archive output for `ops/bin/snapshot` (no default behavior changes).
+  - Added `docs/library/OPERATOR_MANUAL.md` with a top-commands cheat sheet and archive usage.
+  - Updated `docs/library/LIBRARY_INDEX.md` and `docs/ops/INDEX.md` to point to the new manual.
+- Verification:
+  - `git diff --name-only`
+  - `bash tools/verify_tree.sh`
+  - `bash ops/init/tools/context_lint.sh`
+  - `bash ops/bin/snapshot --scope=icl --format=chatgpt | head -n 40`
+  - `bash ops/bin/snapshot --scope=icl --format=chatgpt --out=auto`
+  - `bash ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --compress=tar.xz`
+  - `bash ops/bin/snapshot --scope=icl --format=chatgpt --out=auto.tar.xz`
+  - `ls -la storage/snapshots/ | tail -n 20`
+  - `tar -tf storage/snapshots/<newfile>.tar.xz | head`
+  - `bash ops/bin/help list`
+  - `bash ops/bin/help manual`
+- Risk / rollback:
+  - Risk: Low; new optional output path and docs only.
+  - Rollback: revert `ops/bin/snapshot`, remove `docs/library/OPERATOR_MANUAL.md`, revert `docs/library/LIBRARY_INDEX.md`, `docs/ops/INDEX.md`, and this entry.
+
 ## 2026-01-13 — DP-OPS-0013: Help front door + curated docs library
 
 - Purpose: Add a docs reader front door and formalize the curated docs library surface.

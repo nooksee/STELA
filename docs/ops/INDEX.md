@@ -21,6 +21,10 @@ Library location:
 Add a new library entry:
 - Update `docs/library/LIBRARY_INDEX.md` with a new line; keep it curated (not every .md).
 
+Operator Manual:
+- `docs/library/OPERATOR_MANUAL.md`
+- `./ops/bin/help manual`
+
 Color behavior:
 - If `bat` is installed, help uses `bat` and pipes to `less -R`.
 - If `bat` is not installed, help uses plain `less`.

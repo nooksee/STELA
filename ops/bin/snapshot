@@ -4,6 +4,7 @@ set -euo pipefail
 scope="icl"
 format="chatgpt"
 out_path=""
+compress_mode=""
 max_lines=""
 state_of_play_entry_limit=15
 state_heading_regex='^## [0-9]{4}-[0-9]{2}-[0-9]{2} '
@@ -11,6 +12,7 @@ state_heading_regex='^## [0-9]{4}-[0-9]{2}-[0-9]{2} '
 usage() {
   cat <<'USAGE'
 Usage: ops/bin/snapshot [--scope=icl|full] [--format=chatgpt|gemini|claude] [--max-lines=n] [--out=path|auto]
+                     [--compress=tar.xz]
 USAGE
 }
 
@@ -42,12 +44,31 @@ for arg in "$@"; do
       if [[ -z "$out_path" ]]; then
         die "--out requires a path"
       fi
+      if [[ "$out_path" == "auto.tar.xz" ]]; then
+        out_path="auto"
+        compress_mode="tar.xz"
+      fi
+      ;;
+    --compress=tar.xz)
+      compress_mode="tar.xz"
       ;;
     *)
       die "Unknown argument: $arg"
       ;;
   esac
 done
+
+if [[ -n "$out_path" && "$out_path" != "auto" && -z "$compress_mode" ]]; then
+  case "$out_path" in
+    *.tar.xz)
+      compress_mode="tar.xz"
+      ;;
+  esac
+fi
+
+if [[ -n "$compress_mode" && -z "$out_path" ]]; then
+  die "--compress requires --out"
+fi
 
 if [[ -z "$max_lines" ]]; then
   if [[ "$scope" == "icl" ]]; then
@@ -164,7 +185,11 @@ fi
 output_target=""
 if [[ -n "$out_path" ]]; then
   if [[ "$out_path" == "auto" ]]; then
-    output_target="$repo_root/storage/snapshots/snapshot-${scope}-${branch_safe}-${head_short}.txt"
+    if [[ "$compress_mode" == "tar.xz" ]]; then
+      output_target="$repo_root/storage/snapshots/snapshot-${scope}-${branch_safe}-${head_short}.tar.xz"
+    else
+      output_target="$repo_root/storage/snapshots/snapshot-${scope}-${branch_safe}-${head_short}.txt"
+    fi
   elif [[ "$out_path" = /* ]]; then
     output_target="$out_path"
   else
@@ -371,7 +396,24 @@ emit_snapshot() {
 }
 
 if [[ -n "$output_target" ]]; then
-  emit_snapshot > "$output_target"
+  if [[ "$compress_mode" == "tar.xz" ]]; then
+    if ! command -v tar >/dev/null 2>&1; then
+      die "tar is required for --compress=tar.xz but was not found on PATH."
+    fi
+    tmp_dir="$(mktemp -d)"
+    tmp_name="snapshot-${scope}-${branch_safe}-${head_short}.txt"
+    tmp_path="${tmp_dir}/${tmp_name}"
+    cleanup() {
+      rm -rf "$tmp_dir"
+    }
+    trap cleanup EXIT
+    emit_snapshot > "$tmp_path"
+    tar -cJf "$output_target" -C "$tmp_dir" "$tmp_name"
+    trap - EXIT
+    cleanup
+  else
+    emit_snapshot > "$output_target"
+  fi
 else
   emit_snapshot
 fi
