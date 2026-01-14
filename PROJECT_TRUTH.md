@@ -46,6 +46,11 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - Datasets are docs-only entries under `docs/library/datasets/`, listed in `docs/library/LIBRARY_INDEX.md`.
 - No runtime behavior is implied; datasets are references only.
 
+## MEMENTOS (bias artifacts)
+- MEMENTOS are bias artifacts: preferences that shape defaults without overriding contracts.
+- They are preferences, not permissions; they do not grant state, authority, or memory.
+- If a MEMENTOS conflicts with canon or refusal rules, canon wins.
+
 ## Labels
 - IN-LOOP: human-required step / explicit approval gate.
 
