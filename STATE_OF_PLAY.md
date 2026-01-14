@@ -1,3 +1,19 @@
+## 2026-01-14 — DP-OPS-0027: Approval line placement + handoff paste order
+
+- Purpose: Stop "approval lost in the paste" by canonizing standalone approval line placement and deterministic handoff paste order.
+- What shipped:
+  - Canonized "Approval Line Placement" (standalone, outside OPEN/intent/quotes) in `PROJECT_TRUTH.md`.
+  - Canonized "Operator Handoff Paste Order" (1. Approval, 2. Results, 3. Snapshot) in `PROJECT_TRUTH.md` and `docs/library/OPERATOR_MANUAL.md`.
+  - Wired new rules into `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, and `docs/library/datasets/DB-PR-META.md`.
+- Verification:
+  - `rg -n "Approval line|standalone|APPROVE DP-OPS-|Handoff paste order" PROJECT_TRUTH.md docs/library/OPERATOR_MANUAL.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/datasets/DB-PR-META.md`
+  - Manual check: rules explicitly forbid approvals inside OPEN intent and inside quoted/fenced blocks.
+  - `git diff --name-only`
+  - `bash ops/init/tools/context_lint.sh`
+- Risk / rollback:
+  - Risk: Low; docs-only canon update.
+  - Rollback: revert `PROJECT_TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `docs/library/datasets/DB-PR-META.md`, and this entry.
+
 ## 2026-01-14 — DP-OPS-0026: Operator approval + paste contract lock
 
 - Purpose: Lock the operator approval + paste contract so approval, paste order, and DB-PR-META emission are deterministic.

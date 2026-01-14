@@ -59,10 +59,13 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - DP must be a single fenced block containing: Freshness Gate, required NEW work branch (when changes are requested), Purpose, Scope, Files, Forbidden, Verification, Acceptance.
 - DB-PR-META is IN-LOOP and withheld unless the operator uses the required approval phrase pattern (see Rule 3).
 - Operator approval is an IN-LOOP act and must be explicit.
-- Approval phrase must be plain text and unquoted; it must include: `APPROVE <DP-ID> EMIT DB-PR-META` (DP-ID starts with `DP-`; valid form: `APPROVE DP-OPS-0000 EMIT DB-PR-META`).
-- Approval may appear before pasted worker results; canonical order is approval line first.
-- Worker results must be pasted raw, unquoted, unedited.
-- Snapshot file must be attached in the same message as approval + pasted results.
+- Approval phrase must be a standalone line, plain text, and unquoted.
+- Approval phrase must include: `APPROVE <DP-ID> EMIT DB-PR-META` (DP-ID starts with `DP-`; valid form: `APPROVE DP-OPS-0000 EMIT DB-PR-META`).
+- Approval MUST be outside OPEN prompt text, OPEN "Today's intent", and outside quoted/fenced blocks.
+- Operator Handoff Paste Order (canonical):
+  1) Approval line (standalone)
+  2) Worker results pasted raw (not quoted)
+  3) Snapshot tarball attached (if DP required it)
 - Quoted blocks are commentary and invalid for approval.
 - Requesting DB-PR-META without the approval phrase is insufficient.
 - DB-PR-META surfaces (SSOT; exact labels only; order is canonical):
@@ -117,7 +120,7 @@ These rules override default helpfulness. Refusal is correct behavior when block
   - `APPROVE <DP-ID> EMIT DB-PR-META`
 - The approval phrase must include the current DP-ID between APPROVE and EMIT; missing DP-ID or EMIT is invalid.
 - The approval phrase must be plain text and unquoted; quoted blocks are commentary and invalid for approval.
-- If approval is missing or malformed, respond only with:
+- If approval is missing, buried in a fence/quote, or malformed, respond only with:
   - `APPROVE <DP-ID> EMIT DB-PR-META`
 
 ### Rule 4 — Copy Surface Integrity
