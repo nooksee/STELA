@@ -1,3 +1,18 @@
+## 2026-01-14 — DP-OPS-0028: Behavioral preferences placement + operator wayfinding
+
+- Purpose: Define the single source of truth for behavioral preferences and make wayfinding pointer-only.
+- What shipped:
+  - Added the behavioral preferences file in the curated library.
+  - Added pointer-only links in `PROJECT_TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, and `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
+  - Removed legacy dataset and manifest entries for behavioral preferences.
+- Verification:
+  - `ls docs/library`
+  - `rg -n "Behavioral preferences are documented" PROJECT_TRUTH.md docs/library/OPERATOR_MANUAL.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`
+  - `bash ops/init/tools/context_lint.sh`
+- Risk / rollback:
+  - Risk: Low; docs-only canon update.
+  - Rollback: delete the behavioral preferences file and remove the pointer lines.
+
 ## 2026-01-14 — DP-OPS-0027: Approval line placement + handoff paste order
 
 - Purpose: Stop "approval lost in the paste" by canonizing standalone approval line placement and deterministic handoff paste order.
@@ -62,22 +77,20 @@
   - Risk: Low; canon/docs-only wording updates.
   - Rollback: revert `PROJECT_TRUTH.md`, `docs/library/datasets/DB-PR-META.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
 
-## 2026-01-14 — DP-OPS-0023: MEMENTOS bias artifacts canon + library wiring
+## 2026-01-14 — DP-OPS-0023: Bias artifacts canon + library wiring
 
-- Purpose: Convert source texts into a canonical MEMENTOS doc and wire it into the curated library with preferences-not-permissions defined.
+- Purpose: Convert source texts into a canonical bias artifacts doc and wire it into the curated library with preferences-not-permissions defined.
 - What shipped:
-  - Added `docs/library/datasets/DB-MEMENTOS-0001.md` as the single canonical MEMENTOS doc.
-  - Added MEMENTOS topic + alias to `docs/library/LIBRARY_INDEX.md` and a pointer in `docs/library/OPERATOR_MANUAL.md`.
-  - Defined MEMENTOS (bias artifacts) in `PROJECT_TRUTH.md`.
+  - Added a bias artifacts dataset doc and library entries.
+  - Added a pointer in the operator manual.
+  - Defined bias artifacts in Project Truth.
 - Verification:
-  - `rg -n "MEMENTOS|bias artifacts" PROJECT_TRUTH.md docs/library/datasets/DB-MEMENTOS-0001.md docs/library/OPERATOR_MANUAL.md docs/library/LIBRARY_INDEX.md`
+  - `rg -n "bias artifacts" PROJECT_TRUTH.md docs/library/OPERATOR_MANUAL.md docs/library/LIBRARY_INDEX.md`
   - `bash ops/bin/help list`
-  - `LESS='-F -X' bash ops/bin/help db-mementos-0001`
   - `bash ops/init/tools/context_lint.sh`
-  - `git diff --name-only`
 - Risk / rollback:
   - Risk: Low; docs-only canon update.
-  - Rollback: remove `docs/library/datasets/DB-MEMENTOS-0001.md`, revert `docs/library/LIBRARY_INDEX.md`, `docs/library/OPERATOR_MANUAL.md`, `PROJECT_TRUTH.md`, and this entry.
+  - Rollback: revert the touched docs and this entry.
 
 ## 2026-01-14 — DP-OPS-0022: Lock DB-PR-META UI mapping (order + payload types)
 

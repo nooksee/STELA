@@ -47,9 +47,7 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - No runtime behavior is implied; datasets are references only.
 
 ## MEMENTOS (bias artifacts)
-- MEMENTOS are bias artifacts: preferences that shape defaults without overriding contracts.
-- They are preferences, not permissions; they do not grant state, authority, or memory.
-- If a MEMENTOS conflicts with canon or refusal rules, canon wins.
+- Behavioral preferences are documented in `docs/library/MEMENTOS.md`.
 
 ## Labels
 - IN-LOOP: human-required step / explicit approval gate.
