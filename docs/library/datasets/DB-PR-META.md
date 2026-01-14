@@ -22,8 +22,9 @@ DB-PR-META is the approval-gated metadata output used after approval for commits
 - Required approval pattern (case-insensitive; extra whitespace allowed):
   - MUST contain: `APPROVE` + `<DP-ID>` + `EMIT` + `DB-PR-META`
   - Example: `APPROVE DP-OPS-0025 EMIT DB-PR-META`
+- Approval must be a standalone line outside OPEN prompt text, OPEN intent, and outside quoted/fenced blocks.
 - Ambiguous variants are invalid (missing DP-ID, missing EMIT, "i approve db-pr-meta" without DP-ID).
-- If approval is missing or malformed, refuse with this single paste-ready line:
+- If approval is missing, buried, or malformed, refuse with this single paste-ready line:
   - `APPROVE <DP-ID> EMIT DB-PR-META`
 
 ## Output format
