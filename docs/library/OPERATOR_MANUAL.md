@@ -40,8 +40,10 @@ Datasets:
 
 ## DB-PR-META (approval-gated metadata surfaces)
 DB-PR-META is the approval-gated six-surface metadata output used for commits, PRs, and merge notes.
-Approval phrase:
+Approval phrases (exact):
 `I approve — DB-PR-META for <context>`
+`I approve - DB-PR-META for <context>`
+If approval is missing or malformed, the refusal response includes the paste-ready phrase.
 Dataset reference: `./ops/bin/help db-pr-meta`
 UI order + payload types are canonical; use the DB-PR-META dataset as the SSOT.
 
@@ -59,6 +61,7 @@ Workers may not claim "Freshness unknown" if they can run OPEN themselves.
 Scopes:
 - `--scope=icl` (default, curated operator scope)
 - `--scope=full` (full repo scope)
+Note: snapshots do not include OPEN output; state travels via the After-Action Bundle.
 
 Optional archive output (tar.xz):
 - `./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --compress=tar.xz`

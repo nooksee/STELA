@@ -1,3 +1,18 @@
+## 2026-01-14 — DP-OPS-0024: Approval gate robustness + snapshot/OPEN decision
+
+- Purpose: Make DB-PR-META approval recoverable with tolerant phrasing and paste-ready refusal, and document snapshot/OPEN handling.
+- What shipped:
+  - Added acceptable DB-PR-META approval phrases and paste-ready refusal text in `PROJECT_TRUTH.md` and `docs/library/datasets/DB-PR-META.md`.
+  - Updated `docs/library/OPERATOR_MANUAL.md` to list approval phrases and document that snapshots do not include OPEN output.
+- Verification:
+  - `rg -n "Approval not given|DB-PR-META|approval phrase" PROJECT_TRUTH.md docs/library/OPERATOR_MANUAL.md docs/library/datasets/DB-PR-META.md`
+  - Manual check: near-miss approval refusals include the paste-ready phrase.
+  - `bash ops/init/tools/context_lint.sh`
+  - `git diff --name-only`
+- Risk / rollback:
+  - Risk: Low; canon/docs-only wording updates.
+  - Rollback: revert `PROJECT_TRUTH.md`, `docs/library/datasets/DB-PR-META.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
+
 ## 2026-01-14 — DP-OPS-0023: MEMENTOS bias artifacts canon + library wiring
 
 - Purpose: Convert source texts into a canonical MEMENTOS doc and wire it into the curated library with preferences-not-permissions defined.
