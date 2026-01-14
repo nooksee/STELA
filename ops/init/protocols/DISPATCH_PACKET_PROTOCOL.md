@@ -19,6 +19,8 @@ Applies to all worker assignments that require a formal work order (e.g., ICL, c
 - ops/contracts/OUTPUT_FORMAT_CONTRACT.md
 - ops/init/protocols/OUTPUT_FORMAT_PROTOCOL.md
 
+Reminder: Behavioral preferences are documented in `docs/library/MEMENTOS.md`.
+
 ---
 
 ## 1. Definition

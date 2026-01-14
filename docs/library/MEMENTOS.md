@@ -1,7 +1,14 @@
-# DB-MEMENTOS-0001 - MEMENTOS (Bias Artifacts)
+# MEMENTOS
 
 MEMENTOS are compact bias artifacts that keep responses anchored, auditable, and contract-safe.
-They bias defaults but do not override any contract, refusal rule, or permission boundary.
+This file is the single source of truth for MEMENTOS.
+
+## Definition (restated)
+- A short, declarative behavioral bias.
+- Non-enforcing.
+- Non-authoritative.
+- Designed to nudge model behavior without overriding canon.
+- Preferences, not permissions.
 
 ## Purpose
 - Prevent interface drift by keeping expression constraints explicit and mechanical.
@@ -15,12 +22,6 @@ The repeated failure pattern is a stack:
 - Helpful invention: the model smooths gaps instead of refusing or requesting state.
 
 MEMENTOS exist to interrupt that stack before it becomes canon drift.
-
-## Definition
-MEMENTOS are bias artifacts: explicit preferences that shape defaults.
-They are preferences, not permissions.
-They do not grant state, authority, or new behavior.
-They cannot override contracts or refusal rules.
 
 ## Contract alignment
 - Contracts and refusal rules outrank any MEMENTOS.
@@ -67,12 +68,10 @@ They cannot override contracts or refusal rules.
 - Do not rename UI labels or canon surfaces.
 - Do not create new systems, roles, or workflows.
 
-## Where to sprinkle (strategic locations)
-- Front door prompts and readiness checks.
-- Curated dataset docs that define response posture.
-- Operator-facing manuals or brief pointers.
-- Dispatch or task briefs where defaults are set.
-- Templates or checklists that shape output form.
+## Placement
+- Single source of truth: `docs/library/MEMENTOS.md`.
+- References only: `PROJECT_TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
+- Do not duplicate or embed elsewhere.
 
 ## Example bias artifacts (short and mechanical)
 - "Answer only from explicit inputs; treat missing info as unknown."
@@ -82,13 +81,6 @@ They cannot override contracts or refusal rules.
 - "Do not imply memory or continuity."
 - "Expose assumptions and show which inputs were used."
 - "If multiple interpretations exist, enumerate them first."
-
-## Placement examples (context-specific)
-- Front door: "State required for repo-dependent output."
-- Dispatch brief: "Bias toward refusing uncertainty over inventing detail."
-- Operator manual pointer: "MEMENTOS are preferences, not permissions."
-- Dataset entry: "Neutral tone and explicit boundaries by default."
-- Closeout receipt: "Unknowns remain unknown until supplied."
 
 ## Hard stops (non-negotiable)
 These hard stops are contract-bound and cannot be overridden by MEMENTOS.
