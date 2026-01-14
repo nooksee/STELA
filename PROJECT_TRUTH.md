@@ -55,11 +55,18 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - DB-PR-META is only emitted when explicitly requested (e.g., "db-pr-meta", "yes please").
 - DB-PR-META surfaces (SSOT; exact labels only):
   - Commit message
-  - Extended description
   - PR title
   - PR description (Markdown)
   - Merge commit message
+  - Extended description
   - Merge note (PR comment, Markdown)
+- DB-PR-META UI mapping (order + payload type; no interpretation):
+  1) Commit message -> IDE "Commit message" - plain text (one line)
+  2) PR title -> GitHub PR "Add a title" - plain text (one line)
+  3) PR description (Markdown) -> GitHub PR "Add a description" - Markdown
+  4) Merge commit message -> GitHub merge "Commit message" - plain text (one line)
+  5) Extended description -> GitHub merge "Extended description" - plain text (body)
+  6) Merge note (PR comment, Markdown) -> GitHub PR "Add a comment" - Markdown
 - No alternate labels (e.g., "Commit Subject", "Commit Extended Description") are permitted.
 - Output format: each surface must be emitted as a header line above a single fence; each fence contains only the payload; six blocks only; no extra prose.
 - Default payload style: declarative, minimal, operator-written; no filler.

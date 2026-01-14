@@ -42,6 +42,7 @@ DB-PR-META is the approval-gated six-surface metadata output used for commits, P
 Approval phrase:
 `I approve — DB-PR-META for <context>`
 Dataset reference: `./ops/bin/help db-pr-meta`
+UI order + payload types are canonical; use the DB-PR-META dataset as the SSOT.
 
 ## What workers must return
 Every worker result message must end with the After-Action Bundle (delivery format, not IN-LOOP permission):
