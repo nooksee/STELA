@@ -18,6 +18,14 @@ DB-PR-META is the approval-gated metadata output used after approval for commits
 5) Extended description -> GitHub merge "Extended description" - plain text (body)
 6) Merge note (PR comment, Markdown) -> GitHub PR "Add a comment" - Markdown
 
+## Approval gate (exact phrases)
+- Acceptable approval phrases:
+  - `I approve — DB-PR-META for <context>`
+  - `I approve - DB-PR-META for <context>`
+- `<context>` is required and may be any non-empty text.
+- If approval is missing or malformed, refuse with:
+  - `Approval not given. DB-PR-META withheld. Paste to approve: I approve — DB-PR-META for <context>.`
+
 ## Output format
 - Each surface is emitted as a header line above a single fence.
 - Each fence contains only the payload for that surface; no extra prose inside fences.

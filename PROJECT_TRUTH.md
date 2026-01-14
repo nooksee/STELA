@@ -83,6 +83,7 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - Ordering: if the operator says "DP first", output only the DP and stop; if DB-PR-META is requested, output it after the DP as six blocks.
 - Worker results must end with an After-Action Bundle (delivery format, not IN-LOOP permission).
 - After-Action Bundle (required, last section, exact headings and order): `### After-Action Bundle` `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work) `### B) SNAPSHOT Output` (choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--compress=tar.xz`; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived).
+- Snapshots do not include OPEN output; state travels via the After-Action Bundle only.
 - DPs missing this bundle are incomplete and must be rejected.
 - Worker may not claim "Freshness unknown" if they can run OPEN themselves.
 - If repo access is unavailable, respond only with: `Repo access unavailable; cannot provide Freshness Gate.`
@@ -105,10 +106,12 @@ These rules override default helpfulness. Refusal is correct behavior when block
 - If branch is missing, do not emit the Dispatch Packet.
 
 ### Rule 3 — DB-PR-META Emission
-- DB-PR-META may only be emitted after explicit approval with:
+- DB-PR-META may only be emitted after explicit approval with one of:
   - `I approve — DB-PR-META for <context>`
-- If approval is missing, respond only with:
-  - `Approval not given. DB-PR-META withheld.`
+  - `I approve - DB-PR-META for <context>`
+- `<context>` is required and may be any non-empty text.
+- If approval is missing or malformed, respond only with:
+  - `Approval not given. DB-PR-META withheld. Paste to approve: I approve — DB-PR-META for <context>.`
 
 ### Rule 4 — Copy Surface Integrity
 - Headers outside fences; fence contains payload only; one fence per surface; no prose inside fences.
