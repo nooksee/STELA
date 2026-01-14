@@ -1,3 +1,18 @@
+## 2026-01-14 — DP-OPS-0022: Lock DB-PR-META UI mapping (order + payload types)
+
+- Purpose: Lock the UI-to-DB-PR-META surface mapping with explicit order, UI field references, and payload types (plain text vs Markdown).
+- What shipped:
+  - Updated DB-PR-META UI mapping lines to use the GitHub UI field labels (Add a title, Add a description, merge dialog labels, Add a comment) with explicit payload types in `PROJECT_TRUTH.md` and `docs/library/datasets/DB-PR-META.md`.
+- Verification:
+  - `rg -n "DB-PR-META surfaces" PROJECT_TRUTH.md`
+  - `rg -n "DB-PR-META" PROJECT_TRUTH.md docs/library/datasets/DB-PR-META.md docs/library/OPERATOR_MANUAL.md docs/library/LIBRARY_INDEX.md STATE_OF_PLAY.md`
+  - Manual check: UI order matches IDE "Commit message" (plain text, one line), GitHub PR "Add a title" (plain text, one line), GitHub PR "Add a description" (Markdown), GitHub merge "Commit message" (plain text, one line), GitHub merge "Extended description" (plain text, body), GitHub PR "Add a comment" (Markdown).
+  - `git diff --name-only`
+  - `bash ops/init/tools/context_lint.sh`
+- Risk / rollback:
+  - Risk: Low; docs-only wording updates.
+  - Rollback: revert `PROJECT_TRUTH.md`, `docs/library/datasets/DB-PR-META.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
+
 ## 2026-01-13 — DP-OPS-0021: Lock DB-PR-META surfaces + anti-slop style + operator-idiom guardrail
 
 - Purpose: Lock DB-PR-META surface labels/format, add anti-slop micro-style, and prevent canonizing operator idioms; add dataset entry.
