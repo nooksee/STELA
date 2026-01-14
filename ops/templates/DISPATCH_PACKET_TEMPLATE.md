@@ -61,6 +61,10 @@ TASKS
 REQUIRED VERIFICATION (paste outputs)
 - ...
 
+ACCEPTANCE (IN-LOOP)
+Approval phrase (IN-LOOP): APPROVE <DP-ID> EMIT DB-PR-META
+DB-PR-META is emitted only after approval (no exceptions).
+
 REQUIRED OUTPUT BACK TO OPERATOR (in this exact order)
 A) ...
 B) ...

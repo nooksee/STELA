@@ -40,10 +40,10 @@ Datasets:
 
 ## DB-PR-META (approval-gated metadata surfaces)
 DB-PR-META is the approval-gated six-surface metadata output used for commits, PRs, and merge notes.
-Approval phrases (exact):
-`I approve — DB-PR-META for <context>`
-`I approve - DB-PR-META for <context>`
-If approval is missing or malformed, the refusal response includes the paste-ready phrase.
+How to approve (IN-LOOP):
+Approval phrase (required): `APPROVE <DP-ID> EMIT DB-PR-META`
+Example: `APPROVE DP-OPS-0025 EMIT DB-PR-META`
+Emission gate: approval phrase required; no exceptions.
 Dataset reference: `./ops/bin/help db-pr-meta`
 UI order + payload types are canonical; use the DB-PR-META dataset as the SSOT.
 
