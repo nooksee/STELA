@@ -6,6 +6,8 @@
 
 manual | Operator Manual | docs/library/OPERATOR_MANUAL.md
 db-dataset | DB-DATASET (Dataset Library) | docs/library/datasets/DB-DATASET.md
+db-mementos-0001 | DB-MEMENTOS-0001 (Bias Artifacts) | docs/library/datasets/DB-MEMENTOS-0001.md
+mementos | MEMENTOS (Bias Artifacts) | docs/library/datasets/DB-MEMENTOS-0001.md
 db-voice-0001 | DB-VOICE-0001 (Declarative Mode) | docs/library/datasets/DB-VOICE-0001.md
 db-pr-meta | DB-PR-META (Post-Approval Metadata Surfaces) | docs/library/datasets/DB-PR-META.md
 quickstart | Quickstart | docs/10-QUICKSTART.md

@@ -1,3 +1,20 @@
+## 2026-01-14 — DP-OPS-0023: MEMENTOS bias artifacts canon + library wiring
+
+- Purpose: Convert source texts into a canonical MEMENTOS doc and wire it into the curated library with preferences-not-permissions defined.
+- What shipped:
+  - Added `docs/library/datasets/DB-MEMENTOS-0001.md` as the single canonical MEMENTOS doc.
+  - Added MEMENTOS topic + alias to `docs/library/LIBRARY_INDEX.md` and a pointer in `docs/library/OPERATOR_MANUAL.md`.
+  - Defined MEMENTOS (bias artifacts) in `PROJECT_TRUTH.md`.
+- Verification:
+  - `rg -n "MEMENTOS|bias artifacts" PROJECT_TRUTH.md docs/library/datasets/DB-MEMENTOS-0001.md docs/library/OPERATOR_MANUAL.md docs/library/LIBRARY_INDEX.md`
+  - `bash ops/bin/help list`
+  - `LESS='-F -X' bash ops/bin/help db-mementos-0001`
+  - `bash ops/init/tools/context_lint.sh`
+  - `git diff --name-only`
+- Risk / rollback:
+  - Risk: Low; docs-only canon update.
+  - Rollback: remove `docs/library/datasets/DB-MEMENTOS-0001.md`, revert `docs/library/LIBRARY_INDEX.md`, `docs/library/OPERATOR_MANUAL.md`, `PROJECT_TRUTH.md`, and this entry.
+
 ## 2026-01-14 — DP-OPS-0022: Lock DB-PR-META UI mapping (order + payload types)
 
 - Purpose: Lock the UI-to-DB-PR-META surface mapping with explicit order, UI field references, and payload types (plain text vs Markdown).
