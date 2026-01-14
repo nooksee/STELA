@@ -104,3 +104,11 @@ Formatting rules:
 - All metadata surfaces must be delivered as individual fenced sub-blocks using triple-tilde fences.
 - Use ~~~text for plain text fields; ~~~md for markdown fields.
 - Do not use triple-backticks inside DP content; triple-backticks are reserved for the single outer DP fence.
+
+## 9. Operator Approval + Paste Contract (IN-LOOP)
+- Operator approval is an IN-LOOP act.
+- Approval phrase must be plain text, unquoted: `APPROVE <DP-ID> EMIT DB-PR-META`.
+- Approval line may appear before pasted worker results; canonical order is approval line first.
+- Worker results must be pasted raw, unquoted, unedited.
+- Snapshot file must be attached in the same message.
+- Quoted blocks are commentary and invalid for approval.

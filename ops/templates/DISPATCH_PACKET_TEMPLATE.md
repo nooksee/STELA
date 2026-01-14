@@ -64,6 +64,12 @@ REQUIRED VERIFICATION (paste outputs)
 ACCEPTANCE (IN-LOOP)
 Approval phrase (IN-LOOP): APPROVE <DP-ID> EMIT DB-PR-META
 DB-PR-META is emitted only after approval (no exceptions).
+Operator approval + paste contract (IN-LOOP):
+- Approval line must be plain text, unquoted: APPROVE <DP-ID> EMIT DB-PR-META
+- Approval line may appear before pasted worker results; canonical order is approval line first.
+- Worker results must be pasted raw, unquoted, unedited.
+- Snapshot file must be attached in the same message.
+- Quoted blocks are commentary and invalid for approval.
 
 REQUIRED OUTPUT BACK TO OPERATOR (in this exact order)
 A) ...

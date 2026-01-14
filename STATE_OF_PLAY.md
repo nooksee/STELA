@@ -1,3 +1,20 @@
+## 2026-01-14 — DP-OPS-0026: Operator approval + paste contract lock
+
+- Purpose: Lock the operator approval + paste contract so approval, paste order, and DB-PR-META emission are deterministic.
+- What shipped:
+  - Canonized operator approval + paste contract requirements (plain text approval, raw paste, snapshot attachment, quoted blocks invalid) in `PROJECT_TRUTH.md`.
+  - Documented the exact operator paste order in `docs/library/OPERATOR_MANUAL.md`.
+  - Added the operator approval + paste contract notes to `ops/templates/DISPATCH_PACKET_TEMPLATE.md` and `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
+- Verification:
+  - `rg -n "APPROVE DP-" PROJECT_TRUTH.md`
+  - Manual check: `docs/library/OPERATOR_MANUAL.md` documents the exact paste order.
+  - Manual check: `ops/templates/DISPATCH_PACKET_TEMPLATE.md` includes the approval contract note.
+  - `git diff --name-only`
+  - `bash ops/init/tools/context_lint.sh`
+- Risk / rollback:
+  - Risk: Low; docs-only canon + template/protocol updates.
+  - Rollback: revert `PROJECT_TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, and this entry.
+
 ## 2026-01-14 — DP-OPS-0025: DB-PR-META approval phrase canon + DP template/protocol wiring
 
 - Purpose: Canonize the IN-LOOP DB-PR-META approval phrase pattern with DP-ID + EMIT, and wire it into the DP protocol/template and operator docs.

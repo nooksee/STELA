@@ -43,6 +43,12 @@ DB-PR-META is the approval-gated six-surface metadata output used for commits, P
 How to approve (IN-LOOP):
 Approval phrase (required): `APPROVE <DP-ID> EMIT DB-PR-META`
 Example: `APPROVE DP-OPS-0025 EMIT DB-PR-META`
+Approval + paste contract (single message, exact order):
+1) Approval line (plain text, unquoted): `APPROVE <DP-ID> EMIT DB-PR-META`
+2) Paste worker results raw, unquoted, unedited.
+3) Attach the snapshot file in the same message.
+Approval line may appear before pasted worker results; canonical order is approval line first.
+Quoted blocks are commentary and invalid for approval.
 Emission gate: approval phrase required; no exceptions.
 Dataset reference: `./ops/bin/help db-pr-meta`
 UI order + payload types are canonical; use the DB-PR-META dataset as the SSOT.
