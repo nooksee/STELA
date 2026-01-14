@@ -57,14 +57,15 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 ## Output Mechanics Contract
 - Dispatch Packet (DP) output comes first whenever a DP is requested.
 - DP must be a single fenced block containing: Freshness Gate, required NEW work branch (when changes are requested), Purpose, Scope, Files, Forbidden, Verification, Acceptance.
-- DB-PR-META is only emitted when explicitly requested (e.g., "db-pr-meta", "yes please").
-- DB-PR-META surfaces (SSOT; exact labels only):
-  - Commit message
-  - PR title
-  - PR description (Markdown)
-  - Merge commit message
-  - Extended description
-  - Merge note (PR comment, Markdown)
+- DB-PR-META is IN-LOOP and withheld unless the operator uses the required approval phrase pattern (see Rule 3).
+- Requesting DB-PR-META without the approval phrase is insufficient.
+- DB-PR-META surfaces (SSOT; exact labels only; order is canonical):
+  1) Commit message
+  2) PR title
+  3) PR description (Markdown)
+  4) Merge commit message
+  5) Extended description
+  6) Merge note (PR comment, Markdown)
 - DB-PR-META UI mapping (order + payload type; no interpretation):
   1) Commit message -> IDE "Commit message" - plain text (one line)
   2) PR title -> GitHub PR "Add a title" - plain text (one line)
@@ -106,12 +107,11 @@ These rules override default helpfulness. Refusal is correct behavior when block
 - If branch is missing, do not emit the Dispatch Packet.
 
 ### Rule 3 — DB-PR-META Emission
-- DB-PR-META may only be emitted after explicit approval with one of:
-  - `I approve — DB-PR-META for <context>`
-  - `I approve - DB-PR-META for <context>`
-- `<context>` is required and may be any non-empty text.
+- DB-PR-META may only be emitted after explicit IN-LOOP approval using the required phrase pattern (case-insensitive; extra whitespace allowed):
+  - `APPROVE <DP-ID> EMIT DB-PR-META`
+- The approval phrase must include the current DP-ID between APPROVE and EMIT; missing DP-ID or EMIT is invalid.
 - If approval is missing or malformed, respond only with:
-  - `Approval not given. DB-PR-META withheld. Paste to approve: I approve — DB-PR-META for <context>.`
+  - `APPROVE <DP-ID> EMIT DB-PR-META`
 
 ### Rule 4 — Copy Surface Integrity
 - Headers outside fences; fence contains payload only; one fence per surface; no prose inside fences.

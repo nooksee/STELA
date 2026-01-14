@@ -77,6 +77,7 @@ A dispatch packet must contain the following sections to be considered valid:
 - **Scope / Forbidden Zones:** Explicitly allowed and disallowed file paths.
 - **Tasks:** A concrete, numbered or bulleted list of tasks to perform.
 - **Verification:** Specific commands the worker must run to prove the changes work as intended.
+- **Acceptance (IN-LOOP):** Must include the standard approval phrase line: `Approval phrase (IN-LOOP): APPROVE <DP-ID> EMIT DB-PR-META`.
 - **Required Output:** The exact format and order of deliverables for the operator (e.g., diff, verification logs), ending with the After-Action Bundle (A/B headings required).
 
 ## 7. DP Presentation Rules
@@ -89,6 +90,7 @@ A dispatch packet must contain the following sections to be considered valid:
 
 ## 8. Metadata Surface Requirements
 Every work cycle that culminates in a PR must generate all required metadata surfaces. The DP must require these surfaces, but the final filled kit is delivered after work results.
+DB-PR-META is emitted only after IN-LOOP approval (no exceptions).
 
 Required surfaces (in this order):
 1) IDE "Commit Message" - plain text (single line) in a ~~~text block

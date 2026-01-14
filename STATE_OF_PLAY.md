@@ -1,3 +1,19 @@
+## 2026-01-14 — DP-OPS-0025: DB-PR-META approval phrase canon + DP template/protocol wiring
+
+- Purpose: Canonize the IN-LOOP DB-PR-META approval phrase pattern with DP-ID + EMIT, and wire it into the DP protocol/template and operator docs.
+- What shipped:
+  - Updated DB-PR-META approval gating and refusal line in `PROJECT_TRUTH.md` and `docs/library/datasets/DB-PR-META.md`.
+  - Added the approval phrase line + emission reminder to `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md` and `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
+  - Added a short "How to approve" snippet in `docs/library/OPERATOR_MANUAL.md`.
+- Verification:
+  - `rg -n "APPROVE|EMIT DB-PR-META|Approval phrase" PROJECT_TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md docs/library/datasets/DB-PR-META.md`
+  - Manual check: `PROJECT_TRUTH.md` includes the required approval pattern, refusal paste-line, and the canonical 1-6 DB-PR-META order.
+  - `bash ops/init/tools/context_lint.sh`
+  - `git diff --name-only`
+- Risk / rollback:
+  - Risk: Low; docs-only canon + template updates.
+  - Rollback: revert `PROJECT_TRUTH.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `docs/library/OPERATOR_MANUAL.md`, `docs/library/datasets/DB-PR-META.md`, and this entry.
+
 ## 2026-01-14 — DP-OPS-0024: Approval gate robustness + snapshot/OPEN decision
 
 - Purpose: Make DB-PR-META approval recoverable with tolerant phrasing and paste-ready refusal, and document snapshot/OPEN handling.

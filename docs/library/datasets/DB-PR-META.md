@@ -2,13 +2,13 @@
 
 DB-PR-META is the approval-gated metadata output used after approval for commits, PRs, and merge notes.
 
-## Surfaces (SSOT)
-- Commit message
-- PR title
-- PR description (Markdown)
-- Merge commit message
-- Extended description
-- Merge note (PR comment, Markdown)
+## Surfaces (SSOT; order is canonical)
+1) Commit message
+2) PR title
+3) PR description (Markdown)
+4) Merge commit message
+5) Extended description
+6) Merge note (PR comment, Markdown)
 
 ## UI mapping (order + payload type)
 1) Commit message -> IDE "Commit message" - plain text (one line)
@@ -18,13 +18,13 @@ DB-PR-META is the approval-gated metadata output used after approval for commits
 5) Extended description -> GitHub merge "Extended description" - plain text (body)
 6) Merge note (PR comment, Markdown) -> GitHub PR "Add a comment" - Markdown
 
-## Approval gate (exact phrases)
-- Acceptable approval phrases:
-  - `I approve — DB-PR-META for <context>`
-  - `I approve - DB-PR-META for <context>`
-- `<context>` is required and may be any non-empty text.
-- If approval is missing or malformed, refuse with:
-  - `Approval not given. DB-PR-META withheld. Paste to approve: I approve — DB-PR-META for <context>.`
+## Approval gate (IN-LOOP, required pattern)
+- Required approval pattern (case-insensitive; extra whitespace allowed):
+  - MUST contain: `APPROVE` + `<DP-ID>` + `EMIT` + `DB-PR-META`
+  - Example: `APPROVE DP-OPS-0025 EMIT DB-PR-META`
+- Ambiguous variants are invalid (missing DP-ID, missing EMIT, "i approve db-pr-meta" without DP-ID).
+- If approval is missing or malformed, refuse with this single paste-ready line:
+  - `APPROVE <DP-ID> EMIT DB-PR-META`
 
 ## Output format
 - Each surface is emitted as a header line above a single fence.
