@@ -1,3 +1,19 @@
+## 2026-01-15 — DP-OPS-0029: Approval prefix + delimiter for chat UI paste
+
+- Purpose: Fix "approval lost in paste" by canonizing approval-prefix + delimiter for same-message paste.
+- What shipped:
+  - Added start-of-message approval + delimiter rule and chat-UI fallback to `PROJECT_TRUTH.md`, `docs/library/datasets/DB-PR-META.md`, and `docs/library/OPERATOR_MANUAL.md`.
+  - Updated operator handoff paste order to include the delimiter rule in `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md` and `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
+  - Updated refusal text to return a paste-ready approval + delimiter example in `PROJECT_TRUTH.md` and `docs/library/datasets/DB-PR-META.md`.
+- Verification:
+  - `rg -n "approval|APPROVE|Handoff Paste Order|delimiter|---" PROJECT_TRUTH.md docs/library/datasets/DB-PR-META.md docs/library/OPERATOR_MANUAL.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md`
+  - Manual check: all docs agree on approval pattern, start-of-message requirement, delimiter rule, and paste order.
+  - `git diff --name-only`
+  - `bash ops/init/tools/context_lint.sh`
+- Risk / rollback:
+  - Risk: Low; docs-only canon update.
+  - Rollback: revert the touched docs and this entry.
+
 ## 2026-01-14 — DP-OPS-0028: Behavioral preferences placement + operator wayfinding
 
 - Purpose: Define the single source of truth for behavioral preferences and make wayfinding pointer-only.

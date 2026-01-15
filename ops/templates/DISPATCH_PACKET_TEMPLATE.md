@@ -65,10 +65,11 @@ ACCEPTANCE (IN-LOOP)
 Approval phrase (IN-LOOP): APPROVE <DP-ID> EMIT DB-PR-META
 DB-PR-META is emitted only after approval (no exceptions).
 Operator Handoff Paste Order (IN-LOOP):
-1) Approval line (standalone, plain text, unquoted): APPROVE <DP-ID> EMIT DB-PR-META
-2) Worker results pasted raw (not quoted)
+1) Approval line (start-of-message, plain text, unquoted): APPROVE <DP-ID> EMIT DB-PR-META
+2) Worker results pasted raw (not quoted), after a delimiter (a single blank line or a line containing only `---`)
 3) Snapshot file attached (if DP required it)
-Approval must be outside OPEN prompt text, OPEN intent, and outside quoted/fenced blocks.
+If the chat UI cannot insert blank lines safely, use the `---` delimiter line before pasting results.
+Approval must be the first tokens in the message (start-of-message) and outside OPEN prompt text, OPEN intent, and outside quoted/fenced blocks.
 Quoted blocks are commentary and invalid for approval.
 
 REQUIRED OUTPUT BACK TO OPERATOR (in this exact order)
