@@ -53,6 +53,7 @@ Operator Handoff Paste Order (single message, exact order):
 2) Paste worker results raw, unquoted, unedited (after a delimiter: a single blank line or a line containing only `---`).
 3) Attach the snapshot file in the same message (if DP required it).
 If the chat UI cannot insert blank lines safely, use the `---` delimiter line before pasting results.
+MEMENTO: M-HANDOFF-01 (docs/library/MEMENTOS.md).
 Approval must be the first tokens in the message (start-of-message) and outside OPEN prompt text, OPEN intent, and outside quoted/fenced blocks.
 Quoted blocks are commentary and invalid for approval. If approval is buried, DB-PR-META is withheld.
 Emission gate: approval phrase required; no exceptions.
