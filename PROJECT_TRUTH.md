@@ -25,6 +25,7 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - Workers draft diffs; integrator/operator reviews, commits, and opens PRs.
 - Prefer "run command X" over "open file Y and edit line Z."
 - Prefer front door scripts (`ops/bin/open`, `ops/bin/close`) over control words.
+- OPEN includes a short posture nudge near the top.
 - If the operator says "merged + synced main", do not re-explain workflow.
 - Operator phrases like "main + synced" are status, not canon.
 - Only canonize new terms, labels, or processes when the operator explicitly says "Canonize X" or "Add X to PROJECT_TRUTH".
