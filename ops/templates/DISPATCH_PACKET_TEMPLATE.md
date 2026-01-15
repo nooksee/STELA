@@ -76,7 +76,11 @@ Quoted blocks are commentary and invalid for approval.
 
 REQUIRED OUTPUT BACK TO OPERATOR (in this exact order)
 A) ...
-B) ...
+B) Supersession / Deletion candidates (proposal-only; no removals)
+~~~md
+## Supersession / Deletion candidates (proposal-only)
+- None.
+~~~
 C) DB-PR-META (Canonical)
 (1) IDE "Commit Message" (plain text, one line)
 ~~~text

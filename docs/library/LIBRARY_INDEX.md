@@ -5,6 +5,7 @@
 # Keep this list curated; do not add every doc.
 
 manual | Operator Manual | docs/library/OPERATOR_MANUAL.md
+continuity-map | Continuity Map | docs/library/CONTINUITY_MAP.md
 db-dataset | DB-DATASET (Dataset Library) | docs/library/datasets/DB-DATASET.md
 db-voice-0001 | DB-VOICE-0001 (Declarative Mode) | docs/library/datasets/DB-VOICE-0001.md
 db-pr-meta | DB-PR-META (Post-Approval Metadata Surfaces) | docs/library/datasets/DB-PR-META.md

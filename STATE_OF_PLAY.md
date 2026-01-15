@@ -1,3 +1,23 @@
+## 2026-01-15 — DP-OPS-0032: Continuity map + supersession hygiene
+
+- Purpose: Make continuity surfaces findable; canonize supersession/deprecation/deletion proposals; add a later bucket label.
+- What shipped:
+  - Added `docs/library/CONTINUITY_MAP.md` and wired it into the curated library and Operator Manual.
+  - Canonized supersession/deprecation/deletion proposal rules in `PROJECT_TRUTH.md`.
+  - Added a required "Supersession / Deletion candidates" callout to `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md` and `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
+  - Added a "Later bucket" section in `STATE_OF_PLAY.md` for dedupe / clone detection ideas.
+- Verification:
+  - `rg -n "Continuity Map|CONTINUITY_MAP|supersession|deprecation|proposal-only|Later bucket" PROJECT_TRUTH.md docs/library/OPERATOR_MANUAL.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/LIBRARY_INDEX.md`
+  - `bash ops/init/tools/context_lint.sh`
+  - `bash ops/bin/help list`
+- Risk / rollback:
+  - Risk: Low; docs-only canon updates.
+  - Rollback: revert the touched docs and this entry.
+
+## Later bucket (ideas only; no implementation)
+
+- Dedupe / clone detection ideas: record here; do not implement.
+
 ## 2026-01-15 — DP-OPS-0030: OPEN posture nudge
 
 - Purpose: Add a minimal posture nudge to OPEN for precision and stop-when-uncertain behavior.
