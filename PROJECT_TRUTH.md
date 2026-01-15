@@ -42,6 +42,9 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - Nearly any change that ships (scripts, protocols, behavior rules) must add or update a docs library entry.
 - The library is curated; do not list every .md. If it is not in the manifest, help will refuse to open it.
 
+## Continuity Map (Operator Wayfinding)
+- The pointer-only continuity map is `docs/library/CONTINUITY_MAP.md`.
+
 ## DB-DATASET (Curated Dataset Library)
 - DB-DATASET is the manifest-only dataset library for "mode training" and standards.
 - Datasets are docs-only entries under `docs/library/datasets/`, listed in `docs/library/LIBRARY_INDEX.md`.
@@ -52,6 +55,11 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 
 ## Labels
 - IN-LOOP: human-required step / explicit approval gate.
+
+## Supersession / Deprecation / Deletion Proposals (IN-LOOP)
+- Workers may propose supersession or deletion candidates, but may not remove canon artifacts without explicit operator approval (IN-LOOP). Removals happen only in a later DP.
+- Any supersession or deprecation must be explicit: what is replaced, what replaces it, why, and where the SSOT now lives.
+- Worker results must include a "Supersession / Deletion candidates" callout (proposal-only).
 
 ## Output Mechanics Contract
 - Dispatch Packet (DP) output comes first whenever a DP is requested.

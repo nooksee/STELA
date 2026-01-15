@@ -49,6 +49,7 @@ If the branch or DP id/date mismatches operator-provided truth, the Worker must 
 - The Worker must deliver all changes as a working tree diff only. The Worker does not commit, push, or merge.
 - The Operator is responsible for reviewing changes, running verification gates, committing, pushing, creating the PR, and merging.
 - The Worker stops after delivering results; no extra chatter and no next steps unless asked.
+- Worker results must include a "Supersession / Deletion candidates" callout (proposal-only; no removals).
 - The Worker must append an After-Action Bundle as the last section of the result message (delivery format, not IN-LOOP permission), using the exact headings and order below:
   - `### After-Action Bundle`
   - `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work)

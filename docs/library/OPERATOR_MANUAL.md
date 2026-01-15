@@ -28,6 +28,9 @@ Library location:
 
 Add a new entry by editing the manifest and keeping the list curated (not every .md).
 
+Continuity Map (operator wayfinding):
+- `./ops/bin/help continuity-map`
+
 Datasets:
 - Datasets live under `docs/library/datasets/` and are manifest-only.
 - Use `./ops/bin/help db-dataset` for the dataset library overview.
@@ -92,6 +95,7 @@ Archive behavior:
 Current help topics (from the manifest):
 ```
 manual
+continuity-map
 db-dataset
 db-voice-0001
 db-pr-meta
