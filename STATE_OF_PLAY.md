@@ -1,3 +1,17 @@
+## 2026-01-15 — DP-OPS-0030: OPEN posture nudge
+
+- Purpose: Add a minimal posture nudge to OPEN for precision and stop-when-uncertain behavior.
+- What shipped:
+  - Inserted the 3-line posture nudge before [FRESHNESS GATE] in `ops/bin/open`.
+  - Added short notes about the posture nudge in `PROJECT_TRUTH.md` and `docs/library/OPERATOR_MANUAL.md`.
+- Verification:
+  - `rg -n "canon-governed system|Precision beats speed|If unsure, stop and ask" ops/bin/open PROJECT_TRUTH.md docs/library/OPERATOR_MANUAL.md`
+  - `bash ops/init/tools/context_lint.sh`
+  - Manual check: OPEN output shows the 3-line block above [FRESHNESS GATE] with no other changes.
+- Risk / rollback:
+  - Risk: Low; output text + docs note only.
+  - Rollback: revert `ops/bin/open`, `PROJECT_TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
+
 ## 2026-01-15 — DP-OPS-0029: Approval prefix + delimiter for chat UI paste
 
 - Purpose: Fix "approval lost in paste" by canonizing approval-prefix + delimiter for same-message paste.

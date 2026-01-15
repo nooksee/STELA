@@ -39,6 +39,7 @@ Behavioral preferences:
 ## Open / Close
 - `./ops/bin/open` prints the copy-safe Open Prompt with the freshness gate and canon pointers.
 - `./ops/bin/close` prints a copy-safe session receipt.
+- OPEN includes a brief posture nudge near the top.
 
 ## DB-PR-META (approval-gated metadata surfaces)
 DB-PR-META is the approval-gated six-surface metadata output used for commits, PRs, and merge notes.
