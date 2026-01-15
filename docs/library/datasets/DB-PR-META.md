@@ -29,6 +29,7 @@ DB-PR-META is the approval-gated metadata output used after approval for commits
 - If approval is missing, buried, or malformed, refuse with this paste-ready pattern:
   - `APPROVE <DP-ID> EMIT DB-PR-META`
   - `---`
+MEMENTO: M-EMIT-01 (docs/library/MEMENTOS.md).
 
 ## Output format
 - Each surface is emitted as a header line above a single fence.

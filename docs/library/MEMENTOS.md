@@ -15,6 +15,12 @@ This file is the single source of truth for MEMENTOS.
 - Reduce context loss by forcing unknowns to stay unknown until supplied.
 - Block "helpful invention" by biasing toward verified inputs and explicit boundaries.
 
+## MEMENTO Index (authoritative)
+- M-ATTN-01: Constraint-first framing keeps everything else waiting.
+- M-COMMIT-01: Commitment is explicit, not implied.
+- M-HANDOFF-01: The single blocking unknown takes first priority.
+- M-EMIT-01: Approval is binary; ambiguity is not approval.
+
 ## Core failure mode
 The repeated failure pattern is a stack:
 - Interface drift: responses slide toward narrative helpfulness or implied authority.
@@ -70,7 +76,7 @@ MEMENTOS exist to interrupt that stack before it becomes canon drift.
 
 ## Placement
 - Single source of truth: `docs/library/MEMENTOS.md`.
-- References only: `PROJECT_TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
+- References only: `ops/bin/open`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `docs/library/OPERATOR_MANUAL.md`, `docs/library/datasets/DB-PR-META.md`.
 - Do not duplicate or embed elsewhere.
 
 ## Example bias artifacts (short and mechanical)

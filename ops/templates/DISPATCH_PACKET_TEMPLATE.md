@@ -61,6 +61,8 @@ TASKS
 REQUIRED VERIFICATION (paste outputs)
 - ...
 
+MEMENTO: M-COMMIT-01 (docs/library/MEMENTOS.md)
+
 ACCEPTANCE (IN-LOOP)
 Approval phrase (IN-LOOP): APPROVE <DP-ID> EMIT DB-PR-META
 DB-PR-META is emitted only after approval (no exceptions).

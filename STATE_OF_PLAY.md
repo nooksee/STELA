@@ -12,6 +12,20 @@
   - Risk: Low; output text + docs note only.
   - Rollback: revert `ops/bin/open`, `PROJECT_TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
 
+## 2026-01-15 — DP-OPS-0031: MEMENTOS strategic placement
+
+- Purpose: Place a small set of inference-timed MEMENTOS and pointers without duplication.
+- What shipped:
+  - Added a MEMENTO index and updated placement references in `docs/library/MEMENTOS.md`.
+  - Added MEMENTO pointer references in `ops/bin/open`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `docs/library/OPERATOR_MANUAL.md`, and `docs/library/datasets/DB-PR-META.md`.
+- Verification:
+  - `rg -n "MEMENTO: M-" ops/bin/open ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md docs/library/datasets/DB-PR-META.md`
+  - `rg -n "M-ATTN-01|M-COMMIT-01|M-HANDOFF-01|M-EMIT-01" docs/library/MEMENTOS.md`
+  - `git diff --name-only`
+- Risk / rollback:
+  - Risk: Low; docs-only pointer/index changes.
+  - Rollback: revert `docs/library/MEMENTOS.md`, `ops/bin/open`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `docs/library/OPERATOR_MANUAL.md`, `docs/library/datasets/DB-PR-META.md`, and this entry.
+
 ## 2026-01-15 — DP-OPS-0029: Approval prefix + delimiter for chat UI paste
 
 - Purpose: Fix "approval lost in paste" by canonizing approval-prefix + delimiter for same-message paste.
