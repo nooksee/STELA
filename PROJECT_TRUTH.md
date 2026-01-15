@@ -57,12 +57,14 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - DP must be a single fenced block containing: Freshness Gate, required NEW work branch (when changes are requested), Purpose, Scope, Files, Forbidden, Verification, Acceptance.
 - DB-PR-META is IN-LOOP and withheld unless the operator uses the required approval phrase pattern (see Rule 3).
 - Operator approval is an IN-LOOP act and must be explicit.
-- Approval phrase must be a standalone line, plain text, and unquoted.
+- Approval phrase must be the first tokens in the message (start-of-message), on a standalone line, plain text, and unquoted.
 - Approval phrase must include: `APPROVE <DP-ID> EMIT DB-PR-META` (DP-ID starts with `DP-`; valid form: `APPROVE DP-OPS-0000 EMIT DB-PR-META`).
 - Approval MUST be outside OPEN prompt text, OPEN "Today's intent", and outside quoted/fenced blocks.
+- If approval and worker results are in the same message, approval must be followed by exactly one delimiter: either a single blank line or a line containing only `---`.
+- If the chat UI cannot insert blank lines safely, use the `---` delimiter line before pasting results.
 - Operator Handoff Paste Order (canonical):
-  1) Approval line (standalone)
-  2) Worker results pasted raw (not quoted)
+  1) Approval line (start-of-message, standalone; include delimiter if results are in the same message)
+  2) Worker results pasted raw (not quoted), immediately after the delimiter
   3) Snapshot tarball attached (if DP required it)
 - Quoted blocks are commentary and invalid for approval.
 - Requesting DB-PR-META without the approval phrase is insufficient.
@@ -118,8 +120,11 @@ These rules override default helpfulness. Refusal is correct behavior when block
   - `APPROVE <DP-ID> EMIT DB-PR-META`
 - The approval phrase must include the current DP-ID between APPROVE and EMIT; missing DP-ID or EMIT is invalid.
 - The approval phrase must be plain text and unquoted; quoted blocks are commentary and invalid for approval.
+- The approval phrase must be the first tokens in the message (start-of-message).
+- If approval and results are in the same message, approval must be followed by exactly one delimiter: a single blank line or a line containing only `---`.
 - If approval is missing, buried in a fence/quote, or malformed, respond only with:
   - `APPROVE <DP-ID> EMIT DB-PR-META`
+  - `---`
 
 ### Rule 4 — Copy Surface Integrity
 - Headers outside fences; fence contains payload only; one fence per surface; no prose inside fences.

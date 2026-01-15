@@ -44,12 +44,15 @@ Behavioral preferences:
 DB-PR-META is the approval-gated six-surface metadata output used for commits, PRs, and merge notes.
 How to approve (IN-LOOP):
 Approval phrase (required): `APPROVE <DP-ID> EMIT DB-PR-META`
-Example: `APPROVE DP-OPS-0025 EMIT DB-PR-META`
+Paste-ready delimiter example:
+`APPROVE DP-OPS-0025 EMIT DB-PR-META`
+`---`
 Operator Handoff Paste Order (single message, exact order):
-1) Approval line (standalone, plain text, unquoted): `APPROVE <DP-ID> EMIT DB-PR-META`
-2) Paste worker results raw, unquoted, unedited.
+1) Approval line (start-of-message, plain text, unquoted): `APPROVE <DP-ID> EMIT DB-PR-META`
+2) Paste worker results raw, unquoted, unedited (after a delimiter: a single blank line or a line containing only `---`).
 3) Attach the snapshot file in the same message (if DP required it).
-Approval must be outside OPEN prompt text, OPEN intent, and outside quoted/fenced blocks.
+If the chat UI cannot insert blank lines safely, use the `---` delimiter line before pasting results.
+Approval must be the first tokens in the message (start-of-message) and outside OPEN prompt text, OPEN intent, and outside quoted/fenced blocks.
 Quoted blocks are commentary and invalid for approval. If approval is buried, DB-PR-META is withheld.
 Emission gate: approval phrase required; no exceptions.
 Dataset reference: `./ops/bin/help db-pr-meta`

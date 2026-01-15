@@ -110,9 +110,11 @@ Formatting rules:
 ## 9. Operator Approval + Paste Contract (IN-LOOP)
 - Operator approval is an IN-LOOP act.
 - Approval phrase must be plain text, unquoted: `APPROVE <DP-ID> EMIT DB-PR-META`.
-- Approval must be a standalone line outside OPEN prompt text, OPEN intent, and outside quoted/fenced blocks.
+- Approval must be the first tokens in the message (start-of-message) on a standalone line outside OPEN prompt text, OPEN intent, and outside quoted/fenced blocks.
+- If approval and worker results are in the same message, approval must be followed by exactly one delimiter: either a single blank line or a line containing only `---`.
+- If the chat UI cannot insert blank lines safely, use the `---` delimiter line before pasting results.
 - Operator Handoff Paste Order:
-  1) Approval line (standalone)
-  2) Worker results pasted raw (not quoted)
+  1) Approval line (start-of-message, standalone; include delimiter if results are in the same message)
+  2) Worker results pasted raw (not quoted), immediately after the delimiter
   3) Snapshot file attached (if DP required it)
 - Quoted blocks are commentary and invalid for approval. If approval is buried, DB-PR-META is withheld.
