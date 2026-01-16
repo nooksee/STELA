@@ -1,3 +1,18 @@
+## 2026-01-16 — DP-OPS-0037: MEMENTOS artifacts + interpretation/tone tightening
+
+- Purpose: Harden MEMENTOS SSOT with quoteable artifacts, remove ambiguity in multi-interpretation handling, and calibrate tone guidance.
+- What shipped:
+  - Added one-line artifacts for M-ATTN-01, M-COMMIT-01, M-HANDOFF-01, and M-EMIT-01 under the MEMENTOS index.
+  - Replaced the multi-interpretation handling rule to require enumeration plus operator choice unless canon/inputs determine the answer.
+  - Updated tone guidance to default to calm, precise language and avoid cheerleading or implied authority.
+- Verification:
+  - `bash ops/init/tools/context_lint.sh`
+  - `rg -n "M-ATTN-01|M-COMMIT-01|M-HANDOFF-01|M-EMIT-01" docs/library/MEMENTOS.md`
+  - `rg -n "MEMENTO: M-" ops/bin/open ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md docs/library/datasets/DB-PR-META.md`
+- Risk / rollback:
+  - Risk: Low. MEMENTOS become more explicit; may slightly change stop/ask behavior in edge cases.
+  - Rollback: revert `docs/library/MEMENTOS.md` and `STATE_OF_PLAY.md` to pre-DP-OPS-0037 state.
+
 ## 2026-01-16 — DP-OPS-0035: RECEIPT rename + DP Risk / Rollback requirement
 
 - Purpose: Rename the worker-results bundle to RECEIPT, require Risk / Rollback in DP format, and reinforce OPEN + SNAPSHOT as the rehydration milestone.
