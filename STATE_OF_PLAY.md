@@ -1,3 +1,19 @@
+## 2026-01-16 — DP-OPS-0034: Root AI entry points (llms.txt + AGENTS.md)
+
+- Purpose: Add repo-root AI entry points that map existing canon without duplication.
+- What shipped:
+  - Added `llms.txt` as a pointer map into canon and tools.
+  - Added `AGENTS.md` as a pointer-first agent constitution.
+  - Declared the entry points in `PROJECT_TRUTH.md`.
+- Verification:
+  - `test -f llms.txt`
+  - `test -f AGENTS.md`
+  - `rg -n "llms\\.txt|AGENTS\\.md" PROJECT_TRUTH.md`
+  - `bash ops/init/tools/context_lint.sh`
+- Risk / rollback:
+  - Risk: Low; docs-only pointer additions.
+  - Rollback: delete `llms.txt` and `AGENTS.md`, revert `PROJECT_TRUTH.md`, and remove this entry.
+
 ## 2026-01-15 — DP-OPS-0033: ICL Continuity Core + legacy onboarding retirement
 
 - Purpose: Define the ICL Continuity Core, retire the legacy onboarding directory, and triage ICL continuity files.

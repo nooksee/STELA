@@ -1,0 +1,33 @@
+# nukeCE llms.txt
+# Pointer map to canonical docs and tools (no duplication).
+
+## Core canon
+- PROJECT_TRUTH.md
+- STATE_OF_PLAY.md
+- docs/library/OPERATOR_MANUAL.md
+- docs/library/CONTINUITY_MAP.md
+- ops/init/icl/ICL_CONTINUITY_CORE.md
+- docs/library/LIBRARY_INDEX.md
+
+## Protocols + contracts
+- ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md
+- ops/init/protocols/OUTPUT_FORMAT_PROTOCOL.md
+- ops/contracts/OUTPUT_FORMAT_CONTRACT.md
+- ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md
+- ops/init/protocols/SNAPSHOT_PROTOCOL.md
+- ops/init/protocols/HANDOFF_PROTOCOL.md
+
+## Behavior + datasets
+- docs/library/MEMENTOS.md
+- docs/library/datasets/DB-DATASET.md
+- docs/library/datasets/DB-VOICE-0001.md
+- docs/library/datasets/DB-PR-META.md
+
+## Tools
+- ops/bin/open
+- ops/bin/help
+- ops/bin/snapshot
+- ops/bin/close
+
+## Consolidation
+- AGENTS.md
