@@ -65,6 +65,7 @@ Quoted blocks are commentary and invalid for approval. If approval is buried, DB
 Emission gate: approval phrase required; no exceptions.
 Dataset reference: `./ops/bin/help db-pr-meta`
 UI order + payload types are canonical; use the DB-PR-META dataset as the SSOT.
+Micro-style: avoid exact-duplicate strings across Commit message, PR title, Merge commit message; similar is OK.
 
 ## What workers must return
 Every worker result message must end with the RECEIPT (delivery format, not IN-LOOP permission):

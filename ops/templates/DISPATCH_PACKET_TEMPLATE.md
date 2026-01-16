@@ -102,7 +102,8 @@ B) Supersession / Deletion candidates (proposal-only; no removals)
 ## Supersession / Deletion candidates (proposal-only)
 - None.
 ~~~
-C) DB-PR-META (Canonical)
+C) DB-PR-META (Canonical; DRAFT surfaces only — do not emit)
+- Avoid exact-duplicate strings across: Commit message, PR title, Merge commit message. Similar is OK; do not make them identical clones.
 (1) IDE "Commit Message" (plain text, one line)
 ~~~text
 [fill: one-line commit subject]
