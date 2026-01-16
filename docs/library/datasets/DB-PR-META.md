@@ -41,5 +41,6 @@ MEMENTO: M-EMIT-01 (docs/library/MEMENTOS.md).
 - Prefer verbs + concrete nouns ("Require worker after-action bundle...", "Update DP template...").
 - Avoid self-referential AI phrasing ("as an AI...", "I think...").
 - Avoid hype words ("awesome", "fantastic", "super") in metadata surfaces.
+- Avoid exact-duplicate strings across: Commit message, PR title, Merge commit message. Similar is OK; do not make them identical clones.
 - Prefer repo nouns (paths, scripts, rules) over vibes.
 - Declarative, minimal, operator-written; no filler.

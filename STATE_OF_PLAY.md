@@ -5,6 +5,8 @@
   - Replaced the legacy bundle label with RECEIPT across canon, protocol, template, and operator guidance.
   - Added Risk / Rollback as a required DP section and updated the DP template.
   - Updated worker-result rejection language to use RECEIPT.
+  - Hardened the DP template (addendum): STOP on literal `...`, BLOCKED mini-receipt shape, explicit required output slots A) SUMMARY + SCOPE CONFIRMATION and D) PATCH / DIFF, verification discipline wording.
+  - Updated snapshot behavior (addendum): snapshot writes chat payload .txt; snapshot writes tarball (when used) and ALWAYS writes manifest pointing to chat payload.
 - Verification:
   - `rg -n "### RECEIPT|RECEIPT" PROJECT_TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md`
   - `rg -n "Risk / Rollback" ops/templates/DISPATCH_PACKET_TEMPLATE.md PROJECT_TRUTH.md`

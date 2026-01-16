@@ -51,6 +51,13 @@ fi
 
 branch="$(git rev-parse --abbrev-ref HEAD)"
 head_short="$(git rev-parse --short HEAD)"
+status_porcelain="$(git status --porcelain)"
+if [[ -z "$status_porcelain" ]]; then
+  status_summary="clean"
+else
+  status_summary="dirty"
+fi
+last_commit="$(git log -1 --oneline)"
 
 required_files=(
   "PROJECT_TRUTH.md"
@@ -134,9 +141,20 @@ Don't:
 - If you need full repo context, run: ./ops/bin/snapshot --scope=icl --format=chatgpt (or gemini/claude).
 - For a file output: ./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto
 
+[GIT STATE]
+- Working tree: $status_summary
+- Last commit: $last_commit
+EOF
+
+if [[ "$status_summary" == "dirty" ]]; then
+  cat <<EOF
+- Porcelain (git status --porcelain):
+$status_porcelain
+EOF
+fi
+
+cat <<EOF
 [NEXT OPERATOR MOVES]
-- git status
-- git log -1 --oneline
 - ./ops/bin/snapshot --scope=icl --format=chatgpt
 
 [DB-PR-META]
