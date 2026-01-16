@@ -22,7 +22,7 @@ Any fresh AI can rehydrate from:
 Optional: Rehydration drill is a test, not a ritual. Run it only when onboarding a new AI surface or debugging drift.
 
 ## Daily console (not the truth ledger)
-`ops/init/icl/launch_pack/DAILY_CONSOLE.md` is the operating rhythm checklist.
+`ops/init/icl/DAILY_CONSOLE.md` is the operating rhythm checklist.
 No project truth should live only in a console. If something becomes policy/structure, promote it into the truth-layer docs above.
 
 ## Current deliverable PR

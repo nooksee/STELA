@@ -13,7 +13,7 @@ Anything that must remain true for the project lives in canonical docs (ex: `PRO
 This `DAILY_CONSOLE.md` is allowed to be emotional, tactical, messy, and time-bound. It can mention ideas, experiments, and "what we did today," but it should not be the only place a permanent truth exists.
 
 **Rehydration != Log.**
-- **Rehydration** = onboarding an AI/contractor back into canon using `ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md` + `ops/init/icl/launch_pack/CONTEXT_PACK.md` (optional but powerful).
+- **Rehydration** = onboarding an AI/contractor back into canon using `ops/init/icl/AI_CONTEXT_SYNC.md` + `ops/init/icl/CONTEXT_PACK.md` (optional but powerful).
 - **Daily Console** = your daily runbook + notes (always allowed; never the single source of truth).
 
 ---

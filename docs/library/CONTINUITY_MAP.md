@@ -8,7 +8,7 @@ Pointer-only map of the canonical continuity surfaces that preserve state across
 - Curated library manifest + front door: `docs/library/LIBRARY_INDEX.md`, `ops/bin/help` (approved operator surface)
 - Operator manual: `docs/library/OPERATOR_MANUAL.md` (how to run the system)
 - Dispatch Packet protocol + template: `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md` (work-order governance)
-- Context + launch packs (ICL): `ops/init/icl/launch_pack/CONTEXT_PACK.md`, `ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md`, `ops/init/icl/context_pack.json`
+- ICL Continuity Core: `ops/init/icl/ICL_CONTINUITY_CORE.md`
 - Project map + canonical tree: `PROJECT_MAP.md`, `CANONICAL_TREE.md` (structure + boundaries)
 - Docs index: `docs/00-INDEX.md` (docs navigation)
 - Snapshot tool: `ops/bin/snapshot` (state capture)

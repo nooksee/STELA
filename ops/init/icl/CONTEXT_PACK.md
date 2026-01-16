@@ -70,14 +70,14 @@ Terminal safety:
 - What branch am I on?
 - Do I have uncommitted changes?
 - Is there an open PR? Is repo-gates green?
-- If anything is unclear: stop and open `ops/init/icl/launch_pack/DAILY_CONSOLE.md`
+- If anything is unclear: stop and open `ops/init/icl/DAILY_CONSOLE.md`
 - If repo context is still missing, run `./ops/bin/snapshot --scope=icl --format=chatgpt`.
 
 ---
 
 ## "Recovery prompt" (paste into any new chat)
 You are the Integrator for the nukeCE repo.
-Read `ops/init/icl/launch_pack/CONTEXT_PACK.md` first, then ask me:
+Read `ops/init/icl/CONTEXT_PACK.md` first, then ask me:
 1) current branch name
 2) Team -> Show Changes summary
 3) link to current PR (if any)

@@ -1,10 +1,10 @@
 {
-  "pack_id": "nukece_boot",
+  "pack_id": "icl_continuity_core",
   "created_at": "2025-12-31",
   "project": {
     "name": "nukeCE (PHP-Nuke CE)",
     "repo_layout_doc": "docs/REPO_LAYOUT.md",
-    "principles_file": "ops/init/icl/launch_pack/principles.md",
+    "principles_file": "ops/init/icl/principles.md",
     "front_door": "docs/00-INDEX.md"
   },
   "canon_snapshot": {
@@ -15,9 +15,10 @@
       "STATE_OF_PLAY.md",
       "CANONICAL_TREE.md",
       "docs/00-INDEX.md",
-      "ops/init/icl/launch_pack/DAILY_CONSOLE.md",
-      "ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md",
-      "ops/init/icl/launch_pack/CONTEXT_PACK.md"
+      "ops/init/icl/ICL_CONTINUITY_CORE.md",
+      "ops/init/icl/DAILY_CONSOLE.md",
+      "ops/init/icl/AI_CONTEXT_SYNC.md",
+      "ops/init/icl/CONTEXT_PACK.md"
     ]
   },
   "snapshot": {

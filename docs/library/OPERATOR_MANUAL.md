@@ -31,6 +31,9 @@ Add a new entry by editing the manifest and keeping the list curated (not every 
 Continuity Map (operator wayfinding):
 - `./ops/bin/help continuity-map`
 
+ICL Continuity Core (operator wayfinding):
+- `./ops/bin/help icl-continuity-core`
+
 Datasets:
 - Datasets live under `docs/library/datasets/` and are manifest-only.
 - Use `./ops/bin/help db-dataset` for the dataset library overview.
@@ -96,6 +99,7 @@ Current help topics (from the manifest):
 ```
 manual
 continuity-map
+icl-continuity-core
 db-dataset
 db-voice-0001
 db-pr-meta

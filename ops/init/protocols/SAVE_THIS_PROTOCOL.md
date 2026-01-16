@@ -53,7 +53,7 @@ Optional: assistant memory as convenience (not the source of truth).
 
 If a rule affects formatting or tooling, also add it to:
 - `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`
-- relevant onboarding docs in `ops/init/icl/launch_pack/`
+- ICL Continuity Core (`ops/init/icl/ICL_CONTINUITY_CORE.md`) or legacy onboarding docs in `ops/init/icl/deprecated/`
 
 ## Verification
 - Not run (operator): confirm save targets.

@@ -55,12 +55,13 @@ head_short="$(git rev-parse --short HEAD)"
 required_files=(
   "PROJECT_TRUTH.md"
   "ops/init/icl/context_pack.json"
+  "ops/init/icl/ICL_CONTINUITY_CORE.md"
   "STATE_OF_PLAY.md"
   "PROJECT_MAP.md"
   "CANONICAL_TREE.md"
   "docs/00-INDEX.md"
-  "ops/init/icl/launch_pack/CONTEXT_PACK.md"
-  "ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md"
+  "ops/init/icl/CONTEXT_PACK.md"
+  "ops/init/icl/AI_CONTEXT_SYNC.md"
 )
 
 missing=()
@@ -121,12 +122,13 @@ Don't:
 
 [CANON POINTERS]
 - ops/init/icl/context_pack.json
+- ops/init/icl/ICL_CONTINUITY_CORE.md
 - STATE_OF_PLAY.md
 - PROJECT_MAP.md
 - CANONICAL_TREE.md
 - docs/00-INDEX.md
-- ops/init/icl/launch_pack/CONTEXT_PACK.md
-- ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md
+- ops/init/icl/CONTEXT_PACK.md
+- ops/init/icl/AI_CONTEXT_SYNC.md
 
 [SNAPSHOT]
 - If you need full repo context, run: ./ops/bin/snapshot --scope=icl --format=chatgpt (or gemini/claude).

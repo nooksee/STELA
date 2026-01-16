@@ -7,8 +7,9 @@
 - [ops/INDEX.md](ops/INDEX.md)
 - [../ops/init/icl/ICL_OVERVIEW.md](../ops/init/icl/ICL_OVERVIEW.md)
 - [../ops/init/icl/OCL_OVERVIEW.md](../ops/init/icl/OCL_OVERVIEW.md)
-- [../ops/init/icl/launch_pack/DAILY_CONSOLE.md](../ops/init/icl/launch_pack/DAILY_CONSOLE.md)
-- [../ops/init/icl/launch_pack/RECOVERY.md](../ops/init/icl/launch_pack/RECOVERY.md)
+- [../ops/init/icl/ICL_CONTINUITY_CORE.md](../ops/init/icl/ICL_CONTINUITY_CORE.md)
+- [../ops/init/icl/DAILY_CONSOLE.md](../ops/init/icl/DAILY_CONSOLE.md)
+- [../ops/init/icl/RECOVERY.md](../ops/init/icl/RECOVERY.md)
 - [../ops/contracts/OUTPUT_FORMAT_CONTRACT.md](../ops/contracts/OUTPUT_FORMAT_CONTRACT.md)
 - [../ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md](../ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md)
 
