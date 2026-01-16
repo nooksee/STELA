@@ -1,3 +1,18 @@
+## 2026-01-16 — DP-OPS-0035: RECEIPT rename + DP Risk / Rollback requirement
+
+- Purpose: Rename the worker-results bundle to RECEIPT, require Risk / Rollback in DP format, and reinforce OPEN + SNAPSHOT as the rehydration milestone.
+- What shipped:
+  - Replaced the legacy bundle label with RECEIPT across canon, protocol, template, and operator guidance.
+  - Added Risk / Rollback as a required DP section and updated the DP template.
+  - Updated worker-result rejection language to use RECEIPT.
+- Verification:
+  - `rg -n "### RECEIPT|RECEIPT" PROJECT_TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md`
+  - `rg -n "Risk / Rollback" ops/templates/DISPATCH_PACKET_TEMPLATE.md PROJECT_TRUTH.md`
+  - `bash ops/init/tools/context_lint.sh`
+- Risk / rollback:
+  - Risk: Medium-low; doc/template rename could break operator expectations if any old label lingers.
+  - Rollback: revert the touched files and restore the previous label and DP template section ordering.
+
 ## 2026-01-16 — DP-OPS-0034: Root AI entry points (llms.txt + AGENTS.md)
 
 - Purpose: Add repo-root AI entry points that map existing canon without duplication.
@@ -220,30 +235,30 @@
   - Risk: Low; docs-only wording updates.
   - Rollback: revert `PROJECT_TRUTH.md`, `docs/library/datasets/DB-PR-META.md`, `docs/library/LIBRARY_INDEX.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
 
-## 2026-01-13 — DP-OPS-0020: Require Worker After-Action Bundle (OPEN + SNAPSHOT)
+## 2026-01-13 — DP-OPS-0020: Require Worker RECEIPT (OPEN + SNAPSHOT)
 
-- Purpose: Require workers to end every DP result with an After-Action Bundle containing OPEN output plus SNAPSHOT output, and treat omission as a hard failure.
+- Purpose: Require workers to end every DP result with the RECEIPT containing OPEN output plus SNAPSHOT output, and treat omission as a hard failure.
 - What shipped:
-  - Updated the After-Action Bundle definition and rejection rule in `PROJECT_TRUTH.md`.
-  - Updated the DP protocol and DP template to mandate the new bundle headings and rule.
-  - Updated `docs/library/OPERATOR_MANUAL.md` to match the new After-Action Bundle format.
+  - Updated the RECEIPT definition and rejection rule in `PROJECT_TRUTH.md`.
+  - Updated the DP protocol and DP template to mandate the new RECEIPT headings and rule.
+  - Updated `docs/library/OPERATOR_MANUAL.md` to match the new RECEIPT format.
 - Verification:
-  - `rg -n "After-Action Bundle" ops/templates/DISPATCH_PACKET_TEMPLATE.md`
-  - `rg -n "After-Action Bundle" ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`
-  - Manual check: bundle appears at end of DP template.
+  - `rg -n "RECEIPT" ops/templates/DISPATCH_PACKET_TEMPLATE.md`
+  - `rg -n "RECEIPT" ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`
+  - Manual check: RECEIPT appears at end of DP template.
   - `git diff --name-only`
 - Risk / rollback:
   - Risk: Low; docs-only wording updates.
   - Rollback: revert `PROJECT_TRUTH.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
 
-## 2026-01-13 — DP-OPS-0019: Worker After-Action Bundle canon
+## 2026-01-13 — DP-OPS-0019: Worker RECEIPT canon
 
-- Purpose: Require workers to end every DP result with a full After-Action Bundle (OPEN output, status, last commit; optional snapshot pointer).
+- Purpose: Require workers to end every DP result with a full RECEIPT (OPEN output, status, last commit; optional snapshot pointer).
 - What shipped:
-  - Canonized the After-Action Bundle requirement in `PROJECT_TRUTH.md`.
-  - Updated the DP protocol, DP template, and Operator Manual with copy-ready After-Action Bundle headings and end-of-message rule.
+  - Canonized the RECEIPT requirement in `PROJECT_TRUTH.md`.
+  - Updated the DP protocol, DP template, and Operator Manual with copy-ready RECEIPT headings and end-of-message rule.
 - Verification:
-  - `rg -n "After-Action Bundle" PROJECT_TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md`
+  - `rg -n "RECEIPT" PROJECT_TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md`
   - `git diff --name-only`
 - Risk / rollback:
   - Risk: Low; docs-only change.

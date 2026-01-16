@@ -12,6 +12,7 @@ Rules:
 - This is not informational.
 - Workers must refuse to proceed if Branch is missing or mismatched.
 - Branch must match Freshness Gate branch.
+- If any literal `...` appears anywhere in the DP you receive, STOP and request operator fill-in.
 
 PRESENTATION RULES
 - Entire DP block is meant to be copied as a unit.
@@ -46,6 +47,16 @@ NON-NEGOTIABLES
 - Any move/rename/delete MUST be accompanied by updated references and a STATE_OF_PLAY entry.
 - Add/update STATE_OF_PLAY.md in the SAME PR slice if canon/governance truth docs are impacted.
 
+STOP CONDITIONS — BLOCKED RETURN SHAPE (use when STOP)
+Use this exact mini-receipt:
+~~~text
+BLOCKED: yes
+MISSING: (file/path/input)
+TRIED: (1-3 bullets)
+OPTIONS: (A/B with tradeoff)
+ASK: (one crisp question)
+~~~
+
 SCOPE (allowed paths)
 - ...
 
@@ -59,7 +70,14 @@ TASKS
 1) ...
 
 REQUIRED VERIFICATION (paste outputs)
-- ...
+- Provide either:
+  - RUN: <commands> + results
+  - NOT RUN: <reason> + risk
+- Include `bash ops/init/tools/context_lint.sh` when ops/docs/canon files are touched.
+
+Risk / Rollback
+- Risk: ...
+- Rollback: ...
 
 MEMENTO: M-COMMIT-01 (docs/library/MEMENTOS.md)
 
@@ -75,7 +93,10 @@ Approval must be the first tokens in the message (start-of-message) and outside 
 Quoted blocks are commentary and invalid for approval.
 
 REQUIRED OUTPUT BACK TO OPERATOR (in this exact order)
-A) ...
+A) SUMMARY + SCOPE CONFIRMATION
+- What changed (1-3 bullets)
+- Exact paths touched
+- What was NOT changed (if relevant)
 B) Supersession / Deletion candidates (proposal-only; no removals)
 ~~~md
 ## Supersession / Deletion candidates (proposal-only)
@@ -122,10 +143,12 @@ C) DB-PR-META (Canonical)
 ## Merge note
 - [fill]
 ~~~
-D) ...
-E) After-Action Bundle (append at end of result message; required)
-Use the exact headings and order below. DPs missing this bundle are incomplete and must be rejected.
-### After-Action Bundle
+D) PATCH / DIFF
+- Provide a unified diff OR precise file snippets with anchors
+- Must be directly review/applyable by operator
+E) RECEIPT (append at end of result message; required)
+Use the exact headings and order below. DPs missing the RECEIPT are incomplete and must be rejected.
+### RECEIPT
 ### A) OPEN Output
 - Full, unmodified output of `./ops/bin/open`
 - Must include branch name and HEAD short hash used during work

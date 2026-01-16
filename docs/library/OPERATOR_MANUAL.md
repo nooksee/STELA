@@ -67,12 +67,12 @@ Dataset reference: `./ops/bin/help db-pr-meta`
 UI order + payload types are canonical; use the DB-PR-META dataset as the SSOT.
 
 ## What workers must return
-Every worker result message must end with the After-Action Bundle (delivery format, not IN-LOOP permission):
+Every worker result message must end with the RECEIPT (delivery format, not IN-LOOP permission):
 - Use the exact headings and order:
-  - `### After-Action Bundle`
+  - `### RECEIPT`
   - `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work)
   - `### B) SNAPSHOT Output` (choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--compress=tar.xz`; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived)
-DPs missing this bundle are incomplete and must be rejected.
+DPs missing the RECEIPT are incomplete and must be rejected.
 Workers may not claim "Freshness unknown" if they can run OPEN themselves.
 
 ## Snapshot
@@ -80,7 +80,7 @@ Workers may not claim "Freshness unknown" if they can run OPEN themselves.
 Scopes:
 - `--scope=icl` (default, curated operator scope)
 - `--scope=full` (full repo scope)
-Note: snapshots do not include OPEN output; state travels via the After-Action Bundle.
+Note: snapshots do not include OPEN output; state travels via the RECEIPT.
 
 Optional archive output (tar.xz):
 - `./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --compress=tar.xz`

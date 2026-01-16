@@ -72,7 +72,7 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 
 ## Output Mechanics Contract
 - Dispatch Packet (DP) output comes first whenever a DP is requested.
-- DP must be a single fenced block containing: Freshness Gate, required NEW work branch (when changes are requested), Purpose, Scope, Files, Forbidden, Verification, Acceptance.
+- DP must be a single fenced block containing: Freshness Gate, required NEW work branch (when changes are requested), Purpose, Scope, Files, Forbidden, Verification, Risk / Rollback, Acceptance.
 - DB-PR-META is IN-LOOP and withheld unless the operator uses the required approval phrase pattern (see Rule 3).
 - Operator approval is an IN-LOOP act and must be explicit.
 - Approval phrase must be the first tokens in the message (start-of-message), on a standalone line, plain text, and unquoted.
@@ -109,9 +109,10 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
   - Avoid hype words ("awesome", "fantastic", "super") in metadata surfaces.
   - Prefer repo nouns (paths, scripts, rules) over vibes.
 - Ordering: if the operator says "DP first", output only the DP and stop; if DB-PR-META is requested, output it after the DP as six blocks.
-- Worker results must end with an After-Action Bundle (delivery format, not IN-LOOP permission).
-- After-Action Bundle (required, last section, exact headings and order): `### After-Action Bundle` `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work) `### B) SNAPSHOT Output` (choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--compress=tar.xz`; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived).
-- Snapshots do not include OPEN output; state travels via the After-Action Bundle only.
+- Worker results must end with the RECEIPT (delivery format, not IN-LOOP permission).
+- RECEIPT (required, last section, exact headings and order): `### RECEIPT` `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work) `### B) SNAPSHOT Output` (choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--compress=tar.xz`; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived).
+- RECEIPT is the rehydration milestone: OPEN + SNAPSHOT are required so state, not vibes, drives follow-on work.
+- Snapshots do not include OPEN output; state travels via the RECEIPT only.
 - DPs missing this bundle are incomplete and must be rejected.
 - Worker may not claim "Freshness unknown" if they can run OPEN themselves.
 - If repo access is unavailable, respond only with: `Repo access unavailable; cannot provide Freshness Gate.`
