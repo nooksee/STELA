@@ -100,6 +100,9 @@ fi
 branch="$(git rev-parse --abbrev-ref HEAD)"
 head_short="$(git rev-parse --short HEAD)"
 branch_safe="${branch//\//-}"
+snapshot_base="snapshot-${scope}-${branch_safe}-${head_short}"
+payload_path="$repo_root/storage/snapshots/${snapshot_base}.txt"
+manifest_path="$repo_root/storage/snapshots/${snapshot_base}.manifest.txt"
 
 format_label="$format"
 case "$format" in
@@ -184,18 +187,25 @@ else
 fi
 
 output_target=""
+archive_path=""
 if [[ -n "$out_path" ]]; then
   if [[ "$out_path" == "auto" ]]; then
     if [[ "$compress_mode" == "tar.xz" ]]; then
-      output_target="$repo_root/storage/snapshots/snapshot-${scope}-${branch_safe}-${head_short}.tar.xz"
+      output_target="$repo_root/storage/snapshots/${snapshot_base}.tar.xz"
     else
-      output_target="$repo_root/storage/snapshots/snapshot-${scope}-${branch_safe}-${head_short}.txt"
+      output_target="$payload_path"
     fi
   elif [[ "$out_path" = /* ]]; then
     output_target="$out_path"
   else
     output_target="$repo_root/$out_path"
   fi
+  if [[ "$compress_mode" == "tar.xz" ]]; then
+    archive_path="$output_target"
+  fi
+fi
+mkdir -p "$(dirname "$payload_path")"
+if [[ -n "$output_target" ]]; then
   mkdir -p "$(dirname "$output_target")"
 fi
 
@@ -396,25 +406,53 @@ emit_snapshot() {
   echo "===== SNAPSHOT PAYLOAD END ====="
 }
 
-if [[ -n "$output_target" ]]; then
+emit_manifest() {
+  local path="$1"
+  local payload="$2"
+  local output="$3"
+  local files_count="${#files[@]}"
+  {
+    echo "Snapshot Manifest"
+    echo "Branch: $branch"
+    echo "HEAD: $head_short"
+    echo "Scope: $scope"
+    echo "Format: $format_label"
+    echo "Chat payload: $payload"
+    if [[ -n "$output" ]]; then
+      echo "Output target: $output"
+    else
+      echo "Output target: (stdout)"
+    fi
+    echo "Files included: $files_count"
+    echo "Included files:"
+    for path in "${files[@]}"; do
+      echo "- $path"
+    done
+  } > "$path"
+}
+
+emit_snapshot > "$payload_path"
+
+if [[ -z "$output_target" ]]; then
+  cat "$payload_path"
+  archive_path="$repo_root/storage/snapshots/${snapshot_base}.tar.xz"
+  if ! command -v tar >/dev/null 2>&1; then
+    die "tar is required for snapshot archive output but was not found on PATH."
+  fi
+  tar -cJf "$archive_path" -C "$(dirname "$payload_path")" "$(basename "$payload_path")"
+else
   if [[ "$compress_mode" == "tar.xz" ]]; then
     if ! command -v tar >/dev/null 2>&1; then
       die "tar is required for --compress=tar.xz but was not found on PATH."
     fi
-    tmp_dir="$(mktemp -d)"
-    tmp_name="snapshot-${scope}-${branch_safe}-${head_short}.txt"
-    tmp_path="${tmp_dir}/${tmp_name}"
-    cleanup() {
-      rm -rf "$tmp_dir"
-    }
-    trap cleanup EXIT
-    emit_snapshot > "$tmp_path"
-    tar -cJf "$output_target" -C "$tmp_dir" "$tmp_name"
-    trap - EXIT
-    cleanup
-  else
-    emit_snapshot > "$output_target"
+    tar -cJf "$output_target" -C "$(dirname "$payload_path")" "$(basename "$payload_path")"
+  elif [[ "$output_target" != "$payload_path" ]]; then
+    cp "$payload_path" "$output_target"
   fi
-else
-  emit_snapshot
 fi
+
+manifest_output="$output_target"
+if [[ -z "$manifest_output" && -n "$archive_path" ]]; then
+  manifest_output="$archive_path"
+fi
+emit_manifest "$manifest_path" "$payload_path" "$manifest_output"
