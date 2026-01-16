@@ -1,5 +1,7 @@
 # Contractor onboarding (monkey-proof)
 
+Deprecated: legacy onboarding bundle. Use `ops/init/icl/ICL_CONTINUITY_CORE.md` for current continuity surfaces.
+
 ## The one workflow
 1. Create `work/<topic>-YYYY-MM-DD`
 2. Make one focused change

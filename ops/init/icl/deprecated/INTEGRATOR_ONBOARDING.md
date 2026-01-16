@@ -1,5 +1,7 @@
 # Integrator role (floor boss)
 
+Deprecated: legacy onboarding bundle. Use `ops/init/icl/ICL_CONTINUITY_CORE.md` for current continuity surfaces.
+
 You are the **plant manager** for repo health.
 
 ## Your job

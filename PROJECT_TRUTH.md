@@ -45,6 +45,11 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 ## Continuity Map (Operator Wayfinding)
 - The pointer-only continuity map is `docs/library/CONTINUITY_MAP.md`.
 
+## ICL Continuity Core (SSOT)
+- The ICL Continuity Core is the minimal continuity/rehydration surface for stateless AI operation in nukeCE.
+- SSOT: `ops/init/icl/ICL_CONTINUITY_CORE.md`.
+- Legacy onboarding bundles are deprecated in favor of the core.
+
 ## DB-DATASET (Curated Dataset Library)
 - DB-DATASET is the manifest-only dataset library for "mode training" and standards.
 - Datasets are docs-only entries under `docs/library/datasets/`, listed in `docs/library/LIBRARY_INDEX.md`.

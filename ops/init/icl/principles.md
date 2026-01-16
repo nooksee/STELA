@@ -19,4 +19,4 @@
    Canon is only what is recorded as a ratified Decision object.
 
 7. **Continuity via structure**
-   Continuity comes from Launch Packs + Context Packs + retrieval, not assumed memory.
+   Continuity comes from the ICL Continuity Core + retrieval, not assumed memory.

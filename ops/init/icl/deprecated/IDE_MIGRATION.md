@@ -1,5 +1,7 @@
 # IDE Migration - YYYY-MM-DD
 
+Deprecated: legacy onboarding bundle. Use `ops/init/icl/ICL_CONTINUITY_CORE.md` for current continuity surfaces.
+
 ## Current truth
 NetBeans is the Truth Console for review + integration.
 

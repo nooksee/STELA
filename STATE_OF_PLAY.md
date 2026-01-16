@@ -1,3 +1,20 @@
+## 2026-01-15 — DP-OPS-0033: ICL Continuity Core + legacy onboarding retirement
+
+- Purpose: Define the ICL Continuity Core, retire the legacy onboarding directory, and triage ICL continuity files.
+- What shipped:
+  - Added `ops/init/icl/ICL_CONTINUITY_CORE.md` and wired it into `PROJECT_TRUTH.md`, the continuity map, and the docs library.
+  - Moved core continuity files into `ops/init/icl/` and updated references across ops/docs.
+  - Moved legacy onboarding files into `ops/init/icl/deprecated/` with deprecation notices.
+  - Removed obsolete ICL rename artifacts and the legacy onboarding folder stub.
+  - Updated `ops/bin/open`, `ops/bin/snapshot`, and `ops/init/icl/context_pack.json` for the new core paths.
+- Verification:
+  - `rg -n "launch_pack" ops/`
+  - `git diff --name-only`
+  - `bash ops/init/tools/context_lint.sh`
+- Risk / rollback:
+  - Risk: missed pointer update could break operator wayfinding.
+  - Rollback: revert the touched files and restore the prior ICL layout.
+
 ## 2026-01-15 — DP-OPS-0032: Continuity map + supersession hygiene
 
 - Purpose: Make continuity surfaces findable; canonize supersession/deprecation/deletion proposals; add a later bucket label.
@@ -357,7 +374,7 @@
   - Added `ops/bin/snapshot` with scope/format flags and deterministic output.
   - Updated `ops/bin/open` to point to snapshot for full repo context.
   - Added snapshot pointer to `ops/init/icl/context_pack.json`.
-  - Added snapshot mention to `ops/init/icl/launch_pack/CONTEXT_PACK.md`.
+  - Added snapshot mention to `ops/init/icl/CONTEXT_PACK.md`.
   - Added repo2txt inspiration note to `PROJECT_TRUTH.md`.
 - Verification:
   - `git diff --name-only`
@@ -376,7 +393,7 @@
 - Purpose: Remove redundant doc/ops stubs and keep canon pointers clean.
 - What shipped:
   - Deleted `docs/ops` pointer stubs now covered by ops canon (kept `docs/ops/INDEX.md`).
-  - Updated canon references in `SECURITY.md`, `STATE_OF_PLAY.md`, `ops/init/icl/BANNED_TERMS_MAP.md`, and `ops/init/icl/RENAME_PLAN_ICL_OCL.md`.
+  - Updated canon references in `SECURITY.md` and `STATE_OF_PLAY.md`, plus the ICL rename artifacts (later retired).
 - Verification:
   - `git diff --name-only`
   - `bash ops/bin/open --intent="dp-ops-0007 test" --dp="DP-OPS-0007 / 2026-01-11" | head -n 140`
@@ -569,15 +586,15 @@
 - Purpose: Migrate launch pack artifacts into ops/init and remove the /boot directory.
 - What shipped:
   - Moved `boot/active/launch_pack/context_pack.json` to `ops/init/icl/context_pack.json`.
-  - Moved `boot/active/launch_pack/README.md` to `ops/init/icl/launch_pack/README.md`.
-  - Moved `boot/active/launch_pack/ASSISTANT_PROFILE.md` to `ops/init/icl/launch_pack/ASSISTANT_PROFILE.md`.
-  - Moved `boot/active/launch_pack/USER_PROFILE.md` to `ops/init/icl/launch_pack/USER_PROFILE.md`.
-  - Moved `boot/active/launch_pack/INTEGRATOR_ONBOARDING.md` to `ops/init/icl/launch_pack/INTEGRATOR_ONBOARDING.md`.
-  - Moved `boot/active/launch_pack/CONTRACTOR_ONBOARDING.md` to `ops/init/icl/launch_pack/CONTRACTOR_ONBOARDING.md`.
-  - Moved `boot/active/launch_pack/RECOVERY.md` to `ops/init/icl/launch_pack/RECOVERY.md`.
-  - Moved `boot/active/launch_pack/principles.md` to `ops/init/icl/launch_pack/principles.md`.
-  - Moved `boot/active/launch_pack/canon_snapshot.md` to `ops/init/icl/launch_pack/canon_snapshot.md`.
-  - Moved `boot/active/launch_pack/active_loops.json` to `ops/init/icl/launch_pack/active_loops.json`.
+  - Moved `boot/active/launch_pack/README.md` to `ops/init/icl/ICL_CONTINUITY_CORE.md`.
+  - Moved `boot/active/launch_pack/ASSISTANT_PROFILE.md` to `ops/init/icl/ASSISTANT_PROFILE.md`.
+  - Moved `boot/active/launch_pack/USER_PROFILE.md` to `ops/init/icl/USER_PROFILE.md`.
+  - Moved `boot/active/launch_pack/INTEGRATOR_ONBOARDING.md` to `ops/init/icl/deprecated/INTEGRATOR_ONBOARDING.md`.
+  - Moved `boot/active/launch_pack/CONTRACTOR_ONBOARDING.md` to `ops/init/icl/deprecated/CONTRACTOR_ONBOARDING.md`.
+  - Moved `boot/active/launch_pack/RECOVERY.md` to `ops/init/icl/RECOVERY.md`.
+  - Moved `boot/active/launch_pack/principles.md` to `ops/init/icl/principles.md`.
+  - Moved `boot/active/launch_pack/canon_snapshot.md` to `ops/init/icl/deprecated/canon_snapshot.md`.
+  - Moved `boot/active/launch_pack/active_loops.json` to `ops/init/icl/deprecated/active_loops.json`.
   - Moved `boot/ACTIVE_CONTEXT.md` to `ops/init/icl/ACTIVE_CONTEXT.md`.
   - Moved `boot/BUNDLE_MANIFEST.json` to `ops/init/icl/BUNDLE_MANIFEST.json`.
   - Moved `boot/templates/gitignore.txt` to `ops/templates/gitignore.txt`.
@@ -743,7 +760,7 @@
 - Purpose: Make ops docs feel like a control room with a clear start and precheck checklist.
 - What shipped:
   - Reworked `docs/ops/INDEX.md` into workflow sections with a drift rule reminder.
-  - Added a filled precheck checklist to `ops/init/icl/launch_pack/DAILY_CONSOLE.md`.
+  - Added a filled precheck checklist to `ops/init/icl/DAILY_CONSOLE.md`.
 - Verification:
   - Not run (worker): `bash tools/verify_tree.sh`
   - Not run (worker): `bash tools/repo/lint_truth.sh`
@@ -911,9 +928,9 @@
 ## Completed
 - Docs Family v1 integrated + canon spine created (docs/00-INDEX, 10-QUICKSTART, 20-GOVERNANCE, 30-RELEASE_PROCESS, 40-PROJECT_HYGIENE)
 - Added Copilot onboarding rules: .github/copilot-instructions.md
-- Added SSOT “save-game” handover file: ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md
+- Added SSOT “save-game” handover file: ops/init/icl/AI_CONTEXT_SYNC.md
 - Enabled FAIL-mode policing: canon changes require STATE_OF_PLAY update in the same PR
-- Updated ops/init/icl/launch_pack/DAILY_CONSOLE.md to clarify canon vs log vs rehydration.
+- Updated ops/init/icl/DAILY_CONSOLE.md to clarify canon vs log vs rehydration.
 - Added ops governance docs: OUTPUT_FORMAT_CONTRACT + Copilot onboarding + Gemini onboarding
 - Updated docs/ops/INDEX.md + docs/00-INDEX.md to link the new ops docs
 - Standardized PROJECT_MAP.md bullets for docs/ops/, upstream/, and .github/workflows/ to clarify roles
@@ -934,8 +951,8 @@
 
 - Purpose: Consolidate ICL/OCL doctrine into ops canon and convert docs/ops into pointer-only manual references.
 - What shipped:
-  - Added `ops/init/icl/launch_pack/DAILY_CONSOLE.md`, `ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md`, `ops/init/icl/launch_pack/CONTEXT_PACK.md`, `ops/init/icl/launch_pack/COPILOT_ONBOARDING.md`, `ops/init/icl/launch_pack/GEMINI_ONBOARDING.md`, `ops/init/icl/launch_pack/IDE_MIGRATION.md`.
-  - Updated `ops/init/icl/launch_pack/RECOVERY.md` and `ops/init/icl/launch_pack/README.md`.
+  - Added `ops/init/icl/DAILY_CONSOLE.md`, `ops/init/icl/AI_CONTEXT_SYNC.md`, `ops/init/icl/CONTEXT_PACK.md`, `ops/init/icl/deprecated/COPILOT_ONBOARDING.md`, `ops/init/icl/deprecated/GEMINI_ONBOARDING.md`, `ops/init/icl/deprecated/IDE_MIGRATION.md`.
+  - Updated `ops/init/icl/RECOVERY.md` and `ops/init/icl/ICL_CONTINUITY_CORE.md`.
   - Updated `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`, `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md`, and `ops/init/protocols/SAVE_THIS_PROTOCOL.md`.
   - Added `ops/templates/CONTRACTOR_BRIEF_TEMPLATE.md` and `ops/templates/CONTRACTOR_REPORT_TEMPLATE.md`.
   - Updated `ops/init/icl/context_pack.json` for the new ops canon pointers.
@@ -1015,8 +1032,8 @@
 
 - Purpose: Capture banned-term inventory and draft a rename plan for ICL/OCL artifacts.
 - What shipped:
-  - Added `ops/init/icl/BANNED_TERMS_MAP.md`.
-  - Added `ops/init/icl/RENAME_PLAN_ICL_OCL.md`.
+  - Added ICL banned-terms map (later retired).
+  - Added ICL/OCL rename plan (later retired).
   - Updated `docs/ops/INDEX.md`.
   - Updated `STATE_OF_PLAY.md`.
 - Verification:
@@ -1030,10 +1047,10 @@
 
 - Purpose: Stabilize the launch pack rename by clearing remaining drift markers and confirming pointer correctness.
 - What shipped:
-  - Added `ops/init/icl/DP-ICL-002E3_RENAME_FIXUPS.md`.
+  - Added ICL rename fixups note (later retired).
   - Updated `STATE_OF_PLAY.md` verification language to avoid banned-term drift.
 - Verification:
-  - Banned-term sweep grep (per `ops/init/icl/DP-ICL-002E3_RENAME_FIXUPS.md`) ✅
+  - Banned-term sweep grep (per ICL rename fixups note) ✅
   - `bash tools/verify_tree.sh` ✅
   - `bash tools/repo/lint_truth.sh` ✅
 - Risk / rollback:

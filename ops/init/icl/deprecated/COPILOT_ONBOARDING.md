@@ -1,5 +1,7 @@
 # Copilot Onboarding (Junior Implementer / Drafter)
 
+Deprecated: legacy onboarding bundle. Use `ops/init/icl/ICL_CONTINUITY_CORE.md` for current continuity surfaces.
+
 Role: Copilot is a junior drafter. It proposes small PR slices and produces diff-first suggestions.
 Copilot does NOT merge and does NOT work on `main`.
 
@@ -22,7 +24,7 @@ Copilot does NOT merge and does NOT work on `main`.
 2) `STATE_OF_PLAY.md`
 3) `PROJECT_MAP.md`
 4) `docs/00-INDEX.md`
-5) `ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md`
+5) `ops/init/icl/AI_CONTEXT_SYNC.md`
 
 ---
 

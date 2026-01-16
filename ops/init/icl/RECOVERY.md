@@ -35,7 +35,8 @@ Then, use the repo's canonical docs as truth:
 - `docs/00-INDEX.md`
 - `ops/init/icl/ICL_OVERVIEW.md`
 - `ops/init/icl/OCL_OVERVIEW.md`
-- `ops/init/icl/launch_pack/DAILY_CONSOLE.md`
+- `ops/init/icl/ICL_CONTINUITY_CORE.md`
+- `ops/init/icl/DAILY_CONSOLE.md`
 - `PROJECT_MAP.md`, `PROJECT_TRUTH.md`, `STATE_OF_PLAY.md`, `CANONICAL_TREE.md`
 
 When proposing steps, keep them small, clickable, and safe (NetBeans menus preferred). If a terminal command is necessary, provide it one line at a time, and warn that pasting with a trailing newline can execute immediately.
@@ -72,6 +73,6 @@ Output:
 - A patch (or PR-ready diff) plus a short verification plan.
 ---
 
-## Role-specific onboarding
-- Copilot: `ops/init/icl/launch_pack/COPILOT_ONBOARDING.md`
-- Gemini: `ops/init/icl/launch_pack/GEMINI_ONBOARDING.md`
+## Legacy onboarding (deprecated)
+- Copilot: `ops/init/icl/deprecated/COPILOT_ONBOARDING.md`
+- Gemini: `ops/init/icl/deprecated/GEMINI_ONBOARDING.md`

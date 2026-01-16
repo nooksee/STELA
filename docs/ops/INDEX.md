@@ -35,10 +35,11 @@ Color behavior:
 - If `bat` is not installed, help uses plain `less`.
 
 ## Start here
-- [Daily Console](../../ops/init/icl/launch_pack/DAILY_CONSOLE.md)
-- [Recovery](../../ops/init/icl/launch_pack/RECOVERY.md)
-- [Context Pack](../../ops/init/icl/launch_pack/CONTEXT_PACK.md)
-- [AI Context Sync](../../ops/init/icl/launch_pack/AI_CONTEXT_SYNC.md)
+- [ICL Continuity Core](../../ops/init/icl/ICL_CONTINUITY_CORE.md)
+- [Daily Console](../../ops/init/icl/DAILY_CONSOLE.md)
+- [Recovery](../../ops/init/icl/RECOVERY.md)
+- [Context Pack](../../ops/init/icl/CONTEXT_PACK.md)
+- [AI Context Sync](../../ops/init/icl/AI_CONTEXT_SYNC.md)
 
 ## Core canon
 - [ICL Overview](../../ops/init/icl/ICL_OVERVIEW.md)
@@ -54,21 +55,17 @@ Color behavior:
 ## Playbooks
 - [Paste Surfaces Playbook](../../ops/init/icl/PASTE_SURFACES_PLAYBOOK.md)
 
-## Planning
-- [Banned Terms Map](../../ops/init/icl/BANNED_TERMS_MAP.md)
-- [Rename Plan (ICL/OCL)](../../ops/init/icl/RENAME_PLAN_ICL_OCL.md)
-
 ## Templates
 - [PR Description Template](../../ops/templates/PR_DESCRIPTION_TEMPLATE.md)
 - [Contractor Brief Template](../../ops/templates/CONTRACTOR_BRIEF_TEMPLATE.md)
 - [Contractor Report Template](../../ops/templates/CONTRACTOR_REPORT_TEMPLATE.md)
 
-## Staff surfaces
-- [Integrator Onboarding](../../ops/init/icl/launch_pack/INTEGRATOR_ONBOARDING.md)
-- [Contractor Onboarding](../../ops/init/icl/launch_pack/CONTRACTOR_ONBOARDING.md)
-- [Copilot Onboarding](../../ops/init/icl/launch_pack/COPILOT_ONBOARDING.md)
-- [Gemini Onboarding](../../ops/init/icl/launch_pack/GEMINI_ONBOARDING.md)
-- [IDE Migration](../../ops/init/icl/launch_pack/IDE_MIGRATION.md)
+## Legacy onboarding (deprecated)
+- [Integrator Onboarding](../../ops/init/icl/deprecated/INTEGRATOR_ONBOARDING.md)
+- [Contractor Onboarding](../../ops/init/icl/deprecated/CONTRACTOR_ONBOARDING.md)
+- [Copilot Onboarding](../../ops/init/icl/deprecated/COPILOT_ONBOARDING.md)
+- [Gemini Onboarding](../../ops/init/icl/deprecated/GEMINI_ONBOARDING.md)
+- [IDE Migration](../../ops/init/icl/deprecated/IDE_MIGRATION.md)
 
 ## Triage
 - [../triage/INBOX.md](../triage/INBOX.md)
