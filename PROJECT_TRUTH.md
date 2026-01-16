@@ -42,6 +42,10 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - Nearly any change that ships (scripts, protocols, behavior rules) must add or update a docs library entry.
 - The library is curated; do not list every .md. If it is not in the manifest, help will refuse to open it.
 
+## AI Entry Points (Repo Root)
+- `llms.txt` is the pointer map into canon and tools.
+- `AGENTS.md` is the pointer-first agent constitution.
+
 ## Continuity Map (Operator Wayfinding)
 - The pointer-only continuity map is `docs/library/CONTINUITY_MAP.md`.
 
