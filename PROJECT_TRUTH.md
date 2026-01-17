@@ -14,8 +14,14 @@ Titanium, Evo, Sentinel, and other derivatives are donor banks. We extract speci
 ## Tooling inspiration
 - Snapshot tool inspired by repo2txt (MIT); reimplemented in-repo with no upstream code copied.
 
+## Platform vs Project
+- Platform: the repo-resident operating system (ops/docs/tools/etc.).
+- Project: deployable payload(s) under `projects/*`.
+- During platform construction, platform context must exclude project payload by default.
+
 ## Runtime hygiene
-public_html is the deployable webroot. It must not contain archive snapshots, legacy graveyards, or development artifacts.
+projects/*/public_html is the deployable webroot. Root public_html is a placeholder and must stay minimal.
+Deployable webroots must not contain archive snapshots, legacy graveyards, or development artifacts.
 
 ## Philosophy
 Secure by default. Explainable operations. Auditable administration. Confidence over cleverness.
@@ -72,6 +78,7 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 
 ## Output Mechanics Contract
 - Dispatch Packet (DP) output comes first whenever a DP is requested.
+- Output artifacts are output artifact files created under `storage/handoff/` and `storage/snapshots/` and must remain untracked; the "no new files unless listed" rule applies to tracked repo files only.
 - DP must be a single fenced block containing: Freshness Gate, required NEW work branch (when changes are requested), Purpose, Scope, Files, Forbidden, Verification, Risk / Rollback, Acceptance.
 - DB-PR-META is IN-LOOP and withheld unless the operator uses the required approval phrase pattern (see Rule 3).
 - Operator approval is an IN-LOOP act and must be explicit.

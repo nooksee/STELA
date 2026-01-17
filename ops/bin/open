@@ -4,10 +4,12 @@ set -euo pipefail
 format="chatgpt"
 intent=""
 dp="(none)"
+out=""
+tag=""
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/open [--format=chatgpt|gemini] [--intent="..."] [--dp="DP-XXXX / YYYY-MM-DD"]
+Usage: ops/bin/open [--format=chatgpt|gemini] [--intent="..."] [--dp="DP-XXXX / YYYY-MM-DD"] [--out=auto] [--tag=token]
 USAGE
 }
 
@@ -26,6 +28,12 @@ for arg in "$@"; do
       ;;
     --dp=*)
       dp="${arg#--dp=}"
+      ;;
+    --out=auto)
+      out="auto"
+      ;;
+    --tag=*)
+      tag="${arg#--tag=}"
       ;;
     -h|--help)
       usage
@@ -51,13 +59,36 @@ fi
 
 branch="$(git rev-parse --abbrev-ref HEAD)"
 head_short="$(git rev-parse --short HEAD)"
-status_porcelain="$(git status --porcelain)"
-if [[ -z "$status_porcelain" ]]; then
+branch_safe="$(printf '%s' "$branch" | tr -c 'A-Za-z0-9._-' '-')"
+tag_prefix=""
+if [[ -n "$tag" ]]; then
+  tag_safe="$(printf '%s' "$tag" | tr -c 'A-Za-z0-9._-' '-')"
+  tag_prefix="${tag_safe}-"
+fi
+mkdir -p storage/handoff
+
+porcelain_saved="storage/handoff/OPEN-PORCELAIN-${tag_prefix}${branch_safe}-${head_short}.txt"
+git status --porcelain > "$porcelain_saved"
+porcelain_count="$(wc -l < "$porcelain_saved" | tr -d '[:space:]')"
+if [[ "$porcelain_count" == "0" ]]; then
   status_summary="clean"
 else
   status_summary="dirty"
 fi
 last_commit="$(git log -1 --oneline)"
+
+porcelain_output=""
+porcelain_preview=""
+if [[ "$status_summary" == "dirty" ]]; then
+  if (( porcelain_count <= 200 )); then
+    porcelain_output="$(cat "$porcelain_saved")"
+  else
+    porcelain_preview="$(head -n 50 "$porcelain_saved")"
+  fi
+fi
+
+open_out_path="storage/handoff/OPEN-${tag_prefix}${branch_safe}-${head_short}.txt"
+: > "$open_out_path"
 
 required_files=(
   "PROJECT_TRUTH.md"
@@ -92,7 +123,16 @@ else
   mode_line="Mode: collaborator stance. Follow repo canon and request missing context."
 fi
 
-cat <<EOF
+emit() {
+  if [[ -n "$open_out_path" ]]; then
+    tee -a "$open_out_path"
+  else
+    cat
+  fi
+}
+
+{
+  cat <<EOF
 ===== OPEN PROMPT =====
 nukeCE OPEN PROMPT (Front Door v2.1)
 Repo is truth. If a file/path isn't present, say so.
@@ -143,17 +183,27 @@ Don't:
 
 [GIT STATE]
 - Working tree: $status_summary
+- Porcelain entries: $porcelain_count
+- Porcelain saved: $porcelain_saved
 - Last commit: $last_commit
 EOF
 
 if [[ "$status_summary" == "dirty" ]]; then
-  cat <<EOF
+  if (( porcelain_count <= 200 )); then
+    cat <<EOF
 - Porcelain (git status --porcelain):
-$status_porcelain
+$porcelain_output
 EOF
+  else
+    cat <<EOF
+- Porcelain entries: $porcelain_count
+- Porcelain preview (truncated to 50 lines):
+$porcelain_preview
+EOF
+  fi
 fi
 
-cat <<EOF
+  cat <<EOF
 [NEXT OPERATOR MOVES]
 - ./ops/bin/snapshot --scope=icl --format=chatgpt
 
@@ -164,3 +214,8 @@ cat <<EOF
 - If any canon pointers are missing, say so.
 ===== END OPEN PROMPT =====
 EOF
+} | emit
+
+if [[ "$out" == "auto" ]]; then
+  printf 'OPEN saved: %s\n' "$open_out_path" | emit
+fi

@@ -9,6 +9,7 @@ It is intentionally short and maintained; if it drifts, fix it.
 ./ops/bin/close
 ./ops/bin/snapshot --scope=icl --format=chatgpt
 ./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto
+./ops/bin/snapshot --scope=platform --format=chatgpt --out=auto
 ./ops/bin/snapshot --scope=full --format=chatgpt --out=auto
 ./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --compress=tar.xz
 ./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto.tar.xz
@@ -42,8 +43,15 @@ Datasets:
 Behavioral preferences:
 - Behavioral preferences are documented in `docs/library/MEMENTOS.md`.
 
+## Platform vs Project
+- Platform is the repo-resident operating system (ops/docs/tools/etc.).
+- Project payloads live under `projects/*`.
+- During platform construction, use platform context by default (exclude project payload).
+
 ## Open / Close
 - `./ops/bin/open` prints the copy-safe Open Prompt with the freshness gate and canon pointers.
+- `./ops/bin/open` writes the OPEN prompt to `storage/handoff/OPEN-<tag>-<branch>-<HEAD>.txt` and captures porcelain to `storage/handoff/OPEN-PORCELAIN-<tag>-<branch>-<HEAD>.txt`; stdout still prints the OPEN prompt.
+- Use `--tag=<token>` to include a filename tag; if omitted, filenames omit the tag.
 - `./ops/bin/close` prints a copy-safe session receipt.
 - OPEN includes a brief posture nudge near the top.
 
@@ -60,7 +68,7 @@ Operator Handoff Paste Order (single message, exact order):
 3) Attach the snapshot file in the same message (if DP required it).
 Attachment-mode (lowest-friction default when the operator is on mobile):
 1) Approval line in chat (start-of-message, plain text, unquoted).
-2) Attach the worker-results text file (full worker results, including the RECEIPT (OPEN + SNAPSHOT)).
+2) Attach the worker-results text file from `storage/handoff/<DP-ID>-RESULTS.md` (full worker results, including the RECEIPT (OPEN + SNAPSHOT)).
 3) Attach snapshot artifacts when required.
 If the chat UI cannot insert blank lines safely, use the `---` delimiter line before pasting results.
 MEMENTO: M-HANDOFF-01 (docs/library/MEMENTOS.md).
@@ -80,27 +88,46 @@ Worker guardrails (summary):
 - No new files unless listed in the DP FILES block.
 - Declare the SSOT file for each touched topic; if unclear, STOP.
 - If duplicates / near-duplicates / out-of-place artifacts are found, list them only under Supersession / Deletion candidates with a crisp plan; no deletions or moves unless explicitly authorized by the DP.
+- Output artifacts are output artifact files created under `storage/handoff/` and `storage/snapshots/` and must remain untracked.
+- "No new files unless listed" applies to tracked repo files only.
+- Worker must write the full results message (A/B/C/D + RECEIPT) to `storage/handoff/<DP-ID>-RESULTS.md`; contents must match the paste-mode results exactly.
 
 Every worker result message must end with the RECEIPT (delivery format, not IN-LOOP permission):
 - Use the exact headings and order:
   - `### RECEIPT`
   - `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work)
-  - `### B) SNAPSHOT Output` (paths or archived filenames; choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--compress=tar.xz`; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived)
+  - `### B) SNAPSHOT Output` (paths or archived filenames; choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto`; for large `--scope=full` snapshots, prefer `--compress=tar.xz`; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived)
   - Include the manifest path when present (the manifest points to the chat payload file to paste).
   - If a tarball is produced, include BOTH: the tarball path and the manifest path.
 DPs missing the RECEIPT are incomplete and must be rejected.
 Workers may not claim "Freshness unknown" if they can run OPEN themselves.
+Attachment-mode handoff artifacts must be repo-local: use `storage/handoff/` (never `/tmp` or user temp dirs). Canonical results filename: `storage/handoff/<DP-ID>-RESULTS.md` (basename UPPERCASE; `.md` lowercase).
+For attachment-mode: the attached results file MUST include the RECEIPT (OPEN + SNAPSHOT). If OPEN exceeds message/file limits (edge case), attach the OPEN file from `storage/handoff/` and in `A) OPEN Output` include the exact path plus the one-line note: "OPEN attached; see path above."
+
+What to look for (handoff artifacts):
+- `storage/handoff/<DP-ID>-RESULTS.md`
+- `storage/handoff/OPEN-...txt` (optional; if OPEN used `--out=auto`)
+- Snapshot artifacts under `storage/snapshots/`, as referenced by the RECEIPT
 
 ## Snapshot
 `./ops/bin/snapshot` emits a repo snapshot (stdout by default). Use `--out=auto` to write to `storage/snapshots/`.
 Scopes:
 - `--scope=icl` (default, curated operator scope)
+- `--scope=platform` (platform-only context; excludes `projects/*` and `public_html/*`)
 - `--scope=full` (full repo scope)
 Note: snapshots do not include OPEN output; state travels via the RECEIPT.
+
+Guidance:
+- Use `--scope=platform` for full platform context during platform build.
+- Use `--scope=full` when project payload must be included.
+- For large `--scope=full` snapshots, prefer `--compress=tar.xz` to keep artifacts attachable.
 
 Optional archive output (tar.xz):
 - `./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --compress=tar.xz`
 - `./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto.tar.xz`
+
+Auto-compress default:
+- For `--scope=full` with `--out=auto` and no explicit `--compress`, `--compress=tar.xz` is assumed.
 
 Archive behavior:
 - Output is a `.tar.xz` archive in `storage/snapshots/`.

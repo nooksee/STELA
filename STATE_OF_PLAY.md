@@ -1,3 +1,47 @@
+## 2026-01-17 — DP-OPS-0040A: Handoff artifacts + output-artifact clarification
+
+- Purpose: Clarify tracked vs output artifacts, standardize RESULTS naming, add OPEN tag support, and default snapshot compression for full auto output.
+- What shipped:
+  - Canonized output artifacts as untracked under `storage/handoff/` and `storage/snapshots/`.
+  - Required `<DP-ID>-RESULTS.md` naming in DP protocol/template and operator guidance.
+  - Added `--tag` support for OPEN output filenames and default `--compress=tar.xz` for `--scope=full --out=auto` snapshots.
+- Verification:
+  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/repo/lint_truth.sh`
+  - `rg -n "RESULTS\\.md|storage/handoff|output artifact|untracked" PROJECT_TRUTH.md docs/library/OPERATOR_MANUAL.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md`
+  - `./ops/bin/open --out=auto --tag=dp-ops-0040a-2026-01-17`
+  - `./ops/bin/snapshot --scope=full --format=chatgpt --out=auto`
+- Risk / rollback:
+  - Risk: Low; contract/tooling changes only.
+  - Rollback: revert the touched files to pre-DP-OPS-0040A state.
+
+## 2026-01-17 — DP-OPS-0040 Addendum-01: Handoff artifacts (repo-local)
+
+- Purpose: Canonize repo-local handoff artifacts, RESULTS file requirement, and OPEN porcelain capture/preview rules.
+- What shipped:
+  - Defined `storage/handoff/` as the canonical handoff directory and required a DP-ID RESULTS markdown file (DP-ID-RESULTS.md naming; basename uppercase).
+  - Canonized OPEN/OPEN-PORCELAIN capture filenames and updated OPEN to save full porcelain with a preview cap for large states.
+  - Snapshot now prints payload/manifest/tarball paths and ensures handoff dir exists; docs now prefer `--compress=tar.xz` for large `--scope=full` snapshots.
+- Verification:
+  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/repo/lint_truth.sh`
+  - `./ops/bin/open`
+- Risk / rollback:
+  - Risk: Low; handoff + logging changes only.
+  - Rollback: revert the touched docs/scripts and delete local `storage/handoff/` artifacts (output-only).
+
+## 2026-01-17 — DP-OPS-0040: Platform/project separation + platform snapshot scope
+
+- Purpose: Separate platform vs project payloads and add a platform-only snapshot scope.
+- What shipped:
+  - Platform/project separation (platform vs project move).
+  - Added `--scope=platform` to `./ops/bin/snapshot` for platform-only context.
+- Verification:
+  - Not recorded in repo; DP-OPS-0040 verification details not found. Operator confirmation required.
+- Risk / rollback:
+  - Risk: Low; platform-only scope may change operator expectations for snapshot content.
+  - Rollback: revert DP-OPS-0040 changes (platform/project separation + `--scope=platform`) to pre-DP behavior.
+
 ## 2026-01-17 — DP-OPS-0039: Attachment-mode handoff + branch safety tightening
 
 - Purpose: Canonize attachment-mode handoff and tighten branch safety STOP rules for DP execution.

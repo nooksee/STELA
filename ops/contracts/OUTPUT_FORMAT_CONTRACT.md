@@ -62,6 +62,17 @@ Preferred order:
 - Output must include a brief summary + git diff.
 - Never commit or push; operator handles commit/push after review.
 
+### Handoff artifacts (repo-local)
+- Handoff directory (canonical): `storage/handoff/`
+- Results file (required for DP handoff): `storage/handoff/<DP-ID>-RESULTS.md`
+  - Basename must be UPPERCASE; extension must be `.md` (lowercase).
+  - Contents must match the full worker results, including the RECEIPT.
+- OPEN capture filenames (repo-local):
+  - `storage/handoff/OPEN-<branch>-<YYYY-MM-DD>-<HEAD>.txt`
+  - `storage/handoff/OPEN-PORCELAIN-<branch>-<YYYY-MM-DD>-<HEAD>.txt`
+- When OPEN porcelain is large, the OPEN output must show entry count + a preview capped at 50 lines; full porcelain lives in the OPEN-PORCELAIN file.
+- Snapshot artifacts remain under `storage/snapshots/` (payload + manifest; tarball when compressed).
+
 ## Verification
 - Not run (operator): check format requirements.
 
