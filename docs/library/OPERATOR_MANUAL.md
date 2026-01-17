@@ -68,11 +68,19 @@ UI order + payload types are canonical; use the DB-PR-META dataset as the SSOT.
 Micro-style: avoid exact-duplicate strings across Commit message, PR title, Merge commit message; similar is OK.
 
 ## What workers must return
+Worker guardrails (summary):
+- Reuse-first; duplication check before creating anything (near-duplicates included).
+- No new files unless listed in the DP FILES block.
+- Declare the SSOT file for each touched topic; if unclear, STOP.
+- If duplicates / near-duplicates / out-of-place artifacts are found, list them only under Supersession / Deletion candidates with a crisp plan; no deletions or moves.
+
 Every worker result message must end with the RECEIPT (delivery format, not IN-LOOP permission):
 - Use the exact headings and order:
   - `### RECEIPT`
   - `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work)
-  - `### B) SNAPSHOT Output` (choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--compress=tar.xz`; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived)
+  - `### B) SNAPSHOT Output` (paths or archived filenames; choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--compress=tar.xz`; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived)
+  - Include the manifest path when present (the manifest points to the chat payload file to paste).
+  - If a tarball is produced, include BOTH: the tarball path and the manifest path.
 DPs missing the RECEIPT are incomplete and must be rejected.
 Workers may not claim "Freshness unknown" if they can run OPEN themselves.
 
