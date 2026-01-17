@@ -1,6 +1,7 @@
 # DB-PR-META - Post-Approval Metadata Surfaces
 
 DB-PR-META is the approval-gated metadata output used after approval for commits, PRs, and merge notes.
+SSOT: This file governs DB-PR-META surface names, order, and UI mapping.
 
 ## Surfaces (SSOT; order is canonical)
 1) Commit message

@@ -13,6 +13,7 @@ Rules:
 - Workers must refuse to proceed if Branch is missing or mismatched.
 - Branch must match Freshness Gate branch.
 - If any literal `...` appears anywhere in the DP you receive, STOP and request operator fill-in.
+- Required blocks must be present: SCOPE (allowed paths), FILES (must edit only these), FORBIDDEN. If missing, STOP.
 
 PRESENTATION RULES
 - Entire DP block is meant to be copied as a unit.
@@ -41,14 +42,19 @@ NON-NEGOTIABLES
 - No direct pushes to `main`. Work only on `work/*` branches.
 - Operator creates the branch first. If it exists, do NOT recreate it. If missing, STOP and report.
 - No invention: if repo evidence for a path/file/claim is missing or ambiguous, flag it; do not guess.
-- Touch only scoped paths listed below.
+- Reuse-first: before creating anything, check for existing or near-duplicate artifacts; if found, reuse or propose under Supersession / Deletion candidates.
+- Duplication check is required before creating new artifacts (near-duplicates included).
+- Declare the SSOT file for each touched topic; if unclear, STOP and use the BLOCKED shape.
+- No new files unless listed in FILES (must edit only these). If a new file is required, STOP and use the BLOCKED shape.
+- Do not assume repo layout; follow existing canon (PROJECT_MAP.md, CANONICAL_TREE.md).
+- Touch only scoped paths and files listed below.
 - Do not modify files inside `upstream/` (read-only donor bank).
 - Do not modify files inside `.github/` unless explicitly instructed.
 - Any move/rename/delete MUST be accompanied by updated references and a STATE_OF_PLAY entry.
 - Add/update STATE_OF_PLAY.md in the SAME PR slice if canon/governance truth docs are impacted.
 
 STOP CONDITIONS — BLOCKED RETURN SHAPE (use when STOP)
-Use this exact mini-receipt:
+Use this exact mini-receipt, then STOP:
 ~~~text
 BLOCKED: yes
 MISSING: (file/path/input)
@@ -60,7 +66,10 @@ ASK: (one crisp question)
 SCOPE (allowed paths)
 - ...
 
-FORBIDDEN ZONES
+FILES (must edit only these)
+- ...
+
+FORBIDDEN
 - ...
 
 OBJECTIVE (what "done" looks like)
@@ -96,8 +105,12 @@ REQUIRED OUTPUT BACK TO OPERATOR (in this exact order)
 A) SUMMARY + SCOPE CONFIRMATION
 - What changed (1-3 bullets)
 - Exact paths touched
+- SSOT declaration for each touched topic (file path)
 - What was NOT changed (if relevant)
 B) Supersession / Deletion candidates (proposal-only; no removals)
+- If duplicates / near-duplicates / out-of-place artifacts are found, list them here only.
+- Include a crisp plan: what is replaced, what replaces it, and where the SSOT lives.
+- Do not delete or move anything in this DP.
 ~~~md
 ## Supersession / Deletion candidates (proposal-only)
 - None.
@@ -153,7 +166,7 @@ Use the exact headings and order below. DPs missing the RECEIPT are incomplete a
 ### A) OPEN Output
 - Full, unmodified output of `./ops/bin/open`
 - Must include branch name and HEAD short hash used during work
-### B) SNAPSHOT Output (worker discretion)
+### B) SNAPSHOT Output (paths or archived filenames)
 - Choose one based on scope:
   - `./ops/bin/snapshot --scope=icl` (default for doc / ops changes)
   - `./ops/bin/snapshot --scope=full` (required for structural or wide refactors)
@@ -161,6 +174,8 @@ Use the exact headings and order below. DPs missing the RECEIPT are incomplete a
   - `--out=auto`
   - `--compress=tar.xz` for large operations
 - Snapshot may be inline (truncated if necessary) or referenced by generated filename if archived
+- Include the manifest path when present (the manifest points to the chat payload file to paste).
+- If a tarball is produced, include BOTH: the tarball path and the manifest path.
 Do not claim "Freshness unknown" if you can run OPEN yourself.
 
 Deliver results, then STOP (no commit/push).

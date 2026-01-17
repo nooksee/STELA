@@ -36,6 +36,10 @@ A DP (Dispatch Packet) is the authoritative, operator-authored work order delive
 - **Merge Commit Metadata:** Merge commit messages and extended descriptions must be filled out completely.
 - **Post-Merge Note:** A post-merge “Merge note” comment on the PR is required.
 - **Queue Rule (Operator-only):** STOP AFTER RESULTS applies only when multiple DPs are queued; workers deliver results and stop.
+- **Reuse-first / duplication check:** Before creating anything, workers must check for existing or near-duplicate artifacts. If found, reuse or propose under Supersession / Deletion candidates.
+- **SSOT declaration:** When touching an area, the worker must declare the SSOT file for that topic; if unclear, STOP and request input.
+- **No new files unless listed:** New files are forbidden unless explicitly listed in the DP FILES block.
+- **Repo-shape neutrality:** Workers must not assume repo layout; use `PROJECT_MAP.md` or `CANONICAL_TREE.md` as the layout SSOT.
 
 ## 3. Freshness Gate (Required)
 Before any work starts, the Worker must echo:
@@ -50,10 +54,14 @@ If the branch or DP id/date mismatches operator-provided truth, the Worker must 
 - The Operator is responsible for reviewing changes, running verification gates, committing, pushing, creating the PR, and merging.
 - The Worker stops after delivering results; no extra chatter and no next steps unless asked.
 - Worker results must include a "Supersession / Deletion candidates" callout (proposal-only; no removals).
+- If duplicates / near-duplicates / out-of-place artifacts are found, list them only under Supersession / Deletion candidates with a crisp plan (what is replaced, what replaces it, where the SSOT lives).
+- Do not delete or move anything in this DP.
 - The Worker must append the RECEIPT as the last section of the result message (delivery format, not IN-LOOP permission), using the exact headings and order below:
   - `### RECEIPT`
   - `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work)
-  - `### B) SNAPSHOT Output` (choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--compress=tar.xz` for large operations; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived)
+  - `### B) SNAPSHOT Output` (paths or archived filenames; choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--compress=tar.xz` for large operations; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived)
+  - Include the manifest path when present (the manifest points to the chat payload file to paste).
+  - If a tarball is produced, include BOTH: the tarball path and the manifest path.
   - DPs missing the RECEIPT are incomplete and must be rejected.
   - The Worker may not claim "Freshness unknown" if they can run OPEN themselves.
 
@@ -76,8 +84,11 @@ A dispatch packet must contain the following sections to be considered valid:
 - **Branch:** The exact branch the work will be performed on.
 - **Role:** The persona the worker should adopt (e.g., "You are Gemini (Reviewer)").
 - **Non-Negotiables:** Core rules the worker must follow.
+- **STOP behavior:** If blocked or missing required inputs, return the BLOCKED mini-receipt shape and stop.
 - **Objective:** A clear, high-level description of what "done" looks like.
-- **Scope / Forbidden Zones:** Explicitly allowed and disallowed file paths.
+- **SCOPE (allowed paths):** Explicitly allowed file paths.
+- **FILES (must edit only these):** Exact files permitted for edits (no new files unless listed).
+- **FORBIDDEN:** Explicitly disallowed file paths.
 - **Tasks:** A concrete, numbered or bulleted list of tasks to perform.
 - **Verification:** Specific commands the worker must run to prove the changes work as intended.
 - **Risk / Rollback:** A concise statement of risk and rollback plan for this DP.

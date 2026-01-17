@@ -1,3 +1,24 @@
+## 2026-01-17 — DP-OPS-0038: DP contract binding + RECEIPT manifest requirements
+
+- Purpose: Tighten DP contract for reuse-first, duplication checks, SSOT declarations, and RECEIPT manifest requirements while keeping repo-shape neutral.
+- What shipped:
+  - Hardened DP template/protocol with required SCOPE/FILES/FORBIDDEN blocks, STOP/BLOCKED enforcement, reuse-first + duplication checks, SSOT declaration, and no-new-files constraint.
+  - Added supersession proposal-only guidance with crisp plan requirements.
+  - Required RECEIPT SNAPSHOT to include manifest path and tarball+manifest pair when archived.
+  - Updated operator manual and DB-PR-META dataset SSOT note to match the new guardrails.
+- Verification:
+  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/repo/lint_truth.sh`
+  - `rg -n "SCOPE \\(allowed paths\\)|FILES \\(must edit only these\\)|FORBIDDEN" ops/templates/DISPATCH_PACKET_TEMPLATE.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`
+  - `rg -n "### RECEIPT|### A\\) OPEN Output|### B\\) SNAPSHOT Output" ops/templates/DISPATCH_PACKET_TEMPLATE.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`
+  - `rg -n "manifest path|tarball" ops/templates/DISPATCH_PACKET_TEMPLATE.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md docs/library/OPERATOR_MANUAL.md`
+  - `rg -n "Reuse-first|Duplication check|SSOT|No new files" ops/templates/DISPATCH_PACKET_TEMPLATE.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md docs/library/OPERATOR_MANUAL.md`
+  - `rg -n "Supersession / Deletion candidates|proposal-only" ops/templates/DISPATCH_PACKET_TEMPLATE.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md docs/library/OPERATOR_MANUAL.md`
+  - `rg -n "PROJECT_MAP\\.md|CANONICAL_TREE\\.md" ops/templates/DISPATCH_PACKET_TEMPLATE.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`
+- Risk / rollback:
+  - Risk: Low to medium-low; tighter constraints may slow work if wording is misread.
+  - Rollback: revert the touched files to the pre-DP-OPS-0038 state.
+
 ## 2026-01-16 — DP-OPS-0037: MEMENTOS artifacts + interpretation/tone tightening
 
 - Purpose: Harden MEMENTOS SSOT with quoteable artifacts, remove ambiguity in multi-interpretation handling, and calibrate tone guidance.
