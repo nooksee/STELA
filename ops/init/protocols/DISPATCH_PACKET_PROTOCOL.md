@@ -40,6 +40,7 @@ A DP (Dispatch Packet) is the authoritative, operator-authored work order delive
 - **Reuse-first / duplication check:** Before creating anything, workers must check for existing or near-duplicate artifacts. If found, reuse or propose under Supersession / Deletion candidates.
 - **SSOT declaration:** When touching an area, the worker must declare the SSOT file for that topic; if unclear, STOP and request input.
 - **No new files unless listed:** New files are forbidden unless explicitly listed in the DP FILES block.
+- **Output artifacts:** The no-new-files rule applies to tracked repo files only; output artifacts under `storage/handoff/` and `storage/snapshots/` are allowed untracked.
 - **Repo-shape neutrality:** Workers must not assume repo layout; use `PROJECT_MAP.md` or `CANONICAL_TREE.md` as the layout SSOT.
 
 ## 3. Freshness Gate (Required)
@@ -59,14 +60,34 @@ If the branch or DP id/date mismatches operator-provided truth, the Worker must 
 - If duplicates / near-duplicates / out-of-place artifacts are found, list them only under Supersession / Deletion candidates with a crisp plan (what is replaced, what replaces it, where the SSOT lives).
 - Do not delete or move anything unless explicitly authorized by the DP.
 - Attachment-mode delivery: Worker results may be delivered as one attached text file; attachment contents must match the paste-mode results exactly, including the RECEIPT (OPEN + SNAPSHOT).
-- The Worker must append the RECEIPT as the last section of the result message (delivery format, not IN-LOOP permission), using the exact headings and order below:
+- Handoff artifacts must be repo-local: use `storage/handoff/` (never `/tmp` or user temp dirs).
+- REQUIRED results filename (all deliveries): `storage/handoff/<DP-ID>-RESULTS.md` (basename UPPERCASE; `.md` lowercase).
+- Worker must write the full results message (A/B/C/D + RECEIPT) to the RESULTS file; contents must match the paste-mode results exactly.
+- The RESULTS file must NOT include the operator approval line; approval remains its own message.
+- If `storage/handoff/<DP-ID>-RESULTS.md` is missing, reject the DP results as incomplete.
+  - Implementation hint:
+    - `cat > storage/handoff/<DP-ID>-RESULTS.md <<'EOF'`
+    - `<paste the exact worker results here, including RECEIPT>`
+    - `EOF`
+- Canonical OPEN capture filenames (repo-local):
+  - `storage/handoff/OPEN-<tag>-<branch>-<HEAD>.txt`
+  - `storage/handoff/OPEN-PORCELAIN-<tag>-<branch>-<HEAD>.txt`
+  - If no tag is provided, omit the `<tag>-` segment.
+- The RECEIPT is mandatory and must be appended as the last section of the result message (delivery format, not IN-LOOP permission), using the exact headings and order below:
   - `### RECEIPT`
   - `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work)
-  - `### B) SNAPSHOT Output` (paths or archived filenames; choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--compress=tar.xz` for large operations; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived)
+  - `### B) SNAPSHOT Output` (paths or archived filenames; choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto`; for large `--scope=full` snapshots, prefer `--compress=tar.xz` to keep artifacts attachable; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived)
   - Include the manifest path when present (the manifest points to the chat payload file to paste).
   - If a tarball is produced, include BOTH: the tarball path and the manifest path.
   - DPs missing the RECEIPT are incomplete and must be rejected.
   - The Worker may not claim "Freshness unknown" if they can run OPEN themselves.
+  - For attachment-mode: if OPEN exceeds message/file limits, attach the OPEN file from `storage/handoff/` and in `A) OPEN Output` include the exact path plus the one-line note: "OPEN attached; see path above."
+- Worker final chat message must be minimal and mechanical:
+  - "Wrote RESULTS file: storage/handoff/<DP-ID>-RESULTS.md"
+  - "OPEN captured: storage/handoff/OPEN-...txt"
+  - "Porcelain captured: storage/handoff/OPEN-PORCELAIN-...txt"
+  - "Snapshot: <payload/tarball> + manifest: <manifest>"
+- Then STOP.
 
 ## 5. Integrator Review Gate (Required)
 Before any commit/push/PR/merge, the Integrator must review and sign off.

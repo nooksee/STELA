@@ -11,7 +11,7 @@ state_heading_regex='^## [0-9]{4}-[0-9]{2}-[0-9]{2} '
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/snapshot [--scope=icl|full] [--format=chatgpt|gemini|claude] [--max-lines=n] [--out=path|auto]
+Usage: ops/bin/snapshot [--scope=icl|platform|full] [--format=chatgpt|gemini|claude] [--max-lines=n] [--out=path|auto]
                      [--compress=tar.xz]
 USAGE
 }
@@ -24,7 +24,7 @@ die() {
 
 for arg in "$@"; do
   case "$arg" in
-    --scope=icl|--scope=full)
+    --scope=icl|--scope=platform|--scope=full)
       scope="${arg#--scope=}"
       ;;
     --format=chatgpt|--format=gemini|--format=claude)
@@ -78,6 +78,10 @@ if [[ -z "$max_lines" ]]; then
   fi
 fi
 
+if [[ "$scope" == "full" && "$out_path" == "auto" && -z "$compress_mode" ]]; then
+  compress_mode="tar.xz"
+fi
+
 if ! command -v git >/dev/null 2>&1; then
   die "git is required but was not found on PATH."
 fi
@@ -89,6 +93,8 @@ fi
 if [[ "$(pwd -P)" != "$repo_root" ]]; then
   die "Run from repo root: $repo_root"
 fi
+
+mkdir -p "$repo_root/storage/handoff"
 
 remote_url="$(git remote get-url origin 2>/dev/null || true)"
 if [[ -n "$remote_url" ]]; then
@@ -133,6 +139,13 @@ ICL_FILES=(
 )
 
 is_excluded_path() {
+  if [[ "$scope" == "platform" ]]; then
+    case "$1" in
+      projects/*|public_html/*)
+        return 0
+        ;;
+    esac
+  fi
   case "$1" in
     .git/*|*/.git/*|storage/*|vendor/*|*/vendor/*|node_modules/*|*/node_modules/*|upstream/*|addons/_bundled_snapshot/*|archives/*|archive/*|docs/_archive/*|docs/archive/*|docs/archives/*|*/_archive/*|*/archives/*|*/archive/*)
       return 0
@@ -384,7 +397,11 @@ emit_snapshot() {
   echo "Format: $format_label"
   echo "Files included: $files_count"
   echo "Truncated files: $truncated_files"
-  echo "Excluded dirs: .git/ storage/ vendor/ node_modules/ upstream/ addons/_bundled_snapshot/ archives/ archive/ docs/_archive/ docs/archive/ docs/archives/ */_archive/ */archive/ */archives/"
+  excluded_dirs=".git/ storage/ vendor/ node_modules/ upstream/ addons/_bundled_snapshot/ archives/ archive/ docs/_archive/ docs/archive/ docs/archives/ */_archive/ */archive/ */archives/"
+  if [[ "$scope" == "platform" ]]; then
+    excluded_dirs+=" projects/ public_html/"
+  fi
+  echo "Excluded dirs: $excluded_dirs"
   echo "Excluded types: .png .jpg .jpeg .gif .svg .ico .pdf .zip .tar .gz .xz .tgz .7z .rar .mp3 .mp4 .mov .avi .mkv .webm .ogg .wav .woff .woff2 .ttf .otf .class .jar .exe .dll .so .dylib .psd .ai .sketch .doc .docx .xls .xlsx .ppt .pptx"
   echo "===== SNAPSHOT PAYLOAD BEGIN ====="
   echo "[INDEX]"
@@ -456,3 +473,9 @@ if [[ -z "$manifest_output" && -n "$archive_path" ]]; then
   manifest_output="$archive_path"
 fi
 emit_manifest "$manifest_path" "$payload_path" "$manifest_output"
+
+echo "Snapshot payload: $payload_path"
+if [[ -n "$archive_path" ]]; then
+  echo "Snapshot tarball: $archive_path"
+fi
+echo "Snapshot manifest: $manifest_path"
