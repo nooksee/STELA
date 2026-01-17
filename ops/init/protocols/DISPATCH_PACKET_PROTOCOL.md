@@ -29,6 +29,7 @@ A DP (Dispatch Packet) is the authoritative, operator-authored work order delive
 ## 2. Core Governance Rules (Non-Negotiable)
 - **Branching:** All work must happen on `work/*` branches, created by the Operator.
 - **Branch Creation Rule:** Operator creates the branch first. If it exists, the Worker must not recreate it. If the branch is missing, the Worker must STOP and report.
+- **Branch Safety:** If the current branch is main, STOP and report. If the DP omits the required work branch name, STOP and report. If the current branch does not match the DP required work branch name, STOP and report.
 - **Merge Process:** Merges to `main` happen via Pull Request (PR) only. No direct pushes to `main` are permitted.
 - **Verification Gates:** `repo-gates` must be green before any merge.
 - **State Ledger:** `STATE_OF_PLAY.md` must be updated within the same PR for any changes to doctrine, governance, or canonical repository structure.
@@ -47,6 +48,7 @@ Before any work starts, the Worker must echo:
 - Current HEAD short hash
 - DP id + date
 
+STOP if the current branch is main. STOP if the DP omits the required work branch name or if the current branch does not match the DP required work branch name.
 If the branch or DP id/date mismatches operator-provided truth, the Worker must STOP and report the mismatch. If the operator supplied an expected hash and it mismatches, the Worker must STOP and report the mismatch. If no expected hash was supplied, the Worker notes "hash not verified" and proceeds. If all checks pass, the Worker proceeds immediately to tasks and does not wait for authorization.
 
 ## 4. Worker Delivery Protocol (No Commit/Push)
@@ -55,7 +57,8 @@ If the branch or DP id/date mismatches operator-provided truth, the Worker must 
 - The Worker stops after delivering results; no extra chatter and no next steps unless asked.
 - Worker results must include a "Supersession / Deletion candidates" callout (proposal-only; no removals).
 - If duplicates / near-duplicates / out-of-place artifacts are found, list them only under Supersession / Deletion candidates with a crisp plan (what is replaced, what replaces it, where the SSOT lives).
-- Do not delete or move anything in this DP.
+- Do not delete or move anything unless explicitly authorized by the DP.
+- Attachment-mode delivery: Worker results may be delivered as one attached text file; attachment contents must match the paste-mode results exactly, including the RECEIPT (OPEN + SNAPSHOT).
 - The Worker must append the RECEIPT as the last section of the result message (delivery format, not IN-LOOP permission), using the exact headings and order below:
   - `### RECEIPT`
   - `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work)

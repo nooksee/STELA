@@ -58,6 +58,10 @@ Operator Handoff Paste Order (single message, exact order):
 1) Approval line (start-of-message, plain text, unquoted): `APPROVE <DP-ID> EMIT DB-PR-META`
 2) Paste worker results raw, unquoted, unedited (after a delimiter: a single blank line or a line containing only `---`).
 3) Attach the snapshot file in the same message (if DP required it).
+Attachment-mode (lowest-friction default when the operator is on mobile):
+1) Approval line in chat (start-of-message, plain text, unquoted).
+2) Attach the worker-results text file (full worker results, including the RECEIPT (OPEN + SNAPSHOT)).
+3) Attach snapshot artifacts when required.
 If the chat UI cannot insert blank lines safely, use the `---` delimiter line before pasting results.
 MEMENTO: M-HANDOFF-01 (docs/library/MEMENTOS.md).
 Approval must be the first tokens in the message (start-of-message) and outside OPEN prompt text, OPEN intent, and outside quoted/fenced blocks.
@@ -67,12 +71,15 @@ Dataset reference: `./ops/bin/help db-pr-meta`
 UI order + payload types are canonical; use the DB-PR-META dataset as the SSOT.
 Micro-style: avoid exact-duplicate strings across Commit message, PR title, Merge commit message; similar is OK.
 
+## Branch protection
+Branch protection on `main` should be enabled in GitHub settings.
+
 ## What workers must return
 Worker guardrails (summary):
 - Reuse-first; duplication check before creating anything (near-duplicates included).
 - No new files unless listed in the DP FILES block.
 - Declare the SSOT file for each touched topic; if unclear, STOP.
-- If duplicates / near-duplicates / out-of-place artifacts are found, list them only under Supersession / Deletion candidates with a crisp plan; no deletions or moves.
+- If duplicates / near-duplicates / out-of-place artifacts are found, list them only under Supersession / Deletion candidates with a crisp plan; no deletions or moves unless explicitly authorized by the DP.
 
 Every worker result message must end with the RECEIPT (delivery format, not IN-LOOP permission):
 - Use the exact headings and order:
