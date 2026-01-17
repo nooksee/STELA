@@ -1,3 +1,19 @@
+## 2026-01-17 — DP-OPS-0039: Attachment-mode handoff + branch safety tightening
+
+- Purpose: Canonize attachment-mode handoff and tighten branch safety STOP rules for DP execution.
+- What shipped:
+  - Added attachment-mode as an explicit operator handoff option with attachment content requirements, keeping paste-mode intact.
+  - Added STOP rules for main-branch work, branch mismatch, and missing required work branch name in DP protocol/template.
+  - Clarified no-delete/no-move policy as "unless explicitly authorized by the DP" and documented mobile attachment-mode + branch protection reminder.
+- Verification:
+  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/repo/lint_truth.sh`
+  - `rg -n "Attachment-mode|attachment-mode" PROJECT_TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md`
+  - `rg -n "current branch is main|branch mismatch|does not match the DP" ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md`
+- Risk / rollback:
+  - Risk: Medium-low; workflow wording could be misread by operators/workers.
+  - Rollback: revert `PROJECT_TRUTH.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
+
 ## 2026-01-17 — DP-OPS-0038: DP contract binding + RECEIPT manifest requirements
 
 - Purpose: Tighten DP contract for reuse-first, duplication checks, SSOT declarations, and RECEIPT manifest requirements while keeping repo-shape neutral.

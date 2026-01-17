@@ -80,9 +80,16 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - Approval MUST be outside OPEN prompt text, OPEN "Today's intent", and outside quoted/fenced blocks.
 - If approval and worker results are in the same message, approval must be followed by exactly one delimiter: either a single blank line or a line containing only `---`.
 - If the chat UI cannot insert blank lines safely, use the `---` delimiter line before pasting results.
+- Operator Handoff Modes (canonical):
+  - Paste-mode: results pasted in chat (see paste order below).
+  - Attachment-mode: approval line in chat; worker results delivered as a single attached text file (see attachment order below).
 - Operator Handoff Paste Order (canonical):
   1) Approval line (start-of-message, standalone; include delimiter if results are in the same message)
   2) Worker results pasted raw (not quoted), immediately after the delimiter
+  3) Snapshot tarball attached (if DP required it)
+- Operator Handoff Attachment-mode Order (canonical):
+  1) Approval line (start-of-message, standalone; message contains only the approval line)
+  2) Worker results delivered as a single attached text file; attachment must contain the full worker results, including the RECEIPT (OPEN + SNAPSHOT)
   3) Snapshot tarball attached (if DP required it)
 - Quoted blocks are commentary and invalid for approval.
 - Requesting DB-PR-META without the approval phrase is insufficient.

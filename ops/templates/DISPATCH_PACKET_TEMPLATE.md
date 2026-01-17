@@ -12,6 +12,9 @@ Rules:
 - This is not informational.
 - Workers must refuse to proceed if Branch is missing or mismatched.
 - Branch must match Freshness Gate branch.
+- STOP if current branch is main.
+- STOP if current branch does not match the DP required work branch name.
+- STOP if the DP omits the required work branch name.
 - If any literal `...` appears anywhere in the DP you receive, STOP and request operator fill-in.
 - Required blocks must be present: SCOPE (allowed paths), FILES (must edit only these), FORBIDDEN. If missing, STOP.
 
@@ -97,6 +100,10 @@ Operator Handoff Paste Order (IN-LOOP):
 1) Approval line (start-of-message, plain text, unquoted): APPROVE <DP-ID> EMIT DB-PR-META
 2) Worker results pasted raw (not quoted), after a delimiter (a single blank line or a line containing only `---`)
 3) Snapshot file attached (if DP required it)
+Operator Handoff Attachment-mode Order (IN-LOOP):
+1) Approval line (start-of-message, plain text, unquoted); message contains only the approval line
+2) Attach the worker-results text file; attachment contents must match the paste-mode results exactly, including the RECEIPT (OPEN + SNAPSHOT)
+3) Attach the snapshot file (if DP required it)
 If the chat UI cannot insert blank lines safely, use the `---` delimiter line before pasting results.
 Approval must be the first tokens in the message (start-of-message) and outside OPEN prompt text, OPEN intent, and outside quoted/fenced blocks.
 Quoted blocks are commentary and invalid for approval.
@@ -110,7 +117,7 @@ A) SUMMARY + SCOPE CONFIRMATION
 B) Supersession / Deletion candidates (proposal-only; no removals)
 - If duplicates / near-duplicates / out-of-place artifacts are found, list them here only.
 - Include a crisp plan: what is replaced, what replaces it, and where the SSOT lives.
-- Do not delete or move anything in this DP.
+- Do not delete or move anything unless explicitly authorized by the DP.
 ~~~md
 ## Supersession / Deletion candidates (proposal-only)
 - None.
