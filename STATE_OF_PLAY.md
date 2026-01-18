@@ -1,3 +1,20 @@
+## 2026-01-18 — DP-OPS-0042: STELA naming seed (doc-only)
+
+- Purpose: Seed STELA naming in canon with no-churn guardrails and explicit non-goals.
+- What shipped:
+  - Added Naming / Identity section to `PROJECT_TRUTH.md` defining STELA, nukeCE legacy label, and no-churn policy.
+  - Added a short STELA note in the operator manual and a minimal naming doc with anti-drift bullets.
+  - Added a single MEMENTOS clarification line about naming vs canon/contracts.
+  - Registered the STELA naming doc in `docs/00-INDEX.md`.
+- Verification:
+  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/repo/lint_truth.sh`
+  - `rg -n "(STELA|nukeCE|Nuke CE)" PROJECT_TRUTH.md STATE_OF_PLAY.md docs/library/OPERATOR_MANUAL.md docs/library/MEMENTOS.md docs/library/STELA_NAMING.md docs/00-INDEX.md`
+  - `git diff --name-only`
+- Risk / rollback:
+  - Risk: Low; doc-only naming alignment.
+  - Rollback: revert the touched files to pre-DP-OPS-0042 state.
+
 ## 2026-01-18 — DP-OPS-0041: Snapshot receipt package bundling
 
 - Purpose: Bundle snapshot manifest + payload inside tarball; canonize receipt package artifacts and reduce operator friction.
