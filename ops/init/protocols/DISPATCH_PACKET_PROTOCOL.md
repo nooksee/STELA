@@ -62,6 +62,11 @@ If the branch or DP id/date mismatches operator-provided truth, the Worker must 
 - Attachment-mode delivery: Worker results may be delivered as one attached text file; attachment contents must match the paste-mode results exactly, including the RECEIPT (OPEN + SNAPSHOT).
 - Handoff artifacts must be repo-local: use `storage/handoff/` (never `/tmp` or user temp dirs).
 - REQUIRED results filename (all deliveries): `storage/handoff/<DP-ID>-RESULTS.md` (basename UPPERCASE; `.md` lowercase).
+- Receipt package (minimum handoff artifacts; attachment-mode friendly):
+  - `storage/handoff/<DP-ID>-RESULTS.md` (required)
+  - Snapshot tarball when required by DP
+  - Snapshot manifest (bundled inside the tarball when `--bundle` is used, or attached alongside when not bundled)
+  - OPEN + OPEN-PORCELAIN artifacts are already captured under `storage/handoff/` by OPEN tooling; do not regress this.
 - Worker must write the full results message (A/B/C/D + RECEIPT) to the RESULTS file; contents must match the paste-mode results exactly.
 - The RESULTS file must NOT include the operator approval line; approval remains its own message.
 - If `storage/handoff/<DP-ID>-RESULTS.md` is missing, reject the DP results as incomplete.
@@ -76,7 +81,7 @@ If the branch or DP id/date mismatches operator-provided truth, the Worker must 
 - The RECEIPT is mandatory and must be appended as the last section of the result message (delivery format, not IN-LOOP permission), using the exact headings and order below:
   - `### RECEIPT`
   - `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work)
-  - `### B) SNAPSHOT Output` (paths or archived filenames; choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto`; for large `--scope=full` snapshots, prefer `--compress=tar.xz` to keep artifacts attachable; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived)
+  - `### B) SNAPSHOT Output` (paths or archived filenames; choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--bundle` (tarball includes payload + manifest); for large `--scope=full` snapshots, prefer `--compress=tar.xz` to keep artifacts attachable; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived)
   - Include the manifest path when present (the manifest points to the chat payload file to paste).
   - If a tarball is produced, include BOTH: the tarball path and the manifest path.
   - DPs missing the RECEIPT are incomplete and must be rejected.
