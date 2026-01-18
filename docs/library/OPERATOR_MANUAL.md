@@ -2,6 +2,7 @@
 
 This manual is the operator-facing entrypoint for day-to-day commands and the curated docs library.
 It is intentionally short and maintained; if it drifts, fix it.
+You may see legacy `nukeCE` strings; `STELA` is the platform name going forward.
 
 ## Top Commands (cheat sheet)
 ```

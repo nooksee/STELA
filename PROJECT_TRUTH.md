@@ -5,6 +5,13 @@ If something conflicts with this file, this file wins.
 ## Identity
 PHP-Nuke CE is a curated continuation of the PHP-Nuke lineage. It is not a rewrite and not a fork-dump.
 
+## Naming / Identity
+- STELA: platform name (stone tablet metaphor: published canon / governance visible to all).
+- nukeCE: historical working label for the repo/system.
+- Policy: do not global-replace older strings unless a DP explicitly authorizes it.
+- Naming does not override canon, contracts, gates, or approvals.
+- Non-goals: not a repo rename yet; not a product marketing push yet.
+
 ## Upstream
 Historical upstream: php-nuke/php-nuke. Upstream code is pulled intentionally and reviewed explicitly.
 

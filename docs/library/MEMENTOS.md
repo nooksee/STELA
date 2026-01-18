@@ -9,6 +9,7 @@ This file is the single source of truth for MEMENTOS.
 - Non-authoritative.
 - Designed to nudge model behavior without overriding canon.
 - Preferences, not permissions.
+- Names are not permissions; naming does not override canon or contracts.
 
 ## Purpose
 - Prevent interface drift by keeping expression constraints explicit and mechanical.
