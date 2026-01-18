@@ -1217,3 +1217,19 @@
 - Risk / rollback:
   - Risk: lingering legacy references outside the planning docs could still surface later.
   - Rollback: revert this entry and re-run the drift sweep.
+## 2026-01-18 - DP-OPS-0043: Project Registry v1 (minimal womb + registration)
+
+- Purpose: Introduce a minimal project registry SSOT and a guarded init flow for STELA-born projects.
+- What shipped:
+  - Added `docs/library/datasets/PROJECT_REGISTRY.md` and pointers in `PROJECT_TRUTH.md`.
+  - Added `ops/bin/project`, `ops/lib/project/`, and `ops/init/projects/` scaffolds.
+  - Added `projects/README.md` and updated `docs/library/OPERATOR_MANUAL.md`.
+- Verification:
+  - `bash ops/init/tools/context_lint.sh` ✅
+  - `bash tools/repo/lint_truth.sh` ✅
+  - `./ops/bin/project list` ✅
+  - `./ops/bin/project current` ✅
+  - `./ops/bin/project init demo --dry-run` ✅
+- Risk / rollback:
+  - Risk: Medium-low (new subsystem surface area).
+  - Rollback: revert the FILES touched.

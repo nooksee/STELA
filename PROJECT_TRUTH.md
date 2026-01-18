@@ -26,6 +26,11 @@ Titanium, Evo, Sentinel, and other derivatives are donor banks. We extract speci
 - Project: deployable payload(s) under `projects/*`.
 - During platform construction, platform context must exclude project payload by default.
 
+## Project Registry (SSOT)
+- Registered projects are listed in `docs/library/datasets/PROJECT_REGISTRY.md`.
+- The registry is the SSOT for project identity, status, and root paths.
+- No import/migration of legacy projects unless a DP explicitly authorizes it.
+
 ## Runtime hygiene
 projects/*/public_html is the deployable webroot. Root public_html is a placeholder and must stay minimal.
 Deployable webroots must not contain archive snapshots, legacy graveyards, or development artifacts.
