@@ -1,0 +1,175 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_PATH="$SCRIPT_DIR/../lib/project/project_lib.sh"
+
+if [[ ! -f "$LIB_PATH" ]]; then
+  echo "ERROR: Missing project library: $LIB_PATH" >&2
+  exit 1
+fi
+
+# shellcheck source=../lib/project/project_lib.sh
+source "$LIB_PATH"
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/project <command> [args]
+
+Commands:
+  list
+    Print a concise list of registered projects.
+
+  current
+    Print the current project id, or "none" if unset.
+
+  init <name> --dry-run|--confirm
+    Register a new project and optionally create a minimal scaffold.
+    Use --dry-run to preview changes; use --confirm to apply.
+USAGE
+}
+
+die() {
+  echo "ERROR: $*" >&2
+  usage >&2
+  exit 1
+}
+
+cmd_list() {
+  local any=0
+  local id name created status root notes
+
+  while IFS=$'\t' read -r id name created status root notes; do
+    if (( any == 0 )); then
+      printf "project_id | status | root_path | display_name\n"
+      any=1
+    fi
+    printf "%s | %s | %s | %s\n" "$id" "$status" "$root" "$name"
+  done < <(project_lib_registry_rows)
+
+  if (( any == 0 )); then
+    echo "No registered projects."
+  fi
+}
+
+cmd_current() {
+  echo "none"
+}
+
+cmd_init() {
+  local name=""
+  local dry_run=0
+  local confirm=0
+
+  while (( $# > 0 )); do
+    case "$1" in
+      --dry-run)
+        dry_run=1
+        ;;
+      --confirm)
+        confirm=1
+        ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      -* )
+        die "Unknown flag: $1"
+        ;;
+      * )
+        if [[ -z "$name" ]]; then
+          name="$1"
+        else
+          die "Too many arguments."
+        fi
+        ;;
+    esac
+    shift
+  done
+
+  if [[ -z "$name" ]]; then
+    die "Missing project name."
+  fi
+
+  if (( dry_run + confirm == 0 )); then
+    die "Use --dry-run or --confirm."
+  fi
+
+  if (( dry_run == 1 && confirm == 1 )); then
+    die "Choose only one of --dry-run or --confirm."
+  fi
+
+  local project_id
+  project_id="$(project_lib_slugify "$name")"
+  if [[ -z "$project_id" ]]; then
+    die "Project name produced an empty id."
+  fi
+  if ! project_lib_is_valid_id "$project_id"; then
+    die "Invalid project id after slugify: $project_id"
+  fi
+
+  local root_path="projects/$project_id"
+  if [[ -e "$root_path" ]]; then
+    die "Path already exists: $root_path"
+  fi
+
+  if project_lib_registry_has_id "$project_id"; then
+    die "Project already registered: $project_id"
+  fi
+
+  local created_at status notes template
+  created_at="$(date +%F)"
+  status="active"
+  notes=""
+  template="$(project_lib_template_path)"
+
+  if [[ ! -f "$template" ]]; then
+    die "Missing template: $(project_lib_template_rel)"
+  fi
+
+  if (( dry_run == 1 )); then
+    cat <<EOF
+DRY RUN: would register project:
+  project_id: $project_id
+  display_name: $name
+  created_at: $created_at
+  status: $status
+  root_path: $root_path
+
+DRY RUN: would create $root_path/README.md from $(project_lib_template_rel)
+EOF
+    return 0
+  fi
+
+  mkdir -p "$root_path"
+  project_lib_render_template "$template" "$project_id" "$name" "$created_at" > "$root_path/README.md"
+
+  if ! project_lib_add_registry_entry "$project_id" "$name" "$created_at" "$status" "$root_path" "$notes"; then
+    rm -f "$root_path/README.md"
+    rmdir "$root_path" 2>/dev/null || true
+    die "Failed to register project."
+  fi
+
+  echo "Created project scaffold at $root_path and registered in $(project_lib_registry_rel)."
+}
+
+project_lib_require_repo_root
+
+case "${1:-}" in
+  list )
+    cmd_list
+    ;;
+  current )
+    cmd_current
+    ;;
+  init )
+    shift
+    cmd_init "$@"
+    ;;
+  -h|--help|"" )
+    usage
+    ;;
+  * )
+    die "Unknown command: $1"
+    ;;
+esac

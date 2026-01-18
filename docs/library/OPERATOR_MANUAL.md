@@ -50,6 +50,12 @@ Behavioral preferences:
 - Project payloads live under `projects/*`.
 - During platform construction, use platform context by default (exclude project payload).
 
+## Project registry
+- SSOT: `docs/library/datasets/PROJECT_REGISTRY.md`.
+- `./ops/bin/project` lists/initializes STELA-born projects (no import/migration).
+- `./ops/bin/project current` returns `none` until a current-project pointer exists.
+- `./ops/bin/project init <name>` requires `--dry-run` or `--confirm` (no silent payload creation).
+
 ## Open / Close
 - `./ops/bin/open` prints the copy-safe Open Prompt with the freshness gate and canon pointers.
 - `./ops/bin/open` writes the OPEN prompt to `storage/handoff/OPEN-<tag>-<branch>-<HEAD>.txt` and captures porcelain to `storage/handoff/OPEN-PORCELAIN-<tag>-<branch>-<HEAD>.txt`; stdout still prints the OPEN prompt.
