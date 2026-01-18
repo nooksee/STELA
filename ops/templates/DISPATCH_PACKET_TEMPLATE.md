@@ -58,6 +58,11 @@ NON-NEGOTIABLES
 - Add/update STATE_OF_PLAY.md in the SAME PR slice if canon/governance truth docs are impacted.
 - Handoff artifacts must be repo-local: use `storage/handoff/` (never `/tmp` or user temp dirs).
 - REQUIRED results filename: `storage/handoff/<DP-ID>-RESULTS.md` (basename UPPERCASE; `.md` lowercase).
+- Receipt package (minimum handoff artifacts; attachment-mode friendly):
+  - `storage/handoff/<DP-ID>-RESULTS.md` (required)
+  - Snapshot tarball when required by the DP
+  - Snapshot manifest (bundled inside the tarball when `--bundle` is used, or attached alongside when not bundled)
+  - OPEN + OPEN-PORCELAIN artifacts are already captured under `storage/handoff/` by OPEN tooling; do not regress this.
 - Worker must write the full results message (A/B/C/D + RECEIPT) to the RESULTS file; contents must match the paste-mode results exactly.
 - If `storage/handoff/<DP-ID>-RESULTS.md` is not produced, STOP; delivery is incomplete.
 - The RESULTS file must NOT include the operator approval line; approval remains its own message.
@@ -186,6 +191,7 @@ Use the exact headings and order below. DPs missing the RECEIPT are incomplete a
   - `./ops/bin/snapshot --scope=full` (required for structural or wide refactors)
 - Optional:
   - `--out=auto`
+  - `--bundle` (tarball includes payload + manifest)
   - For large `--scope=full` snapshots, prefer `--compress=tar.xz`
 - Snapshot may be inline (truncated if necessary) or referenced by generated filename if archived
 - Include the manifest path when present (the manifest points to the chat payload file to paste).

@@ -12,6 +12,7 @@ It is intentionally short and maintained; if it drifts, fix it.
 ./ops/bin/snapshot --scope=platform --format=chatgpt --out=auto
 ./ops/bin/snapshot --scope=full --format=chatgpt --out=auto
 ./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --compress=tar.xz
+./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --bundle
 ./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto.tar.xz
 ./ops/bin/help
 ./ops/bin/help list
@@ -70,6 +71,7 @@ Attachment-mode (lowest-friction default when the operator is on mobile):
 1) Approval line in chat (start-of-message, plain text, unquoted).
 2) Attach the worker-results text file from `storage/handoff/<DP-ID>-RESULTS.md` (full worker results, including the RECEIPT (OPEN + SNAPSHOT)).
 3) Attach snapshot artifacts when required.
+Minimal attachment-mode handoff: one approval line + results artifact attachment, plus the snapshot bundle when required. Paste-mode remains valid.
 If the chat UI cannot insert blank lines safely, use the `---` delimiter line before pasting results.
 MEMENTO: M-HANDOFF-01 (docs/library/MEMENTOS.md).
 Approval must be the first tokens in the message (start-of-message) and outside OPEN prompt text, OPEN intent, and outside quoted/fenced blocks.
@@ -91,12 +93,17 @@ Worker guardrails (summary):
 - Output artifacts are output artifact files created under `storage/handoff/` and `storage/snapshots/` and must remain untracked.
 - "No new files unless listed" applies to tracked repo files only.
 - Worker must write the full results message (A/B/C/D + RECEIPT) to `storage/handoff/<DP-ID>-RESULTS.md`; contents must match the paste-mode results exactly.
+Receipt package (minimum handoff artifacts; attachment-mode friendly):
+- `storage/handoff/<DP-ID>-RESULTS.md` (required)
+- Snapshot tarball when required by the DP
+- Snapshot manifest (bundled inside the tarball when `--bundle` is used, or attached alongside when not bundled)
+- OPEN + OPEN-PORCELAIN artifacts are already captured under `storage/handoff/` by OPEN tooling; do not regress this.
 
 Every worker result message must end with the RECEIPT (delivery format, not IN-LOOP permission):
 - Use the exact headings and order:
   - `### RECEIPT`
   - `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work)
-  - `### B) SNAPSHOT Output` (paths or archived filenames; choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto`; for large `--scope=full` snapshots, prefer `--compress=tar.xz`; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived)
+  - `### B) SNAPSHOT Output` (paths or archived filenames; choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--bundle` (tarball includes payload + manifest); for large `--scope=full` snapshots, prefer `--compress=tar.xz`; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived)
   - Include the manifest path when present (the manifest points to the chat payload file to paste).
   - If a tarball is produced, include BOTH: the tarball path and the manifest path.
 DPs missing the RECEIPT are incomplete and must be rejected.
@@ -124,6 +131,7 @@ Guidance:
 
 Optional archive output (tar.xz):
 - `./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --compress=tar.xz`
+- `./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --bundle`
 - `./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto.tar.xz`
 
 Auto-compress default:
@@ -131,7 +139,8 @@ Auto-compress default:
 
 Archive behavior:
 - Output is a `.tar.xz` archive in `storage/snapshots/`.
-- The archive contains exactly one file: the generated snapshot text.
+- By default, the archive contains the generated snapshot text only.
+- With `--bundle`, the archive contains the snapshot text plus the manifest.
 
 ## Help
 `./ops/bin/help` is the operator front door for curated docs.

@@ -98,6 +98,11 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
   1) Approval line (start-of-message, standalone; message contains only the approval line)
   2) Worker results delivered as a single attached text file; attachment must contain the full worker results, including the RECEIPT (OPEN + SNAPSHOT)
   3) Snapshot tarball attached (if DP required it)
+- Receipt package (minimum handoff artifacts; attachment-mode friendly):
+  - `storage/handoff/<DP-ID>-RESULTS.md` (required)
+  - Snapshot tarball when required by DP
+  - Snapshot manifest (bundled inside the tarball when `--bundle` is used, or attached alongside when not bundled)
+  - OPEN + OPEN-PORCELAIN artifacts are already captured under `storage/handoff/` by OPEN tooling; do not regress this.
 - Quoted blocks are commentary and invalid for approval.
 - Requesting DB-PR-META without the approval phrase is insufficient.
 - DB-PR-META surfaces (SSOT; exact labels only; order is canonical):

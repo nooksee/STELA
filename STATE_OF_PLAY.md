@@ -1,3 +1,18 @@
+## 2026-01-18 — DP-OPS-0041: Snapshot receipt package bundling
+
+- Purpose: Bundle snapshot manifest + payload inside tarball; canonize receipt package artifacts and reduce operator friction.
+- What shipped:
+  - Added `--bundle` to `ops/bin/snapshot` to include payload + manifest inside the tarball.
+  - Updated DP protocol/template, operator manual, and PROJECT_TRUTH to describe receipt package artifacts and bundling expectations.
+- Verification:
+  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/repo/lint_truth.sh`
+  - `./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --bundle`
+  - `tar -tf storage/snapshots/snapshot-icl-work-dp-ops-0041-snapshot-receipt-package-2026-01-18-4adb71c4.tar.xz`
+- Risk / rollback:
+  - Risk: Medium-low; snapshot tooling + docs updates.
+  - Rollback: revert the touched files; snapshot behavior returns to pre-DP defaults.
+
 ## 2026-01-17 — DP-OPS-0040A: Handoff artifacts + output-artifact clarification
 
 - Purpose: Clarify tracked vs output artifacts, standardize RESULTS naming, add OPEN tag support, and default snapshot compression for full auto output.

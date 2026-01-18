@@ -5,6 +5,7 @@ scope="icl"
 format="chatgpt"
 out_path=""
 compress_mode=""
+bundle_mode=0
 max_lines=""
 state_of_play_entry_limit=15
 state_heading_regex='^## [0-9]{4}-[0-9]{2}-[0-9]{2} '
@@ -12,7 +13,7 @@ state_heading_regex='^## [0-9]{4}-[0-9]{2}-[0-9]{2} '
 usage() {
   cat <<'USAGE'
 Usage: ops/bin/snapshot [--scope=icl|platform|full] [--format=chatgpt|gemini|claude] [--max-lines=n] [--out=path|auto]
-                     [--compress=tar.xz]
+                     [--compress=tar.xz] [--bundle]
 USAGE
 }
 
@@ -52,6 +53,9 @@ for arg in "$@"; do
     --compress=tar.xz)
       compress_mode="tar.xz"
       ;;
+    --bundle|--bundle=receipt)
+      bundle_mode=1
+      ;;
     *)
       die "Unknown argument: $arg"
       ;;
@@ -68,6 +72,10 @@ fi
 
 if [[ -n "$compress_mode" && -z "$out_path" ]]; then
   die "--compress requires --out"
+fi
+
+if [[ "$bundle_mode" -eq 1 && -n "$out_path" && -z "$compress_mode" ]]; then
+  compress_mode="tar.xz"
 fi
 
 if [[ -z "$max_lines" ]]; then
@@ -213,9 +221,11 @@ if [[ -n "$out_path" ]]; then
   else
     output_target="$repo_root/$out_path"
   fi
-  if [[ "$compress_mode" == "tar.xz" ]]; then
-    archive_path="$output_target"
-  fi
+fi
+if [[ -z "$output_target" ]]; then
+  archive_path="$repo_root/storage/snapshots/${snapshot_base}.tar.xz"
+elif [[ "$compress_mode" == "tar.xz" ]]; then
+  archive_path="$output_target"
 fi
 mkdir -p "$(dirname "$payload_path")"
 if [[ -n "$output_target" ]]; then
@@ -450,29 +460,36 @@ emit_manifest() {
 
 emit_snapshot > "$payload_path"
 
-if [[ -z "$output_target" ]]; then
-  cat "$payload_path"
-  archive_path="$repo_root/storage/snapshots/${snapshot_base}.tar.xz"
-  if ! command -v tar >/dev/null 2>&1; then
-    die "tar is required for snapshot archive output but was not found on PATH."
-  fi
-  tar -cJf "$archive_path" -C "$(dirname "$payload_path")" "$(basename "$payload_path")"
-else
-  if [[ "$compress_mode" == "tar.xz" ]]; then
-    if ! command -v tar >/dev/null 2>&1; then
-      die "tar is required for --compress=tar.xz but was not found on PATH."
-    fi
-    tar -cJf "$output_target" -C "$(dirname "$payload_path")" "$(basename "$payload_path")"
-  elif [[ "$output_target" != "$payload_path" ]]; then
-    cp "$payload_path" "$output_target"
-  fi
-fi
-
 manifest_output="$output_target"
 if [[ -z "$manifest_output" && -n "$archive_path" ]]; then
   manifest_output="$archive_path"
 fi
-emit_manifest "$manifest_path" "$payload_path" "$manifest_output"
+
+if [[ "$bundle_mode" -eq 1 ]]; then
+  emit_manifest "$manifest_path" "$payload_path" "$manifest_output"
+fi
+
+if [[ -z "$output_target" ]]; then
+  cat "$payload_path"
+fi
+
+if [[ -n "$archive_path" ]]; then
+  if ! command -v tar >/dev/null 2>&1; then
+    die "tar is required for snapshot archive output but was not found on PATH."
+  fi
+  tar_items=()
+  tar_items+=("$(basename "$payload_path")")
+  if [[ "$bundle_mode" -eq 1 ]]; then
+    tar_items+=("$(basename "$manifest_path")")
+  fi
+  tar -cJf "$archive_path" -C "$(dirname "$payload_path")" "${tar_items[@]}"
+elif [[ -n "$output_target" && "$output_target" != "$payload_path" ]]; then
+  cp "$payload_path" "$output_target"
+fi
+
+if [[ "$bundle_mode" -eq 0 ]]; then
+  emit_manifest "$manifest_path" "$payload_path" "$manifest_output"
+fi
 
 echo "Snapshot payload: $payload_path"
 if [[ -n "$archive_path" ]]; then
