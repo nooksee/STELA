@@ -1,3 +1,21 @@
+## 2026-01-19 — DP-OPS-0047: Project womb v2 (new/current + standard skeleton)
+
+- Purpose: Extend project tooling with `new/use/current`, auto ID/slug, and a standard skeleton that includes upstream/addons/patches stubs.
+- What shipped:
+  - Added project helpers for next-id generation, slugging, and current-project pointer management.
+  - Extended `ops/bin/project` with `new`, `use`, and real `current`, plus standard subdir scaffolding.
+  - Added default upstream/addons/patches README templates and updated registry/operator docs.
+- Verification:
+  - `./ops/bin/project list`
+  - `./ops/bin/project current`
+  - `./ops/bin/project new --name "Demo Project" --dry-run`
+  - `./ops/bin/project use <an-existing-id> --dry-run`
+  - `./ops/bin/context_lint.sh`
+  - `./ops/bin/lint_truth.sh`
+- Risk / rollback:
+  - Risk: Medium; bash tooling changes and registry format updates can drift.
+  - Rollback: revert edits to `ops/bin/project`, `ops/lib/project/project_lib.sh`, and docs/templates.
+
 ## 2026-01-19 — DP-OPS-0046: Retire close + canonize DISCUSS-ONLY
 
 - Purpose: Retire the legacy close script and canonize DISCUSS-ONLY as the talk-only cue.

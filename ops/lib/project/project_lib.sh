@@ -45,6 +45,16 @@ project_lib_template_path() {
   printf "%s/%s" "$PROJECT_LIB_REPO_ROOT" "$(project_lib_template_rel)"
 }
 
+project_lib_subdir_template_rel() {
+  local subdir="$1"
+  printf "%s" "ops/init/projects/default/${subdir}/README.md"
+}
+
+project_lib_subdir_template_path() {
+  local subdir="$1"
+  printf "%s/%s" "$PROJECT_LIB_REPO_ROOT" "$(project_lib_subdir_template_rel "$subdir")"
+}
+
 project_lib_require_registry() {
   local rel path
   rel="$(project_lib_registry_rel)"
@@ -60,6 +70,22 @@ project_lib_slugify() {
   raw="$(printf "%s" "$raw" | tr '[:upper:]' '[:lower:]')"
   raw="$(printf "%s" "$raw" | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')"
   printf "%s" "$raw"
+}
+
+project_lib_next_project_id() {
+  local max=0
+  local id
+
+  while IFS=$'\t' read -r id _; do
+    if [[ "$id" =~ ^proj-([0-9]+)$ ]]; then
+      local num="${BASH_REMATCH[1]}"
+      if (( 10#$num > max )); then
+        max=$((10#$num))
+      fi
+    fi
+  done < <(project_lib_registry_rows)
+
+  printf "proj-%04d" $((max + 1))
 }
 
 project_lib_is_valid_id() {
@@ -101,6 +127,19 @@ project_lib_registry_has_id() {
   return 1
 }
 
+project_lib_registry_has_root_path() {
+  local target_root="$1"
+  local id name created status root notes
+
+  while IFS=$'\t' read -r id name created status root notes; do
+    if [[ "$root" == "$target_root" ]]; then
+      return 0
+    fi
+  done < <(project_lib_registry_rows)
+
+  return 1
+}
+
 project_lib_escape_sed() {
   printf "%s" "$1" | sed -e 's/[\\/&]/\\&/g'
 }
@@ -121,6 +160,52 @@ project_lib_render_template() {
     -e "s/{{DISPLAY_NAME}}/$esc_name/g" \
     -e "s/{{CREATED_AT}}/$esc_date/g" \
     "$template"
+}
+
+project_lib_get_current_project_id() {
+  local path
+  project_lib_require_registry
+  path="$(project_lib_registry_path)"
+
+  awk '
+    /^Current[[:space:]]*:/ {
+      sub(/^Current[[:space:]]*:[[:space:]]*/, "", $0)
+      sub(/[[:space:]]+$/, "", $0)
+      print $0
+      exit
+    }
+  ' "$path"
+}
+
+project_lib_set_current_project_id() {
+  local project_id="$1"
+  local rel path tmp
+  rel="$(project_lib_registry_rel)"
+  path="$(project_lib_registry_path)"
+
+  if [[ ! -f "$path" ]]; then
+    echo "ERROR: Missing registry: $rel" >&2
+    return 1
+  fi
+
+  tmp="$(mktemp)"
+  if ! awk -v new_id="$project_id" '
+      BEGIN { updated=0 }
+      /^Current[[:space:]]*:/ {
+        print "Current: " new_id
+        updated=1
+        next
+      }
+      { print }
+      END { if (!updated) { exit 2 } }
+    ' "$path" > "$tmp"; then
+    rm -f "$tmp"
+    echo "ERROR: Failed to update current project: $rel" >&2
+    return 1
+  fi
+
+  cat "$tmp" > "$path"
+  rm -f "$tmp"
 }
 
 project_lib_add_registry_entry() {

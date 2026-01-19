@@ -66,8 +66,13 @@ What to expect:
 ## Project registry
 - SSOT: `docs/library/datasets/PROJECT_REGISTRY.md`.
 - `./ops/bin/project` lists/initializes STELA-born projects (no import/migration).
-- `./ops/bin/project current` returns `none` until a current-project pointer exists.
 - `./ops/bin/project init <name>` requires `--dry-run` or `--confirm` (no silent payload creation).
+
+## Projects
+- `./ops/bin/project new --name "..." --dry-run` previews a new project with auto id/slug; `--confirm` creates it and sets the current pointer.
+- `./ops/bin/project use <project_id> --dry-run|--confirm` updates the current project pointer for a registered id.
+- `./ops/bin/project current` reports the current project id or `none`.
+- Recommended flow: run `project new --dry-run`, review output, then `--confirm` and check `project current`.
 
 ## Open
 - `./ops/bin/open` prints the copy-safe Open Prompt with the freshness gate and canon pointers.
