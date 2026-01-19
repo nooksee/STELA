@@ -27,7 +27,6 @@
 - ops/bin/open
 - ops/bin/help
 - ops/bin/snapshot
-- ops/bin/close
 
 ## Consolidation
 - AGENTS.md

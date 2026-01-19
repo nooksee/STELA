@@ -7,7 +7,6 @@ You may see legacy `nukeCE` strings; `STELA` is the platform name going forward.
 ## Top Commands (cheat sheet)
 ```
 ./ops/bin/open --intent="..." --dp="DP-XXXX / YYYY-MM-DD"
-./ops/bin/close
 ./ops/bin/snapshot --scope=icl --format=chatgpt
 ./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto
 ./ops/bin/snapshot --scope=platform --format=chatgpt --out=auto
@@ -51,8 +50,13 @@ Use the docket (`docs/library/DOCKET.md`) when you want a light forward-looking 
 - Keep `NEXT_DP_ID` updated to avoid DP-number confusion.
 - Optional; you can skip it and run DPs normally.
 
-DISCUSS-ONLY cue:
-- Use `DISCUSS-ONLY` during free-form chat to signal ideation only and reduce accidental execution-mode requests; it is a non-gating cue and does not authorize execution.
+## Talk-only mode (DISCUSS-ONLY)
+Use `DISCUSS-ONLY` to signal ideation only; it is a non-gating cue and does not authorize execution.
+When to use:
+- Early scoping, open-ended brainstorming, or when you want alignment without action.
+What to expect:
+- The model will discuss and ask clarifying questions.
+- No commands run, no file edits, and no approval-dependent artifacts until a DP (and approval phrase when required) is provided.
 
 ## Platform vs Project
 - Platform is the repo-resident operating system (ops/docs/tools/etc.).
@@ -65,11 +69,10 @@ DISCUSS-ONLY cue:
 - `./ops/bin/project current` returns `none` until a current-project pointer exists.
 - `./ops/bin/project init <name>` requires `--dry-run` or `--confirm` (no silent payload creation).
 
-## Open / Close
+## Open
 - `./ops/bin/open` prints the copy-safe Open Prompt with the freshness gate and canon pointers.
 - `./ops/bin/open` writes the OPEN prompt to `storage/handoff/OPEN-<tag>-<branch>-<HEAD>.txt` and captures porcelain to `storage/handoff/OPEN-PORCELAIN-<tag>-<branch>-<HEAD>.txt`; stdout still prints the OPEN prompt.
 - Use `--tag=<token>` to include a filename tag; if omitted, filenames omit the tag.
-- `./ops/bin/close` prints a copy-safe session receipt.
 - OPEN includes a brief posture nudge near the top.
 
 ## DB-PR-META (approval-gated metadata surfaces)

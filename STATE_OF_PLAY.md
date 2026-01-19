@@ -1,3 +1,18 @@
+## 2026-01-19 — DP-OPS-0046: Retire close + canonize DISCUSS-ONLY
+
+- Purpose: Retire the legacy close script and canonize DISCUSS-ONLY as the talk-only cue.
+- What shipped:
+  - Deleted the legacy close script and removed it from ICL snapshot inputs.
+  - Updated DP protocol/template, operator manual, and PROJECT_TRUTH to define DISCUSS-ONLY and remove close guidance.
+  - Updated help menu and `llms.txt` tool list to drop close references.
+- Verification:
+  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/repo/lint_truth.sh`
+  - `rg -n "close" .`
+- Risk / rollback:
+  - Risk: Low-medium; operators relying on close may need adjustment.
+  - Rollback: restore the legacy close script and revert the touched files.
+
 ## 2026-01-19 — DP-OPS-0045: DP docket + DISCUSS-ONLY cue
 
 - Purpose: Introduce an optional forward-looking docket (`docs/library/DOCKET.md`) and clarify DISCUSS-ONLY as a non-gating alignment cue.
@@ -574,7 +589,7 @@
 - Verification:
   - `git diff --name-only`
   - `bash ops/bin/open --intent="dp-ops-0007 test" --dp="DP-OPS-0007 / 2026-01-11" | head -n 140`
-  - `bash ops/bin/close | head -n 200`
+  - Legacy close script output (retired).
   - `bash ops/init/tools/context_lint.sh`
   - `rg -n "docs/ops/" docs/00-INDEX.md docs/** ops/**`
 - Risk / rollback:
@@ -609,14 +624,14 @@
 
 - Purpose: Add a single-command close script that prints a copy-safe session snapshot receipt.
 - What shipped:
-  - Added `ops/bin/close` to emit the session snapshot.
+  - Added the close script to emit the session snapshot.
   - Updated `STATE_OF_PLAY.md`.
 - Verification:
-  - `ls -la ops/bin/close`
-  - `bash ops/bin/close | head -n 160`
+  - `ls -la` (close script; legacy).
+  - Legacy close script output (retired).
 - Risk / rollback:
   - Risk: Low; new ops helper script only.
-  - Rollback: delete `ops/bin/close` and remove this entry.
+  - Rollback: delete the close script and remove this entry.
 
 ## 2026-01-11 — DP-OPS-0003: Front Door v2 open prompt
 
