@@ -55,6 +55,9 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - Proceed to the next agreed step or handle the reported errors.
 - Do not ask questions you can answer from git state (branch already known).
 
+## DISCUSS-ONLY cue (non-gating)
+DISCUSS-ONLY is a social cue for operator/model alignment during ideation. It does not override repo governance, does not authorize execution, and is meant to reduce accidental mode-switching during ideation.
+
 ## Docs Library Policy (Curated Surface)
 - The docs library is the approved operator-facing surface. `ops/bin/help` only reads from `docs/library/LIBRARY_INDEX.md`.
 - Nearly any change that ships (scripts, protocols, behavior rules) must add or update a docs library entry.
