@@ -31,6 +31,24 @@
   - Risk: Low-medium; operators relying on close may need adjustment.
   - Rollback: restore the legacy close script and revert the touched files.
 
+## 2026-01-19 — DP-OPS-0048: Stelae library seed
+
+- Purpose: Seed a lightweight Stelae library page and wire it into canon pointers.
+- What shipped:
+  - Added `docs/library/STELAE.md` with 10 starter Stelae entries.
+  - Linked STELAE in `docs/00-INDEX.md` and `CANONICAL_TREE.md`.
+  - Added a STELAE pointer line to `ops/bin/open`.
+- Verification:
+  - `bash ops/init/tools/context_lint.sh`
+  - Result: `[context_lint] Result: clean`
+  - `bash tools/repo/lint_truth.sh`
+  - Result: `[lint_truth] OK`
+  - `./ops/bin/open --intent="dp-ops-0048 verify" --dp="DP-OPS-0048 / 2026-01-19" | rg -n "STELAE"`
+  - `rg -n "STELAE" docs/00-INDEX.md CANONICAL_TREE.md docs/library/STELAE.md`
+- Risk / rollback:
+  - Risk: Low; docs + small open pointer change.
+  - Rollback: revert the touched files and remove `docs/library/STELAE.md`.
+
 ## 2026-01-19 — DP-OPS-0045: DP docket + DISCUSS-ONLY cue
 
 - Purpose: Introduce an optional forward-looking docket (`docs/library/DOCKET.md`) and clarify DISCUSS-ONLY as a non-gating alignment cue.
