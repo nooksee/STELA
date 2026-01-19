@@ -13,6 +13,10 @@ This repo root is the developer workspace.
 - `releases/` release notes/manifests (no embedded zip artifacts in-repo)
 - `storage/` local dev storage (not deployed; keep empty in repo)
 
+## Docs library (curated)
+- `docs/library/` operator-facing curated library.
+- `docs/library/STELAE.md` Stelae operator nudges.
+
 ## In public_html
 - `admin/` admin UI entry + admin modules
 - `modules/` site modules
