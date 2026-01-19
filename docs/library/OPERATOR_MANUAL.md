@@ -45,6 +45,15 @@ Datasets:
 Behavioral preferences:
 - Behavioral preferences are documented in `docs/library/MEMENTOS.md`.
 
+## DP docket (optional)
+Use the docket (`docs/library/DOCKET.md`) when you want a light forward-looking queue:
+- Creative sessions, mobile sessions, or multi-day work (less DP-number drift).
+- Keep `NEXT_DP_ID` updated to avoid DP-number confusion.
+- Optional; you can skip it and run DPs normally.
+
+DISCUSS-ONLY cue:
+- Use `DISCUSS-ONLY` during free-form chat to signal ideation only and reduce accidental execution-mode requests; it is a non-gating cue and does not authorize execution.
+
 ## Platform vs Project
 - Platform is the repo-resident operating system (ops/docs/tools/etc.).
 - Project payloads live under `projects/*`.

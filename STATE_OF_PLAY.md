@@ -1,3 +1,19 @@
+## 2026-01-19 — DP-OPS-0045: DP docket + DISCUSS-ONLY cue
+
+- Purpose: Introduce an optional forward-looking docket (`docs/library/DOCKET.md`) and clarify DISCUSS-ONLY as a non-gating alignment cue.
+- What shipped:
+  - Added `docs/library/DOCKET.md` as the single forward-looking DP docket with NEXT_DP_ID.
+  - Updated `docs/library/OPERATOR_MANUAL.md` with docket guidance and the DISCUSS-ONLY cue.
+  - Updated `PROJECT_TRUTH.md` with DISCUSS-ONLY non-gating clarification.
+- Verification:
+  - `bash ops/init/tools/context_lint.sh`
+  - Result: `[context_lint] Result: clean`
+  - `bash tools/repo/lint_truth.sh`
+  - Result: `[lint_truth] OK`
+- Risk / rollback:
+  - Risk: Low; doc-only operator guidance.
+  - Rollback: revert the touched files and remove `docs/library/DOCKET.md`.
+
 ## 2026-01-18 — DP-OPS-0042: STELA naming seed (doc-only)
 
 - Purpose: Seed STELA naming in canon with no-churn guardrails and explicit non-goals.
