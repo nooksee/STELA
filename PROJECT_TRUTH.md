@@ -37,12 +37,13 @@ Deployable webroots must not contain archive snapshots, legacy graveyards, or de
 
 ## Philosophy
 Secure by default. Explainable operations. Auditable administration. Confidence over cleverness.
+Creativity is free-form; execution is structured; memory lives in the repo.
 
 ## Minimum Operator Effort
 - Do not ask the operator to open/edit files unless the operator explicitly opts in.
 - Workers draft diffs; integrator/operator reviews, commits, and opens PRs.
 - Prefer "run command X" over "open file Y and edit line Z."
-- Prefer front door scripts (`ops/bin/open`, `ops/bin/close`) over control words.
+- Prefer front door scripts (`ops/bin/open`, `ops/bin/snapshot`) over control words.
 - OPEN includes a short posture nudge near the top.
 - If the operator says "merged + synced main", do not re-explain workflow.
 - Operator phrases like "main + synced" are status, not canon.
@@ -56,7 +57,7 @@ Secure by default. Explainable operations. Auditable administration. Confidence 
 - Do not ask questions you can answer from git state (branch already known).
 
 ## DISCUSS-ONLY cue (non-gating)
-DISCUSS-ONLY is a social cue for operator/model alignment during ideation. It does not override repo governance, does not authorize execution, and is meant to reduce accidental mode-switching during ideation.
+DISCUSS-ONLY is a social cue for operator/model alignment during ideation. It permits discussion and clarifying questions but does not authorize execution, commands, or approval-dependent artifacts. Begin work only after a DP is issued (and the approval phrase when required).
 
 ## Docs Library Policy (Curated Surface)
 - The docs library is the approved operator-facing surface. `ops/bin/help` only reads from `docs/library/LIBRARY_INDEX.md`.

@@ -26,6 +26,9 @@ Reminder: Behavioral preferences are documented in `docs/library/MEMENTOS.md`.
 ## 1. Definition
 A DP (Dispatch Packet) is the authoritative, operator-authored work order delivered to a Worker. It defines the objective, scope, constraints, and required outputs so the Worker can execute without guessing.
 
+## 1.1 DISCUSS-ONLY (talk-only cue)
+`DISCUSS-ONLY` is a non-gating cue for ideation and alignment. When present, discussion and clarifying questions are allowed, but execution is not requested. Do not run commands, change files, or emit approval-dependent artifacts. Begin work only after the operator removes `DISCUSS-ONLY` and issues a DP (and the approval phrase line when required).
+
 ## 2. Core Governance Rules (Non-Negotiable)
 - **Branching:** All work must happen on `work/*` branches, created by the Operator.
 - **Branch Creation Rule:** Operator creates the branch first. If it exists, the Worker must not recreate it. If the branch is missing, the Worker must STOP and report.

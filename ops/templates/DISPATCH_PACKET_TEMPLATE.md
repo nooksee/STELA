@@ -1,6 +1,9 @@
 # Dispatch Packet (DP) — Work Order Template
 # This is the canonical template for creating a Dispatch Packet.
 
+DISCUSS-ONLY (optional talk-only cue; paste at top of a message when you want discussion only):
+`DISCUSS-ONLY` — discuss/clarify only; no execution or artifacts until a DP (and approval phrase when required).
+
 COPY/PASTE — Dispatch Packet
 ```
 WORK ORDER (DP-XXXX) — Title

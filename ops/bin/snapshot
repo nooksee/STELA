@@ -142,7 +142,6 @@ ICL_FILES=(
   "ops/init/icl/AI_CONTEXT_SYNC.md"
   "ops/init/icl/context_pack.json"
   "ops/bin/open"
-  "ops/bin/close"
   "ops/bin/snapshot"
 )
 
