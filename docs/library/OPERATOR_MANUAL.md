@@ -105,6 +105,22 @@ Dataset reference: `./ops/bin/help db-pr-meta`
 UI order + payload types are canonical; use the DB-PR-META dataset as the SSOT.
 Micro-style: avoid exact-duplicate strings across Commit message, PR title, Merge commit message; similar is OK.
 
+## When to DISAPPROVE
+- Missing proof bundle (git status --porcelain, git diff --name-only, git diff --stat, required verification outputs).
+- Missing RECEIPT or missing RESULTS file.
+- Forbidden path touched or scope mismatch.
+- Verification missing or failed.
+- Results claims do not match `git diff --name-only` or `git diff --stat`.
+
+## DISAPPROVE message (copy/paste template)
+```
+DISAPPROVE <DP-ID>
+Why (facts): <brief, factual bullets>
+Required patch (do these steps): <numbered steps>
+Re-run verification + regenerate receipt: <commands or checklist>
+```
+Note: this is a worker feedback format; it is not the approval phrase.
+
 ## Branch protection
 Branch protection on `main` should be enabled in GitHub settings.
 

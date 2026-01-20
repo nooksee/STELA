@@ -181,6 +181,11 @@ C) DB-PR-META (Canonical; DRAFT surfaces only — do not emit)
 D) PATCH / DIFF
 - Provide a unified diff OR precise file snippets with anchors
 - Must be directly review/applyable by operator
+- Proof bundle (required; paste outputs):
+  - `git status --porcelain`:
+  - `git diff --name-only`:
+  - `git diff --stat`:
+  - Verification command outputs required by the DP (paste outputs or NOT RUN + reason)
 E) RECEIPT (mandatory; must be the last section of the result message)
 Use the exact headings and order below. DPs missing the RECEIPT are incomplete and must be rejected.
 ### RECEIPT

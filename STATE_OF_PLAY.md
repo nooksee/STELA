@@ -1,3 +1,21 @@
+## 2026-01-20 — DP-OPS-0048A: Proof-first review gate + disapproval protocol
+
+- Purpose: Require a minimal proof bundle in DP RESULTS and add a canonical DISAPPROVE response shape.
+- What shipped:
+  - DP protocol/template: required proof bundle (git status --porcelain, git diff --name-only, git diff --stat, plus verification outputs).
+  - Operator manual: disapproval checklist + copy/paste DISAPPROVE template.
+  - PROJECT_TRUTH: proof-bundle reject rule added.
+- Verification:
+  - `bash ops/init/tools/context_lint.sh`
+  - Result: `[context_lint] Result: clean`
+  - `bash tools/repo/lint_truth.sh`
+  - Result: `[lint_truth] OK`
+  - `rg -n "Proof bundle|git diff --name-only|git diff --stat|DISAPPROVE" ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md PROJECT_TRUTH.md`
+  - `rg -n "### A) SUMMARY + SCOPE CONFIRMATION|### B) PATHS TOUCHED|### C) VERIFICATION|### D) PATCH / DIFF|### E) NOTES|### RECEIPT" ops/templates/DISPATCH_PACKET_TEMPLATE.md`
+- Risk / rollback:
+  - Risk: Low; doc-only protocol/template updates.
+  - Rollback: revert the touched files.
+
 ## 2026-01-19 — DP-OPS-0047: Project womb v2 (new/current + standard skeleton)
 
 - Purpose: Extend project tooling with `new/use/current`, auto ID/slug, and a standard skeleton that includes upstream/addons/patches stubs.

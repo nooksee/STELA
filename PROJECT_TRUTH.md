@@ -119,6 +119,7 @@ DISCUSS-ONLY is a social cue for operator/model alignment during ideation. It pe
   - Snapshot tarball when required by DP
   - Snapshot manifest (bundled inside the tarball when `--bundle` is used, or attached alongside when not bundled)
   - OPEN + OPEN-PORCELAIN artifacts are already captured under `storage/handoff/` by OPEN tooling; do not regress this.
+- Worker RESULTS must include the minimal proof bundle (git status --porcelain, git diff --name-only, git diff --stat, plus required verification outputs); missing proof => reject.
 - Quoted blocks are commentary and invalid for approval.
 - Requesting DB-PR-META without the approval phrase is insufficient.
 - DB-PR-META surfaces (SSOT; exact labels only; order is canonical):

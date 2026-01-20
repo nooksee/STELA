@@ -71,6 +71,11 @@ If the branch or DP id/date mismatches operator-provided truth, the Worker must 
   - Snapshot manifest (bundled inside the tarball when `--bundle` is used, or attached alongside when not bundled)
   - OPEN + OPEN-PORCELAIN artifacts are already captured under `storage/handoff/` by OPEN tooling; do not regress this.
 - Worker must write the full results message (A/B/C/D + RECEIPT) to the RESULTS file; contents must match the paste-mode results exactly.
+- Minimal proof bundle (required; paste outputs):
+  - `git status --porcelain` (must be empty OR explicitly explain why not)
+  - `git diff --name-only`
+  - `git diff --stat`
+  - Verification command outputs required by the DP (paste outputs or NOT RUN + reason)
 - The RESULTS file must NOT include the operator approval line; approval remains its own message.
 - If `storage/handoff/<DP-ID>-RESULTS.md` is missing, reject the DP results as incomplete.
   - Implementation hint:
@@ -99,6 +104,7 @@ If the branch or DP id/date mismatches operator-provided truth, the Worker must 
 
 ## 5. Integrator Review Gate (Required)
 Before any commit/push/PR/merge, the Integrator must review and sign off.
+- Proof-first rule: Approval MUST NOT be granted unless RESULTS include the minimal proof bundle; missing proof is an automatic reject.
 - Worker delivers: diff + verification notes + captured HEAD short hash.
 - Worker MUST include a `STATE_OF_PLAY.md` update in scope for any PR (including doc-only).
 - Integrator checks:
