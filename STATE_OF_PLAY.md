@@ -1,3 +1,15 @@
+## 2026-01-21 — DP-OPS-0048C: DP Run Hygiene v1: Placeholder-Marker Ban + Memento Seed
+
+- What changed: Added a no placeholder-marker rule for run DPs and worker results, seeded M-RUN-01, and logged this DP.
+- Verification:
+  - `bash ops/init/tools/context_lint.sh`
+  - Result: `[context_lint] Result: clean`
+  - `bash tools/repo/lint_truth.sh`
+  - Result: `[lint_truth] OK`
+- Risk / rollback:
+  - Risk: Low; doc-only policy and ledger updates.
+  - Rollback: revert the touched files.
+
 ## 2026-01-20 — DP-OPS-0048B: DP template headings + RECEIPT structure
 
 - Purpose: Normalize DP worker-results headings to canonical A–E + RECEIPT and complete RECEIPT subheadings for consistent handoff bundles.

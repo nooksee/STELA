@@ -21,12 +21,14 @@ This file is the single source of truth for MEMENTOS.
 - M-COMMIT-01: Commitment is explicit, not implied.
 - M-HANDOFF-01: The single blocking unknown takes first priority.
 - M-EMIT-01: Approval is binary; ambiguity is not approval.
+- M-RUN-01: Drafts can be fuzzy; runs must be concrete.
 
 ## MEMENTO Artifacts (quoteable, single-sentence)
 - M-ATTN-01: "State knowns and unknowns first; if a required input is missing, stop and request it."
 - M-COMMIT-01: "Do not imply commitment; only commit to what is explicitly requested and authorized."
 - M-HANDOFF-01: "Surface the single blocking unknown first; do not proceed until it is resolved."
 - M-EMIT-01: "Treat approval as binary; if approval is not explicit and valid, do not emit gated output."
+- M-RUN-01: "Drafts can be fuzzy; runs must be concrete."
 
 ## Core failure mode
 The repeated failure pattern is a stack:
