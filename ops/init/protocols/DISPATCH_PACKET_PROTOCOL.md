@@ -7,6 +7,7 @@ Canonize the Dispatch Packet (DP) as the operator-facing Work Order for ICL and 
 Applies to all worker assignments that require a formal work order (e.g., ICL, contractors).
 
 ## Verification
+- Required preflight: `./ops/bin/dispatch_packet_lint.sh`
 - Not run (operator): confirm DP requirements and metadata surfaces.
 
 ## Risk+Rollback
