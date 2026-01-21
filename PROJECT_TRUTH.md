@@ -5,8 +5,11 @@ If something conflicts with this file, this file wins.
 ## Identity
 PHP-Nuke CE is a curated continuation of the PHP-Nuke lineage. It is not a rewrite and not a fork-dump.
 
-## Naming / Identity
-- STELA: platform name (stone tablet metaphor: published canon / governance visible to all).
+## Naming
+- Stela (S-T-E-L-A): only canonical project / platform name spelling (stone tablet metaphor: published canon / governance visible to all).
+- Stelae (S-T-E-L-A-E): plural / collection label.
+- Policy: treat "Steela", "Stella", and "Stila" as typos; correct on sight.
+- SSOT (human-facing usage + examples): `docs/library/STELAE.md`.
 - nukeCE: historical working label for the repo/system.
 - Policy: do not global-replace older strings unless a DP explicitly authorizes it.
 - Naming does not override canon, contracts, gates, or approvals.

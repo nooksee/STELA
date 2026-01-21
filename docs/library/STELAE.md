@@ -4,6 +4,13 @@ Stelae are short operator-facing reminders to keep conversations precise and cal
 They are not policy; they are practical nudges that reduce ambiguity.
 Use them to keep talk-only and execution distinct and predictable.
 
+## Spelling Policy
+- "Stela" is the singular project / platform name.
+- "Stelae" is the plural / collection label.
+Examples:
+- Correct: "Stela is the platform name."
+- Correct: "These Stelae keep operator guidance consistent."
+
 ## How to use
 - Drop `DISCUSS-ONLY` at the top when you want discussion without action.
 - Remove `DISCUSS-ONLY` and issue a DP when you want execution.

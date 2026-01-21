@@ -1,3 +1,43 @@
+## 2026-01-21 — DP-OPS-0049: Stela Name Guardrails (Canonical Spelling + Lint)
+
+- Purpose: Canonize Stela/Stelae spelling, declare SSOT, and add a lint guardrail for typos.
+- What shipped:
+  - Updated naming canon in `PROJECT_TRUTH.md`, operator guidance in `docs/library/OPERATOR_MANUAL.md`, and spelling policy in `docs/library/STELAE.md`.
+  - Added forbidden spelling checks to `tools/repo/lint_truth.sh`.
+- Verification:
+  - `bash ops/init/tools/context_lint.sh`
+  - Result: `[context_lint] Result: clean`
+  - `bash tools/repo/lint_truth.sh`
+  - Result: `[lint_truth] OK`
+  - `rg -n "Stela|Stelae" PROJECT_TRUTH.md docs/library/STELAE.md docs/library/OPERATOR_MANUAL.md`
+  - Result:
+    - `PROJECT_TRUTH.md:9:- Stela (S-T-E-L-A): only canonical project / platform name spelling (stone tablet metaphor: published canon / governance visible to all).`
+    - `PROJECT_TRUTH.md:10:- Stelae (S-T-E-L-A-E): plural / collection label.`
+    - `docs/library/STELAE.md:1:# Stelae`
+    - `docs/library/STELAE.md:3:Stelae are short operator-facing reminders to keep conversations precise and calm.`
+    - `docs/library/STELAE.md:8:- "Stela" is the singular project / platform name.`
+    - `docs/library/STELAE.md:9:- "Stelae" is the plural / collection label.`
+    - `docs/library/STELAE.md:11:- Correct: "Stela is the platform name."`
+    - `docs/library/STELAE.md:12:- Correct: "These Stelae keep operator guidance consistent."`
+    - `docs/library/OPERATOR_MANUAL.md:5:You may see legacy \`nukeCE\` strings; \`Stela\` is the platform name going forward.`
+    - `docs/library/OPERATOR_MANUAL.md:116:- \`./ops/bin/project\` lists/initializes Stela-born projects (no import/migration).`
+    - `docs/library/OPERATOR_MANUAL.md:180:- Canon spelling: Stela (singular) / Stelae (plural). Normalize voice-to-text variants before committing or approving.`
+  - `rg -n "Steela|Stila|Stella" . || true`
+  - Result:
+    - `./projects/default/upstream/php-nuke/includes/vendor/mobiledetect/mobiledetectlib/MobileDetect.json:160:            "iJoyTablet": "Tablet (Spirit 7|Essentia|Galatea|Fusion|Onix 7|Landa|Titan|Scooby|Deox|Stella|Themis|Argon|Unique 7|Sygnus|Hexen|Finity 7|Cream|Cream X2|Jade|Neon 7|Neron 7|Kandy|Scape|Saphyr 7|Rebel|Biox|Rebel|Rebel 8GB|Myst|Draco 7|Myst|Tab7-004|Myst|Tadeo Jones|Tablet Boing|Arrow|Draco Dual Cam|Aurix|Mint|Amity|Revolution|Finity 9|Neon 9|T9w|Amity 4GB Dual Cam|Stone 4GB|Stone 8GB|Andromeda|Silken|X2|Andromeda II|Halley|Flame|Saphyr 9,7|Touch 8|Planet|Triton|Unique 10|Hexen 10|Memphis 4GB|Memphis 8GB|Onix 10)"`
+    - `./projects/default/upstream/php-nuke/includes/vendor/mobiledetect/mobiledetectlib/src/MobileDetect.php:577:        'iJoyTablet' => 'Tablet (Spirit 7|Essentia|Galatea|Fusion|Onix 7|Landa|Titan|Scooby|Deox|Stella|Themis|Argon|Unique 7|Sygnus|Hexen|Finity 7|Cream|Cream X2|Jade|Neon 7|Neron 7|Kandy|Scape|Saphyr 7|Rebel|Biox|Rebel|Rebel 8GB|Myst|Draco 7|Myst|Tab7-004|Myst|Tadeo Jones|Tablet Boing|Arrow|Draco Dual Cam|Aurix|Mint|Amity|Revolution|Finity 9|Neon 9|T9w|Amity 4GB Dual Cam|Stone 4GB|Stone 8GB|Andromeda|Silken|X2|Andromeda II|Halley|Flame|Saphyr 9,7|Touch 8|Planet|Triton|Unique 10|Hexen 10|Memphis 4GB|Memphis 8GB|Onix 10)'`
+    - `./projects/default/public_html/includes/vendor/mobiledetect/mobiledetectlib/MobileDetect.json:160:            "iJoyTablet": "Tablet (Spirit 7|Essentia|Galatea|Fusion|Onix 7|Landa|Titan|Scooby|Deox|Stella|Themis|Argon|Unique 7|Sygnus|Hexen|Finity 7|Cream|Cream X2|Jade|Neon 7|Neron 7|Kandy|Scape|Saphyr 7|Rebel|Biox|Rebel|Rebel 8GB|Myst|Draco 7|Myst|Tab7-004|Myst|Tadeo Jones|Tablet Boing|Arrow|Draco Dual Cam|Aurix|Mint|Amity|Revolution|Finity 9|Neon 9|T9w|Amity 4GB Dual Cam|Stone 4GB|Stone 8GB|Andromeda|Silken|X2|Andromeda II|Halley|Flame|Saphyr 9,7|Touch 8|Planet|Triton|Unique 10|Hexen 10|Memphis 4GB|Memphis 8GB|Onix 10)"`
+    - `./projects/default/public_html/includes/vendor/mobiledetect/mobiledetectlib/src/MobileDetect.php:577:        'iJoyTablet' => 'Tablet (Spirit 7|Essentia|Galatea|Fusion|Onix 7|Landa|Titan|Scooby|Deox|Stella|Themis|Argon|Unique 7|Sygnus|Hexen|Finity 7|Cream|Cream X2|Jade|Neon 7|Neron 7|Kandy|Scape|Saphyr 7|Rebel|Biox|Rebel|Rebel 8GB|Myst|Draco 7|Myst|Tab7-004|Myst|Tadeo Jones|Tablet Boing|Arrow|Draco Dual Cam|Aurix|Mint|Amity|Revolution|Finity 9|Neon 9|T9w|Amity 4GB Dual Cam|Stone 4GB|Stone 8GB|Andromeda|Silken|X2|Andromeda II|Halley|Flame|Saphyr 9,7|Touch 8|Planet|Triton|Unique 10|Hexen 10|Memphis 4GB|Memphis 8GB|Onix 10)'`
+    - `./PROJECT_TRUTH.md:11:- Policy: treat "Steela", "Stella", and "Stila" as typos; correct on sight.`
+    - `./tools/repo/lint_truth.sh:14:  Steela`
+    - `./tools/repo/lint_truth.sh:15:  Stila`
+    - `./tools/repo/lint_truth.sh:16:  Stella`
+    - `./projects/default/upstream/titanium/includes/vendor/mobiledetect/mobiledetectlib/MobileDetect.json:160:            "iJoyTablet": "Tablet (Spirit 7|Essentia|Galatea|Fusion|Onix 7|Landa|Titan|Scooby|Deox|Stella|Themis|Argon|Unique 7|Sygnus|Hexen|Finity 7|Cream|Cream X2|Jade|Neon 7|Neron 7|Kandy|Scape|Saphyr 7|Rebel|Biox|Rebel|Rebel 8GB|Myst|Draco 7|Myst|Tab7-004|Myst|Tadeo Jones|Tablet Boing|Arrow|Draco Dual Cam|Aurix|Mint|Amity|Revolution|Finity 9|Neon 9|T9w|Amity 4GB Dual Cam|Stone 4GB|Stone 8GB|Andromeda|Silken|X2|Andromeda II|Halley|Flame|Saphyr 9,7|Touch 8|Planet|Triton|Unique 10|Hexen 10|Memphis 4GB|Memphis 8GB|Onix 10)"`
+    - `./projects/default/upstream/titanium/includes/vendor/mobiledetect/mobiledetectlib/src/MobileDetect.php:577:        'iJoyTablet' => 'Tablet (Spirit 7|Essentia|Galatea|Fusion|Onix 7|Landa|Titan|Scooby|Deox|Stella|Themis|Argon|Unique 7|Sygnus|Hexen|Finity 7|Cream|Cream X2|Jade|Neon 7|Neron 7|Kandy|Scape|Saphyr 7|Rebel|Biox|Rebel|Rebel 8GB|Myst|Draco 7|Myst|Tab7-004|Myst|Tadeo Jones|Tablet Boing|Arrow|Draco Dual Cam|Aurix|Mint|Amity|Revolution|Finity 9|Neon 9|T9w|Amity 4GB Dual Cam|Stone 4GB|Stone 8GB|Andromeda|Silken|X2|Andromeda II|Halley|Flame|Saphyr 9,7|Touch 8|Planet|Triton|Unique 10|Hexen 10|Memphis 4GB|Memphis 8GB|Onix 10)'`
+- Risk / rollback:
+  - Risk: Low (docs-only naming updates + lint tightening).
+  - Rollback: revert `PROJECT_TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, `docs/library/STELAE.md`, `tools/repo/lint_truth.sh`, and `STATE_OF_PLAY.md`.
+
 ## 2026-01-21 — DP-OPS-0048E: Phase-Locked Output Protocol (DP vs DB-PR-META) v3
 
 - Purpose: Phase lock outputs to operator step and provide deterministic recovery commands.
