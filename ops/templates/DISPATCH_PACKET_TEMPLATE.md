@@ -123,12 +123,27 @@ Approval must be the first tokens in the message (start-of-message) and outside 
 Quoted blocks are commentary and invalid for approval.
 
 REQUIRED OUTPUT BACK TO OPERATOR (in this exact order)
-A) SUMMARY + SCOPE CONFIRMATION
+### A) SUMMARY + SCOPE CONFIRMATION
 - What changed (1-3 bullets)
+- What was NOT changed (if relevant)
+
+### B) PATHS TOUCHED
 - Exact paths touched
 - SSOT declaration for each touched topic (file path)
-- What was NOT changed (if relevant)
-B) Supersession / Deletion candidates (proposal-only; no removals)
+
+### C) VERIFICATION
+
+### D) PATCH / DIFF
+- Provide a unified diff OR precise file snippets with anchors
+- Must be directly review/applyable by operator
+- Proof bundle (required; paste outputs):
+  - `git status --porcelain`:
+  - `git diff --name-only`:
+  - `git diff --stat`:
+  - Verification command outputs required by the DP (paste outputs or NOT RUN + reason)
+
+### E) NOTES
+Supersession / Deletion candidates (proposal-only; no removals)
 - If duplicates / near-duplicates / out-of-place artifacts are found, list them here only.
 - Include a crisp plan: what is replaced, what replaces it, and where the SSOT lives.
 - Do not delete or move anything unless explicitly authorized by the DP.
@@ -178,22 +193,14 @@ C) DB-PR-META (Canonical; DRAFT surfaces only — do not emit)
 ## Merge note
 - [fill]
 ~~~
-D) PATCH / DIFF
-- Provide a unified diff OR precise file snippets with anchors
-- Must be directly review/applyable by operator
-- Proof bundle (required; paste outputs):
-  - `git status --porcelain`:
-  - `git diff --name-only`:
-  - `git diff --stat`:
-  - Verification command outputs required by the DP (paste outputs or NOT RUN + reason)
-E) RECEIPT (mandatory; must be the last section of the result message)
-Use the exact headings and order below. DPs missing the RECEIPT are incomplete and must be rejected.
+
 ### RECEIPT
-### A) OPEN Output
+RECEIPT is mandatory; must be the last section of the result message. DPs missing the RECEIPT are incomplete and must be rejected.
+#### A) OPEN Output
 - Full, unmodified output of `./ops/bin/open`
 - Must include branch name and HEAD short hash used during work
 - If OPEN exceeds message/file limits (edge case), attach the OPEN file from `storage/handoff/` and in this section include the exact path plus the one-line note: "OPEN attached; see path above."
-### B) SNAPSHOT Output (paths or archived filenames)
+#### B) SNAPSHOT Output
 - Choose one based on scope:
   - `./ops/bin/snapshot --scope=icl` (default for doc / ops changes)
   - `./ops/bin/snapshot --scope=full` (required for structural or wide refactors)
@@ -204,6 +211,13 @@ Use the exact headings and order below. DPs missing the RECEIPT are incomplete a
 - Snapshot may be inline (truncated if necessary) or referenced by generated filename if archived
 - Include the manifest path when present (the manifest points to the chat payload file to paste).
 - If a tarball is produced, include BOTH: the tarball path and the manifest path.
+#### C) PORCELAIN Output
+- Paste the literal porcelain output from `storage/handoff/OPEN-PORCELAIN-<branch>-<YYYY-MM-DD>-<HEAD>.txt` (or equivalent).
+- If the porcelain output is empty/0B, include the section and paste the literal output or the explicit sentinel `(empty)` (no omissions).
+#### D) DP-RESULTS.md Output
+- Paste the full contents of `storage/handoff/<DP-ID>-RESULTS.md`.
+#### E) NOTES (optional)
+- Optional operator/worker notes for the receipt bundle.
 Do not claim "Freshness unknown" if you can run OPEN yourself.
 
 Deliver results, then STOP (no commit/push).
