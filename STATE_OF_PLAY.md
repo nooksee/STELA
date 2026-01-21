@@ -1,3 +1,33 @@
+## 2026-01-20 — DP-OPS-0048B: DP template headings + RECEIPT structure
+
+- Purpose: Normalize DP worker-results headings to canonical A–E + RECEIPT and complete RECEIPT subheadings for consistent handoff bundles.
+- What shipped:
+  - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md` to use canonical A–E headings and receipt subheadings.
+- Verification:
+  - `bash ops/init/tools/context_lint.sh`
+  - Result: `[context_lint] Result: clean`
+  - `bash tools/repo/lint_truth.sh`
+  - Result: `[lint_truth] OK`
+  - `rg -n "^### [A-E]\\) " ops/templates/DISPATCH_PACKET_TEMPLATE.md`
+  - Result:
+    - `126:### A) SUMMARY + SCOPE CONFIRMATION`
+    - `130:### B) PATHS TOUCHED`
+    - `134:### C) VERIFICATION`
+    - `136:### D) PATCH / DIFF`
+    - `145:### E) NOTES`
+  - `rg -n "^### RECEIPT$" ops/templates/DISPATCH_PACKET_TEMPLATE.md`
+  - Result: `197:### RECEIPT`
+  - `rg -n "^#### [A-E]\\) (OPEN Output|SNAPSHOT Output|PORCELAIN Output|DP-RESULTS\\.md Output|NOTES \\(optional\\))$" ops/templates/DISPATCH_PACKET_TEMPLATE.md`
+  - Result:
+    - `199:#### A) OPEN Output`
+    - `203:#### B) SNAPSHOT Output`
+    - `214:#### C) PORCELAIN Output`
+    - `217:#### D) DP-RESULTS.md Output`
+    - `219:#### E) NOTES (optional)`
+- Risk / rollback:
+  - Risk: Low; template-only formatting changes.
+  - Rollback: revert the touched files.
+
 ## 2026-01-20 — DP-OPS-0048A: Proof-first review gate + disapproval protocol
 
 - Purpose: Require a minimal proof bundle in DP RESULTS and add a canonical DISAPPROVE response shape.
