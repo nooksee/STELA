@@ -8,6 +8,26 @@ Applies to all deliverables that culminate in a PR.
 
 ## Requirements
 
+### Phase Lock (precedence)
+Phase Lock rules override other output formatting requirements.
+
+- If the operator message begins with "APPROVE" and includes "EMIT DB-PR-META":
+  - Output MUST be DB-PR-META only.
+  - No DP edits.
+  - No DP reprint.
+  - No commentary.
+- If the operator message contains "SEE ATTACHED" + "REFRESH STATE" and requests revise/update of a DP:
+  - Output MUST be the DP only.
+  - Exactly one code block containing the DP.
+  - No DB-PR-META.
+  - No extra text.
+- If the operator message contains "DISCUSS-ONLY":
+  - No artifacts.
+  - No copy/paste blocks.
+- If the operator uses a Phase Error Recovery command (contains "PHASE ERROR" / "BLOCKED ACKNOWLEDGED" / "RE-EMIT CLEAN"):
+  - Obey it literally (only the requested re-emit/revision).
+  - Do not expand scope.
+
 ### Metadata kit surfaces (always-on)
 - IDE commit subject.
 - PR title + PR description (markdown).
