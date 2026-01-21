@@ -1,3 +1,20 @@
+## 2026-01-21 — DP-OPS-0048D: Dispatch Packet template heading linter
+
+- What changed:
+  - Added `ops/bin/dispatch_packet_lint.sh` to enforce canonical DP A-E headings.
+  - Required the linter in `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md` verification.
+  - Listed the linter in `ops/bin/help`.
+- Verification:
+  - `./ops/bin/dispatch_packet_lint.sh`
+  - Result: `FAIL: expected heading '### A) STATE' but found '### A) SUMMARY + SCOPE CONFIRMATION'`
+  - `./ops/init/tools/context_lint.sh`
+  - Result: `[context_lint] Result: clean`
+  - `./ops/init/tools/lint_truth.sh`
+  - Result: `/bin/bash: line 1: ./ops/init/tools/lint_truth.sh: No such file or directory`
+- Risk / rollback:
+  - Risk: Low; adds a gate that currently fails until the DP template headings are updated.
+  - Rollback: revert the linter and protocol/help changes.
+
 ## 2026-01-21 — DP-OPS-0048C: DP Run Hygiene v1: Placeholder-Marker Ban + Memento Seed
 
 - What changed: Added a no placeholder-marker rule for run DPs and worker results, seeded M-RUN-01, and logged this DP.

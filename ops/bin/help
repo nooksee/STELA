@@ -116,6 +116,7 @@ Command index:
   DISCUSS-ONLY  talk-only cue (see OPERATOR_MANUAL + DISPATCH_PACKET_PROTOCOL)
   SNAPSHOT ./ops/bin/snapshot --scope=icl --format=chatgpt
   HELP     ./ops/bin/help [list|<topic>]
+  DP-LINT  ./ops/bin/dispatch_packet_lint.sh [path]
   GATES    bash ops/init/tools/context_lint.sh
 
 Docs library:
