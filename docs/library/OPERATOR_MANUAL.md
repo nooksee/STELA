@@ -2,7 +2,7 @@
 
 This manual is the operator-facing entrypoint for day-to-day commands and the curated docs library.
 It is intentionally short and maintained; if it drifts, fix it.
-You may see legacy `nukeCE` strings; `STELA` is the platform name going forward.
+You may see legacy `nukeCE` strings; `Stela` is the platform name going forward.
 
 ## Top Commands (cheat sheet)
 ```
@@ -113,7 +113,7 @@ If output is wrong, don’t explain—re-emit with the phase command.
 
 ## Project registry
 - SSOT: `docs/library/datasets/PROJECT_REGISTRY.md`.
-- `./ops/bin/project` lists/initializes STELA-born projects (no import/migration).
+- `./ops/bin/project` lists/initializes Stela-born projects (no import/migration).
 - `./ops/bin/project init <name>` requires `--dry-run` or `--confirm` (no silent payload creation).
 
 ## Projects
@@ -177,6 +177,7 @@ Worker guardrails (summary):
 - Reuse-first; duplication check before creating anything (near-duplicates included).
 - No new files unless listed in the DP FILES block.
 - Declare the SSOT file for each touched topic; if unclear, STOP.
+- Canon spelling: Stela (singular) / Stelae (plural). Normalize voice-to-text variants before committing or approving.
 - If duplicates / near-duplicates / out-of-place artifacts are found, list them only under Supersession / Deletion candidates with a crisp plan; no deletions or moves unless explicitly authorized by the DP.
 - Output artifacts are output artifact files created under `storage/handoff/` and `storage/snapshots/` and must remain untracked.
 - "No new files unless listed" applies to tracked repo files only.

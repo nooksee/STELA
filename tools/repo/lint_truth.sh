@@ -10,6 +10,12 @@ patterns=(
   'boot/_upstream_runtime'
 )
 
+forbidden_spellings=(
+  Steela
+  Stila
+  Stella
+)
+
 scan_paths=(
   docs
   boot
@@ -40,6 +46,15 @@ for pat in "${patterns[@]}"; do
   if echo "$files" | xargs -r grep -nH -I -E "$pat" >/dev/null 2>&1; then
     echo "[lint_truth] DEPRECATED reference found: $pat"
     echo "$files" | xargs -r grep -nH -I -E "$pat" || true
+    fail=1
+  fi
+done
+
+for token in "${forbidden_spellings[@]}"; do
+  pattern="\\<${token}\\>"
+  if echo "$files" | xargs -r grep -nH -I -E "$pattern" >/dev/null 2>&1; then
+    echo "[lint_truth] FORBIDDEN spelling found: $token"
+    echo "$files" | xargs -r grep -nH -I -E "$pattern" || true
     fail=1
   fi
 done
