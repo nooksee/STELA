@@ -58,6 +58,54 @@ What to expect:
 - The model will discuss and ask clarifying questions.
 - No commands run, no file edits, and no approval-dependent artifacts until a DP (and approval phrase when required) is provided.
 
+## Phase-Locked Output Protocol
+Operator Standard Phrases (copy/paste; short)
+- Refresh + DP (DP-only):
+  SEE ATTACHED — REFRESH STATE (OPEN + snapshot) — REVISE/UPDATE DP-OPS-00XX — OUTPUT: DP ONLY — SINGLE CODE BLOCK — NO DB-PR-META
+
+- Approve + Meta (meta-only):
+  APPROVE DP-OPS-00XX EMIT DB-PR-META — OUTPUT: DB-PR-META ONLY — NO DP TEXT — META IN COPY/PASTE CODE BLOCKS
+
+- Discuss-only:
+  DISCUSS-ONLY
+
+The 10-step DP conveyor belt (mechanical loop)
+1. A draft DP exists (idea-form DP is acceptable) and is saved for later refresh.
+2. Operator requests refresh/update (attaches OPEN + snapshot) using the standard phrase.
+3. Integrator emits the updated DP only (single code block; no meta; no extra text).
+4. Operator creates/switches to the DP’s required work branch.
+5. Operator hands the DP to the worker; worker runs the DP.
+6. Worker returns REQUIRED OUTPUT + RECEIPT (proof bundle included).
+7. Operator reviews results and decides:
+   - DISAPPROVE (with reason + patch request), OR
+   - APPROVE DP-OPS-00XX EMIT DB-PR-META (standard phrase).
+8. Integrator emits DB-PR-META only (copy/paste-safe code blocks; no DP text).
+9. Operator commits using DB-PR-META; pushes branch; opens/merges PR; syncs main; cleans up branch.
+10. Loop closed: repo is clean; canon updates (e.g., STATE_OF_PLAY) are present in the merged PR.
+
+Phase error definition + no-debate recovery
+Phase error = assistant emitted the wrong artifact for the operator’s current step.
+
+- DP phase wrong output → re-emit DP only:
+  PHASE ERROR — RE-EMIT DP-OPS-00XX ONLY — DP ONLY — SINGLE CODE BLOCK — NO DB-PR-META
+
+- Meta phase wrong output → re-emit DB-PR-META only:
+  PHASE ERROR — RE-EMIT DB-PR-META ONLY FOR DP-OPS-00XX — META ONLY — NO DP TEXT
+
+- Worker blocked due to placeholders / malformed DP (branch name, OPEN/snapshot names, literal ‘...’):
+  BLOCKED ACKNOWLEDGED — REVISE DP-OPS-00XX TO REMOVE PLACEHOLDERS ONLY — NO OTHER EDITS — OUTPUT: DP ONLY
+
+- Clean copy needed (formatting wrong):
+  RE-EMIT CLEAN — DP-OPS-00XX — SINGLE CODE BLOCK — NO EXTRA TEXT
+
+Output-shape expectations
+- DP presentation: exactly one code block containing the DP; no extra text.
+- DB-PR-META presentation: meta fields in copy/paste-ready code blocks; no DP text.
+- DISCUSS-ONLY: no artifacts, no copy/paste blocks.
+
+One-line reminder
+If output is wrong, don’t explain—re-emit with the phase command.
+
 ## Platform vs Project
 - Platform is the repo-resident operating system (ops/docs/tools/etc.).
 - Project payloads live under `projects/*`.

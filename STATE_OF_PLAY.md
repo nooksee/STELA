@@ -1,3 +1,18 @@
+## 2026-01-21 — DP-OPS-0048E: Phase-Locked Output Protocol (DP vs DB-PR-META) v3
+
+- Purpose: Phase lock outputs to operator step and provide deterministic recovery commands.
+- What changed:
+  - Added Phase-Locked Output Protocol guidance and Phase Lock contract rules.
+  - Added M-PHASE-01, logged the DP, and produced receipt bundle artifacts under `storage/handoff/`.
+- Verification:
+  - `./ops/bin/context_lint.sh`
+  - Result: `/bin/bash: line 1: ./ops/bin/context_lint.sh: No such file or directory`
+  - `./ops/bin/lint_truth.sh`
+  - Result: `/bin/bash: line 1: ./ops/bin/lint_truth.sh: No such file or directory`
+- Risk / rollback:
+  - Risk: Medium-low (workflow wording could be misread; primary risk is operator confusion if phrasing drifts).
+  - Rollback: revert `docs/library/OPERATOR_MANUAL.md`, `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`, `docs/library/MEMENTOS.md`, and `STATE_OF_PLAY.md`.
+
 ## 2026-01-21 — DP-OPS-0048D: Dispatch Packet template heading linter
 
 - What changed:
