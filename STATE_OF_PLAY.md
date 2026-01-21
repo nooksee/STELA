@@ -1,3 +1,15 @@
+## 2026-01-21 — DP-OPS-0050: Stelae Governance (Keep It Useful, Keep It Rare)
+
+- Summary: Added Stelae governance + entry format rules, added operator Stelae usage guidance, and logged the DP.
+- Verification:
+  - `./ops/bin/context_lint.sh`
+  - Result: `/bin/bash: line 1: ./ops/bin/context_lint.sh: No such file or directory`
+  - `./ops/bin/lint_truth.sh`
+  - Result: `/bin/bash: line 1: ./ops/bin/lint_truth.sh: No such file or directory`
+- Risk / rollback:
+  - Risk: Low (docs-only governance + guidance updates).
+  - Rollback: revert `docs/library/STELAE.md`, `OPERATOR_MANUAL.md`, and `STATE_OF_PLAY.md`.
+
 ## 2026-01-21 — DP-OPS-0049: Stela Name Guardrails (Canonical Spelling + Lint)
 
 - Purpose: Canonize Stela/Stelae spelling, declare SSOT, and add a lint guardrail for typos.
@@ -332,7 +344,7 @@
   - Replaced the legacy bundle label with RECEIPT across canon, protocol, template, and operator guidance.
   - Added Risk / Rollback as a required DP section and updated the DP template.
   - Updated worker-result rejection language to use RECEIPT.
-  - Hardened the DP template (addendum): STOP on literal `...`, BLOCKED mini-receipt shape, explicit required output slots A) SUMMARY + SCOPE CONFIRMATION and D) PATCH / DIFF, verification discipline wording.
+  - Hardened the DP template (addendum): STOP on literal ellipsis placeholder, BLOCKED mini-receipt shape, explicit required output slots A) SUMMARY + SCOPE CONFIRMATION and D) PATCH / DIFF, verification discipline wording.
   - Updated snapshot behavior (addendum): snapshot writes chat payload .txt; snapshot writes tarball (when used) and ALWAYS writes manifest pointing to chat payload.
 - Verification:
   - `rg -n "### RECEIPT|RECEIPT" PROJECT_TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md`

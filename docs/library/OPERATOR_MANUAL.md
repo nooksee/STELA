@@ -6,7 +6,7 @@ You may see legacy `nukeCE` strings; `Stela` is the platform name going forward.
 
 ## Top Commands (cheat sheet)
 ```
-./ops/bin/open --intent="..." --dp="DP-XXXX / YYYY-MM-DD"
+./ops/bin/open --intent="short-intent" --dp="DP-XXXX / YYYY-MM-DD"
 ./ops/bin/snapshot --scope=icl --format=chatgpt
 ./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto
 ./ops/bin/snapshot --scope=platform --format=chatgpt --out=auto
@@ -43,6 +43,11 @@ Datasets:
 
 Behavioral preferences:
 - Behavioral preferences are documented in `docs/library/MEMENTOS.md`.
+
+## Stelae (operator reminders)
+- Stelae live at `docs/library/STELAE.md`.
+- Consult them before submitting a DP, when switching DISCUSS -> EXECUTE, and after a phase error or when frustrated.
+- Practical rule: If you're angry or rushing, read one Stela before you send.
 
 ## DP docket (optional)
 Use the docket (`docs/library/DOCKET.md`) when you want a light forward-looking queue:
@@ -92,7 +97,7 @@ Phase error = assistant emitted the wrong artifact for the operator’s current 
 - Meta phase wrong output → re-emit DB-PR-META only:
   PHASE ERROR — RE-EMIT DB-PR-META ONLY FOR DP-OPS-00XX — META ONLY — NO DP TEXT
 
-- Worker blocked due to placeholders / malformed DP (branch name, OPEN/snapshot names, literal ‘...’):
+- Worker blocked due to placeholders / malformed DP (branch name, OPEN/snapshot names, literal three-dot placeholder):
   BLOCKED ACKNOWLEDGED — REVISE DP-OPS-00XX TO REMOVE PLACEHOLDERS ONLY — NO OTHER EDITS — OUTPUT: DP ONLY
 
 - Clean copy needed (formatting wrong):
@@ -117,7 +122,7 @@ If output is wrong, don’t explain—re-emit with the phase command.
 - `./ops/bin/project init <name>` requires `--dry-run` or `--confirm` (no silent payload creation).
 
 ## Projects
-- `./ops/bin/project new --name "..." --dry-run` previews a new project with auto id/slug; `--confirm` creates it and sets the current pointer.
+- `./ops/bin/project new --name "Example Project" --dry-run` previews a new project with auto id/slug; `--confirm` creates it and sets the current pointer.
 - `./ops/bin/project use <project_id> --dry-run|--confirm` updates the current project pointer for a registered id.
 - `./ops/bin/project current` reports the current project id or `none`.
 - Recommended flow: run `project new --dry-run`, review output, then `--confirm` and check `project current`.
@@ -202,7 +207,7 @@ For attachment-mode: the attached results file MUST include the RECEIPT (OPEN + 
 
 What to look for (handoff artifacts):
 - `storage/handoff/<DP-ID>-RESULTS.md`
-- `storage/handoff/OPEN-...txt` (optional; if OPEN used `--out=auto`)
+- `storage/handoff/OPEN-<tag>-<branch>-<HEAD>.txt` (optional; if OPEN used `--out=auto`)
 - Snapshot artifacts under `storage/snapshots/`, as referenced by the RECEIPT
 
 ## Snapshot
