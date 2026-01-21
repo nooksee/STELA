@@ -96,6 +96,7 @@ DISCUSS-ONLY is a social cue for operator/model alignment during ideation. It pe
 - Dispatch Packet (DP) output comes first whenever a DP is requested.
 - Output artifacts are output artifact files created under `storage/handoff/` and `storage/snapshots/` and must remain untracked; the "no new files unless listed" rule applies to tracked repo files only.
 - DP must be a single fenced block containing: Freshness Gate, required NEW work branch (when changes are requested), Purpose, Scope, Files, Forbidden, Verification, Risk / Rollback, Acceptance.
+- Run DPs must not contain placeholder-markers. Worker results bundles (receipt and proof bundle) must not contain placeholder-markers. If placeholder-markers appear in run materials, the integrator must DISAPPROVE and require a corrected re-run or re-issue before merge.
 - DB-PR-META is IN-LOOP and withheld unless the operator uses the required approval phrase pattern (see Rule 3).
 - Operator approval is an IN-LOOP act and must be explicit.
 - Approval phrase must be the first tokens in the message (start-of-message), on a standalone line, plain text, and unquoted.
