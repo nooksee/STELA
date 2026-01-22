@@ -63,20 +63,37 @@ What to expect:
 - The model will discuss and ask clarifying questions.
 - No commands run, no file edits, and no approval-dependent artifacts until a DP (and approval phrase when required) is provided.
 
-## Phase-Locked Output Protocol
-Operator Standard Phrases (copy/paste; short)
-- Refresh + DP (DP-only):
-  SEE ATTACHED — REFRESH STATE (OPEN + snapshot) — REVISE/UPDATE DP-OPS-00XX — OUTPUT: DP ONLY — SINGLE CODE BLOCK — NO DB-PR-META
+## Integrator Phase Discipline
+Conformance-first is mandatory: normalize to the current DP template and fill the Freshness Gate from OPEN + snapshot (operator-provided or locally generated for this run) before any DP edits.
+Phase-locked outputs are mandatory: when meta is requested, output DB-PR-META only.
+Receipt bundle is mandatory for any DP intended to be run.
 
-- Approve + Meta (meta-only):
+Start phrases (copy/paste; short)
+- DP Revision Run (conformance-first):
+  SEE ATTACHED — REFRESH STATE (OPEN + snapshot; operator-provided or locally generated for this run) — REVISE/UPDATE DP-OPS-00XX — OUTPUT: DP ONLY — SINGLE CODE BLOCK — NO DB-PR-META
+
+- DB-PR-META Emission (meta-only):
   APPROVE DP-OPS-00XX EMIT DB-PR-META — OUTPUT: DB-PR-META ONLY — NO DP TEXT — META IN COPY/PASTE CODE BLOCKS
 
-- Discuss-only:
-  DISCUSS-ONLY
+Hard stop conditions + recovery (short)
+- Missing OPEN/snapshot, mismatched branch/HEAD, scope mismatch, placeholders in DP, or wrong artifact emitted.
+- Recovery phrases (copy/paste):
+  PHASE ERROR — RE-EMIT DP-OPS-00XX ONLY — DP ONLY — SINGLE CODE BLOCK — NO DB-PR-META
+  PHASE ERROR — RE-EMIT DB-PR-META ONLY FOR DP-OPS-00XX — META ONLY — NO DP TEXT
+  BLOCKED ACKNOWLEDGED — REVISE DP-OPS-00XX TO REMOVE PLACEHOLDERS ONLY — NO OTHER EDITS — OUTPUT: DP ONLY
+
+Mini decision table
+- I want DP revised → use "DP Revision Run (conformance-first)".
+- I approved results / want meta → use "DB-PR-META Emission (meta-only)".
+
+## Phase-Locked Output Protocol
+Operator Standard Phrases: see Integrator Phase Discipline (copy/paste; short).
+Discuss-only:
+- DISCUSS-ONLY
 
 The 10-step DP conveyor belt (mechanical loop)
 1. A draft DP exists (idea-form DP is acceptable) and is saved for later refresh.
-2. Operator requests refresh/update (attaches OPEN + snapshot) using the standard phrase.
+2. Operator requests refresh/update (attaches OPEN + snapshot; operator-provided or locally generated for this run) using the standard phrase.
 3. Integrator emits the updated DP only (single code block; no meta; no extra text).
 4. Operator creates/switches to the DP’s required work branch.
 5. Operator hands the DP to the worker; worker runs the DP.

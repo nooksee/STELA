@@ -1,3 +1,19 @@
+## 2026-01-22 — DP-OPS-0050A: Integrator Phase Discipline (Conformance-First + Phase-Locked Outputs)
+
+- Purpose: Lock conformance-first DP refreshes, phase-locked outputs, receipt bundle always, and allow OPEN/snapshot to be operator-provided or locally generated per run.
+- What shipped:
+  - Added Integrator Phase Discipline rules (conformance-first, phase-locked outputs, receipt bundle always) to `PROJECT_TRUTH.md`.
+  - Added Integrator Phase Discipline operator phrases, hard stops, and decision table to `docs/library/OPERATOR_MANUAL.md`.
+  - Updated M-PHASE-01 to "Conformance First, Creativity After" with triggers in `docs/library/MEMENTOS.md`.
+- Verification:
+  - `bash ops/init/tools/context_lint.sh`
+  - Result: `[context_lint] Result: clean`
+  - `bash tools/repo/lint_truth.sh`
+  - Result: `[lint_truth] OK`
+- Risk / rollback:
+  - Risk: Low (docs-only guidance updates).
+  - Rollback: revert `PROJECT_TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, `docs/library/MEMENTOS.md`, and `STATE_OF_PLAY.md`.
+
 ## 2026-01-21 — DP-OPS-0050: Stelae Governance (Keep It Useful, Keep It Rare)
 
 - Summary: Added Stelae governance + entry format rules, added operator Stelae usage guidance, and logged the DP.

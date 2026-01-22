@@ -148,7 +148,7 @@ DISCUSS-ONLY is a social cue for operator/model alignment during ideation. It pe
   - Avoid self-referential AI phrasing ("as an AI...", "I think...").
   - Avoid hype words ("awesome", "fantastic", "super") in metadata surfaces.
   - Prefer repo nouns (paths, scripts, rules) over vibes.
-- Ordering: if the operator says "DP first", output only the DP and stop; if DB-PR-META is requested, output it after the DP as six blocks.
+- Ordering: if the operator says "DP first", output only the DP and stop; if the operator requests DB-PR-META only, output DB-PR-META only and stop; if both DP + DB-PR-META are explicitly requested, output DP first, then DB-PR-META as six blocks.
 - Worker results must end with the RECEIPT (delivery format, not IN-LOOP permission).
 - RECEIPT (required, last section, exact headings and order): `### RECEIPT` `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work) `### B) SNAPSHOT Output` (choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--compress=tar.xz`; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived).
 - RECEIPT is the rehydration milestone: OPEN + SNAPSHOT are required so state, not vibes, drives follow-on work.
@@ -157,6 +157,12 @@ DISCUSS-ONLY is a social cue for operator/model alignment during ideation. It pe
 - Worker may not claim "Freshness unknown" if they can run OPEN themselves.
 - If repo access is unavailable, respond only with: `Repo access unavailable; cannot provide Freshness Gate.`
 - Refusal: if the Freshness Gate (branch + HEAD) is missing in-thread, respond only with a request to run/paste OPEN or provide branch + HEAD; do not guess.
+
+## Integrator Phase Discipline (Conformance-First + Phase-Locked Outputs)
+- Conformance-first: if asked to revise/update a DP to today's template/current state, load the canonical DP template from the repo, normalize headings/sections to match it, fill the Freshness Gate from OPEN + snapshot (operator-provided or locally generated for this run), then apply DP-specific edits.
+- Phase-locked outputs: if the operator uses the approval phrase and requests DB-PR-META only, output DB-PR-META only (no DP text, no commentary).
+- No invention: if required inputs are missing or mismatched, stop and request the missing state; do not guess.
+- Receipt bundle always: any DP intended to be run must require the full receipt bundle (RESULTS + OPEN + OPEN-PORCELAIN + snapshot + manifest when applicable).
 ## Model Behavior Guardrail (Anti-Drift)
 These rules override default helpfulness. Refusal is correct behavior when blocked.
 
