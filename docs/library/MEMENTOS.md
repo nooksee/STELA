@@ -22,7 +22,7 @@ This file is the single source of truth for MEMENTOS.
 - M-HANDOFF-01: The single blocking unknown takes first priority.
 - M-EMIT-01: Approval is binary; ambiguity is not approval.
 - M-RUN-01: Drafts can be fuzzy; runs must be concrete.
-- M-PHASE-01: Right artifact, right phase.
+- M-PHASE-01: Conformance First, Creativity After.
 
 ## MEMENTO Artifacts (quoteable, single-sentence)
 - M-ATTN-01: "State knowns and unknowns first; if a required input is missing, stop and request it."
@@ -30,7 +30,11 @@ This file is the single source of truth for MEMENTOS.
 - M-HANDOFF-01: "Surface the single blocking unknown first; do not proceed until it is resolved."
 - M-EMIT-01: "Treat approval as binary; if approval is not explicit and valid, do not emit gated output."
 - M-RUN-01: "Drafts can be fuzzy; runs must be concrete."
-- M-PHASE-01: "Right artifact, right phase. If wrong, re-emit—don’t explain."
+- M-PHASE-01: "Conformance first, creativity after."
+
+## MEMENTO Triggers (operational)
+- M-PHASE-01 meaning: If you feel the urge to be helpful before matching the template, you are about to break phase.
+- M-PHASE-01 trigger: Any DP revision or any DB-PR-META request.
 
 ## Core failure mode
 The repeated failure pattern is a stack:
