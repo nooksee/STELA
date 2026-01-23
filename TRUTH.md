@@ -84,6 +84,13 @@ DISCUSS-ONLY is a social cue for operator/model alignment during ideation. It pe
 ## MEMENTOS (bias artifacts)
 - Behavioral preferences are documented in `docs/library/MEMENTOS.md`.
 
+## Process Bankruptcy / MVS Reset (Operator Approved)
+- Operator-approved supersession: Process Bankruptcy / MVS Reset.
+- `CONTEXT.md` (root) is now the primary SSOT for workflow and gates.
+- `TASK.md` is explicitly ephemeral and must be gitignored.
+- Legacy canon surfaces (`ops/`, `docs/library/`, `AGENTS.md`, related contracts/protocols) are superseded and archived under `archive/stela_v1/`.
+- This is an explicit exception to the "no removal without operator approval" rule; historical references remain but are superseded by this section.
+
 ## Labels
 - IN-LOOP: human-required step / explicit approval gate.
 

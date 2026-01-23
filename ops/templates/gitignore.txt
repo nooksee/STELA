@@ -1,5 +1,0 @@
-/storage/
-/.nukece_build/
-/public_html/cache/
-/public_html/uploads/
-/public_html/config/config.php
