@@ -1,6 +1,6 @@
 # Contractor packet (read-in)
 
-This pack is the minimum you need to work safely in the nukeCE repository.
+This pack is the minimum you need to work safely in the Stela repository.
 
 ## Non-negotiables
 
@@ -17,7 +17,8 @@ This pack is the minimum you need to work safely in the nukeCE repository.
 ## Before you start
 
 1. Read:
-   - `ops/init/icl/DAILY_CONSOLE.md`
+   - `TRUTH.md`
+   - `docs/library/OPERATOR_MANUAL.md`
    - `docs/40-PROJECT_HYGIENE.md`
    - `docs/upstreams.md`
 

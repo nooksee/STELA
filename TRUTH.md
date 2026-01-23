@@ -1,19 +1,15 @@
-# Project Truth — PHP-Nuke CE
+# Stela System Constitution
+Author: Kevin Atwood
 
 If something conflicts with this file, this file wins.
 
 ## Identity
-PHP-Nuke CE is a curated continuation of the PHP-Nuke lineage. It is not a rewrite and not a fork-dump.
+Stela is a curated continuation of the PHP-Nuke lineage. It is not a rewrite and not a fork-dump.
 
 ## Naming
 - Stela (S-T-E-L-A): only canonical project / platform name spelling (stone tablet metaphor: published canon / governance visible to all).
-- Stelae (S-T-E-L-A-E): plural / collection label.
 - Policy: treat "Steela", "Stella", and "Stila" as typos; correct on sight.
-- SSOT (human-facing usage + examples): `docs/library/STELAE.md`.
-- nukeCE: historical working label for the repo/system.
-- Policy: do not global-replace older strings unless a DP explicitly authorizes it.
 - Naming does not override canon, contracts, gates, or approvals.
-- Non-goals: not a repo rename yet; not a product marketing push yet.
 
 ## Upstream
 Historical upstream: php-nuke/php-nuke. Upstream code is pulled intentionally and reviewed explicitly.
@@ -22,12 +18,18 @@ Historical upstream: php-nuke/php-nuke. Upstream code is pulled intentionally an
 Titanium, Evo, Sentinel, and other derivatives are donor banks. We extract specific features and re-implement them with clear provenance.
 
 ## Tooling inspiration
-- Snapshot tool inspired by repo2txt (MIT); reimplemented in-repo with no upstream code copied.
+- Dump tool inspired by repo2txt (MIT); reimplemented in-repo with no upstream code copied.
 
 ## Platform vs Project
 - Platform: the repo-resident operating system (ops/docs/tools/etc.).
 - Project: deployable payload(s) under `projects/*`.
 - During platform construction, platform context must exclude project payload by default.
+- `public_html` is the strict webroot for project payloads and must not be renamed in scripts.
+
+## Stela Operational Standards
+- Agents are Contractors; User is Integrator.
+- `SoP.md` is state; `TRUTH.md` is law.
+- System tools live in `/ops`; Worker tools live in `/tools`.
 
 ## Project Registry (SSOT)
 - Registered projects are listed in `docs/library/datasets/PROJECT_REGISTRY.md`.
@@ -36,7 +38,7 @@ Titanium, Evo, Sentinel, and other derivatives are donor banks. We extract speci
 
 ## Runtime hygiene
 projects/*/public_html is the deployable webroot. Root public_html is a placeholder and must stay minimal.
-Deployable webroots must not contain archive snapshots, legacy graveyards, or development artifacts.
+Deployable webroots must not contain archive dumps, legacy graveyards, or development artifacts.
 
 ## Philosophy
 Secure by default. Explainable operations. Auditable administration. Confidence over cleverness.
@@ -46,11 +48,11 @@ Creativity is free-form; execution is structured; memory lives in the repo.
 - Do not ask the operator to open/edit files unless the operator explicitly opts in.
 - Workers draft diffs; integrator/operator reviews, commits, and opens PRs.
 - Prefer "run command X" over "open file Y and edit line Z."
-- Prefer front door scripts (`ops/bin/open`, `ops/bin/snapshot`) over control words.
+- Prefer front door scripts (`ops/bin/open`, `ops/bin/dump`) over control words.
 - OPEN includes a short posture nudge near the top.
 - If the operator says "merged + synced main", do not re-explain workflow.
 - Operator phrases like "main + synced" are status, not canon.
-- Only canonize new terms, labels, or processes when the operator explicitly says "Canonize X" or "Add X to PROJECT_TRUTH".
+- Only canonize new terms, labels, or processes when the operator explicitly says "Canonize X" or "Add X to TRUTH".
 - Proceed to the next agreed step or handle the reported errors.
 - Do not ask questions you can answer from git state (branch already known).
 
@@ -73,11 +75,6 @@ DISCUSS-ONLY is a social cue for operator/model alignment during ideation. It pe
 
 ## Continuity Map (Operator Wayfinding)
 - The pointer-only continuity map is `docs/library/CONTINUITY_MAP.md`.
-
-## ICL Continuity Core (SSOT)
-- The ICL Continuity Core is the minimal continuity/rehydration surface for stateless AI operation in nukeCE.
-- SSOT: `ops/init/icl/ICL_CONTINUITY_CORE.md`.
-- Legacy onboarding bundles are deprecated in favor of the core.
 
 ## DB-DATASET (Curated Dataset Library)
 - DB-DATASET is the manifest-only dataset library for "mode training" and standards.
@@ -104,7 +101,7 @@ DISCUSS-ONLY is a social cue for operator/model alignment during ideation. It pe
 
 ## Output Mechanics Contract
 - Dispatch Packet (DP) output comes first whenever a DP is requested.
-- Output artifacts are output artifact files created under `storage/handoff/` and `storage/snapshots/` and must remain untracked; the "no new files unless listed" rule applies to tracked repo files only.
+- Output artifacts are output artifact files created under `storage/handoff/` and `storage/dumps/` and must remain untracked; the "no new files unless listed" rule applies to tracked repo files only.
 - DP must be a single fenced block containing: Freshness Gate, required NEW work branch (when changes are requested), Purpose, Scope, Files, Forbidden, Verification, Risk / Rollback, Acceptance.
 - Run DPs must not contain placeholder-markers. Worker results bundles (receipt and proof bundle) must not contain placeholder-markers. If placeholder-markers appear in run materials, the integrator must DISAPPROVE and require a corrected re-run or re-issue before merge.
 - DB-PR-META is IN-LOOP and withheld unless the operator uses the required approval phrase pattern (see Rule 3).
@@ -120,15 +117,15 @@ DISCUSS-ONLY is a social cue for operator/model alignment during ideation. It pe
 - Operator Handoff Paste Order (canonical):
   1) Approval line (start-of-message, standalone; include delimiter if results are in the same message)
   2) Worker results pasted raw (not quoted), immediately after the delimiter
-  3) Snapshot tarball attached (if DP required it)
+  3) Dump tarball attached (if DP required it)
 - Operator Handoff Attachment-mode Order (canonical):
   1) Approval line (start-of-message, standalone; message contains only the approval line)
-  2) Worker results delivered as a single attached text file; attachment must contain the full worker results, including the RECEIPT (OPEN + SNAPSHOT)
-  3) Snapshot tarball attached (if DP required it)
+  2) Worker results delivered as a single attached text file; attachment must contain the full worker results, including the RECEIPT (OPEN + DUMP)
+  3) Dump tarball attached (if DP required it)
 - Receipt package (minimum handoff artifacts; attachment-mode friendly):
   - `storage/handoff/<DP-ID>-RESULTS.md` (required)
-  - Snapshot tarball when required by DP
-  - Snapshot manifest (bundled inside the tarball when `--bundle` is used, or attached alongside when not bundled)
+  - Dump tarball when required by DP
+  - Dump manifest (bundled inside the tarball when `--bundle` is used, or attached alongside when not bundled)
   - OPEN + OPEN-PORCELAIN artifacts are already captured under `storage/handoff/` by OPEN tooling; do not regress this.
 - Worker RESULTS must include the minimal proof bundle (git status --porcelain, git diff --name-only, git diff --stat, plus required verification outputs); missing proof => reject.
 - Quoted blocks are commentary and invalid for approval.
@@ -157,19 +154,19 @@ DISCUSS-ONLY is a social cue for operator/model alignment during ideation. It pe
   - Prefer repo nouns (paths, scripts, rules) over vibes.
 - Ordering: if the operator says "DP first", output only the DP and stop; if the operator requests DB-PR-META only, output DB-PR-META only and stop; if both DP + DB-PR-META are explicitly requested, output DP first, then DB-PR-META as six blocks.
 - Worker results must end with the RECEIPT (delivery format, not IN-LOOP permission).
-- RECEIPT (required, last section, exact headings and order): `### RECEIPT` `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work) `### B) SNAPSHOT Output` (choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--compress=tar.xz`; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived).
-- RECEIPT is the rehydration milestone: OPEN + SNAPSHOT are required so state, not vibes, drives follow-on work.
-- Snapshots do not include OPEN output; state travels via the RECEIPT only.
+- RECEIPT (required, last section, exact headings and order): `### RECEIPT` `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work) `### B) DUMP Output` (choose `--scope=platform` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--compress=tar.xz`; dump may be inline, truncated if necessary, or referenced by generated filename if archived).
+- RECEIPT is the rehydration milestone: OPEN + DUMP are required so state, not vibes, drives follow-on work.
+- Dumps do not include OPEN output; state travels via the RECEIPT only.
 - DPs missing this bundle are incomplete and must be rejected.
 - Worker may not claim "Freshness unknown" if they can run OPEN themselves.
 - If repo access is unavailable, respond only with: `Repo access unavailable; cannot provide Freshness Gate.`
 - Refusal: if the Freshness Gate (branch + HEAD) is missing in-thread, respond only with a request to run/paste OPEN or provide branch + HEAD; do not guess.
 
 ## Integrator Phase Discipline (Conformance-First + Phase-Locked Outputs)
-- Conformance-first: if asked to revise/update a DP to today's template/current state, load the canonical DP template from the repo, normalize headings/sections to match it, fill the Freshness Gate from OPEN + snapshot (operator-provided or locally generated for this run), then apply DP-specific edits.
+- Conformance-first: if asked to revise/update a DP to today's template/current state, load the canonical DP template from the repo, normalize headings/sections to match it, fill the Freshness Gate from OPEN + dump (operator-provided or locally generated for this run), then apply DP-specific edits.
 - Phase-locked outputs: if the operator uses the approval phrase and requests DB-PR-META only, output DB-PR-META only (no DP text, no commentary).
 - No invention: if required inputs are missing or mismatched, stop and request the missing state; do not guess.
-- Receipt bundle always: any DP intended to be run must require the full receipt bundle (RESULTS + OPEN + OPEN-PORCELAIN + snapshot + manifest when applicable).
+- Receipt bundle always: any DP intended to be run must require the full receipt bundle (RESULTS + OPEN + OPEN-PORCELAIN + dump + manifest when applicable).
 ## Model Behavior Guardrail (Anti-Drift)
 These rules override default helpfulness. Refusal is correct behavior when blocked.
 

@@ -2,7 +2,7 @@
 set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WEBROOT="${ROOT_DIR}/public_html"
-echo "nukeCE Tree Verification Report"
+echo "Stela Tree Verification Report"
 echo "Webroot: ${WEBROOT}"
 echo
 problem_count=0

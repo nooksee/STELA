@@ -2,52 +2,52 @@
 
 - Purpose: Lock conformance-first DP refreshes, phase-locked outputs, receipt bundle always, and allow OPEN/snapshot to be operator-provided or locally generated per run.
 - What shipped:
-  - Added Integrator Phase Discipline rules (conformance-first, phase-locked outputs, receipt bundle always) to `PROJECT_TRUTH.md`.
+  - Added Integrator Phase Discipline rules (conformance-first, phase-locked outputs, receipt bundle always) to `TRUTH.md`.
   - Added Integrator Phase Discipline operator phrases, hard stops, and decision table to `docs/library/OPERATOR_MANUAL.md`.
   - Updated M-PHASE-01 to "Conformance First, Creativity After" with triggers in `docs/library/MEMENTOS.md`.
 - Verification:
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
   - Result: `[context_lint] Result: clean`
-  - `bash tools/repo/lint_truth.sh`
+  - `bash tools/lint_truth.sh`
   - Result: `[lint_truth] OK`
 - Risk / rollback:
   - Risk: Low (docs-only guidance updates).
-  - Rollback: revert `PROJECT_TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, `docs/library/MEMENTOS.md`, and `STATE_OF_PLAY.md`.
+  - Rollback: revert `TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, `docs/library/MEMENTOS.md`, and `SoP.md`.
 
 ## 2026-01-21 — DP-OPS-0050: Stelae Governance (Keep It Useful, Keep It Rare)
 
 - Summary: Added Stelae governance + entry format rules, added operator Stelae usage guidance, and logged the DP.
 - Verification:
-  - `./ops/bin/context_lint.sh`
-  - Result: `/bin/bash: line 1: ./ops/bin/context_lint.sh: No such file or directory`
+  - `./tools/context_lint.sh`
+  - Result: `/bin/bash: line 1: ./tools/context_lint.sh: No such file or directory`
   - `./ops/bin/lint_truth.sh`
   - Result: `/bin/bash: line 1: ./ops/bin/lint_truth.sh: No such file or directory`
 - Risk / rollback:
   - Risk: Low (docs-only governance + guidance updates).
-  - Rollback: revert `docs/library/STELAE.md`, `OPERATOR_MANUAL.md`, and `STATE_OF_PLAY.md`.
+  - Rollback: revert `docs/library/[REMOVED].md`, `OPERATOR_MANUAL.md`, and `SoP.md`.
 
 ## 2026-01-21 — DP-OPS-0049: Stela Name Guardrails (Canonical Spelling + Lint)
 
 - Purpose: Canonize Stela/Stelae spelling, declare SSOT, and add a lint guardrail for typos.
 - What shipped:
-  - Updated naming canon in `PROJECT_TRUTH.md`, operator guidance in `docs/library/OPERATOR_MANUAL.md`, and spelling policy in `docs/library/STELAE.md`.
-  - Added forbidden spelling checks to `tools/repo/lint_truth.sh`.
+  - Updated naming canon in `TRUTH.md`, operator guidance in `docs/library/OPERATOR_MANUAL.md`, and spelling policy in `docs/library/[REMOVED].md`.
+  - Added forbidden spelling checks to `tools/lint_truth.sh`.
 - Verification:
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
   - Result: `[context_lint] Result: clean`
-  - `bash tools/repo/lint_truth.sh`
+  - `bash tools/lint_truth.sh`
   - Result: `[lint_truth] OK`
-  - `rg -n "Stela|Stelae" PROJECT_TRUTH.md docs/library/STELAE.md docs/library/OPERATOR_MANUAL.md`
+  - `rg -n "Stela|Stelae" TRUTH.md docs/library/[REMOVED].md docs/library/OPERATOR_MANUAL.md`
   - Result:
-    - `PROJECT_TRUTH.md:9:- Stela (S-T-E-L-A): only canonical project / platform name spelling (stone tablet metaphor: published canon / governance visible to all).`
-    - `PROJECT_TRUTH.md:10:- Stelae (S-T-E-L-A-E): plural / collection label.`
-    - `docs/library/STELAE.md:1:# Stelae`
-    - `docs/library/STELAE.md:3:Stelae are short operator-facing reminders to keep conversations precise and calm.`
-    - `docs/library/STELAE.md:8:- "Stela" is the singular project / platform name.`
-    - `docs/library/STELAE.md:9:- "Stelae" is the plural / collection label.`
-    - `docs/library/STELAE.md:11:- Correct: "Stela is the platform name."`
-    - `docs/library/STELAE.md:12:- Correct: "These Stelae keep operator guidance consistent."`
-    - `docs/library/OPERATOR_MANUAL.md:5:You may see legacy \`nukeCE\` strings; \`Stela\` is the platform name going forward.`
+    - `TRUTH.md:9:- Stela (S-T-E-L-A): only canonical project / platform name spelling (stone tablet metaphor: published canon / governance visible to all).`
+    - `TRUTH.md:10:- Stelae (S-T-E-L-A-E): plural / collection label.`
+    - `docs/library/[REMOVED].md:1:# Stelae`
+    - `docs/library/[REMOVED].md:3:Stelae are short operator-facing reminders to keep conversations precise and calm.`
+    - `docs/library/[REMOVED].md:8:- "Stela" is the singular project / platform name.`
+    - `docs/library/[REMOVED].md:9:- "Stelae" is the plural / collection label.`
+    - `docs/library/[REMOVED].md:11:- Correct: "Stela is the platform name."`
+    - `docs/library/[REMOVED].md:12:- Correct: "These Stelae keep operator guidance consistent."`
+    - `docs/library/OPERATOR_MANUAL.md:5:You may see legacy \`Stela\` strings; \`Stela\` is the platform name going forward.`
     - `docs/library/OPERATOR_MANUAL.md:116:- \`./ops/bin/project\` lists/initializes Stela-born projects (no import/migration).`
     - `docs/library/OPERATOR_MANUAL.md:180:- Canon spelling: Stela (singular) / Stelae (plural). Normalize voice-to-text variants before committing or approving.`
   - `rg -n "Steela|Stila|Stella" . || true`
@@ -56,15 +56,15 @@
     - `./projects/default/upstream/php-nuke/includes/vendor/mobiledetect/mobiledetectlib/src/MobileDetect.php:577:        'iJoyTablet' => 'Tablet (Spirit 7|Essentia|Galatea|Fusion|Onix 7|Landa|Titan|Scooby|Deox|Stella|Themis|Argon|Unique 7|Sygnus|Hexen|Finity 7|Cream|Cream X2|Jade|Neon 7|Neron 7|Kandy|Scape|Saphyr 7|Rebel|Biox|Rebel|Rebel 8GB|Myst|Draco 7|Myst|Tab7-004|Myst|Tadeo Jones|Tablet Boing|Arrow|Draco Dual Cam|Aurix|Mint|Amity|Revolution|Finity 9|Neon 9|T9w|Amity 4GB Dual Cam|Stone 4GB|Stone 8GB|Andromeda|Silken|X2|Andromeda II|Halley|Flame|Saphyr 9,7|Touch 8|Planet|Triton|Unique 10|Hexen 10|Memphis 4GB|Memphis 8GB|Onix 10)'`
     - `./projects/default/public_html/includes/vendor/mobiledetect/mobiledetectlib/MobileDetect.json:160:            "iJoyTablet": "Tablet (Spirit 7|Essentia|Galatea|Fusion|Onix 7|Landa|Titan|Scooby|Deox|Stella|Themis|Argon|Unique 7|Sygnus|Hexen|Finity 7|Cream|Cream X2|Jade|Neon 7|Neron 7|Kandy|Scape|Saphyr 7|Rebel|Biox|Rebel|Rebel 8GB|Myst|Draco 7|Myst|Tab7-004|Myst|Tadeo Jones|Tablet Boing|Arrow|Draco Dual Cam|Aurix|Mint|Amity|Revolution|Finity 9|Neon 9|T9w|Amity 4GB Dual Cam|Stone 4GB|Stone 8GB|Andromeda|Silken|X2|Andromeda II|Halley|Flame|Saphyr 9,7|Touch 8|Planet|Triton|Unique 10|Hexen 10|Memphis 4GB|Memphis 8GB|Onix 10)"`
     - `./projects/default/public_html/includes/vendor/mobiledetect/mobiledetectlib/src/MobileDetect.php:577:        'iJoyTablet' => 'Tablet (Spirit 7|Essentia|Galatea|Fusion|Onix 7|Landa|Titan|Scooby|Deox|Stella|Themis|Argon|Unique 7|Sygnus|Hexen|Finity 7|Cream|Cream X2|Jade|Neon 7|Neron 7|Kandy|Scape|Saphyr 7|Rebel|Biox|Rebel|Rebel 8GB|Myst|Draco 7|Myst|Tab7-004|Myst|Tadeo Jones|Tablet Boing|Arrow|Draco Dual Cam|Aurix|Mint|Amity|Revolution|Finity 9|Neon 9|T9w|Amity 4GB Dual Cam|Stone 4GB|Stone 8GB|Andromeda|Silken|X2|Andromeda II|Halley|Flame|Saphyr 9,7|Touch 8|Planet|Triton|Unique 10|Hexen 10|Memphis 4GB|Memphis 8GB|Onix 10)'`
-    - `./PROJECT_TRUTH.md:11:- Policy: treat "Steela", "Stella", and "Stila" as typos; correct on sight.`
-    - `./tools/repo/lint_truth.sh:14:  Steela`
-    - `./tools/repo/lint_truth.sh:15:  Stila`
-    - `./tools/repo/lint_truth.sh:16:  Stella`
+    - `./TRUTH.md:11:- Policy: treat "Steela", "Stella", and "Stila" as typos; correct on sight.`
+    - `./tools/lint_truth.sh:14:  Steela`
+    - `./tools/lint_truth.sh:15:  Stila`
+    - `./tools/lint_truth.sh:16:  Stella`
     - `./projects/default/upstream/titanium/includes/vendor/mobiledetect/mobiledetectlib/MobileDetect.json:160:            "iJoyTablet": "Tablet (Spirit 7|Essentia|Galatea|Fusion|Onix 7|Landa|Titan|Scooby|Deox|Stella|Themis|Argon|Unique 7|Sygnus|Hexen|Finity 7|Cream|Cream X2|Jade|Neon 7|Neron 7|Kandy|Scape|Saphyr 7|Rebel|Biox|Rebel|Rebel 8GB|Myst|Draco 7|Myst|Tab7-004|Myst|Tadeo Jones|Tablet Boing|Arrow|Draco Dual Cam|Aurix|Mint|Amity|Revolution|Finity 9|Neon 9|T9w|Amity 4GB Dual Cam|Stone 4GB|Stone 8GB|Andromeda|Silken|X2|Andromeda II|Halley|Flame|Saphyr 9,7|Touch 8|Planet|Triton|Unique 10|Hexen 10|Memphis 4GB|Memphis 8GB|Onix 10)"`
     - `./projects/default/upstream/titanium/includes/vendor/mobiledetect/mobiledetectlib/src/MobileDetect.php:577:        'iJoyTablet' => 'Tablet (Spirit 7|Essentia|Galatea|Fusion|Onix 7|Landa|Titan|Scooby|Deox|Stella|Themis|Argon|Unique 7|Sygnus|Hexen|Finity 7|Cream|Cream X2|Jade|Neon 7|Neron 7|Kandy|Scape|Saphyr 7|Rebel|Biox|Rebel|Rebel 8GB|Myst|Draco 7|Myst|Tab7-004|Myst|Tadeo Jones|Tablet Boing|Arrow|Draco Dual Cam|Aurix|Mint|Amity|Revolution|Finity 9|Neon 9|T9w|Amity 4GB Dual Cam|Stone 4GB|Stone 8GB|Andromeda|Silken|X2|Andromeda II|Halley|Flame|Saphyr 9,7|Touch 8|Planet|Triton|Unique 10|Hexen 10|Memphis 4GB|Memphis 8GB|Onix 10)'`
 - Risk / rollback:
   - Risk: Low (docs-only naming updates + lint tightening).
-  - Rollback: revert `PROJECT_TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, `docs/library/STELAE.md`, `tools/repo/lint_truth.sh`, and `STATE_OF_PLAY.md`.
+  - Rollback: revert `TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, `docs/library/[REMOVED].md`, `tools/lint_truth.sh`, and `SoP.md`.
 
 ## 2026-01-21 — DP-OPS-0048E: Phase-Locked Output Protocol (DP vs DB-PR-META) v3
 
@@ -73,13 +73,13 @@
   - Added Phase-Locked Output Protocol guidance and Phase Lock contract rules.
   - Added M-PHASE-01, logged the DP, and produced receipt bundle artifacts under `storage/handoff/`.
 - Verification:
-  - `./ops/bin/context_lint.sh`
-  - Result: `/bin/bash: line 1: ./ops/bin/context_lint.sh: No such file or directory`
+  - `./tools/context_lint.sh`
+  - Result: `/bin/bash: line 1: ./tools/context_lint.sh: No such file or directory`
   - `./ops/bin/lint_truth.sh`
   - Result: `/bin/bash: line 1: ./ops/bin/lint_truth.sh: No such file or directory`
 - Risk / rollback:
   - Risk: Medium-low (workflow wording could be misread; primary risk is operator confusion if phrasing drifts).
-  - Rollback: revert `docs/library/OPERATOR_MANUAL.md`, `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`, `docs/library/MEMENTOS.md`, and `STATE_OF_PLAY.md`.
+  - Rollback: revert `docs/library/OPERATOR_MANUAL.md`, `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`, `docs/library/MEMENTOS.md`, and `SoP.md`.
 
 ## 2026-01-21 — DP-OPS-0048D: Dispatch Packet template heading linter
 
@@ -90,7 +90,7 @@
 - Verification:
   - `./ops/bin/dispatch_packet_lint.sh`
   - Result: `FAIL: expected heading '### A) STATE' but found '### A) SUMMARY + SCOPE CONFIRMATION'`
-  - `./ops/init/tools/context_lint.sh`
+  - `./tools/context_lint.sh`
   - Result: `[context_lint] Result: clean`
   - `./ops/init/tools/lint_truth.sh`
   - Result: `/bin/bash: line 1: ./ops/init/tools/lint_truth.sh: No such file or directory`
@@ -102,9 +102,9 @@
 
 - What changed: Added a no placeholder-marker rule for run DPs and worker results, seeded M-RUN-01, and logged this DP.
 - Verification:
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
   - Result: `[context_lint] Result: clean`
-  - `bash tools/repo/lint_truth.sh`
+  - `bash tools/lint_truth.sh`
   - Result: `[lint_truth] OK`
 - Risk / rollback:
   - Risk: Low; doc-only policy and ledger updates.
@@ -116,9 +116,9 @@
 - What shipped:
   - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md` to use canonical A–E headings and receipt subheadings.
 - Verification:
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
   - Result: `[context_lint] Result: clean`
-  - `bash tools/repo/lint_truth.sh`
+  - `bash tools/lint_truth.sh`
   - Result: `[lint_truth] OK`
   - `rg -n "^### [A-E]\\) " ops/templates/DISPATCH_PACKET_TEMPLATE.md`
   - Result:
@@ -146,13 +146,13 @@
 - What shipped:
   - DP protocol/template: required proof bundle (git status --porcelain, git diff --name-only, git diff --stat, plus verification outputs).
   - Operator manual: disapproval checklist + copy/paste DISAPPROVE template.
-  - PROJECT_TRUTH: proof-bundle reject rule added.
+  - TRUTH: proof-bundle reject rule added.
 - Verification:
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
   - Result: `[context_lint] Result: clean`
-  - `bash tools/repo/lint_truth.sh`
+  - `bash tools/lint_truth.sh`
   - Result: `[lint_truth] OK`
-  - `rg -n "Proof bundle|git diff --name-only|git diff --stat|DISAPPROVE" ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md PROJECT_TRUTH.md`
+  - `rg -n "Proof bundle|git diff --name-only|git diff --stat|DISAPPROVE" ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md TRUTH.md`
   - `rg -n "### A) SUMMARY + SCOPE CONFIRMATION|### B) PATHS TOUCHED|### C) VERIFICATION|### D) PATCH / DIFF|### E) NOTES|### RECEIPT" ops/templates/DISPATCH_PACKET_TEMPLATE.md`
 - Risk / rollback:
   - Risk: Low; doc-only protocol/template updates.
@@ -170,7 +170,7 @@
   - `./ops/bin/project current`
   - `./ops/bin/project new --name "Demo Project" --dry-run`
   - `./ops/bin/project use <an-existing-id> --dry-run`
-  - `./ops/bin/context_lint.sh`
+  - `./tools/context_lint.sh`
   - `./ops/bin/lint_truth.sh`
 - Risk / rollback:
   - Risk: Medium; bash tooling changes and registry format updates can drift.
@@ -181,11 +181,11 @@
 - Purpose: Retire the legacy close script and canonize DISCUSS-ONLY as the talk-only cue.
 - What shipped:
   - Deleted the legacy close script and removed it from ICL snapshot inputs.
-  - Updated DP protocol/template, operator manual, and PROJECT_TRUTH to define DISCUSS-ONLY and remove close guidance.
+  - Updated DP protocol/template, operator manual, and TRUTH to define DISCUSS-ONLY and remove close guidance.
   - Updated help menu and `llms.txt` tool list to drop close references.
 - Verification:
-  - `bash ops/init/tools/context_lint.sh`
-  - `bash tools/repo/lint_truth.sh`
+  - `bash tools/context_lint.sh`
+  - `bash tools/lint_truth.sh`
   - `rg -n "close" .`
 - Risk / rollback:
   - Risk: Low-medium; operators relying on close may need adjustment.
@@ -195,19 +195,19 @@
 
 - Purpose: Seed a lightweight Stelae library page and wire it into canon pointers.
 - What shipped:
-  - Added `docs/library/STELAE.md` with 10 starter Stelae entries.
-  - Linked STELAE in `docs/00-INDEX.md` and `CANONICAL_TREE.md`.
-  - Added a STELAE pointer line to `ops/bin/open`.
+  - Added `docs/library/[REMOVED].md` with 10 starter Stelae entries.
+  - Linked [REMOVED] in `docs/00-INDEX.md` and `CANONICAL_TREE.md`.
+  - Added a [REMOVED] pointer line to `ops/bin/open`.
 - Verification:
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
   - Result: `[context_lint] Result: clean`
-  - `bash tools/repo/lint_truth.sh`
+  - `bash tools/lint_truth.sh`
   - Result: `[lint_truth] OK`
-  - `./ops/bin/open --intent="dp-ops-0048 verify" --dp="DP-OPS-0048 / 2026-01-19" | rg -n "STELAE"`
-  - `rg -n "STELAE" docs/00-INDEX.md CANONICAL_TREE.md docs/library/STELAE.md`
+  - `./ops/bin/open --intent="dp-ops-0048 verify" --dp="DP-OPS-0048 / 2026-01-19" | rg -n "[REMOVED]"`
+  - `rg -n "[REMOVED]" docs/00-INDEX.md CANONICAL_TREE.md docs/library/[REMOVED].md`
 - Risk / rollback:
   - Risk: Low; docs + small open pointer change.
-  - Rollback: revert the touched files and remove `docs/library/STELAE.md`.
+  - Rollback: revert the touched files and remove `docs/library/[REMOVED].md`.
 
 ## 2026-01-19 — DP-OPS-0045: DP docket + DISCUSS-ONLY cue
 
@@ -215,11 +215,11 @@
 - What shipped:
   - Added `docs/library/DOCKET.md` as the single forward-looking DP docket with NEXT_DP_ID.
   - Updated `docs/library/OPERATOR_MANUAL.md` with docket guidance and the DISCUSS-ONLY cue.
-  - Updated `PROJECT_TRUTH.md` with DISCUSS-ONLY non-gating clarification.
+  - Updated `TRUTH.md` with DISCUSS-ONLY non-gating clarification.
 - Verification:
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
   - Result: `[context_lint] Result: clean`
-  - `bash tools/repo/lint_truth.sh`
+  - `bash tools/lint_truth.sh`
   - Result: `[lint_truth] OK`
 - Risk / rollback:
   - Risk: Low; doc-only operator guidance.
@@ -229,14 +229,14 @@
 
 - Purpose: Seed STELA naming in canon with no-churn guardrails and explicit non-goals.
 - What shipped:
-  - Added Naming / Identity section to `PROJECT_TRUTH.md` defining STELA, nukeCE legacy label, and no-churn policy.
+  - Added Naming / Identity section to `TRUTH.md` defining STELA, Stela legacy label, and no-churn policy.
   - Added a short STELA note in the operator manual and a minimal naming doc with anti-drift bullets.
   - Added a single MEMENTOS clarification line about naming vs canon/contracts.
   - Registered the STELA naming doc in `docs/00-INDEX.md`.
 - Verification:
-  - `bash ops/init/tools/context_lint.sh`
-  - `bash tools/repo/lint_truth.sh`
-  - `rg -n "(STELA|nukeCE|Nuke CE)" PROJECT_TRUTH.md STATE_OF_PLAY.md docs/library/OPERATOR_MANUAL.md docs/library/MEMENTOS.md docs/library/STELA_NAMING.md docs/00-INDEX.md`
+  - `bash tools/context_lint.sh`
+  - `bash tools/lint_truth.sh`
+  - `rg -n "(STELA|Stela|Nuke CE)" TRUTH.md SoP.md docs/library/OPERATOR_MANUAL.md docs/library/MEMENTOS.md docs/library/STELA_NAMING.md docs/00-INDEX.md`
   - `git diff --name-only`
 - Risk / rollback:
   - Risk: Low; doc-only naming alignment.
@@ -246,13 +246,13 @@
 
 - Purpose: Bundle snapshot manifest + payload inside tarball; canonize receipt package artifacts and reduce operator friction.
 - What shipped:
-  - Added `--bundle` to `ops/bin/snapshot` to include payload + manifest inside the tarball.
-  - Updated DP protocol/template, operator manual, and PROJECT_TRUTH to describe receipt package artifacts and bundling expectations.
+  - Added `--bundle` to `ops/bin/dump` to include payload + manifest inside the tarball.
+  - Updated DP protocol/template, operator manual, and TRUTH to describe receipt package artifacts and bundling expectations.
 - Verification:
-  - `bash ops/init/tools/context_lint.sh`
-  - `bash tools/repo/lint_truth.sh`
-  - `./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --bundle`
-  - `tar -tf storage/snapshots/snapshot-icl-work-dp-ops-0041-snapshot-receipt-package-2026-01-18-4adb71c4.tar.xz`
+  - `bash tools/context_lint.sh`
+  - `bash tools/lint_truth.sh`
+  - `./ops/bin/dump --scope=icl --format=chatgpt --out=auto --bundle`
+  - `tar -tf storage/dumps/snapshot-icl-work-dp-ops-0041-snapshot-receipt-package-2026-01-18-4adb71c4.tar.xz`
 - Risk / rollback:
   - Risk: Medium-low; snapshot tooling + docs updates.
   - Rollback: revert the touched files; snapshot behavior returns to pre-DP defaults.
@@ -261,15 +261,15 @@
 
 - Purpose: Clarify tracked vs output artifacts, standardize RESULTS naming, add OPEN tag support, and default snapshot compression for full auto output.
 - What shipped:
-  - Canonized output artifacts as untracked under `storage/handoff/` and `storage/snapshots/`.
+  - Canonized output artifacts as untracked under `storage/handoff/` and `storage/dumps/`.
   - Required `<DP-ID>-RESULTS.md` naming in DP protocol/template and operator guidance.
   - Added `--tag` support for OPEN output filenames and default `--compress=tar.xz` for `--scope=full --out=auto` snapshots.
 - Verification:
-  - `bash ops/init/tools/context_lint.sh`
-  - `bash tools/repo/lint_truth.sh`
-  - `rg -n "RESULTS\\.md|storage/handoff|output artifact|untracked" PROJECT_TRUTH.md docs/library/OPERATOR_MANUAL.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md`
+  - `bash tools/context_lint.sh`
+  - `bash tools/lint_truth.sh`
+  - `rg -n "RESULTS\\.md|storage/handoff|output artifact|untracked" TRUTH.md docs/library/OPERATOR_MANUAL.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md`
   - `./ops/bin/open --out=auto --tag=dp-ops-0040a-2026-01-17`
-  - `./ops/bin/snapshot --scope=full --format=chatgpt --out=auto`
+  - `./ops/bin/dump --scope=full --format=chatgpt --out=auto`
 - Risk / rollback:
   - Risk: Low; contract/tooling changes only.
   - Rollback: revert the touched files to pre-DP-OPS-0040A state.
@@ -282,8 +282,8 @@
   - Canonized OPEN/OPEN-PORCELAIN capture filenames and updated OPEN to save full porcelain with a preview cap for large states.
   - Snapshot now prints payload/manifest/tarball paths and ensures handoff dir exists; docs now prefer `--compress=tar.xz` for large `--scope=full` snapshots.
 - Verification:
-  - `bash ops/init/tools/context_lint.sh`
-  - `bash tools/repo/lint_truth.sh`
+  - `bash tools/context_lint.sh`
+  - `bash tools/lint_truth.sh`
   - `./ops/bin/open`
 - Risk / rollback:
   - Risk: Low; handoff + logging changes only.
@@ -294,7 +294,7 @@
 - Purpose: Separate platform vs project payloads and add a platform-only snapshot scope.
 - What shipped:
   - Platform/project separation (platform vs project move).
-  - Added `--scope=platform` to `./ops/bin/snapshot` for platform-only context.
+  - Added `--scope=platform` to `./ops/bin/dump` for platform-only context.
 - Verification:
   - Not recorded in repo; DP-OPS-0040 verification details not found. Operator confirmation required.
 - Risk / rollback:
@@ -309,13 +309,13 @@
   - Added STOP rules for main-branch work, branch mismatch, and missing required work branch name in DP protocol/template.
   - Clarified no-delete/no-move policy as "unless explicitly authorized by the DP" and documented mobile attachment-mode + branch protection reminder.
 - Verification:
-  - `bash ops/init/tools/context_lint.sh`
-  - `bash tools/repo/lint_truth.sh`
-  - `rg -n "Attachment-mode|attachment-mode" PROJECT_TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md`
+  - `bash tools/context_lint.sh`
+  - `bash tools/lint_truth.sh`
+  - `rg -n "Attachment-mode|attachment-mode" TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md`
   - `rg -n "current branch is main|branch mismatch|does not match the DP" ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md`
 - Risk / rollback:
   - Risk: Medium-low; workflow wording could be misread by operators/workers.
-  - Rollback: revert `PROJECT_TRUTH.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
+  - Rollback: revert `TRUTH.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
 
 ## 2026-01-17 — DP-OPS-0038: DP contract binding + RECEIPT manifest requirements
 
@@ -326,8 +326,8 @@
   - Required RECEIPT SNAPSHOT to include manifest path and tarball+manifest pair when archived.
   - Updated operator manual and DB-PR-META dataset SSOT note to match the new guardrails.
 - Verification:
-  - `bash ops/init/tools/context_lint.sh`
-  - `bash tools/repo/lint_truth.sh`
+  - `bash tools/context_lint.sh`
+  - `bash tools/lint_truth.sh`
   - `rg -n "SCOPE \\(allowed paths\\)|FILES \\(must edit only these\\)|FORBIDDEN" ops/templates/DISPATCH_PACKET_TEMPLATE.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`
   - `rg -n "### RECEIPT|### A\\) OPEN Output|### B\\) SNAPSHOT Output" ops/templates/DISPATCH_PACKET_TEMPLATE.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`
   - `rg -n "manifest path|tarball" ops/templates/DISPATCH_PACKET_TEMPLATE.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md docs/library/OPERATOR_MANUAL.md`
@@ -346,12 +346,12 @@
   - Replaced the multi-interpretation handling rule to require enumeration plus operator choice unless canon/inputs determine the answer.
   - Updated tone guidance to default to calm, precise language and avoid cheerleading or implied authority.
 - Verification:
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
   - `rg -n "M-ATTN-01|M-COMMIT-01|M-HANDOFF-01|M-EMIT-01" docs/library/MEMENTOS.md`
   - `rg -n "MEMENTO: M-" ops/bin/open ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md docs/library/datasets/DB-PR-META.md`
 - Risk / rollback:
   - Risk: Low. MEMENTOS become more explicit; may slightly change stop/ask behavior in edge cases.
-  - Rollback: revert `docs/library/MEMENTOS.md` and `STATE_OF_PLAY.md` to pre-DP-OPS-0037 state.
+  - Rollback: revert `docs/library/MEMENTOS.md` and `SoP.md` to pre-DP-OPS-0037 state.
 
 ## 2026-01-16 — DP-OPS-0035: RECEIPT rename + DP Risk / Rollback requirement
 
@@ -363,9 +363,9 @@
   - Hardened the DP template (addendum): STOP on literal ellipsis placeholder, BLOCKED mini-receipt shape, explicit required output slots A) SUMMARY + SCOPE CONFIRMATION and D) PATCH / DIFF, verification discipline wording.
   - Updated snapshot behavior (addendum): snapshot writes chat payload .txt; snapshot writes tarball (when used) and ALWAYS writes manifest pointing to chat payload.
 - Verification:
-  - `rg -n "### RECEIPT|RECEIPT" PROJECT_TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md`
-  - `rg -n "Risk / Rollback" ops/templates/DISPATCH_PACKET_TEMPLATE.md PROJECT_TRUTH.md`
-  - `bash ops/init/tools/context_lint.sh`
+  - `rg -n "### RECEIPT|RECEIPT" TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md`
+  - `rg -n "Risk / Rollback" ops/templates/DISPATCH_PACKET_TEMPLATE.md TRUTH.md`
+  - `bash tools/context_lint.sh`
 - Risk / rollback:
   - Risk: Medium-low; doc/template rename could break operator expectations if any old label lingers.
   - Rollback: revert the touched files and restore the previous label and DP template section ordering.
@@ -376,29 +376,29 @@
 - What shipped:
   - Added `llms.txt` as a pointer map into canon and tools.
   - Added `AGENTS.md` as a pointer-first agent constitution.
-  - Declared the entry points in `PROJECT_TRUTH.md`.
+  - Declared the entry points in `TRUTH.md`.
 - Verification:
   - `test -f llms.txt`
   - `test -f AGENTS.md`
-  - `rg -n "llms\\.txt|AGENTS\\.md" PROJECT_TRUTH.md`
-  - `bash ops/init/tools/context_lint.sh`
+  - `rg -n "llms\\.txt|AGENTS\\.md" TRUTH.md`
+  - `bash tools/context_lint.sh`
 - Risk / rollback:
   - Risk: Low; docs-only pointer additions.
-  - Rollback: delete `llms.txt` and `AGENTS.md`, revert `PROJECT_TRUTH.md`, and remove this entry.
+  - Rollback: delete `llms.txt` and `AGENTS.md`, revert `TRUTH.md`, and remove this entry.
 
 ## 2026-01-15 — DP-OPS-0033: ICL Continuity Core + legacy onboarding retirement
 
 - Purpose: Define the ICL Continuity Core, retire the legacy onboarding directory, and triage ICL continuity files.
 - What shipped:
-  - Added `ops/init/icl/ICL_CONTINUITY_CORE.md` and wired it into `PROJECT_TRUTH.md`, the continuity map, and the docs library.
+  - Added `ops/init/icl/ICL_CONTINUITY_CORE.md` and wired it into `TRUTH.md`, the continuity map, and the docs library.
   - Moved core continuity files into `ops/init/icl/` and updated references across ops/docs.
   - Moved legacy onboarding files into `ops/init/icl/deprecated/` with deprecation notices.
   - Removed obsolete ICL rename artifacts and the legacy onboarding folder stub.
-  - Updated `ops/bin/open`, `ops/bin/snapshot`, and `ops/init/icl/context_pack.json` for the new core paths.
+  - Updated `ops/bin/open`, `ops/bin/dump`, and `ops/init/icl/context_pack.json` for the new core paths.
 - Verification:
   - `rg -n "launch_pack" ops/`
   - `git diff --name-only`
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
 - Risk / rollback:
   - Risk: missed pointer update could break operator wayfinding.
   - Rollback: revert the touched files and restore the prior ICL layout.
@@ -408,12 +408,12 @@
 - Purpose: Make continuity surfaces findable; canonize supersession/deprecation/deletion proposals; add a later bucket label.
 - What shipped:
   - Added `docs/library/CONTINUITY_MAP.md` and wired it into the curated library and Operator Manual.
-  - Canonized supersession/deprecation/deletion proposal rules in `PROJECT_TRUTH.md`.
+  - Canonized supersession/deprecation/deletion proposal rules in `TRUTH.md`.
   - Added a required "Supersession / Deletion candidates" callout to `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md` and `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
-  - Added a "Later bucket" section in `STATE_OF_PLAY.md` for dedupe / clone detection ideas.
+  - Added a "Later bucket" section in `SoP.md` for dedupe / clone detection ideas.
 - Verification:
-  - `rg -n "Continuity Map|CONTINUITY_MAP|supersession|deprecation|proposal-only|Later bucket" PROJECT_TRUTH.md docs/library/OPERATOR_MANUAL.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/LIBRARY_INDEX.md`
-  - `bash ops/init/tools/context_lint.sh`
+  - `rg -n "Continuity Map|CONTINUITY_MAP|supersession|deprecation|proposal-only|Later bucket" TRUTH.md docs/library/OPERATOR_MANUAL.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/LIBRARY_INDEX.md`
+  - `bash tools/context_lint.sh`
   - `bash ops/bin/help list`
 - Risk / rollback:
   - Risk: Low; docs-only canon updates.
@@ -428,14 +428,14 @@
 - Purpose: Add a minimal posture nudge to OPEN for precision and stop-when-uncertain behavior.
 - What shipped:
   - Inserted the 3-line posture nudge before [FRESHNESS GATE] in `ops/bin/open`.
-  - Added short notes about the posture nudge in `PROJECT_TRUTH.md` and `docs/library/OPERATOR_MANUAL.md`.
+  - Added short notes about the posture nudge in `TRUTH.md` and `docs/library/OPERATOR_MANUAL.md`.
 - Verification:
-  - `rg -n "canon-governed system|Precision beats speed|If unsure, stop and ask" ops/bin/open PROJECT_TRUTH.md docs/library/OPERATOR_MANUAL.md`
-  - `bash ops/init/tools/context_lint.sh`
+  - `rg -n "canon-governed system|Precision beats speed|If unsure, stop and ask" ops/bin/open TRUTH.md docs/library/OPERATOR_MANUAL.md`
+  - `bash tools/context_lint.sh`
   - Manual check: OPEN output shows the 3-line block above [FRESHNESS GATE] with no other changes.
 - Risk / rollback:
   - Risk: Low; output text + docs note only.
-  - Rollback: revert `ops/bin/open`, `PROJECT_TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
+  - Rollback: revert `ops/bin/open`, `TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
 
 ## 2026-01-15 — DP-OPS-0031: MEMENTOS strategic placement
 
@@ -455,14 +455,14 @@
 
 - Purpose: Fix "approval lost in paste" by canonizing approval-prefix + delimiter for same-message paste.
 - What shipped:
-  - Added start-of-message approval + delimiter rule and chat-UI fallback to `PROJECT_TRUTH.md`, `docs/library/datasets/DB-PR-META.md`, and `docs/library/OPERATOR_MANUAL.md`.
+  - Added start-of-message approval + delimiter rule and chat-UI fallback to `TRUTH.md`, `docs/library/datasets/DB-PR-META.md`, and `docs/library/OPERATOR_MANUAL.md`.
   - Updated operator handoff paste order to include the delimiter rule in `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md` and `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
-  - Updated refusal text to return a paste-ready approval + delimiter example in `PROJECT_TRUTH.md` and `docs/library/datasets/DB-PR-META.md`.
+  - Updated refusal text to return a paste-ready approval + delimiter example in `TRUTH.md` and `docs/library/datasets/DB-PR-META.md`.
 - Verification:
-  - `rg -n "approval|APPROVE|Handoff Paste Order|delimiter|---" PROJECT_TRUTH.md docs/library/datasets/DB-PR-META.md docs/library/OPERATOR_MANUAL.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md`
+  - `rg -n "approval|APPROVE|Handoff Paste Order|delimiter|---" TRUTH.md docs/library/datasets/DB-PR-META.md docs/library/OPERATOR_MANUAL.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md`
   - Manual check: all docs agree on approval pattern, start-of-message requirement, delimiter rule, and paste order.
   - `git diff --name-only`
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
 - Risk / rollback:
   - Risk: Low; docs-only canon update.
   - Rollback: revert the touched docs and this entry.
@@ -472,12 +472,12 @@
 - Purpose: Define the single source of truth for behavioral preferences and make wayfinding pointer-only.
 - What shipped:
   - Added the behavioral preferences file in the curated library.
-  - Added pointer-only links in `PROJECT_TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, and `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
+  - Added pointer-only links in `TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, and `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
   - Removed legacy dataset and manifest entries for behavioral preferences.
 - Verification:
   - `ls docs/library`
-  - `rg -n "Behavioral preferences are documented" PROJECT_TRUTH.md docs/library/OPERATOR_MANUAL.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`
-  - `bash ops/init/tools/context_lint.sh`
+  - `rg -n "Behavioral preferences are documented" TRUTH.md docs/library/OPERATOR_MANUAL.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`
+  - `bash tools/context_lint.sh`
 - Risk / rollback:
   - Risk: Low; docs-only canon update.
   - Rollback: delete the behavioral preferences file and remove the pointer lines.
@@ -486,65 +486,65 @@
 
 - Purpose: Stop "approval lost in the paste" by canonizing standalone approval line placement and deterministic handoff paste order.
 - What shipped:
-  - Canonized "Approval Line Placement" (standalone, outside OPEN/intent/quotes) in `PROJECT_TRUTH.md`.
-  - Canonized "Operator Handoff Paste Order" (1. Approval, 2. Results, 3. Snapshot) in `PROJECT_TRUTH.md` and `docs/library/OPERATOR_MANUAL.md`.
+  - Canonized "Approval Line Placement" (standalone, outside OPEN/intent/quotes) in `TRUTH.md`.
+  - Canonized "Operator Handoff Paste Order" (1. Approval, 2. Results, 3. Snapshot) in `TRUTH.md` and `docs/library/OPERATOR_MANUAL.md`.
   - Wired new rules into `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, and `docs/library/datasets/DB-PR-META.md`.
 - Verification:
-  - `rg -n "Approval line|standalone|APPROVE DP-OPS-|Handoff paste order" PROJECT_TRUTH.md docs/library/OPERATOR_MANUAL.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/datasets/DB-PR-META.md`
+  - `rg -n "Approval line|standalone|APPROVE DP-OPS-|Handoff paste order" TRUTH.md docs/library/OPERATOR_MANUAL.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/datasets/DB-PR-META.md`
   - Manual check: rules explicitly forbid approvals inside OPEN intent and inside quoted/fenced blocks.
   - `git diff --name-only`
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
 - Risk / rollback:
   - Risk: Low; docs-only canon update.
-  - Rollback: revert `PROJECT_TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `docs/library/datasets/DB-PR-META.md`, and this entry.
+  - Rollback: revert `TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `docs/library/datasets/DB-PR-META.md`, and this entry.
 
 ## 2026-01-14 — DP-OPS-0026: Operator approval + paste contract lock
 
 - Purpose: Lock the operator approval + paste contract so approval, paste order, and DB-PR-META emission are deterministic.
 - What shipped:
-  - Canonized operator approval + paste contract requirements (plain text approval, raw paste, snapshot attachment, quoted blocks invalid) in `PROJECT_TRUTH.md`.
+  - Canonized operator approval + paste contract requirements (plain text approval, raw paste, snapshot attachment, quoted blocks invalid) in `TRUTH.md`.
   - Documented the exact operator paste order in `docs/library/OPERATOR_MANUAL.md`.
   - Added the operator approval + paste contract notes to `ops/templates/DISPATCH_PACKET_TEMPLATE.md` and `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
 - Verification:
-  - `rg -n "APPROVE DP-" PROJECT_TRUTH.md`
+  - `rg -n "APPROVE DP-" TRUTH.md`
   - Manual check: `docs/library/OPERATOR_MANUAL.md` documents the exact paste order.
   - Manual check: `ops/templates/DISPATCH_PACKET_TEMPLATE.md` includes the approval contract note.
   - `git diff --name-only`
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
 - Risk / rollback:
   - Risk: Low; docs-only canon + template/protocol updates.
-  - Rollback: revert `PROJECT_TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, and this entry.
+  - Rollback: revert `TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, and this entry.
 
 ## 2026-01-14 — DP-OPS-0025: DB-PR-META approval phrase canon + DP template/protocol wiring
 
 - Purpose: Canonize the IN-LOOP DB-PR-META approval phrase pattern with DP-ID + EMIT, and wire it into the DP protocol/template and operator docs.
 - What shipped:
-  - Updated DB-PR-META approval gating and refusal line in `PROJECT_TRUTH.md` and `docs/library/datasets/DB-PR-META.md`.
+  - Updated DB-PR-META approval gating and refusal line in `TRUTH.md` and `docs/library/datasets/DB-PR-META.md`.
   - Added the approval phrase line + emission reminder to `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md` and `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
   - Added a short "How to approve" snippet in `docs/library/OPERATOR_MANUAL.md`.
 - Verification:
-  - `rg -n "APPROVE|EMIT DB-PR-META|Approval phrase" PROJECT_TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md docs/library/datasets/DB-PR-META.md`
-  - Manual check: `PROJECT_TRUTH.md` includes the required approval pattern, refusal paste-line, and the canonical 1-6 DB-PR-META order.
-  - `bash ops/init/tools/context_lint.sh`
+  - `rg -n "APPROVE|EMIT DB-PR-META|Approval phrase" TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md docs/library/datasets/DB-PR-META.md`
+  - Manual check: `TRUTH.md` includes the required approval pattern, refusal paste-line, and the canonical 1-6 DB-PR-META order.
+  - `bash tools/context_lint.sh`
   - `git diff --name-only`
 - Risk / rollback:
   - Risk: Low; docs-only canon + template updates.
-  - Rollback: revert `PROJECT_TRUTH.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `docs/library/OPERATOR_MANUAL.md`, `docs/library/datasets/DB-PR-META.md`, and this entry.
+  - Rollback: revert `TRUTH.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `docs/library/OPERATOR_MANUAL.md`, `docs/library/datasets/DB-PR-META.md`, and this entry.
 
 ## 2026-01-14 — DP-OPS-0024: Approval gate robustness + snapshot/OPEN decision
 
 - Purpose: Make DB-PR-META approval recoverable with tolerant phrasing and paste-ready refusal, and document snapshot/OPEN handling.
 - What shipped:
-  - Added acceptable DB-PR-META approval phrases and paste-ready refusal text in `PROJECT_TRUTH.md` and `docs/library/datasets/DB-PR-META.md`.
+  - Added acceptable DB-PR-META approval phrases and paste-ready refusal text in `TRUTH.md` and `docs/library/datasets/DB-PR-META.md`.
   - Updated `docs/library/OPERATOR_MANUAL.md` to list approval phrases and document that snapshots do not include OPEN output.
 - Verification:
-  - `rg -n "Approval not given|DB-PR-META|approval phrase" PROJECT_TRUTH.md docs/library/OPERATOR_MANUAL.md docs/library/datasets/DB-PR-META.md`
+  - `rg -n "Approval not given|DB-PR-META|approval phrase" TRUTH.md docs/library/OPERATOR_MANUAL.md docs/library/datasets/DB-PR-META.md`
   - Manual check: near-miss approval refusals include the paste-ready phrase.
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
   - `git diff --name-only`
 - Risk / rollback:
   - Risk: Low; canon/docs-only wording updates.
-  - Rollback: revert `PROJECT_TRUTH.md`, `docs/library/datasets/DB-PR-META.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
+  - Rollback: revert `TRUTH.md`, `docs/library/datasets/DB-PR-META.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
 
 ## 2026-01-14 — DP-OPS-0023: Bias artifacts canon + library wiring
 
@@ -554,9 +554,9 @@
   - Added a pointer in the operator manual.
   - Defined bias artifacts in Project Truth.
 - Verification:
-  - `rg -n "bias artifacts" PROJECT_TRUTH.md docs/library/OPERATOR_MANUAL.md docs/library/LIBRARY_INDEX.md`
+  - `rg -n "bias artifacts" TRUTH.md docs/library/OPERATOR_MANUAL.md docs/library/LIBRARY_INDEX.md`
   - `bash ops/bin/help list`
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
 - Risk / rollback:
   - Risk: Low; docs-only canon update.
   - Rollback: revert the touched docs and this entry.
@@ -565,38 +565,38 @@
 
 - Purpose: Lock the UI-to-DB-PR-META surface mapping with explicit order, UI field references, and payload types (plain text vs Markdown).
 - What shipped:
-  - Updated DB-PR-META UI mapping lines to use the GitHub UI field labels (Add a title, Add a description, merge dialog labels, Add a comment) with explicit payload types in `PROJECT_TRUTH.md` and `docs/library/datasets/DB-PR-META.md`.
+  - Updated DB-PR-META UI mapping lines to use the GitHub UI field labels (Add a title, Add a description, merge dialog labels, Add a comment) with explicit payload types in `TRUTH.md` and `docs/library/datasets/DB-PR-META.md`.
 - Verification:
-  - `rg -n "DB-PR-META surfaces" PROJECT_TRUTH.md`
-  - `rg -n "DB-PR-META" PROJECT_TRUTH.md docs/library/datasets/DB-PR-META.md docs/library/OPERATOR_MANUAL.md docs/library/LIBRARY_INDEX.md STATE_OF_PLAY.md`
+  - `rg -n "DB-PR-META surfaces" TRUTH.md`
+  - `rg -n "DB-PR-META" TRUTH.md docs/library/datasets/DB-PR-META.md docs/library/OPERATOR_MANUAL.md docs/library/LIBRARY_INDEX.md SoP.md`
   - Manual check: UI order matches IDE "Commit message" (plain text, one line), GitHub PR "Add a title" (plain text, one line), GitHub PR "Add a description" (Markdown), GitHub merge "Commit message" (plain text, one line), GitHub merge "Extended description" (plain text, body), GitHub PR "Add a comment" (Markdown).
   - `git diff --name-only`
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
 - Risk / rollback:
   - Risk: Low; docs-only wording updates.
-  - Rollback: revert `PROJECT_TRUTH.md`, `docs/library/datasets/DB-PR-META.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
+  - Rollback: revert `TRUTH.md`, `docs/library/datasets/DB-PR-META.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
 
 ## 2026-01-13 — DP-OPS-0021: Lock DB-PR-META surfaces + anti-slop style + operator-idiom guardrail
 
 - Purpose: Lock DB-PR-META surface labels/format, add anti-slop micro-style, and prevent canonizing operator idioms; add dataset entry.
 - What shipped:
-  - Canonized DB-PR-META surface names, output format, and style in `PROJECT_TRUTH.md`.
-  - Added operator-idiom canonization guardrails in `PROJECT_TRUTH.md`.
+  - Canonized DB-PR-META surface names, output format, and style in `TRUTH.md`.
+  - Added operator-idiom canonization guardrails in `TRUTH.md`.
   - Added the DB-PR-META dataset doc and wired it into the curated library.
 - Verification:
   - `git diff --name-only`
-  - `rg -n "DB-PR-META" PROJECT_TRUTH.md docs/library/datasets/DB-PR-META.md docs/library/LIBRARY_INDEX.md docs/library/OPERATOR_MANUAL.md STATE_OF_PLAY.md`
+  - `rg -n "DB-PR-META" TRUTH.md docs/library/datasets/DB-PR-META.md docs/library/LIBRARY_INDEX.md docs/library/OPERATOR_MANUAL.md SoP.md`
   - Manual check: DB-PR-META section lists the six exact surface names.
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
 - Risk / rollback:
   - Risk: Low; docs-only wording updates.
-  - Rollback: revert `PROJECT_TRUTH.md`, `docs/library/datasets/DB-PR-META.md`, `docs/library/LIBRARY_INDEX.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
+  - Rollback: revert `TRUTH.md`, `docs/library/datasets/DB-PR-META.md`, `docs/library/LIBRARY_INDEX.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
 
 ## 2026-01-13 — DP-OPS-0020: Require Worker RECEIPT (OPEN + SNAPSHOT)
 
 - Purpose: Require workers to end every DP result with the RECEIPT containing OPEN output plus SNAPSHOT output, and treat omission as a hard failure.
 - What shipped:
-  - Updated the RECEIPT definition and rejection rule in `PROJECT_TRUTH.md`.
+  - Updated the RECEIPT definition and rejection rule in `TRUTH.md`.
   - Updated the DP protocol and DP template to mandate the new RECEIPT headings and rule.
   - Updated `docs/library/OPERATOR_MANUAL.md` to match the new RECEIPT format.
 - Verification:
@@ -606,16 +606,16 @@
   - `git diff --name-only`
 - Risk / rollback:
   - Risk: Low; docs-only wording updates.
-  - Rollback: revert `PROJECT_TRUTH.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
+  - Rollback: revert `TRUTH.md`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
 
 ## 2026-01-13 — DP-OPS-0019: Worker RECEIPT canon
 
 - Purpose: Require workers to end every DP result with a full RECEIPT (OPEN output, status, last commit; optional snapshot pointer).
 - What shipped:
-  - Canonized the RECEIPT requirement in `PROJECT_TRUTH.md`.
+  - Canonized the RECEIPT requirement in `TRUTH.md`.
   - Updated the DP protocol, DP template, and Operator Manual with copy-ready RECEIPT headings and end-of-message rule.
 - Verification:
-  - `rg -n "RECEIPT" PROJECT_TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md`
+  - `rg -n "RECEIPT" TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md ops/templates/DISPATCH_PACKET_TEMPLATE.md docs/library/OPERATOR_MANUAL.md`
   - `git diff --name-only`
 - Risk / rollback:
   - Risk: Low; docs-only change.
@@ -630,8 +630,8 @@
   - Required worker outputs to include OPEN output, `git status --porcelain`, and `git log -1 --oneline`, with a hard stop if repo access is unavailable.
 - Verification:
   - `git diff --name-only`
-  - `rg -n "DB-PR-META" PROJECT_TRUTH.md docs/library/OPERATOR_MANUAL.md ops/** STATE_OF_PLAY.md`
-  - `bash ops/init/tools/context_lint.sh`
+  - `rg -n "DB-PR-META" TRUTH.md docs/library/OPERATOR_MANUAL.md ops/** SoP.md`
+  - `bash tools/context_lint.sh`
 - Risk / rollback:
   - Risk: Low; wording-only changes.
   - Rollback: revert the touched docs/templates and this entry.
@@ -642,13 +642,13 @@
 - What shipped:
   - Added DB-DATASET and DB-VOICE-0001 dataset docs under `docs/library/datasets/`.
   - Added dataset topics to `docs/library/LIBRARY_INDEX.md` and updated curated-surface docs.
-  - Canonized DB-DATASET and IN-LOOP meaning in `PROJECT_TRUTH.md`.
+  - Canonized DB-DATASET and IN-LOOP meaning in `TRUTH.md`.
 - Verification:
   - `git diff --name-only`
   - `bash ops/bin/help list`
   - `bash ops/bin/help db-dataset`
   - `bash ops/bin/help db-voice-0001`
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
 - Risk / rollback:
   - Risk: Low; docs-only changes.
   - Rollback: revert the docs updates and this entry.
@@ -672,24 +672,24 @@
 
 - Purpose: Add optional tar.xz archive output for snapshots and promote a real Operator Manual in the docs library.
 - What shipped:
-  - Added optional tar.xz archive output for `ops/bin/snapshot` (no default behavior changes).
+  - Added optional tar.xz archive output for `ops/bin/dump` (no default behavior changes).
   - Added `docs/library/OPERATOR_MANUAL.md` with a top-commands cheat sheet and archive usage.
   - Updated `docs/library/LIBRARY_INDEX.md` and `docs/ops/INDEX.md` to point to the new manual.
 - Verification:
   - `git diff --name-only`
   - `bash tools/verify_tree.sh`
-  - `bash ops/init/tools/context_lint.sh`
-  - `bash ops/bin/snapshot --scope=icl --format=chatgpt | head -n 40`
-  - `bash ops/bin/snapshot --scope=icl --format=chatgpt --out=auto`
-  - `bash ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --compress=tar.xz`
-  - `bash ops/bin/snapshot --scope=icl --format=chatgpt --out=auto.tar.xz`
-  - `ls -la storage/snapshots/ | tail -n 20`
-  - `tar -tf storage/snapshots/<newfile>.tar.xz | head`
+  - `bash tools/context_lint.sh`
+  - `bash ops/bin/dump --scope=icl --format=chatgpt | head -n 40`
+  - `bash ops/bin/dump --scope=icl --format=chatgpt --out=auto`
+  - `bash ops/bin/dump --scope=icl --format=chatgpt --out=auto --compress=tar.xz`
+  - `bash ops/bin/dump --scope=icl --format=chatgpt --out=auto.tar.xz`
+  - `ls -la storage/dumps/ | tail -n 20`
+  - `tar -tf storage/dumps/<newfile>.tar.xz | head`
   - `bash ops/bin/help list`
   - `bash ops/bin/help manual`
 - Risk / rollback:
   - Risk: Low; new optional output path and docs only.
-  - Rollback: revert `ops/bin/snapshot`, remove `docs/library/OPERATOR_MANUAL.md`, revert `docs/library/LIBRARY_INDEX.md`, `docs/ops/INDEX.md`, and this entry.
+  - Rollback: revert `ops/bin/dump`, remove `docs/library/OPERATOR_MANUAL.md`, revert `docs/library/LIBRARY_INDEX.md`, `docs/ops/INDEX.md`, and this entry.
 
 ## 2026-01-13 — DP-OPS-0013: Help front door + curated docs library
 
@@ -698,95 +698,95 @@
   - Added `ops/bin/help` with manifest-only access and pager output.
   - Added `docs/library/LIBRARY_INDEX.md` as the curated docs manifest.
   - Updated `docs/ops/INDEX.md` with help usage and library rules.
-  - Canonized the docs library policy in `PROJECT_TRUTH.md`.
+  - Canonized the docs library policy in `TRUTH.md`.
 - Verification:
   - `git diff --name-only`
   - `bash ops/bin/help`
   - `bash ops/bin/help list`
   - `bash ops/bin/help manual`
   - `bash ops/bin/help context-pack`
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
 - Risk / rollback:
   - Risk: Low; new helper script and docs/canon updates only.
-  - Rollback: delete `ops/bin/help`, revert `docs/library/LIBRARY_INDEX.md`, `docs/ops/INDEX.md`, `PROJECT_TRUTH.md`, and this entry.
+  - Rollback: delete `ops/bin/help`, revert `docs/library/LIBRARY_INDEX.md`, `docs/ops/INDEX.md`, `TRUTH.md`, and this entry.
 
 ## 2026-01-12 — DP-OPS-0012: Hard-code DP + Metadata Kit mechanics (fences, ordering, freshness gate)
 
 - Purpose: Canonize DP + Metadata Kit output mechanics so ordering, fences, and refusal behavior are deterministic.
 - What shipped:
-  - Added the Output Mechanics Contract to `PROJECT_TRUTH.md`.
-  - Updated `STATE_OF_PLAY.md`.
+  - Added the Output Mechanics Contract to `TRUTH.md`.
+  - Updated `SoP.md`.
 - Verification:
   - `git diff --name-only`
-  - `rg -n "Output Mechanics Contract" PROJECT_TRUTH.md`
-  - `sed -n '1,80p' STATE_OF_PLAY.md`
+  - `rg -n "Output Mechanics Contract" TRUTH.md`
+  - `sed -n '1,80p' SoP.md`
 - Risk / rollback:
   - Risk: Low; canon text only.
-  - Rollback: revert `PROJECT_TRUTH.md` and `STATE_OF_PLAY.md`.
+  - Rollback: revert `TRUTH.md` and `SoP.md`.
 ## 2026-01-12 — DP-OPS-0011: Anti-Drift Guardrail (Model Refusal Rules)
 
 - Purpose: Eliminate conversational drift and enforce deterministic refusal when required state, structure, or approvals are missing.
 - What shipped:
-  - Added the Model Behavior Guardrail (Anti-Drift) canon section to `PROJECT_TRUTH.md`.
+  - Added the Model Behavior Guardrail (Anti-Drift) canon section to `TRUTH.md`.
   - Codified hard refusal rules for state binding, DP emission order, Metadata Kit approval, copy surface integrity, and no silent creativity.
 - Verification:
-  - Manual review of `PROJECT_TRUTH.md` and this entry.
+  - Manual review of `TRUTH.md` and this entry.
 - Risk / rollback:
   - Risk: Low; canon text update only.
-  - Rollback: revert `PROJECT_TRUTH.md` and this entry.
+  - Rollback: revert `TRUTH.md` and this entry.
 
 ## 2026-01-12 — DP-OPS-0009: Snapshot tool tightening v1.1
 
 - Purpose: Keep ICL snapshots paste-sized with deterministic truncation and add optional file output.
 - What shipped:
   - Added `--max-lines` with scope defaults, per-file truncation markers, and header counts.
-  - Capped `STATE_OF_PLAY.md` to the top 15 entries for ICL snapshots.
+  - Capped `SoP.md` to the top 15 entries for ICL snapshots.
   - Added `--out=auto` for snapshot file output and updated snapshot pointers.
 - Verification:
   - `git diff --name-only`
-  - `bash ops/bin/snapshot --scope=icl --format=chatgpt | head -n 80`
-  - `bash ops/bin/snapshot --scope=icl --format=chatgpt | tail -n 40`
-  - `bash ops/bin/snapshot --scope=icl --format=chatgpt --max-lines=50 | head -n 120`
-  - `bash ops/bin/snapshot --scope=icl --format=chatgpt --out=auto`
-  - `ls -la storage/snapshots/ | tail -n 20`
+  - `bash ops/bin/dump --scope=icl --format=chatgpt | head -n 80`
+  - `bash ops/bin/dump --scope=icl --format=chatgpt | tail -n 40`
+  - `bash ops/bin/dump --scope=icl --format=chatgpt --max-lines=50 | head -n 120`
+  - `bash ops/bin/dump --scope=icl --format=chatgpt --out=auto`
+  - `ls -la storage/dumps/ | tail -n 20`
   - `bash ops/bin/open --intent="dp-ops-0009 test" --dp="DP-OPS-0009 / 2026-01-12" | head -n 180`
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
 - Risk / rollback:
   - Risk: Truncation may hide needed detail if the cap is too low.
-  - Rollback: revert `ops/bin/snapshot`, `ops/bin/open`, and `ops/init/icl/context_pack.json`.
+  - Rollback: revert `ops/bin/dump`, `ops/bin/open`, and `ops/init/icl/context_pack.json`.
 
 ## 2026-01-12 — DP-OPS-0008: Internal repo snapshot tool v1
 
-- Purpose: Bring repo snapshot generation in-house as `ops/bin/snapshot` and wire it into the ICL front door.
+- Purpose: Bring repo snapshot generation in-house as `ops/bin/dump` and wire it into the ICL front door.
 - What shipped:
-  - Added `ops/bin/snapshot` with scope/format flags and deterministic output.
+  - Added `ops/bin/dump` with scope/format flags and deterministic output.
   - Updated `ops/bin/open` to point to snapshot for full repo context.
   - Added snapshot pointer to `ops/init/icl/context_pack.json`.
   - Added snapshot mention to `ops/init/icl/CONTEXT_PACK.md`.
-  - Added repo2txt inspiration note to `PROJECT_TRUTH.md`.
+  - Added repo2txt inspiration note to `TRUTH.md`.
 - Verification:
   - `git diff --name-only`
-  - `ls -la ops/bin/snapshot`
-  - `bash ops/bin/snapshot --scope=icl --format=chatgpt | head -n 120`
-  - `bash ops/bin/snapshot --scope=icl --format=chatgpt | tail -n 40`
-  - `bash ops/bin/snapshot --scope=full --format=chatgpt | head -n 60`
+  - `ls -la ops/bin/dump`
+  - `bash ops/bin/dump --scope=icl --format=chatgpt | head -n 120`
+  - `bash ops/bin/dump --scope=icl --format=chatgpt | tail -n 40`
+  - `bash ops/bin/dump --scope=full --format=chatgpt | head -n 60`
   - `bash ops/bin/open --intent="dp-ops-0008 test" --dp="DP-OPS-0008 / 2026-01-12" | head -n 160`
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
 - Risk / rollback:
   - Risk: snapshot scope or exclude list may need tuning for size.
-  - Rollback: delete `ops/bin/snapshot` and revert the pointer updates.
+  - Rollback: delete `ops/bin/dump` and revert the pointer updates.
 
 ## 2026-01-11 — DP-OPS-0007: Doc/ops room cleanup + canon consolidation
 
 - Purpose: Remove redundant doc/ops stubs and keep canon pointers clean.
 - What shipped:
   - Deleted `docs/ops` pointer stubs now covered by ops canon (kept `docs/ops/INDEX.md`).
-  - Updated canon references in `SECURITY.md` and `STATE_OF_PLAY.md`, plus the ICL rename artifacts (later retired).
+  - Updated canon references in `SECURITY.md` and `SoP.md`, plus the ICL rename artifacts (later retired).
 - Verification:
   - `git diff --name-only`
   - `bash ops/bin/open --intent="dp-ops-0007 test" --dp="DP-OPS-0007 / 2026-01-11" | head -n 140`
   - Legacy close script output (retired).
-  - `bash ops/init/tools/context_lint.sh`
+  - `bash tools/context_lint.sh`
   - `rg -n "docs/ops/" docs/00-INDEX.md docs/** ops/**`
 - Risk / rollback:
   - Risk: missed reference to removed stubs.
@@ -797,7 +797,7 @@
 - Purpose: Require explicit branch declaration in all Dispatch Packets.
 - What shipped:
   - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
-  - Updated `STATE_OF_PLAY.md`.
+  - Updated `SoP.md`.
 - Verification:
   - Manual review.
 - Risk / rollback:
@@ -807,21 +807,21 @@
 
 - Purpose: Codify minimum operator effort and no-editor-nagging guidance in canon.
 - What shipped:
-  - Updated `PROJECT_TRUTH.md` with the Minimum Operator Effort section.
-  - Updated `STATE_OF_PLAY.md`.
+  - Updated `TRUTH.md` with the Minimum Operator Effort section.
+  - Updated `SoP.md`.
 - Verification:
   - `git diff --name-only`
-  - `rg -n "Minimum Operator Effort|Focus Rule" PROJECT_TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`
+  - `rg -n "Minimum Operator Effort|Focus Rule" TRUTH.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`
 - Risk / rollback:
   - Risk: Low; canon text update only.
-  - Rollback: revert `PROJECT_TRUTH.md` and this entry.
+  - Rollback: revert `TRUTH.md` and this entry.
 
 ## 2026-01-11 — DP-OPS-0004: Front Door v1 close snapshot
 
 - Purpose: Add a single-command close script that prints a copy-safe session snapshot receipt.
 - What shipped:
   - Added the close script to emit the session snapshot.
-  - Updated `STATE_OF_PLAY.md`.
+  - Updated `SoP.md`.
 - Verification:
   - `ls -la` (close script; legacy).
   - Legacy close script output (retired).
@@ -834,8 +834,8 @@
 - Purpose: Auto-fill branch + HEAD in the open prompt, add optional intent/DP fields, and codify the Focus Rule.
 - What shipped:
   - Updated `ops/bin/open` to Front Door v2 with git auto-detection and new flags.
-  - Updated `PROJECT_TRUTH.md` with the Focus Rule (Operator-Led Flow).
-  - Updated `STATE_OF_PLAY.md`.
+  - Updated `TRUTH.md` with the Focus Rule (Operator-Led Flow).
+  - Updated `SoP.md`.
 - Verification:
   - `git diff --name-only`
   - `ls -la ops/bin/open`
@@ -843,14 +843,14 @@
   - `bash ops/bin/open --intent="test intent" --dp="DP-OPS-0003 / 2026-01-11" | head -n 120`
 - Risk / rollback:
   - Risk: Low; ops helper script and canon text update only.
-  - Rollback: revert `ops/bin/open`, `PROJECT_TRUTH.md`, and this entry.
+  - Rollback: revert `ops/bin/open`, `TRUTH.md`, and this entry.
 
 ## 2026-01-11 — DP-OPS-0002: Front Door v1 open prompt
 
 - Purpose: Add a front door command that prints a ready-to-paste Open Prompt with canon pointers, a freshness gate, and the Metadata Kit instruction.
 - What shipped:
   - Added `ops/bin/open` (front door prompt generator).
-  - Updated `STATE_OF_PLAY.md`.
+  - Updated `SoP.md`.
 - Verification:
   - `ls -la ops/bin/open`
   - `bash ops/bin/open | head -n 80`
@@ -864,7 +864,7 @@
 - What shipped:
   - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
   - Updated `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
-  - Updated `STATE_OF_PLAY.md`.
+  - Updated `SoP.md`.
 - Verification:
   - `git diff --name-only`
   - `rg -n "```" ops/templates/DISPATCH_PACKET_TEMPLATE.md`
@@ -879,7 +879,7 @@
 - What shipped:
   - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
   - Updated `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
-  - Updated `STATE_OF_PLAY.md`.
+  - Updated `SoP.md`.
 - Verification:
   - Checked diff scope and scanned for copy-boundary markers and triple-backtick leakage in the template.
   - Verified six metadata surfaces remain in order with ~~~md for markdown fields.
@@ -893,7 +893,7 @@
 - What shipped:
   - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
   - Updated `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
-  - Updated `STATE_OF_PLAY.md`.
+  - Updated `SoP.md`.
 - Verification:
   - Doc-only change; reviewed diff.
   - Confirmed no STOP COPYING / COPY EVERYTHING markers or triple-backtick fences in the template.
@@ -908,7 +908,7 @@
 - What shipped:
   - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md` to add the derived branch line and rewrite Metadata Kit v1 with plain-text vs markdown surfaces and ~~~md blocks.
   - Updated `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md` to align metadata surfaces/types/order and clarify tilde fence usage.
-  - Updated `STATE_OF_PLAY.md`.
+  - Updated `SoP.md`.
 - Verification:
   - Doc-only change; reviewed diff.
   - Scanned template/protocol for "yaml" misuse; none.
@@ -928,11 +928,11 @@
   - Updated `ops/init/protocols/SESSION_CLOSE_PROTOCOL.md`.
   - Updated `ops/init/icl/OCL_OVERVIEW.md`.
   - Updated `ops/templates/SESSION_SNAPSHOT_TEMPLATE.md`.
-  - Updated `STATE_OF_PLAY.md`.
+  - Updated `SoP.md`.
 - Verification:
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
-  - `bash ops/init/tools/context_lint.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
+  - `bash tools/context_lint.sh` ✅
 - Risk / rollback:
   - Risk: resume behavior wording may need tuning as control word usage evolves.
   - Rollback: revert the protocol/overview/template updates.
@@ -946,11 +946,11 @@
   - Updated `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
   - Updated `ops/templates/PR_DESCRIPTION_TEMPLATE.md`.
   - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
-  - Updated `STATE_OF_PLAY.md`.
+  - Updated `SoP.md`.
 - Verification:
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
-  - `bash ops/init/tools/context_lint.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
+  - `bash tools/context_lint.sh` ✅
 - Risk / rollback:
   - Risk: output-format guidance may need tuning as operators adopt the unified flow.
   - Rollback: revert the contract/protocol/template updates.
@@ -964,7 +964,7 @@
   - Updated `ops/init/manifests/OUTPUT_MANIFEST.md`.
 - Verification:
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
 - Risk / rollback:
   - Risk: precedence and ledger language may need tuning as OCL canon evolves.
   - Rollback: revert the overview/protocol/manifest edits.
@@ -987,14 +987,14 @@
   - Moved `boot/BUNDLE_MANIFEST.json` to `ops/init/icl/BUNDLE_MANIFEST.json`.
   - Moved `boot/templates/gitignore.txt` to `ops/templates/gitignore.txt`.
   - Updated `ops/init/icl/context_pack.json` and `ops/init/icl/ACTIVE_CONTEXT.md` for new launch pack paths.
-  - Updated `ops/init/tools/context_lint.sh` to drop `/boot` path allowance.
+  - Updated `tools/context_lint.sh` to drop `/boot` path allowance.
   - Updated `docs/README_CONTEXT.md`, `docs/10-QUICKSTART.md`, `docs/30-RELEASE_PROCESS.md`, `docs/SOP_MULTICHAT.md`, `docs/REPO_LAYOUT.md`, `docs/PROJECT_STRUCTURE.md`, and `docs/20-GOVERNANCE.md`.
   - Removed `boot/`.
 - Verification:
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
-  - `bash ops/init/tools/context_lint.sh` (warn: missing path referenced in STATE_OF_PLAY.md: ops/templates/DAILY_CONSOLE_TEMPLATE.md)
-  - `grep -R "(/boot|boot/|launch_pack|launchpack|DAILY_CONSOLE|console)" -n .` (hit: STATE_OF_PLAY.md verification line)
+  - `bash tools/lint_truth.sh` ✅
+  - `bash tools/context_lint.sh` (warn: missing path referenced in SoP.md: ops/templates/DAILY_CONSOLE_TEMPLATE.md)
+  - `grep -R "(/boot|boot/|launch_pack|launchpack|DAILY_CONSOLE|console)" -n .` (hit: SoP.md verification line)
 - Risk / rollback:
   - Risk: stale references outside scope may still mention /boot.
   - Rollback: restore /boot and revert the ops/docs updates.
@@ -1008,7 +1008,7 @@
   - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
 - Verification:
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
 - Risk / rollback:
   - Risk: formatting rules may require adjustment as metadata kits evolve.
   - Rollback: revert the overview/protocol/template edits.
@@ -1020,7 +1020,7 @@
   - Removed Daily Console template (deprecated; file deleted).
 - Verification:
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
 - Risk / rollback:
   - Risk: legacy references may linger outside ops scope.
   - Rollback: restore the template file.
@@ -1035,7 +1035,7 @@
   - Updated `ops/init/icl/OCL_OVERVIEW.md`.
 - Verification:
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
 - Risk / rollback:
   - Risk: control word handling may need tuning as OCL evolves.
   - Rollback: revert the protocol/template/manifest/overview edits.
@@ -1050,7 +1050,7 @@
   - Added `ops/templates/SESSION_SNAPSHOT_TEMPLATE.md`.
 - Verification:
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
 - Risk / rollback:
   - Risk: snapshot artifact expectations may need tuning as OCL evolves.
   - Rollback: revert the overview/protocol/template and output manifest update.
@@ -1065,7 +1065,7 @@
   - Updated `ops/init/protocols/HANDOFF_PROTOCOL.md`.
 - Verification:
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
 - Risk / rollback:
   - Risk: OCL framing or ticket lifecycle may need tuning as ops canon evolves.
   - Rollback: revert the OCL overview and protocol/manifest edits.
@@ -1079,7 +1079,7 @@
   - Updated `ops/init/manifests/OUTPUT_MANIFEST.md` to include DP as a required output type.
 - Verification:
   - Not run (worker): `bash tools/verify_tree.sh`
-  - Not run (worker): `bash tools/repo/lint_truth.sh`
+  - Not run (worker): `bash tools/lint_truth.sh`
 - Risk / rollback:
   - Risk: DP requirements may need tuning as ops conventions evolve.
   - Rollback: revert the DP protocol/template and the output manifest update.
@@ -1089,11 +1089,11 @@
 - Purpose: Reduce long-session decay and detect filesystem drift early during ICL.
 - What shipped:
   - Added `ops/init/protocols/CONTEXT_PRUNING_PROTOCOL.md`.
-  - Added `ops/init/tools/context_lint.sh` and updated `ops/init/manifests/CONTEXT_MANIFEST.md`.
+  - Added `tools/context_lint.sh` and updated `ops/init/manifests/CONTEXT_MANIFEST.md`.
 - Verification:
-  - `bash ops/init/tools/context_lint.sh` ✅
+  - `bash tools/context_lint.sh` ✅
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
 - Risk / rollback:
   - Risk: lint rules may need tuning as ICL canon evolves.
   - Rollback: remove the new protocol and context linter, and revert manifest edits.
@@ -1107,7 +1107,7 @@
   - Tightened the INIT_CONTRACT repeat-back requirements for "opt-in repo knowledge" and "no commit/push".
 - Verification:
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
   - `bash ops/init/pack.sh --help` ✅
   - `bash ops/init/pack.sh | head` ✅
 - Risk / rollback:
@@ -1123,7 +1123,7 @@
   - Note: `ops/contracts/` and `ops/templates/` were pre-existing and are referenced by the new ICL skeleton.
 - Verification:
   - Not run (worker): `bash tools/verify_tree.sh`
-  - Not run (worker): `bash tools/repo/lint_truth.sh`
+  - Not run (worker): `bash tools/lint_truth.sh`
 - Risk / rollback:
   - Risk: stub content may require follow-up hardening.
   - Rollback: remove the new ops/init tree and this entry.
@@ -1138,7 +1138,7 @@
   - Linked `CONTRIBUTING.md` to the security policy.
 - Verification:
   - Not run (worker): `bash tools/verify_tree.sh`
-  - Not run (worker): `bash tools/repo/lint_truth.sh`
+  - Not run (worker): `bash tools/lint_truth.sh`
 - Risk / rollback:
   - Risk: docs-only (security guidance changes).
   - Rollback: revert this entry and the docs updates.
@@ -1151,7 +1151,7 @@
   - Added a filled precheck checklist to `ops/init/icl/DAILY_CONSOLE.md`.
 - Verification:
   - Not run (worker): `bash tools/verify_tree.sh`
-  - Not run (worker): `bash tools/repo/lint_truth.sh`
+  - Not run (worker): `bash tools/lint_truth.sh`
 - Risk / rollback:
   - Risk: docs-only (index + checklist edits).
   - Rollback: revert this entry and the ops docs changes.
@@ -1164,7 +1164,7 @@
   - Added explicit operator reminders for merge commit metadata and merge-note comments.
 - Verification:
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
 - Risk / rollback:
   - Risk: docs-only (PR template formatting).
   - Rollback: revert this entry and the template update.
@@ -1179,7 +1179,7 @@
   - `grep -r "launch_pack_v2" docs/` → no matches ✅
   - `grep -r "_meta/" docs/` → hits expected in `docs/SECURE_WEBROOT_OPTION.md` ✅
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
 - Risk / rollback:
   - Risk: docs-only (index link placement).
   - Rollback: revert this entry and `docs/00-INDEX.md` change.
@@ -1193,7 +1193,7 @@
 - Verification:
   - grep -r "commit/push" docs/ops .github (hits expected)
   - bash tools/verify_tree.sh ✅
-  - bash tools/repo/lint_truth.sh ✅
+  - bash tools/lint_truth.sh ✅
 - Risk / rollback:
   - Risk: docs-only (no runtime behavior changes)
   - Rollback: revert merge commit
@@ -1207,7 +1207,7 @@
 - Verification:
   - grep -r "Guerrilla" docs/ .github/ (no matches)
   - bash tools/verify_tree.sh ✅
-  - bash tools/repo/lint_truth.sh ✅
+  - bash tools/lint_truth.sh ✅
 - Risk / rollback:
   - Risk: docs-only (no runtime behavior changes)
   - Rollback: revert merge commit
@@ -1224,7 +1224,7 @@
   - grep -r "launch_pack_v2" docs/ (no matches)
   - grep -r "src/" docs/ README.md CONTRIBUTING.md (hits in `docs/upstreams.md`, `docs/NUKESECURITY_VISION_TO_IMPLEMENTATION_MAP.md`, `docs/GEOIP_IMPORTER.md`, `docs/triage/_archive/SUBSYSTEM_MAP_v11.md`, `docs/triage/_archive/SECURITY_SURFACE_SWEEP_v11.md`, `docs/repo-nomenclature.md`)
   - bash tools/verify_tree.sh ✅
-  - bash tools/repo/lint_truth.sh ✅
+  - bash tools/lint_truth.sh ✅
 - Risk / rollback:
   - Risk: onboarding expectations may still conflict with older archived docs.
   - Rollback: revert merge commit
@@ -1255,7 +1255,7 @@
   - Link/reference grep (boot-docs references) ✅
   - Terminology grep (Guerrilla) ✅
   - bash tools/verify_tree.sh ✅
-  - bash tools/repo/lint_truth.sh ✅
+  - bash tools/lint_truth.sh ✅
 - Risk / rollback:
   - Risk: link-rot in moved docs or missed references.
   - Rollback: revert merge commit
@@ -1317,7 +1317,7 @@
 - Docs Family v1 integrated + canon spine created (docs/00-INDEX, 10-QUICKSTART, 20-GOVERNANCE, 30-RELEASE_PROCESS, 40-PROJECT_HYGIENE)
 - Added Copilot onboarding rules: .github/copilot-instructions.md
 - Added SSOT “save-game” handover file: ops/init/icl/AI_CONTEXT_SYNC.md
-- Enabled FAIL-mode policing: canon changes require STATE_OF_PLAY update in the same PR
+- Enabled FAIL-mode policing: canon changes require SoP update in the same PR
 - Updated ops/init/icl/DAILY_CONSOLE.md to clarify canon vs log vs rehydration.
 - Added ops governance docs: OUTPUT_FORMAT_CONTRACT + Copilot onboarding + Gemini onboarding
 - Updated docs/ops/INDEX.md + docs/00-INDEX.md to link the new ops docs
@@ -1325,7 +1325,7 @@
 - 2026-01-03: Canonized Output Formatting Contract (ops/contracts/OUTPUT_FORMAT_CONTRACT.md) and linked it in docs indexes.
 
 ## Active blockers
-- repo-gates (FAIL-mode) blocking PR until this STATE_OF_PLAY update is committed + pushed
+- repo-gates (FAIL-mode) blocking PR until this SoP update is committed + pushed
 
 ## Next steps (ordered)
 1. Save all edited docs in NetBeans
@@ -1348,8 +1348,8 @@
   - Updated `PROJECT_MAP.md`, `CANONICAL_TREE.md`, and docs indexes/references (`docs/00-INDEX.md`, `docs/10-QUICKSTART.md`, `docs/CONTRACTOR_PACKET.md`, `docs/REPO_LAYOUT.md`, `docs/PROJECT_STRUCTURE.md`, `docs/20-GOVERNANCE.md`, `docs/README_CONTEXT.md`, `docs/security/README.md`).
 - Verification:
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
-  - `bash ops/init/tools/context_lint.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
+  - `bash tools/context_lint.sh` ✅
   - `bash ops/init/pack.sh --help` ✅
   - `grep -R \"(boot/|/boot|console|DAILY_CONSOLE|launch_pack|launchpack)\" -n .` ✅
 - Risk / rollback:
@@ -1361,11 +1361,11 @@
 - What shipped:
   - Updated `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
   - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
-  - Updated `STATE_OF_PLAY.md`.
+  - Updated `SoP.md`.
 - Verification:
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
-  - `bash ops/init/tools/context_lint.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
+  - `bash tools/context_lint.sh` ✅
 - Risk / rollback:
   - Risk: stricter DP gating may slow work starts if operator-provided truth is stale.
   - Rollback: revert the DP protocol/template changes.
@@ -1375,29 +1375,29 @@
 - What shipped:
   - Updated `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
   - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
-  - Updated `STATE_OF_PLAY.md`.
+  - Updated `SoP.md`.
 - Verification:
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
-  - `bash ops/init/tools/context_lint.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
+  - `bash tools/context_lint.sh` ✅
   - `grep -R "STOP COPYING" -n ops/templates/DISPATCH_PACKET_TEMPLATE.md` ✅
 - Risk / rollback:
   - Risk: operators may miss the queue stop rule if they only scan the top of the template.
   - Rollback: revert the protocol/template edits.
-## 2026-01-09 - DP-ICL-002D4: DP template hygiene + STATE_OF_PLAY compliance
+## 2026-01-09 - DP-ICL-002D4: DP template hygiene + SoP compliance
 
 - Purpose: Ensure the DP template contains zero "STOP COPYING" lines and log the compliance update.
 - What shipped:
   - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
-  - Updated `STATE_OF_PLAY.md`.
+  - Updated `SoP.md`.
 - Verification:
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
-  - `bash ops/init/tools/context_lint.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
+  - `bash tools/context_lint.sh` ✅
   - `grep -n "STOP COPYING" ops/templates/DISPATCH_PACKET_TEMPLATE.md` ✅
 - Risk / rollback:
   - Risk: operators may rely on the DP template for footer phrasing cues.
-  - Rollback: revert the DP template and STATE_OF_PLAY entry.
+  - Rollback: revert the DP template and SoP entry.
 ## 2026-01-09 - DP-ICL-002E0: Process lock for TYPE LINE BY LINE + paste surfaces
 
 - Purpose: Standardize operator command safety language, paste surfaces, and DP freshness gate rules.
@@ -1407,11 +1407,11 @@
   - Updated `ops/templates/DISPATCH_PACKET_TEMPLATE.md`.
   - Added `ops/init/icl/PASTE_SURFACES_PLAYBOOK.md`.
   - Updated `docs/ops/INDEX.md`.
-  - Updated `STATE_OF_PLAY.md`.
+  - Updated `SoP.md`.
 - Verification:
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
-  - `bash ops/init/tools/context_lint.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
+  - `bash tools/context_lint.sh` ✅
   - `grep -n "STOP COPYING" ops/templates/DISPATCH_PACKET_TEMPLATE.md` ✅
 - Risk / rollback:
   - Risk: operators may need time to adapt to TYPE LINE BY LINE command blocks.
@@ -1423,11 +1423,11 @@
   - Added ICL banned-terms map (later retired).
   - Added ICL/OCL rename plan (later retired).
   - Updated `docs/ops/INDEX.md`.
-  - Updated `STATE_OF_PLAY.md`.
+  - Updated `SoP.md`.
 - Verification:
   - `grep -RinE "(recovery|launchpack|launch_pack|console|precheck)" ops docs *.md 2>/dev/null || true` ✅
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
 - Risk / rollback:
   - Risk: large rename PRs can break links and references if not updated in lockstep.
   - Rollback: revert the inventory/plan docs and redo with a narrower rename scope.
@@ -1436,11 +1436,11 @@
 - Purpose: Stabilize the launch pack rename by clearing remaining drift markers and confirming pointer correctness.
 - What shipped:
   - Added ICL rename fixups note (later retired).
-  - Updated `STATE_OF_PLAY.md` verification language to avoid banned-term drift.
+  - Updated `SoP.md` verification language to avoid banned-term drift.
 - Verification:
   - Banned-term sweep grep (per ICL rename fixups note) ✅
   - `bash tools/verify_tree.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
 - Risk / rollback:
   - Risk: lingering legacy references outside the planning docs could still surface later.
   - Rollback: revert this entry and re-run the drift sweep.
@@ -1448,12 +1448,12 @@
 
 - Purpose: Introduce a minimal project registry SSOT and a guarded init flow for STELA-born projects.
 - What shipped:
-  - Added `docs/library/datasets/PROJECT_REGISTRY.md` and pointers in `PROJECT_TRUTH.md`.
+  - Added `docs/library/datasets/PROJECT_REGISTRY.md` and pointers in `TRUTH.md`.
   - Added `ops/bin/project`, `ops/lib/project/`, and `ops/init/projects/` scaffolds.
   - Added `projects/README.md` and updated `docs/library/OPERATOR_MANUAL.md`.
 - Verification:
-  - `bash ops/init/tools/context_lint.sh` ✅
-  - `bash tools/repo/lint_truth.sh` ✅
+  - `bash tools/context_lint.sh` ✅
+  - `bash tools/lint_truth.sh` ✅
   - `./ops/bin/project list` ✅
   - `./ops/bin/project current` ✅
   - `./ops/bin/project init demo --dry-run` ✅

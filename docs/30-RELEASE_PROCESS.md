@@ -1,6 +1,6 @@
 # Release process
 
-nukeCE uses a **batch-and-ship** release train to keep patch clutter minimal and keep provenance clear.
+Stela uses a **batch-and-ship** release train to keep patch clutter minimal and keep provenance clear.
 
 ## Principles
 
@@ -14,7 +14,8 @@ nukeCE uses a **batch-and-ship** release train to keep patch clutter minimal and
 A release bundle is the smallest practical snapshot that makes the system usable by others:
 
 - `public_html/` — deployable webroot
-- `ops/init/icl/` — ICL Continuity Core + context pack needed to operate the repo safely
+- `ops/` — system operations, contracts, templates, and tooling
+- `tools/` — worker utilities required to validate changes
 - `docs/` — current operating manual
 
 ## Operator checklist (high level)

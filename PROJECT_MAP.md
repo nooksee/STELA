@@ -28,4 +28,4 @@ This file is the stable blueprint. Update only when structure or core architectu
 ## Naming rules
 - Module directories are lowercase.
 - Admin modules are prefixed admin_.
-- No archive snapshots inside public_html.
+- No archive dumps inside public_html.

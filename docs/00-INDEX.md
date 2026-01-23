@@ -5,11 +5,6 @@
 
 ## Operating system (ops)
 - [ops/INDEX.md](ops/INDEX.md)
-- [../ops/init/icl/ICL_OVERVIEW.md](../ops/init/icl/ICL_OVERVIEW.md)
-- [../ops/init/icl/OCL_OVERVIEW.md](../ops/init/icl/OCL_OVERVIEW.md)
-- [../ops/init/icl/ICL_CONTINUITY_CORE.md](../ops/init/icl/ICL_CONTINUITY_CORE.md)
-- [../ops/init/icl/DAILY_CONSOLE.md](../ops/init/icl/DAILY_CONSOLE.md)
-- [../ops/init/icl/RECOVERY.md](../ops/init/icl/RECOVERY.md)
 - [../ops/contracts/OUTPUT_FORMAT_CONTRACT.md](../ops/contracts/OUTPUT_FORMAT_CONTRACT.md)
 - [../ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md](../ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md)
 
@@ -23,7 +18,7 @@
 - [LESSONS_LEARNED.md](LESSONS_LEARNED.md)
 - [README_CONTEXT.md](README_CONTEXT.md)
 - [library/STELA_NAMING.md](library/STELA_NAMING.md)
-- [library/STELAE.md](library/STELAE.md)
+- [library/[REMOVED].md](library/[REMOVED].md)
 - [SECURE_WEBROOT_OPTION.md](SECURE_WEBROOT_OPTION.md)
 - [DATA_FEEDS.md](DATA_FEEDS.md)
 - [GEOIP_IMPORTER.md](GEOIP_IMPORTER.md)

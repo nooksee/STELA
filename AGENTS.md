@@ -1,0 +1,24 @@
+# AGENTS.md
+# Pointer-first agent constitution for Stela (no duplicated canon text).
+
+## Hard constraints (SSOT)
+- TRUTH.md
+- SoP.md
+- ops/contracts/OUTPUT_FORMAT_CONTRACT.md
+- ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md
+- ops/lib/manifests/CONTEXT_MANIFEST.md
+- ops/templates/DISPATCH_PACKET_TEMPLATE.md
+- docs/library/OPERATOR_MANUAL.md
+- docs/library/CONTINUITY_MAP.md
+
+## Soft preferences (bias artifacts + datasets)
+- docs/library/MEMENTOS.md
+- docs/library/datasets/DB-DATASET.md
+- docs/library/datasets/DB-VOICE-0001.md
+- docs/library/datasets/DB-PR-META.md
+
+## Curated library gate
+- docs/library/LIBRARY_INDEX.md
+
+## Entry points
+- llms.txt

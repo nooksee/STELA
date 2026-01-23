@@ -1,0 +1,229 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+format="chatgpt"
+intent=""
+dp="(none)"
+out=""
+tag=""
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/open [--format=chatgpt|gemini] [--intent="..."] [--dp="DP-XXXX / YYYY-MM-DD"] [--out=auto] [--tag=token]
+USAGE
+}
+
+die() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --format=chatgpt|--format=gemini)
+      format="${arg#--format=}"
+      ;;
+    --intent=*)
+      intent="${arg#--intent=}"
+      ;;
+    --dp=*)
+      dp="${arg#--dp=}"
+      ;;
+    --out=auto)
+      out="auto"
+      ;;
+    --tag=*)
+      tag="${arg#--tag=}"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      die "Unknown argument: $arg"
+      ;;
+  esac
+done
+
+if ! command -v git >/dev/null 2>&1; then
+  die "git is required but was not found on PATH."
+fi
+
+if ! repo_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+  die "git repo not found. Run from repo root."
+fi
+
+if [[ "$(pwd -P)" != "$repo_root" ]]; then
+  die "Run from repo root: $repo_root"
+fi
+
+branch="$(git rev-parse --abbrev-ref HEAD)"
+head_short="$(git rev-parse --short HEAD)"
+branch_safe="$(printf '%s' "$branch" | tr -c 'A-Za-z0-9._-' '-')"
+tag_prefix=""
+if [[ -n "$tag" ]]; then
+  tag_safe="$(printf '%s' "$tag" | tr -c 'A-Za-z0-9._-' '-')"
+  tag_prefix="${tag_safe}-"
+fi
+mkdir -p storage/handoff
+
+porcelain_saved="storage/handoff/OPEN-PORCELAIN-${tag_prefix}${branch_safe}-${head_short}.txt"
+git status --porcelain > "$porcelain_saved"
+porcelain_count="$(wc -l < "$porcelain_saved" | tr -d '[:space:]')"
+if [[ "$porcelain_count" == "0" ]]; then
+  status_summary="clean"
+else
+  status_summary="dirty"
+fi
+last_commit="$(git log -1 --oneline)"
+
+porcelain_output=""
+porcelain_preview=""
+if [[ "$status_summary" == "dirty" ]]; then
+  if (( porcelain_count <= 200 )); then
+    porcelain_output="$(cat "$porcelain_saved")"
+  else
+    porcelain_preview="$(head -n 50 "$porcelain_saved")"
+  fi
+fi
+
+open_out_path="storage/handoff/OPEN-${tag_prefix}${branch_safe}-${head_short}.txt"
+: > "$open_out_path"
+
+required_files=(
+  "TRUTH.md"
+  "SoP.md"
+  "AGENTS.md"
+  "PROJECT_MAP.md"
+  "CANONICAL_TREE.md"
+  "docs/00-INDEX.md"
+  "docs/library/OPERATOR_MANUAL.md"
+  "docs/library/CONTINUITY_MAP.md"
+  "ops/contracts/OUTPUT_FORMAT_CONTRACT.md"
+  "ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md"
+  "ops/templates/DISPATCH_PACKET_TEMPLATE.md"
+  "ops/lib/manifests/CONTEXT_MANIFEST.md"
+)
+
+missing=()
+for path in "${required_files[@]}"; do
+  if [[ ! -f "$path" ]]; then
+    missing+=("$path")
+  fi
+done
+
+if (( ${#missing[@]} > 0 )); then
+  echo "ERROR: expected files missing. Run from repo root." >&2
+  for path in "${missing[@]}"; do
+    echo "  - $path" >&2
+  done
+  exit 1
+fi
+
+if [[ "$format" == "gemini" ]]; then
+  mode_line="Mode: reviewer stance. Prioritize risks, regressions, and missing tests."
+else
+  mode_line="Mode: collaborator stance. Follow repo canon and request missing context."
+fi
+
+emit() {
+  if [[ -n "$open_out_path" ]]; then
+    tee -a "$open_out_path"
+  else
+    cat
+  fi
+}
+
+{
+  cat <<EOF
+===== OPEN PROMPT =====
+nukeCE OPEN PROMPT (Front Door v2.1)
+Repo is truth. If a file/path isn't present, say so.
+$mode_line
+You are entering a canon-governed system.
+Precision beats speed.
+If unsure, stop and ask.
+MEMENTO: M-ATTN-01 (docs/library/MEMENTOS.md)
+STELAE: S-ATTN-01 (docs/library/STELAE.md)
+
+[FRESHNESS GATE]
+- Active branch: $branch
+- HEAD short hash: $head_short
+- DP id/date (if applicable): $dp
+- Today's intent: $intent
+
+[ROLE CONTRACT]
+Integrator (operator): Owns scope, priorities, and approvals.
+Contractor (assistant): Executes tasks, flags risks, asks when blocked.
+AI stance: Canon-first, explicit about unknowns, no invention.
+
+[DO / DON'T]
+Do:
+- PR-only changes; no main edits.
+- Run required gates before close.
+Don't:
+- Edit main directly.
+- Skip gates.
+
+[CONSTITUTION]
+- TRUTH.md
+
+[FOCUS RULE]
+- TRUTH.md
+
+[CANON POINTERS]
+- TRUTH.md
+- SoP.md
+- AGENTS.md
+- PROJECT_MAP.md
+- CANONICAL_TREE.md
+- docs/00-INDEX.md
+- docs/library/OPERATOR_MANUAL.md
+- docs/library/CONTINUITY_MAP.md
+- ops/contracts/OUTPUT_FORMAT_CONTRACT.md
+- ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md
+- ops/templates/DISPATCH_PACKET_TEMPLATE.md
+- ops/lib/manifests/CONTEXT_MANIFEST.md
+
+[DUMP]
+- If you need full repo context, run: ./ops/bin/dump --scope=platform --format=chatgpt (or gemini/claude).
+- For a file output: ./ops/bin/dump --scope=platform --format=chatgpt --out=auto
+
+[GIT STATE]
+- Working tree: $status_summary
+- Porcelain entries: $porcelain_count
+- Porcelain saved: $porcelain_saved
+- Last commit: $last_commit
+EOF
+
+if [[ "$status_summary" == "dirty" ]]; then
+  if (( porcelain_count <= 200 )); then
+    cat <<EOF
+- Porcelain (git status --porcelain):
+$porcelain_output
+EOF
+  else
+    cat <<EOF
+- Porcelain entries: $porcelain_count
+- Porcelain preview (truncated to 50 lines):
+$porcelain_preview
+EOF
+  fi
+fi
+
+  cat <<EOF
+[NEXT OPERATOR MOVES]
+- ./ops/bin/dump --scope=platform --format=chatgpt
+
+[DB-PR-META]
+- After approving work results, tell the assistant you approve and ask for DB-PR-META; assistant must emit it immediately.
+
+[OPERATOR CONTEXT]
+- If any canon pointers are missing, say so.
+===== END OPEN PROMPT =====
+EOF
+} | emit
+
+if [[ "$out" == "auto" ]]; then
+  printf 'OPEN saved: %s\n' "$open_out_path" | emit
+fi
