@@ -27,3 +27,6 @@ nbproject/
 
 # NetBeans (machine-specific)
 nbproject/private/
+
+# Local task template
+TASK.md
