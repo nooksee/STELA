@@ -4,4 +4,4 @@ nukeCE is an explainability-first, provenance-forward CMS program with PR-only g
 
 [![repo-gates](https://github.com/nooksee/php-nuke-ce/actions/workflows/repo_gates.yml/badge.svg)](https://github.com/nooksee/php-nuke-ce/actions/workflows/repo_gates.yml)
 
-Start here: `docs/10-QUICKSTART.md`
+See CONTEXT.md for the developer guide.
