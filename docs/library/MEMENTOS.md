@@ -48,7 +48,7 @@ MEMENTOS exist to interrupt that stack before it becomes canon drift.
 - Contracts and refusal rules outrank any MEMENTOS.
 - If contract language changes, update MEMENTOS to match.
 - Use MEMENTOS to reinforce canon, not reinterpret it.
-- When in doubt, defer to PROJECT_TRUTH and dataset docs.
+- When in doubt, defer to TRUTH and dataset docs.
 
 ## What MEMENTOS do
 - Bias responses toward constraint-first reasoning.
@@ -115,7 +115,7 @@ Do not proceed "helpfully" past uncertainty.
 
 ### UI labels are truth (DB-PR-META)
 DB-PR-META surface labels are canonical and must not be renamed.
-Use the exact UI labels and ordering defined in PROJECT_TRUTH.
+Use the exact UI labels and ordering defined in TRUTH.
 
 ## Operational notes
 - MEMENTOS should be short, explicit, and easy to reuse.

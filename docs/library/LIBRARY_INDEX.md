@@ -6,16 +6,12 @@
 
 manual | Operator Manual | docs/library/OPERATOR_MANUAL.md
 continuity-map | Continuity Map | docs/library/CONTINUITY_MAP.md
-icl-continuity-core | ICL Continuity Core | ops/init/icl/ICL_CONTINUITY_CORE.md
 db-dataset | DB-DATASET (Dataset Library) | docs/library/datasets/DB-DATASET.md
 db-voice-0001 | DB-VOICE-0001 (Declarative Mode) | docs/library/datasets/DB-VOICE-0001.md
 db-pr-meta | DB-PR-META (Post-Approval Metadata Surfaces) | docs/library/datasets/DB-PR-META.md
 quickstart | Quickstart | docs/10-QUICKSTART.md
 docs-index | Docs Index | docs/00-INDEX.md
-context-pack | Context Pack (Recovery Card) | ops/init/icl/CONTEXT_PACK.md
-daily-console | Daily Console | ops/init/icl/DAILY_CONSOLE.md
-recovery | Recovery | ops/init/icl/RECOVERY.md
 output-format-contract | Output Format Contract | ops/contracts/OUTPUT_FORMAT_CONTRACT.md
 contractor-dispatch-contract | Contractor Dispatch Contract | ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md
-project-truth | Project Truth | PROJECT_TRUTH.md
-state-of-play | State of Play | STATE_OF_PLAY.md
+system-constitution | Stela System Constitution | TRUTH.md
+state-of-play | SoP | SoP.md

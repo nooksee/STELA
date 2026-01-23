@@ -91,15 +91,18 @@ open_out_path="storage/handoff/OPEN-${tag_prefix}${branch_safe}-${head_short}.tx
 : > "$open_out_path"
 
 required_files=(
-  "PROJECT_TRUTH.md"
-  "ops/init/icl/context_pack.json"
-  "ops/init/icl/ICL_CONTINUITY_CORE.md"
-  "STATE_OF_PLAY.md"
+  "TRUTH.md"
+  "SoP.md"
+  "AGENTS.md"
   "PROJECT_MAP.md"
   "CANONICAL_TREE.md"
   "docs/00-INDEX.md"
-  "ops/init/icl/CONTEXT_PACK.md"
-  "ops/init/icl/AI_CONTEXT_SYNC.md"
+  "docs/library/OPERATOR_MANUAL.md"
+  "docs/library/CONTINUITY_MAP.md"
+  "ops/contracts/OUTPUT_FORMAT_CONTRACT.md"
+  "ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md"
+  "ops/templates/DISPATCH_PACKET_TEMPLATE.md"
+  "ops/lib/manifests/CONTEXT_MANIFEST.md"
 )
 
 missing=()
@@ -163,24 +166,28 @@ Don't:
 - Skip gates.
 
 [CONSTITUTION]
-- PROJECT_TRUTH.md
+- TRUTH.md
 
 [FOCUS RULE]
-- PROJECT_TRUTH.md
+- TRUTH.md
 
 [CANON POINTERS]
-- ops/init/icl/context_pack.json
-- ops/init/icl/ICL_CONTINUITY_CORE.md
-- STATE_OF_PLAY.md
+- TRUTH.md
+- SoP.md
+- AGENTS.md
 - PROJECT_MAP.md
 - CANONICAL_TREE.md
 - docs/00-INDEX.md
-- ops/init/icl/CONTEXT_PACK.md
-- ops/init/icl/AI_CONTEXT_SYNC.md
+- docs/library/OPERATOR_MANUAL.md
+- docs/library/CONTINUITY_MAP.md
+- ops/contracts/OUTPUT_FORMAT_CONTRACT.md
+- ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md
+- ops/templates/DISPATCH_PACKET_TEMPLATE.md
+- ops/lib/manifests/CONTEXT_MANIFEST.md
 
-[SNAPSHOT]
-- If you need full repo context, run: ./ops/bin/snapshot --scope=icl --format=chatgpt (or gemini/claude).
-- For a file output: ./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto
+[DUMP]
+- If you need full repo context, run: ./ops/bin/dump --scope=platform --format=chatgpt (or gemini/claude).
+- For a file output: ./ops/bin/dump --scope=platform --format=chatgpt --out=auto
 
 [GIT STATE]
 - Working tree: $status_summary
@@ -206,7 +213,7 @@ fi
 
   cat <<EOF
 [NEXT OPERATOR MOVES]
-- ./ops/bin/snapshot --scope=icl --format=chatgpt
+- ./ops/bin/dump --scope=platform --format=chatgpt
 
 [DB-PR-META]
 - After approving work results, tell the assistant you approve and ask for DB-PR-META; assistant must emit it immediately.

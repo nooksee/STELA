@@ -1,4 +1,4 @@
-# Security Policy (nukeCE)
+# Security Policy (Stela)
 
 This repo values clarity over obscurity and explainable ops. Security work should be
 traceable, auditable, and easy to reason about.

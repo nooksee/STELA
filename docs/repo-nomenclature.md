@@ -11,8 +11,8 @@ This document standardizes names used across issues, branches, PRs, and docs.
 - `upstream/` — donor snapshots (read-only posture)
 
 **Planned / evolving:**
-- `src/` — nukeCE core source (primary development surface once extracted)
-- `packages/` — imported features adapted into nukeCE
+- `src/` — Stela core source (primary development surface once extracted)
+- `packages/` — imported features adapted into Stela
 
 ## Branch naming
 

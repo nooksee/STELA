@@ -38,7 +38,7 @@ project_lib_registry_path() {
 }
 
 project_lib_template_rel() {
-  printf "%s" "ops/init/projects/default/README.md"
+  printf "%s" "ops/lib/project/templates/default/README.md"
 }
 
 project_lib_template_path() {
@@ -47,7 +47,7 @@ project_lib_template_path() {
 
 project_lib_subdir_template_rel() {
   local subdir="$1"
-  printf "%s" "ops/init/projects/default/${subdir}/README.md"
+  printf "%s" "ops/lib/project/templates/default/${subdir}/README.md"
 }
 
 project_lib_subdir_template_path() {

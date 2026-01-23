@@ -1,4 +1,4 @@
-# nukeCE Canonical Tree
+# Stela Canonical Tree
 
 This repo root is the developer workspace.
 
@@ -15,7 +15,7 @@ This repo root is the developer workspace.
 
 ## Docs library (curated)
 - `docs/library/` operator-facing curated library.
-- `docs/library/STELAE.md` Stelae operator nudges.
+- `docs/library/[REMOVED].md` Stelae operator nudges.
 
 ## In public_html
 - `admin/` admin UI entry + admin modules

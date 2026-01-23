@@ -52,19 +52,19 @@ NON-NEGOTIABLES
 - Duplication check is required before creating new artifacts (near-duplicates included).
 - Declare the SSOT file for each touched topic; if unclear, STOP and use the BLOCKED shape.
 - No new files unless listed in FILES (must edit only these). If a new file is required, STOP and use the BLOCKED shape.
-- "No new files unless listed" applies to tracked repo files only; output artifacts under `storage/handoff/` and `storage/snapshots/` are allowed untracked.
+- "No new files unless listed" applies to tracked repo files only; output artifacts under `storage/handoff/` and `storage/dumps/` are allowed untracked.
 - Do not assume repo layout; follow existing canon (PROJECT_MAP.md, CANONICAL_TREE.md).
 - Touch only scoped paths and files listed below.
 - Do not modify files inside `upstream/` (read-only donor bank).
 - Do not modify files inside `.github/` unless explicitly instructed.
-- Any move/rename/delete MUST be accompanied by updated references and a STATE_OF_PLAY entry.
-- Add/update STATE_OF_PLAY.md in the SAME PR slice if canon/governance truth docs are impacted.
+- Any move/rename/delete MUST be accompanied by updated references and a SoP entry.
+- Add/update SoP.md in the SAME PR slice if canon/governance truth docs are impacted.
 - Handoff artifacts must be repo-local: use `storage/handoff/` (never `/tmp` or user temp dirs).
 - REQUIRED results filename: `storage/handoff/<DP-ID>-RESULTS.md` (basename UPPERCASE; `.md` lowercase).
 - Receipt package (minimum handoff artifacts; attachment-mode friendly):
   - `storage/handoff/<DP-ID>-RESULTS.md` (required)
-  - Snapshot tarball when required by the DP
-  - Snapshot manifest (bundled inside the tarball when `--bundle` is used, or attached alongside when not bundled)
+  - Dump tarball when required by the DP
+  - Dump manifest (bundled inside the tarball when `--bundle` is used, or attached alongside when not bundled)
   - OPEN + OPEN-PORCELAIN artifacts are already captured under `storage/handoff/` by OPEN tooling; do not regress this.
 - Worker must write the full results message (A/B/C/D + RECEIPT) to the RESULTS file; contents must match the paste-mode results exactly.
 - If `storage/handoff/<DP-ID>-RESULTS.md` is not produced, STOP; delivery is incomplete.
@@ -99,7 +99,7 @@ REQUIRED VERIFICATION (paste outputs)
 - Provide either:
   - RUN: <commands> + results
   - NOT RUN: <reason> + risk
-- Include `bash ops/init/tools/context_lint.sh` when ops/docs/canon files are touched.
+- Include `bash tools/context_lint.sh` when ops/docs/canon files are touched.
 
 Risk / Rollback
 - Risk: ...
@@ -113,11 +113,11 @@ DB-PR-META is emitted only after approval (no exceptions).
 Operator Handoff Paste Order (IN-LOOP):
 1) Approval line (start-of-message, plain text, unquoted): APPROVE <DP-ID> EMIT DB-PR-META
 2) Worker results pasted raw (not quoted), after a delimiter (a single blank line or a line containing only `---`)
-3) Snapshot file attached (if DP required it)
+3) Dump file attached (if DP required it)
 Operator Handoff Attachment-mode Order (IN-LOOP):
 1) Approval line (start-of-message, plain text, unquoted); message contains only the approval line
-2) Attach the worker-results text file from `storage/handoff/<DP-ID>-RESULTS.md`; attachment contents must match the paste-mode results exactly, including the RECEIPT (OPEN + SNAPSHOT)
-3) Attach the snapshot file (if DP required it)
+2) Attach the worker-results text file from `storage/handoff/<DP-ID>-RESULTS.md`; attachment contents must match the paste-mode results exactly, including the RECEIPT (OPEN + DUMP)
+3) Attach the dump file (if DP required it)
 If the chat UI cannot insert blank lines safely, use the `---` delimiter line before pasting results.
 Approval must be the first tokens in the message (start-of-message) and outside OPEN prompt text, OPEN intent, and outside quoted/fenced blocks.
 Quoted blocks are commentary and invalid for approval.
@@ -200,15 +200,15 @@ RECEIPT is mandatory; must be the last section of the result message. DPs missin
 - Full, unmodified output of `./ops/bin/open`
 - Must include branch name and HEAD short hash used during work
 - If OPEN exceeds message/file limits (edge case), attach the OPEN file from `storage/handoff/` and in this section include the exact path plus the one-line note: "OPEN attached; see path above."
-#### B) SNAPSHOT Output
+#### B) DUMP Output
 - Choose one based on scope:
-  - `./ops/bin/snapshot --scope=icl` (default for doc / ops changes)
-  - `./ops/bin/snapshot --scope=full` (required for structural or wide refactors)
+  - `./ops/bin/dump --scope=icl` (default for doc / ops changes)
+  - `./ops/bin/dump --scope=full` (required for structural or wide refactors)
 - Optional:
   - `--out=auto`
   - `--bundle` (tarball includes payload + manifest)
-  - For large `--scope=full` snapshots, prefer `--compress=tar.xz`
-- Snapshot may be inline (truncated if necessary) or referenced by generated filename if archived
+  - For large `--scope=full` dumps, prefer `--compress=tar.xz`
+- Dump may be inline (truncated if necessary) or referenced by generated filename if archived
 - Include the manifest path when present (the manifest points to the chat payload file to paste).
 - If a tarball is produced, include BOTH: the tarball path and the manifest path.
 #### C) PORCELAIN Output
@@ -226,6 +226,6 @@ Final message (mechanical; no extra prose):
 - "Wrote RESULTS file: storage/handoff/<DP-ID>-RESULTS.md"
 - "OPEN captured: storage/handoff/OPEN-...txt"
 - "Porcelain captured: storage/handoff/OPEN-PORCELAIN-...txt"
-- "Snapshot: <payload/tarball> + manifest: <manifest>"
+- "Dump: <payload/tarball> + manifest: <manifest>"
 
 ```

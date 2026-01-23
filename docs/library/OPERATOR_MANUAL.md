@@ -2,18 +2,17 @@
 
 This manual is the operator-facing entrypoint for day-to-day commands and the curated docs library.
 It is intentionally short and maintained; if it drifts, fix it.
-You may see legacy `nukeCE` strings; `Stela` is the platform name going forward.
+You may see legacy `Stela` strings; `Stela` is the platform name going forward.
 
 ## Top Commands (cheat sheet)
 ```
 ./ops/bin/open --intent="short-intent" --dp="DP-XXXX / YYYY-MM-DD"
-./ops/bin/snapshot --scope=icl --format=chatgpt
-./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto
-./ops/bin/snapshot --scope=platform --format=chatgpt --out=auto
-./ops/bin/snapshot --scope=full --format=chatgpt --out=auto
-./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --compress=tar.xz
-./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --bundle
-./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto.tar.xz
+./ops/bin/dump --scope=platform --format=chatgpt
+./ops/bin/dump --scope=platform --format=chatgpt --out=auto
+./ops/bin/dump --scope=full --format=chatgpt --out=auto
+./ops/bin/dump --scope=platform --format=chatgpt --out=auto --compress=tar.xz
+./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
+./ops/bin/dump --scope=platform --format=chatgpt --out=auto.tar.xz
 ./ops/bin/help
 ./ops/bin/help list
 ./ops/bin/help manual
@@ -33,9 +32,6 @@ Add a new entry by editing the manifest and keeping the list curated (not every 
 Continuity Map (operator wayfinding):
 - `./ops/bin/help continuity-map`
 
-ICL Continuity Core (operator wayfinding):
-- `./ops/bin/help icl-continuity-core`
-
 Datasets:
 - Datasets live under `docs/library/datasets/` and are manifest-only.
 - Use `./ops/bin/help db-dataset` for the dataset library overview.
@@ -43,11 +39,6 @@ Datasets:
 
 Behavioral preferences:
 - Behavioral preferences are documented in `docs/library/MEMENTOS.md`.
-
-## Stelae (operator reminders)
-- Stelae live at `docs/library/STELAE.md`.
-- Consult them before submitting a DP, when switching DISCUSS -> EXECUTE, and after a phase error or when frustrated.
-- Practical rule: If you're angry or rushing, read one Stela before you send.
 
 ## DP docket (optional)
 Use the docket (`docs/library/DOCKET.md`) when you want a light forward-looking queue:
@@ -64,19 +55,19 @@ What to expect:
 - No commands run, no file edits, and no approval-dependent artifacts until a DP (and approval phrase when required) is provided.
 
 ## Integrator Phase Discipline
-Conformance-first is mandatory: normalize to the current DP template and fill the Freshness Gate from OPEN + snapshot (operator-provided or locally generated for this run) before any DP edits.
+Conformance-first is mandatory: normalize to the current DP template and fill the Freshness Gate from OPEN + dump (operator-provided or locally generated for this run) before any DP edits.
 Phase-locked outputs are mandatory: when meta is requested, output DB-PR-META only.
 Receipt bundle is mandatory for any DP intended to be run.
 
 Start phrases (copy/paste; short)
 - DP Revision Run (conformance-first):
-  SEE ATTACHED — REFRESH STATE (OPEN + snapshot; operator-provided or locally generated for this run) — REVISE/UPDATE DP-OPS-00XX — OUTPUT: DP ONLY — SINGLE CODE BLOCK — NO DB-PR-META
+  SEE ATTACHED — REFRESH STATE (OPEN + dump; operator-provided or locally generated for this run) — REVISE/UPDATE DP-OPS-00XX — OUTPUT: DP ONLY — SINGLE CODE BLOCK — NO DB-PR-META
 
 - DB-PR-META Emission (meta-only):
   APPROVE DP-OPS-00XX EMIT DB-PR-META — OUTPUT: DB-PR-META ONLY — NO DP TEXT — META IN COPY/PASTE CODE BLOCKS
 
 Hard stop conditions + recovery (short)
-- Missing OPEN/snapshot, mismatched branch/HEAD, scope mismatch, placeholders in DP, or wrong artifact emitted.
+- Missing OPEN/dump, mismatched branch/HEAD, scope mismatch, placeholders in DP, or wrong artifact emitted.
 - Recovery phrases (copy/paste):
   PHASE ERROR — RE-EMIT DP-OPS-00XX ONLY — DP ONLY — SINGLE CODE BLOCK — NO DB-PR-META
   PHASE ERROR — RE-EMIT DB-PR-META ONLY FOR DP-OPS-00XX — META ONLY — NO DP TEXT
@@ -93,7 +84,7 @@ Discuss-only:
 
 The 10-step DP conveyor belt (mechanical loop)
 1. A draft DP exists (idea-form DP is acceptable) and is saved for later refresh.
-2. Operator requests refresh/update (attaches OPEN + snapshot; operator-provided or locally generated for this run) using the standard phrase.
+2. Operator requests refresh/update (attaches OPEN + dump; operator-provided or locally generated for this run) using the standard phrase.
 3. Integrator emits the updated DP only (single code block; no meta; no extra text).
 4. Operator creates/switches to the DP’s required work branch.
 5. Operator hands the DP to the worker; worker runs the DP.
@@ -103,7 +94,7 @@ The 10-step DP conveyor belt (mechanical loop)
    - APPROVE DP-OPS-00XX EMIT DB-PR-META (standard phrase).
 8. Integrator emits DB-PR-META only (copy/paste-safe code blocks; no DP text).
 9. Operator commits using DB-PR-META; pushes branch; opens/merges PR; syncs main; cleans up branch.
-10. Loop closed: repo is clean; canon updates (e.g., STATE_OF_PLAY) are present in the merged PR.
+10. Loop closed: repo is clean; canon updates (e.g., SoP) are present in the merged PR.
 
 Phase error definition + no-debate recovery
 Phase error = assistant emitted the wrong artifact for the operator’s current step.
@@ -114,7 +105,7 @@ Phase error = assistant emitted the wrong artifact for the operator’s current 
 - Meta phase wrong output → re-emit DB-PR-META only:
   PHASE ERROR — RE-EMIT DB-PR-META ONLY FOR DP-OPS-00XX — META ONLY — NO DP TEXT
 
-- Worker blocked due to placeholders / malformed DP (branch name, OPEN/snapshot names, literal three-dot placeholder):
+- Worker blocked due to placeholders / malformed DP (branch name, OPEN/dump names, literal three-dot placeholder):
   BLOCKED ACKNOWLEDGED — REVISE DP-OPS-00XX TO REMOVE PLACEHOLDERS ONLY — NO OTHER EDITS — OUTPUT: DP ONLY
 
 - Clean copy needed (formatting wrong):
@@ -160,12 +151,12 @@ Paste-ready delimiter example:
 Operator Handoff Paste Order (single message, exact order):
 1) Approval line (start-of-message, plain text, unquoted): `APPROVE <DP-ID> EMIT DB-PR-META`
 2) Paste worker results raw, unquoted, unedited (after a delimiter: a single blank line or a line containing only `---`).
-3) Attach the snapshot file in the same message (if DP required it).
+3) Attach the dump file in the same message (if DP required it).
 Attachment-mode (lowest-friction default when the operator is on mobile):
 1) Approval line in chat (start-of-message, plain text, unquoted).
-2) Attach the worker-results text file from `storage/handoff/<DP-ID>-RESULTS.md` (full worker results, including the RECEIPT (OPEN + SNAPSHOT)).
-3) Attach snapshot artifacts when required.
-Minimal attachment-mode handoff: one approval line + results artifact attachment, plus the snapshot bundle when required. Paste-mode remains valid.
+2) Attach the worker-results text file from `storage/handoff/<DP-ID>-RESULTS.md` (full worker results, including the RECEIPT (OPEN + DUMP)).
+3) Attach dump artifacts when required.
+Minimal attachment-mode handoff: one approval line + results artifact attachment, plus the dump bundle when required. Paste-mode remains valid.
 If the chat UI cannot insert blank lines safely, use the `---` delimiter line before pasting results.
 MEMENTO: M-HANDOFF-01 (docs/library/MEMENTOS.md).
 Approval must be the first tokens in the message (start-of-message) and outside OPEN prompt text, OPEN intent, and outside quoted/fenced blocks.
@@ -199,59 +190,60 @@ Worker guardrails (summary):
 - Reuse-first; duplication check before creating anything (near-duplicates included).
 - No new files unless listed in the DP FILES block.
 - Declare the SSOT file for each touched topic; if unclear, STOP.
-- Canon spelling: Stela (singular) / Stelae (plural). Normalize voice-to-text variants before committing or approving.
+- Canon spelling: Stela. Normalize voice-to-text variants before committing or approving.
 - If duplicates / near-duplicates / out-of-place artifacts are found, list them only under Supersession / Deletion candidates with a crisp plan; no deletions or moves unless explicitly authorized by the DP.
-- Output artifacts are output artifact files created under `storage/handoff/` and `storage/snapshots/` and must remain untracked.
+- Output artifacts are output artifact files created under `storage/handoff/` and `storage/dumps/` and must remain untracked.
 - "No new files unless listed" applies to tracked repo files only.
 - Worker must write the full results message (A/B/C/D + RECEIPT) to `storage/handoff/<DP-ID>-RESULTS.md`; contents must match the paste-mode results exactly.
 Receipt package (minimum handoff artifacts; attachment-mode friendly):
 - `storage/handoff/<DP-ID>-RESULTS.md` (required)
-- Snapshot tarball when required by the DP
-- Snapshot manifest (bundled inside the tarball when `--bundle` is used, or attached alongside when not bundled)
+- Dump tarball when required by the DP
+- Dump manifest (bundled inside the tarball when `--bundle` is used, or attached alongside when not bundled)
 - OPEN + OPEN-PORCELAIN artifacts are already captured under `storage/handoff/` by OPEN tooling; do not regress this.
 
 Every worker result message must end with the RECEIPT (delivery format, not IN-LOOP permission):
 - Use the exact headings and order:
   - `### RECEIPT`
   - `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work)
-  - `### B) SNAPSHOT Output` (paths or archived filenames; choose `--scope=icl` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--bundle` (tarball includes payload + manifest); for large `--scope=full` snapshots, prefer `--compress=tar.xz`; snapshot may be inline, truncated if necessary, or referenced by generated filename if archived)
+  - `### B) DUMP Output` (paths or archived filenames; choose `--scope=platform` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--bundle` (tarball includes payload + manifest); for large `--scope=full` dumps, prefer `--compress=tar.xz`; dump may be inline, truncated if necessary, or referenced by generated filename if archived)
   - Include the manifest path when present (the manifest points to the chat payload file to paste).
   - If a tarball is produced, include BOTH: the tarball path and the manifest path.
 DPs missing the RECEIPT are incomplete and must be rejected.
 Workers may not claim "Freshness unknown" if they can run OPEN themselves.
 Attachment-mode handoff artifacts must be repo-local: use `storage/handoff/` (never `/tmp` or user temp dirs). Canonical results filename: `storage/handoff/<DP-ID>-RESULTS.md` (basename UPPERCASE; `.md` lowercase).
-For attachment-mode: the attached results file MUST include the RECEIPT (OPEN + SNAPSHOT). If OPEN exceeds message/file limits (edge case), attach the OPEN file from `storage/handoff/` and in `A) OPEN Output` include the exact path plus the one-line note: "OPEN attached; see path above."
+For attachment-mode: the attached results file MUST include the RECEIPT (OPEN + DUMP). If OPEN exceeds message/file limits (edge case), attach the OPEN file from `storage/handoff/` and in `A) OPEN Output` include the exact path plus the one-line note: "OPEN attached; see path above."
 
 What to look for (handoff artifacts):
 - `storage/handoff/<DP-ID>-RESULTS.md`
 - `storage/handoff/OPEN-<tag>-<branch>-<HEAD>.txt` (optional; if OPEN used `--out=auto`)
-- Snapshot artifacts under `storage/snapshots/`, as referenced by the RECEIPT
+- Dump artifacts under `storage/dumps/`, as referenced by the RECEIPT
 
-## Snapshot
-`./ops/bin/snapshot` emits a repo snapshot (stdout by default). Use `--out=auto` to write to `storage/snapshots/`.
+## Dump
+`./ops/bin/dump` emits a repo dump (stdout by default). Use `--out=auto` to write to `storage/dumps/`.
 Scopes:
-- `--scope=icl` (default, curated operator scope)
-- `--scope=platform` (platform-only context; excludes `projects/*` and `public_html/*`)
+- `--scope=platform` (default, curated operator scope; excludes `projects/*`)
 - `--scope=full` (full repo scope)
-Note: snapshots do not include OPEN output; state travels via the RECEIPT.
+- `--scope=project --target=<slug>` (platform + a single project payload)
+Note: dumps do not include OPEN output; state travels via the RECEIPT.
 
 Guidance:
 - Use `--scope=platform` for full platform context during platform build.
-- Use `--scope=full` when project payload must be included.
-- For large `--scope=full` snapshots, prefer `--compress=tar.xz` to keep artifacts attachable.
+- Use `--scope=full` when all project payloads must be included.
+- Use `--scope=project --target=<slug>` for a single project focus view.
+- For large `--scope=full` dumps, prefer `--compress=tar.xz` to keep artifacts attachable.
 
 Optional archive output (tar.xz):
-- `./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --compress=tar.xz`
-- `./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto --bundle`
-- `./ops/bin/snapshot --scope=icl --format=chatgpt --out=auto.tar.xz`
+- `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --compress=tar.xz`
+- `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`
+- `./ops/bin/dump --scope=platform --format=chatgpt --out=auto.tar.xz`
 
 Auto-compress default:
 - For `--scope=full` with `--out=auto` and no explicit `--compress`, `--compress=tar.xz` is assumed.
 
 Archive behavior:
-- Output is a `.tar.xz` archive in `storage/snapshots/`.
-- By default, the archive contains the generated snapshot text only.
-- With `--bundle`, the archive contains the snapshot text plus the manifest.
+- Output is a `.tar.xz` archive in `storage/dumps/`.
+- By default, the archive contains the generated dump text only.
+- With `--bundle`, the archive contains the dump text plus the manifest.
 
 ## Help
 `./ops/bin/help` is the operator front door for curated docs.
@@ -262,17 +254,13 @@ Current help topics (from the manifest):
 ```
 manual
 continuity-map
-icl-continuity-core
 db-dataset
 db-voice-0001
 db-pr-meta
 quickstart
 docs-index
-context-pack
-daily-console
-recovery
 output-format-contract
 contractor-dispatch-contract
-project-truth
+system-constitution
 state-of-play
 ```

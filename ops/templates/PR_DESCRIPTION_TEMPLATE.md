@@ -42,7 +42,7 @@ Each section uses a prose line followed by a fenced block for copy/paste.
 ```
 
 ## Canon updates
-- Updated `STATE_OF_PLAY.md` when doctrine/governance changes.
+- Updated `SoP.md` when doctrine/governance changes.
 ```
 - <fill>
 ```

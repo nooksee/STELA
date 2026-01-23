@@ -23,7 +23,7 @@ Create a **documentation-only** PR that passes repo-gates.
 
 5. Run gates locally:
    - `bash tools/verify_tree.sh`
-   - `bash tools/repo/lint_truth.sh`
+   - `bash tools/lint_truth.sh`
 
 6. Push the branch and open a PR on GitHub.
 

@@ -91,7 +91,7 @@ Preferred order:
   - `storage/handoff/OPEN-<branch>-<YYYY-MM-DD>-<HEAD>.txt`
   - `storage/handoff/OPEN-PORCELAIN-<branch>-<YYYY-MM-DD>-<HEAD>.txt`
 - When OPEN porcelain is large, the OPEN output must show entry count + a preview capped at 50 lines; full porcelain lives in the OPEN-PORCELAIN file.
-- Snapshot artifacts remain under `storage/snapshots/` (payload + manifest; tarball when compressed).
+- Dump artifacts remain under `storage/dumps/` (payload + manifest; tarball when compressed).
 
 ## Verification
 - Not run (operator): check format requirements.
@@ -101,6 +101,5 @@ Preferred order:
 - Rollback: revert this contract and follow prior canon.
 
 ## Canon Links
-- ops/init/protocols/OUTPUT_FORMAT_PROTOCOL.md
 - ops/templates/PR_DESCRIPTION_TEMPLATE.md
 - ops/templates/MERGE_NOTE_TEMPLATE.md

@@ -9,7 +9,7 @@ Applies to contractor briefs and worker tasks.
 ## Requirements
 - Work happens only on `work/*` branches; no direct pushes to `main`.
 - PR-only merges; repo-gates must be green before merge.
-- `STATE_OF_PLAY.md` must be updated when canon/governance changes (same PR).
+- `SoP.md` must be updated when canon/governance changes (same PR).
 - Metadata surfaces are required for every PR: Purpose / What shipped / Scope / Verification / Risk+Rollback / Canon updates.
 - Worker delivers changes as a working tree diff only. Operator handles commit/push/merge.
 
@@ -29,7 +29,6 @@ Applies to contractor briefs and worker tasks.
 - Rollback: restore prior contract language.
 
 ## Canon Links
-- ops/init/profiles/WORKER_PROFILE.md
 - ops/contracts/OUTPUT_FORMAT_CONTRACT.md
 - ops/templates/CONTRACTOR_BRIEF_TEMPLATE.md
 - ops/templates/CONTRACTOR_REPORT_TEMPLATE.md

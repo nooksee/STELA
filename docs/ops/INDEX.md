@@ -35,40 +35,23 @@ Color behavior:
 - If `bat` is not installed, help uses plain `less`.
 
 ## Start here
-- [ICL Continuity Core](../../ops/init/icl/ICL_CONTINUITY_CORE.md)
-- [Daily Console](../../ops/init/icl/DAILY_CONSOLE.md)
-- [Recovery](../../ops/init/icl/RECOVERY.md)
-- [Context Pack](../../ops/init/icl/CONTEXT_PACK.md)
-- [AI Context Sync](../../ops/init/icl/AI_CONTEXT_SYNC.md)
-
-## Core canon
-- [ICL Overview](../../ops/init/icl/ICL_OVERVIEW.md)
-- [OCL Overview](../../ops/init/icl/OCL_OVERVIEW.md)
+- [Stela System Constitution](../../TRUTH.md)
+- [SoP](../../SoP.md)
+- [Operator Manual](../../docs/library/OPERATOR_MANUAL.md)
+- [Continuity Map](../../docs/library/CONTINUITY_MAP.md)
 
 ## Execute
 - [Output Format Contract](../../ops/contracts/OUTPUT_FORMAT_CONTRACT.md)
 - [Contractor Dispatch Contract](../../ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md)
-- [Save This Protocol](../../ops/init/protocols/SAVE_THIS_PROTOCOL.md)
-- [Output Format Protocol](../../ops/init/protocols/OUTPUT_FORMAT_PROTOCOL.md)
-- [Dispatch Packet Protocol](../../ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md)
-
-## Playbooks
-- [Paste Surfaces Playbook](../../ops/init/icl/PASTE_SURFACES_PLAYBOOK.md)
+- [Dispatch Packet Template](../../ops/templates/DISPATCH_PACKET_TEMPLATE.md)
 
 ## Templates
 - [PR Description Template](../../ops/templates/PR_DESCRIPTION_TEMPLATE.md)
 - [Contractor Brief Template](../../ops/templates/CONTRACTOR_BRIEF_TEMPLATE.md)
 - [Contractor Report Template](../../ops/templates/CONTRACTOR_REPORT_TEMPLATE.md)
 
-## Legacy onboarding (deprecated)
-- [Integrator Onboarding](../../ops/init/icl/deprecated/INTEGRATOR_ONBOARDING.md)
-- [Contractor Onboarding](../../ops/init/icl/deprecated/CONTRACTOR_ONBOARDING.md)
-- [Copilot Onboarding](../../ops/init/icl/deprecated/COPILOT_ONBOARDING.md)
-- [Gemini Onboarding](../../ops/init/icl/deprecated/GEMINI_ONBOARDING.md)
-- [IDE Migration](../../ops/init/icl/deprecated/IDE_MIGRATION.md)
-
 ## Triage
 - [../triage/INBOX.md](../triage/INBOX.md)
 
 ## Verification
-- [../../STATE_OF_PLAY.md](../../STATE_OF_PLAY.md)
+- [../../SoP.md](../../SoP.md)

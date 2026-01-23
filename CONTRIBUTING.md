@@ -1,4 +1,4 @@
-# Contributing to nukeCE
+# Contributing to Stela
 
 Welcome. You’re allowed to be clever here — but you must also be **traceable**. 😄
 

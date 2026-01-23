@@ -1,7 +1,7 @@
-# nukeCE (PHP-Nuke CE)
+# Stela (PHP-Nuke CE)
 
-nukeCE is an explainability-first, provenance-forward CMS program with PR-only governance and strong provenance discipline.
+Stela is an explainability-first, provenance-forward CMS program with PR-only governance and strong provenance discipline.
 
-[![repo-gates](https://github.com/nooksee/php-nuke-ce/actions/workflows/repo_gates.yml/badge.svg)](https://github.com/nooksee/php-nuke-ce/actions/workflows/repo_gates.yml)
+[![repo-gates](https://github.com/[User]/stela-platform/actions/workflows/repo_gates.yml/badge.svg)](https://github.com/[User]/stela-platform/actions/workflows/repo_gates.yml)
 
 Start here: `docs/10-QUICKSTART.md`

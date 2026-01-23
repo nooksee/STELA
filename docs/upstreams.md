@@ -10,7 +10,7 @@ They exist so we can:
 ## Rules
 
 - Keep donor snapshots **read-only** under `upstream/`.
-- nukeCE-owned changes happen in **owned surfaces** (e.g., `public_html/`, and future `src/` / `packages/`).
+- Stela-owned changes happen in **owned surfaces** (e.g., `public_html/`, and future `src/` / `packages/`).
 - Any meaningful import/adaptation must include **provenance notes** (what came from where, and what changed).
 
 ## Recommended import workflow

@@ -10,8 +10,8 @@ rm -rf "$WEB/modules/_legacy" 2>/dev/null || true
 rm -rf "$WEB/modules/phpinfo" 2>/dev/null || true
 
 # Run hygiene check
-if [ -x tools/truth/project_truth_check.sh ]; then
-  tools/truth/project_truth_check.sh
+if [ -x tools/project_truth_check.sh ]; then
+  tools/project_truth_check.sh
 fi
 
 echo "Cleanup complete."

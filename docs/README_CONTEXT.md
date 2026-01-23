@@ -1,17 +1,15 @@
-# README_CONTEXT - Context Pack overview
+# README_CONTEXT - Context overview
 
-## What the Context Pack is
-The Context Pack is the minimal, curated set of documents that lets a new operator or AI assistant rehydrate project reality without guessing.
+## What the context surface is
+The context surface is the minimal, curated set of documents that lets a new operator or AI assistant rehydrate project reality without guessing.
 
 ## Where it lives today
-- `ops/init/icl/context_pack.json` is the index of active pointers.
-- The rest of the pack lives alongside it in `ops/init/icl/`.
+- `ops/lib/manifests/CONTEXT_MANIFEST.md` is the required list of canonical pointers.
+- `docs/library/CONTINUITY_MAP.md` is the operator-facing pointer map.
 
 ## How to keep it current
-- When docs move, update `ops/init/icl/context_pack.json` to point at the new locations.
-- Keep `ops/init/icl/RECOVERY.md` aligned with current workflow and repo-gates.
+- When docs move, update `ops/lib/manifests/CONTEXT_MANIFEST.md` and `docs/library/CONTINUITY_MAP.md` to point at the new locations.
 - Keep onboarding pointers aligned to `docs/10-QUICKSTART.md`.
-- Legacy onboarding docs live in `ops/init/icl/deprecated/`; if used, keep them aligned with governance and the front-door docs.
 
 ## What it is not
 - It is not runtime configuration.

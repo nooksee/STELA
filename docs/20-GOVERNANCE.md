@@ -1,4 +1,4 @@
-# Governance (how nukeCE stays coherent)
+# Governance (how Stela stays coherent)
 
 This project is built to resist drift. Governance is not “process theater” — it is the product.
 
@@ -9,13 +9,13 @@ This project is built to resist drift. Governance is not “process theater” �
 
 ## Truth-Layer (source of truth)
 Authoritative docs (kept correct at all times):
-- `PROJECT_TRUTH.md`
+- `TRUTH.md`
 - `PROJECT_MAP.md`
-- `STATE_OF_PLAY.md`
+- `SoP.md`
 - `CANONICAL_TREE.md`
 - `docs/00-INDEX.md` (front door)
 
-Rule: if canon changes, **STATE_OF_PLAY must be updated** (same PR when possible).
+Rule: if canon changes, **SoP must be updated** (same PR when possible).
 
 ## Branch naming
 `work/<topic>-YYYY-MM-DD`
@@ -47,7 +47,7 @@ AI contractors should be given:
 - strict instruction: no direct pushes to main, provide commands in small safe chunks
 
 ## Tone lanes (prevents "AI slop")
-- Ops lane (allowed to be checklist-heavy): `ops/` (including `ops/init/icl/`) and `docs/ops/INDEX.md` (pointer only)
+- Ops lane (allowed to be checklist-heavy): `ops/` and `docs/ops/INDEX.md` (pointer only)
 - Public-facing lane (must stay human): root README, founders docs
 
 We prefer: clear, explain-first, minimal filler.

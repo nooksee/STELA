@@ -8,7 +8,7 @@ Current: none
 
 ## What is a project
 A project is a deployable payload rooted under `projects/<slug>/` with a README that owns its scope.
-Project payloads live under `projects/<slug>/` and remain excluded from platform snapshots by design.
+Project payloads live under `projects/<slug>/` and remain excluded from platform dumps by design.
 
 ## Minimum project layout (v1)
 Required:

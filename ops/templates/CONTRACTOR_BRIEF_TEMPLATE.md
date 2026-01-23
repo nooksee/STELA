@@ -1,4 +1,4 @@
-# Contractor Brief Template (CANON) - nukeCE
+# Contractor Brief Template (CANON) - Stela
 
 Purpose: produce a paste-ready briefing for a Junior Implementer (Copilot/Codex/Gemini)
 that results in a small, reviewable, doc-first PR slice.
@@ -37,7 +37,7 @@ REPO RULES (NON-NEGOTIABLE)
 - No invention: do not add paths/files/claims not supported by canon.
 - Do not modify files inside `upstream/` (read-only donor bank).
 - Do not modify files inside `.github/` unless explicitly instructed.
-- If canon/governance truth docs are impacted, update `STATE_OF_PLAY.md` in the same PR.
+- If canon/governance truth docs are impacted, update `SoP.md` in the same PR.
 
 SCOPE (touch only these files)
 - <path/to/file1>

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# nukeCE truth lint:
+# Stela truth lint:
 # Only checks authored surfaces.
 # Ignores upstream/runtime/quarantine/vendor entirely.
 
@@ -38,7 +38,7 @@ for f in "${root_files[@]}"; do
 done
 
 # Prevent self-matches: this linter contains the patterns by design.
-files="$(printf '%s\n' "$files" | grep -v -x 'tools/repo/lint_truth.sh' || true)"
+files="$(printf '%s\n' "$files" | grep -v -x 'tools/lint_truth.sh' || true)"
 
 [ -z "${files//[[:space:]]/}" ] && { echo "[lint_truth] OK (no files to scan)"; exit 0; }
 

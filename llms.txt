@@ -1,21 +1,18 @@
-# nukeCE llms.txt
+# Stela llms.txt
 # Pointer map to canonical docs and tools (no duplication).
 
 ## Core canon
-- PROJECT_TRUTH.md
-- STATE_OF_PLAY.md
+- TRUTH.md
+- SoP.md
 - docs/library/OPERATOR_MANUAL.md
 - docs/library/CONTINUITY_MAP.md
-- ops/init/icl/ICL_CONTINUITY_CORE.md
+- ops/lib/manifests/CONTEXT_MANIFEST.md
 - docs/library/LIBRARY_INDEX.md
 
 ## Protocols + contracts
-- ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md
-- ops/init/protocols/OUTPUT_FORMAT_PROTOCOL.md
+- ops/templates/DISPATCH_PACKET_TEMPLATE.md
 - ops/contracts/OUTPUT_FORMAT_CONTRACT.md
 - ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md
-- ops/init/protocols/SNAPSHOT_PROTOCOL.md
-- ops/init/protocols/HANDOFF_PROTOCOL.md
 
 ## Behavior + datasets
 - docs/library/MEMENTOS.md
@@ -26,7 +23,7 @@
 ## Tools
 - ops/bin/open
 - ops/bin/help
-- ops/bin/snapshot
+- ops/bin/dump
 
 ## Consolidation
 - AGENTS.md

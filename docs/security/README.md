@@ -1,4 +1,4 @@
-# Security (nukeCE)
+# Security (Stela)
 
 This document expands on the repo-level policy in `SECURITY.md`.
 
