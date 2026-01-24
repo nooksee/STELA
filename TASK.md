@@ -44,6 +44,7 @@
     * Run: `./ops/bin/dump --scope=platform` (Verify clean scope)
     * Run: `./tools/context_lint.sh` (if available)
 * **Artifact Bundle:**
-    * `DP-OPS-[ID]-RESULTS.md`
-    * `OPEN-[branch].txt`
-    * `OPEN-PORCELAIN-[branch].txt`
+    * **Target Directory:** `storage/handoff/`
+    * `DP-OPS-[ID]-RESULTS.md` (Create this in handoff)
+    * `OPEN-[branch].txt` (Already in handoff)
+    * `OPEN-PORCELAIN-[branch].txt` (Already in handoff)

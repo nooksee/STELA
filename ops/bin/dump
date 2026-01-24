@@ -11,7 +11,7 @@ target=""
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/dump [--scope=platform|full|project] [--target=<slug>] [--format=chatgpt|gemini|claude]
+Usage: ops/bin/dump [--scope=platform|full|project] [--target=<slug>] [--format=chatgpt|gemini|claude|list]
                    [--max-lines=n] [--out=path|auto] [--compress=tar.xz] [--bundle]
 USAGE
 }
@@ -33,7 +33,7 @@ for arg in "$@"; do
         die "--target requires a value"
       fi
       ;;
-    --format=chatgpt|--format=gemini|--format=claude)
+    --format=chatgpt|--format=gemini|--format=claude|--format=list)
       format="${arg#--format=}"
       ;;
     --max-lines=*)
@@ -173,6 +173,9 @@ case "$format" in
   claude)
     format_label="Claude"
     ;;
+  list)
+    format_label="List"
+    ;;
 esac
 
 include_file() {
@@ -182,6 +185,7 @@ include_file() {
       return 0
       ;;
     platform)
+      if [[ "$path" == "ops/bin/dispatch_packet_lint.sh" ]]; then return 0; fi
       # Whitelist the README
       if [[ "$path" == "projects/README.md" ]]; then return 0; fi
       # Strictly ban everything else in projects/
@@ -356,14 +360,16 @@ emit_dump() {
   for path in "${files[@]}"; do
     echo "- $path"
   done
-  echo ""
-  echo "[FILE CONTENTS]"
-  for path in "${files[@]}"; do
-    echo "<<< FILE BEGIN: $path"
-    emit_file_contents "$path" "$suppress_pipe_errors" "$max_lines"
-    echo ">>> FILE END: $path"
+  if [[ "$format" != "list" ]]; then
     echo ""
-  done
+    echo "[FILE CONTENTS]"
+    for path in "${files[@]}"; do
+      echo "<<< FILE BEGIN: $path"
+      emit_file_contents "$path" "$suppress_pipe_errors" "$max_lines"
+      echo ">>> FILE END: $path"
+      echo ""
+    done
+  fi
   echo "===== DUMP PAYLOAD END ====="
 }
 
