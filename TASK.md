@@ -45,9 +45,10 @@
     * Run: `./tools/context_lint.sh` (if available)
 * **Artifact Bundle:**
     * **Target Directory:** `storage/handoff/`
-    * **DP-OPS-[ID]-RESULTS.md** (The Proof Bundle):
-        * **1. Summary:** (1-2 sentences in your own voice explaining the change).
-        * **2. Verification Output:** (Copy/Paste the actual terminal output of your verification commands).
-        * **3. Disk Audit:** (Output of `find . -maxdepth 3 -not -path '*/.*' -exec du -h {} + | sort -hr | head -n 10`).
+    * **DP-OPS-[ID]-RESULTS.md** (A-E Deliverable Format):
+        * **A) SUMMARY + SCOPE CONFIRMATION:** (Concise bullets, exact paths touched).
+        * **B) SUPERSESSION / DELETION:** (Proposal only).
+        * **D) PATCH / DIFF:** (Unified diff or link to porcelain).
+        * **E) RECEIPT:** (Must include OPEN output + SNAPSHOT output).
     * `OPEN-[branch].txt` (Already in handoff)
     * `OPEN-PORCELAIN-[branch].txt` (Already in handoff)

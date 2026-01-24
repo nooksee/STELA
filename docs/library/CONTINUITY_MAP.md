@@ -11,6 +11,3 @@ Pointer-only map of the canonical continuity surfaces that preserve state across
 - Docs index: `docs/00_INDEX.md` (docs navigation)
 - Dump tool: `ops/bin/dump` (state capture)
 
-## Later bucket (ideas only; no implementation)
-- Location: `SoP.md` (section: "Later bucket")
-- Use: dedupe / clone detection ideas only; record, do not implement.

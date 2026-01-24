@@ -83,11 +83,11 @@
 ## 2026-01-21 — DP-OPS-0048D: Dispatch Packet template heading linter
 
 - What changed:
-  - Added `ops/bin/dispatch_packet_lint.sh` to enforce canonical DP A-E headings.
+  - Added `tools/dispatch_packet_lint.sh` to enforce canonical DP A-E headings.
   - Required the linter in `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md` verification.
   - Listed the linter in `ops/bin/help`.
 - Verification:
-  - `./ops/bin/dispatch_packet_lint.sh`
+  - `./tools/dispatch_packet_lint.sh`
   - Result: `FAIL: expected heading '### A) STATE' but found '### A) SUMMARY + SCOPE CONFIRMATION'`
   - `./tools/context_lint.sh`
   - Result: `[context_lint] Result: clean`
