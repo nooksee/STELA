@@ -34,7 +34,6 @@ This file is the single source of truth for MEMENTOS.
 
 ## MEMENTO Triggers (operational)
 - M-PHASE-01 meaning: If you feel the urge to be helpful before matching the template, you are about to break phase.
-- M-PHASE-01 trigger: Any DP revision or any DB-PR-META request.
 
 ## Core failure mode
 The repeated failure pattern is a stack:
@@ -82,7 +81,6 @@ MEMENTOS exist to interrupt that stack before it becomes canon drift.
 - When blocked, stop and request the missing state.
 
 ## What MEMENTOS do not do
-- Do not bypass approvals or IN-LOOP gates.
 - Do not override refusal rules or state binding.
 - Do not imply memory, continuity, or hidden context.
 - Do not rename UI labels or canon surfaces.
@@ -90,7 +88,6 @@ MEMENTOS exist to interrupt that stack before it becomes canon drift.
 
 ## Placement
 - Single source of truth: `docs/library/MEMENTOS.md`.
-- References only: `ops/bin/open`, `ops/templates/DISPATCH_PACKET_TEMPLATE.md`, `docs/library/OPERATOR_MANUAL.md`, `docs/library/datasets/DB-PR-META.md`.
 - Do not duplicate or embed elsewhere.
 
 ## Example bias artifacts (short and mechanical)
@@ -113,8 +110,6 @@ If state is missing, stop and request it.
 If the required state cannot be verified, refusal is correct behavior.
 Do not proceed "helpfully" past uncertainty.
 
-### UI labels are truth (DB-PR-META)
-DB-PR-META surface labels are canonical and must not be renamed.
 Use the exact UI labels and ordering defined in TRUTH.
 
 ## Operational notes

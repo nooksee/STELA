@@ -1,24 +1,41 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-manifest_rel="docs/library/LIBRARY_INDEX.md"
-
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/help [list|<topic>]
+Usage: ops/bin/help [term]
 USAGE
 }
 
 die() {
-  echo "ERROR: $*" >&2
+  echo "Stela System: error: $*" >&2
   exit 1
 }
 
-trim() {
-  local s="$1"
-  s="${s#"${s%%[![:space:]]*}"}"
-  s="${s%"${s##*[![:space:]]}"}"
-  printf "%s" "$s"
+color_init() {
+  if [[ -n "${TERM:-}" ]] && command -v tput >/dev/null 2>&1 && tput sgr0 >/dev/null 2>&1; then
+    bold="$(tput bold)"
+    dim="$(tput dim)"
+    red="$(tput setaf 1)"
+    green="$(tput setaf 2)"
+    yellow="$(tput setaf 3)"
+    blue="$(tput setaf 4)"
+    cyan="$(tput setaf 6)"
+    reset="$(tput sgr0)"
+  else
+    bold=""
+    dim=""
+    red=""
+    green=""
+    yellow=""
+    blue=""
+    cyan=""
+    reset=""
+  fi
+}
+
+say() {
+  printf "Stela System: %s\n" "$*"
 }
 
 require_repo_root() {
@@ -35,130 +52,50 @@ require_repo_root() {
   fi
 }
 
-require_pager() {
-  if ! command -v less >/dev/null 2>&1; then
-    die "less is required but was not found on PATH."
-  fi
-}
-
-declare -a topics=()
-declare -A topic_titles=()
-declare -A topic_paths=()
-
-load_manifest() {
-  if [[ ! -f "$manifest_rel" ]]; then
-    die "Missing docs library manifest: $manifest_rel"
-  fi
-
-  local line raw_topic raw_title raw_path extra topic title path
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    line="${line%%$'\r'}"
-    if [[ -z "${line//[[:space:]]/}" ]]; then
-      continue
-    fi
-    if [[ "$line" =~ ^[[:space:]]*# ]]; then
-      continue
-    fi
-
-    IFS='|' read -r raw_topic raw_title raw_path extra <<< "$line"
-    if [[ -n "${extra:-}" ]]; then
-      die "Manifest line has extra fields: $line"
-    fi
-
-    topic="$(trim "${raw_topic:-}")"
-    title="$(trim "${raw_title:-}")"
-    path="$(trim "${raw_path:-}")"
-
-    if [[ -z "$topic" || -z "$title" || -z "$path" ]]; then
-      die "Manifest line missing fields: $line"
-    fi
-    if [[ "$topic" =~ [[:space:]] ]]; then
-      die "Manifest topic must not contain whitespace: $topic"
-    fi
-    if [[ "$path" == /* || "$path" == *".."* ]]; then
-      die "Manifest path must be repo-relative without '..': $path"
-    fi
-    if [[ ! -f "$path" ]]; then
-      die "Manifest path missing: $path"
-    fi
-    if [[ -n "${topic_paths[$topic]:-}" ]]; then
-      die "Duplicate topic in manifest: $topic"
-    fi
-
-    topics+=("$topic")
-    topic_titles["$topic"]="$title"
-    topic_paths["$topic"]="$path"
-  done < "$manifest_rel"
-
-  if (( ${#topics[@]} == 0 )); then
-    die "No topics found in manifest: $manifest_rel"
-  fi
-}
-
-page_text() {
-  less
-}
-
-page_plain_file() {
-  less "$1"
-}
-
-page_color_file() {
-  bat --style=plain --color=always --paging=never "$1" | less -R
-}
-
 show_menu() {
-  cat <<EOF | page_text
-ops/bin/help - docs front door (curated)
+  say "Processing help request."
+  cat <<EOF
+${bold}Stela Help${reset}
+${dim}Explainable command index and quick start.${reset}
 
-Command index:
-  OPEN     ./ops/bin/open --intent="..." --dp="DP-XXXX / YYYY-MM-DD"
-  DISCUSS-ONLY  talk-only cue (see OPERATOR_MANUAL + DISPATCH_PACKET_TEMPLATE)
-  DUMP     ./ops/bin/dump --scope=platform --format=chatgpt
-  HELP     ./ops/bin/help [list|<topic>]
-  DP-LINT  ./ops/bin/dispatch_packet_lint.sh [path]
-  GATES    bash tools/context_lint.sh
+${bold}Commands${reset}
+  ${cyan}project${reset}  Manage TRUTH/TASK, status, and work log.
+  ${cyan}open${reset}     Generate an OPEN prompt with freshness gate.
+  ${cyan}dump${reset}     Capture platform state (excludes projects/).
+  ${cyan}help${reset}     Search docs/: ./ops/bin/help <term>
 
-Docs library:
-  ./ops/bin/help list
-  ./ops/bin/help manual
-  ./ops/bin/help <topic>
+${bold}Quick Start${reset}
+  1) Review canon: ${green}TRUTH.md${reset} and ${green}TASK.md${reset}
+  2) Capture context: ${green}./ops/bin/open --intent="..." --dp="DP-XXXX / YYYY-MM-DD"${reset}
+  3) Dump platform: ${green}./ops/bin/dump --scope=platform --format=chatgpt${reset}
+  4) Check status: ${green}./ops/bin/project status${reset}
 
-Library manifest:
-  $manifest_rel
-
-Rule: if a doc is not listed in the manifest, help will refuse to open it.
+${bold}Search${reset}
+  ./ops/bin/help <term>  (grep -r in docs/ with line numbers)
 EOF
 }
 
-show_list() {
-  {
-    printf "Available docs (from %s):\n\n" "$manifest_rel"
-    for topic in "${topics[@]}"; do
-      printf "  %-28s %s\n" "$topic" "${topic_titles[$topic]}"
-    done
-    printf "\nExample: ./ops/bin/help %s\n" "${topics[0]}"
-  } | page_text
-}
-
-open_topic() {
-  local topic="$1"
-  local path="${topic_paths[$topic]:-}"
-
-  if [[ -z "$path" ]]; then
-    die "Unknown topic: $topic (run: ./ops/bin/help list)"
+search_docs() {
+  local term="$1"
+  if [[ -z "$term" ]]; then
+    die "Search term required."
+  fi
+  if [[ ! -d "docs" ]]; then
+    die "docs/ directory not found."
   fi
 
-  if command -v bat >/dev/null 2>&1; then
-    page_color_file "$path"
+  say "Processing search for \"$term\"."
+  matches="$(grep -RIn --binary-files=without-match -- "$term" docs/ || true)"
+  if [[ -n "$matches" ]]; then
+    say "I have located the following references regarding \"$term\":"
+    printf "%s\n" "$matches"
   else
-    page_plain_file "$path"
+    say "No references found regarding \"$term\" in docs/."
   fi
 }
 
+color_init
 require_repo_root
-require_pager
-load_manifest
 
 if (( $# > 1 )); then
   die "Too many arguments."
@@ -168,13 +105,10 @@ case "${1:-}" in
   "" )
     show_menu
     ;;
-  list )
-    show_list
-    ;;
   -h|--help )
     usage
     ;;
   * )
-    open_topic "$1"
+    search_docs "$1"
     ;;
 esac

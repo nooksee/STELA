@@ -7,5 +7,5 @@ Minimal shell helpers for the project registry and `ops/bin/project`.
 
 ## Conventions
 - Run from repo root.
-- Registry SSOT: `docs/library/datasets/PROJECT_REGISTRY.md`.
+- Registry SSOT: `storage/PROJECT_REGISTRY.md`.
 - Scaffold template: `ops/lib/project/templates/default/README.md`.

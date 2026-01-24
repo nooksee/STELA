@@ -5,8 +5,8 @@ This repo is governed. The fastest way to succeed here is to follow the rules *e
 ## First steps (read in this order)
 1) `TRUTH.md`
 2) `SoP.md`
-3) `PROJECT_MAP.md`
-4) `docs/00-INDEX.md`
+3) `TRUTH.md Section 3`
+4) `docs/00_INDEX.md`
 5) `docs/library/OPERATOR_MANUAL.md`
 6) `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md`
 

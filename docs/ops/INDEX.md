@@ -4,35 +4,19 @@ Short index for operators. Ops canon lives in `ops/`; this index points to it.
 If a doc is not linked here or captured in `docs/triage/INBOX.md`, it is drift.
 
 ## Docs library + help (curated surface)
-Use `./ops/bin/help` as the operator front door for approved docs. It only opens
-topics listed in `docs/library/LIBRARY_INDEX.md`. If it is not listed, it is not
-approved for help.
-
-Usage:
-- `./ops/bin/help`
-- `./ops/bin/help list`
-- `./ops/bin/help manual`
-- `./ops/bin/help <topic>`
+Use `./ops/bin/help` as the operator front door for curated docs.
+- `./ops/bin/help` shows the command menu and quick start.
+- `./ops/bin/help <term>` searches `docs/` (grep with line numbers).
 
 Library location:
 - Root: `docs/library/`
-- Manifest: `docs/library/LIBRARY_INDEX.md` (format: `topic | title | path`)
-
-Datasets (manifest-only):
-- Root: `docs/library/datasets/`
-- `./ops/bin/help db-dataset`
-- `./ops/bin/help db-voice-0001`
+- Index: `docs/library/LIBRARY_INDEX.md` (curated topic list)
 
 Add a new library entry:
 - Update `docs/library/LIBRARY_INDEX.md` with a new line; keep it curated (not every .md).
 
 Operator Manual:
 - `docs/library/OPERATOR_MANUAL.md`
-- `./ops/bin/help manual`
-
-Color behavior:
-- If `bat` is installed, help uses `bat` and pipes to `less -R`.
-- If `bat` is not installed, help uses plain `less`.
 
 ## Start here
 - [Stela System Constitution](../../TRUTH.md)
@@ -43,12 +27,6 @@ Color behavior:
 ## Execute
 - [Output Format Contract](../../ops/contracts/OUTPUT_FORMAT_CONTRACT.md)
 - [Contractor Dispatch Contract](../../ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md)
-- [Dispatch Packet Template](../../ops/templates/DISPATCH_PACKET_TEMPLATE.md)
-
-## Templates
-- [PR Description Template](../../ops/templates/PR_DESCRIPTION_TEMPLATE.md)
-- [Contractor Brief Template](../../ops/templates/CONTRACTOR_BRIEF_TEMPLATE.md)
-- [Contractor Report Template](../../ops/templates/CONTRACTOR_REPORT_TEMPLATE.md)
 
 ## Triage
 - [../triage/INBOX.md](../triage/INBOX.md)

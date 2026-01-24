@@ -33,7 +33,7 @@ is_known_path() {
     ops/init/*)
       return 1
       ;;
-    ops/*|docs/*|tools/*|public_html/*|upstream/*|storage/*|tests/*|scripts/*|addons/*|patches/*|nbproject/*|.github/*|README.md|SECURITY.md|CONTRIBUTING.md|SoP.md|TRUTH.md|PROJECT_MAP.md|CANONICAL_TREE.md|CHANGELOG.md)
+    ops/*|docs/*|tools/*|public_html/*|upstream/*|storage/*|tests/*|scripts/*|addons/*|patches/*|nbproject/*|.github/*|README.md|SECURITY.md|CONTRIBUTING.md|SoP.md|TRUTH.md|CHANGELOG.md)
       return 0
       ;;
   esac

@@ -94,14 +94,9 @@ required_files=(
   "TRUTH.md"
   "SoP.md"
   "AGENTS.md"
-  "PROJECT_MAP.md"
-  "CANONICAL_TREE.md"
   "docs/00-INDEX.md"
   "docs/library/OPERATOR_MANUAL.md"
   "docs/library/CONTINUITY_MAP.md"
-  "ops/contracts/OUTPUT_FORMAT_CONTRACT.md"
-  "ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md"
-  "ops/templates/DISPATCH_PACKET_TEMPLATE.md"
   "ops/lib/manifests/CONTEXT_MANIFEST.md"
 )
 
@@ -137,14 +132,12 @@ emit() {
 {
   cat <<EOF
 ===== OPEN PROMPT =====
-nukeCE OPEN PROMPT (Front Door v2.1)
+Stela OPEN PROMPT
 Repo is truth. If a file/path isn't present, say so.
 $mode_line
 You are entering a canon-governed system.
 Precision beats speed.
 If unsure, stop and ask.
-MEMENTO: M-ATTN-01 (docs/library/MEMENTOS.md)
-STELAE: S-ATTN-01 (docs/library/STELAE.md)
 
 [FRESHNESS GATE]
 - Active branch: $branch
@@ -175,14 +168,9 @@ Don't:
 - TRUTH.md
 - SoP.md
 - AGENTS.md
-- PROJECT_MAP.md
-- CANONICAL_TREE.md
 - docs/00-INDEX.md
 - docs/library/OPERATOR_MANUAL.md
 - docs/library/CONTINUITY_MAP.md
-- ops/contracts/OUTPUT_FORMAT_CONTRACT.md
-- ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md
-- ops/templates/DISPATCH_PACKET_TEMPLATE.md
 - ops/lib/manifests/CONTEXT_MANIFEST.md
 
 [DUMP]
@@ -214,9 +202,6 @@ fi
   cat <<EOF
 [NEXT OPERATOR MOVES]
 - ./ops/bin/dump --scope=platform --format=chatgpt
-
-[DB-PR-META]
-- After approving work results, tell the assistant you approve and ask for DB-PR-META; assistant must emit it immediately.
 
 [OPERATOR CONTEXT]
 - If any canon pointers are missing, say so.

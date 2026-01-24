@@ -10,10 +10,11 @@ This project is built to resist drift. Governance is not “process theater” �
 ## Truth-Layer (source of truth)
 Authoritative docs (kept correct at all times):
 - `TRUTH.md`
-- `PROJECT_MAP.md`
 - `SoP.md`
-- `CANONICAL_TREE.md`
-- `docs/00-INDEX.md` (front door)
+- `TRUTH.md Section 2`
+- `TRUTH.md Section 3`
+- `TRUTH.md Section 4`
+- `docs/00_INDEX.md` (front door)
 
 Rule: if canon changes, **SoP must be updated** (same PR when possible).
 

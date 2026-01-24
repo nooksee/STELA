@@ -19,8 +19,8 @@ This pack is the minimum you need to work safely in the Stela repository.
 1. Read:
    - `TRUTH.md`
    - `docs/library/OPERATOR_MANUAL.md`
-   - `docs/40-PROJECT_HYGIENE.md`
-   - `docs/upstreams.md`
+   - `docs/40_PROJECT_HYGIENE.md`
+   - `docs/UPSTREAMS.md`
 
 2. Confirm you can:
    - create a `work/*` branch,

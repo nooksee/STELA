@@ -30,7 +30,7 @@ project_lib_require_repo_root() {
 }
 
 project_lib_registry_rel() {
-  printf "%s" "docs/library/datasets/PROJECT_REGISTRY.md"
+  printf "%s" "storage/PROJECT_REGISTRY.md"
 }
 
 project_lib_registry_path() {
