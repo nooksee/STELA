@@ -2,7 +2,7 @@
 
 Welcome. You’re allowed to be clever here — but you must also be **traceable**. 😄
 
-Source of truth for onboarding and workflow: `docs/10-QUICKSTART.md`.
+Source of truth for onboarding and workflow: `docs/10_QUICKSTART.md`.
 
 ## Non-negotiables
 - **No direct pushes to `main`.** Ever.
@@ -48,7 +48,7 @@ Do not commit private IDE settings:
 
 ## Provenance expectations
 If you import or adapt external code:
-- Add notes in `docs/upstreams.md` (or the appropriate truth-layer doc)
+- Add notes in `docs/UPSTREAMS.md` (or the appropriate truth-layer doc)
 - Include: source, purpose, what changed, and any known risks/limits
 
 ## Using Codex (approved “junior contractor” mode)

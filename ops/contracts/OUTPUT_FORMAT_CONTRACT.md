@@ -67,7 +67,7 @@ Metadata kits and operator command blocks do NOT use these markers.
 Preferred order:
 1) Unified diff for small edits.
 2) Full file replacement for new files or heavy refactors.
-3) Never invent file paths; if unsure, point to canon truth docs (TRUTH.md Section 3 / TRUTH.md Section 2).
+3) Never invent file paths; if unsure, point to canon truth docs (TRUTH.md Section 3 / TRUTH.md Section 4).
 
 ### Verification minimums
 - Branch name correct (`work/<topic>-YYYY-MM-DD`).

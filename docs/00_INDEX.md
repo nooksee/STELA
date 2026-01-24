@@ -1,7 +1,7 @@
 # Docs — index
 
 ## Start here
-- [10-QUICKSTART.md](10-QUICKSTART.md)
+- [10_QUICKSTART.md](10_QUICKSTART.md)
 
 ## Operating system (ops)
 - [ops/INDEX.md](ops/INDEX.md)
@@ -14,7 +14,7 @@
 ## Reference
 - [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)
 - [REPO_LAYOUT.md](REPO_LAYOUT.md)
-- [30-RELEASE_PROCESS.md](30-RELEASE_PROCESS.md)
+- [30_RELEASE_PROCESS.md](30_RELEASE_PROCESS.md)
 - [LESSONS_LEARNED.md](LESSONS_LEARNED.md)
 - [README_CONTEXT.md](README_CONTEXT.md)
 - [library/STELA_NAMING.md](library/STELA_NAMING.md)

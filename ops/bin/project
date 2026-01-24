@@ -1,0 +1,193 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_LIB="${SCRIPT_DIR}/../lib/project/project_lib.sh"
+
+if [[ ! -f "$PROJECT_LIB" ]]; then
+  echo "Stela System: error: missing project library: $PROJECT_LIB" >&2
+  exit 1
+fi
+
+# shellcheck source=/dev/null
+source "$PROJECT_LIB"
+
+project_lib_die() {
+  echo "Stela System: error: $*" >&2
+  exit 1
+}
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/project <init|status|log> [message]
+USAGE
+}
+
+color_init() {
+  if [[ -n "${TERM:-}" ]] && command -v tput >/dev/null 2>&1 && tput sgr0 >/dev/null 2>&1; then
+    green="$(tput setaf 2)"
+    yellow="$(tput setaf 3)"
+    reset="$(tput sgr0)"
+  else
+    green=""
+    yellow=""
+    reset=""
+  fi
+}
+
+say() {
+  printf "Stela System: %s\n" "$*"
+}
+
+require_root() {
+  project_lib_require_repo_root
+}
+
+ensure_task_exists() {
+  if [[ ! -f "TASK.md" ]]; then
+    project_lib_die "TASK.md not found. Run: ./ops/bin/project init"
+  fi
+}
+
+extract_goal() {
+  local goal status
+  goal="$(awk '/\* \*\*Goal:\*\*/ {sub(/^\* \*\*Goal:\*\* */, "", $0); print; exit}' TASK.md)"
+  if [[ -n "$goal" ]]; then
+    printf "%s" "$goal"
+    return 0
+  fi
+  status="$(awk '/^\*\*Status:\*\*/ {sub(/^\*\*Status:\*\* */, "", $0); print; exit}' TASK.md)"
+  if [[ -n "$status" ]]; then
+    printf "Status: %s" "$status"
+    return 0
+  fi
+  printf "(objective not defined)"
+}
+
+init_cmd() {
+  require_root
+  local missing=()
+
+  [[ -f "TRUTH.md" ]] || missing+=("TRUTH.md")
+  [[ -f "TASK.md" ]] || missing+=("TASK.md")
+
+  if (( ${#missing[@]} == 0 )); then
+    say "TRUTH.md and TASK.md are present."
+    return 0
+  fi
+
+  for path in "${missing[@]}"; do
+    printf "Stela System: %s is missing. Create a placeholder? [y/N]: " "$path"
+    read -r reply
+    if [[ "$reply" =~ ^[Yy]$ ]]; then
+      if [[ "$path" == "TRUTH.md" ]]; then
+        cat <<'EOF_TRUTH' > TRUTH.md
+# TRUTH
+
+## 1. Project Context
+- Placeholder: define project context.
+
+## 2. Canonical Structure
+- Placeholder: define canonical structure.
+
+## 3. Operational Map
+- Placeholder: define operational map.
+EOF_TRUTH
+        say "TRUTH.md placeholder created."
+      else
+        cat <<'EOF_TASK' > TASK.md
+# STELA TASK DASHBOARD
+**Status:** ACTIVE
+**Operator:** TBD
+
+## 1. ACTIVE CONTEXT
+* **Goal:** TBD
+* **Constraint:** TBD
+
+## 2. GENERATOR: DISPATCH PACKET (THE STANDARD)
+# DP-OPS-XXXX: [ACTION TITLE]
+**Date:** [YYYY-MM-DD]
+**Target:** [System/File/Process]
+**Objective:** [One sentence clear goal]
+
+## I. CONTEXT & RATIONALE
+* **Current State:** [Describe drift]
+* **Desired State:** [Describe fix]
+
+## II. EXECUTION PLAN
+### Step 1: [Action Name]
+* **Command:** `[Bash Command]`
+
+## III. VERIFICATION
+* **Check:** [Command to prove success]
+EOF_TASK
+        say "TASK.md placeholder created."
+      fi
+    else
+      say "$path was not created."
+    fi
+  done
+}
+
+status_cmd() {
+  require_root
+  ensure_task_exists
+  color_init
+
+  local objective
+  objective="$(extract_goal)"
+
+  say "Processing project status."
+  printf "%sCurrent Objective:%s %s\n" "$green" "$reset" "$objective"
+
+  local git_status
+  git_status="$(git status --short)"
+  if [[ -z "$git_status" ]]; then
+    say "Working tree clean."
+  else
+    say "Working tree changes detected."
+    printf "%s\n" "$git_status"
+  fi
+}
+
+log_cmd() {
+  require_root
+  ensure_task_exists
+  local message="$*"
+
+  if [[ -z "$message" ]]; then
+    project_lib_die "Log message required."
+  fi
+
+  if ! rg -q "^## WORK LOG" TASK.md 2>/dev/null; then
+    printf "\n## WORK LOG\n" >> TASK.md
+  fi
+
+  printf "* [%s] %s\n" "$(date +"%Y-%m-%d %H:%M:%S")" "$message" >> TASK.md
+  say "Work log entry appended to TASK.md."
+}
+
+case "${1:-}" in
+  init)
+    shift
+    init_cmd
+    ;;
+  status)
+    shift
+    status_cmd
+    ;;
+  log)
+    shift
+    log_cmd "$@"
+    ;;
+  -h|--help|help)
+    usage
+    ;;
+  "")
+    usage
+    exit 1
+    ;;
+  *)
+    project_lib_die "Unknown command: $1"
+    ;;
+esac

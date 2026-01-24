@@ -94,7 +94,7 @@ required_files=(
   "TRUTH.md"
   "SoP.md"
   "AGENTS.md"
-  "docs/00-INDEX.md"
+  "docs/00_INDEX.md"
   "docs/library/OPERATOR_MANUAL.md"
   "docs/library/CONTINUITY_MAP.md"
   "ops/contracts/OUTPUT_FORMAT_CONTRACT.md"
@@ -172,7 +172,7 @@ Don't:
 - TRUTH.md (Sections 1-3: Project Context / Canonical Structure / Operational Map)
 - SoP.md
 - AGENTS.md
-- docs/00-INDEX.md
+- docs/00_INDEX.md
 - docs/library/OPERATOR_MANUAL.md
 - docs/library/CONTINUITY_MAP.md
 - ops/contracts/OUTPUT_FORMAT_CONTRACT.md

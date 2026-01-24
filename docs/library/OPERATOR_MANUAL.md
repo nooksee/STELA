@@ -14,23 +14,21 @@ You may see legacy `Stela` strings; `Stela` is the platform name going forward.
 ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
 ./ops/bin/dump --scope=platform --format=chatgpt --out=auto.tar.xz
 ./ops/bin/help
-./ops/bin/help list
-./ops/bin/help manual
+./ops/bin/help continuity
 ```
 
 ## Docs library (curated surface)
 The docs library is the approved, curated surface for operators.
-`ops/bin/help` will only open documents listed in `docs/library/LIBRARY_INDEX.md`.
-If a document is not in the manifest, help will refuse to open it.
+`ops/bin/help` searches `docs/` and prints matching lines with numbers.
 
 Library location:
 - Root: `docs/library/`
-- Manifest: `docs/library/LIBRARY_INDEX.md` (format: `topic | title | path`)
+- Index: `docs/library/LIBRARY_INDEX.md` (curated topic list)
 
-Add a new entry by editing the manifest and keeping the list curated (not every .md).
+Add a new entry by editing the index and keeping the list curated (not every .md).
 
 Continuity Map (operator wayfinding):
-- `./ops/bin/help continuity-map`
+- `./ops/bin/help continuity`
 
 Behavioral preferences:
 - Behavioral preferences are documented in `docs/library/MEMENTOS.md`.
@@ -218,17 +216,5 @@ Archive behavior:
 
 ## Help
 `./ops/bin/help` is the operator front door for curated docs.
-- `./ops/bin/help list` shows approved topics from the library manifest.
-- `./ops/bin/help <topic>` opens that doc in `less` (color via `bat` when available).
-
-Current help topics (from the manifest):
-```
-manual
-continuity-map
-quickstart
-docs-index
-output-format-contract
-contractor-dispatch-contract
-system-constitution
-state-of-play
-```
+- `./ops/bin/help` shows the command menu and quick start.
+- `./ops/bin/help <term>` searches `docs/` with line numbers.

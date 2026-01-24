@@ -65,7 +65,7 @@ This file is the stable blueprint. Update only when structure or core architectu
 ## Repo layout (what lives where)
 - public_html/      deployable webroot (what the server serves)
 - ops/              ICL/OCL canon (protocols, contracts, templates, launch pack)
-- docs/             project manual (start at docs/00-INDEX.md; points into ops canon)
+- docs/             project manual (start at docs/00_INDEX.md; points into ops canon)
 - docs/ops/         pointer index into ops canon
 - tools/            verification + truth checks (support for repo-gates)
 - scripts/          helper scripts (build/sync/release tooling when used)
