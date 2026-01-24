@@ -1,6 +1,5 @@
 # STELA TASK DASHBOARD
 **Status:** ACTIVE
-**Operator:** Kevin Atwood (nooksee)
 
 ## 1. ACTIVE CONTEXT
 * **Goal:** System Consolidation & Truth Enforcement.
@@ -50,5 +49,5 @@
         * **B) SUPERSESSION / DELETION:** (Proposal only).
         * **D) PATCH / DIFF:** (Unified diff or link to porcelain).
         * **E) RECEIPT:** (Must include OPEN output + SNAPSHOT output).
-    * `OPEN-[branch].txt` (Already in handoff)
+   * `OPEN-[branch].txt` (Already in handoff)
     * `OPEN-PORCELAIN-[branch].txt` (Already in handoff)
