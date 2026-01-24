@@ -32,11 +32,6 @@ Add a new entry by editing the manifest and keeping the list curated (not every 
 Continuity Map (operator wayfinding):
 - `./ops/bin/help continuity-map`
 
-Datasets:
-- Datasets live under `docs/library/datasets/` and are manifest-only.
-- Use `./ops/bin/help db-dataset` for the dataset library overview.
-- Use `./ops/bin/help db-pr-meta` for DB-PR-META surface rules.
-
 Behavioral preferences:
 - Behavioral preferences are documented in `docs/library/MEMENTOS.md`.
 
@@ -56,26 +51,19 @@ What to expect:
 
 ## Integrator Phase Discipline
 Conformance-first is mandatory: normalize to the current DP template and fill the Freshness Gate from OPEN + dump (operator-provided or locally generated for this run) before any DP edits.
-Phase-locked outputs are mandatory: when meta is requested, output DB-PR-META only.
 Receipt bundle is mandatory for any DP intended to be run.
 
 Start phrases (copy/paste; short)
 - DP Revision Run (conformance-first):
-  SEE ATTACHED — REFRESH STATE (OPEN + dump; operator-provided or locally generated for this run) — REVISE/UPDATE DP-OPS-00XX — OUTPUT: DP ONLY — SINGLE CODE BLOCK — NO DB-PR-META
 
-- DB-PR-META Emission (meta-only):
-  APPROVE DP-OPS-00XX EMIT DB-PR-META — OUTPUT: DB-PR-META ONLY — NO DP TEXT — META IN COPY/PASTE CODE BLOCKS
 
 Hard stop conditions + recovery (short)
 - Missing OPEN/dump, mismatched branch/HEAD, scope mismatch, placeholders in DP, or wrong artifact emitted.
 - Recovery phrases (copy/paste):
-  PHASE ERROR — RE-EMIT DP-OPS-00XX ONLY — DP ONLY — SINGLE CODE BLOCK — NO DB-PR-META
-  PHASE ERROR — RE-EMIT DB-PR-META ONLY FOR DP-OPS-00XX — META ONLY — NO DP TEXT
   BLOCKED ACKNOWLEDGED — REVISE DP-OPS-00XX TO REMOVE PLACEHOLDERS ONLY — NO OTHER EDITS — OUTPUT: DP ONLY
 
 Mini decision table
 - I want DP revised → use "DP Revision Run (conformance-first)".
-- I approved results / want meta → use "DB-PR-META Emission (meta-only)".
 
 ## Phase-Locked Output Protocol
 Operator Standard Phrases: see Integrator Phase Discipline (copy/paste; short).
@@ -91,19 +79,13 @@ The 10-step DP conveyor belt (mechanical loop)
 6. Worker returns REQUIRED OUTPUT + RECEIPT (proof bundle included).
 7. Operator reviews results and decides:
    - DISAPPROVE (with reason + patch request), OR
-   - APPROVE DP-OPS-00XX EMIT DB-PR-META (standard phrase).
-8. Integrator emits DB-PR-META only (copy/paste-safe code blocks; no DP text).
-9. Operator commits using DB-PR-META; pushes branch; opens/merges PR; syncs main; cleans up branch.
 10. Loop closed: repo is clean; canon updates (e.g., SoP) are present in the merged PR.
 
 Phase error definition + no-debate recovery
 Phase error = assistant emitted the wrong artifact for the operator’s current step.
 
 - DP phase wrong output → re-emit DP only:
-  PHASE ERROR — RE-EMIT DP-OPS-00XX ONLY — DP ONLY — SINGLE CODE BLOCK — NO DB-PR-META
 
-- Meta phase wrong output → re-emit DB-PR-META only:
-  PHASE ERROR — RE-EMIT DB-PR-META ONLY FOR DP-OPS-00XX — META ONLY — NO DP TEXT
 
 - Worker blocked due to placeholders / malformed DP (branch name, OPEN/dump names, literal three-dot placeholder):
   BLOCKED ACKNOWLEDGED — REVISE DP-OPS-00XX TO REMOVE PLACEHOLDERS ONLY — NO OTHER EDITS — OUTPUT: DP ONLY
@@ -113,7 +95,6 @@ Phase error = assistant emitted the wrong artifact for the operator’s current 
 
 Output-shape expectations
 - DP presentation: exactly one code block containing the DP; no extra text.
-- DB-PR-META presentation: meta fields in copy/paste-ready code blocks; no DP text.
 - DISCUSS-ONLY: no artifacts, no copy/paste blocks.
 
 One-line reminder
@@ -125,7 +106,7 @@ If output is wrong, don’t explain—re-emit with the phase command.
 - During platform construction, use platform context by default (exclude project payload).
 
 ## Project registry
-- SSOT: `docs/library/datasets/PROJECT_REGISTRY.md`.
+- SSOT: `storage/PROJECT_REGISTRY.md`.
 - `./ops/bin/project` lists/initializes Stela-born projects (no import/migration).
 - `./ops/bin/project init <name>` requires `--dry-run` or `--confirm` (no silent payload creation).
 
@@ -141,15 +122,9 @@ If output is wrong, don’t explain—re-emit with the phase command.
 - Use `--tag=<token>` to include a filename tag; if omitted, filenames omit the tag.
 - OPEN includes a brief posture nudge near the top.
 
-## DB-PR-META (approval-gated metadata surfaces)
-DB-PR-META is the approval-gated six-surface metadata output used for commits, PRs, and merge notes.
-How to approve (IN-LOOP):
-Approval phrase (required): `APPROVE <DP-ID> EMIT DB-PR-META`
 Paste-ready delimiter example:
-`APPROVE DP-OPS-0025 EMIT DB-PR-META`
 `---`
 Operator Handoff Paste Order (single message, exact order):
-1) Approval line (start-of-message, plain text, unquoted): `APPROVE <DP-ID> EMIT DB-PR-META`
 2) Paste worker results raw, unquoted, unedited (after a delimiter: a single blank line or a line containing only `---`).
 3) Attach the dump file in the same message (if DP required it).
 Attachment-mode (lowest-friction default when the operator is on mobile):
@@ -160,10 +135,7 @@ Minimal attachment-mode handoff: one approval line + results artifact attachment
 If the chat UI cannot insert blank lines safely, use the `---` delimiter line before pasting results.
 MEMENTO: M-HANDOFF-01 (docs/library/MEMENTOS.md).
 Approval must be the first tokens in the message (start-of-message) and outside OPEN prompt text, OPEN intent, and outside quoted/fenced blocks.
-Quoted blocks are commentary and invalid for approval. If approval is buried, DB-PR-META is withheld.
 Emission gate: approval phrase required; no exceptions.
-Dataset reference: `./ops/bin/help db-pr-meta`
-UI order + payload types are canonical; use the DB-PR-META dataset as the SSOT.
 Micro-style: avoid exact-duplicate strings across Commit message, PR title, Merge commit message; similar is OK.
 
 ## When to DISAPPROVE
@@ -201,7 +173,6 @@ Receipt package (minimum handoff artifacts; attachment-mode friendly):
 - Dump manifest (bundled inside the tarball when `--bundle` is used, or attached alongside when not bundled)
 - OPEN + OPEN-PORCELAIN artifacts are already captured under `storage/handoff/` by OPEN tooling; do not regress this.
 
-Every worker result message must end with the RECEIPT (delivery format, not IN-LOOP permission):
 - Use the exact headings and order:
   - `### RECEIPT`
   - `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work)
@@ -254,9 +225,6 @@ Current help topics (from the manifest):
 ```
 manual
 continuity-map
-db-dataset
-db-voice-0001
-db-pr-meta
 quickstart
 docs-index
 output-format-contract

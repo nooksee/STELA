@@ -113,7 +113,7 @@ ops/bin/help - docs front door (curated)
 
 Command index:
   OPEN     ./ops/bin/open --intent="..." --dp="DP-XXXX / YYYY-MM-DD"
-  DISCUSS-ONLY  talk-only cue (see OPERATOR_MANUAL + DISPATCH_PACKET_TEMPLATE)
+  DISCUSS-ONLY  talk-only cue (see OPERATOR_MANUAL)
   DUMP     ./ops/bin/dump --scope=platform --format=chatgpt
   HELP     ./ops/bin/help [list|<topic>]
   DP-LINT  ./ops/bin/dispatch_packet_lint.sh [path]

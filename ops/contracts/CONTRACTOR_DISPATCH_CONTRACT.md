@@ -30,5 +30,3 @@ Applies to contractor briefs and worker tasks.
 
 ## Canon Links
 - ops/contracts/OUTPUT_FORMAT_CONTRACT.md
-- ops/templates/CONTRACTOR_BRIEF_TEMPLATE.md
-- ops/templates/CONTRACTOR_REPORT_TEMPLATE.md

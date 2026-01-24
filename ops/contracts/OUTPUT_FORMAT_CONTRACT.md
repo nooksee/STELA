@@ -11,15 +11,12 @@ Applies to all deliverables that culminate in a PR.
 ### Phase Lock (precedence)
 Phase Lock rules override other output formatting requirements.
 
-- If the operator message begins with "APPROVE" and includes "EMIT DB-PR-META":
-  - Output MUST be DB-PR-META only.
   - No DP edits.
   - No DP reprint.
   - No commentary.
 - If the operator message contains "SEE ATTACHED" + "REFRESH STATE" and requests revise/update of a DP:
   - Output MUST be the DP only.
   - Exactly one code block containing the DP.
-  - No DB-PR-META.
   - No extra text.
 - If the operator message contains "DISCUSS-ONLY":
   - No artifacts.
@@ -70,7 +67,7 @@ Metadata kits and operator command blocks do NOT use these markers.
 Preferred order:
 1) Unified diff for small edits.
 2) Full file replacement for new files or heavy refactors.
-3) Never invent file paths; if unsure, point to canon truth docs (PROJECT_MAP.md / CANONICAL_TREE.md).
+3) Never invent file paths; if unsure, point to canon truth docs (TRUTH.md Section 3 / TRUTH.md Section 2).
 
 ### Verification minimums
 - Branch name correct (`work/<topic>-YYYY-MM-DD`).
@@ -101,5 +98,3 @@ Preferred order:
 - Rollback: revert this contract and follow prior canon.
 
 ## Canon Links
-- ops/templates/PR_DESCRIPTION_TEMPLATE.md
-- ops/templates/MERGE_NOTE_TEMPLATE.md

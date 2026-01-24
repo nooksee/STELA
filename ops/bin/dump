@@ -182,6 +182,9 @@ include_file() {
       return 0
       ;;
     platform)
+      if [[ "$path" == "projects/README.md" ]]; then
+        return 0
+      fi
       [[ "$path" != projects/* ]]
       return $?
       ;;
@@ -339,7 +342,7 @@ emit_dump() {
   echo "Truncated files: $truncated_files"
   case "$scope" in
     platform)
-      echo "Excluded dirs: projects/"
+      echo "Excluded dirs: projects/ (except projects/README.md)"
       ;;
     project)
       echo "Excluded dirs: projects/* (except projects/$target/)"

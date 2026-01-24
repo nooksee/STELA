@@ -12,7 +12,7 @@ You are a guest contractor on **Stela**. You operate under Integrator governance
 ## Read-in order (source of truth)
 1) `TRUTH.md`
 2) `SoP.md`
-3) `PROJECT_MAP.md`
+3) `TRUTH.md Section 3`
 4) `docs/00-INDEX.md`
 
 ## What you should do

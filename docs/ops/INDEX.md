@@ -18,11 +18,6 @@ Library location:
 - Root: `docs/library/`
 - Manifest: `docs/library/LIBRARY_INDEX.md` (format: `topic | title | path`)
 
-Datasets (manifest-only):
-- Root: `docs/library/datasets/`
-- `./ops/bin/help db-dataset`
-- `./ops/bin/help db-voice-0001`
-
 Add a new library entry:
 - Update `docs/library/LIBRARY_INDEX.md` with a new line; keep it curated (not every .md).
 
@@ -43,12 +38,6 @@ Color behavior:
 ## Execute
 - [Output Format Contract](../../ops/contracts/OUTPUT_FORMAT_CONTRACT.md)
 - [Contractor Dispatch Contract](../../ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md)
-- [Dispatch Packet Template](../../ops/templates/DISPATCH_PACKET_TEMPLATE.md)
-
-## Templates
-- [PR Description Template](../../ops/templates/PR_DESCRIPTION_TEMPLATE.md)
-- [Contractor Brief Template](../../ops/templates/CONTRACTOR_BRIEF_TEMPLATE.md)
-- [Contractor Report Template](../../ops/templates/CONTRACTOR_REPORT_TEMPLATE.md)
 
 ## Triage
 - [../triage/INBOX.md](../triage/INBOX.md)

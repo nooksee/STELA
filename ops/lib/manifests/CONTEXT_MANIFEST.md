@@ -17,7 +17,6 @@ Optional pre-session check: run `tools/context_lint.sh`.
 - `docs/library/CONTINUITY_MAP.md`
 - `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`
 - `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md`
-- `ops/templates/DISPATCH_PACKET_TEMPLATE.md`
 - `tools/context_lint.sh`
 
 ## Verification

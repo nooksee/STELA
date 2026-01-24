@@ -1,15 +1,8 @@
-Current Task
-Objective
-[One sentence goal]
+# STELA TASK DASHBOARD
+**Status:** ACTIVE
+**Operator:** Kevin Atwood (nooksee)
 
-Context Pointers
-[Path to relevant file 1]
-[Path to relevant file 2]
-
-Plan
-[ ] Step 1
-[ ] Step 2
-
-Verification
-[ ] Automated: bash tools/verify_tree.sh
-[ ] Manual: [Check X in browser]
+## GENERATOR: DISPATCH PACKET
+# DP-OPS-XXXX: [ACTION TITLE]
+**Objective:** [Clear Goal]
+**Execution:** [Commands]
