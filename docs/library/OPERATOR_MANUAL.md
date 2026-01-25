@@ -2,71 +2,58 @@
 
 This manual is the operator-facing entrypoint for day-to-day commands and the curated docs library.
 It is intentionally short and maintained; if it drifts, fix it.
-You may see legacy `Stela` strings; `Stela` is the platform name going forward.
 
 ## Top Commands (cheat sheet)
-```
+~~~bash
 ./ops/bin/open --intent="short-intent" --dp="DP-XXXX / YYYY-MM-DD"
 ./ops/bin/dump --scope=platform --format=chatgpt
 ./ops/bin/dump --scope=platform --format=chatgpt --out=auto
+./ops/bin/dump --scope=platform --format=chatgpt --include-dir=ops --include-dir=docs --out=auto
+./ops/bin/dump --scope=platform --format=chatgpt --include-binary=raw --out=auto   # rare; literal bytes
 ./ops/bin/dump --scope=full --format=chatgpt --out=auto
 ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --compress=tar.xz
 ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
 ./ops/bin/dump --scope=platform --format=chatgpt --out=auto.tar.xz
 ./ops/bin/help
 ./ops/bin/help continuity
-```
+~~~
 
 ## Docs library (curated surface)
-The docs library is the approved, curated surface for operators.
+The docs library is the approved, curated surface for operators.  
 `ops/bin/help` searches `docs/` and prints matching lines with numbers.
 
 Library location:
 - Root: `docs/library/`
 - Index: `docs/library/LIBRARY_INDEX.md` (curated topic list)
 
-Add a new entry by editing the index and keeping the list curated (not every .md).
+Add a new entry by editing the index and keeping the list curated (not every `.md`).
 
 Continuity Map (operator wayfinding):
 - `./ops/bin/help continuity`
 
-Behavioral preferences:
-- Behavioral preferences are documented in `docs/library/MEMENTOS.md`.
-
-## DP docket (optional)
-Use the docket (`docs/library/DOCKET.md`) when you want a light forward-looking queue:
-- Creative sessions, mobile sessions, or multi-day work (less DP-number drift).
-- Keep `NEXT_DP_ID` updated to avoid DP-number confusion.
-- Optional; you can skip it and run DPs normally.
-
-## Talk-only mode (DISCUSS-ONLY)
-Use `DISCUSS-ONLY` to signal ideation only; it is a non-gating cue and does not authorize execution.
-When to use:
-- Early scoping, open-ended brainstorming, or when you want alignment without action.
-What to expect:
-- The model will discuss and ask clarifying questions.
-- No commands run, no file edits, and no approval-dependent artifacts until a DP (and approval phrase when required) is provided.
-
 ## Integrator Phase Discipline
-Conformance-first is mandatory: normalize to the current DP template and fill the Freshness Gate from OPEN + dump (operator-provided or locally generated for this run) before any DP edits.
+Conformance-first is mandatory: normalize to the current DP template and fill the Freshness Gate from OPEN + dump (operator-provided or locally generated for this run) before any DP edits.  
 Receipt bundle is mandatory for any DP intended to be run.
 
 Start phrases (copy/paste; short)
-- DP Revision Run (conformance-first):
-
+- DP Revision Run (conformance-first): *(to be defined)*
 
 Hard stop conditions + recovery (short)
 - Missing OPEN/dump, mismatched branch/HEAD, scope mismatch, placeholders in DP, or wrong artifact emitted.
-- Recovery phrases (copy/paste):
-  BLOCKED ACKNOWLEDGED — REVISE DP-OPS-00XX TO REMOVE PLACEHOLDERS ONLY — NO OTHER EDITS — OUTPUT: DP ONLY
+- Recovery phrase (copy/paste):
+
+~~~text
+BLOCKED ACKNOWLEDGED — REVISE DP-OPS-00XX TO REMOVE PLACEHOLDERS ONLY — NO OTHER EDITS — OUTPUT: DP ONLY
+~~~
 
 Mini decision table
 - I want DP revised → use "DP Revision Run (conformance-first)".
 
 ## Phase-Locked Output Protocol
 Operator Standard Phrases: see Integrator Phase Discipline (copy/paste; short).
+
 Discuss-only:
-- DISCUSS-ONLY
+- `DISCUSS-ONLY`
 
 The 10-step DP conveyor belt (mechanical loop)
 1. A draft DP exists (idea-form DP is acceptable) and is saved for later refresh.
@@ -77,25 +64,33 @@ The 10-step DP conveyor belt (mechanical loop)
 6. Worker returns REQUIRED OUTPUT + RECEIPT (proof bundle included).
 7. Operator reviews results and decides:
    - DISAPPROVE (with reason + patch request), OR
+   - APPROVE / MERGE (operator-controlled)
+8. If DISAPPROVE: operator issues required patch steps and re-dispatches.
+9. Worker re-runs required verification + regenerates receipt bundle.
 10. Loop closed: repo is clean; canon updates (e.g., SoP) are present in the merged PR.
 
-Phase error definition + no-debate recovery
+Phase error definition + no-debate recovery  
 Phase error = assistant emitted the wrong artifact for the operator’s current step.
 
-- DP phase wrong output → re-emit DP only:
-
+- DP phase wrong output → re-emit DP only: *(to be defined)*
 
 - Worker blocked due to placeholders / malformed DP (branch name, OPEN/dump names, literal three-dot placeholder):
-  BLOCKED ACKNOWLEDGED — REVISE DP-OPS-00XX TO REMOVE PLACEHOLDERS ONLY — NO OTHER EDITS — OUTPUT: DP ONLY
+
+~~~text
+BLOCKED ACKNOWLEDGED — REVISE DP-OPS-00XX TO REMOVE PLACEHOLDERS ONLY — NO OTHER EDITS — OUTPUT: DP ONLY
+~~~
 
 - Clean copy needed (formatting wrong):
-  RE-EMIT CLEAN — DP-OPS-00XX — SINGLE CODE BLOCK — NO EXTRA TEXT
+
+~~~text
+RE-EMIT CLEAN — DP-OPS-00XX — SINGLE CODE BLOCK — NO EXTRA TEXT
+~~~
 
 Output-shape expectations
 - DP presentation: exactly one code block containing the DP; no extra text.
 - DISCUSS-ONLY: no artifacts, no copy/paste blocks.
 
-One-line reminder
+One-line reminder  
 If output is wrong, don’t explain—re-emit with the phase command.
 
 ## Platform vs Project
@@ -103,37 +98,31 @@ If output is wrong, don’t explain—re-emit with the phase command.
 - Project payloads live under `projects/*`.
 - During platform construction, use platform context by default (exclude project payload).
 
-## Project registry
-- SSOT: `storage/PROJECT_REGISTRY.md`.
-- `./ops/bin/project` lists/initializes Stela-born projects (no import/migration).
-- `./ops/bin/project init <name>` requires `--dry-run` or `--confirm` (no silent payload creation).
-
-## Projects
-- `./ops/bin/project new --name "Example Project" --dry-run` previews a new project with auto id/slug; `--confirm` creates it and sets the current pointer.
-- `./ops/bin/project use <project_id> --dry-run|--confirm` updates the current project pointer for a registered id.
-- `./ops/bin/project current` reports the current project id or `none`.
-- Recommended flow: run `project new --dry-run`, review output, then `--confirm` and check `project current`.
-
 ## Open
 - `./ops/bin/open` prints the copy-safe Open Prompt with the freshness gate and canon pointers.
 - `./ops/bin/open` writes the OPEN prompt to `storage/handoff/OPEN-<tag>-<branch>-<HEAD>.txt` and captures porcelain to `storage/handoff/OPEN-PORCELAIN-<tag>-<branch>-<HEAD>.txt`; stdout still prints the OPEN prompt.
 - Use `--tag=<token>` to include a filename tag; if omitted, filenames omit the tag.
 - OPEN includes a brief posture nudge near the top.
 
-Paste-ready delimiter example:
-`---`
+Paste-ready delimiter example: `---`
+
 Operator Handoff Paste Order (single message, exact order):
+1) Approval line in chat (start-of-message, plain text, unquoted).
 2) Paste worker results raw, unquoted, unedited (after a delimiter: a single blank line or a line containing only `---`).
 3) Attach the dump file in the same message (if DP required it).
+
 Attachment-mode (lowest-friction default when the operator is on mobile):
 1) Approval line in chat (start-of-message, plain text, unquoted).
 2) Attach the worker-results text file from `storage/handoff/<DP-ID>-RESULTS.md` (full worker results, including the RECEIPT (OPEN + DUMP)).
 3) Attach dump artifacts when required.
-Minimal attachment-mode handoff: one approval line + results artifact attachment, plus the dump bundle when required. Paste-mode remains valid.
+
+Minimal attachment-mode handoff: one approval line + results artifact attachment, plus the dump bundle when required. Paste-mode remains valid.  
 If the chat UI cannot insert blank lines safely, use the `---` delimiter line before pasting results.
-MEMENTO: M-HANDOFF-01 (docs/library/MEMENTOS.md).
-Approval must be the first tokens in the message (start-of-message) and outside OPEN prompt text, OPEN intent, and outside quoted/fenced blocks.
-Emission gate: approval phrase required; no exceptions.
+
+MEMENTO: M-HANDOFF-01 (`docs/library/MEMENTOS.md`).
+
+Approval must be the first tokens in the message (start-of-message) and outside OPEN prompt text, OPEN intent, and outside quoted/fenced blocks.  
+Emission gate: approval phrase required; no exceptions.  
 Micro-style: avoid exact-duplicate strings across Commit message, PR title, Merge commit message; similar is OK.
 
 ## When to DISAPPROVE
@@ -144,12 +133,13 @@ Micro-style: avoid exact-duplicate strings across Commit message, PR title, Merg
 - Results claims do not match `git diff --name-only` or `git diff --stat`.
 
 ## DISAPPROVE message (copy/paste template)
-```
+~~~text
 DISAPPROVE <DP-ID>
 Why (facts): <brief, factual bullets>
 Required patch (do these steps): <numbered steps>
 Re-run verification + regenerate receipt: <commands or checklist>
-```
+~~~
+
 Note: this is a worker feedback format; it is not the approval phrase.
 
 ## Branch protection
@@ -165,22 +155,30 @@ Worker guardrails (summary):
 - Output artifacts are output artifact files created under `storage/handoff/` and `storage/dumps/` and must remain untracked.
 - "No new files unless listed" applies to tracked repo files only.
 - Worker must write the full results message (A/B/C/D + RECEIPT) to `storage/handoff/<DP-ID>-RESULTS.md`; contents must match the paste-mode results exactly.
+
 Receipt package (minimum handoff artifacts; attachment-mode friendly):
 - `storage/handoff/<DP-ID>-RESULTS.md` (required)
 - Dump tarball when required by the DP
 - Dump manifest (bundled inside the tarball when `--bundle` is used, or attached alongside when not bundled)
 - OPEN + OPEN-PORCELAIN artifacts are already captured under `storage/handoff/` by OPEN tooling; do not regress this.
 
-- Use the exact headings and order:
-  - `### RECEIPT`
-  - `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work)
-  - `### B) DUMP Output` (paths or archived filenames; choose `--scope=platform` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--bundle` (tarball includes payload + manifest); for large `--scope=full` dumps, prefer `--compress=tar.xz`; dump may be inline, truncated if necessary, or referenced by generated filename if archived)
-  - Include the manifest path when present (the manifest points to the chat payload file to paste).
-  - If a tarball is produced, include BOTH: the tarball path and the manifest path.
-DPs missing the RECEIPT are incomplete and must be rejected.
-Workers may not claim "Freshness unknown" if they can run OPEN themselves.
-Attachment-mode handoff artifacts must be repo-local: use `storage/handoff/` (never `/tmp` or user temp dirs). Canonical results filename: `storage/handoff/<DP-ID>-RESULTS.md` (basename UPPERCASE; `.md` lowercase).
-For attachment-mode: the attached results file MUST include the RECEIPT (OPEN + DUMP). If OPEN exceeds message/file limits (edge case), attach the OPEN file from `storage/handoff/` and in `A) OPEN Output` include the exact path plus the one-line note: "OPEN attached; see path above."
+Use the exact headings and order:
+- `### RECEIPT`
+- `### A) OPEN Output` (full, unmodified output of `./ops/bin/open`; must include branch name and HEAD short hash used during work)
+- `### B) DUMP Output` (paths or archived filenames; choose `--scope=platform` for doc/ops changes or `--scope=full` for structural or wide refactors; optional `--out=auto` and `--bundle` (tarball includes payload + manifest); for large `--scope=full` dumps, prefer `--compress=tar.xz`; dump may be inline, truncated if necessary, or referenced by generated filename if archived)
+
+Include the manifest path when present (the manifest points to the chat payload file to paste).  
+If a tarball is produced, include BOTH: the tarball path and the manifest path.
+
+DPs missing the RECEIPT are incomplete and must be rejected.  
+Workers may not claim "Freshness unknown" if they can run OPEN themselves.  
+Attachment-mode handoff artifacts must be repo-local: use `storage/handoff/` (never `/tmp` or user temp dirs).
+
+Canonical results filename:
+- `storage/handoff/<DP-ID>-RESULTS.md` (basename UPPERCASE; `.md` lowercase).
+
+For attachment-mode: the attached results file MUST include the RECEIPT (OPEN + DUMP).  
+If OPEN exceeds message/file limits (edge case), attach the OPEN file from `storage/handoff/` and in `A) OPEN Output` include the exact path plus the one-line note: "OPEN attached; see path above."
 
 What to look for (handoff artifacts):
 - `storage/handoff/<DP-ID>-RESULTS.md`
@@ -189,22 +187,36 @@ What to look for (handoff artifacts):
 
 ## Dump
 `./ops/bin/dump` emits a repo dump (stdout by default). Use `--out=auto` to write to `storage/dumps/`.
+
 Scopes:
-- `--scope=platform` (default, curated operator scope; excludes `projects/*`)
+- `--scope=platform` (default; platform context; excludes `projects/*`)
 - `--scope=full` (full repo scope)
 - `--scope=project --target=<slug>` (platform + a single project payload)
-Note: dumps do not include OPEN output; state travels via the RECEIPT.
+
+Binary handling (important):
+- Default: `--include-binary=meta` (LLM-friendly) → binaries are **not embedded**; dump prints **path + bytes + sha256**.
+- Optional:
+  - `--include-binary=raw` (literal bytes; huge/noisy)
+  - `--include-binary=base64` (safe text, still huge)
+
+Refiners (optional; apply after scope selection; may be repeated):
+- `--include-dir=DIR` → restrict output to files under DIR (e.g., `ops`, `docs`, `tools`)
+- `--exclude-dir=DIR` → remove files under DIR
+- `--ignore-file=GLOB` → remove files matching a glob against repo-relative paths (e.g., `*.png`, `docs/**/draft-*`)
 
 Guidance:
-- Use `--scope=platform` for full platform context during platform build.
-- Use `--scope=full` when all project payloads must be included.
+- Use `--scope=platform` for platform build and governance work.
+- Use `--scope=full` when project payloads must be included.
 - Use `--scope=project --target=<slug>` for a single project focus view.
-- For large `--scope=full` dumps, prefer `--compress=tar.xz` to keep artifacts attachable.
+- For large dumps, prefer archive output (`--compress=tar.xz`) to keep artifacts attachable.
+- Use refiners for narrow, task-specific dumps (e.g., `--include-dir=ops --include-dir=docs`) to reduce noise.
 
 Optional archive output (tar.xz):
-- `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --compress=tar.xz`
-- `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`
-- `./ops/bin/dump --scope=platform --format=chatgpt --out=auto.tar.xz`
+~~~bash
+./ops/bin/dump --scope=platform --format=chatgpt --out=auto --compress=tar.xz
+./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle     # tarball includes payload + manifest
+./ops/bin/dump --scope=platform --format=chatgpt --out=auto.tar.xz
+~~~
 
 Auto-compress default:
 - For `--scope=full` with `--out=auto` and no explicit `--compress`, `--compress=tar.xz` is assumed.
@@ -213,6 +225,8 @@ Archive behavior:
 - Output is a `.tar.xz` archive in `storage/dumps/`.
 - By default, the archive contains the generated dump text only.
 - With `--bundle`, the archive contains the dump text plus the manifest.
+
+Note: dumps do not include OPEN output; state travels via the RECEIPT (OPEN + DUMP).
 
 ## Help
 `./ops/bin/help` is the operator front door for curated docs.
