@@ -2,6 +2,7 @@
 
 This manual is the operator-facing entrypoint for day-to-day commands and the curated docs library.
 It is intentionally short and maintained; if it drifts, fix it.
+You may see legacy `Stela` strings; `Stela` is the platform name going forward.
 
 ## Top Commands (cheat sheet)
 ~~~bash
@@ -31,68 +32,6 @@ Add a new entry by editing the index and keeping the list curated (not every `.m
 Continuity Map (operator wayfinding):
 - `./ops/bin/help continuity`
 
-## Integrator Phase Discipline
-Conformance-first is mandatory: normalize to the current DP template and fill the Freshness Gate from OPEN + dump (operator-provided or locally generated for this run) before any DP edits.  
-Receipt bundle is mandatory for any DP intended to be run.
-
-Start phrases (copy/paste; short)
-- DP Revision Run (conformance-first): *(to be defined)*
-
-Hard stop conditions + recovery (short)
-- Missing OPEN/dump, mismatched branch/HEAD, scope mismatch, placeholders in DP, or wrong artifact emitted.
-- Recovery phrase (copy/paste):
-
-~~~text
-BLOCKED ACKNOWLEDGED — REVISE DP-OPS-00XX TO REMOVE PLACEHOLDERS ONLY — NO OTHER EDITS — OUTPUT: DP ONLY
-~~~
-
-Mini decision table
-- I want DP revised → use "DP Revision Run (conformance-first)".
-
-## Phase-Locked Output Protocol
-Operator Standard Phrases: see Integrator Phase Discipline (copy/paste; short).
-
-Discuss-only:
-- `DISCUSS-ONLY`
-
-The 10-step DP conveyor belt (mechanical loop)
-1. A draft DP exists (idea-form DP is acceptable) and is saved for later refresh.
-2. Operator requests refresh/update (attaches OPEN + dump; operator-provided or locally generated for this run) using the standard phrase.
-3. Integrator emits the updated DP only (single code block; no meta; no extra text).
-4. Operator creates/switches to the DP’s required work branch.
-5. Operator hands the DP to the worker; worker runs the DP.
-6. Worker returns REQUIRED OUTPUT + RECEIPT (proof bundle included).
-7. Operator reviews results and decides:
-   - DISAPPROVE (with reason + patch request), OR
-   - APPROVE / MERGE (operator-controlled)
-8. If DISAPPROVE: operator issues required patch steps and re-dispatches.
-9. Worker re-runs required verification + regenerates receipt bundle.
-10. Loop closed: repo is clean; canon updates (e.g., SoP) are present in the merged PR.
-
-Phase error definition + no-debate recovery  
-Phase error = assistant emitted the wrong artifact for the operator’s current step.
-
-- DP phase wrong output → re-emit DP only: *(to be defined)*
-
-- Worker blocked due to placeholders / malformed DP (branch name, OPEN/dump names, literal three-dot placeholder):
-
-~~~text
-BLOCKED ACKNOWLEDGED — REVISE DP-OPS-00XX TO REMOVE PLACEHOLDERS ONLY — NO OTHER EDITS — OUTPUT: DP ONLY
-~~~
-
-- Clean copy needed (formatting wrong):
-
-~~~text
-RE-EMIT CLEAN — DP-OPS-00XX — SINGLE CODE BLOCK — NO EXTRA TEXT
-~~~
-
-Output-shape expectations
-- DP presentation: exactly one code block containing the DP; no extra text.
-- DISCUSS-ONLY: no artifacts, no copy/paste blocks.
-
-One-line reminder  
-If output is wrong, don’t explain—re-emit with the phase command.
-
 ## Platform vs Project
 - Platform is the repo-resident operating system (ops/docs/tools/etc.).
 - Project payloads live under `projects/*`.
@@ -105,25 +44,6 @@ If output is wrong, don’t explain—re-emit with the phase command.
 - OPEN includes a brief posture nudge near the top.
 
 Paste-ready delimiter example: `---`
-
-Operator Handoff Paste Order (single message, exact order):
-1) Approval line in chat (start-of-message, plain text, unquoted).
-2) Paste worker results raw, unquoted, unedited (after a delimiter: a single blank line or a line containing only `---`).
-3) Attach the dump file in the same message (if DP required it).
-
-Attachment-mode (lowest-friction default when the operator is on mobile):
-1) Approval line in chat (start-of-message, plain text, unquoted).
-2) Attach the worker-results text file from `storage/handoff/<DP-ID>-RESULTS.md` (full worker results, including the RECEIPT (OPEN + DUMP)).
-3) Attach dump artifacts when required.
-
-Minimal attachment-mode handoff: one approval line + results artifact attachment, plus the dump bundle when required. Paste-mode remains valid.  
-If the chat UI cannot insert blank lines safely, use the `---` delimiter line before pasting results.
-
-MEMENTO: M-HANDOFF-01 (`docs/library/MEMENTOS.md`).
-
-Approval must be the first tokens in the message (start-of-message) and outside OPEN prompt text, OPEN intent, and outside quoted/fenced blocks.  
-Emission gate: approval phrase required; no exceptions.  
-Micro-style: avoid exact-duplicate strings across Commit message, PR title, Merge commit message; similar is OK.
 
 ## When to DISAPPROVE
 - Missing proof bundle (git status --porcelain, git diff --name-only, git diff --stat, required verification outputs).
@@ -139,8 +59,6 @@ Why (facts): <brief, factual bullets>
 Required patch (do these steps): <numbered steps>
 Re-run verification + regenerate receipt: <commands or checklist>
 ~~~
-
-Note: this is a worker feedback format; it is not the approval phrase.
 
 ## Branch protection
 Branch protection on `main` should be enabled in GitHub settings.
