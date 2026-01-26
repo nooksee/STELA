@@ -9,9 +9,6 @@
 - docs/library/OPERATOR_MANUAL.md
 - docs/library/CONTINUITY_MAP.md
 
-## Soft preferences (bias artifacts + datasets)
-- docs/library/MEMENTOS.md
-
 ## Curated library gate
 - docs/library/LIBRARY_INDEX.md
 
