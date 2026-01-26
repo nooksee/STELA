@@ -56,11 +56,6 @@ Please include:
 - Fixes prioritize impact, exploitability, and clarity.
 - We aim for coordinated, responsible disclosure.
 
-## Known issues and future improvements
-
-- Legacy MD5 hashing in legacy code paths should be replaced.
-- Legacy upstream snapshots contain outdated patterns pending modernization.
-
 ## Cross-links
 
 - `SECURITY.md` (repo root)

@@ -5,11 +5,6 @@
 
 ## Operating system (ops)
 - [ops/INDEX.md](ops/INDEX.md)
-- [../ops/contracts/OUTPUT_FORMAT_CONTRACT.md](../ops/contracts/OUTPUT_FORMAT_CONTRACT.md)
-- [../ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md](../ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md)
-
-## Triage (capture ideas without losing them)
-- [triage/INBOX.md](triage/INBOX.md)
 
 ## Reference
 - [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)

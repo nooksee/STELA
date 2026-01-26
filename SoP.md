@@ -169,21 +169,6 @@
   - Risk: Medium; bash tooling changes and registry format updates can drift.
   - Rollback: revert edits to `ops/bin/project`, `ops/lib/project/project_lib.sh`, and docs/templates.
 
-## 2026-01-19 — DP-OPS-0046: Retire close + canonize DISCUSS-ONLY
-
-- Purpose: Retire the legacy close script and canonize DISCUSS-ONLY as the talk-only cue.
-- What shipped:
-  - Deleted the legacy close script and removed it from ICL snapshot inputs.
-  - Updated DP protocol/template, operator manual, and TRUTH to define DISCUSS-ONLY and remove close guidance.
-  - Updated help menu and `llms.txt` tool list to drop close references.
-- Verification:
-  - `bash tools/context_lint.sh`
-  - `bash tools/lint_truth.sh`
-  - `rg -n "close" .`
-- Risk / rollback:
-  - Risk: Low-medium; operators relying on close may need adjustment.
-  - Rollback: restore the legacy close script and revert the touched files.
-
 ## 2026-01-19 — DP-OPS-0048: Stelae library seed
 
 - Purpose: Seed a lightweight Stelae library page and wire it into canon pointers.
@@ -201,22 +186,6 @@
 - Risk / rollback:
   - Risk: Low; docs + small open pointer change.
   - Rollback: revert the touched files and remove `docs/library/[REMOVED].md`.
-
-## 2026-01-19 — DP-OPS-0045: DP docket + DISCUSS-ONLY cue
-
-- Purpose: Introduce an optional forward-looking docket (`docs/library/DOCKET.md`) and clarify DISCUSS-ONLY as a non-gating alignment cue.
-- What shipped:
-  - Added `docs/library/DOCKET.md` as the single forward-looking DP docket with NEXT_DP_ID.
-  - Updated `docs/library/OPERATOR_MANUAL.md` with docket guidance and the DISCUSS-ONLY cue.
-  - Updated `TRUTH.md` with DISCUSS-ONLY non-gating clarification.
-- Verification:
-  - `bash tools/context_lint.sh`
-  - Result: `[context_lint] Result: clean`
-  - `bash tools/lint_truth.sh`
-  - Result: `[lint_truth] OK`
-- Risk / rollback:
-  - Risk: Low; doc-only operator guidance.
-  - Rollback: revert the touched files and remove `docs/library/DOCKET.md`.
 
 ## 2026-01-18 — DP-OPS-0042: STELA naming seed (doc-only)
 

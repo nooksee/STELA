@@ -57,7 +57,6 @@ When reporting, include:
 ## Known issues and future improvements
 
 - Legacy code paths include MD5 hashing that should be upgraded.
-- Legacy upstream snapshots contain outdated patterns pending modernization.
 
 ## Related docs
 

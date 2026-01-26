@@ -46,7 +46,7 @@
 ## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)
 **You are currently providing (operator inputs — fill these):**
 - OPEN (branch/head): `[branch] @ [short-hash]` (from `[OPEN-filename].txt`)
-- Repo snapshot/dump (if provided): `[filename]` (scope: `[platform|project|…]`; files included: `[N]`)
+- Repo dump (if provided): `[filename]` (scope: `[platform|project|…]`; files included: `[N]`)
 - Any additional attached artifacts: `[OPEN-PORCELAIN…]`, `[manifest…]`, etc.
 
 **Worker MUST:**
@@ -140,9 +140,6 @@
 - `storage/handoff/DP-OPS-[ID]-RESULTS.md` (required)
 - `storage/handoff/OPEN-[work-branch]-[hash].txt` (when produced)
 - `storage/handoff/OPEN-PORCELAIN-[work-branch]-[hash].txt` (when produced)
-- If a snapshot/dump was provided or generated, include it (and manifest if available):
-  - `storage/handoff/snapshot-*- [work-branch]-[hash].txt`
-  - `storage/handoff/snapshot-*- [work-branch]-[hash].manifest.txt`
 
 **No receipt/proof bundle = DISAPPROVE.**
 

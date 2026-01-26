@@ -69,16 +69,14 @@ Paste delimiter (when pasting raw results into chat): `---`
 
 ## DP workflow (mechanical loop)
 
-**DISCUSS-ONLY** (non-gating cue): use when you want ideation only.
-
 1) Run `open` (or attach OPEN artifacts if already generated).  
 2) Run `dump` (choose `--scope=platform` for platform work; `--scope=full` only when needed).  
 3) Ask for a DP (or DP revision) referencing `TASK.md` as the template/SSOT.  
 4) Create/switch to the DP’s branch (operator-controlled).  
 5) Hand DP to worker; worker executes.  
 6) Worker returns REQUIRED OUTPUT + RECEIPT (proof bundle).  
-7) Operator decides: **DISAPPROVE** (with patch steps) or **APPROVE/MERGE**.  
-8) If DISAPPROVE: re-dispatch patch; worker re-runs verification + regenerates receipt.  
+7) Operator decides: whether to diasapprove (with patch steps) or approve.  
+8) If disapproves: re-dispatch patch; worker re-runs verification + regenerates receipt.  
 9) Merge.  
 10) Ensure merge-gated canon updates (e.g., `SoP.md`, `TASK.md` log append) are present.
 
@@ -91,19 +89,6 @@ Paste delimiter (when pasting raw results into chat): `---`
 - Forbidden path touched or scope mismatch.
 - Verification missing or failed.
 - Claims don’t match diffs/stat.
-
----
-
-## DISAPPROVE message (copy/paste template)
-
-~~~text
-DISAPPROVE <DP-ID>
-Why (facts): <brief, factual bullets>
-Required patch (do these steps): <numbered steps>
-Re-run verification + regenerate receipt: <commands or checklist>
-~~~
-
-Note: this is worker feedback format; it is **not** an approval phrase.
 
 ---
 

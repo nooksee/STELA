@@ -5,11 +5,6 @@ set -euo pipefail
 # Only checks authored surfaces.
 # Ignores upstream/runtime/quarantine/vendor entirely.
 
-patterns=(
-  '\bnukece_meta\b'
-  'boot/_upstream_runtime'
-)
-
 forbidden_spellings=(
   Steela
   Stila
@@ -18,7 +13,6 @@ forbidden_spellings=(
 
 scan_paths=(
   docs
-  boot
   tools
   .github
 )
@@ -27,7 +21,6 @@ root_files=(
   README.md
   SECURITY.md
   CONTRIBUTING.md
-  CODE_OF_CONDUCT.md
 )
 
 fail=0

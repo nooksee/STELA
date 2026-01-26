@@ -8,7 +8,6 @@ Source of truth for onboarding and workflow: `docs/10_QUICKSTART.md`.
 - **No direct pushes to `main`.** Ever.
 - Work happens on **`work/*` branches** only.
 - Every PR must pass **repo-gates**.
-- Upstream snapshots in `upstream/` are **read-only donor history**.
 
 ## Security policy
 See `SECURITY.md` for reporting guidance and security posture.
