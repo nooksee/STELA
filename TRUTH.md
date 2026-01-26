@@ -33,7 +33,6 @@ This repo root is the developer workspace.
 - 
 
 ## Non-runtime (developer/support)
-- `ops/` ICL/OCL canon (protocols, contracts, templates, launch pack)
 - `docs/` project manual (points into ops canon)
 - `tools/` scripts (verify, build, apply)
 - `storage/` local dev storage (not deployed; keep empty in repo)

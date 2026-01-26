@@ -9,13 +9,6 @@
 - ops/lib/manifests/CONTEXT_MANIFEST.md
 - docs/library/LIBRARY_INDEX.md
 
-## Protocols + contracts
-- ops/contracts/OUTPUT_FORMAT_CONTRACT.md
-- ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md
-
-## Behavior + datasets
-- docs/library/MEMENTOS.md
-
 ## Tools
 - ops/bin/open
 - ops/bin/help

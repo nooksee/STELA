@@ -19,7 +19,7 @@ AI workers (Codex, Gemini, Copilot):
 - No direct access to secrets or privileged credentials.
 
 Worker rule: AI workers do not commit or push code. Humans do.
-See `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md` and `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`.
+See `TRUTH.md`.
 
 ## Secrets management
 
@@ -61,5 +61,4 @@ When reporting, include:
 ## Related docs
 
 - `docs/security/README.md`
-- `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md`
-- `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`
+- `TASK.md`

@@ -82,6 +82,31 @@ Paste delimiter (when pasting raw results into chat): `---`
 
 ---
 
+## DP lint (dispatch_packet_lint.sh)
+
+Use the DP lint to validate Dispatch Packet shape before dispatching.
+
+~~~bash
+./tools/dispatch_packet_lint.sh --test
+./tools/dispatch_packet_lint.sh path/to/DP.md
+./tools/dispatch_packet_lint.sh - < path/to/DP.md
+~~~
+
+Notes:
+- Lint is mechanical; it enforces the current TASK.md DP headings/order and required fields.
+- It should fail on non-DP documents.
+
+---
+
+## Dump refiners (guardrail)
+
+Dump refiners (`--include-dir`, `--exclude-dir`, `--ignore-file`) are allowed only when explicitly justified in the DP.
+When used, the DP must include this fallback line:
+
+`Fallback: ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`
+
+---
+
 ## When to DISAPPROVE
 
 - Missing proof bundle (e.g., `git status --porcelain`, `git diff --name-only`, `git diff --stat`, required verification outputs).

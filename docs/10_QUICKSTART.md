@@ -8,7 +8,6 @@ This repo is governed. The fastest way to succeed here is to follow the rules *e
 3) `TRUTH.md Section 3`
 4) `docs/00_INDEX.md`
 5) `docs/library/OPERATOR_MANUAL.md`
-6) `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md`
 
 ## Workflow doctrine (non-negotiable)
 - One slice per PR.
@@ -43,7 +42,7 @@ Examples:
 - `main` = the locked classroom whiteboard
 - `work/*` = your notebook
 - `docs/` = project manual that points into ops canon
-- `ops/` = system operations (contracts, templates)
+- `ops/` = system operations
 - `.github/` = governance (repo-gates, PR templates, Copilot instructions)
 
 ## NetBeans-only comfort path (no terminal required)

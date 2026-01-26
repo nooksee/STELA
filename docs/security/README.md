@@ -20,10 +20,6 @@ AI workers (Codex, Gemini, Copilot):
 - Provide citations/provenance for external sources.
 - No direct access to secrets or privileged credentials.
 
-References:
-- `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md`
-- `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`
-
 ## Secrets management
 
 - Do not store secrets in the repo.
@@ -59,5 +55,3 @@ Please include:
 ## Cross-links
 
 - `SECURITY.md` (repo root)
-- `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md`
-- `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`

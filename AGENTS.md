@@ -4,8 +4,7 @@
 ## Hard constraints (SSOT)
 - TRUTH.md
 - SoP.md
-- ops/contracts/OUTPUT_FORMAT_CONTRACT.md
-- ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md
+- TASK.md
 - ops/lib/manifests/CONTEXT_MANIFEST.md
 - docs/library/OPERATOR_MANUAL.md
 - docs/library/CONTINUITY_MAP.md
