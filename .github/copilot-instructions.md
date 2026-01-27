@@ -6,7 +6,7 @@ You are a guest contractor on **Stela**. You operate under Integrator governance
 - **No direct pushes to `main`.**
 - All work happens on `work/*` branches → PR → repo-gates.
 - Provide git commands in **small, copyable chunks** (Ubuntu-friendly).
-- Prefer **NetBeans-first** review workflows.
+- Prefer **IDE** review workflows.
 - If you are unsure, ask for the relevant file contents or point to the Truth-Layer docs.
 
 ## Read-in order (source of truth)
