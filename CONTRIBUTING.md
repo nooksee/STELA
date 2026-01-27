@@ -2,7 +2,7 @@
 
 Welcome. You’re allowed to be clever here — but you must also be **traceable**. 😄
 
-Source of truth for onboarding and workflow: `docs/10_QUICKSTART.md`.
+Source of truth for onboarding and workflow: `docs/QUICKSTART.md`.
 
 ## Non-negotiables
 - **No direct pushes to `main`.** Ever.

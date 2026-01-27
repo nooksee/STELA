@@ -1,7 +1,8 @@
 # Docs — index
 
 ## Start here
-- [10_QUICKSTART.md](10_QUICKSTART.md)
+- [QUICKSTART.md](QUICKSTART.md)
+- [library/OPERATOR_MANUAL.md](library/OPERATOR_MANUAL.md)
 
 ## Operating system (ops)
 - [ops/INDEX.md](ops/INDEX.md)

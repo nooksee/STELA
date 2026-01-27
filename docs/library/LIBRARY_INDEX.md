@@ -6,7 +6,7 @@
 
 manual | Operator Manual | docs/library/OPERATOR_MANUAL.md
 continuity-map | Continuity Map | docs/library/CONTINUITY_MAP.md
-quickstart | Quickstart | docs/10_QUICKSTART.md
-docs-index | Docs Index | docs/00_INDEX.md
+quickstart | Quickstart | docs/QUICKSTART.md
+docs-index | Docs Index | docs/INDEX.md
 system-constitution | Stela System Constitution | TRUTH.md
 state-of-play | SoP | SoP.md

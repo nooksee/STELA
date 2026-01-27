@@ -31,11 +31,11 @@ It is intentionally short and maintained; if it drifts, fix it.
 ## What exists where (paths you’ll reference constantly)
 
 **Canon / required by OPEN tooling (must exist from repo root):**
-- `TRUTH.md` — canon + invariants
-- `TASK.md` — DP template + living work log surface (Option B)
-- `SoP.md` — state-of-play log (merge-gated)
+- `TRUTH.md` — constitution + invariants (SSOT + filing doctrine)
+- `TASK.md` — DP contract + living work surface/log
+- `SoP.md` — history ledger (what shipped, when, why)
 - `AGENTS.md` — agent roles/expectations
-- `docs/00_INDEX.md` — docs map / entry index
+- `docs/INDEX.md` — docs map / entry index
 - `docs/library/OPERATOR_MANUAL.md` — this file
 - `docs/library/CONTINUITY_MAP.md` — continuity wayfinding
 - `ops/lib/manifests/CONTEXT_MANIFEST.md` — what “counts as context” + lint targets
@@ -109,7 +109,7 @@ When used, the DP must include this fallback line:
 
 ## When to DISAPPROVE
 
-- Missing proof bundle (e.g., `git status --porcelain`, `git diff --name-only`, `git diff --stat`, required verification outputs).
+- Missing proof bundle required by `TASK.md`.
 - Missing RECEIPT or missing results file.
 - Forbidden path touched or scope mismatch.
 - Verification missing or failed.
@@ -123,20 +123,10 @@ Enable branch protection on `main` in GitHub settings.
 
 ---
 
-## What workers must return (minimum)
+## What workers must return (SSOT: `TASK.md`)
 
-- Worker must write the full results message to:  
-  `storage/handoff/<DP-ID>-RESULTS.md`
-- Results must include a **RECEIPT** with **OPEN + DUMP** and verification proof.
-
-Required headings (exact):
-- `### RECEIPT`
-- `### A) OPEN Output` (full `./ops/bin/open` output or path if attached)
-- `### B) DUMP Output` (inline dump or dump artifact paths; include archive + manifest if bundled)
-
-Attachment-mode friendly minimum:
-- `storage/handoff/<DP-ID>-RESULTS.md` (required)
-- dump artifact(s) from `storage/dumps/` when DP requires
+Use `TASK.md` for the required worker outputs, proof bundle items, and RESULTS headings.
+This manual expects a results file under `storage/handoff/<DP-ID>-RESULTS.md` and receipt pointers to OPEN + DUMP artifacts.
 
 ---
 

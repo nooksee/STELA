@@ -85,7 +85,7 @@ required_files=(
   "SoP.md"
   "AGENTS.md"
   "TASK.md"
-  "docs/00_INDEX.md"
+  "docs/INDEX.md"
   "docs/library/OPERATOR_MANUAL.md"
   "docs/library/CONTINUITY_MAP.md"
   "ops/lib/manifests/CONTEXT_MANIFEST.md"
@@ -162,7 +162,7 @@ Don't:
 - TASK.md
 - SoP.md
 - AGENTS.md
-- docs/00_INDEX.md
+- docs/INDEX.md
 - docs/library/OPERATOR_MANUAL.md
 - docs/library/CONTINUITY_MAP.md
 - ops/lib/manifests/CONTEXT_MANIFEST.md

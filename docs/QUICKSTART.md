@@ -3,10 +3,10 @@
 This repo is governed. The fastest way to succeed here is to follow the rules *exactly*.
 
 ## First steps (read in this order)
-1) `TRUTH.md`
+1) `TRUTH.md` (Filing Doctrine + Constitution + Structure/Map)
 2) `SoP.md`
-3) `TRUTH.md Section 3`
-4) `docs/00_INDEX.md`
+3) `TASK.md`
+4) `docs/INDEX.md`
 5) `docs/library/OPERATOR_MANUAL.md`
 
 ## Workflow doctrine (non-negotiable)
@@ -51,4 +51,4 @@ Examples:
 - **Push:** Team → Remote → Push…
 - **Pull:** Team → Remote → Pull…
 
-If anything feels risky: stop and read `SoP.md` again. That file is the truth of “what’s real today”.
+If anything feels risky: stop and re-read `TRUTH.md` and `SoP.md`. `SoP.md` shows what shipped most recently.

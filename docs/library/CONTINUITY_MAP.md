@@ -8,6 +8,6 @@ Pointer-only map of the canonical continuity surfaces that preserve state across
 - Curated library index + front door: `docs/library/LIBRARY_INDEX.md`, `ops/bin/help` (approved operator surface)
 - Operator manual: `docs/library/OPERATOR_MANUAL.md` (how to run the system)
 - Project map + canonical tree: `TRUTH.md Section 3`, `TRUTH.md Section 4` (structure + boundaries)
-- Docs index: `docs/00_INDEX.md` (docs navigation)
+- Docs index: `docs/INDEX.md` (docs navigation)
 - Dump tool: `ops/bin/dump` (state capture)
 

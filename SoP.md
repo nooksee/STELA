@@ -1,3 +1,22 @@
+## 2026-01-27 — DP-OPS-0003: Canon truth consolidation from legacy mementos (v3)
+
+- Purpose: Consolidate high-value truth into canon surfaces and remove scatter/duplication.
+- What shipped:
+  - Reshaped `TRUTH.md` into filing doctrine + constitution/invariants.
+  - Tightened `TASK.md` closeout outputs (diff name-only/stat + NEXT).
+  - Updated `docs/library/OPERATOR_MANUAL.md`, `docs/QUICKSTART.md`, `docs/GOVERNANCE.md`, and `docs/INDEX.md` to use pointer-based canon references.
+- Results: `storage/handoff/DP-OPS-0003-RESULTS.md`
+- Verification:
+  - `bash tools/verify_tree.sh`
+  - Result: `4 issue(s)` (missing expected directories: `modules/`, `admin/`, `includes/`, `themes/`).
+  - `bash tools/context_lint.sh`
+  - Result: `[context_lint] Result: warnings detected` (missing paths referenced in `SoP.md`).
+  - `bash tools/lint_truth.sh`
+  - Result: `[lint_truth] OK`
+- Risk / rollback:
+  - Risk: Low (canon/doc reshaping only).
+  - Rollback: revert `TRUTH.md`, `TASK.md`, `docs/library/OPERATOR_MANUAL.md`, `docs/QUICKSTART.md`, `docs/GOVERNANCE.md`, `docs/INDEX.md`, and `SoP.md`.
+
 ## 2026-01-22 — DP-OPS-0050A: Integrator Phase Discipline (Conformance-First + Phase-Locked Outputs)
 
 - Purpose: Lock conformance-first DP refreshes, phase-locked outputs, receipt bundle always, and allow OPEN/snapshot to be operator-provided or locally generated per run.
@@ -174,7 +193,7 @@
 - Purpose: Seed a lightweight Stelae library page and wire it into canon pointers.
 - What shipped:
   - Added `docs/library/[REMOVED].md` with 10 starter Stelae entries.
-  - Linked [REMOVED] in `docs/00_INDEX.md` and `TRUTH.md Section 2`.
+  - Linked [REMOVED] in `docs/INDEX.md` and `TRUTH.md Section 2`.
   - Added a [REMOVED] pointer line to `ops/bin/open`.
 - Verification:
   - `bash tools/context_lint.sh`
@@ -182,7 +201,7 @@
   - `bash tools/lint_truth.sh`
   - Result: `[lint_truth] OK`
   - `./ops/bin/open --intent="dp-ops-0048 verify" --dp="DP-OPS-0048 / 2026-01-19" | rg -n "[REMOVED]"`
-  - `rg -n "[REMOVED]" docs/00_INDEX.md TRUTH.md Section 2 docs/library/[REMOVED].md`
+  - `rg -n "[REMOVED]" docs/INDEX.md TRUTH.md Section 2 docs/library/[REMOVED].md`
 - Risk / rollback:
   - Risk: Low; docs + small open pointer change.
   - Rollback: revert the touched files and remove `docs/library/[REMOVED].md`.
@@ -194,11 +213,11 @@
   - Added Naming / Identity section to `TRUTH.md` defining STELA, Stela legacy label, and no-churn policy.
   - Added a short STELA note in the operator manual and a minimal naming doc with anti-drift bullets.
   - Added a single MEMENTOS clarification line about naming vs canon/contracts.
-  - Registered the STELA naming doc in `docs/00_INDEX.md`.
+  - Registered the STELA naming doc in `docs/INDEX.md`.
 - Verification:
   - `bash tools/context_lint.sh`
   - `bash tools/lint_truth.sh`
-  - `rg -n "(STELA|Stela|Nuke CE)" TRUTH.md SoP.md docs/library/OPERATOR_MANUAL.md docs/library/MEMENTOS.md docs/library/STELA_NAMING.md docs/00_INDEX.md`
+  - `rg -n "(STELA|Stela|Nuke CE)" TRUTH.md SoP.md docs/library/OPERATOR_MANUAL.md docs/library/MEMENTOS.md docs/library/STELA_NAMING.md docs/INDEX.md`
   - `git diff --name-only`
 - Risk / rollback:
   - Risk: Low; doc-only naming alignment.
@@ -685,7 +704,7 @@
   - `bash ops/bin/open --intent="dp-ops-0007 test" --dp="DP-OPS-0007 / 2026-01-11" | head -n 140`
   - Legacy close script output (retired).
   - `bash tools/context_lint.sh`
-  - `rg -n "docs/ops/" docs/00_INDEX.md docs/** ops/**`
+  - `rg -n "docs/ops/" docs/INDEX.md docs/** ops/**`
 - Risk / rollback:
   - Risk: missed reference to removed stubs.
   - Rollback: restore deleted stubs and revert reference updates.
@@ -870,7 +889,7 @@
   - Moved `boot/BUNDLE_MANIFEST.json` to `ops/init/icl/BUNDLE_MANIFEST.json`.
   - Updated `ops/init/icl/context_pack.json` and `ops/init/icl/ACTIVE_CONTEXT.md` for new launch pack paths.
   - Updated `tools/context_lint.sh` to drop `/boot` path allowance.
-  - Updated `docs/README_CONTEXT.md`, `docs/10_QUICKSTART.md`, `docs/30_RELEASE_PROCESS.md`, `docs/SOP_MULTICHAT.md`, `docs/REPO_LAYOUT.md`, `docs/PROJECT_STRUCTURE.md`, and `docs/20_GOVERNANCE.md`.
+  - Updated `docs/README_CONTEXT.md`, `docs/QUICKSTART.md`, `docs/30_RELEASE_PROCESS.md`, `docs/SOP_MULTICHAT.md`, `docs/REPO_LAYOUT.md`, `docs/PROJECT_STRUCTURE.md`, and `docs/GOVERNANCE.md`.
   - Removed `boot/`.
 - Verification:
   - `bash tools/verify_tree.sh` ✅
@@ -1049,7 +1068,7 @@
 
 - Purpose: Keep Quickstart as the single onboarding entry point across front-door docs.
 - What shipped:
-  - Moved `docs/README_CONTEXT.md` out of the “Start here” section in `docs/00_INDEX.md`.
+  - Moved `docs/README_CONTEXT.md` out of the “Start here” section in `docs/INDEX.md`.
   - Kept Quickstart as the only Start Here link while preserving reference access.
 - Verification:
   - `grep -r "launch_pack_v2" docs/` → no matches ✅
@@ -1058,7 +1077,7 @@
   - `bash tools/lint_truth.sh` ✅
 - Risk / rollback:
   - Risk: docs-only (index link placement).
-  - Rollback: revert this entry and `docs/00_INDEX.md` change.
+  - Rollback: revert this entry and `docs/INDEX.md` change.
 
 ## 2026-01-05 — Ops: no worker commit/push (T-OPS-NO-WORKER-COMMIT)
 
@@ -1091,8 +1110,8 @@
 
 - Purpose: Align onboarding docs to repo reality and make Quickstart the canonical entry point.
 - What shipped:
-  - Made `docs/10_QUICKSTART.md` the single onboarding guide with doctrine + ops links.
-  - Replaced `docs/START_HERE.md` with a pointer; updated `README.md`, `CONTRIBUTING.md`, and `docs/00_INDEX.md`.
+  - Made `docs/QUICKSTART.md` the single onboarding guide with doctrine + ops links.
+  - Replaced `docs/START_HERE.md` with a pointer; updated `README.md`, `CONTRIBUTING.md`, and `docs/INDEX.md`.
   - Refreshed context and structure docs to match current top-level folders.
 - Verification:
   - grep -r "_meta/" docs/ (hits in `docs/SECURE_WEBROOT_OPTION.md`)
@@ -1124,7 +1143,7 @@
 - Purpose: Eliminate split-brain docs and standardize metadata terminology.
 - What shipped:
   - Moved boot docs into `docs/` (including archives and triage archive), removing duplicates in the former boot docs location.
-  - Updated indexes and references (`docs/00_INDEX.md`, `docs/CONTRACTOR_PACKET.md`, `ops/init/icl/context_pack.json`).
+  - Updated indexes and references (`docs/INDEX.md`, `docs/CONTRACTOR_PACKET.md`, `ops/init/icl/context_pack.json`).
   - Standardized docs terminology to “Metadata Surfaces (always-on)”.
 - Verification:
   - Link/reference grep (boot-docs references) ✅
@@ -1140,7 +1159,7 @@
 - Purpose: Canonize contractor dispatch rules so every PR follows governance + metadata requirements.
 - What shipped:
   - Added `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md` to formalize dispatch rules and cadence.
-  - Linked the new brief from `docs/ops/INDEX.md` and `docs/00_INDEX.md`.
+  - Linked the new brief from `docs/ops/INDEX.md` and `docs/INDEX.md`.
 - Verification:
   - repo-gates ✅
   - state-of-play-policing ✅
@@ -1188,13 +1207,13 @@
 # State of Play — 2026-01-03
 
 ## Completed
-- Docs Family v1 integrated + canon spine created (docs/00_INDEX, 10_QUICKSTART, 20_GOVERNANCE, 30_RELEASE_PROCESS, 40_PROJECT_HYGIENE)
+- Docs Family v1 integrated + canon spine created (docs/INDEX, QUICKSTART, GOVERNANCE, 30_RELEASE_PROCESS, 40_PROJECT_HYGIENE)
 - Added Copilot onboarding rules: .github/copilot-instructions.md
 - Added SSOT “save-game” handover file: ops/init/icl/AI_CONTEXT_SYNC.md
 - Enabled FAIL-mode policing: canon changes require SoP update in the same PR
 - Updated ops/init/icl/DAILY_CONSOLE.md to clarify canon vs log vs rehydration.
 - Added ops governance docs: OUTPUT_FORMAT_CONTRACT + Copilot onboarding + Gemini onboarding
-- Updated docs/ops/INDEX.md + docs/00_INDEX.md to link the new ops docs
+- Updated docs/ops/INDEX.md + docs/INDEX.md to link the new ops docs
 - Standardized TRUTH.md Section 3 bullets for docs/ops/, upstream/, and .github/workflows/ to clarify roles
 - 2026-01-03: Canonized Output Formatting Contract (ops/contracts/OUTPUT_FORMAT_CONTRACT.md) and linked it in docs indexes.
 
@@ -1218,7 +1237,7 @@
   - Updated `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`, `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md`, and `ops/init/protocols/SAVE_THIS_PROTOCOL.md`.
   - Updated `ops/init/icl/context_pack.json` for the new ops canon pointers.
   - Converted docs/ops duplicates into pointer stubs and refreshed `docs/ops/INDEX.md`.
-  - Updated `TRUTH.md Section 3`, `TRUTH.md Section 2`, and docs indexes/references (`docs/00_INDEX.md`, `docs/10_QUICKSTART.md`, `docs/CONTRACTOR_PACKET.md`, `docs/REPO_LAYOUT.md`, `docs/PROJECT_STRUCTURE.md`, `docs/20_GOVERNANCE.md`, `docs/README_CONTEXT.md`, `docs/security/README.md`).
+  - Updated `TRUTH.md Section 3`, `TRUTH.md Section 2`, and docs indexes/references (`docs/INDEX.md`, `docs/QUICKSTART.md`, `docs/CONTRACTOR_PACKET.md`, `docs/REPO_LAYOUT.md`, `docs/PROJECT_STRUCTURE.md`, `docs/GOVERNANCE.md`, `docs/README_CONTEXT.md`, `docs/security/README.md`).
 - Verification:
   - `bash tools/verify_tree.sh` ✅
   - `bash tools/lint_truth.sh` ✅

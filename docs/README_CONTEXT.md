@@ -9,7 +9,7 @@ The context surface is the minimal, curated set of documents that lets a new ope
 
 ## How to keep it current
 - When docs move, update `ops/lib/manifests/CONTEXT_MANIFEST.md` and `docs/library/CONTINUITY_MAP.md` to point at the new locations.
-- Keep onboarding pointers aligned to `docs/10_QUICKSTART.md`.
+- Keep onboarding pointers aligned to `docs/QUICKSTART.md`.
 
 ## What it is not
 - It is not runtime configuration.

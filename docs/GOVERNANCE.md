@@ -5,16 +5,15 @@ This project is built to resist drift. Governance is not “process theater” �
 ## Non-negotiables
 - **No direct pushes to `main`.** Work happens on `work/*` branches → PRs → merge.
 - **repo-gates must pass.** If gates fail, we fix gates or the change — not the rules.
-- **Truth-Layer is authoritative.** When in doubt, Truth-Layer wins.
+- **Canon surfaces are authoritative.** When in doubt, `TRUTH.md` wins.
 
-## Truth-Layer (source of truth)
+## Canon surfaces (source of truth)
 Authoritative docs (kept correct at all times):
-- `TRUTH.md`
-- `SoP.md`
-- `TRUTH.md Section 2`
-- `TRUTH.md Section 3`
-- `TRUTH.md Section 4`
-- `docs/00_INDEX.md` (front door)
+- `TRUTH.md` (constitution + filing doctrine + structure/map)
+- `TASK.md` (DP contract + living work surface/log)
+- `SoP.md` (history ledger)
+- `docs/INDEX.md` (front door)
+- `docs/library/OPERATOR_MANUAL.md` (operator mechanics; pointer-only)
 
 Rule: if canon changes, **SoP must be updated** (same PR when possible).
 
@@ -43,7 +42,7 @@ All contractors operate under Integrator governance:
 - changes ship only via PR + repo-gates
 
 AI contractors should be given:
-- the Truth-Layer read order
+- the canon read order (`TRUTH.md`, `SoP.md`, `TASK.md`, `docs/INDEX.md`, `docs/library/OPERATOR_MANUAL.md`)
 - the “single deliverable PR” for the day
 - strict instruction: no direct pushes to main, provide commands in small safe chunks
 

@@ -7,6 +7,8 @@
 > - **Top:** current Dispatch Packet (DP) intent + constraints
 > - **Bottom:** Work Log (timestamped continuity breadcrumbs + single next action)
 
+Canon surface definitions live in `TRUTH.md`.
+
 ---
 
 ## 0) REQUIRED CONTEXT LOAD (PRE-FLIGHT)
@@ -140,6 +142,9 @@
 - `storage/handoff/DP-OPS-[ID]-RESULTS.md` (required)
 - `storage/handoff/OPEN-[work-branch]-[hash].txt` (when produced)
 - `storage/handoff/OPEN-PORCELAIN-[work-branch]-[hash].txt` (when produced)
+- `git diff --name-only` (include in RESULTS)
+- `git diff --stat` (include in RESULTS)
+- `NEXT:` one single action (include in RESULTS)
 
 **No receipt/proof bundle = DISAPPROVE.**
 
@@ -148,6 +153,9 @@
 - Verification results (RUN/NOT RUN + reason + risk)
 - Patch/diff proof bundle (status/diff list or direct diff)
 - Receipt pointers (OPEN + PORCELAIN + DUMP outputs/paths)
+- `git diff --name-only` output
+- `git diff --stat` output
+- `NEXT:` one single action
 
 ---
 

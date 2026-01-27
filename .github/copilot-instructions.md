@@ -13,7 +13,7 @@ You are a guest contractor on **Stela**. You operate under Integrator governance
 1) `TRUTH.md`
 2) `SoP.md`
 3) `TRUTH.md Section 3`
-4) `docs/00_INDEX.md`
+4) `docs/INDEX.md`
 
 ## What you should do
 - Reduce doc drift and redundancy.
