@@ -1,3 +1,19 @@
+## 2026-01-27 — DP-OPS-0005: TASK hardening (worker git authority + dump-as-command + real Work Log + task gate + DP lint sync)
+
+- Purpose: Harden TASK + gates for worker git authority, dump-as-command, and real Work Log discipline.
+- What shipped:
+  - Updated `TASK.md` DP template (freshness gate wording, worker git authority block, dump-as-command phrasing, Work Log expectation + example).
+  - Synced `tools/dispatch_packet_lint.sh` to TASK headings and broadened lint field parsing for DP suffixes/parenthetical labels and in-scope format.
+  - Added TASK policing in `.github` (`sop_policing.yml` update + new `task_policing.yml`).
+- Verification:
+  - `bash tools/dispatch_packet_lint.sh storage/handoff/DP-OPS-0005_v2.md`
+  - Result: `OK: DP lint passed`
+  - `bash tools/context_lint.sh`
+  - Result: `[context_lint] Result: warnings detected` (missing paths referenced in `SoP.md`).
+- Risk / rollback:
+  - Risk: Low (process/gate updates only).
+  - Rollback: revert `TASK.md`, `tools/dispatch_packet_lint.sh`, `.github/workflows/sop_policing.yml`, `.github/workflows/task_policing.yml`, and `SoP.md`.
+
 ## 2026-01-27 — DP-OPS-0003: Canon truth consolidation from legacy mementos (v3)
 
 - Purpose: Consolidate high-value truth into canon surfaces and remove scatter/duplication.

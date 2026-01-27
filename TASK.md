@@ -48,11 +48,11 @@ Canon surface definitions live in `TRUTH.md`.
 ## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)
 **You are currently providing (operator inputs — fill these):**
 - OPEN (branch/head): `[branch] @ [short-hash]` (from `[OPEN-filename].txt`)
-- Repo dump (if provided): `[filename]` (scope: `[platform|project|…]`; files included: `[N]`)
+- Repo dump command (if provided): `[exact command]` (worker runs it; record output path(s) in RECEIPT)
 - Any additional attached artifacts: `[OPEN-PORCELAIN…]`, `[manifest…]`, etc.
 
-**Worker MUST:**
-1) Create/switch to **EXACT** work branch (provided by Integrator):
+**Worker MUST (no branch creation/switching):**
+1) Already be on the **EXACT** work branch (provided by Integrator):
 - `[work/EXACT-branch-name-here]`
 
 2) Confirm:
@@ -61,6 +61,7 @@ Canon surface definitions live in `TRUTH.md`.
 
 **STOP if any mismatch.**  
 **STOP if the exact work branch name is missing.**  
+**STOP if told to create/switch branches.**  
 (If Base HEAD is “not provided,” note “hash not verified” and proceed only if authorized by the Integrator.)
 
 ---
@@ -91,6 +92,11 @@ Canon surface definitions live in `TRUTH.md`.
   - No edits to `.github/`
   - No edits to `projects/` unless explicitly authorized
   - No renames/moves/deletes unless explicitly authorized
+
+- **Worker Git Authority (non-negotiable):**
+  - Workers do not create/switch branches.
+  - Workers do not stage/commit/merge/push.
+  - Workers only return diffs/results/receipt.
 
 - **Precedence:** If any conflict exists, **TRUTH.md wins**. If unclear, STOP and ask.
 
@@ -197,7 +203,10 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 
 ## 4) WORK LOG (TIMESTAMPED CONTINUITY)
 **Rule:** This is not a transcript. It’s the durable breadcrumb trail.  
+**Expectation:** Append a new timestamped entry on every DP closeout (no exceptions).  
 **Each entry ends with:** `NEXT: <one single action>`.
 
+- **Example format:** `2026-01-27 14:05 — DP-OPS-0005: Example entry only. Verification: NOT RUN. Blockers: none. NEXT: follow-up.`
 - *[YYYY-MM-DD HH:MM]* — DP-OPS-[ID]: [short note]. Verification: [RUN/NOT RUN]. Blockers: [none/...]. NEXT: [single action]
 - *[YYYY-MM-DD HH:MM]* — [short note]. Verification: [..]. Blockers: [..]. NEXT: [single action]
+- *2026-01-27 14:26* — DP-OPS-0005: Hardened TASK (worker git authority + dump-as-command + Work Log expectation); synced DP lint to TASK headings; added TASK gating in .github; updated SoP. Verification: RUN (dispatch_packet_lint OK; context_lint warnings). Blockers: none. NEXT: validate end-to-end DP flow with a small "toy DP" and ensure gates behave as intended.

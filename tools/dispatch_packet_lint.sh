@@ -34,7 +34,6 @@ strip_backticks() {
 
 PLACEHOLDER_TOKENS=(
   "TBD"
-  "..."
   "<fill"
   "[ID]"
   "[TITLE]"
@@ -57,33 +56,134 @@ contains_placeholder() {
   return 1
 }
 
+has_standalone_ellipsis() {
+  local path="$1"
+  if grep -nE '(^|[[:space:]])\\.\\.\\.([[:space:]]|$)' "$path" >/dev/null; then
+    return 0
+  fi
+  return 1
+}
+
+field_value() {
+  local label="$1"
+  awk -v label="$label" '
+    {
+      pos = index($0, label)
+      if (pos) {
+        rest = substr($0, pos)
+        colon = index(rest, ":")
+        if (colon) {
+          text = substr(rest, colon + 1)
+          gsub(/^[[:space:]]+/, "", text)
+          print text
+          exit
+        }
+      }
+    }
+  ' "$path"
+}
+
 check_required_field() {
   local label="$1"
   local value
 
-  value="$(awk -v label="$label" '
-    {
-      match($0, label ":[[:space:]]*")
-      if (RSTART) {
-        text = substr($0, RSTART + RLENGTH)
-        gsub(/^[[:space:]]+/, "", text)
-        print text
-        exit
-      }
-    }
-  ' "$path")"
-
+  value="$(field_value "$label")"
   value="$(trim "$value")"
   value="$(strip_backticks "$value")"
 
   if [[ -z "$value" ]]; then
     fail "missing or empty value for '$label'"
-    return
+    return 1
   fi
 
   if contains_placeholder "$value"; then
     fail "placeholder value for '$label'"
+    return 1
   fi
+  return 0
+}
+
+field_value_valid() {
+  local label="$1"
+  local value
+
+  value="$(field_value "$label")"
+  value="$(trim "$value")"
+  value="$(strip_backticks "$value")"
+
+  if [[ -z "$value" ]]; then
+    return 1
+  fi
+
+  if contains_placeholder "$value"; then
+    return 1
+  fi
+  return 0
+}
+
+scope_list_exists() {
+  local path="$1"
+  local section="$2"
+  awk -v section="$section" '
+    BEGIN { found = 0; ok = 0 }
+    {
+      if (!found && index($0, section)) { found = 1; next }
+      if (found) {
+        if ($0 ~ /^\\s*$/) { exit }
+        if ($0 ~ /^\\s*#{1,6} /) { exit }
+        if ($0 ~ /^\\s*[-*] /) { ok = 1; exit }
+        if ($0 ~ /^\\s*\\*\\*/) { exit }
+      }
+    }
+    END { exit ok ? 0 : 1 }
+  ' "$path"
+}
+
+extract_allowlist_paths() {
+  local path="$1"
+  local section="$2"
+  awk -v section="$section" '
+    BEGIN { found = 0 }
+    {
+      if (!found && index($0, section)) { found = 1; next }
+      if (found) {
+        if ($0 ~ /^\\s*$/) { exit }
+        if ($0 ~ /^\\s*#{1,6} /) { exit }
+        if ($0 ~ /^\\s*[-*] /) {
+          line = $0
+          sub(/^\\s*[-*]\\s+/, "", line)
+          print line
+          next
+        }
+        if ($0 ~ /^\\s*\\*\\*/) { exit }
+      }
+    }
+  ' "$path"
+}
+
+extract_allowlist_backticks() {
+  local path="$1"
+  local section="$2"
+  awk -v section="$section" '
+    BEGIN { found = 0 }
+    {
+      if (!found && index($0, section)) { found = 1; next }
+      if (found) {
+        if ($0 ~ /^\\s*$/) { exit }
+        if ($0 ~ /^\\s*#{1,6} /) { exit }
+        if ($0 ~ /^\\s*[-*] /) {
+          line = $0
+          while (match(line, /`[^`]+`/)) {
+            token = substr(line, RSTART + 1, RLENGTH - 2)
+            print token
+            line = substr(line, RSTART + RLENGTH)
+          }
+          next
+        }
+        if ($0 ~ /^\\s*\\*\\*/) { exit }
+      }
+    }
+  ' "$path"
 }
 
 lint_file() {
@@ -95,15 +195,20 @@ lint_file() {
     return 1
   fi
 
+  # If TASK DP headings change, update this list in the same PR.
   local headings=(
-    "## 0. FRESHNESS GATE (STOP IF FAILED)"
-    "## I. SCOPE & SAFETY"
-    "## II. EXECUTION PLAN (A-E CANON)"
+    "## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)"
+    "## I. REQUIRED CONTEXT LOAD (DP-SCOPED)"
+    "## II. SCOPE & SAFETY"
+    "## III. EXECUTION PLAN (A–E CANON)"
     "### A) STATE"
     "### B) REQUEST"
     "### C) CHANGELOG"
     "### D) PATCH / DIFF"
     "### E) RECEIPT (REQUIRED)"
+    "## 3) CLOSEOUT (MANDATORY)"
+    "## 3.1) THREAD TRANSITION (RESET / ARCHIVE RULE)"
+    "## 4) WORK LOG (TIMESTAMPED CONTINUITY)"
   )
 
   local heading_lines=()
@@ -132,7 +237,7 @@ lint_file() {
     done
   fi
 
-  if ! grep -nE '^#\s*DP-[A-Z]+-[0-9]{4,}:' "$path" >/dev/null; then
+  if ! grep -nE '^#\s*DP-[A-Z]+-[0-9]{4,}([_-]v[0-9]+)?:' "$path" >/dev/null; then
     fail "missing DP id heading (expected '# DP-<AREA>-<####>: <title>')"
   fi
 
@@ -143,32 +248,35 @@ lint_file() {
     fi
   done
 
+  if has_standalone_ellipsis "$path"; then
+    fail "placeholder token found: ..."
+  fi
+
   check_required_field "Base Branch"
   check_required_field "Required Work Branch"
   check_required_field "Base HEAD"
-  check_required_field "Objective"
 
-  mapfile -t allowlist < <(
-    awk '
-      BEGIN { found = 0 }
-      /Target Files \(Allowlist\)/ { found = 1; next }
-      found {
-        if ($0 ~ /^\s*$/) { exit }
-        if ($0 ~ /^\s*#{1,6} /) { exit }
-        if ($0 ~ /^\s*[-*] /) {
-          line = $0
-          sub(/^\s*[-*]\s+/, "", line)
-          print line
-          next
-        }
-        if ($0 ~ /^\s*\*\*/) { exit }
-      }
-    ' "$path"
-  )
+  if ! field_value_valid "Objective"; then
+    if ! grep -Fq "In scope" "$path"; then
+      fail "missing scope summary (Objective or In scope section)"
+    fi
+  fi
 
+  local allowlist_from_in_scope=0
+
+  mapfile -t allowlist < <(extract_allowlist_paths "$path" "Target Files (Allowlist)")
   if (( ${#allowlist[@]} == 0 )); then
+    mapfile -t allowlist < <(extract_allowlist_paths "$path" "Allowed Scope")
+  fi
+  if (( ${#allowlist[@]} == 0 )); then
+    if grep -Fq "In scope" "$path"; then
+      allowlist_from_in_scope=1
+    fi
+  fi
+
+  if (( ${#allowlist[@]} == 0 )) && (( allowlist_from_in_scope == 0 )); then
     fail "Target Files allowlist missing or empty"
-  else
+  elif (( allowlist_from_in_scope == 0 )); then
     local entry
     for entry in "${allowlist[@]}"; do
       entry="$(trim "$entry")"
@@ -215,15 +323,17 @@ run_test() {
   tmp_valid="$(mktemp)"
   cat <<'EOF' > "$tmp_valid"
 # DP-OPS-0001: Lint Test
-## 0. FRESHNESS GATE (STOP IF FAILED)
+## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)
 * **Base Branch:** work/boot_files_update
 * **Required Work Branch:** work/boot_files_update
 * **Base HEAD:** 13a2074d
-## I. SCOPE & SAFETY
+## I. REQUIRED CONTEXT LOAD (DP-SCOPED)
+* **Loaded:** OPEN, TRUTH, AGENTS, SoP
+## II. SCOPE & SAFETY
 * **Objective:** Validate lint headings and required fields.
 * **Target Files (Allowlist):**
   * tools/dispatch_packet_lint.sh
-## II. EXECUTION PLAN (A-E CANON)
+## III. EXECUTION PLAN (A–E CANON)
 ### A) STATE
 Test state.
 ### B) REQUEST
@@ -234,6 +344,12 @@ Test state.
 - Test diff.
 ### E) RECEIPT (REQUIRED)
 - Test receipt.
+## 3) CLOSEOUT (MANDATORY)
+- Closeout notes.
+## 3.1) THREAD TRANSITION (RESET / ARCHIVE RULE)
+- Transition notes.
+## 4) WORK LOG (TIMESTAMPED CONTINUITY)
+- 2026-01-27 14:05 — DP-OPS-0001: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
 EOF
 
   lint_file "$tmp_valid" >/dev/null
@@ -241,15 +357,17 @@ EOF
   tmp_invalid="$(mktemp)"
   cat <<'EOF' > "$tmp_invalid"
 # DP-OPS-0001: Lint Test
-## 0. FRESHNESS GATE (STOP IF FAILED)
+## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)
 * **Base Branch:** work/boot_files_update
 * **Required Work Branch:** work/boot_files_update
 * **Base HEAD:** 13a2074d
-## I. SCOPE & SAFETY
+## I. REQUIRED CONTEXT LOAD (DP-SCOPED)
+* **Loaded:** OPEN, TRUTH, AGENTS, SoP
+## II. SCOPE & SAFETY
 * **Objective:** TBD
 * **Target Files (Allowlist):**
   * tools/dispatch_packet_lint.sh
-## II. EXECUTION PLAN (A-E CANON)
+## III. EXECUTION PLAN (A–E CANON)
 ### A) STATE
 Test state.
 ### B) REQUEST
@@ -260,6 +378,12 @@ Test state.
 - Test diff.
 ### E) RECEIPT (REQUIRED)
 - Test receipt.
+## 3) CLOSEOUT (MANDATORY)
+- Closeout notes.
+## 3.1) THREAD TRANSITION (RESET / ARCHIVE RULE)
+- Transition notes.
+## 4) WORK LOG (TIMESTAMPED CONTINUITY)
+- 2026-01-27 14:05 — DP-OPS-0001: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
 EOF
 
   if lint_file "$tmp_invalid" >/dev/null 2>&1; then
@@ -271,15 +395,17 @@ EOF
   tmp_order="$(mktemp)"
   cat <<'EOF' > "$tmp_order"
 # DP-OPS-0001: Lint Test
-## 0. FRESHNESS GATE (STOP IF FAILED)
+## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)
 * **Base Branch:** work/boot_files_update
 * **Required Work Branch:** work/boot_files_update
 * **Base HEAD:** 13a2074d
-## II. EXECUTION PLAN (A-E CANON)
-## I. SCOPE & SAFETY
+## III. EXECUTION PLAN (A–E CANON)
+## II. SCOPE & SAFETY
 * **Objective:** Validate lint headings and required fields.
 * **Target Files (Allowlist):**
   * tools/dispatch_packet_lint.sh
+## I. REQUIRED CONTEXT LOAD (DP-SCOPED)
+* **Loaded:** OPEN, TRUTH, AGENTS, SoP
 ### A) STATE
 Test state.
 ### B) REQUEST
@@ -290,6 +416,12 @@ Test state.
 - Test diff.
 ### E) RECEIPT (REQUIRED)
 - Test receipt.
+## 3) CLOSEOUT (MANDATORY)
+- Closeout notes.
+## 3.1) THREAD TRANSITION (RESET / ARCHIVE RULE)
+- Transition notes.
+## 4) WORK LOG (TIMESTAMPED CONTINUITY)
+- 2026-01-27 14:05 — DP-OPS-0001: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
 EOF
 
   if lint_file "$tmp_order" >/dev/null 2>&1; then

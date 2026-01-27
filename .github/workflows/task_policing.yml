@@ -1,0 +1,43 @@
+name: task-policing
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  enforce:
+    runs-on: 
+    steps:
+      - name: Enforce TASK update when gate surfaces change
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              per_page: 100,
+            });
+
+            const names = files.map(f => f.filename);
+
+            const taskTouched = names.includes("TASK.md");
+            const gateFiles = [
+              "ops/bin/open",
+              "ops/bin/dump",
+              "tools/dispatch_packet_lint.sh",
+              ".github/copilot-instructions.md",
+              "docs/library/OPERATOR_MANUAL.md",
+            ];
+
+            const gateTouched = names.some(n => gateFiles.includes(n));
+
+            if (gateTouched && !taskTouched) {
+              core.setFailed(
+                "Gate surface changed but TASK.md was not updated in this PR. " +
+                "Update TASK.md to reflect the new behavior and re-push."
+              );
+            } else {
+              core.info("OK: TASK policing rule satisfied (or no gate changes).");
+            }
