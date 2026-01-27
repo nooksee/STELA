@@ -194,9 +194,6 @@ fi
 
   cat <<EOF
 
-[DISPATCH CHEAT LINE]
-"SEE ATTACHED, refresh state. Draft DP using TASK.md. Output only the DP. Ask if anything required is missing."
-
 [NEXT OPERATOR MOVES]
 - ./ops/bin/dump --scope=platform --format=chatgpt
 
