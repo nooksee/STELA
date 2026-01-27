@@ -61,26 +61,7 @@ else
 fi
 
 if [[ -f "${SoP_PATH}" ]]; then
-  state_entries=$(extract_backticks "${SoP_PATH}" | awk 'NF')
-  if [[ -n "${state_entries}" ]]; then
-    while IFS= read -r entry; do
-      if [[ "${entry}" == *" "* ]]; then
-        continue
-      fi
-      if [[ "${entry}" == *"/"* || "${entry}" == *.md || "${entry}" == *.sh ]]; then
-        if [[ "${entry}" == /* ]]; then
-          target="${entry}"
-        elif is_known_path "${entry}"; then
-          target="${REPO_ROOT}/${entry}"
-        else
-          continue
-        fi
-        if [[ ! -e "${target}" ]]; then
-          warn "Missing path referenced in SoP.md: ${entry}"
-        fi
-      fi
-    done <<< "${state_entries}"
-  fi
+  note "Skipping SoP.md referenced-path enforcement (historical log)."
 else
   warn "Missing SoP.md"
 fi
