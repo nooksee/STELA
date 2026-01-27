@@ -18,10 +18,10 @@ This repo is governed. The fastest way to succeed here is to follow the rules *e
 ## The only workflow we use (PR-only)
 **Rule:** No direct pushes to `main`. Ever.
 
-1) **Start clean**: check Git Status (NetBeans) — you want “nothing to commit”.
+1) **Start clean**: check Git Status (IDE) — you want “nothing to commit”.
 2) **Create a work branch**: `work/<topic>-YYYY-MM-DD`
-3) **Edit** in NetBeans.
-4) **Review changes** (diff) in NetBeans.
+3) **Edit** in IDE.
+4) **Review changes** (diff) in IDE.
 5) **Commit** (small, descriptive message).
 6) **Push** your branch.
 7) **Open PR** → repo-gates ✅ → merge → delete branch.
@@ -45,7 +45,7 @@ Examples:
 - `ops/` = system operations
 - `.github/` = governance (repo-gates, PR templates, Copilot instructions)
 
-## NetBeans-only comfort path (no terminal required)
+## IDE-only comfort path (no terminal required)
 - **Status / Diff:** Team → Git → Show Changes
 - **Commit:** Team → Commit…
 - **Push:** Team → Remote → Push…

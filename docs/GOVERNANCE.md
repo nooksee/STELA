@@ -27,7 +27,7 @@ Examples:
 ## Pull Requests
 A PR should be:
 - single-purpose
-- reviewable in NetBeans
+- reviewable in an IDE
 - mergeable with repo-gates green
 
 Recommended PR description:

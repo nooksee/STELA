@@ -13,7 +13,7 @@ Source of truth for onboarding and workflow: `docs/QUICKSTART.md`.
 See `SECURITY.md` for reporting guidance and security posture.
 Do not commit secrets to the repo.
 
-## The standard workflow (NetBeans-first)
+## The standard workflow (IDE-first)
 1) Create a branch
 - Name format: `work/<topic>-YYYY-MM-DD`
 - Examples:
@@ -25,13 +25,13 @@ Do not commit secrets to the repo.
 - Keep “drive-by refactors” out of unrelated changes.
 
 3) Review changes visually
-- In NetBeans: **Team → Show Changes**
+- In IDE: **Team → Show Changes**
 - Sanity-check: do the changes match the intent?
 
 4) Commit
 - Use clear, boring commit messages. Boring is good.
   - `docs: expand development philosophy`
-  - `chore: ignore NetBeans private settings`
+  - `chore: ignore IDE private settings`
 
 5) Push + PR
 - Push your `work/*` branch
@@ -52,5 +52,5 @@ If you import or adapt external code:
 
 ## Using Codex (approved “junior contractor” mode)
 Codex may draft changes **only** on `work/*` branches.
-A human (Kevin) reviews visually in NetBeans before merging.
+A human (Operator) reviews visually in an IDE before merging.
 Repo-gates must pass. PR-only merges. No exceptions.
