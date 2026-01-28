@@ -2,12 +2,15 @@
 
 This repo is governed. The fastest way to succeed here is to follow the rules *exactly*.
 
-## First steps (read in this order)
-1) `TRUTH.md` (Filing Doctrine + Constitution + Structure/Map)
-2) `SoP.md`
-3) `TASK.md`
-4) `docs/INDEX.md`
-5) `docs/library/OPERATOR_MANUAL.md`
+## First steps (Operator Onboarding)
+
+1) TRUTH.md (Filing Doctrine + Constitution + Structure/Map)
+2) SoP.md
+3) TASK.md
+4) docs/INDEX.md
+5) docs/library/OPERATOR_MANUAL.md 
+
+Note: AI workers follow the specialized read-in sequences defined in AGENTS.md or .github/copilot-instructions.md.
 
 ## Workflow doctrine (non-negotiable)
 - One slice per PR.

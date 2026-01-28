@@ -124,11 +124,10 @@ emit() {
   cat <<EOF
 ===== OPEN PROMPT =====
 Stela OPEN PROMPT
-Repo is truth. If a file/path isn't present, say so.
+
+Adhere to the Behavioral Logic Standards defined in AGENTS.md.
+
 $mode_line
-You are entering a canon-governed system.
-Precision beats speed.
-If unsure, stop and ask.
 
 [FRESHNESS GATE]
 - Active branch: $branch

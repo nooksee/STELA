@@ -7,19 +7,8 @@ For extended guidance, see `docs/security/README.md`.
 
 ## Roles and access expectations
 
-Operator (human):
-- Owns final decisions and approvals.
-- Performs commits, pushes, and merges.
-- Manages secrets and access tokens.
-- Ensures repo-gates are green before merge.
-
-AI workers (Codex, Gemini, Copilot):
-- Draft changes only; no commit/push.
-- Work within the assigned scope and cite sources/provenance.
-- No direct access to secrets or privileged credentials.
-
-Worker rule: AI workers do not commit or push code. Humans do.
-See `TRUTH.md`.
+For jurisdiction definitions and behavioral logic standards for the Operator,
+Integrator, and Contractor, see the canonical constitution in AGENTS.md.
 
 ## Secrets management
 

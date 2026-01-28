@@ -1,18 +1,23 @@
 # Stela llms.txt
 # Pointer map to canonical docs and tools (no duplication).
 
-## Core canon
-- TRUTH.md
-- SoP.md
-- docs/library/OPERATOR_MANUAL.md
-- docs/library/CONTINUITY_MAP.md
-- ops/lib/manifests/CONTEXT_MANIFEST.md
-- docs/library/LIBRARY_INDEX.md
+## 1. Governance & Jurisdictions
+- TRUTH.md — The system constitution and invariants.
+- AGENTS.md — Staffing protocols and behavioral logic standards.
+- docs/GOVERNANCE.md — Non-negotiables and project coherence rules.
 
-## Tools
-- ops/bin/open
-- ops/bin/help
-- ops/bin/dump
+## 2. State & Continuity
+- SoP.md — Historical ledger (State of Play).
+- TASK.md — Active work surface, DP contract, and thread log.
+- docs/library/CONTINUITY_MAP.md — Wayfinding for cross-session state.
+- ops/lib/manifests/CONTEXT_MANIFEST.md — Required context artifact checklist.
 
-## Consolidation
-- AGENTS.md
+## 3. Operations & Manuals
+- docs/library/OPERATOR_MANUAL.md — Command mechanics and cheat sheet.
+- docs/library/LIBRARY_INDEX.md — Curated index of approved operator surfaces.
+- docs/INDEX.md — Documentation front door.
+
+## 4. Operational Binaries
+- ops/bin/open — Prompt generation and freshness gate.
+- ops/bin/dump — State capture for agent ingestion.
+- ops/bin/help — Context-aware documentation search.
