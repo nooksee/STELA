@@ -47,9 +47,8 @@ Canon surface definitions live in `TRUTH.md`.
 
 ## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)
 **You are currently providing (operator inputs — fill these):**
-- OPEN (branch/head): `[branch] @ [short-hash]` (from `[OPEN-filename].txt`)
+- OPEN (branch/head): `[branch] @ [short-hash]`
 - Repo dump command (if provided): `[exact command]` (worker runs it; record output path(s) in RECEIPT)
-- Any additional attached artifacts: `[OPEN-PORCELAIN…]`, `[manifest…]`, etc.
 
 **Worker MUST (no branch creation/switching):**
 1) Already be on the **EXACT** work branch (provided by Integrator):
