@@ -51,7 +51,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 
 ## 2026-01-22 — DP-OPS-0050A: Integrator Phase Discipline (Conformance-First + Phase-Locked Outputs)
 
-- Purpose: Lock conformance-first DP refreshes, phase-locked outputs, receipt bundle always, and allow OPEN/snapshot to be operator-provided or locally generated per run.
+- Purpose: Lock conformance-first DP refreshes, phase-locked outputs, receipt bundle always, and allow OPEN/dump to be operator-provided or locally generated per run.
 - What shipped:
   - Added Integrator Phase Discipline rules (conformance-first, phase-locked outputs, receipt bundle always) to `TRUTH.md`.
   - Added Integrator Phase Discipline operator phrases, hard stops, and decision table to `docs/library/OPERATOR_MANUAL.md`.
@@ -178,7 +178,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - Result: `197:### RECEIPT`
   - Result:
     - `199:#### A) OPEN Output`
-    - `203:#### B) SNAPSHOT Output`
+    - `203:#### B) dump Output`
     - `214:#### C) PORCELAIN Output`
     - `217:#### D) DP-RESULTS.md Output`
     - `219:#### E) NOTES (optional)`
@@ -257,7 +257,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 
 ## 2026-01-18 — DP-OPS-0041: Snapshot receipt package bundling
 
-- Purpose: Bundle snapshot manifest + payload inside tarball; canonize receipt package artifacts and reduce operator friction.
+- Purpose: Bundle dump manifest + payload inside tarball; canonize receipt package artifacts and reduce operator friction.
 - What shipped:
   - Added `--bundle` to `ops/bin/dump` to include payload + manifest inside the tarball.
   - Updated DP protocol/template, operator manual, and TRUTH to describe receipt package artifacts and bundling expectations.
@@ -265,14 +265,14 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - `bash tools/context_lint.sh`
   - `bash tools/lint_truth.sh`
   - `./ops/bin/dump --scope=icl --format=chatgpt --out=auto --bundle`
-  - `tar -tf storage/dumps/snapshot-icl-work-dp-ops-0041-snapshot-receipt-package-2026-01-18-4adb71c4.tar.xz`
+  - `tar -tf storage/dumps/dump-icl-work-dp-ops-0041-dump-receipt-package-2026-01-18-4adb71c4.tar.xz`
 - Risk / rollback:
-  - Risk: Medium-low; snapshot tooling + docs updates.
-  - Rollback: revert the touched files; snapshot behavior returns to pre-DP defaults.
+  - Risk: Medium-low; dump tooling + docs updates.
+  - Rollback: revert the touched files; dump behavior returns to pre-DP defaults.
 
 ## 2026-01-17 — DP-OPS-0040A: Handoff artifacts + output-artifact clarification
 
-- Purpose: Clarify tracked vs output artifacts, standardize RESULTS naming, add OPEN tag support, and default snapshot compression for full auto output.
+- Purpose: Clarify tracked vs output artifacts, standardize RESULTS naming, add OPEN tag support, and default dump compression for full auto output.
 - What shipped:
   - Canonized output artifacts as untracked under `storage/handoff/` and `storage/dumps/`.
   - Required `<DP-ID>-RESULTS.md` naming in DP protocol/template and operator guidance.
@@ -301,16 +301,16 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - Risk: Low; handoff + logging changes only.
   - Rollback: revert the touched docs/scripts and delete local `storage/handoff/` artifacts (output-only).
 
-## 2026-01-17 — DP-OPS-0040: Platform/project separation + platform snapshot scope
+## 2026-01-17 — DP-OPS-0040: Platform/project separation + platform dump scope
 
-- Purpose: Separate platform vs project payloads and add a platform-only snapshot scope.
+- Purpose: Separate platform vs project payloads and add a platform-only dump scope.
 - What shipped:
   - Platform/project separation (platform vs project move).
   - Added `--scope=platform` to `./ops/bin/dump` for platform-only context.
 - Verification:
   - Not recorded in repo; DP-OPS-0040 verification details not found. Operator confirmation required.
 - Risk / rollback:
-  - Risk: Low; platform-only scope may change operator expectations for snapshot content.
+  - Risk: Low; platform-only scope may change operator expectations for dump content.
   - Rollback: revert DP-OPS-0040 changes (platform/project separation + `--scope=platform`) to pre-DP behavior.
 
 ## 2026-01-17 — DP-OPS-0039: Attachment-mode handoff + branch safety tightening
@@ -332,7 +332,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - What shipped:
   - Hardened DP template/protocol with required SCOPE/FILES/FORBIDDEN blocks, STOP/BLOCKED enforcement, reuse-first + duplication checks, SSOT declaration, and no-new-files constraint.
   - Added supersession proposal-only guidance with crisp plan requirements.
-  - Required RECEIPT SNAPSHOT to include manifest path and tarball+manifest pair when archived.
+  - Required RECEIPT dump to include manifest path and tarball+manifest pair when archived.
 - Verification:
   - `bash tools/context_lint.sh`
   - `bash tools/lint_truth.sh`
@@ -356,13 +356,13 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 
 ## 2026-01-16 — DP-OPS-0035: RECEIPT rename + DP Risk / Rollback requirement
 
-- Purpose: Rename the worker-results bundle to RECEIPT, require Risk / Rollback in DP format, and reinforce OPEN + SNAPSHOT as the rehydration milestone.
+- Purpose: Rename the worker-results bundle to RECEIPT, require Risk / Rollback in DP format, and reinforce OPEN + dump as the rehydration milestone.
 - What shipped:
   - Replaced the legacy bundle label with RECEIPT across canon, protocol, template, and operator guidance.
   - Added Risk / Rollback as a required DP section and updated the DP template.
   - Updated worker-result rejection language to use RECEIPT.
   - Hardened the DP template (addendum): STOP on literal ellipsis placeholder, BLOCKED mini-receipt shape, explicit required output slots A) SUMMARY + SCOPE CONFIRMATION and D) PATCH / DIFF, verification discipline wording.
-  - Updated snapshot behavior (addendum): snapshot writes chat payload .txt; snapshot writes tarball (when used) and ALWAYS writes manifest pointing to chat payload.
+  - Updated dump behavior (addendum): dump writes chat payload .txt; dump writes tarball (when used) and ALWAYS writes manifest pointing to chat payload.
 - Verification:
   - `bash tools/context_lint.sh`
 - Risk / rollback:
