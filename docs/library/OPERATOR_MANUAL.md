@@ -82,14 +82,14 @@ Paste delimiter (when pasting raw results into chat): `---`
 
 ---
 
-## DP lint (dispatch_packet_lint.sh)
+## DP lint (dp_lint.sh)
 
 Use the DP lint to validate Dispatch Packet shape before dispatching.
 
 ~~~bash
-./tools/dispatch_packet_lint.sh --test
-./tools/dispatch_packet_lint.sh path/to/DP.md
-./tools/dispatch_packet_lint.sh - < path/to/DP.md
+./tools/dp_lint.sh --test
+./tools/dp_lint.sh path/to/DP.md
+./tools/dp_lint.sh - < path/to/DP.md
 ~~~
 
 Notes:

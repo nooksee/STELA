@@ -19,16 +19,16 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Purpose: Harden TASK + gates for worker git authority, dump-as-command, and real Work Log discipline.
 - What shipped:
   - Updated `TASK.md` DP template (freshness gate wording, worker git authority block, dump-as-command phrasing, Work Log expectation + example).
-  - Synced `tools/dispatch_packet_lint.sh` to TASK headings and broadened lint field parsing for DP suffixes/parenthetical labels and in-scope format.
+  - Synced `tools/dp_lint.sh` to TASK headings and broadened lint field parsing for DP suffixes/parenthetical labels and in-scope format.
   - Added TASK policing in `.github` (`sop_policing.yml` update + new `task_policing.yml`).
 - Verification:
-  - `bash tools/dispatch_packet_lint.sh storage/handoff/DP-OPS-0005_v2.md`
+  - `bash tools/dp_lint.sh storage/handoff/DP-OPS-0005_v2.md`
   - Result: `OK: DP lint passed`
   - `bash tools/context_lint.sh`
   - Result: `[context_lint] Result: warnings detected` (missing paths referenced in `SoP.md`).
 - Risk / rollback:
   - Risk: Low (process/gate updates only).
-  - Rollback: revert `TASK.md`, `tools/dispatch_packet_lint.sh`, `.github/workflows/sop_policing.yml`, `.github/workflows/task_policing.yml`, and `SoP.md`.
+  - Rollback: revert `TASK.md`, `tools/dp_lint.sh`, `.github/workflows/sop_policing.yml`, `.github/workflows/task_policing.yml`, and `SoP.md`.
 
 ## 2026-01-27 — DP-OPS-0003: Canon truth consolidation from legacy mementos (v3)
 
@@ -134,11 +134,11 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 ## 2026-01-21 — DP-OPS-0048D: Dispatch Packet template heading linter
 
 - What changed:
-  - Added `tools/dispatch_packet_lint.sh` to enforce canonical DP A-E headings.
+  - Added `tools/dp_lint.sh` to enforce canonical DP A-E headings.
   - Required the linter in `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md` verification.
   - Listed the linter in `ops/bin/help`.
 - Verification:
-  - `./tools/dispatch_packet_lint.sh`
+  - `./tools/dp_lint.sh`
   - Result: `FAIL: expected heading '### A) STATE' but found '### A) SUMMARY + SCOPE CONFIRMATION'`
   - `./tools/context_lint.sh`
   - Result: `[context_lint] Result: clean`

@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: tools/dispatch_packet_lint.sh [--test] [path|-]
+Usage: tools/dp_lint.sh [--test] [path|-]
 USAGE
 }
 
@@ -332,7 +332,7 @@ run_test() {
 ## II. SCOPE & SAFETY
 * **Objective:** Validate lint headings and required fields.
 * **Target Files (Allowlist):**
-  * tools/dispatch_packet_lint.sh
+  * tools/dp_lint.sh
 ## III. EXECUTION PLAN (A–E CANON)
 ### A) STATE
 Test state.
@@ -366,7 +366,7 @@ EOF
 ## II. SCOPE & SAFETY
 * **Objective:** TBD
 * **Target Files (Allowlist):**
-  * tools/dispatch_packet_lint.sh
+  * tools/dp_lint.sh
 ## III. EXECUTION PLAN (A–E CANON)
 ### A) STATE
 Test state.
@@ -403,7 +403,7 @@ EOF
 ## II. SCOPE & SAFETY
 * **Objective:** Validate lint headings and required fields.
 * **Target Files (Allowlist):**
-  * tools/dispatch_packet_lint.sh
+  * tools/dp_lint.sh
 ## I. REQUIRED CONTEXT LOAD (DP-SCOPED)
 * **Loaded:** OPEN, TRUTH, AGENTS, SoP
 ### A) STATE

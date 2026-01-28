@@ -26,7 +26,7 @@ jobs:
             const gateFiles = [
               "ops/bin/open",
               "ops/bin/dump",
-              "tools/dispatch_packet_lint.sh",
+              "tools/dp_lint.sh",
               ".github/copilot-instructions.md",
               "docs/library/OPERATOR_MANUAL.md",
             ];
