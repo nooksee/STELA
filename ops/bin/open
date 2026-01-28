@@ -123,10 +123,10 @@ emit() {
 {
   cat <<EOF
 ===== OPEN PROMPT =====
+
 Stela OPEN PROMPT
 
 Adhere to the Behavioral Logic Standards defined in AGENTS.md.
-
 $mode_line
 
 [FRESHNESS GATE]
@@ -198,6 +198,7 @@ fi
 
 [OPERATOR CONTEXT]
 - If any canon pointers are missing, say so.
+
 ===== END OPEN PROMPT =====
 EOF
 } | emit
