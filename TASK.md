@@ -211,3 +211,4 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - *2026-01-27 14:26* — DP-OPS-0005: Hardened TASK (worker git authority + dump-as-command + Work Log expectation); synced DP lint to TASK headings; added TASK gating in .github; updated SoP. Verification: RUN (dp_lint OK; context_lint warnings). Blockers: none. NEXT: validate end-to-end DP flow with a small "toy DP" and ensure gates behave as intended.
 
 - *2026-01-27 17:20* — DP-OPS-0004: pruned SoP into untracked museum; adjusted context_lint to ignore historical SoP refs. Verification: RUN (context_lint clean; verify_tree 4 issues; lint_truth OK). Blockers: none. NEXT: review DP-OPS-0004 results and confirm closeout.
+- *2026-01-29 10:16* — DP-OPS-0006: Added DP sanity check command and dump refiners examples in OPERATOR_MANUAL; tightened AI branch authority in CONTRIBUTING. Verification: RUN (verify_tree 4 warnings; context_lint clean). Blockers: none. NEXT: operator review + commit.

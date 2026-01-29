@@ -46,6 +46,13 @@ It is intentionally short and maintained; if it drifts, fix it.
 
 ---
 
+## Staffing and logic (pointer-first)
+
+- Roles: Operator (human), Integrator (lead AI), Contractor (guest AI).
+- `AGENTS.md` is the jurisdiction spec for roles, AI constraints, and stop conditions.
+
+---
+
 ## Platform vs Project (scope sanity)
 
 - **Platform** = repo-resident operating system (`ops/`, `docs/`, `tools/`, governance files).
@@ -90,6 +97,7 @@ Use the DP lint to validate Dispatch Packet shape before dispatching.
 ./tools/dp_lint.sh --test
 ./tools/dp_lint.sh path/to/DP.md
 ./tools/dp_lint.sh - < path/to/DP.md
+bash tools/dp_lint.sh storage/handoff/<DP-ID>.md
 ~~~
 
 Notes:
@@ -104,6 +112,13 @@ Dump refiners (`--include-dir`, `--exclude-dir`, `--ignore-file`) are allowed on
 When used, the DP must include this fallback line:
 
 `Fallback: ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`
+
+Narrow dumps should be explicit and minimal. Examples:
+
+~~~bash
+./ops/bin/dump --scope=platform --format=chatgpt --out=auto --include-dir=docs/library --exclude-dir=projects
+./ops/bin/dump --scope=platform --format=chatgpt --out=auto --ignore-file=.gitignore
+~~~
 
 ---
 

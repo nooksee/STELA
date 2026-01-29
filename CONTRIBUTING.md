@@ -50,7 +50,11 @@ If you import or adapt external code:
 - Add notes in `docs/UPSTREAMS.md` (or the appropriate truth-layer doc)
 - Include: source, purpose, what changed, and any known risks/limits
 
-## Using Codex (approved “junior contractor” mode)
-Codex may draft changes **only** on `work/*` branches.
-A human (Operator) reviews visually in an IDE before merging.
-Repo-gates must pass. PR-only merges. No exceptions.
+## AI assistance
+AI may draft changes only on `work/*` branches.
+The Operator creates and switches branches.
+AI must STOP if it is not on the required work branch.
+AI never works on `main`.
+The Operator performs all commits, pushes, and merges.
+AI does not commit, push, or merge.
+Follow `AGENTS.md` for AI contribution rules and jurisdiction.
