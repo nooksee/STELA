@@ -70,10 +70,6 @@ STOP if told to create or switch branches.
   - [Exact path]
   - [Exact path]
 
-Authoring-time artifacts are not worker prerequisites:
-- Operator-attached OPEN or dump files used to author a DP must not be listed as required worker inputs.
-- Worker generates run-time artifacts for RECEIPT by running `./ops/bin/open` and `./ops/bin/dump`.
-
 ---
 
 ## II) SCOPE & SAFETY
@@ -88,6 +84,8 @@ Authoring-time artifacts are not worker prerequisites:
 - [path/to/file2]
 
 Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly allows new files.
+
+- **Conditional Requirements:** If canon/governance surfaces (e.g., TASK.md) are modified, `SoP.md` MUST be included in the allowlist and updated.
 
 - **Stop Condition (scope):** If any required change falls outside the allowlist, **STOP** and report.
 
@@ -159,8 +157,13 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
 
 **No receipt/proof bundle = DISAPPROVE.**
 
+#### REQUIRED OUTPUT
+**MUST include a "Status" block at the top of RESULTS:**
+- `Scope summary:` (1 sentence validating the loop)
+- `Tracked change:` (What was edited)
+- `Verification:` (Output of proofs)
+
 #### RESULTS file must include (minimum)
-- Summary + scope confirmation (exact paths touched)
 - Verification results (RUN/NOT RUN + reason + risk)
 - Patch/diff proof bundle (status/diff list or direct diff)
 - Receipt pointers (OPEN + PORCELAIN + DUMP outputs/paths)
@@ -226,4 +229,7 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - *2026-01-29 10:16* — DP-OPS-0006: Added DP sanity check command and dump refiners examples in OPERATOR_MANUAL; tightened AI branch authority in CONTRIBUTING. Verification: RUN (verify_tree 4 warnings; context_lint clean). Blockers: none. NEXT: operator review + commit.
 - *2026-01-29 12:05* — DP-OPS-0007: Aligned dp_lint with TASK + removed operator-artifact prerequisite pattern + clarified storage artifact handling. Verification: RUN (tools/dp_lint.sh --test). Blockers: none. NEXT: operator review + commit.
 - *2026-01-29 13:59* — DP-OPS-0008: Relaxed dp_lint heading matching; codified DP file placement and worker receipt rule; updated OPERATOR_MANUAL; added dp_lint fixtures. Verification: RUN (dp_lint fixture ok/bad). Blockers: none. NEXT: operator review + commit.
-- *2026-01-29 15:35* — DP-OPS-TEST: Toy DP execution on work/boot_files_update@beae19e0. Verification: RUN. Blockers: none. NEXT: Operator review receipt completeness.
+- *2026-01-29 17:12* — DP-OPS-TEST: Toy DP execution on work/boot_files_update@4a0494b5. Verification: RUN. Blockers: none. NEXT: Operator review receipt completeness.
+- *2026-01-29 18:12* — DP-OPS-FIX-01: Removed authoring-time artifacts block; confirmed Section III heading format. Verification: RUN (grep -n "## III. EXECUTION PLAN" TASK.md). Blockers: none. NEXT: re-run DP-OPS-TEST.
+- *2026-01-29 18:27* — DP-OPS-FIX-01: Removed authoring-time artifacts block; confirmed Section III heading single line; created receipt and refreshed OPEN and dump artifacts. Verification: RUN (git status --porcelain; git diff; grep -n "## III. EXECUTION PLAN" TASK.md). Blockers: none. NEXT: re-run DP-OPS-TEST.
+- *2026-01-29 18:41* — DP-OPS-FIX-01: Added scope lock for canon changes; required RESULTS Status block; refreshed receipt. Verification: RUN (git status --porcelain; git diff --name-only; git diff --stat; git diff; grep -n "## III. EXECUTION PLAN" TASK.md). Blockers: none. NEXT: re-run DP-OPS-TEST.
