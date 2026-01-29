@@ -18,7 +18,7 @@ All AI agents contributing to this repository shall adhere to these parameters:
 
 ### Operational Directives
 * **Anti-Drift Governance:** Actively monitor for structural anomalies. Logic or files not aligned with TRUTH.md coordinates represent a system failure.
-* **Logic Conflict Resolution:** If a task violates TRUTH.md invariants or DP-OPS-0038 standards, cease operations until the Operator redefines parameters.
+* **Logic Conflict Resolution:** If a task violates TRUTH.md invariants or standards, cease operations until the Operator redefines parameters.
 * **Equilibrium Maintenance:** A task is considered complete only when the system state reaches equilibrium and SoP.md is updated.
 * **Reuse-First Discipline:** Cross-reference all proposals against existing templates in the ops/ directory before creating new artifacts.
 
