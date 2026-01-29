@@ -41,6 +41,7 @@ PLACEHOLDER_TOKENS=(
   "[slug]"
   "[date]"
   "[hash]"
+  "[branch]"
   "[One sentence goal]"
   "[List exact files to touch]"
 )
@@ -129,10 +130,10 @@ scope_list_exists() {
     {
       if (!found && index($0, section)) { found = 1; next }
       if (found) {
-        if ($0 ~ /^\\s*$/) { exit }
-        if ($0 ~ /^\\s*#{1,6} /) { exit }
-        if ($0 ~ /^\\s*[-*] /) { ok = 1; exit }
-        if ($0 ~ /^\\s*\\*\\*/) { exit }
+        if ($0 ~ /^[[:space:]]*$/) { exit }
+        if ($0 ~ /^[[:space:]]*#{1,6} /) { exit }
+        if ($0 ~ /^[[:space:]]*[-*] /) { ok = 1; exit }
+        if ($0 ~ /^[[:space:]]*\\*\\*/) { exit }
       }
     }
     END { exit ok ? 0 : 1 }
@@ -147,15 +148,18 @@ extract_allowlist_paths() {
     {
       if (!found && index($0, section)) { found = 1; next }
       if (found) {
-        if ($0 ~ /^\\s*$/) { exit }
-        if ($0 ~ /^\\s*#{1,6} /) { exit }
-        if ($0 ~ /^\\s*[-*] /) {
+        if ($0 ~ /^[[:space:]]*$/) { next }
+        if ($0 ~ /^[[:space:]]*<!--/) { next }
+        if ($0 ~ /^[[:space:]]*#{1,6} /) { exit }
+        if ($0 ~ /^[[:space:]]*[-*] /) {
           line = $0
-          sub(/^\\s*[-*]\\s+/, "", line)
+          sub(/^[[:space:]]*[-*][[:space:]]+/, "", line)
+          sub(/[[:space:]]+#.*/, "", line)
+          sub(/[[:space:]]+[(].*/, "", line)
           print line
           next
         }
-        if ($0 ~ /^\\s*\\*\\*/) { exit }
+        if ($0 ~ /^[[:space:]]*\\*\\*/) { exit }
       }
     }
   ' "$path"
@@ -169,9 +173,10 @@ extract_allowlist_backticks() {
     {
       if (!found && index($0, section)) { found = 1; next }
       if (found) {
-        if ($0 ~ /^\\s*$/) { exit }
-        if ($0 ~ /^\\s*#{1,6} /) { exit }
-        if ($0 ~ /^\\s*[-*] /) {
+        if ($0 ~ /^[[:space:]]*$/) { next }
+        if ($0 ~ /^[[:space:]]*<!--/) { next }
+        if ($0 ~ /^[[:space:]]*#{1,6} /) { exit }
+        if ($0 ~ /^[[:space:]]*[-*] /) {
           line = $0
           while (match(line, /`[^`]+`/)) {
             token = substr(line, RSTART + 1, RLENGTH - 2)
@@ -180,10 +185,38 @@ extract_allowlist_backticks() {
           }
           next
         }
-        if ($0 ~ /^\\s*\\*\\*/) { exit }
+        if ($0 ~ /^[[:space:]]*\\*\\*/) { exit }
       }
     }
   ' "$path"
+}
+
+first_heading_line() {
+  local path="$1"
+  local pattern="$2"
+  awk -v r="$pattern" '$0 ~ r { print NR; exit }' "$path"
+}
+
+has_in_scope_section() {
+  local path="$1"
+  if grep -nE '^[[:space:]]*(###\s+)?In scope\b' "$path" >/dev/null; then
+    return 0
+  fi
+  if grep -nE '^[[:space:]]*\\*\\*In scope\\*\\*' "$path" >/dev/null; then
+    return 0
+  fi
+  return 1
+}
+
+has_objective_section() {
+  local path="$1"
+  if grep -nE '^[[:space:]]*(###\s+)?Objective\b' "$path" >/dev/null; then
+    return 0
+  fi
+  if grep -nE '^[[:space:]]*\\*\\*Objective\\*\\*' "$path" >/dev/null; then
+    return 0
+  fi
+  return 1
 }
 
 lint_file() {
@@ -198,8 +231,8 @@ lint_file() {
   # If TASK DP headings change, update this list in the same PR.
   local headings=(
     "## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)"
-    "## I. REQUIRED CONTEXT LOAD (DP-SCOPED)"
-    "## II. SCOPE & SAFETY"
+    "## I) REQUIRED CONTEXT LOAD (READ BEFORE DOING ANYTHING)"
+    "## II) SCOPE & SAFETY"
     "## III. EXECUTION PLAN (A–E CANON)"
     "### A) STATE"
     "### B) REQUEST"
@@ -207,19 +240,30 @@ lint_file() {
     "### D) PATCH / DIFF"
     "### E) RECEIPT (REQUIRED)"
     "## 3) CLOSEOUT (MANDATORY)"
-    "## 3.1) THREAD TRANSITION (RESET / ARCHIVE RULE)"
-    "## 4) WORK LOG (TIMESTAMPED CONTINUITY)"
+  )
+
+  local heading_patterns=(
+    '^## 0[.)] FRESHNESS GATE \\(MUST PASS BEFORE WORK\\)$'
+    '^## I[.)] REQUIRED CONTEXT LOAD( \\([^)]*\\))?$'
+    '^## II[.)] SCOPE( & SAFETY| \\+ SAFETY( \\+ CONSTRAINTS)?)$'
+    '^## III[.)] EXECUTION PLAN \\(A[-–]E CANON\\)$'
+    '^### A\\) STATE$'
+    '^### B\\) REQUEST$'
+    '^### C\\) CHANGELOG$'
+    '^### D\\) PATCH / DIFF$'
+    '^### E\\) (RESULTS|RECEIPT( \\((REQUIRED|PROOF BUNDLE REQUIRED)\\))?)$'
+    '^## 3\\) CLOSEOUT( \\([^)]*\\))?$'
   )
 
   local heading_lines=()
   local missing=0
-  local heading
   local line
+  local i
 
-  for heading in "${headings[@]}"; do
-    line="$(awk -v h="$heading" '$0 == h { print NR; exit }' "$path")"
+  for ((i=0; i<${#headings[@]}; i++)); do
+    line="$(first_heading_line "$path" "${heading_patterns[i]}")"
     if [[ -z "$line" ]]; then
-      fail "missing heading '$heading'"
+      fail "missing heading '${headings[i]}'"
       missing=1
       heading_lines+=("")
     else
@@ -228,7 +272,6 @@ lint_file() {
   done
 
   if (( !missing )); then
-    local i
     for ((i=0; i<${#heading_lines[@]}-1; i++)); do
       if (( heading_lines[i] >= heading_lines[i+1] )); then
         fail "headings out of order: '${headings[i]}' should appear before '${headings[i+1]}'"
@@ -237,8 +280,39 @@ lint_file() {
     done
   fi
 
-  if ! grep -nE '^#\s*DP-[A-Z]+-[0-9]{4,}([_-]v[0-9]+)?:' "$path" >/dev/null; then
-    fail "missing DP id heading (expected '# DP-<AREA>-<####>: <title>')"
+  local closeout_line="${heading_lines[${#heading_lines[@]}-1]}"
+  local work_log_label="## 4) WORK LOG (TIMESTAMPED CONTINUITY)"
+  local work_log_pattern='^## 4\\) WORK LOG( \\([^)]*\\))?$'
+  local work_log_line
+  work_log_line="$(first_heading_line "$path" "$work_log_pattern")"
+  if [[ -z "$work_log_line" ]]; then
+    fail "missing heading '$work_log_label'"
+    missing=1
+  fi
+
+  local thread_label="## 3.1) THREAD TRANSITION (RESET / ARCHIVE RULE)"
+  local thread_pattern='^## (3\\.1\\) THREAD TRANSITION( \\([^)]*\\))?|5\\) THREAD TRANSITION / NEXT DP( \\([^)]*\\))?)$'
+  local thread_line
+  thread_line="$(first_heading_line "$path" "$thread_pattern")"
+  if [[ -z "$thread_line" ]]; then
+    fail "missing heading '$thread_label' (or '## 5) THREAD TRANSITION / NEXT DP (OPTIONAL)')"
+    missing=1
+  fi
+
+  if [[ -n "$closeout_line" && -n "$work_log_line" ]]; then
+    if (( work_log_line <= closeout_line )); then
+      fail "headings out of order: '$work_log_label' should appear after '${headings[${#headings[@]}-1]}'"
+    fi
+  fi
+
+  if [[ -n "$closeout_line" && -n "$thread_line" ]]; then
+    if (( thread_line <= closeout_line )); then
+      fail "headings out of order: '$thread_label' should appear after '${headings[${#headings[@]}-1]}'"
+    fi
+  fi
+
+  if ! grep -nE '^#\s*DP-[A-Z]+-[0-9]{4,}([_-]v[0-9]+)?(: .+)?$' "$path" >/dev/null; then
+    fail "missing DP id heading (expected '# DP-<AREA>-<####>' with optional ': <title>')"
   fi
 
   local token
@@ -257,26 +331,31 @@ lint_file() {
   check_required_field "Base HEAD"
 
   if ! field_value_valid "Objective"; then
-    if ! grep -Fq "In scope" "$path"; then
+    if ! has_objective_section "$path" && ! has_in_scope_section "$path"; then
       fail "missing scope summary (Objective or In scope section)"
     fi
   fi
 
-  local allowlist_from_in_scope=0
-
-  mapfile -t allowlist < <(extract_allowlist_paths "$path" "Target Files (Allowlist)")
+  mapfile -t allowlist < <(extract_allowlist_backticks "$path" "Target Files allowlist (hard gate)")
   if (( ${#allowlist[@]} == 0 )); then
-    mapfile -t allowlist < <(extract_allowlist_paths "$path" "Allowed Scope")
+    mapfile -t allowlist < <(extract_allowlist_paths "$path" "Target Files allowlist (hard gate)")
   fi
   if (( ${#allowlist[@]} == 0 )); then
-    if grep -Fq "In scope" "$path"; then
-      allowlist_from_in_scope=1
+    mapfile -t allowlist < <(extract_allowlist_backticks "$path" "Target Files (Allowlist)")
+    if (( ${#allowlist[@]} == 0 )); then
+      mapfile -t allowlist < <(extract_allowlist_paths "$path" "Target Files (Allowlist)")
+    fi
+  fi
+  if (( ${#allowlist[@]} == 0 )); then
+    mapfile -t allowlist < <(extract_allowlist_backticks "$path" "Allowed Scope")
+    if (( ${#allowlist[@]} == 0 )); then
+      mapfile -t allowlist < <(extract_allowlist_paths "$path" "Allowed Scope")
     fi
   fi
 
-  if (( ${#allowlist[@]} == 0 )) && (( allowlist_from_in_scope == 0 )); then
+  if (( ${#allowlist[@]} == 0 )); then
     fail "Target Files allowlist missing or empty"
-  elif (( allowlist_from_in_scope == 0 )); then
+  else
     local entry
     for entry in "${allowlist[@]}"; do
       entry="$(trim "$entry")"
@@ -327,12 +406,12 @@ run_test() {
 * **Base Branch:** work/boot_files_update
 * **Required Work Branch:** work/boot_files_update
 * **Base HEAD:** 13a2074d
-## I. REQUIRED CONTEXT LOAD (DP-SCOPED)
+## I) REQUIRED CONTEXT LOAD (READ BEFORE DOING ANYTHING)
 * **Loaded:** OPEN, TRUTH, AGENTS, SoP
-## II. SCOPE & SAFETY
+## II) SCOPE & SAFETY
 * **Objective:** Validate lint headings and required fields.
-* **Target Files (Allowlist):**
-  * tools/dp_lint.sh
+### Target Files allowlist (hard gate)
+- tools/dp_lint.sh
 ## III. EXECUTION PLAN (A–E CANON)
 ### A) STATE
 Test state.
@@ -361,12 +440,12 @@ EOF
 * **Base Branch:** work/boot_files_update
 * **Required Work Branch:** work/boot_files_update
 * **Base HEAD:** 13a2074d
-## I. REQUIRED CONTEXT LOAD (DP-SCOPED)
+## I) REQUIRED CONTEXT LOAD (READ BEFORE DOING ANYTHING)
 * **Loaded:** OPEN, TRUTH, AGENTS, SoP
-## II. SCOPE & SAFETY
+## II) SCOPE & SAFETY
 * **Objective:** TBD
-* **Target Files (Allowlist):**
-  * tools/dp_lint.sh
+### Target Files allowlist (hard gate)
+- tools/dp_lint.sh
 ## III. EXECUTION PLAN (A–E CANON)
 ### A) STATE
 Test state.
@@ -400,11 +479,11 @@ EOF
 * **Required Work Branch:** work/boot_files_update
 * **Base HEAD:** 13a2074d
 ## III. EXECUTION PLAN (A–E CANON)
-## II. SCOPE & SAFETY
+## II) SCOPE & SAFETY
 * **Objective:** Validate lint headings and required fields.
-* **Target Files (Allowlist):**
-  * tools/dp_lint.sh
-## I. REQUIRED CONTEXT LOAD (DP-SCOPED)
+### Target Files allowlist (hard gate)
+- tools/dp_lint.sh
+## I) REQUIRED CONTEXT LOAD (READ BEFORE DOING ANYTHING)
 * **Loaded:** OPEN, TRUTH, AGENTS, SoP
 ### A) STATE
 Test state.

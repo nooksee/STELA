@@ -46,44 +46,48 @@ Canon surface definitions live in `TRUTH.md`.
 # DP-OPS-[ID]: [TITLE]
 
 ## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)
-**You are currently providing (operator inputs — fill these):**
-- OPEN (branch/head): `[branch] @ [short-hash]`
-- Repo dump command (if provided): `[exact command]` (worker runs it; record output path(s) in RECEIPT)
+Base Branch: [branch]  
+Required Work Branch: [branch]  
+Base HEAD: [hash]
 
-**Worker MUST (no branch creation/switching):**
-1) Already be on the **EXACT** work branch (provided by Integrator):
-- `[work/EXACT-branch-name-here]`
+Required local re-check (worker runs; paste results in RESULTS):
+- `git rev-parse --abbrev-ref HEAD`
+- `git rev-parse HEAD`
+- `git status --porcelain`
 
-2) Confirm:
-- Current branch is **exactly** the above
-- If a Base HEAD hash is provided: `git rev-parse HEAD` == `[short-hash]`
+Worker must already be on the **Required Work Branch** listed above (no branch creation or switching).
 
-**STOP if any mismatch.**  
-**STOP if the exact work branch name is missing.**  
-**STOP if told to create/switch branches.**  
-(If Base HEAD is “not provided,” note “hash not verified” and proceed only if authorized by the Integrator.)
+STOP if any mismatch.  
+STOP if the Required Work Branch is missing.  
+STOP if told to create or switch branches.
 
 ---
 
-## I. REQUIRED CONTEXT LOAD (DP-SCOPED)
+## I) REQUIRED CONTEXT LOAD (READ BEFORE DOING ANYTHING)
 **Worker must confirm loaded before acting:**
 - OPEN, TRUTH, AGENTS, SoP, CONTEXT_MANIFEST, CONTINUITY_MAP
 - Plus any DP-scoped files listed here:
   - [Exact path]
   - [Exact path]
 
+Authoring-time artifacts are not worker prerequisites:
+- Operator-attached OPEN or dump files used to author a DP must not be listed as required worker inputs.
+- Worker generates run-time artifacts for RECEIPT by running `./ops/bin/open` and `./ops/bin/dump`.
+
 ---
 
-## II. SCOPE & SAFETY
+## II) SCOPE & SAFETY
 - **Objective:** [One sentence goal]
 
 - **Non-Goals (optional, drift-killer):**
   - [What is explicitly NOT being done]
   - [What must NOT expand]
 
-- **Allowed Scope (strict allowlist — exact paths only; “create if missing” only when explicitly stated):**
-  - [path/to/file1]
-  - [path/to/file2]
+### Target Files allowlist (hard gate)
+- [path/to/file1]
+- [path/to/file2]
+
+Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly allows new files.
 
 - **Stop Condition (scope):** If any required change falls outside the allowlist, **STOP** and report.
 
@@ -133,6 +137,8 @@ Canon surface definitions live in `TRUTH.md`.
 
 #### Verification (MUST RUN; or report NOT RUN + reason + risk)
 - `./ops/bin/dump --scope=platform` (or repo-correct equivalent when scope differs)
+- If dump refiners are used, include this fallback line in the DP:
+  - `Fallback: ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`
 - Context lint (use repo-canonical command):
   - Prefer: `bash tools/context_lint.sh`
   - If not found and required: **STOP** and ask (do not invent a substitute)
@@ -161,6 +167,13 @@ Canon surface definitions live in `TRUTH.md`.
 - `git diff --name-only` output
 - `git diff --stat` output
 - `NEXT:` one single action
+
+**Storage artifact flow (local-only, untracked):**
+- OPEN and OPEN-PORCELAIN outputs land in `storage/handoff/`.
+- Dump bundles land in `storage/dumps/`.
+- Results receipts land in `storage/handoff/DP-OPS-0000-RESULTS.md` (pattern).
+- Optional DP drafts may live in `storage/dp/intake/` and move to `storage/dp/processed/`.
+- These are retention paths only; they are not worker prerequisites unless the DP explicitly says so.
 
 ---
 
@@ -212,3 +225,4 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 
 - *2026-01-27 17:20* — DP-OPS-0004: pruned SoP into untracked museum; adjusted context_lint to ignore historical SoP refs. Verification: RUN (context_lint clean; verify_tree 4 issues; lint_truth OK). Blockers: none. NEXT: review DP-OPS-0004 results and confirm closeout.
 - *2026-01-29 10:16* — DP-OPS-0006: Added DP sanity check command and dump refiners examples in OPERATOR_MANUAL; tightened AI branch authority in CONTRIBUTING. Verification: RUN (verify_tree 4 warnings; context_lint clean). Blockers: none. NEXT: operator review + commit.
+- *2026-01-29 12:05* — DP-OPS-0007: Aligned dp_lint with TASK + removed operator-artifact prerequisite pattern + clarified storage artifact handling. Verification: RUN (tools/dp_lint.sh --test). Blockers: none. NEXT: operator review + commit.
