@@ -172,7 +172,7 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
 - OPEN and OPEN-PORCELAIN outputs land in `storage/handoff/`.
 - Dump bundles land in `storage/dumps/`.
 - Results receipts land in `storage/handoff/DP-OPS-0000-RESULTS.md` (pattern).
-- Optional DP drafts may live in `storage/dp/intake/` and move to `storage/dp/processed/`.
+- Operator stores DP drafts under `storage/dp/intake/` and moves or copies to `storage/dp/processed/` after completion (or when reusing a previously executed DP).
 - These are retention paths only; they are not worker prerequisites unless the DP explicitly says so.
 
 ---
@@ -226,3 +226,4 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - *2026-01-27 17:20* — DP-OPS-0004: pruned SoP into untracked museum; adjusted context_lint to ignore historical SoP refs. Verification: RUN (context_lint clean; verify_tree 4 issues; lint_truth OK). Blockers: none. NEXT: review DP-OPS-0004 results and confirm closeout.
 - *2026-01-29 10:16* — DP-OPS-0006: Added DP sanity check command and dump refiners examples in OPERATOR_MANUAL; tightened AI branch authority in CONTRIBUTING. Verification: RUN (verify_tree 4 warnings; context_lint clean). Blockers: none. NEXT: operator review + commit.
 - *2026-01-29 12:05* — DP-OPS-0007: Aligned dp_lint with TASK + removed operator-artifact prerequisite pattern + clarified storage artifact handling. Verification: RUN (tools/dp_lint.sh --test). Blockers: none. NEXT: operator review + commit.
+- *2026-01-29 13:59* — DP-OPS-0008: Relaxed dp_lint heading matching; codified DP file placement and worker receipt rule; updated OPERATOR_MANUAL; added dp_lint fixtures. Verification: RUN (dp_lint fixture ok/bad). Blockers: none. NEXT: operator review + commit.

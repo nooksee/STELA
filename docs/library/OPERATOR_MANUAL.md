@@ -104,6 +104,11 @@ Notes:
 - Lint is mechanical; it enforces the current TASK.md DP headings/order and required fields.
 - It should fail on non-DP documents.
 
+DP file placement (operator):
+- Draft DPs live under `storage/dp/intake/`.
+- Move or copy completed DPs to `storage/dp/processed/` (untracked).
+- Workers lint against the local DP file path, for example: `./tools/dp_lint.sh storage/dp/intake/DP-OPS-0008.md`.
+
 ---
 
 ## Dump refiners (guardrail)

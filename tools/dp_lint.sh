@@ -104,6 +104,29 @@ check_required_field() {
   return 0
 }
 
+check_required_field_any() {
+  local primary="$1"
+  local secondary="$2"
+  local value
+
+  value="$(field_value "$primary")"
+  value="$(trim "$value")"
+  value="$(strip_backticks "$value")"
+  if [[ -n "$value" ]] && ! contains_placeholder "$value"; then
+    return 0
+  fi
+
+  value="$(field_value "$secondary")"
+  value="$(trim "$value")"
+  value="$(strip_backticks "$value")"
+  if [[ -n "$value" ]] && ! contains_placeholder "$value"; then
+    return 0
+  fi
+
+  fail "missing or empty value for '$primary' or '$secondary'"
+  return 1
+}
+
 field_value_valid() {
   local label="$1"
   local value
@@ -234,25 +257,15 @@ lint_file() {
     "## I) REQUIRED CONTEXT LOAD (READ BEFORE DOING ANYTHING)"
     "## II) SCOPE & SAFETY"
     "## III. EXECUTION PLAN (A–E CANON)"
-    "### A) STATE"
-    "### B) REQUEST"
-    "### C) CHANGELOG"
-    "### D) PATCH / DIFF"
-    "### E) RECEIPT (REQUIRED)"
     "## 3) CLOSEOUT (MANDATORY)"
   )
 
   local heading_patterns=(
-    '^## 0[.)] FRESHNESS GATE \\(MUST PASS BEFORE WORK\\)$'
-    '^## I[.)] REQUIRED CONTEXT LOAD( \\([^)]*\\))?$'
-    '^## II[.)] SCOPE( & SAFETY| \\+ SAFETY( \\+ CONSTRAINTS)?)$'
-    '^## III[.)] EXECUTION PLAN \\(A[-–]E CANON\\)$'
-    '^### A\\) STATE$'
-    '^### B\\) REQUEST$'
-    '^### C\\) CHANGELOG$'
-    '^### D\\) PATCH / DIFF$'
-    '^### E\\) (RESULTS|RECEIPT( \\((REQUIRED|PROOF BUNDLE REQUIRED)\\))?)$'
-    '^## 3\\) CLOSEOUT( \\([^)]*\\))?$'
+    '^##[[:space:]]*0[.)]?[[:space:]]*FRESHNESS GATE'
+    '^##[[:space:]]*I[.)]?[[:space:]]*REQUIRED CONTEXT LOAD'
+    '^##[[:space:]]*II[.)]?[[:space:]]*SCOPE'
+    '^##[[:space:]]*III[.)]?[[:space:]]*EXECUTION PLAN'
+    '^##[[:space:]]*3[.)]?[[:space:]]*CLOSEOUT'
   )
 
   local heading_lines=()
@@ -282,7 +295,7 @@ lint_file() {
 
   local closeout_line="${heading_lines[${#heading_lines[@]}-1]}"
   local work_log_label="## 4) WORK LOG (TIMESTAMPED CONTINUITY)"
-  local work_log_pattern='^## 4\\) WORK LOG( \\([^)]*\\))?$'
+  local work_log_pattern='^##[[:space:]]*4[.)]?[[:space:]]*WORK LOG'
   local work_log_line
   work_log_line="$(first_heading_line "$path" "$work_log_pattern")"
   if [[ -z "$work_log_line" ]]; then
@@ -291,7 +304,7 @@ lint_file() {
   fi
 
   local thread_label="## 3.1) THREAD TRANSITION (RESET / ARCHIVE RULE)"
-  local thread_pattern='^## (3\\.1\\) THREAD TRANSITION( \\([^)]*\\))?|5\\) THREAD TRANSITION / NEXT DP( \\([^)]*\\))?)$'
+  local thread_pattern='^##[[:space:]]*(3\\.1|5)[.)]?[[:space:]]*THREAD TRANSITION'
   local thread_line
   thread_line="$(first_heading_line "$path" "$thread_pattern")"
   if [[ -z "$thread_line" ]]; then
@@ -327,8 +340,15 @@ lint_file() {
   fi
 
   check_required_field "Base Branch"
-  check_required_field "Required Work Branch"
+  check_required_field_any "Required Work Branch" "Work Branch"
   check_required_field "Base HEAD"
+
+  local letter
+  for letter in A B C D E; do
+    if ! grep -nE "^###\\s*${letter}[.)]" "$path" >/dev/null; then
+      fail "missing heading '### ${letter})'"
+    fi
+  done
 
   if ! field_value_valid "Objective"; then
     if ! has_objective_section "$path" && ! has_in_scope_section "$path"; then
@@ -404,7 +424,7 @@ run_test() {
 # DP-OPS-0001: Lint Test
 ## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)
 * **Base Branch:** work/boot_files_update
-* **Required Work Branch:** work/boot_files_update
+* **Work Branch:** work/boot_files_update
 * **Base HEAD:** 13a2074d
 ## I) REQUIRED CONTEXT LOAD (READ BEFORE DOING ANYTHING)
 * **Loaded:** OPEN, TRUTH, AGENTS, SoP
@@ -412,18 +432,18 @@ run_test() {
 * **Objective:** Validate lint headings and required fields.
 ### Target Files allowlist (hard gate)
 - tools/dp_lint.sh
-## III. EXECUTION PLAN (A–E CANON)
-### A) STATE
+## III) EXECUTION PLAN (A–E CANON)
+### A) STATE / CONTEXT
 Test state.
 ### B) REQUEST
 1) Test request.
-### C) CHANGELOG
+### C) CHANGELOG NOTES
 - Test changelog.
-### D) PATCH / DIFF
+### D) PATCH / DIFF OUTPUT
 - Test diff.
 ### E) RECEIPT (REQUIRED)
 - Test receipt.
-## 3) CLOSEOUT (MANDATORY)
+## 3. CLOSEOUT (MANDATORY)
 - Closeout notes.
 ## 3.1) THREAD TRANSITION (RESET / ARCHIVE RULE)
 - Transition notes.
@@ -438,7 +458,7 @@ EOF
 # DP-OPS-0001: Lint Test
 ## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)
 * **Base Branch:** work/boot_files_update
-* **Required Work Branch:** work/boot_files_update
+* **Work Branch:** work/boot_files_update
 * **Base HEAD:** 13a2074d
 ## I) REQUIRED CONTEXT LOAD (READ BEFORE DOING ANYTHING)
 * **Loaded:** OPEN, TRUTH, AGENTS, SoP
@@ -446,7 +466,7 @@ EOF
 * **Objective:** TBD
 ### Target Files allowlist (hard gate)
 - tools/dp_lint.sh
-## III. EXECUTION PLAN (A–E CANON)
+## III) EXECUTION PLAN (A–E CANON)
 ### A) STATE
 Test state.
 ### B) REQUEST
@@ -476,9 +496,9 @@ EOF
 # DP-OPS-0001: Lint Test
 ## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)
 * **Base Branch:** work/boot_files_update
-* **Required Work Branch:** work/boot_files_update
+* **Work Branch:** work/boot_files_update
 * **Base HEAD:** 13a2074d
-## III. EXECUTION PLAN (A–E CANON)
+## III) EXECUTION PLAN (A–E CANON)
 ## II) SCOPE & SAFETY
 * **Objective:** Validate lint headings and required fields.
 ### Target Files allowlist (hard gate)
