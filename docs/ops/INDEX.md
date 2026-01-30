@@ -24,12 +24,5 @@ Operator Manual:
 - [Operator Manual](../../docs/library/OPERATOR_MANUAL.md)
 - [Continuity Map](../../docs/library/CONTINUITY_MAP.md)
 
-## Execute
-- [Output Format Contract](../../ops/contracts/OUTPUT_FORMAT_CONTRACT.md)
-- [Contractor Dispatch Contract](../../ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md)
-
-## Triage
-- [../triage/INBOX.md](../triage/INBOX.md)
-
 ## Verification
 - [../../SoP.md](../../SoP.md)

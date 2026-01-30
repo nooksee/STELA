@@ -7,7 +7,7 @@ on:
 
 jobs:
   gates:
-    runs-on: ubuntu-latest
+    runs-on: 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -16,4 +16,4 @@ jobs:
         run: bash tools/verify_tree.sh
 
       - name: Truth lint (authored surfaces)
-        run: bash tools/repo/lint_truth.sh
+        run: bash tools/lint_truth.sh

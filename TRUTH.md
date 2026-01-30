@@ -5,24 +5,24 @@ The 4-Line Heuristic:
 > 3. Is it the WORK itself? -> `projects/` (Code)
 > 4. Is it TEMPORARY trash? -> `storage/` (Logs/Cache)
 
-## 2. CONTEXT
-Project Context: Stela
-Goal
-Explainable, governable legacy modernization. We prioritize clear provenance and working code over process.
+Canon surfaces (what lives where):
+- `TRUTH.md` — constitution + invariants (SSOT).
+- `TASK.md` — DP contract + living work surface/log (SSOT for the current thread).
+- `SoP.md` — history ledger only (what shipped, when, why).
+- `docs/library/OPERATOR_MANUAL.md` — operator mechanics + commands (pointer-first).
+- `docs/` — rationale + expanded guidance (not SSOT).
 
-Critical Rules (Gates)
-- No direct pushes to main. Work on work/* branches -> PR -> merge.
-- Run verification before review: bash tools/verify_tree.sh
+## 2. CONSTITUTION (INVARIANTS + ANTI-DRIFT)
+Mnemonic principles (optional, high-signal):
+- Governance beats heroics.
+- Structure beats memory.
+- Version-noise is a bug.
 
-Repository Map
-tools/: Verification scripts and repo tooling.
-docs/: Human reference.
-
-Workflow
-Read TASK.md (local).
-Edit code in a work/* branch.
-Verify: bash tools/verify_tree.sh
-Commit and open a PR.
+Anti-drift invariants:
+- If uncertain: STOP; ask for the missing input. Do not assume.
+- Reuse-first; run a duplication check before creating new artifacts.
+- SSOT discipline: one canonical file per domain; other mentions are pointers.
+- SoP is history only; no permanent rules live there.
 
 ## 3. STRUCTURE
 # Stela Canonical Tree
@@ -33,7 +33,6 @@ This repo root is the developer workspace.
 - 
 
 ## Non-runtime (developer/support)
-- `ops/` ICL/OCL canon (protocols, contracts, templates, launch pack)
 - `docs/` project manual (points into ops canon)
 - `tools/` scripts (verify, build, apply)
 - `storage/` local dev storage (not deployed; keep empty in repo)
@@ -43,14 +42,9 @@ This repo root is the developer workspace.
 
 If something is unclear, treat this file as the map and the code as evidence.
 
-## 4. MAP
-# Project Map
-
-This file is the stable blueprint. Update only when structure or core architecture changes.
-
 ## Repo layout (what lives where)
 - ops/              
-- docs/             project manual (start at docs/00_INDEX.md; points into ops canon)
+- docs/             project manual (start at docs/INDEX.md; points into ops canon)
 - docs/ops/         pointer index into ops canon
 - tools/            verification + truth checks (support for repo-gates)
 -.github/workflows/ — repo-gates / CI enforcement location
@@ -60,8 +54,3 @@ This file is the stable blueprint. Update only when structure or core architectu
 - /docs is the project manual and index; it points into /ops instead of duplicating canon.
 
 ## Key runtime entrypoints
-
-## Naming rules
-- Module directories are lowercase.
-- Admin modules are prefixed admin_.
-- No archive dumps inside public_html.

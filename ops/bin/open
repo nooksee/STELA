@@ -40,52 +40,42 @@ for arg in "$@"; do
       exit 0
       ;;
     *)
-      die "Unknown argument: $arg"
+      die "Unknown arg: $arg"
       ;;
   esac
 done
 
-if ! command -v git >/dev/null 2>&1; then
-  die "git is required but was not found on PATH."
-fi
-
-if ! repo_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
-  die "git repo not found. Run from repo root."
-fi
-
-if [[ "$(pwd -P)" != "$repo_root" ]]; then
-  die "Run from repo root: $repo_root"
-fi
-
 branch="$(git rev-parse --abbrev-ref HEAD)"
 head_short="$(git rev-parse --short HEAD)"
-branch_safe="$(printf '%s' "$branch" | tr -c 'A-Za-z0-9._-' '-')"
+branch_safe="${branch//\//-}"
+
 tag_prefix=""
 if [[ -n "$tag" ]]; then
-  tag_safe="$(printf '%s' "$tag" | tr -c 'A-Za-z0-9._-' '-')"
-  tag_prefix="${tag_safe}-"
+  tag_prefix="${tag}-"
 fi
-mkdir -p storage/handoff
 
-porcelain_saved="storage/handoff/OPEN-PORCELAIN-${tag_prefix}${branch_safe}-${head_short}.txt"
-git status --porcelain > "$porcelain_saved"
-porcelain_count="$(wc -l < "$porcelain_saved" | tr -d '[:space:]')"
-if [[ "$porcelain_count" == "0" ]]; then
-  status_summary="clean"
-else
-  status_summary="dirty"
-fi
-last_commit="$(git log -1 --oneline)"
-
+status_summary="clean"
+porcelain_count=0
+porcelain_saved="(none)"
 porcelain_output=""
 porcelain_preview=""
-if [[ "$status_summary" == "dirty" ]]; then
+
+porcelain_raw="$(git status --porcelain || true)"
+
+if [[ -n "$porcelain_raw" ]]; then
+  porcelain_count="$(printf "%s\n" "$porcelain_raw" | wc -l | tr -d '[:space:]')"
+  status_summary="dirty"
+  porcelain_saved="storage/handoff/OPEN-PORCELAIN-${tag_prefix}${branch_safe}-${head_short}.txt"
+  printf "%s\n" "$porcelain_raw" > "$porcelain_saved"
+
   if (( porcelain_count <= 200 )); then
-    porcelain_output="$(cat "$porcelain_saved")"
+    porcelain_output="$porcelain_raw"
   else
-    porcelain_preview="$(head -n 50 "$porcelain_saved")"
+    porcelain_preview="$(printf "%s\n" "$porcelain_raw" | head -n 50)"
   fi
 fi
+
+last_commit="$(git log -1 --oneline)"
 
 open_out_path="storage/handoff/OPEN-${tag_prefix}${branch_safe}-${head_short}.txt"
 : > "$open_out_path"
@@ -94,7 +84,8 @@ required_files=(
   "TRUTH.md"
   "SoP.md"
   "AGENTS.md"
-  "docs/00_INDEX.md"
+  "TASK.md"
+  "docs/INDEX.md"
   "docs/library/OPERATOR_MANUAL.md"
   "docs/library/CONTINUITY_MAP.md"
   "ops/lib/manifests/CONTEXT_MANIFEST.md"
@@ -132,12 +123,11 @@ emit() {
 {
   cat <<EOF
 ===== OPEN PROMPT =====
+
 Stela OPEN PROMPT
-Repo is truth. If a file/path isn't present, say so.
+
+Adhere to the Behavioral Logic Standards defined in AGENTS.md.
 $mode_line
-You are entering a canon-governed system.
-Precision beats speed.
-If unsure, stop and ask.
 
 [FRESHNESS GATE]
 - Active branch: $branch
@@ -158,23 +148,26 @@ Don't:
 - Edit main directly.
 - Skip gates.
 
-[CONSTITUTION]
+[CONSTITUTION / FOCUS]
 - TRUTH.md
 
-[FOCUS RULE]
-- TRUTH.md
+[PRIMARY WORK SURFACE]
+- TASK.md (DP template + living work log)
+- TASK does NOT auto-load unless it's included in your dump/attachments.
+- When drafting a DP: follow TASK headings/order; output only the DP; ask if required fields are missing.
 
 [CANON POINTERS]
 - TRUTH.md
+- TASK.md
 - SoP.md
 - AGENTS.md
-- docs/00-INDEX.md
+- docs/INDEX.md
 - docs/library/OPERATOR_MANUAL.md
 - docs/library/CONTINUITY_MAP.md
 - ops/lib/manifests/CONTEXT_MANIFEST.md
 
 [DUMP]
-- If you need full repo context, run: ./ops/bin/dump --scope=platform --format=chatgpt (or gemini/claude).
+- If you need full repo context, run: ./ops/bin/dump --scope=platform --format=chatgpt (or gemini).
 - For a file output: ./ops/bin/dump --scope=platform --format=chatgpt --out=auto
 
 [GIT STATE]
@@ -192,7 +185,6 @@ $porcelain_output
 EOF
   else
     cat <<EOF
-- Porcelain entries: $porcelain_count
 - Porcelain preview (truncated to 50 lines):
 $porcelain_preview
 EOF
@@ -200,15 +192,18 @@ EOF
 fi
 
   cat <<EOF
+
 [NEXT OPERATOR MOVES]
 - ./ops/bin/dump --scope=platform --format=chatgpt
 
 [OPERATOR CONTEXT]
 - If any canon pointers are missing, say so.
+
 ===== END OPEN PROMPT =====
 EOF
 } | emit
 
+# IMPORTANT: do not append this line into the OPEN artifact.
 if [[ "$out" == "auto" ]]; then
-  printf 'OPEN saved: %s\n' "$open_out_path" | emit
+  printf 'OPEN saved: %s\n' "$open_out_path"
 fi

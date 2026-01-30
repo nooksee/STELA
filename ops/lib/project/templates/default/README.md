@@ -15,6 +15,7 @@ Optional (standard when needed):
 - upstream/
 - addons/
 - patches/
+- public_html/
 
 ## Notes
 Replace this scaffold with project-specific notes and references.

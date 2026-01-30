@@ -2,19 +2,18 @@
 
 Welcome. You’re allowed to be clever here — but you must also be **traceable**. 😄
 
-Source of truth for onboarding and workflow: `docs/10_QUICKSTART.md`.
+Source of truth for onboarding and workflow: `docs/QUICKSTART.md`.
 
 ## Non-negotiables
 - **No direct pushes to `main`.** Ever.
 - Work happens on **`work/*` branches** only.
 - Every PR must pass **repo-gates**.
-- Upstream snapshots in `upstream/` are **read-only donor history**.
 
 ## Security policy
 See `SECURITY.md` for reporting guidance and security posture.
 Do not commit secrets to the repo.
 
-## The standard workflow (NetBeans-first)
+## The standard workflow (IDE-first)
 1) Create a branch
 - Name format: `work/<topic>-YYYY-MM-DD`
 - Examples:
@@ -26,13 +25,13 @@ Do not commit secrets to the repo.
 - Keep “drive-by refactors” out of unrelated changes.
 
 3) Review changes visually
-- In NetBeans: **Team → Show Changes**
+- In IDE: **Team → Show Changes**
 - Sanity-check: do the changes match the intent?
 
 4) Commit
 - Use clear, boring commit messages. Boring is good.
   - `docs: expand development philosophy`
-  - `chore: ignore NetBeans private settings`
+  - `chore: ignore IDE private settings`
 
 5) Push + PR
 - Push your `work/*` branch
@@ -51,7 +50,11 @@ If you import or adapt external code:
 - Add notes in `docs/UPSTREAMS.md` (or the appropriate truth-layer doc)
 - Include: source, purpose, what changed, and any known risks/limits
 
-## Using Codex (approved “junior contractor” mode)
-Codex may draft changes **only** on `work/*` branches.
-A human (Kevin) reviews visually in NetBeans before merging.
-Repo-gates must pass. PR-only merges. No exceptions.
+## AI assistance
+AI may draft changes only on `work/*` branches.
+The Operator creates and switches branches.
+AI must STOP if it is not on the required work branch.
+AI never works on `main`.
+The Operator performs all commits, pushes, and merges.
+AI does not commit, push, or merge.
+Follow `AGENTS.md` for AI contribution rules and jurisdiction.

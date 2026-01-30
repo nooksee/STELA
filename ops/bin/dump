@@ -9,10 +9,31 @@ bundle_mode=0
 max_lines=0
 target=""
 
+# Optional refiners (apply after scope selection)
+include_dirs=()
+exclude_dirs=()
+ignore_patterns=()
+
+# Binary handling:
+# - meta (default): omit bytes; include size + sha256
+# - raw: emit raw bytes (may be huge / not LLM-friendly)
+# - base64: emit base64 text (huge, but safe in text streams)
+include_binary="meta"
+
 usage() {
   cat <<'USAGE'
 Usage: ops/bin/dump [--scope=platform|full|project] [--target=<slug>] [--format=chatgpt|gemini|claude]
                    [--max-lines=n] [--out=path|auto] [--compress=tar.xz] [--bundle]
+                   [--include-binary=meta|raw|base64]
+                   [--include-dir=DIR] [--exclude-dir=DIR] [--ignore-file=GLOB]
+
+Notes:
+- Scopes select tracked files via `git ls-files` (deterministic).
+- Refiners further restrict selection after scope:
+  - --include-dir restricts output to files under DIR (may be repeated).
+  - --exclude-dir removes files under DIR (may be repeated).
+  - --ignore-file removes files matching a glob against the repo-relative path (may be repeated).
+- Binary default is metadata-only (size + sha256). Use --include-binary=raw for literal bytes.
 USAGE
 }
 
@@ -20,6 +41,13 @@ die() {
   echo "ERROR: $*" >&2
   usage >&2
   exit 1
+}
+
+norm_dir() {
+  local d="$1"
+  d="${d#./}"
+  d="${d%/}"
+  printf "%s" "$d"
 }
 
 for arg in "$@"; do
@@ -60,6 +88,24 @@ for arg in "$@"; do
       ;;
     --bundle|--bundle=receipt)
       bundle_mode=1
+      ;;
+    --include-binary=meta|--include-binary=raw|--include-binary=base64)
+      include_binary="${arg#--include-binary=}"
+      ;;
+    --include-dir=*)
+      d="$(norm_dir "${arg#--include-dir=}")"
+      [[ -n "$d" ]] || die "--include-dir requires a value"
+      include_dirs+=("$d")
+      ;;
+    --exclude-dir=*)
+      d="$(norm_dir "${arg#--exclude-dir=}")"
+      [[ -n "$d" ]] || die "--exclude-dir requires a value"
+      exclude_dirs+=("$d")
+      ;;
+    --ignore-file=*)
+      p="${arg#--ignore-file=}"
+      [[ -n "$p" ]] || die "--ignore-file requires a value"
+      ignore_patterns+=("$p")
       ;;
     *)
       die "Unknown argument: $arg"
@@ -164,18 +210,36 @@ manifest_path="$repo_root/storage/dumps/${dump_base}.manifest.txt"
 
 format_label="$format"
 case "$format" in
-  chatgpt)
-    format_label="ChatGPT"
-    ;;
-  gemini)
-    format_label="Gemini"
-    ;;
-  claude)
-    format_label="Claude"
-    ;;
+  chatgpt) format_label="ChatGPT" ;;
+  gemini) format_label="Gemini" ;;
+  claude) format_label="Claude" ;;
 esac
 
-include_file() {
+path_in_any_dir() {
+  local path="$1"
+  shift
+  local d
+  for d in "$@"; do
+    if [[ "$path" == "$d"/* || "$path" == "$d" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+path_matches_any_glob() {
+  local path="$1"
+  shift
+  local g
+  for g in "$@"; do
+    case "$path" in
+      $g) return 0 ;;
+    esac
+  done
+  return 1
+}
+
+include_by_scope() {
   local path="$1"
   case "$scope" in
     full)
@@ -193,6 +257,36 @@ include_file() {
       return $?
       ;;
   esac
+}
+
+include_file() {
+  local path="$1"
+
+  # Scope gate
+  if ! include_by_scope "$path"; then
+    return 1
+  fi
+
+  # Refiners
+  if (( ${#include_dirs[@]} > 0 )); then
+    if ! path_in_any_dir "$path" "${include_dirs[@]}"; then
+      return 1
+    fi
+  fi
+
+  if (( ${#exclude_dirs[@]} > 0 )); then
+    if path_in_any_dir "$path" "${exclude_dirs[@]}"; then
+      return 1
+    fi
+  fi
+
+  if (( ${#ignore_patterns[@]} > 0 )); then
+    if path_matches_any_glob "$path" "${ignore_patterns[@]}"; then
+      return 1
+    fi
+  fi
+
+  return 0
 }
 
 files=()
@@ -291,6 +385,75 @@ emit_file_contents() {
   fi
 }
 
+is_binary_file() {
+  local path="$1"
+  # Treat empty as text.
+  if [[ ! -s "$path" ]]; then
+    return 1
+  fi
+  # grep -Iq returns 0 if file looks like text.
+  if LC_ALL=C grep -Iq . "$path" 2>/dev/null; then
+    return 1
+  fi
+  return 0
+}
+
+file_size_bytes() {
+  local path="$1"
+  if command -v wc >/dev/null 2>&1; then
+    wc -c < "$path" | tr -d '[:space:]'
+  else
+    echo "unknown"
+  fi
+}
+
+file_sha256() {
+  local path="$1"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$path" | awk '{print $1}'
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$path" | awk '{print $1}'
+  elif command -v openssl >/dev/null 2>&1; then
+    openssl dgst -sha256 "$path" | awk '{print $NF}'
+  else
+    echo "sha256-unavailable"
+  fi
+}
+
+emit_binary_block() {
+  local path="$1"
+  local bytes sha
+  bytes="$(file_size_bytes "$path")"
+  sha="$(file_sha256 "$path")"
+
+  case "$include_binary" in
+    meta)
+      echo "(binary; content omitted)"
+      echo "BINARY-META:"
+      echo "- path: $path"
+      echo "- bytes: $bytes"
+      echo "- sha256: $sha"
+      ;;
+    raw)
+      echo "(binary; raw bytes follow)"
+      cat "$path" || true
+      ;;
+    base64)
+      echo "(binary; base64 follows)"
+      if command -v base64 >/dev/null 2>&1; then
+        # GNU base64 supports -w; BSD doesn't. Try -w then fallback.
+        base64 -w 76 "$path" 2>/dev/null || base64 "$path" 2>/dev/null || true
+      else
+        echo "(base64 unavailable)"
+        echo "BINARY-META:"
+        echo "- path: $path"
+        echo "- bytes: $bytes"
+        echo "- sha256: $sha"
+      fi
+      ;;
+  esac
+}
+
 is_file_truncated() {
   local path="$1"
   local lines
@@ -300,6 +463,10 @@ is_file_truncated() {
   fi
 
   if (( max_lines > 0 )); then
+    # Only applies to text emission.
+    if is_binary_file "$path"; then
+      return 1
+    fi
     lines=$(count_lines "$path")
     if (( lines > max_lines )); then
       return 0
@@ -312,6 +479,7 @@ emit_dump() {
   local suppress_pipe_errors=0
   local files_count
   local truncated_files=0
+  local binary_files=0
 
   if [[ -p /proc/$$/fd/1 ]]; then
     suppress_pipe_errors=1
@@ -322,6 +490,9 @@ emit_dump() {
   for path in "${files[@]}"; do
     if is_file_truncated "$path"; then
       truncated_files=$((truncated_files + 1))
+    fi
+    if is_binary_file "$path"; then
+      binary_files=$((binary_files + 1))
     fi
   done
 
@@ -336,19 +507,30 @@ emit_dump() {
   fi
   echo "Format: $format_label"
   echo "Files included: $files_count"
-  echo "Truncated files: $truncated_files"
+  echo "Binary files: $binary_files"
+  echo "Truncated text files: $truncated_files"
   case "$scope" in
-    platform)
-      echo "Excluded dirs: projects/"
-      ;;
-    project)
-      echo "Excluded dirs: projects/* (except projects/$target/)"
-      ;;
-    full)
-      echo "Excluded dirs: none"
-      ;;
+    platform) echo "Excluded dirs (scope): projects/" ;;
+    project)  echo "Excluded dirs (scope): projects/* (except projects/$target/)" ;;
+    full)     echo "Excluded dirs (scope): none" ;;
   esac
-  echo "Excluded types: none"
+  if (( ${#include_dirs[@]} > 0 )); then
+    echo "Include dirs (refiner): ${include_dirs[*]}"
+  else
+    echo "Include dirs (refiner): (none)"
+  fi
+  if (( ${#exclude_dirs[@]} > 0 )); then
+    echo "Exclude dirs (refiner): ${exclude_dirs[*]}"
+  else
+    echo "Exclude dirs (refiner): (none)"
+  fi
+  if (( ${#ignore_patterns[@]} > 0 )); then
+    echo "Ignore globs (refiner): ${ignore_patterns[*]}"
+  else
+    echo "Ignore globs (refiner): (none)"
+  fi
+  echo "Binary handling: $include_binary"
+  echo "Max lines (text): $max_lines"
   echo "===== DUMP PAYLOAD BEGIN ====="
   echo "[INDEX]"
   for path in "${files[@]}"; do
@@ -358,7 +540,11 @@ emit_dump() {
   echo "[FILE CONTENTS]"
   for path in "${files[@]}"; do
     echo "<<< FILE BEGIN: $path"
-    emit_file_contents "$path" "$suppress_pipe_errors" "$max_lines"
+    if [[ -f "$path" ]] && is_binary_file "$path"; then
+      emit_binary_block "$path"
+    else
+      emit_file_contents "$path" "$suppress_pipe_errors" "$max_lines"
+    fi
     echo ">>> FILE END: $path"
     echo ""
   done
@@ -379,6 +565,17 @@ emit_manifest() {
       echo "Target: $target"
     fi
     echo "Format: $format_label"
+    echo "Binary handling: $include_binary"
+    echo "Max lines (text): $max_lines"
+    if (( ${#include_dirs[@]} > 0 )); then
+      echo "Include dirs (refiner): ${include_dirs[*]}"
+    fi
+    if (( ${#exclude_dirs[@]} > 0 )); then
+      echo "Exclude dirs (refiner): ${exclude_dirs[*]}"
+    fi
+    if (( ${#ignore_patterns[@]} > 0 )); then
+      echo "Ignore globs (refiner): ${ignore_patterns[*]}"
+    fi
     echo "Dump payload: $(display_path "$payload")"
     if [[ -n "$output" ]]; then
       echo "Output target: $(display_path "$output")"
@@ -387,8 +584,8 @@ emit_manifest() {
     fi
     echo "Files included: $files_count"
     echo "Included files:"
-    for path in "${files[@]}"; do
-      echo "- $path"
+    for p in "${files[@]}"; do
+      echo "- $p"
     done
   } > "$path"
 }

@@ -1,99 +1,68 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Stela Context Linter (Manifest Supremacy)
+# Purpose: Verify that EVERY artifact listed in the Context Manifest exists.
+# Logic: If the Manifest claims it is context, it must be present.
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 MANIFEST_PATH="${REPO_ROOT}/ops/lib/manifests/CONTEXT_MANIFEST.md"
-SoP_PATH="${REPO_ROOT}/SoP.md"
+
+echo "Stela Context Verification"
+echo "Manifest: ops/lib/manifests/CONTEXT_MANIFEST.md"
+echo "------------------------"
 
 errors=0
 warnings=0
 
-note() {
-  printf "[context_lint] %s\n" "$1"
+fail() {
+  echo "FAIL: $1" >&2
+  errors=$((errors+1))
 }
 
 warn() {
-  printf "[context_lint] WARN: %s\n" "$1"
-  warnings=1
+  echo "WARN: $1" >&2
+  warnings=$((warnings+1))
 }
 
-error() {
-  printf "[context_lint] ERROR: %s\n" "$1"
-  errors=1
-}
-
-extract_backticks() {
-  awk -F'`' 'NF >= 3 { for (i = 2; i <= NF; i += 2) print $i }' "$1"
-}
-
-is_known_path() {
-  local entry="$1"
-  case "$entry" in
-    ops/init/*)
-      return 1
-      ;;
-    ops/*|docs/*|tools/*|public_html/*|upstream/*|storage/*|tests/*|scripts/*|addons/*|patches/*|nbproject/*|.github/*|README.md|SECURITY.md|CONTRIBUTING.md|SoP.md|TRUTH.md|CHANGELOG.md)
-      return 0
-      ;;
-  esac
-  return 1
-}
-
+# 1. Manifest Check
 if [[ ! -f "${MANIFEST_PATH}" ]]; then
-  error "Missing manifest: ops/lib/manifests/CONTEXT_MANIFEST.md"
-else
-  manifest_entries=$(extract_backticks "${MANIFEST_PATH}" | awk 'NF')
-  if [[ -z "${manifest_entries}" ]]; then
-    error "No canonical entries found in ops/lib/manifests/CONTEXT_MANIFEST.md"
-  else
-    while IFS= read -r entry; do
-      case "${entry}" in
-        ops/*|docs/*|tools/*|SoP.md|TRUTH.md|AGENTS.md|llms.txt)
-          target="${REPO_ROOT}/${entry}"
-          if [[ ! -f "${target}" ]]; then
-            error "Missing canonical file: ${entry}"
-          fi
-          ;;
-      esac
-    done <<< "${manifest_entries}"
-  fi
-fi
-
-if [[ -f "${SoP_PATH}" ]]; then
-  state_entries=$(extract_backticks "${SoP_PATH}" | awk 'NF')
-  if [[ -n "${state_entries}" ]]; then
-    while IFS= read -r entry; do
-      if [[ "${entry}" == *" "* ]]; then
-        continue
-      fi
-      if [[ "${entry}" == *"/"* || "${entry}" == *.md || "${entry}" == *.sh ]]; then
-        if [[ "${entry}" == /* ]]; then
-          target="${entry}"
-        elif is_known_path "${entry}"; then
-          target="${REPO_ROOT}/${entry}"
-        else
-          continue
-        fi
-        if [[ ! -e "${target}" ]]; then
-          warn "Missing path referenced in SoP.md: ${entry}"
-        fi
-      fi
-    done <<< "${state_entries}"
-  fi
-else
-  warn "Missing SoP.md"
-fi
-
-if [[ ${errors} -ne 0 ]]; then
-  note "Result: errors detected"
+  echo "CRITICAL: Manifest not found at ${MANIFEST_PATH}"
   exit 2
 fi
 
-if [[ ${warnings} -ne 0 ]]; then
-  note "Result: warnings detected"
-  exit 1
+# 2. Extraction (Grab everything inside backticks)
+# We do not filter by directory. If it is backticked in the Manifest, we check it.
+mapfile -t required_artifacts < <(awk -F'`' 'NF >= 3 { for (i = 2; i <= NF; i += 2) print $i }' "${MANIFEST_PATH}" | grep -v "^$")
+
+if (( ${#required_artifacts[@]} == 0 )); then
+  warn "Manifest appears empty (no backticked paths found)."
+else
+  echo "Verifying ${#required_artifacts[@]} artifacts..."
 fi
 
-note "Result: clean"
-exit 0
+# 3. Verification Loop
+for relative_path in "${required_artifacts[@]}"; do
+  # Handle special cases or command snippets if necessary.
+  # For now, we assume the Manifest strictly lists file paths in backticks.
+  
+  target="${REPO_ROOT}/${relative_path}"
+  
+  if [[ ! -e "${target}" ]]; then
+    fail "Missing required context: '${relative_path}'"
+  fi
+done
+
+echo "------------------------"
+if [[ $errors -eq 0 ]]; then
+  if [[ $warnings -eq 0 ]]; then
+    echo "OK: Context Complete."
+  else
+    echo "PASS (with $warnings warnings)."
+  fi
+  exit 0
+else
+  echo "FAILED: $errors missing artifact(s)."
+  exit 1
+fi

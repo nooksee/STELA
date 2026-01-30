@@ -10,19 +10,7 @@ This document expands on the repo-level policy in `SECURITY.md`.
 
 ## Roles and access expectations
 
-Operator (human):
-- Commits, pushes, and merges.
-- Owns approvals and access control.
-- Runs repo-gates and validation.
-
-AI workers (Codex, Gemini, Copilot):
-- Draft-only contributions; no commit/push.
-- Provide citations/provenance for external sources.
-- No direct access to secrets or privileged credentials.
-
-References:
-- `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md`
-- `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`
+Jurisdictions for human and AI agents are defined in AGENTS.md.
 
 ## Secrets management
 
@@ -56,13 +44,6 @@ Please include:
 - Fixes prioritize impact, exploitability, and clarity.
 - We aim for coordinated, responsible disclosure.
 
-## Known issues and future improvements
-
-- Legacy MD5 hashing in legacy code paths should be replaced.
-- Legacy upstream snapshots contain outdated patterns pending modernization.
-
 ## Cross-links
 
 - `SECURITY.md` (repo root)
-- `ops/contracts/CONTRACTOR_DISPATCH_CONTRACT.md`
-- `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`
