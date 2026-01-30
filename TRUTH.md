@@ -9,7 +9,7 @@ Canon surfaces (what lives where):
 - `TRUTH.md` — constitution + invariants (SSOT).
 - `TASK.md` — DP contract + living work surface/log (SSOT for the current thread).
 - `SoP.md` — history ledger only (what shipped, when, why).
-- `docs/library/OPERATOR_MANUAL.md` — operator mechanics + commands (pointer-first).
+- `docs/library/MANUAL.md` — operator mechanics + commands (pointer-first).
 - `docs/` — rationale + expanded guidance (not SSOT).
 
 ## 2. CONSTITUTION (INVARIANTS + ANTI-DRIFT)
@@ -28,9 +28,6 @@ Anti-drift invariants:
 # Stela Canonical Tree
 
 This repo root is the developer workspace.
-
-## Runtime webroot
-- 
 
 ## Non-runtime (developer/support)
 - `docs/` project manual (points into ops canon)

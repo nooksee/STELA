@@ -36,9 +36,9 @@ It is intentionally short and maintained; if it drifts, fix it.
 - `SoP.md` — history ledger (what shipped, when, why)
 - `AGENTS.md` — agent roles/expectations
 - `docs/INDEX.md` — docs map / entry index
-- `docs/library/OPERATOR_MANUAL.md` — this file
-- `docs/library/CONTINUITY_MAP.md` — continuity wayfinding
-- `ops/lib/manifests/CONTEXT_MANIFEST.md` — what “counts as context” + lint targets
+- `docs/library/MANUAL.md` — this file
+- `docs/library/MAP.md` — continuity wayfinding
+- `ops/lib/manifests/CONTEXT.md` — what “counts as context” + lint targets
 
 **Untracked operator/worker artifacts (never commit these):**
 - `storage/handoff/` — OPEN outputs + worker RESULTS receipts (attach from here)

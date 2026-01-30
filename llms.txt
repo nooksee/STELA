@@ -9,12 +9,12 @@
 ## 2. State & Continuity
 - SoP.md — Historical ledger (State of Play).
 - TASK.md — Active work surface, DP contract, and thread log.
-- docs/library/CONTINUITY_MAP.md — Wayfinding for cross-session state.
-- ops/lib/manifests/CONTEXT_MANIFEST.md — Required context artifact checklist.
+- docs/library/MAP.md — Wayfinding for cross-session state.
+- ops/lib/manifests/CONTEXT.md — Required context artifact checklist.
 
 ## 3. Operations & Manuals
-- docs/library/OPERATOR_MANUAL.md — Command mechanics and cheat sheet.
-- docs/library/LIBRARY_INDEX.md — Curated index of approved operator surfaces.
+- docs/library/MANUAL.md — Command mechanics and cheat sheet.
+- docs/library/INDEX.md — Curated index of approved operator surfaces.
 - docs/INDEX.md — Documentation front door.
 
 ## 4. Operational Binaries

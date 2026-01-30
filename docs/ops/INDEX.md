@@ -10,19 +10,19 @@ Use `./ops/bin/help` as the operator front door for curated docs.
 
 Library location:
 - Root: `docs/library/`
-- Index: `docs/library/LIBRARY_INDEX.md` (curated topic list)
+- Index: `docs/library/INDEX.md` (curated topic list)
 
 Add a new library entry:
-- Update `docs/library/LIBRARY_INDEX.md` with a new line; keep it curated (not every .md).
+- Update `docs/library/INDEX.md` with a new line; keep it curated (not every .md).
 
 Operator Manual:
-- `docs/library/OPERATOR_MANUAL.md`
+- `docs/library/MANUAL.md`
 
 ## Start here
 - [Stela System Constitution](../../TRUTH.md)
 - [SoP](../../SoP.md)
-- [Operator Manual](../../docs/library/OPERATOR_MANUAL.md)
-- [Continuity Map](../../docs/library/CONTINUITY_MAP.md)
+- [Operator Manual](../../docs/library/MANUAL.md)
+- [Continuity Map](../../docs/library/MAP.md)
 
 ## Verification
 - [../../SoP.md](../../SoP.md)

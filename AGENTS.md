@@ -26,9 +26,9 @@ All AI agents contributing to this repository shall adhere to these parameters:
 * TRUTH.md
 * SoP.md
 * TASK.md
-* ops/lib/manifests/CONTEXT_MANIFEST.md
-* docs/library/OPERATOR_MANUAL.md
-* docs/library/CONTINUITY_MAP.md
+* ops/lib/manifests/CONTEXT.md
+* docs/library/MANUAL.md
+* docs/library/MAP.md
 
 ## 4. Entry Points
 * llms.txt

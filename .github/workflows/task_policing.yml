@@ -28,7 +28,7 @@ jobs:
               "ops/bin/dump",
               "tools/dp_lint.sh",
               ".github/copilot-instructions.md",
-              "docs/library/OPERATOR_MANUAL.md",
+              "docs/library/MANUAL.md",
             ];
 
             const gateTouched = names.some(n => gateFiles.includes(n));

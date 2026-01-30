@@ -26,7 +26,6 @@ scan_dirs=(
 root_files=(
   "TRUTH.md"
   "TASK.md"
-  "SoP.md"
   "AGENTS.md"
   "README.md"
   "SECURITY.md"

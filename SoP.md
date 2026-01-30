@@ -55,7 +55,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - What shipped:
   - Reshaped `TRUTH.md` into filing doctrine + constitution/invariants.
   - Tightened `TASK.md` closeout outputs (diff name-only/stat + NEXT).
-  - Updated `docs/library/OPERATOR_MANUAL.md`, `docs/QUICKSTART.md`, `docs/GOVERNANCE.md`, and `docs/INDEX.md` to use pointer-based canon references.
+  - Updated `docs/library/MANUAL.md`, `docs/QUICKSTART.md`, `docs/GOVERNANCE.md`, and `docs/INDEX.md` to use pointer-based canon references.
 - Results: `storage/handoff/DP-OPS-0003-RESULTS.md`
 - Verification:
   - `bash tools/verify_tree.sh`
@@ -66,14 +66,14 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - Result: `[lint_truth] OK`
 - Risk / rollback:
   - Risk: Low (canon/doc reshaping only).
-  - Rollback: revert `TRUTH.md`, `TASK.md`, `docs/library/OPERATOR_MANUAL.md`, `docs/QUICKSTART.md`, `docs/GOVERNANCE.md`, `docs/INDEX.md`, and `SoP.md`.
+  - Rollback: revert `TRUTH.md`, `TASK.md`, `docs/library/MANUAL.md`, `docs/QUICKSTART.md`, `docs/GOVERNANCE.md`, `docs/INDEX.md`, and `SoP.md`.
 
 ## 2026-01-22 — DP-OPS-0050A: Integrator Phase Discipline (Conformance-First + Phase-Locked Outputs)
 
 - Purpose: Lock conformance-first DP refreshes, phase-locked outputs, receipt bundle always, and allow OPEN/dump to be operator-provided or locally generated per run.
 - What shipped:
   - Added Integrator Phase Discipline rules (conformance-first, phase-locked outputs, receipt bundle always) to `TRUTH.md`.
-  - Added Integrator Phase Discipline operator phrases, hard stops, and decision table to `docs/library/OPERATOR_MANUAL.md`.
+  - Added Integrator Phase Discipline operator phrases, hard stops, and decision table to `docs/library/MANUAL.md`.
   - Updated M-PHASE-01 to "Conformance First, Creativity After" with triggers in `docs/library/MEMENTOS.md`.
 - Verification:
   - `bash tools/context_lint.sh`
@@ -82,7 +82,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - Result: `[lint_truth] OK`
 - Risk / rollback:
   - Risk: Low (docs-only guidance updates).
-  - Rollback: revert `TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, `docs/library/MEMENTOS.md`, and `SoP.md`.
+  - Rollback: revert `TRUTH.md`, `docs/library/MANUAL.md`, `docs/library/MEMENTOS.md`, and `SoP.md`.
 
 ## 2026-01-21 — DP-OPS-0050: Stelae Governance (Keep It Useful, Keep It Rare)
 
@@ -94,20 +94,20 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - Result: `/bin/bash: line 1: ./ops/bin/lint_truth.sh: No such file or directory`
 - Risk / rollback:
   - Risk: Low (docs-only governance + guidance updates).
-  - Rollback: revert `docs/library/[REMOVED].md`, `OPERATOR_MANUAL.md`, and `SoP.md`.
+  - Rollback: revert `docs/library/[REMOVED].md`, `MANUAL.md`, and `SoP.md`.
 
 ## 2026-01-21 — DP-OPS-0049: Stela Name Guardrails (Canonical Spelling + Lint)
 
 - Purpose: Canonize Stela/Stelae spelling, declare SSOT, and add a lint guardrail for typos.
 - What shipped:
-  - Updated naming canon in `TRUTH.md`, operator guidance in `docs/library/OPERATOR_MANUAL.md`, and spelling policy in `docs/library/[REMOVED].md`.
+  - Updated naming canon in `TRUTH.md`, operator guidance in `docs/library/MANUAL.md`, and spelling policy in `docs/library/[REMOVED].md`.
   - Added forbidden spelling checks to `tools/lint_truth.sh`.
 - Verification:
   - `bash tools/context_lint.sh`
   - Result: `[context_lint] Result: clean`
   - `bash tools/lint_truth.sh`
   - Result: `[lint_truth] OK`
-  - `rg -n "Stela|Stelae" TRUTH.md docs/library/[REMOVED].md docs/library/OPERATOR_MANUAL.md`
+  - `rg -n "Stela|Stelae" TRUTH.md docs/library/[REMOVED].md docs/library/MANUAL.md`
   - Result:
     - `TRUTH.md:9:- Stela (S-T-E-L-A): only canonical project / platform name spelling (stone tablet metaphor: published canon / governance visible to all).`
     - `TRUTH.md:10:- Stelae (S-T-E-L-A-E): plural / collection label.`
@@ -117,9 +117,9 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
     - `docs/library/[REMOVED].md:9:- "Stelae" is the plural / collection label.`
     - `docs/library/[REMOVED].md:11:- Correct: "Stela is the platform name."`
     - `docs/library/[REMOVED].md:12:- Correct: "These Stelae keep operator guidance consistent."`
-    - `docs/library/OPERATOR_MANUAL.md:5:You may see legacy \`Stela\` strings; \`Stela\` is the platform name going forward.`
-    - `docs/library/OPERATOR_MANUAL.md:116:- \`./ops/bin/project\` lists/initializes Stela-born projects (no import/migration).`
-    - `docs/library/OPERATOR_MANUAL.md:180:- Canon spelling: Stela (singular) / Stelae (plural). Normalize voice-to-text variants before committing or approving.`
+    - `docs/library/MANUAL.md:5:You may see legacy \`Stela\` strings; \`Stela\` is the platform name going forward.`
+    - `docs/library/MANUAL.md:116:- \`./ops/bin/project\` lists/initializes Stela-born projects (no import/migration).`
+    - `docs/library/MANUAL.md:180:- Canon spelling: Stela (singular) / Stelae (plural). Normalize voice-to-text variants before committing or approving.`
   - `rg -n "Steela|Stila|Stella" . || true`
   - Result:
     - `./projects/default/upstream/php-nuke/includes/vendor/mobiledetect/mobiledetectlib/MobileDetect.json:160:            "iJoyTablet": "Tablet (Spirit 7|Essentia|Galatea|Fusion|Onix 7|Landa|Titan|Scooby|Deox|Stella|Themis|Argon|Unique 7|Sygnus|Hexen|Finity 7|Cream|Cream X2|Jade|Neon 7|Neron 7|Kandy|Scape|Saphyr 7|Rebel|Biox|Rebel|Rebel 8GB|Myst|Draco 7|Myst|Tab7-004|Myst|Tadeo Jones|Tablet Boing|Arrow|Draco Dual Cam|Aurix|Mint|Amity|Revolution|Finity 9|Neon 9|T9w|Amity 4GB Dual Cam|Stone 4GB|Stone 8GB|Andromeda|Silken|X2|Andromeda II|Halley|Flame|Saphyr 9,7|Touch 8|Planet|Triton|Unique 10|Hexen 10|Memphis 4GB|Memphis 8GB|Onix 10)"`
@@ -134,7 +134,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
     - `./projects/default/upstream/titanium/includes/vendor/mobiledetect/mobiledetectlib/src/MobileDetect.php:577:        'iJoyTablet' => 'Tablet (Spirit 7|Essentia|Galatea|Fusion|Onix 7|Landa|Titan|Scooby|Deox|Stella|Themis|Argon|Unique 7|Sygnus|Hexen|Finity 7|Cream|Cream X2|Jade|Neon 7|Neron 7|Kandy|Scape|Saphyr 7|Rebel|Biox|Rebel|Rebel 8GB|Myst|Draco 7|Myst|Tab7-004|Myst|Tadeo Jones|Tablet Boing|Arrow|Draco Dual Cam|Aurix|Mint|Amity|Revolution|Finity 9|Neon 9|T9w|Amity 4GB Dual Cam|Stone 4GB|Stone 8GB|Andromeda|Silken|X2|Andromeda II|Halley|Flame|Saphyr 9,7|Touch 8|Planet|Triton|Unique 10|Hexen 10|Memphis 4GB|Memphis 8GB|Onix 10)'`
 - Risk / rollback:
   - Risk: Low (docs-only naming updates + lint tightening).
-  - Rollback: revert `TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, `docs/library/[REMOVED].md`, `tools/lint_truth.sh`, and `SoP.md`.
+  - Rollback: revert `TRUTH.md`, `docs/library/MANUAL.md`, `docs/library/[REMOVED].md`, `tools/lint_truth.sh`, and `SoP.md`.
 
 
 - Purpose: Phase lock outputs to operator step and provide deterministic recovery commands.
@@ -148,7 +148,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - Result: `/bin/bash: line 1: ./ops/bin/lint_truth.sh: No such file or directory`
 - Risk / rollback:
   - Risk: Medium-low (workflow wording could be misread; primary risk is operator confusion if phrasing drifts).
-  - Rollback: revert `docs/library/OPERATOR_MANUAL.md`, `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`, `docs/library/MEMENTOS.md`, and `SoP.md`.
+  - Rollback: revert `docs/library/MANUAL.md`, `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`, `docs/library/MEMENTOS.md`, and `SoP.md`.
 
 ## 2026-01-21 — DP-OPS-0048D: Dispatch Packet template heading linter
 
@@ -268,7 +268,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Verification:
   - `bash tools/context_lint.sh`
   - `bash tools/lint_truth.sh`
-  - `rg -n "(STELA|Stela|Nuke CE)" TRUTH.md SoP.md docs/library/OPERATOR_MANUAL.md docs/library/MEMENTOS.md docs/library/STELA_NAMING.md docs/INDEX.md`
+  - `rg -n "(STELA|Stela|Nuke CE)" TRUTH.md SoP.md docs/library/MANUAL.md docs/library/MEMENTOS.md docs/library/STELA_NAMING.md docs/INDEX.md`
   - `git diff --name-only`
 - Risk / rollback:
   - Risk: Low; doc-only naming alignment.
@@ -425,7 +425,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 
 - Purpose: Make continuity surfaces findable; canonize supersession/deprecation/deletion proposals; add a later bucket label.
 - What shipped:
-  - Added `docs/library/CONTINUITY_MAP.md` and wired it into the curated library and Operator Manual.
+  - Added `docs/library/MAP.md` and wired it into the curated library and Operator Manual.
   - Canonized supersession/deprecation/deletion proposal rules in `TRUTH.md`.
   - Added a "Later bucket" section in `SoP.md` for dedupe / clone detection ideas.
 - Verification:
@@ -444,14 +444,14 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Purpose: Add a minimal posture nudge to OPEN for precision and stop-when-uncertain behavior.
 - What shipped:
   - Inserted the 3-line posture nudge before [FRESHNESS GATE] in `ops/bin/open`.
-  - Added short notes about the posture nudge in `TRUTH.md` and `docs/library/OPERATOR_MANUAL.md`.
+  - Added short notes about the posture nudge in `TRUTH.md` and `docs/library/MANUAL.md`.
 - Verification:
-  - `rg -n "canon-governed system|Precision beats speed|If unsure, stop and ask" ops/bin/open TRUTH.md docs/library/OPERATOR_MANUAL.md`
+  - `rg -n "canon-governed system|Precision beats speed|If unsure, stop and ask" ops/bin/open TRUTH.md docs/library/MANUAL.md`
   - `bash tools/context_lint.sh`
   - Manual check: OPEN output shows the 3-line block above [FRESHNESS GATE] with no other changes.
 - Risk / rollback:
   - Risk: Low; output text + docs note only.
-  - Rollback: revert `ops/bin/open`, `TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, and this entry.
+  - Rollback: revert `ops/bin/open`, `TRUTH.md`, `docs/library/MANUAL.md`, and this entry.
 
 ## 2026-01-15 — DP-OPS-0031: MEMENTOS strategic placement
 
@@ -481,11 +481,11 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Purpose: Define the single source of truth for behavioral preferences and make wayfinding pointer-only.
 - What shipped:
   - Added the behavioral preferences file in the curated library.
-  - Added pointer-only links in `TRUTH.md`, `docs/library/OPERATOR_MANUAL.md`, and `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
+  - Added pointer-only links in `TRUTH.md`, `docs/library/MANUAL.md`, and `ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`.
   - Removed legacy dataset and manifest entries for behavioral preferences.
 - Verification:
   - `ls docs/library`
-  - `rg -n "Behavioral preferences are documented" TRUTH.md docs/library/OPERATOR_MANUAL.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`
+  - `rg -n "Behavioral preferences are documented" TRUTH.md docs/library/MANUAL.md ops/init/protocols/DISPATCH_PACKET_PROTOCOL.md`
   - `bash tools/context_lint.sh`
 - Risk / rollback:
   - Risk: Low; docs-only canon update.
@@ -496,7 +496,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Purpose: Stop "approval lost in the paste" by canonizing standalone approval line placement and deterministic handoff paste order.
 - What shipped:
   - Canonized "Approval Line Placement" (standalone, outside OPEN/intent/quotes) in `TRUTH.md`.
-  - Canonized "Operator Handoff Paste Order" (1. Approval, 2. Results, 3. Snapshot) in `TRUTH.md` and `docs/library/OPERATOR_MANUAL.md`.
+  - Canonized "Operator Handoff Paste Order" (1. Approval, 2. Results, 3. Snapshot) in `TRUTH.md` and `docs/library/MANUAL.md`.
 - Verification:
   - Manual check: rules explicitly forbid approvals inside OPEN intent and inside quoted/fenced blocks.
   - `git diff --name-only`
