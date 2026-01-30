@@ -6,7 +6,7 @@ on:
 
 jobs:
   enforce:
-    runs-on: 
+    runs-on: ubuntu-latest
     steps:
       - name: Enforce SoP update when canon changes
         uses: actions/github-script@v7
