@@ -1,17 +1,36 @@
-# CONTEXT - Context overview
+# Context (System Rehydration)
 
-## What the context surface is
-The context surface is the minimal, curated set of documents that lets a new operator or AI assistant rehydrate project reality without guessing.
+## 0. Philosophy
+**Context is not memory; it is a file.**
+In a stateless system, "Context" is the precise set of artifacts required to rehydrate an agent (Human or AI) from zero to full operational awareness.
+* **If it's not in the Context, it doesn't exist.**
+* **If it's in the Context, it must be true.**
 
-## Where it lives today
-- `ops/lib/manifests/CONTEXT.md` is the required list of canonical pointers.
-- `docs/library/MAP.md` is the operator-facing pointer map.
+## 1. The Manifest (SSOT)
+The authoritative list of required artifacts lives in:
+* [`ops/lib/manifests/CONTEXT.md`](../ops/lib/manifests/CONTEXT.md)
 
-## How to keep it current
-- When docs move, update `ops/lib/manifests/CONTEXT.md` and `docs/library/MAP.md` to point at the new locations.
-- Keep onboarding pointers aligned to `docs/QUICKSTART.md`.
+**The Core Set (Must Load):**
+* `TRUTH.md` (Constitution)
+* `SoP.md` (History)
+* `TASK.md` (Active Objective)
+* `AGENTS.md` (Jurisdiction)
 
-## What it is not
-- It is not runtime configuration.
-- It is not a deployment artifact.
-- It does not replace canon in `ops/` or the Truth-Layer docs.
+## 2. Ingestion Mechanics
+Context is not read casually; it is injected via tooling.
+* **Generation:** [`./ops/bin/open`](../ops/bin/open)
+  * Automatically assembles the "Open Prompt" with freshness gates and git state.
+* **Capture:** [`./ops/bin/dump`](../ops/bin/dump)
+  * Captures the platform state (file contents) for agent ingestion.
+
+## 3. Verification (The Linter)
+We do not guess if context is complete. We prove it.
+* **Tool:** [`tools/context_lint.sh`](../tools/context_lint.sh)
+* **Rule:** This script verifies that every path listed in the Manifest actually exists on disk.
+* **Usage:** Run before every session to prevent "blind" operations.
+
+## 4. Maintenance Doctrine
+**Update the Manifest when:**
+* A canonical file is renamed or moved.
+* A new high-level governance surface is created.
+* **Never** clutter the context with temporary project files or logs.
