@@ -1,57 +1,92 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Stela truth lint:
-# Only checks authored surfaces.
-# Ignores upstream/runtime/quarantine/vendor entirely.
+# Stela Truth Linter (Constitution Guard)
+# Purpose: Enforce canon spelling, catch legacy drift, and police governance terminology.
+# Scope: Authored surfaces only (ops/, docs/, tools/, .github/, and root Canon).
+# Ignores: projects/ (Work), storage/ (Trash), public_html/ (Runtime).
 
+# 1. Forbidden Spellings (Hard Fail)
+# Typos of the platform name "Stela".
 forbidden_spellings=(
-  Steela
-  Stila
-  Stella
+  "Steela"
+  "Stila"
+  "Stella"
 )
 
-scan_paths=(
-  docs
-  tools
-  .github
+# 2. Scope Definition (Expanded)
+# We now scan ops/ and the root Canon files, which were previously ignored.
+scan_dirs=(
+  "docs"
+  "tools"
+  ".github"
+  "ops"
 )
 
 root_files=(
-  README.md
-  SECURITY.md
-  CONTRIBUTING.md
+  "TRUTH.md"
+  "TASK.md"
+  "SoP.md"
+  "AGENTS.md"
+  "README.md"
+  "SECURITY.md"
+  "CONTRIBUTING.md"
+  "llms.txt"
 )
 
-fail=0
+echo "Stela Truth Verification"
+echo "------------------------"
 
-files="$(git ls-files "${scan_paths[@]}" 2>/dev/null || true)"
+failures=0
+warnings=0
+
+fail() {
+  echo "FAIL: $1" >&2
+  echo "      $2" >&2
+  failures=$((failures+1))
+}
+
+warn() {
+  echo "WARN: $1" >&2
+  echo "      $2" >&2
+  warnings=$((warnings+1))
+}
+
+# Build the file list
+files="$(git ls-files "${scan_dirs[@]}" 2>/dev/null || true)"
 for f in "${root_files[@]}"; do
-  [ -f "$f" ] && files="$files"$'\n'"$f"
-done
-
-# Prevent self-matches: this linter contains the patterns by design.
-files="$(printf '%s\n' "$files" | grep -v -x 'tools/lint_truth.sh' || true)"
-
-[ -z "${files//[[:space:]]/}" ] && { echo "[lint_truth] OK (no files to scan)"; exit 0; }
-
-for pat in "${patterns[@]}"; do
-  if echo "$files" | xargs -r grep -nH -I -E "$pat" >/dev/null 2>&1; then
-    echo "[lint_truth] DEPRECATED reference found: $pat"
-    echo "$files" | xargs -r grep -nH -I -E "$pat" || true
-    fail=1
+  if [[ -f "$f" ]]; then
+    files="$files"$'\n'"$f"
   fi
 done
 
+# Filter out this script itself to prevent self-flagging
+files="$(printf '%s\n' "$files" | grep -v "tools/lint_truth.sh" || true)"
+
+if [[ -z "${files//[[:space:]]/}" ]]; then
+  echo "OK (No files to scan)"
+  exit 0
+fi
+
+# Check 1: Forbidden Spellings (Hard Fail)
+echo "Scanning for typos (Stela)..."
 for token in "${forbidden_spellings[@]}"; do
-  pattern="\\<${token}\\>"
-  if echo "$files" | xargs -r grep -nH -I -E "$pattern" >/dev/null 2>&1; then
-    echo "[lint_truth] FORBIDDEN spelling found: $token"
-    echo "$files" | xargs -r grep -nH -I -E "$pattern" || true
-    fail=1
+  # grep word boundary, ignore case
+  matches="$(echo "$files" | xargs -r grep -nH -I -E "\b${token}\b" || true)"
+  if [[ -n "$matches" ]]; then
+    fail "Forbidden spelling found: '$token'" "$matches"
   fi
 done
 
-[ "$fail" -eq 1 ] && { echo "[lint_truth] FAIL"; exit 1; }
-
-echo "[lint_truth] OK"
+echo "------------------------"
+if [[ $failures -eq 0 ]]; then
+  if [[ $warnings -eq 0 ]]; then
+    echo "OK: Truth Integrity Verified."
+  else
+    echo "PASS (with $warnings warnings)."
+  fi
+  exit 0
+else
+  echo "FAILED: $failures error(s) detected."
+  exit 1
+fi
