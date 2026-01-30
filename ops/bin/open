@@ -86,9 +86,9 @@ required_files=(
   "AGENTS.md"
   "TASK.md"
   "docs/INDEX.md"
-  "docs/library/OPERATOR_MANUAL.md"
-  "docs/library/CONTINUITY_MAP.md"
-  "ops/lib/manifests/CONTEXT_MANIFEST.md"
+  "docs/library/MANUAL.md"
+  "docs/library/MAP.md"
+  "ops/lib/manifests/CONTEXT.md"
 )
 
 missing=()
@@ -162,9 +162,9 @@ Don't:
 - SoP.md
 - AGENTS.md
 - docs/INDEX.md
-- docs/library/OPERATOR_MANUAL.md
-- docs/library/CONTINUITY_MAP.md
-- ops/lib/manifests/CONTEXT_MANIFEST.md
+- docs/library/MANUAL.md
+- docs/library/MAP.md
+- ops/lib/manifests/CONTEXT.md
 
 [DUMP]
 - If you need full repo context, run: ./ops/bin/dump --scope=platform --format=chatgpt (or gemini).

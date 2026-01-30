@@ -16,7 +16,7 @@ Authoritative docs (kept correct at all times):
 - `AGENTS.md` — jurisdiction definitions and behavioral logic standards.
 - `llms.txt` — discovery entry point for AI agents (pointer-first).
 - `docs/INDEX.md` — front door to the manual.
-- `docs/library/OPERATOR_MANUAL.md` — operator mechanics; pointer-only.
+- `docs/library/MANUAL.md` — operator mechanics; pointer-only.
 
 Rule: if canon changes, **SoP must be updated** (same PR when possible).
 

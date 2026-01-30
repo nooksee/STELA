@@ -12,11 +12,11 @@ Pointer-only map of the canonical continuity surfaces that preserve state and go
 - **Active Thread**: `TASK.md` — Single living surface for current work; includes the Dispatch Packet (DP) and work log.
 
 ## 3. Wayfinding (The Manuals)
-- **Operator Entry**: `docs/library/OPERATOR_MANUAL.md` — Primary mechanics and command cheat sheet.
-- **Curated Library**: `docs/library/LIBRARY_INDEX.md` — Curated index of approved operator surfaces.
+- **Operator Entry**: `docs/library/MANUAL.md` — Primary mechanics and command cheat sheet.
+- **Curated Library**: `docs/library/INDEX.md` — Curated index of approved operator surfaces.
 - **Project Index**: `docs/INDEX.md` — The general documentation front door.
 
 ## 4. State Capture & Ingestion (The Tools)
 - **Prompt Generation**: `ops/bin/open` — Generates the OPEN prompt with freshness gate and git state.
 - **State Capture**: `ops/bin/dump` — Captures repository state for agent ingestion.
-- **Context Validation**: `ops/lib/manifests/CONTEXT_MANIFEST.md` — Canonical list of required context artifacts.
+- **Context Validation**: `ops/lib/manifests/CONTEXT.md` — Canonical list of required context artifacts.

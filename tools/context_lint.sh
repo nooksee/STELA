@@ -7,10 +7,10 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-MANIFEST_PATH="${REPO_ROOT}/ops/lib/manifests/CONTEXT_MANIFEST.md"
+MANIFEST_PATH="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
 
 echo "Stela Context Verification"
-echo "Manifest: ops/lib/manifests/CONTEXT_MANIFEST.md"
+echo "Manifest: ops/lib/manifests/CONTEXT.md"
 echo "------------------------"
 
 errors=0

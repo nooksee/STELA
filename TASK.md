@@ -19,15 +19,15 @@ Canon surface definitions live in `TRUTH.md`.
 - [ ] `TRUTH.md` (precedence + invariants)
 - [ ] `AGENTS.md` (jurisdiction / stop-and-ask)
 - [ ] `SoP.md` (merge-grade readiness ledger)
-- [ ] `ops/lib/manifests/CONTEXT_MANIFEST.md` (required context set)
-- [ ] `docs/library/CONTINUITY_MAP.md` (continuity terrain)
+- [ ] `ops/lib/manifests/CONTEXT.md` (required context set)
+- [ ] `docs/library/MAP.md` (continuity terrain)
 
 **Job-specific canon (fill in per DP):**
 - [ ] [path/to/file]
 - [ ] [path/to/file]
 
 **Loading discipline (worker must echo):**
-- “Loaded: OPEN, TRUTH, AGENTS, SoP, CONTEXT_MANIFEST, CONTINUITY_MAP (+ job-specific files).”
+- “Loaded: OPEN, TRUTH, AGENTS, SoP, CONTEXT, MAP (+ job-specific files).”
 
 ---
 
@@ -65,7 +65,7 @@ STOP if told to create or switch branches.
 
 ## I) REQUIRED CONTEXT LOAD (READ BEFORE DOING ANYTHING)
 **Worker must confirm loaded before acting:**
-- OPEN, TRUTH, AGENTS, SoP, CONTEXT_MANIFEST, CONTINUITY_MAP
+- OPEN, TRUTH, AGENTS, SoP, CONTEXT, MAP
 - Plus any DP-scoped files listed here:
   - [Exact path]
   - [Exact path]
@@ -226,9 +226,9 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - *[YYYY-MM-DD HH:MM]* — [short note]. Verification: [..]. Blockers: [..]. NEXT: [single action]
 - *2026-01-27 14:26* — DP-OPS-0005: Hardened TASK (worker git authority + dump-as-command + Work Log expectation); synced DP lint to TASK headings; added TASK gating in .github; updated SoP. Verification: RUN (dp_lint OK; context_lint warnings). Blockers: none. NEXT: validate end-to-end DP flow with a small "toy DP" and ensure gates behave as intended.
 - *2026-01-27 17:20* — DP-OPS-0004: pruned SoP into untracked museum; adjusted context_lint to ignore historical SoP refs. Verification: RUN (context_lint clean; verify_tree 4 issues; lint_truth OK). Blockers: none. NEXT: review DP-OPS-0004 results and confirm closeout.
-- *2026-01-29 10:16* — DP-OPS-0006: Added DP sanity check command and dump refiners examples in OPERATOR_MANUAL; tightened AI branch authority in CONTRIBUTING. Verification: RUN (verify_tree 4 warnings; context_lint clean). Blockers: none. NEXT: operator review + commit.
+- *2026-01-29 10:16* — DP-OPS-0006: Added DP sanity check command and dump refiners examples in MANUAL; tightened AI branch authority in CONTRIBUTING. Verification: RUN (verify_tree 4 warnings; context_lint clean). Blockers: none. NEXT: operator review + commit.
 - *2026-01-29 12:05* — DP-OPS-0007: Aligned dp_lint with TASK + removed operator-artifact prerequisite pattern + clarified storage artifact handling. Verification: RUN (tools/dp_lint.sh --test). Blockers: none. NEXT: operator review + commit.
-- *2026-01-29 13:59* — DP-OPS-0008: Relaxed dp_lint heading matching; codified DP file placement and worker receipt rule; updated OPERATOR_MANUAL; added dp_lint fixtures. Verification: RUN (dp_lint fixture ok/bad). Blockers: none. NEXT: operator review + commit.
+- *2026-01-29 13:59* — DP-OPS-0008: Relaxed dp_lint heading matching; codified DP file placement and worker receipt rule; updated MANUAL; added dp_lint fixtures. Verification: RUN (dp_lint fixture ok/bad). Blockers: none. NEXT: operator review + commit.
 - *2026-01-29 17:12* — DP-OPS-TEST: Toy DP execution on work/boot_files_update@4a0494b5. Verification: RUN. Blockers: none. NEXT: Operator review receipt completeness.
 - *2026-01-29 18:12* — DP-OPS-FIX-01: Removed authoring-time artifacts block; confirmed Section III heading format. Verification: RUN (grep -n "## III. EXECUTION PLAN" TASK.md). Blockers: none. NEXT: re-run DP-OPS-TEST.
 - *2026-01-29 18:27* — DP-OPS-FIX-01: Removed authoring-time artifacts block; confirmed Section III heading single line; created receipt and refreshed OPEN and dump artifacts. Verification: RUN (git status --porcelain; git diff; grep -n "## III. EXECUTION PLAN" TASK.md). Blockers: none. NEXT: re-run DP-OPS-TEST.

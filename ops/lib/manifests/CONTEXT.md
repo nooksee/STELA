@@ -15,9 +15,9 @@ Mandatory pre-session check: run `tools/context_lint.sh`.
 - `llms.txt` — Discovery entry point for AI agents.
 
 ## Supporting Surfaces
-- `docs/library/LIBRARY_INDEX.md` — Curated operator surface index.
-- `docs/library/OPERATOR_MANUAL.md` — Command mechanics and cheat sheet.
-- `docs/library/CONTINUITY_MAP.md` — Context wayfinding map.
+- `docs/library/INDEX.md` — Curated operator surface index.
+- `docs/library/MANUAL.md` — Command mechanics and cheat sheet.
+- `docs/library/MAP.md` — Context wayfinding map.
 - `docs/GOVERNANCE.md` — Project governance and non-negotiables.
 
 ## Verification Tools
@@ -32,6 +32,6 @@ Mandatory pre-session check: run `tools/context_lint.sh`.
 - Rollback: Re-run `ops/bin/open` and verify against this manifest.
 
 ## Canon Links
-- docs/library/OPERATOR_MANUAL.md
-- docs/library/CONTINUITY_MAP.md
+- docs/library/MANUAL.md
+- docs/library/MAP.md
 - AGENTS.md
