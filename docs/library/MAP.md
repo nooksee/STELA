@@ -1,22 +1,27 @@
-# Continuity Map (Operator Surface)
+# Continuity Map (State Persistence)
 
-Pointer-only map of the canonical continuity surfaces that preserve state and governance across stateless runs.
+## 0. Philosophy
+**The repo is stateless; the Map provides the memory.**
+This document defines the specific surfaces that must be loaded to preserve governance, history, and active intent across sessions.
 
-## 1. Governance & Logic (The Constitution)
-- **Constitution**: `TRUTH.md` — Invariants, filing doctrine, and the canonical project map.
-- **Agent Jurisdiction**: `AGENTS.md` — Behavioral logic standards and staffing protocols for Operator, Integrator, and Contractor.
-- **Discovery**: `llms.txt` — Primary entry point for AI workers to discover the truth layer.
+## 1. The Constitution (Immutable Law)
+*Rules that do not change without a governance event.*
+* **Constitution:** [`../../TRUTH.md`](../../TRUTH.md) — Invariants, filing doctrine, and structure (SSOT).
+* **Jurisdiction:** [`../../AGENTS.md`](../../AGENTS.md) — Staffing protocols and behavioral logic (Human vs AI).
+* **Discovery:** [`../../llms.txt`](../../llms.txt) — The machine-readable entry point.
 
-## 2. State Ledger (The Record)
-- **History**: `SoP.md` — The "State of Play" ledger; records what was shipped, when, and why.
-- **Active Thread**: `TASK.md` — Single living surface for current work; includes the Dispatch Packet (DP) and work log.
+## 2. The Ledger (Mutable State)
+*Living records of what has happened and what is happening.*
+* **History:** [`../../SoP.md`](../../SoP.md) — The State of Play. (What shipped, when, why).
+* **Active Contract:** [`../../TASK.md`](../../TASK.md) — The Dispatch Packet. (Current objective and work log).
 
-## 3. Wayfinding (The Manuals)
-- **Operator Entry**: `docs/library/MANUAL.md` — Primary mechanics and command cheat sheet.
-- **Curated Library**: `docs/library/INDEX.md` — Curated index of approved operator surfaces.
-- **Project Index**: `docs/INDEX.md` — The general documentation front door.
+## 3. The Interface (Wayfinding)
+*Operator-facing manuals for navigation.*
+* **Command Console:** [`MANUAL.md`](MANUAL.md) — Mechanics, cheat sheets, and top commands.
+* **Curated Index:** [`INDEX.md`](INDEX.md) — The approved library of operator guidance.
 
-## 4. State Capture & Ingestion (The Tools)
-- **Prompt Generation**: `ops/bin/open` — Generates the OPEN prompt with freshness gate and git state.
-- **State Capture**: `ops/bin/dump` — Captures repository state for agent ingestion.
-- **Context Validation**: `ops/lib/manifests/CONTEXT.md` — Canonical list of required context artifacts.
+## 4. The Bridge (Ingestion Tools)
+*Mechanisms that move state from disk to context.*
+* **Generation:** [`../../ops/bin/open`](../../ops/bin/open) — Creates the session prompt.
+* **Capture:** [`../../ops/bin/dump`](../../ops/bin/dump) — Serializes the platform.
+* **Validation:** [`../../ops/lib/manifests/CONTEXT.md`](../../ops/lib/manifests/CONTEXT.md) — The required context checklist.

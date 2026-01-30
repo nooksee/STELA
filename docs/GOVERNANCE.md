@@ -1,40 +1,38 @@
-# Governance (how Stela stays coherent)
+# Governance (Coherence & Drift Control)
 
-This project is built to resist drift.
-Governance is not “process theater” — it is the product.
+## 0. Philosophy
+**Governance is not “process theater” — it is the product.**
+This project is built to resist entropy. We value structure over memory and explicit contracts over implicit knowledge.
 
-## Non-negotiables
-- **No direct pushes to `main`.** Work happens on `work/*` branches → PRs → merge.
-- **repo-gates must pass.** If gates fail, we fix gates or the change — not the rules.
-- **Canon surfaces are authoritative.** When in doubt, `TRUTH.md` wins.
+## 1. Non-Negotiables (Hard Rules)
+* **No Direct Pushes:** `main` is read-only. Work happens on `work/*` branches → PRs → Merge.
+* **Green Gates Only:** If `repo-gates` fail, the code is wrong, not the gate.
+* **Canon Supremacy:** When in doubt, `TRUTH.md` wins.
 
-## Canon surfaces (source of truth)
-Authoritative docs (kept correct at all times):
-- `TRUTH.md` — constitution + filing doctrine + structure/map (SSOT).
-- `TASK.md` — DP contract + living work surface/log (SSOT for current thread).
-- `SoP.md` — history ledger only (what shipped, when, why).
-- `AGENTS.md` — jurisdiction definitions and behavioral logic standards.
-- `llms.txt` — discovery entry point for AI agents (pointer-first).
-- `docs/INDEX.md` — front door to the manual.
-- `docs/library/MANUAL.md` — operator mechanics; pointer-only.
+## 2. Canon Surfaces (Source of Truth)
+These files represent the immutable reality of the project.
+* `TRUTH.md` — Constitution, filing doctrine, and structure.
+* `AGENTS.md` — Jurisdiction, staffing, and logic standards.
+* `SoP.md` — The historical ledger (State of Play).
+* `TASK.md` — The active contract (DP) and work log.
+* `docs/INDEX.md` — The system root.
 
-Rule: if canon changes, **SoP must be updated** (same PR when possible).
+## 3. Change Management (The SoP Rule)
+**Rule:** You must write to `SoP.md` if (and only if) you alter **Canon** or **Governance** surfaces.
+* **Why:** We track changes to the *rules* of the system, not just the code.
+* **Routine Work:** Standard feature work in `projects/` does not require SoP entries unless it changes the platform itself.
 
-## Branch naming
-`work/<topic>-YYYY-MM-DD`
+## 4. Staffing Protocol (Jurisdiction)
+Defined strictly in `AGENTS.md`:
+* **Operator (Human):** Final authority. Owns approvals, commits, and secrets.
+* **Integrator (AI Lead):** Guardian of governance. Detects drift and maintains structure.
+* **Contractor (AI Guest):** Execution arm. Drafts logic but never commits.
 
-## Staffing Protocol
-All work follows the jurisdictional boundaries defined in `AGENTS.md`:
-- **Operator (Human):** Final authority for approvals, commits, and secrets.
-- **Integrator (Lead AI):** Guardian of governance and structural integrity.
-- **Contractor (Guest AI):** Execution arm for logic, implementation, and drafting.
+## 5. AI Engagement Protocol
+* **Logic First:** All agents must adhere to the Behavioral Logic Standards in `AGENTS.md`.
+* **DP Required:** No logic changes shall be proposed without an active Dispatch Packet (DP) in `TASK.md`.
+* **No Hallucinations:** Cite sources. Do not invent paths.
 
-## AI Contractors
-- All AI agents and contractors operate under the logic-first parameters defined in `AGENTS.md`.
-- **Execution Rule:** No logic changes shall be proposed without an active Dispatch Packet (DP) as defined in `TASK.md`.
-
-## Tone lanes (prevents "AI slop")
-- Ops lane (checklist-heavy): `ops/` and `docs/ops/INDEX.md` (pointer only).
-- Public-facing lane (human-centric): root README, founders docs.
-
-We prefer: clear, explain-first, minimal filler.
+## 6. Tone Lanes
+* **Ops Lane (`ops/`, `docs/ops/`):** Checklist-heavy, precise, dry, no-fluff.
+* **Public Lane (`README.md`):** Human-centric, explanatory, welcoming.

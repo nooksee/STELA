@@ -1,175 +1,126 @@
-# Operator Manual (Curated)
+# Operator Manual (Command Console)
 
-This manual is the operator-facing entrypoint for day-to-day commands and the curated docs library.
-It is intentionally short and maintained; if it drifts, fix it.
-
-**Canon spelling:** `Stela` (normalize voice-to-text variants before approving/merging).
+## 0. The Loop (Mechanical Workflow)
+**Execution Cycle:**
+1.  **Start:** `./ops/bin/open` (Generates prompt + freshness gate).
+2.  **Capture:** `./ops/bin/dump` (Serializes state).
+3.  **Assign:** Create DP in `TASK.md` + New Branch `work/topic-date`.
+4.  **Dispatch:** Hand DP to Worker (See Section 5).
+5.  **Review:** Verify `RECEIPT` (Proofs) vs `TASK.md` requirements.
+6.  **Close:** Merge PR + Update `SoP.md` (if Canon changed).
 
 ---
 
-## Top Commands (cheat sheet)
+## 1. Top Commands (Cheat Sheet)
 
+### Session Start (Open)
 ~~~bash
-# 1) OPEN (prints + always writes a handoff copy)
-./ops/bin/open --intent="short-intent" --dp="DP-XXXX / YYYY-MM-DD"
-./ops/bin/open --intent="short-intent" --dp="DP-XXXX / YYYY-MM-DD" --tag=boot --out=auto
+# Standard Open (Prints to stdout + saves to storage/handoff/)
+./ops/bin/open --intent="Refactor docs" --dp="DP-OPS-0050"
 
-# 2) DUMP (stdout by default; use --out=auto to write to storage/dumps/)
-./ops/bin/dump --scope=platform --format=chatgpt
+# Auto-save convenience (Adds "OPEN saved: <path>" line)
+./ops/bin/open --intent="..." --out=auto
+~~~
+
+### State Capture (Dump)
+~~~bash
+# Platform Scope (Default - Excludes projects/)
 ./ops/bin/dump --scope=platform --format=chatgpt --out=auto
-./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
-./ops/bin/dump --scope=full --format=chatgpt --out=auto   # auto-compresses to tar.xz when full+out=auto
-./ops/bin/dump --scope=platform --format=chatgpt --out=auto --compress=tar.xz
 
-# 3) HELP (front door for curated docs)
-./ops/bin/help
-./ops/bin/help continuity
+# Full Scope (Includes projects/ - auto-compressed)
+./ops/bin/dump --scope=full --format=chatgpt --out=auto
+
+# Receipt Bundle (Dump + Manifest inside tarball)
+./ops/bin/dump --scope=platform --out=auto --bundle
 ~~~
 
----
-
-## What exists where (paths you’ll reference constantly)
-
-**Canon / required by OPEN tooling (must exist from repo root):**
-- `TRUTH.md` — constitution + invariants (SSOT + filing doctrine)
-- `TASK.md` — DP contract + living work surface/log
-- `SoP.md` — history ledger (what shipped, when, why)
-- `AGENTS.md` — agent roles/expectations
-- `docs/INDEX.md` — docs map / entry index
-- `docs/library/MANUAL.md` — this file
-- `docs/library/MAP.md` — continuity wayfinding
-- `ops/lib/manifests/CONTEXT.md` — what “counts as context” + lint targets
-
-**Untracked operator/worker artifacts (never commit these):**
-- `storage/handoff/` — OPEN outputs + worker RESULTS receipts (attach from here)
-- `storage/dumps/` — dump outputs / archives (attach from here)
-
----
-
-## Staffing and logic (pointer-first)
-
-- Roles: Operator (human), Integrator (lead AI), Contractor (guest AI).
-- `AGENTS.md` is the jurisdiction spec for roles, AI constraints, and stop conditions.
-
----
-
-## Platform vs Project (scope sanity)
-
-- **Platform** = repo-resident operating system (`ops/`, `docs/`, `tools/`, governance files).
-- **Project payloads** live under `projects/*`.
-- During platform construction, default to **platform scope** (exclude project payload).
-
----
-
-## OPEN
-
-- `./ops/bin/open` prints the copy-safe Open Prompt with the freshness gate + canon pointers.
-- It **always** writes the OPEN text to:  
-  `storage/handoff/OPEN-<tag>-<branch>-<HEAD>.txt`
-- It **always** writes porcelain to:  
-  `storage/handoff/OPEN-PORCELAIN-<tag>-<branch>-<HEAD>.txt`
-- `--out=auto` adds a trailing convenience line (`OPEN saved: <path>`) after printing.
-
-Paste delimiter (when pasting raw results into chat): `---`
-
----
-
-## DP workflow (mechanical loop)
-
-1) Run `open` (or attach OPEN artifacts if already generated).  
-2) Run `dump` (choose `--scope=platform` for platform work; `--scope=full` only when needed).  
-3) Ask for a DP (or DP revision) referencing `TASK.md` as the template/SSOT.  
-4) Create/switch to the DP’s branch (operator-controlled).  
-5) Hand DP to worker; worker executes.  
-6) Worker returns REQUIRED OUTPUT + RECEIPT (proof bundle).  
-7) Operator decides: whether to diasapprove (with patch steps) or approve.  
-8) If disapproves: re-dispatch patch; worker re-runs verification + regenerates receipt.  
-9) Merge.  
-10) Ensure merge-gated canon updates (e.g., `SoP.md`, `TASK.md` log append) are present.
-
----
-
-## DP lint (dp_lint.sh)
-
-Use the DP lint to validate Dispatch Packet shape before dispatching.
-
+### Documentation (Help)
 ~~~bash
-./tools/dp_lint.sh --test
-./tools/dp_lint.sh path/to/DP.md
-./tools/dp_lint.sh - < path/to/DP.md
-bash tools/dp_lint.sh storage/handoff/<DP-ID>.md
+./ops/bin/help              # Show menu
+./ops/bin/help continuity   # Grep docs for "continuity"
 ~~~
 
-Notes:
-- Lint is mechanical; it enforces the current TASK.md DP headings/order and required fields.
-- It should fail on non-DP documents.
-
-DP file placement (operator):
-- Draft DPs live under `storage/dp/intake/`.
-- Move or copy completed DPs to `storage/dp/processed/` (untracked).
-- Workers lint against the local DP file path, for example: `./tools/dp_lint.sh storage/dp/intake/DP-OPS-0008.md`.
-
----
-
-## Dump refiners (guardrail)
-
-Dump refiners (`--include-dir`, `--exclude-dir`, `--ignore-file`) are allowed only when explicitly justified in the DP.
-When used, the DP must include this fallback line:
-
-`Fallback: ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`
-
-Narrow dumps should be explicit and minimal. Examples:
-
+### Validation (Lint)
 ~~~bash
-./ops/bin/dump --scope=platform --format=chatgpt --out=auto --include-dir=docs/library --exclude-dir=projects
-./ops/bin/dump --scope=platform --format=chatgpt --out=auto --ignore-file=.gitignore
+# Validate DP format before dispatch
+./tools/dp_lint.sh storage/dp/intake/DP-OPS-0050.md
+
+# Validate Context consistency
+./tools/context_lint.sh
 ~~~
 
 ---
 
-## When to DISAPPROVE
+## 2. Dispatch Packet (DP) Mechanics
+**Placement:**
+* Drafts: `storage/dp/intake/`
+* Processed: `storage/dp/processed/`
 
-- Missing proof bundle required by `TASK.md`.
-- Missing RECEIPT or missing results file.
-- Forbidden path touched or scope mismatch.
-- Verification missing or failed.
-- Claims don’t match diffs/stat.
-
----
-
-## Branch protection
-
-Enable branch protection on `main` in GitHub settings.
+**Disapproval Triggers (When to Reject):**
+* ❌ Missing `RECEIPT` (Proof Bundle).
+* ❌ Verification steps reported as "NOT RUN".
+* ❌ `git diff --stat` does not match the claims.
+* ❌ Forbidden scope touched (Drift).
 
 ---
 
-## What workers must return (SSOT: `TASK.md`)
-
-Use `TASK.md` for the required worker outputs, proof bundle items, and RESULTS headings.
-This manual expects a results file under `storage/handoff/<DP-ID>-RESULTS.md` and receipt pointers to OPEN + DUMP artifacts.
-
----
-
-## Dump
-
-`./ops/bin/dump` emits a repo dump (stdout by default). Use `--out=auto` to write into `storage/dumps/`.
-
-Scopes:
-- `--scope=platform` (default; excludes `projects/*`)
-- `--scope=full` (full repo scope)
-- `--scope=project --target=<slug>` (platform + one project payload)
-
-Archive output:
-- `--compress=tar.xz` requires `--out`.
-- `--bundle` implies tar.xz output and bundles dump + manifest.
-
-Auto-compress default:
-- For `--scope=full` with `--out=auto` and no explicit `--compress`, `--compress=tar.xz` is assumed.
+## 3. Scope Definition
+* **Platform:** `ops/`, `docs/`, `tools/`, `.github/`. (The OS).
+* **Project:** `projects/`. (The Payload).
+* **Rule:** Default to `--scope=platform` unless the DP explicitly targets a project.
 
 ---
 
-## Help
+## 4. Key Paths (Reference)
+* **Constitution:** [`../../TRUTH.md`](../../TRUTH.md)
+* **Active Contract:** [`../../TASK.md`](../../TASK.md)
+* **History:** [`../../SoP.md`](../../SoP.md)
+* **Artifacts:** `storage/handoff/` (Results), `storage/dumps/` (State).
 
-`./ops/bin/help` is the operator front door for curated docs.
-- `./ops/bin/help` shows the command menu and quick start.
-- `./ops/bin/help <term>` searches `docs/` with line numbers.
+---
+
+## 5. AI Interaction Protocols (Mode Switching)
+*To prevent logic drift, explicitly set the AI's "mode" at the start of a session. Use these templates to lock in the correct jurisdiction and context.*
+
+### Mode 1: Refresh + Discuss (Analyst Stance)
+**Use when:** Starting fresh or analyzing without editing. Locks the AI into a read-only, advisory role.
+**Attach:** `OPEN` + `dump`.
+
+SEE ATTACHED: OPEN + repo dump. Refresh state.
+PREPARE TO DISCUSS: <topic>.
+Use attached files as ground truth.
+Discussion only (no edits, no DP, no commands).
+
+### Mode 2: Refresh + Draft DP (Architect Stance)
+**Use when:** Creating a new Dispatch Packet. Enforces `TASK.md` structure and prevents hallucinated requirements.
+**Attach:** `OPEN` + `dump` + `plan.md`.
+
+SEE ATTACHED: OPEN + repo dump. Refresh state.
+DRAFT <DP-ID> from the attached <summary-file>.
+- Use the dump branch + freshness (Base HEAD) exactly as shown in the dump/OPEN.
+- Strictly use the headings + order in TASK.md (including closing headings).
+- Output ONLY the DP.
+- Do not add/rename sections.
+- If required inputs are missing, STOP and ask only for the missing items.
+
+### Mode 3: Refresh + Conform DP (Hygiene Stance)
+**Use when:** Updating an old DP to the current template.
+**Attach:** `OPEN` + `dump` + `Old-DP.md`.
+
+SEE ATTACHED: OPEN + repo dump. Refresh state.
+CONFORM <DP-ID> TO CURRENT TASK.md — INTENT UNCHANGED.
+- Use the dump branch + freshness (Base HEAD) exactly as shown in the dump/OPEN.
+- Strictly use the headings + order in TASK.md.
+- Output ONLY the DP.
+
+### Mode 4: Refresh + Audit (Gatekeeper Stance)
+**Use when:** Validating worker output before merge. Forces a binary PASS/FAIL decision based on evidence.
+**Attach:** `RESULTS.md` + `OPEN` + `dump` + `manifest`.
+
+SEE ATTACHED: RESULTS + OPEN + OPEN-PORCELAIN + dump + dump manifest. Refresh state.
+AUDIT: Does <DP-ID> meet spec?
+- receipt complete
+- allowlist respected
+- proofs present
+- verification present
+If anything is missing/incorrect: DISAPPROVE and issue a patch request.

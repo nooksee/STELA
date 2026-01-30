@@ -2,56 +2,43 @@
 
 This repo is governed. The fastest way to succeed here is to follow the rules *exactly*.
 
-## First steps (Operator Onboarding)
+## 1. Onboarding (Read-in Order)
+**Operators (Human):**
+1. `TRUTH.md` — The Constitution (Filing Doctrine + Structure).
+2. `SoP.md` — The History Ledger (State of Play).
+3. `TASK.md` — The Active Work Surface (Current Objective).
+4. `docs/library/MANUAL.md` — Command Reference.
 
-1) TRUTH.md (Filing Doctrine + Constitution + Structure/Map)
-2) SoP.md
-3) TASK.md
-4) docs/INDEX.md
-5) docs/library/MANUAL.md 
+**Agents (AI):**
+- Follow the jurisdictional read-in sequence defined in `AGENTS.md`.
 
-Note: AI workers follow the specialized read-in sequences defined in AGENTS.md or .github/copilot-instructions.md.
+## 2. Workflow Doctrine (Non-Negotiables)
+* **PR-Only:** No direct pushes to `main`. Ever.
+* **Repo Gates:** All CI checks must pass before merge.
+* **One Slice:** One topic per PR.
 
-## Workflow doctrine (non-negotiable)
-- One slice per PR.
-- Green checks before merge (repo-gates).
-- Metadata Surfaces (always-on): Purpose / What shipped / Verification / Risk+Rollback.
-- If there’s a PR, there’s a `SoP.md` entry.
+## 3. The SoP Rule (History Ledger)
+**Rule:** You only write to `SoP.md` if you alter **Canon** or **Governance**.
+* **Canon:** `TRUTH.md`, `TASK.md`, `ops/`, `docs/`, `.github/`.
+* **Logic:** If you change the rules of the system, you must log the state change.
+* **Routine Work:** Standard code changes in `projects/` do *not* require an SoP entry unless they fundamentally shift the platform.
 
-## The only workflow we use (PR-only)
-**Rule:** No direct pushes to `main`. Ever.
+## 4. Standard Workflow
+1.  **Check State:** Ensure `main` is clean.
+2.  **Branch:** `work/<topic>-YYYY-MM-DD`
+3.  **Edit & Commit:** Small, descriptive commits.
+4.  **Push & PR:** Open PR → Pass Gates → Merge.
 
-1) **Start clean**: check Git Status (IDE) — you want “nothing to commit”.
-2) **Create a work branch**: `work/<topic>-YYYY-MM-DD`
-3) **Edit** in IDE.
-4) **Review changes** (diff) in IDE.
-5) **Commit** (small, descriptive message).
-6) **Push** your branch.
-7) **Open PR** → repo-gates ✅ → merge → delete branch.
+## 5. Commit Taxonomy
+* `docs:` Documentation changes.
+* `ci:` Workflow / repo-gates / tooling.
+* `chore:` Housekeeping / dependencies.
+* `feat:` New capabilities.
+* `fix:` Bug remediation.
 
-## Commit message style
-Use a simple prefix:
-- `docs:` documentation changes
-- `ci:` workflow / repo-gates changes
-- `chore:` housekeeping
-- `feat:` new feature
-- `fix:` bug fix
-
-Examples:
-- `docs: add governance + quickstart`
-- `ci: enforce SoP update when canon changes`
-
-## Where things live (mental model)
-- `main` = the locked classroom whiteboard
-- `work/*` = your notebook
-- `docs/` = project manual that points into ops canon
-- `ops/` = system operations
-- `.github/` = governance (repo-gates, PR templates, Copilot instructions)
-
-## IDE-only comfort path (no terminal required)
-- **Status / Diff:** Team → Git → Show Changes
-- **Commit:** Team → Commit…
-- **Push:** Team → Remote → Push…
-- **Pull:** Team → Remote → Pull…
-
-If anything feels risky: stop and re-read `TRUTH.md` and `SoP.md`. `SoP.md` shows what shipped most recently.
+## 6. Mental Model (Where things live)
+* `main` — The locked production state.
+* `work/*` — The active notebook (scratchpad).
+* `ops/` — The operating system (binaries + registry).
+* `docs/` — The manual (points into ops).
+* `projects/` — The work payloads.

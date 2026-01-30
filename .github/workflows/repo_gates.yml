@@ -17,3 +17,7 @@ jobs:
 
       - name: Truth lint (authored surfaces)
         run: bash tools/lint_truth.sh
+
+      # NEW: Enforce Library Registry
+      - name: Library Guard
+        run: bash tools/lint_library.sh
