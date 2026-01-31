@@ -43,6 +43,7 @@ Canon surface definitions live in `TRUTH.md`.
 ---
 
 ## 2) CURRENT DISPATCH PACKET (DP) — STELA STANDARD (A–E)
+**Formatting rule:** When emitted in chat, the entire DP must be enclosed in a single fenced code block (start to end).
 # DP-OPS-[ID]: [TITLE]
 
 ## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)
@@ -233,3 +234,4 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - *2026-01-29 18:12* — DP-OPS-FIX-01: Removed authoring-time artifacts block; confirmed Section III heading format. Verification: RUN (grep -n "## III. EXECUTION PLAN" TASK.md). Blockers: none. NEXT: re-run DP-OPS-TEST.
 - *2026-01-29 18:27* — DP-OPS-FIX-01: Removed authoring-time artifacts block; confirmed Section III heading single line; created receipt and refreshed OPEN and dump artifacts. Verification: RUN (git status --porcelain; git diff; grep -n "## III. EXECUTION PLAN" TASK.md). Blockers: none. NEXT: re-run DP-OPS-TEST.
 - *2026-01-29 18:41* — DP-OPS-FIX-01: Added scope lock for canon changes; required RESULTS Status block; refreshed receipt. Verification: RUN (git status --porcelain; git diff --name-only; git diff --stat; git diff; grep -n "## III. EXECUTION PLAN" TASK.md). Blockers: none. NEXT: re-run DP-OPS-TEST.
+- *2026-01-31 11:37* — DP-OPS-0009: Added DP code-fence formatting rule in TASK and logged the change in SoP. Verification: RUN (dump; context_lint; lint_truth). Blockers: none. NEXT: operator review + commit.
