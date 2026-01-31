@@ -74,7 +74,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - What shipped:
   - Added Integrator Phase Discipline rules (conformance-first, phase-locked outputs, receipt bundle always) to `TRUTH.md`.
   - Added Integrator Phase Discipline operator phrases, hard stops, and decision table to `docs/library/MANUAL.md`.
-  - Updated M-PHASE-01 to "Conformance First, Creativity After" with triggers in `docs/library/MEMENTOS.md`.
+  - Updated M-PHASE-01 to "Conformance First, Creativity After" with triggers in `docs/library/[DELETED].md`.
 - Verification:
   - `bash tools/context_lint.sh`
   - Result: `[context_lint] Result: clean`
@@ -82,7 +82,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - Result: `[lint_truth] OK`
 - Risk / rollback:
   - Risk: Low (docs-only guidance updates).
-  - Rollback: revert `TRUTH.md`, `docs/library/MANUAL.md`, `docs/library/MEMENTOS.md`, and `SoP.md`.
+  - Rollback: revert `TRUTH.md`, `docs/library/MANUAL.md`, `docs/library/[DELETED].md`, and `SoP.md`.
 
 ## 2026-01-21 — DP-OPS-0050: Stelae Governance (Keep It Useful, Keep It Rare)
 
@@ -148,7 +148,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - Result: `/bin/bash: line 1: ./ops/bin/lint_truth.sh: No such file or directory`
 - Risk / rollback:
   - Risk: Medium-low (workflow wording could be misread; primary risk is operator confusion if phrasing drifts).
-  - Rollback: revert `docs/library/MANUAL.md`, `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`, `docs/library/MEMENTOS.md`, and `SoP.md`.
+  - Rollback: revert `docs/library/MANUAL.md`, `ops/contracts/OUTPUT_FORMAT_CONTRACT.md`, `docs/library/[DELETED].md`, and `SoP.md`.
 
 ## 2026-01-21 — DP-OPS-0048D: Dispatch Packet template heading linter
 
@@ -263,12 +263,12 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - What shipped:
   - Added Naming / Identity section to `TRUTH.md` defining STELA, Stela legacy label, and no-churn policy.
   - Added a short STELA note in the operator manual and a minimal naming doc with anti-drift bullets.
-  - Added a single MEMENTOS clarification line about naming vs canon/contracts.
+  - Added a single [DELETED] clarification line about naming vs canon/contracts.
   - Registered the STELA naming doc in `docs/INDEX.md`.
 - Verification:
   - `bash tools/context_lint.sh`
   - `bash tools/lint_truth.sh`
-  - `rg -n "(STELA|Stela|Nuke CE)" TRUTH.md SoP.md docs/library/MANUAL.md docs/library/MEMENTOS.md docs/library/STELA_NAMING.md docs/INDEX.md`
+  - `rg -n "(STELA|Stela|Nuke CE)" TRUTH.md SoP.md docs/library/MANUAL.md docs/library/[DELETED].md docs/library/STELA_NAMING.md docs/INDEX.md`
   - `git diff --name-only`
 - Risk / rollback:
   - Risk: Low; doc-only naming alignment.
@@ -359,19 +359,19 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - Risk: Low to medium-low; tighter constraints may slow work if wording is misread.
   - Rollback: revert the touched files to the pre-DP-OPS-0038 state.
 
-## 2026-01-16 — DP-OPS-0037: MEMENTOS artifacts + interpretation/tone tightening
+## 2026-01-16 — DP-OPS-0037: [DELETED] artifacts + interpretation/tone tightening
 
-- Purpose: Harden MEMENTOS SSOT with quoteable artifacts, remove ambiguity in multi-interpretation handling, and calibrate tone guidance.
+- Purpose: Harden [DELETED] SSOT with quoteable artifacts, remove ambiguity in multi-interpretation handling, and calibrate tone guidance.
 - What shipped:
-  - Added one-line artifacts for M-ATTN-01, M-COMMIT-01, M-HANDOFF-01, and M-EMIT-01 under the MEMENTOS index.
+  - Added one-line artifacts for M-ATTN-01, M-COMMIT-01, M-HANDOFF-01, and M-EMIT-01 under the [DELETED] index.
   - Replaced the multi-interpretation handling rule to require enumeration plus operator choice unless canon/inputs determine the answer.
   - Updated tone guidance to default to calm, precise language and avoid cheerleading or implied authority.
 - Verification:
   - `bash tools/context_lint.sh`
-  - `rg -n "M-ATTN-01|M-COMMIT-01|M-HANDOFF-01|M-EMIT-01" docs/library/MEMENTOS.md`
+  - `rg -n "M-ATTN-01|M-COMMIT-01|M-HANDOFF-01|M-EMIT-01" docs/library/[DELETED].md`
 - Risk / rollback:
-  - Risk: Low. MEMENTOS become more explicit; may slightly change stop/ask behavior in edge cases.
-  - Rollback: revert `docs/library/MEMENTOS.md` and `SoP.md` to pre-DP-OPS-0037 state.
+  - Risk: Low. [DELETED] become more explicit; may slightly change stop/ask behavior in edge cases.
+  - Rollback: revert `docs/library/[DELETED].md` and `SoP.md` to pre-DP-OPS-0037 state.
 
 ## 2026-01-16 — DP-OPS-0035: RECEIPT rename + DP Risk / Rollback requirement
 
@@ -453,13 +453,13 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - Risk: Low; output text + docs note only.
   - Rollback: revert `ops/bin/open`, `TRUTH.md`, `docs/library/MANUAL.md`, and this entry.
 
-## 2026-01-15 — DP-OPS-0031: MEMENTOS strategic placement
+## 2026-01-15 — DP-OPS-0031: [DELETED] strategic placement
 
-- Purpose: Place a small set of inference-timed MEMENTOS and pointers without duplication.
+- Purpose: Place a small set of inference-timed [DELETED] and pointers without duplication.
 - What shipped:
-  - Added a MEMENTO index and updated placement references in `docs/library/MEMENTOS.md`.
+  - Added a MEMENTO index and updated placement references in `docs/library/[DELETED].md`.
 - Verification:
-  - `rg -n "M-ATTN-01|M-COMMIT-01|M-HANDOFF-01|M-EMIT-01" docs/library/MEMENTOS.md`
+  - `rg -n "M-ATTN-01|M-COMMIT-01|M-HANDOFF-01|M-EMIT-01" docs/library/[DELETED].md`
   - `git diff --name-only`
 - Risk / rollback:
   - Risk: Low; docs-only pointer/index changes.
