@@ -1,5 +1,19 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-2026-01-27.md`.
 
+## 2026-01-31 — DP-OPS-0009: DP output code-fence rule
+
+- Purpose: Require DP drafts to be fully fenced in chat to improve readability/discoverability and reduce formatting drift.
+- What shipped:
+  - Added a single formatting rule line in the TASK DP template requiring full fenced code block enclosure for DP emissions.
+  - Logged the governance/template change in SoP per canon-change policy.
+- Verification:
+  - `./ops/bin/dump --scope=platform`
+  - `bash tools/context_lint.sh`
+  - `bash tools/lint_truth.sh`
+- Risk / rollback:
+  - Risk: Low (TASK template line + SoP entry).
+  - Rollback: revert `TASK.md` and `SoP.md`.
+
 ## 2026-01-29 — DP-OPS-FIX-01: TASK heading sync + authoring-time artifacts removal
 
 - Purpose: Align TASK Section III heading format and remove the authoring-time artifacts block to reduce dp_lint friction.
