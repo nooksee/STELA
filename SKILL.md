@@ -4,6 +4,11 @@
 
 This file is the operator-facing promotion template for creating new S-LEARN-XX skills. Use `ops/lib/skill/skill_lib.sh` to append candidates and generate Promotion Packets.
 
+## Harvest Engine workflow
+- `ops/lib/skill/skill_lib.sh harvest` creates a draft in `storage/handoff/`.
+- `ops/lib/skill/skill_lib.sh promote` promotes a draft into `docs/library/skills/S-LEARN-XX.md` and registers it in `docs/library/INDEX.md`.
+- `ops/lib/skill/skill_lib.sh check` enforces the Skills Context Hazard against `ops/lib/manifests/CONTEXT.md`.
+
 ## Promotion Packet Template
 ```md
 ### Promotion Packet: S-LEARN-XX - ENTER_SKILL_TITLE
@@ -51,6 +56,27 @@ This file is the operator-facing promotion template for creating new S-LEARN-XX 
   - bash tools/lint_library.sh
   - bash tools/verify_tree.sh
 
+<a id="promotion-packet-s-learn-07"></a>
+### Promotion Packet: S-LEARN-07 - Harvest and Promote Skills at DP Closeout
+- Candidate name: Harvest and Promote Skills at DP Closeout
+- Proposed Skill ID: S-LEARN-07 (rule: choose the next available numeric ID not already present in docs/library/skills or registered in docs/library/INDEX.md)
+- Scope: production payloads only; not platform maintenance
+- Invocation guidance: Use this skill when a DP explicitly requests Harvest and Promote Skills at DP Closeout. Apply the solution as documented in docs/library/skills/S-LEARN-07.md.
+- Drift preventers:
+  - Stop conditions: Stop if the DP scope is platform maintenance or if the DP does not explicitly request this skill
+  - Anti-hallucination: Use repo files as SSOT and stop if required inputs are missing
+  - Negative check: Do not add Skills to ops/lib/manifests/CONTEXT.md
+- Definition of Done:
+  - S-LEARN-07 created under docs/library/skills and matches scope and drift preventers
+  - docs/library/INDEX.md updated with a stable topic key and correct path
+  - SoP.md updated if canon or governance surfaces changed
+  - Proof bundle updated in storage/handoff with diff outputs
+- Verification (capture command output in RESULTS):
+  - ./ops/bin/dump --scope=platform
+  - bash tools/context_lint.sh
+  - bash tools/lint_truth.sh (required when canon or governance surfaces change)
+  - bash tools/lint_library.sh
+  - bash tools/verify_tree.sh
 ## Candidate Log (append-only)
 Append new candidates using `ops/lib/skill/skill_lib.sh`. Each entry must be timestamped and include Name, Context, Solution, plus a pointer to the generated Promotion Packet.
 
@@ -58,3 +84,11 @@ Append new candidates using `ops/lib/skill/skill_lib.sh`. Each entry must be tim
   - Name: dp-ops-0010-lesson
   - Context: Captured lesson learned from DP-OPS-0010 work
   - Solution: Concrete guidance to avoid recurrence or improve speed/quality
+
+- 2026-02-01 16:26:48 UTC - [Promotion Packet](#promotion-packet-s-learn-07)
+  - Name: Harvest and Promote Skills at DP Closeout
+  - Context: a DP requires skill capture and a reusable workflow must be captured during closeout
+  - Solution: run the harvest command to create a draft, refine it for accuracy, promote it into docs/library/skills, update docs/library/INDEX.md, and record proof in RESULTS
+## Promotion Log (append-only)
+Append entries are added by `ops/lib/skill/skill_lib.sh promote` and record completed promotions.
+- 2026-02-01 16:26:48 UTC - Promoted S-LEARN-07 - Harvest and Promote Skills at DP Closeout -> docs/library/skills/S-LEARN-07.md

@@ -21,6 +21,7 @@ All AI agents contributing to this repository shall adhere to these parameters:
 * **Logic Conflict Resolution:** If a task violates TRUTH.md invariants or standards, cease operations until the Operator redefines parameters.
 * **Equilibrium Maintenance:** A task is considered complete only when the system state reaches equilibrium and SoP.md is updated.
 * **Reuse-First Discipline:** Cross-reference all proposals against existing templates in the ops/ directory before creating new artifacts.
+* **Contractor Closeout Skill Harvesting:** Upon DP closeout, propose a reusable skill via harvesting when the DP is a production payload DP or when the DP explicitly requests skill capture. Stop if the DP scope is platform maintenance and no explicit skill request exists.
 
 ## 3. Hard Constraints (SSOT)
 * TRUTH.md

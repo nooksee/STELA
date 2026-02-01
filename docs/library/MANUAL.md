@@ -49,6 +49,20 @@
 ./tools/context_lint.sh
 ~~~
 
+### Skills (Harvest + Promote)
+Skills remain on-demand only and must not be placed in `ops/lib/manifests/CONTEXT.md`.
+
+~~~bash
+# Enforce Skills Context Hazard
+ops/lib/skill/skill_lib.sh check
+
+# Draft a skill candidate
+ops/lib/skill/skill_lib.sh harvest --name "skill-title" --context "when to use it" --solution "what to do"
+
+# Promote the draft into docs/library/skills and register it
+ops/lib/skill/skill_lib.sh promote storage/handoff/skill-draft-YYYYMMDD-HHMMSS-skill-title.md
+~~~
+
 ---
 
 ## 2. Dispatch Packet (DP) Mechanics
