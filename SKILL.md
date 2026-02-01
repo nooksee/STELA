@@ -4,13 +4,6 @@
 
 This file is the operator-facing promotion template for creating new S-LEARN-XX skills. Use `ops/lib/skill/skill_lib.sh` to append candidates and generate Promotion Packets.
 
-## Candidate Log (append-only)
-Append new candidates using `ops/lib/skill/skill_lib.sh`. Each entry must be timestamped and include Name, Context, Solution, plus a pointer to the generated Promotion Packet.
-
-- 2026-02-01 05:29:25 UTC - [Promotion Packet](#promotion-packet-s-learn-06)
-  - Name: dp-ops-0010-lesson
-  - Context: Captured lesson learned from DP-OPS-0010 work
-  - Solution: Concrete guidance to avoid recurrence or improve speed/quality
 ## Promotion Packet Template
 ```md
 ### Promotion Packet: S-LEARN-XX - ENTER_SKILL_TITLE
@@ -57,3 +50,11 @@ Append new candidates using `ops/lib/skill/skill_lib.sh`. Each entry must be tim
   - bash tools/lint_truth.sh (required when canon or governance surfaces change)
   - bash tools/lint_library.sh
   - bash tools/verify_tree.sh
+
+## Candidate Log (append-only)
+Append new candidates using `ops/lib/skill/skill_lib.sh`. Each entry must be timestamped and include Name, Context, Solution, plus a pointer to the generated Promotion Packet.
+
+- 2026-02-01 05:29:25 UTC - [Promotion Packet](#promotion-packet-s-learn-06)
+  - Name: dp-ops-0010-lesson
+  - Context: Captured lesson learned from DP-OPS-0010 work
+  - Solution: Concrete guidance to avoid recurrence or improve speed/quality
