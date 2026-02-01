@@ -25,3 +25,11 @@ docs-front-door     | Docs Root Index           | docs/INDEX.md
 ops-subsystem       | Ops Engine Room           | docs/ops/INDEX.md
 context-spec        | Context Rehydration       | docs/CONTEXT.md
 security-ops        | Security Operations       | docs/security/README.md
+
+# --- 5. Skills (Production Payloads / On-Demand) ---
+skills-template     | Skills Promotion Template | SKILL.md
+skill-s-learn-01    | Skill: Verification Loop  | docs/library/skills/S-LEARN-01.md
+skill-s-learn-02    | Skill: Project Guidelines | docs/library/skills/S-LEARN-02.md
+skill-s-learn-03    | Skill: Zenith Reference   | docs/library/skills/S-LEARN-03.md
+skill-s-learn-04    | Skill: Coding Standards   | docs/library/skills/S-LEARN-04.md
+skill-s-learn-05    | Skill: Security Protocols | docs/library/skills/S-LEARN-05.md

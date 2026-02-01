@@ -1,5 +1,26 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-2026-01-27.md`.
 
+## 2026-01-31 — DP-OPS-0010: Skills subsystem and skill capture
+
+- Purpose: Establish a Skills subsystem for production payload work with explicit Context Hazard and a worker-run capture step.
+- What shipped:
+  - Added `SKILL.md` as the promotion template for creating new S-LEARN-XX skills, including Context Hazard rules, candidate log, and promotion packet template.
+  - Added `docs/library/skills` with S-LEARN-01 through S-LEARN-05 for on-demand production payload guidance.
+  - Added `ops/lib/skill/skill_lib.sh` to append candidate entries and matching Promotion Packets to `SKILL.md`.
+  - Updated `TASK.md` to require worker-run skill capture during normal DP processing, including allowlist and RESULTS proof rules.
+  - Updated `docs/library/INDEX.md` to register Skills artifacts for Library Guard.
+  - Recorded the Context Hazard decision to keep Skills out of `ops/lib/manifests/CONTEXT.md`.
+- Verification:
+  - `./ops/bin/dump --scope=platform`
+  - `bash tools/context_lint.sh`
+  - `bash tools/lint_truth.sh`
+  - `bash tools/lint_library.sh`
+  - `bash tools/verify_tree.sh`
+  - `bash tools/dp_lint.sh --test`
+- Risk / rollback:
+  - Risk: Medium (new workflow and capture utility).
+  - Rollback: revert `SKILL.md`, `docs/library/skills/`, `ops/lib/skill/skill_lib.sh`, `docs/library/INDEX.md`, `TASK.md`, and `SoP.md`.
+
 ## 2026-01-31 — DP-OPS-0009: DP output code-fence rule
 
 - Purpose: Require DP drafts to be fully fenced in chat to improve readability/discoverability and reduce formatting drift.
