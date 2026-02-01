@@ -1,5 +1,24 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-2026-01-27.md`.
 
+## 2026-02-01 — DP-OPS-0011: Autonomous Skill Harvesting Engine
+
+- Purpose: Upgrade the skill harvesting workflow with provenance capture, draft promotion, and Skills Context Hazard enforcement.
+- What shipped:
+  - Refactored `ops/lib/skill/skill_lib.sh` with harvest/promote/check subcommands, provenance capture, draft handling, collision-safe ID allocation (including `SKILL.md`), and context hazard enforcement.
+  - Documented the harvest workflow and promotion log in `SKILL.md`.
+  - Updated `TASK.md`, `AGENTS.md`, and `docs/library/MANUAL.md` to document the workflow and closeout responsibilities.
+  - Added `docs/library/skills/S-LEARN-07.md` and registered it in `docs/library/INDEX.md`.
+- Verification:
+  - `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`
+  - `bash tools/context_lint.sh`
+  - `bash tools/lint_truth.sh`
+  - `bash tools/lint_library.sh`
+  - `bash tools/verify_tree.sh`
+  - `bash tools/dp_lint.sh --test`
+- Risk / rollback:
+  - Risk: Medium (new skill workflow automation and canon updates).
+  - Rollback: revert `ops/lib/skill/skill_lib.sh`, `SKILL.md`, `TASK.md`, `AGENTS.md`, `docs/library/MANUAL.md`, `docs/library/INDEX.md`, `docs/library/skills/S-LEARN-07.md`, and `SoP.md`.
+
 ## 2026-01-31 — DP-OPS-0010: Skills subsystem and skill capture
 
 - Purpose: Establish a Skills subsystem for production payload work with explicit Context Hazard and a worker-run capture step.

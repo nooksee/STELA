@@ -146,9 +146,13 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
   - If not found and required: **STOP** and ask (do not invent a substitute)
 
 #### Skill capture (required during normal DP processing)
-- Run `ops/lib/skill/skill_lib.sh` at least once to capture a lesson learned from the DP work.
+- Default workflow: run `ops/lib/skill/skill_lib.sh harvest` to create a draft, review the candidate, then either promote with `ops/lib/skill/skill_lib.sh promote <draft_path>` or log "no new skill promoted" with a rationale in RESULTS.
+- Legacy capture is permitted when explicitly requested by the DP or when harvest is not applicable. Use `ops/lib/skill/skill_lib.sh "name" "context" "solution"` and record the reason in RESULTS.
 - If a DP requires skill capture, the DP Target Files allowlist must include `SKILL.md`.
-- The worker must include proof in RESULTS (command invoked plus grep evidence).
+- Proof required in RESULTS:
+  - Harvest-only: command invoked plus draft path and `ls storage/handoff/` output.
+  - Promotion: command invoked plus `grep -n "Promotion Packet:" SKILL.md` and `grep -n "docs/library/skills/S-LEARN-" docs/library/INDEX.md`.
+  - Legacy capture: command invoked plus `grep -n "Promotion Packet:" SKILL.md`.
 
 #### Artifact bundle (required directory)
 - `storage/handoff/`
@@ -241,3 +245,4 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - *2026-01-29 18:41* — DP-OPS-FIX-01: Added scope lock for canon changes; required RESULTS Status block; refreshed receipt. Verification: RUN (git status --porcelain; git diff --name-only; git diff --stat; git diff; grep -n "## III. EXECUTION PLAN" TASK.md). Blockers: none. NEXT: re-run DP-OPS-TEST.
 - *2026-01-31 11:37* — DP-OPS-0009: Added DP code-fence formatting rule in TASK and logged the change in SoP. Verification: RUN (dump; context_lint; lint_truth). Blockers: none. NEXT: operator review + commit.
 - *2026-02-01 05:30* — DP-OPS-0010: Established Skills subsystem (SKILL.md + S-LEARN-01..05) and worker skill capture utility; updated TASK + library index + SoP. Verification: RUN (dump; context_lint; lint_truth; lint_library; verify_tree WARN; dp_lint --test). Blockers: none. NEXT: operator review + commit.
+- *2026-02-01 16:30* — DP-OPS-0011: Added harvest/promote/check workflow to skill_lib, updated canon docs, and promoted S-LEARN-07. Verification: RUN (dump bundle; context_lint; lint_truth; lint_library; verify_tree WARN; dp_lint --test; skill_lib check). Blockers: none. NEXT: operator review + commit.
