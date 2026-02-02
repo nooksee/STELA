@@ -1,5 +1,19 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-2026-01-27.md`.
 
+## 2026-02-02 — DP-OPS-0013: Legacy Skill Refactor (Museum Provenance)
+
+- Purpose: Refactor legacy skills S-LEARN-01 through S-LEARN-05 to align with the S-LEARN-07 template and add Museum Provenance.
+- What shipped:
+  - Updated S-LEARN-01 through S-LEARN-05 with Museum Provenance and Friction Context.
+  - Standardized headers and procedure structure to match S-LEARN-07 and rewrote guidance with Trap/Solution specificity.
+- Verification:
+  - `./ops/bin/dump --scope=platform`
+  - `bash tools/context_lint.sh`
+  - `bash tools/lint_truth.sh`
+- Risk / rollback:
+  - Risk: Low (documentation-only skill refactor).
+  - Rollback: revert `docs/library/skills/S-LEARN-01.md` through `docs/library/skills/S-LEARN-05.md` and `SoP.md`.
+
 ## 2026-02-01 — DP-OPS-0012: Autonomous Skill Heuristics and Provenance Engine (Phase 2)
 
 - Purpose: Upgrade the Skills Subsystem with heuristics-driven provenance, semantic drift guard, and the harvest lifecycle refinements.
