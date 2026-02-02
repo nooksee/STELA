@@ -34,3 +34,4 @@ skill-s-learn-03    | Skill: Zenith Reference   | docs/library/skills/S-LEARN-03
 skill-s-learn-04    | Skill: Coding Standards   | docs/library/skills/S-LEARN-04.md
 skill-s-learn-05    | Skill: Security Protocols | docs/library/skills/S-LEARN-05.md
 skill-s-learn-07 | Skill: Harvest and Promote Skills at DP Closeout | docs/library/skills/S-LEARN-07.md
+skill-s-learn-08 | Skill: Advanced Git Forensics | docs/library/skills/S-LEARN-08.md

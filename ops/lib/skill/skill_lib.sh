@@ -9,11 +9,22 @@ TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
 SKILLS_DIR="${REPO_ROOT}/docs/library/skills"
 HANDOFF_DIR="${REPO_ROOT}/storage/handoff"
+HEURISTICS_LIB="${SCRIPT_DIR}/heuristics.sh"
+
+if [[ -f "$HEURISTICS_LIB" ]]; then
+  # shellcheck source=/dev/null
+  source "$HEURISTICS_LIB"
+else
+  detect_hot_zone() { echo "None"; }
+  detect_high_churn() { echo "None"; }
+  generate_provenance_block() { echo "## Provenance"; }
+  check_semantic_collision() { return 0; }
+fi
 
 usage() {
   cat <<'USAGE'
 Usage:
-  ops/lib/skill/skill_lib.sh harvest|--harvest [--name "..."] [--context "..."] [--solution "..."] [--context-stdin | --solution-stdin]
+  ops/lib/skill/skill_lib.sh harvest|--harvest [--name "..."] [--context "..."] [--solution "..."] [--context-stdin | --solution-stdin] [--force]
   ops/lib/skill/skill_lib.sh promote|--promote <draft_path> [--delete-draft]
   ops/lib/skill/skill_lib.sh check|--check
 
@@ -22,6 +33,7 @@ Legacy (append-only candidate + promotion packet):
 
 Notes:
 - Use --context-stdin or --solution-stdin to read multi-line content from stdin (heredoc-safe). Only one stdin field is allowed per invocation.
+- Harvest auto-detects provenance and can suggest name or context when omitted.
 - Promote without a draft path uses the most recent draft when unambiguous.
 USAGE
 }
@@ -126,10 +138,13 @@ collect_harvest_inputs() {
   local -n out_name=$1
   local -n out_context=$2
   local -n out_solution=$3
-  shift 3
+  local -n out_force=$4
+  local allow_empty="${5:-0}"
+  shift 5
 
   local context_from_stdin=0
   local solution_from_stdin=0
+  out_force=0
   local positional=()
 
   while [[ $# -gt 0 ]]; do
@@ -152,6 +167,10 @@ collect_harvest_inputs() {
         ;;
       --solution-stdin)
         solution_from_stdin=1
+        shift
+        ;;
+      --force)
+        out_force=1
         shift
         ;;
       -h|--help)
@@ -200,7 +219,7 @@ collect_harvest_inputs() {
     out_solution="$(cat)"
   fi
 
-  if [[ -z "$out_name" ]]; then
+  if [[ -z "$out_name" && "$allow_empty" -eq 0 ]]; then
     if [[ -t 0 ]]; then
       read -r -p "Name: " out_name
     else
@@ -208,7 +227,7 @@ collect_harvest_inputs() {
     fi
   fi
 
-  if [[ -z "$out_context" ]]; then
+  if [[ -z "$out_context" && "$allow_empty" -eq 0 ]]; then
     if [[ -t 0 ]]; then
       echo "Enter context. End with a single line containing EOF."
       out_context="$(read_multiline_from_tty)"
@@ -217,7 +236,7 @@ collect_harvest_inputs() {
     fi
   fi
 
-  if [[ -z "$out_solution" ]]; then
+  if [[ -z "$out_solution" && "$allow_empty" -eq 0 ]]; then
     if [[ -t 0 ]]; then
       echo "Enter solution. End with a single line containing EOF."
       out_solution="$(read_multiline_from_tty)"
@@ -397,31 +416,64 @@ cmd_harvest() {
   local name=""
   local context=""
   local solution=""
+  local force=0
 
-  collect_harvest_inputs name context solution "$@"
+  collect_harvest_inputs name context solution force 1 "$@"
 
-  local branch
-  branch="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
+  local base_ref="main"
+  local head_ref="HEAD"
 
-  local diff_stat
-  diff_stat="$(git -C "$REPO_ROOT" diff --stat main...HEAD || true)"
-  if [[ -z "$diff_stat" ]]; then
-    diff_stat="(no changes)"
+  local hot_zone
+  hot_zone="$(detect_hot_zone "$base_ref" "$head_ref" "$REPO_ROOT")"
+  if [[ -z "$hot_zone" ]]; then
+    hot_zone="None"
   fi
 
-  local diff_names
-  diff_names="$(git -C "$REPO_ROOT" diff --name-only main...HEAD || true)"
-  if [[ -z "$diff_names" ]]; then
-    diff_names="(no changes)"
+  local high_churn
+  high_churn="$(detect_high_churn "$base_ref" "$head_ref" "$REPO_ROOT")"
+  if [[ -z "$high_churn" ]]; then
+    high_churn="None"
+  fi
+
+  if [[ -z "$name" ]]; then
+    if [[ "$hot_zone" != "None" ]]; then
+      name="Hot Zone: ${hot_zone}"
+    else
+      name="Skill Draft"
+    fi
+  fi
+
+  if [[ -z "$context" ]]; then
+    if [[ "$hot_zone" != "None" ]]; then
+      context="the hot zone ${hot_zone}"
+    else
+      context="capturing a reusable lesson from recent work"
+    fi
+    if [[ "$high_churn" != "None" ]]; then
+      local churn_inline
+      churn_inline="$(printf '%s\n' "$high_churn" | awk 'NF {printf "%s%s", sep, $0; sep="; "}')"
+      context="${context}; high churn: ${churn_inline}"
+    fi
+  fi
+
+  local solution_placeholder=0
+  if [[ -z "$solution" ]]; then
+    solution="REPLACE_SOLUTION"
+    solution_placeholder=1
+  fi
+
+  if ! check_semantic_collision "$name" "$SKILLS_DIR" "$HANDOFF_DIR"; then
+    if [[ $force -eq 0 ]]; then
+      die "Semantic collision detected. Use --force to override."
+    else
+      echo "WARN: Semantic collision override enabled." >&2
+    fi
   fi
 
   local dp_id
   local objective
   dp_id="$(read_task_field "Current DP")"
   objective="$(read_task_field "Goal")"
-
-  local timestamp
-  timestamp="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 
   local slug
   slug="$(slugify "$name")"
@@ -442,23 +494,14 @@ cmd_harvest() {
 
   local tmp
   tmp="$(mktemp)"
+
+  local provenance_block
+  provenance_block="$(generate_provenance_block "$dp_id" "$objective" "$base_ref" "$head_ref" "$REPO_ROOT")"
+
   cat <<EOF > "$tmp"
 # Skill Draft: ${name}
 
-## Provenance
-- Captured: ${timestamp}
-- Branch: ${branch}
-- Base ref: main...HEAD
-- Active DP: ${dp_id}
-- Objective: ${objective}
-- Diff stat:
-\`\`\`text
-${diff_stat}
-\`\`\`
-- Diff files:
-\`\`\`text
-${diff_names}
-\`\`\`
+${provenance_block}
 
 ## Scope
 Production payload work only. Not platform maintenance.
@@ -479,6 +522,10 @@ EOF
 
   redact_stream < "$tmp" > "$draft_path"
   rm -f "$tmp"
+
+  if [[ $solution_placeholder -eq 1 ]]; then
+    echo "WARN: Solution placeholder present. Refine the draft before promotion." >&2
+  fi
 
   echo "$draft_path"
 }
