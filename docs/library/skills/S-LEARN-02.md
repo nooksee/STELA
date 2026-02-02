@@ -1,37 +1,41 @@
-# S-LEARN-02: Project Guidelines
+# S-LEARN-02: Project Guidelines (The Stela Stack)
 
 ## Provenance
 - Captured: 2026-02-01
-- Origin: Legacy Migration (DP-OPS-0013)
+- Origin: System Hardening (DP-OPS-0014)
 - Source: Operator Institutional Knowledge
 - Friction Context:
-  - Hot Zone: Universal / Platform Root
-  - High Churn: Historical Aggregate
+  - Hot Zone: Project Scaffolding
+  - High Churn: Architecture Decisions
 
 ## Scope
 Production payload work only. Not platform maintenance.
 
 ## Invocation guidance
-Use this skill when a DP explicitly requests project-wide implementation guidance. Apply the stack and structure constraints and document any DP-approved exceptions.
+Use this skill when initializing or refactoring project payloads. The Trap: Mixing paradigms (e.g., using Django patterns in FastAPI, or Pages Router in App Router). Solution: Adhere strictly to the Stela Stack definitions below.
 
 ## Drift preventers
-- Stop if the DP scope is platform maintenance or if the DP does not explicitly request this skill.
-- Do not introduce alternate stacks unless the DP explicitly overrides these constraints.
-- Anti-hallucination: confirm project paths and existing conventions in the repo before adding new structure.
+- Stop if the DP attempts to introduce a new language or framework (e.g., Go, Vue, NestJS) without explicit Operator override.
+- Strict Isolation: Project code must not import from ops/ or docs/.
 
 ## Procedure
-1) Confirm stack constraints:
-   - Frontend: Next.js App Router with TypeScript.
-   - Database: Supabase Postgres.
-   - Backend: FastAPI (Python).
-   - Cache or queue: Redis.
-2) Confirm deployment notes:
-   - Keep runtime configuration in environment variables and document deployment notes or README as required by the DP.
-   - Next.js deploys as a Node-based web app; FastAPI deploys as an ASGI service behind a process manager.
-   - Supabase manages Postgres; do not embed database credentials in source control.
-   - Redis must be provisioned as a managed service or container in the target environment.
-3) Confirm structural constraints:
-   - Prefer many small, focused files over large monolithic files.
-   - Frontend directory conventions: `app/`, `components/`, `hooks/`, `lib/`, `types/`.
-   - Backend directory conventions: `app/main.py`, `app/routers/`, `app/schemas/`, `app/services/`, `app/db/`.
-4) Document DP-approved exceptions in RESULTS.
+1) Directory Authority:
+   - Frontend code lives under `src/`.
+   - Backend code lives under `app/`.
+2) Frontend Stack (Web):
+   - Framework: Next.js 14+ (App Router).
+   - Language: TypeScript (Strict).
+   - UI: Tailwind CSS + Shadcn/UI (Copy-paste component ownership).
+   - Structure: `src/app`, `src/components`, `src/lib`.
+3) Backend Stack (API):
+   - Framework: FastAPI (Python 3.11+).
+   - Interface: REST (JSON) + OpenAPI (Auto-generated).
+   - Structure: `app/main.py`, `app/routers/`, `app/schemas/` (Pydantic).
+4) Data & State:
+   - Database: Supabase (Postgres).
+   - Auth: Supabase Auth.
+   - Caching: Redis (if required).
+5) Deployment Contract:
+   - Config: Environment variables ONLY (Read from `process.env` or `os.environ`).
+   - Secrets: Never committed.
+   - Docker: Multi-stage builds required for production artifacts.
