@@ -1,5 +1,22 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-2026-01-27.md`.
 
+## 2026-02-02 — DP-OPS-0015: Skills System Final Hardening and Consolidation
+
+- Purpose: Consolidate S-LEARN-08 into S-LEARN-06 and harden S-LEARN-06 and S-LEARN-07 with Trap and Solution patterns plus concrete commands.
+- What shipped:
+  - Moved Advanced Git Forensics to S-LEARN-06 and removed S-LEARN-08.
+  - Rewrote S-LEARN-06 and S-LEARN-07 with mandated Trap and Solution guidance and concrete command checks.
+  - Updated docs/library/INDEX.md to register S-LEARN-06 and refresh the S-LEARN-07 title.
+- Verification:
+  - `./ops/bin/dump --scope=platform`
+  - `bash tools/context_lint.sh`
+  - `bash tools/lint_truth.sh`
+  - `bash tools/lint_library.sh`
+  - `bash tools/verify_tree.sh` (PASS with 3 warnings: storage/archives, storage/documentation, storage/ToDo)
+- Risk / rollback:
+  - Risk: Low (documentation and registry updates).
+  - Rollback: revert `docs/library/skills/S-LEARN-06.md`, `docs/library/skills/S-LEARN-07.md`, `docs/library/INDEX.md`, and `SoP.md`.
+
 ## 2026-02-02 — DP-OPS-0014: Skills System Hardening and Polishing
 
 - Purpose: Harden S-LEARN-01 through S-LEARN-05 with Stela stack concrete specs and enforce receipt bundle mandate in TASK.
