@@ -146,13 +146,14 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
   - If not found and required: **STOP** and ask (do not invent a substitute)
 
 #### Skill capture (required during normal DP processing)
-- Default workflow: run `ops/lib/skill/skill_lib.sh harvest` to create a draft, review the candidate, then either promote with `ops/lib/skill/skill_lib.sh promote <draft_path>` or log "no new skill promoted" with a rationale in RESULTS.
-- Legacy capture is permitted when explicitly requested by the DP or when harvest is not applicable. Use `ops/lib/skill/skill_lib.sh "name" "context" "solution"` and record the reason in RESULTS.
+- Workflow: run `ops/lib/skill/skill_lib.sh harvest` to auto-generate a draft with provenance and semantic collision checks.
+- Review: inspect the draft in `storage/handoff/` for heuristic accuracy (Hot Zone and High Churn). Refine Invocation guidance and Solution. Do not edit the Provenance block.
+- Promote: run `ops/lib/skill/skill_lib.sh promote <draft_path>` or log "no new skill promoted" with a rationale in RESULTS.
+- Legacy capture is forbidden. Do not manually write skill files; the provenance block is required.
 - If a DP requires skill capture, the DP Target Files allowlist must include `SKILL.md`.
 - Proof required in RESULTS:
   - Harvest-only: command invoked plus draft path and `ls storage/handoff/` output.
   - Promotion: command invoked plus `grep -n "Promotion Packet:" SKILL.md` and `grep -n "docs/library/skills/S-LEARN-" docs/library/INDEX.md`.
-  - Legacy capture: command invoked plus `grep -n "Promotion Packet:" SKILL.md`.
 
 #### Artifact bundle (required directory)
 - `storage/handoff/`
@@ -246,3 +247,4 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - *2026-01-31 11:37* — DP-OPS-0009: Added DP code-fence formatting rule in TASK and logged the change in SoP. Verification: RUN (dump; context_lint; lint_truth). Blockers: none. NEXT: operator review + commit.
 - *2026-02-01 05:30* — DP-OPS-0010: Established Skills subsystem (SKILL.md + S-LEARN-01..05) and worker skill capture utility; updated TASK + library index + SoP. Verification: RUN (dump; context_lint; lint_truth; lint_library; verify_tree WARN; dp_lint --test). Blockers: none. NEXT: operator review + commit.
 - *2026-02-01 16:30* — DP-OPS-0011: Added harvest/promote/check workflow to skill_lib, updated canon docs, and promoted S-LEARN-07. Verification: RUN (dump bundle; context_lint; lint_truth; lint_library; verify_tree WARN; dp_lint --test; skill_lib check). Blockers: none. NEXT: operator review + commit.
+- *2026-02-01 19:03* — DP-OPS-0012: Added heuristics engine, semantic drift guard, and provenance enforcement for skill harvesting; updated canon docs and added S-LEARN-08. Verification: RUN (dump; context_lint; lint_truth; lint_library; verify_tree WARN; skill_lib check). Blockers: none. NEXT: operator review + commit.

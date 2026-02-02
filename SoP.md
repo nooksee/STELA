@@ -1,5 +1,25 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-2026-01-27.md`.
 
+## 2026-02-01 — DP-OPS-0012: Autonomous Skill Heuristics and Provenance Engine (Phase 2)
+
+- Purpose: Upgrade the Skills Subsystem with heuristics-driven provenance, semantic drift guard, and the harvest lifecycle refinements.
+- What shipped:
+  - Added `ops/lib/skill/heuristics.sh` to analyze git diff and churn for provenance.
+  - Updated `ops/lib/skill/skill_lib.sh` to source heuristics, enforce semantic collision checks, and auto-generate provenance.
+  - Updated `SKILL.md`, `TASK.md`, and `AGENTS.md` to document Phase 2 workflow and constraints.
+  - Updated `docs/library/skills/S-LEARN-07.md` with heuristics-aware guidance.
+  - Added `docs/library/skills/S-LEARN-08.md` and registered it in `docs/library/INDEX.md`.
+- Verification:
+  - `./ops/bin/dump --scope=platform`
+  - `bash tools/context_lint.sh`
+  - `bash tools/lint_truth.sh`
+  - `bash tools/lint_library.sh`
+  - `bash tools/verify_tree.sh`
+  - `bash ops/lib/skill/skill_lib.sh check`
+- Risk / rollback:
+  - Risk: Medium (new heuristics engine and workflow changes).
+  - Rollback: revert `ops/lib/skill/heuristics.sh`, `ops/lib/skill/skill_lib.sh`, `SKILL.md`, `TASK.md`, `AGENTS.md`, `docs/library/skills/S-LEARN-07.md`, `docs/library/skills/S-LEARN-08.md`, `docs/library/INDEX.md`, and `SoP.md`.
+
 ## 2026-02-01 — DP-OPS-0011: Autonomous Skill Harvesting Engine
 
 - Purpose: Upgrade the skill harvesting workflow with provenance capture, draft promotion, and Skills Context Hazard enforcement.
