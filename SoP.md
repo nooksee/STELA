@@ -1,5 +1,22 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-2026-01-27.md`.
 
+## 2026-02-02 — DP-OPS-0014: Skills System Hardening and Polishing
+
+- Purpose: Harden S-LEARN-01 through S-LEARN-05 with Stela stack concrete specs and enforce receipt bundle mandate in TASK.
+- What shipped:
+  - Rewrote S-LEARN-01 through S-LEARN-05 with stack-specific commands, traps, and isolation rules.
+  - Defined Zenith envelope and hook contract plus coding and security standards for the Next.js/FastAPI/Supabase stack.
+  - Updated TASK proof bundle checklist with automatic disapproval mandate.
+- Verification:
+  - `./ops/bin/dump --scope=platform`
+  - `bash tools/context_lint.sh`
+  - `bash tools/lint_truth.sh`
+  - `bash tools/lint_library.sh`
+  - `bash tools/verify_tree.sh` (PASS with 3 warnings: storage/archives, storage/documentation, storage/ToDo)
+- Risk / rollback:
+  - Risk: Low (documentation-only skill and TASK updates).
+  - Rollback: revert `docs/library/skills/S-LEARN-01.md` through `docs/library/skills/S-LEARN-05.md`, `TASK.md`, and `SoP.md`.
+
 ## 2026-02-02 — DP-OPS-0013: Legacy Skill Refactor (Museum Provenance)
 
 - Purpose: Refactor legacy skills S-LEARN-01 through S-LEARN-05 to align with the S-LEARN-07 template and add Museum Provenance.

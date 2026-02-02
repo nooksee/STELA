@@ -159,14 +159,15 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
 - `storage/handoff/`
 
 #### Proof bundle checklist (required; naming pattern over exact names)
-- `storage/handoff/DP-OPS-[ID]-RESULTS.md` (required)
+- `storage/handoff/DP-OPS--RESULTS.md` (required)
 - `storage/handoff/OPEN-[work-branch]-[hash].txt` (when produced)
 - `storage/handoff/OPEN-PORCELAIN-[work-branch]-[hash].txt` (when produced)
 - `git diff --name-only` (include in RESULTS)
 - `git diff --stat` (include in RESULTS)
 - `NEXT:` one single action (include in RESULTS)
 
-**No receipt/proof bundle = DISAPPROVE.**
+**MANDATE:** No receipt/proof bundle = **AUTOMATIC DISAPPROVAL**.
+Partial receipts (e.g., missing OPEN artifacts when a session was started) are considered failures.
 
 #### REQUIRED OUTPUT
 **MUST include a "Status" block at the top of RESULTS:**
@@ -249,3 +250,4 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - *2026-02-01 16:30* — DP-OPS-0011: Added harvest/promote/check workflow to skill_lib, updated canon docs, and promoted S-LEARN-07. Verification: RUN (dump bundle; context_lint; lint_truth; lint_library; verify_tree WARN; dp_lint --test; skill_lib check). Blockers: none. NEXT: operator review + commit.
 - *2026-02-01 19:03* — DP-OPS-0012: Added heuristics engine, semantic drift guard, and provenance enforcement for skill harvesting; updated canon docs and added S-LEARN-08. Verification: RUN (dump; context_lint; lint_truth; lint_library; verify_tree WARN; skill_lib check). Blockers: none. NEXT: operator review + commit.
 - *2026-02-01 20:10* — DP-OPS-0013: Refactored S-LEARN-01 through S-LEARN-05 with Museum Provenance, standardized headers, and Trap/Solution guidance. Verification: RUN (dump; context_lint; lint_truth). Blockers: none. NEXT: operator review + commit.
+- *2026-02-02 03:57* — DP-OPS-0014: Hardened S-LEARN-01 through S-LEARN-05 with stack-specific specifications and updated TASK receipt mandate; ran skill harvest with semantic collision override. Verification: RUN (dump; context_lint OK; lint_truth OK; lint_library OK; verify_tree PASS with 3 warnings: storage/archives, storage/documentation, storage/ToDo). Blockers: none. NEXT: operator review + commit.

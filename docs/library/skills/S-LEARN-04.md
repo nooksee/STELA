@@ -2,39 +2,36 @@
 
 ## Provenance
 - Captured: 2026-02-01
-- Origin: Legacy Migration (DP-OPS-0013)
+- Origin: System Hardening (DP-OPS-0014)
 - Source: Operator Institutional Knowledge
 - Friction Context:
-  - Hot Zone: Universal / Platform Root
-  - High Churn: Historical Aggregate
+  - Hot Zone: Code Review
+  - High Churn: Syntax Formatting
 
 ## Scope
-Production payload work only. Not platform maintenance.
+Production payload work only.
+Not platform maintenance.
 
 ## Invocation guidance
-Use this skill when a DP explicitly requests coding standards. Apply these rules to payload code and document any DP-approved exceptions.
+Use this skill when writing or reviewing payload code.
+**The Trap:** "It runs, so it is fine."
+**Solution:** Code must be readable, typed, and formatted.
 
 ## Drift preventers
-- Stop if the DP scope is platform maintenance or if the DP does not explicitly request this skill.
-- Anti-hallucination: follow repository conventions when they are more specific than this skill.
+- Stop if `any` is used in TypeScript.
+- Stop if Python code is not formatted by Black.
 
 ## Procedure
-1) Apply readability-first constraints:
-   - Prefer explicit control flow over clever abstractions.
-   - Keep functions focused on a single responsibility.
-   - Use descriptive names for variables, functions, and types.
-2) Apply immutability emphasis:
-   - Prefer immutable data structures and pure functions where possible.
-   - Avoid mutating shared state unless the DP explicitly requires it.
-3) Apply naming conventions:
-   - Components: PascalCase.
-   - Hooks: camelCase with a `use` prefix.
-   - Types and interfaces: PascalCase.
-   - Functions and variables: camelCase verbs for actions, nouns for data.
-4) Apply React anti-pattern guardrails:
-   - Avoid deeply nested conditional rendering; extract helpers or early returns.
-   - Avoid deep component nesting; refactor into smaller components.
-5) Apply size constraints:
-   - If the DP defines a function size limit, refactor when functions exceed that limit.
-   - When no limit is defined, refactor functions that become difficult to scan in one screen.
-6) Document DP-approved exceptions in RESULTS.
+1) **TypeScript (Frontend):**
+   - **Strict Mode:** `strict: true` in `tsconfig.json`.
+   - **No Any:** Use `unknown` or specific interfaces.
+   - **Named Exports:** Prefer named exports over default exports for components.
+   - **Naming:** `PascalCase` for Components/Interfaces. `camelCase` for vars/hooks.
+2) **Python (Backend):**
+   - **Type Hints:** Mandatory for all function arguments and returns.
+   - **Pydantic:** Use Pydantic models for all data exchange (Schemas), not raw dicts.
+   - **Formatter:** Code must pass `black --check`.
+   - **Imports:** Sort with `isort`.
+3) **Comments & Docs:**
+   - **Why, not What:** Comment complex logic reasoning, not syntax.
+   - **Docstrings:** Required for public API endpoints (FastAPI uses these for Swagger UI).
