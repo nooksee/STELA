@@ -93,7 +93,7 @@ Executes:
 ## Final Report Format
 
 ```
-ORCHESTRATION REPORT
+INTEGRATION REPORT
 ====================
 Workflow: feature
 Task: Add user authentication
