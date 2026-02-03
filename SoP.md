@@ -1,5 +1,20 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-2026-01-27.md`.
 
+## 2026-02-03 — DP-OPS-0016: Hardened TASK.md (context hygiene + mandatory closing block)
+
+- Purpose: Harden TASK worker context boundaries, receipt discipline, and closeout metadata structure.
+- What shipped:
+  - Removed OPEN from worker context load instructions and added the Planner-only OPEN rule plus disposable artifact prohibition.
+  - Expanded receipt checklist to require OPEN, OPEN-PORCELAIN, and dump artifacts with explicit failure conditions.
+  - Added the Mandatory Closing Block with six distinct commit and PR metadata fields.
+- Verification:
+  - `./ops/bin/dump --scope=platform`
+  - `bash tools/context_lint.sh`
+  - `bash tools/lint_truth.sh`
+- Risk / rollback:
+  - Risk: Low (governance text updates only).
+  - Rollback: revert `TASK.md` and `SoP.md`.
+
 ## 2026-02-02 — DP-OPS-0015: Skills System Final Hardening and Consolidation
 
 - Purpose: Consolidate S-LEARN-08 into S-LEARN-06 and harden S-LEARN-06 and S-LEARN-07 with Trap and Solution patterns plus concrete commands.
