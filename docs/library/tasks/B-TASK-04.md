@@ -105,4 +105,4 @@ After planning:
 ## Related Agents
 
 This command invokes the `planner` agent located at:
-`~/.claude/agents/planner.md`
+`~/docs/library/agents/R-AGENT-04.md`

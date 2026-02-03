@@ -454,8 +454,8 @@ When reviewing PRs, post inline comments:
 
 ---
 
-> Security review performed by Claude Code security-reviewer agent
-> For questions, see docs/SECURITY.md
+> Security review performed by security-reviewer agent
+> For questions, see docs/security/README.md
 ```
 
 ## When to Run Security Reviews

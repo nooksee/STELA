@@ -4,7 +4,7 @@ Sequential agent workflow for complex tasks.
 
 ## Usage
 
-`/orchestrate [workflow-type] [task-description]`
+`/ops/bin/project orchestrate [workflow-type] [task-description]`
 
 ## Workflow Types
 
