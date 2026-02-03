@@ -41,7 +41,7 @@ This is an example project-level STELA.md file. Place this in your project root.
 ## File Structure
 
 ```
-src/
+projects/
 |-- app/              # Next.js app router
 |-- components/       # Reusable UI components
 |-- hooks/            # Custom React hooks
