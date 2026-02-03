@@ -15,19 +15,21 @@ Canon surface definitions live in `TRUTH.md`.
 **Rule:** No execution until the worker explicitly confirms these are loaded.
 
 **Must read (always):**
-- [ ] `OPEN` (orientation / posture)
 - [ ] `TRUTH.md` (precedence + invariants)
 - [ ] `AGENTS.md` (jurisdiction / stop-and-ask)
 - [ ] `SoP.md` (merge-grade readiness ledger)
 - [ ] `ops/lib/manifests/CONTEXT.md` (required context set)
 - [ ] `docs/library/MAP.md` (continuity terrain)
 
+(OPEN is for Planner/DP Writer state refresh; Worker does not read OPEN).
+DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
+
 **Job-specific canon (fill in per DP):**
 - [ ] [path/to/file]
 - [ ] [path/to/file]
 
 **Loading discipline (worker must echo):**
-- “Loaded: OPEN, TRUTH, AGENTS, SoP, CONTEXT, MAP (+ job-specific files).”
+- “Loaded: TRUTH, AGENTS, SoP, CONTEXT, MAP (+ job-specific files).”
 
 ---
 
@@ -66,10 +68,13 @@ STOP if told to create or switch branches.
 
 ## I) REQUIRED CONTEXT LOAD (READ BEFORE DOING ANYTHING)
 **Worker must confirm loaded before acting:**
-- OPEN, TRUTH, AGENTS, SoP, CONTEXT, MAP
+- TRUTH, AGENTS, SoP, CONTEXT, MAP
 - Plus any DP-scoped files listed here:
   - [Exact path]
   - [Exact path]
+
+(OPEN is for Planner/DP Writer state refresh; Worker does not read OPEN).
+DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
 
 ---
 
@@ -160,13 +165,15 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
 
 #### Proof bundle checklist (required; naming pattern over exact names)
 - `storage/handoff/DP-OPS--RESULTS.md` (required)
-- `storage/handoff/OPEN-[work-branch]-[hash].txt` (when produced)
-- `storage/handoff/OPEN-PORCELAIN-[work-branch]-[hash].txt` (when produced)
+- `storage/handoff/OPEN-PORCELAIN-[work-branch]-[hash].txt` (required)
+- `storage/handoff/OPEN-[work-branch]-[hash].txt` (required)
+- `storage/dumps/dump-full-...` (or platform scope as applicable)
 - `git diff --name-only` (include in RESULTS)
 - `git diff --stat` (include in RESULTS)
 - `NEXT:` one single action (include in RESULTS)
 
 **MANDATE:** No receipt/proof bundle = **AUTOMATIC DISAPPROVAL**.
+Closeout routine receipts not being produced CONSISTENTLY INCLUDING PORCELAIN, DUMP AND OPEN is a failure condition.
 Partial receipts (e.g., missing OPEN artifacts when a session was started) are considered failures.
 
 #### REQUIRED OUTPUT
@@ -198,11 +205,21 @@ Partial receipts (e.g., missing OPEN artifacts when a session was started) are c
 - [ ] Produce/Update: `storage/handoff/DP-OPS-[ID]-RESULTS.md`
 - [ ] If canon/governance surfaces were changed, include **SoP.md** in scope and update it in the same PR slice.
 - [ ] Ensure proof bundle checklist is satisfied (above). (No bundle = DISAPPROVE.)
+- [ ] Fill out the Mandatory Closing Block (varied wording required).
 - [ ] Append a **TASK Work Log** entry (below) capturing:
   - what changed (high level)
   - gates/verification outcome (pass/fail or not run + reason)
   - blockers (if any)
   - **NEXT:** one single action
+
+### Mandatory Closing Block (Varied Wording Required)
+Varied Wording provision: Each entry must use meaningfully distinct wording; copy or minor tense changes are not acceptable. Entry 4 must differ from Entry 1.
+1. Primary Commit Header (plaintext)
+2. Pull Request Title (plaintext)
+3. Pull Request Description (markdown)
+4. Final Squash Stub (plaintext) (Must differ from #1)
+5. Extended Technical Manifest (plaintext)
+6. Review Conversation Starter (markdown)
 
 ### Integrator/operator closeout duties
 - [ ] Review diff vs DP scope/forbidden zones
@@ -252,3 +269,4 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - *2026-02-01 20:10* — DP-OPS-0013: Refactored S-LEARN-01 through S-LEARN-05 with Museum Provenance, standardized headers, and Trap/Solution guidance. Verification: RUN (dump; context_lint; lint_truth). Blockers: none. NEXT: operator review + commit.
 - *2026-02-02 03:57* — DP-OPS-0014: Hardened S-LEARN-01 through S-LEARN-05 with stack-specific specifications and updated TASK receipt mandate; ran skill harvest with semantic collision override. Verification: RUN (dump; context_lint OK; lint_truth OK; lint_library OK; verify_tree PASS with 3 warnings: storage/archives, storage/documentation, storage/ToDo). Blockers: none. NEXT: operator review + commit.
 - *2026-02-02 04:39* — DP-OPS-0015: Consolidated S-LEARN-08 into S-LEARN-06 and hardened S-LEARN-06 and S-LEARN-07; updated index and ran skill harvest with semantic collision override. Verification: RUN (dump; context_lint OK; lint_truth OK with grep warnings for removed S-LEARN-08.md; lint_library OK; verify_tree PASS with 3 warnings: storage/archives, storage/documentation, storage/ToDo). Blockers: none. NEXT: operator review + commit.
+- *2026-02-03 11:32* — DP-OPS-0016: Hardened TASK context boundaries, receipt checklist, and closeout metadata; updated SoP. Verification: RUN (dump; context_lint OK; lint_truth OK). Blockers: none. NEXT: operator review + commit.
