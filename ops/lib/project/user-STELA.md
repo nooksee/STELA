@@ -32,7 +32,7 @@ Detailed guidelines are in ``:
 | coding-style.md | Immutability, file organization, error handling |
 | testing.md | 80% coverage requirement |
 | git-workflow.md | Commit format, PR workflow |
-| agents.md | Agent orchestration, when to use which agent |
+| agents.md | Agent integration, when to use which agent |
 | patterns.md | API response, repository patterns |
 | performance.md | Model selection, context management |
 

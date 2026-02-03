@@ -1,11 +1,11 @@
-# ORCHESTRATION (Projects Runtime Contract)
+# INTEGRATION (Projects Runtime Contract)
 
-This file defines the orchestration contract implemented by the Projects binary (ops/lib/project):
+This file defines the integration contract implemented by the Projects binary (ops/lib/project):
 how it composes Tasks + Agents + Skills into a single, auditable execution flow.
 
 ## 1. Purpose
 
-Orchestration is a deterministic composition layer:
+Integration is a deterministic composition layer:
 - Input: a workflow selection plus a task description
 - Process: run a known agent sequence, passing structured handoffs
 - Output: a single final report with aggregated evidence and a recommendation
@@ -61,8 +61,8 @@ The orchestrator resolves an agent name to a single agent definition.
 
 ### 4.3 Resolution rules
 - Exact match on `name:` wins.
-- If multiple matches exist, orchestration MUST fail fast and report ambiguity.
-- If no match exists, orchestration MUST fail fast and report missing agent.
+- If multiple matches exist, integration MUST fail fast and report ambiguity.
+- If no match exists, integration MUST fail fast and report missing agent.
 
 ## 5. Execution Model
 
@@ -114,7 +114,7 @@ Validation rules:
 
 The orchestrator MUST emit a single final report matching this structure:
 
-ORCHESTRATION REPORT
+INTEGRATION REPORT
 ====================
 Workflow: <workflow_type>
 Task: <task_description>
@@ -152,7 +152,7 @@ RECOMMENDATION
 - Agents define specialized analysis/execution behavior (R-AGENT-XX).
 - Skills provide domain procedures and drift preventers (docs/library/skills/*).
 
-Orchestration is the glue layer that:
+Integration is the glue layer that:
 - selects which agents to run
 - enforces the handoff/report schemas
 - ensures the output is auditable and merge-ready

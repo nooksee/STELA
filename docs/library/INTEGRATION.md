@@ -1,17 +1,17 @@
-# ORCHESTRATION (Operator Guide)
+# INTEGRATION (Operator Guide)
 
-This document explains when and how to use orchestration as an operator.
+This document explains when and how to use integration as an operator.
 The canonical runtime contract lives in:
-- ops/lib/project/ORCHESTRATION.md
+- ops/lib/project/INTEGRATION.md
 
-## 1. What orchestration is for
+## 1. What integration is for
 
-Use orchestration when a single agent stance is insufficient and you need:
+Use integration when a single agent stance is insufficient and you need:
 - multiple perspectives (plan, quality review, security review)
 - structured handoffs between those perspectives
 - a single final report with a clear recommendation
 
-Orchestration is a sequencing tool. It does not change governance rules.
+Integration is a sequencing tool. It does not change governance rules.
 
 ## 2. Default workflows
 
@@ -33,7 +33,7 @@ If you need a bespoke chain, use the custom workflow described in B-TASK-03.
 
 ## 3. What you should expect as output
 
-Orchestration produces two artifact types:
+Integration produces two artifact types:
 
 1) HANDOFF artifacts between agents:
 - Context
@@ -42,7 +42,7 @@ Orchestration produces two artifact types:
 - Open Questions
 - Recommendations
 
-2) A single ORCHESTRATION REPORT at the end:
+2) A single INTEGRATION REPORT at the end:
 - Workflow, Task, Agents
 - Summary
 - Agent Outputs
@@ -55,7 +55,7 @@ Orchestration produces two artifact types:
 
 - AGENTS.md defines jurisdiction and human-vs-AI operating rules.
 - docs/library/agents/R-AGENT-XX define the available roles (architect, code-reviewer, security-reviewer, etc.).
-- Orchestration selects from those role definitions and sequences them.
+- Integration selects from those role definitions and sequences them.
 It is a coordination layer, not a new role.
 
 ## 5. Parallel phases (when allowed)
@@ -71,4 +71,4 @@ The orchestrator must merge parallel outputs into one merged handoff before cont
 ## 6. Canon placement rule (why this file is short)
 
 docs/ is the manual and should point into ops/ for operational canon.
-That is why detailed mechanics live in ops/lib/project/ORCHESTRATION.md and this file stays operator-focused.
+That is why detailed mechanics live in ops/lib/project/INTEGRATION.md and this file stays operator-focused.
