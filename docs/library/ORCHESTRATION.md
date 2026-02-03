@@ -1,99 +1,74 @@
-# Agent Orchestration
+# ORCHESTRATION (Operator Guide)
 
-## Available Agents
+This document explains when and how to use orchestration as an operator.
+The canonical runtime contract lives in:
+- ops/lib/project/ORCHESTRATION.md
 
-Located in `AGENTS.md`:
+## 1. What orchestration is for
 
-| Agent | Purpose | When to Use |
-|-------|---------|-------------|
-| planner | Implementation planning | Complex features, refactoring |
-| architect | System design | Architectural decisions |
-| code-reviewer | Code review | After writing code |
-| security-reviewer | Security analysis | Before commits |
-| build-error-resolver | Fix build errors | When build fails |
-| refactor-cleaner | Dead code cleanup | Code maintenance |
-| doc-updater | Documentation | Updating docs |
+Use orchestration when a single agent stance is insufficient and you need:
+- multiple perspectives (plan, quality review, security review)
+- structured handoffs between those perspectives
+- a single final report with a clear recommendation
 
-## Immediate Agent Usage
+Orchestration is a sequencing tool. It does not change governance rules.
 
-No user prompt needed:
-1. Complex feature requests - Use **planner** agent
-2. Code just written/modified - Use **code-reviewer** agent
-3. Architectural decision - Use **architect** agent
+## 2. Default workflows
 
-## Parallel Task Execution
+These workflows are standardized:
 
-ALWAYS use parallel Task execution for independent operations:
+- feature:
+  planner -> code-reviewer -> security-reviewer
 
-```markdown
-# GOOD: Parallel execution
-Launch 3 agents in parallel:
-1. Agent 1: Security analysis of auth.ts
-2. Agent 2: Performance review of cache system
-3. Agent 3: Type checking of utils.ts
+- bugfix:
+  explorer -> code-reviewer
 
-# BAD: Sequential when unnecessary
-First agent 1, then agent 2, then agent 3
-```
+- refactor:
+  architect -> code-reviewer
 
-## Multi-Perspective Analysis
+- security:
+  security-reviewer -> code-reviewer -> architect
 
-For complex problems, use split role sub-agents:
-- Factual reviewer
-- Senior engineer
-- Security expert
-- Consistency reviewer
-- Redundancy checker
+If you need a bespoke chain, use the custom workflow described in B-TASK-03.
 
-## Feature Implementation Workflow
+## 3. What you should expect as output
 
-1. **Plan First**
-   - Use **planner** agent to create implementation plan
-   - Identify dependencies and risks
-   - Break down into phases
+Orchestration produces two artifact types:
 
-2. **Code Review**
-   - Use **code-reviewer** agent immediately after writing code
-   - Address CRITICAL and HIGH issues
-   - Fix MEDIUM issues when possible
+1) HANDOFF artifacts between agents:
+- Context
+- Findings
+- Files Modified
+- Open Questions
+- Recommendations
 
-3. **Commit & Push**
-   - Detailed commit messages
-   - Follow conventional commits format
-   
-# Security Guidelines
+2) A single ORCHESTRATION REPORT at the end:
+- Workflow, Task, Agents
+- Summary
+- Agent Outputs
+- Files Changed
+- Test Results
+- Security Status
+- Recommendation (SHIP / NEEDS WORK / BLOCKED)
 
-## Mandatory Security Checks
+## 4. How this relates to Agents and AGENTS.md
 
-Before ANY commit:
-- [ ] No hardcoded secrets (API keys, passwords, tokens)
-- [ ] All user inputs validated
-- [ ] SQL injection prevention (parameterized queries)
-- [ ] XSS prevention (sanitized HTML)
-- [ ] CSRF protection enabled
-- [ ] Authentication/authorization verified
-- [ ] Rate limiting on all endpoints
-- [ ] Error messages don't leak sensitive data
+- AGENTS.md defines jurisdiction and human-vs-AI operating rules.
+- docs/library/agents/R-AGENT-XX define the available roles (architect, code-reviewer, security-reviewer, etc.).
+- Orchestration selects from those role definitions and sequences them.
+It is a coordination layer, not a new role.
 
-## Secret Management
+## 5. Parallel phases (when allowed)
 
-```typescript
-// NEVER: Hardcoded secrets
-const apiKey = "sk-proj-xxxxx"
+Parallel phases are allowed only for independent checks.
+Typical parallel trio:
+- code-reviewer (quality)
+- security-reviewer (security)
+- architect (design)
 
-// ALWAYS: Environment variables
-const apiKey = process.env.OPENAI_API_KEY
+The orchestrator must merge parallel outputs into one merged handoff before continuing.
 
-if (!apiKey) {
-  throw new Error('OPENAI_API_KEY not configured')
-}
-```
+## 6. Canon placement rule (why this file is short)
 
-## Security Response Protocol
-
-If security issue found:
-1. STOP immediately
-2. Use **security-reviewer** agent
-3. Fix CRITICAL issues before continuing
-4. Rotate any exposed secrets
-5. Review entire codebase for similar issues
+docs/ is the manual and should point into ops/ for operational canon.
+That is why detailed mechanics live in ops/lib/project/ORCHESTRATION.md and this file stays operator-focused.

@@ -9,7 +9,7 @@ Describe the project scope and intent here.
 
 ## Layout
 Required:
-- README.md (this file)
+- SCAFFOLD.md (this file)
 
 Optional (standard when needed):
 - upstream/
