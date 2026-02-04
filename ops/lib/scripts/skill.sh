@@ -24,12 +24,12 @@ fi
 usage() {
   cat <<'USAGE'
 Usage:
-  ops/lib/skill/skill_lib.sh harvest|--harvest [--name "..."] [--context "..."] [--solution "..."] [--context-stdin | --solution-stdin] [--force]
-  ops/lib/skill/skill_lib.sh promote|--promote <draft_path> [--delete-draft]
-  ops/lib/skill/skill_lib.sh check|--check
+  ops/lib/scripts/skill.sh harvest|--harvest [--name "..."] [--context "..."] [--solution "..."] [--context-stdin | --solution-stdin] [--force]
+  ops/lib/scripts/skill.sh promote|--promote <draft_path> [--delete-draft]
+  ops/lib/scripts/skill.sh check|--check
 
 Legacy (append-only candidate + promotion packet):
-  ops/lib/skill/skill_lib.sh "name" "context" "solution"
+  ops/lib/scripts/skill.sh "name" "context" "solution"
 
 Notes:
 - Use --context-stdin or --solution-stdin to read multi-line content from stdin (heredoc-safe). Only one stdin field is allowed per invocation.
@@ -676,10 +676,10 @@ EOF
   - Proof bundle updated in storage/handoff with diff outputs
 - Verification (capture command output in RESULTS):
   - ./ops/bin/dump --scope=platform
-  - bash tools/context_lint.sh
-  - bash tools/lint_truth.sh (required when canon or governance surfaces change)
-  - bash tools/lint_library.sh
-  - bash tools/verify_tree.sh
+  - bash tools/lint/context.sh
+  - bash tools/lint/truth.sh (required when canon or governance surfaces change)
+  - bash tools/lint/library.sh
+  - bash tools/verify.sh
 EOF
 
   insert_into_section "## Candidate Log (append-only)" "$candidate_tmp" "$SKILL_FILE"
@@ -754,10 +754,10 @@ EOF
   - Proof bundle updated in storage/handoff with diff outputs
 - Verification (capture command output in RESULTS):
   - ./ops/bin/dump --scope=platform
-  - bash tools/context_lint.sh
-  - bash tools/lint_truth.sh (required when canon or governance surfaces change)
-  - bash tools/lint_library.sh
-  - bash tools/verify_tree.sh
+  - bash tools/lint/context.sh
+  - bash tools/lint/truth.sh (required when canon or governance surfaces change)
+  - bash tools/lint/library.sh
+  - bash tools/verify.sh
 EOF
 
   insert_into_section "## Candidate Log (append-only)" "$candidate_tmp" "$SKILL_FILE"

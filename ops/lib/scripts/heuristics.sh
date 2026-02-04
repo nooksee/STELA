@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Stela Skill Heuristics Engine
-# Functions are sourced by ops/lib/skill/skill_lib.sh
+# Functions are sourced by ops/lib/scripts/skill.sh
 
 detect_hot_zone() {
   local base_ref="${1:-main}"

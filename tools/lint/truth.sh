@@ -60,7 +60,7 @@ for f in "${root_files[@]}"; do
 done
 
 # Filter out this script itself to prevent self-flagging
-files="$(printf '%s\n' "$files" | grep -v "tools/lint_truth.sh" || true)"
+files="$(printf '%s\n' "$files" | grep -v "tools/lint/truth.sh" || true)"
 
 if [[ -z "${files//[[:space:]]/}" ]]; then
   echo "OK (No files to scan)"

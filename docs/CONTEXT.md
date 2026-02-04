@@ -30,7 +30,7 @@ Context is not read casually; it is injected via tooling.
 
 ## 3. Verification (The Linter)
 We do not guess if context is complete. We prove it.
-* **Tool:** [`tools/context_lint.sh`](../tools/context_lint.sh)
+* **Tool:** [`tools/lint/context.sh`](../tools/lint/context.sh)
 * **Rule:** This script verifies that every path listed in the Manifest actually exists on disk.
 * **Usage:** Run before every session to prevent "blind" operations.
 
