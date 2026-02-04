@@ -20,7 +20,7 @@ Use this skill during DP closeout to capture reusable workflows. The Trap: "I wi
 
 ## Procedure
 1) Harvest (Draft Generation):
-   - Run `ops/lib/skill/skill_lib.sh harvest`.
+   - Run `ops/lib/scripts/skill.sh harvest`.
    - Input: Provide concrete Context (When to use) and Solution (What to do).
    - Constraint: Do not edit the `## Provenance` block.
 2) Refine (Quality Gate):
@@ -28,7 +28,7 @@ Use this skill during DP closeout to capture reusable workflows. The Trap: "I wi
    - Trap: Leaving "ENTER_SOLUTION" placeholders.
    - Solution: Run `grep -E "TODO|ENTER_|REPLACE_" <draft_path>`. If hits found, Fix before promoting.
 3) Promote (Registry):
-   - Run `ops/lib/skill/skill_lib.sh promote <draft_path>`.
+   - Run `ops/lib/scripts/skill.sh promote <draft_path>`.
    - Verify `docs/library/INDEX.md` contains the new entry.
 4) Proof:
    - Include the harvest/promote command outputs in the DP RESULTS file.

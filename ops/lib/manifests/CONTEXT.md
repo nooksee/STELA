@@ -5,7 +5,7 @@ List required artifacts for session rehydration and context loading.
 
 ## Scope
 Used by operators to ensure AI workers have a complete "Single Source of Truth" (SSOT).
-Mandatory pre-session check: run `tools/context_lint.sh`.
+Mandatory pre-session check: run `tools/lint/context.sh`.
 
 ## Canonical Context (The Core)
 - `TRUTH.md` — Constitution and filing doctrine.
@@ -21,8 +21,8 @@ Mandatory pre-session check: run `tools/context_lint.sh`.
 - `docs/GOVERNANCE.md` — Project governance and non-negotiables.
 
 ## Verification Tools
-- `tools/context_lint.sh` — Validates presence of manifest artifacts.
-- `tools/lint_truth.sh` — Verifies spelling and canon integrity.
+- `tools/lint/context.sh` — Validates presence of manifest artifacts.
+- `tools/lint/truth.sh` — Verifies spelling and canon integrity.
 
 ## Verification
 - Operator: Manually verify all "Canonical Context" files are provided in the dump.

@@ -1,78 +1,78 @@
 #!/usr/bin/env bash
 
-project_lib_die() {
+project_die() {
   echo "ERROR: $*" >&2
   exit 1
 }
 
-project_lib_trim() {
+project_trim() {
   local s="$1"
   s="${s#"${s%%[![:space:]]*}"}"
   s="${s%"${s##*[![:space:]]}"}"
   printf "%s" "$s"
 }
 
-project_lib_require_repo_root() {
+project_require_repo_root() {
   if ! command -v git >/dev/null 2>&1; then
-    project_lib_die "git is required but was not found on PATH."
+    project_die "git is required but was not found on PATH."
   fi
 
   local repo_root
   if ! repo_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
-    project_lib_die "git repo not found. Run from repo root."
+    project_die "git repo not found. Run from repo root."
   fi
 
   if [[ "$(pwd -P)" != "$repo_root" ]]; then
-    project_lib_die "Run from repo root: $repo_root"
+    project_die "Run from repo root: $repo_root"
   fi
 
-  PROJECT_LIB_REPO_ROOT="$repo_root"
+  PROJECT_REPO_ROOT="$repo_root"
 }
 
-project_lib_registry_rel() {
+project_registry_rel() {
   printf "%s" "storage/PROJECT_REGISTRY.md"
 }
 
-project_lib_registry_path() {
-  printf "%s/%s" "$PROJECT_LIB_REPO_ROOT" "$(project_lib_registry_rel)"
+project_registry_path() {
+  printf "%s/%s" "$PROJECT_REPO_ROOT" "$(project_registry_rel)"
 }
 
-project_lib_template_rel() {
+project_template_rel() {
   printf "%s" "ops/lib/project/templates/default/README.md"
 }
 
-project_lib_template_path() {
-  printf "%s/%s" "$PROJECT_LIB_REPO_ROOT" "$(project_lib_template_rel)"
+project_template_path() {
+  printf "%s/%s" "$PROJECT_REPO_ROOT" "$(project_template_rel)"
 }
 
-project_lib_subdir_template_rel() {
+project_subdir_template_rel() {
   local subdir="$1"
   printf "%s" "ops/lib/project/templates/default/${subdir}/README.md"
 }
 
-project_lib_subdir_template_path() {
+project_subdir_template_path() {
   local subdir="$1"
-  printf "%s/%s" "$PROJECT_LIB_REPO_ROOT" "$(project_lib_subdir_template_rel "$subdir")"
+  printf "%s/%s" "$PROJECT_REPO_ROOT" "$(project_subdir_template_rel "$subdir")"
 }
 
-project_lib_require_registry() {
+project_require_registry() {
   local rel path
-  rel="$(project_lib_registry_rel)"
-  path="$(project_lib_registry_path)"
+  rel="$(project_registry_rel)"
+  path="$(project_registry_path)"
   if [[ ! -f "$path" ]]; then
     echo "ERROR: Missing registry: $rel" >&2
     return 1
   fi
 }
 
-project_lib_slugify() {
+project_slugify() {
   local raw="$1"
   raw="$(printf "%s" "$raw" | tr '[:upper:]' '[:lower:]')"
   raw="$(printf "%s" "$raw" | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')"
   printf "%s" "$raw"
 }
 
-project_lib_next_project_id() {
+project_next_project_id() {
   local max=0
   local id
 
@@ -83,19 +83,19 @@ project_lib_next_project_id() {
         max=$((10#$num))
       fi
     fi
-  done < <(project_lib_registry_rows)
+  done < <(project_registry_rows)
 
   printf "proj-%04d" $((max + 1))
 }
 
-project_lib_is_valid_id() {
+project_is_valid_id() {
   [[ "$1" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]]
 }
 
-project_lib_registry_rows() {
+project_registry_rows() {
   local path
-  project_lib_require_registry
-  path="$(project_lib_registry_path)"
+  project_require_registry
+  path="$(project_registry_path)"
 
   awk -F'|' '
     function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s; }
@@ -114,7 +114,7 @@ project_lib_registry_rows() {
   ' "$path"
 }
 
-project_lib_registry_has_id() {
+project_registry_has_id() {
   local target_id="$1"
   local id name created status root notes
 
@@ -122,12 +122,12 @@ project_lib_registry_has_id() {
     if [[ "$id" == "$target_id" ]]; then
       return 0
     fi
-  done < <(project_lib_registry_rows)
+  done < <(project_registry_rows)
 
   return 1
 }
 
-project_lib_registry_has_root_path() {
+project_registry_has_root_path() {
   local target_root="$1"
   local id name created status root notes
 
@@ -135,25 +135,25 @@ project_lib_registry_has_root_path() {
     if [[ "$root" == "$target_root" ]]; then
       return 0
     fi
-  done < <(project_lib_registry_rows)
+  done < <(project_registry_rows)
 
   return 1
 }
 
-project_lib_escape_sed() {
+project_escape_sed() {
   printf "%s" "$1" | sed -e 's/[\\/&]/\\&/g'
 }
 
-project_lib_render_template() {
+project_render_template() {
   local template="$1"
   local project_id="$2"
   local display_name="$3"
   local created_at="$4"
 
   local esc_id esc_name esc_date
-  esc_id="$(project_lib_escape_sed "$project_id")"
-  esc_name="$(project_lib_escape_sed "$display_name")"
-  esc_date="$(project_lib_escape_sed "$created_at")"
+  esc_id="$(project_escape_sed "$project_id")"
+  esc_name="$(project_escape_sed "$display_name")"
+  esc_date="$(project_escape_sed "$created_at")"
 
   sed \
     -e "s/{{PROJECT_ID}}/$esc_id/g" \
@@ -162,10 +162,10 @@ project_lib_render_template() {
     "$template"
 }
 
-project_lib_get_current_project_id() {
+project_get_current_project_id() {
   local path
-  project_lib_require_registry
-  path="$(project_lib_registry_path)"
+  project_require_registry
+  path="$(project_registry_path)"
 
   awk '
     /^Current[[:space:]]*:/ {
@@ -177,11 +177,11 @@ project_lib_get_current_project_id() {
   ' "$path"
 }
 
-project_lib_set_current_project_id() {
+project_set_current_project_id() {
   local project_id="$1"
   local rel path tmp
-  rel="$(project_lib_registry_rel)"
-  path="$(project_lib_registry_path)"
+  rel="$(project_registry_rel)"
+  path="$(project_registry_path)"
 
   if [[ ! -f "$path" ]]; then
     echo "ERROR: Missing registry: $rel" >&2
@@ -208,7 +208,7 @@ project_lib_set_current_project_id() {
   rm -f "$tmp"
 }
 
-project_lib_add_registry_entry() {
+project_add_registry_entry() {
   local project_id="$1"
   local display_name="$2"
   local created_at="$3"
@@ -217,8 +217,8 @@ project_lib_add_registry_entry() {
   local notes="$6"
 
   local rel path tmp
-  rel="$(project_lib_registry_rel)"
-  path="$(project_lib_registry_path)"
+  rel="$(project_registry_rel)"
+  path="$(project_registry_path)"
 
   if [[ ! -f "$path" ]]; then
     echo "ERROR: Missing registry: $rel" >&2

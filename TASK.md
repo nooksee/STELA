@@ -11,7 +11,7 @@ Canon surface definitions live in `TRUTH.md`.
 
 ---
 
-## 0) REQUIRED CONTEXT LOAD (PRE-FLIGHT)
+## 1. Required Context Load (Pre-Flight)
 **Rule:** No execution until the worker explicitly confirms these are loaded.
 
 **Must read (always):**
@@ -33,7 +33,7 @@ DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
 
 ---
 
-## 1) ACTIVE CONTEXT (THREAD HEADER)
+## 2. Active Context (Thread Header)
 - **Goal:** System Consolidation & Truth Enforcement.
 - **Constraint:** “My Local is Truth.”
 - **Current DP:** DP-OPS-[ID] — [TITLE]
@@ -46,11 +46,11 @@ DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
 
 ---
 
-## 2) CURRENT DISPATCH PACKET (DP) — STELA STANDARD (A–E)
+## 3. Current Dispatch Packet (DP) - Stela Standard (A-E)
 **Formatting rule:** When emitted in chat, the entire DP must be enclosed in a single fenced code block (start to end).
 # DP-OPS-[ID]: [TITLE]
 
-## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)
+## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: [branch]  
 Required Work Branch: [branch]  
 Base HEAD: [short-hash] (preferred) or `Not provided` / `Current (draft; lock at merge)`
@@ -68,7 +68,7 @@ STOP if told to create or switch branches.
 
 ---
 
-## I) REQUIRED CONTEXT LOAD (READ BEFORE DOING ANYTHING)
+## 3.2 Required Context Load (Read Before Doing Anything)
 **Worker must confirm loaded before acting:**
 - TRUTH, AGENTS, SoP, CONTEXT, MAP
 - Plus any DP-scoped files listed here:
@@ -80,7 +80,7 @@ DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
 
 ---
 
-## II) SCOPE & SAFETY
+## 3.3 Scope and Safety
 - **Objective:** [One sentence goal]
 
 - **Non-Goals (optional, drift-killer):**
@@ -116,14 +116,14 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
 
 ---
 
-## III. EXECUTION PLAN (A–E CANON)
+## 3.4 Execution Plan (A-E Canon)
 
-### A) STATE
+### 3.4.1 State
 - **Context:** [Why we are doing this]
 - **Drift:** [What is currently wrong]
 - **Desired State:** [What “correct” looks like]
 
-### B) REQUEST
+### 3.4.2 Request
 **Numbered tasks (concrete, no vibes):**
 1) [Do X]
 2) [Do Y]
@@ -132,14 +132,14 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
 **Required Content (optional; use when doc/governance changes demand exact text/format):**
 - [Specify required sections/format rules/quality bar as needed]
 
-### C) CHANGELOG
+### 3.4.3 Changelog
 - **Log (human-readable, 1–6 bullets):**
   - [What changed]
 
-### D) PATCH / DIFF
+### 3.4.4 Patch / Diff
 - **Format:** Unified diff (preferred) or anchored snippets.
 
-### E) RECEIPT (REQUIRED)
+### 3.4.5 Receipt (Required)
 
 #### Verification (MUST RUN; or report NOT RUN + reason + risk)
 - `./ops/bin/dump --scope=platform` (or repo-correct equivalent when scope differs)
@@ -147,16 +147,16 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
   - `Fallback: ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`
 - **Zero-Byte Check:** Verify dump is not empty (`test -s <path>`).
 - Context lint (use repo-canonical command):
-  - Prefer: `bash tools/context_lint.sh`
+  - Prefer: `bash tools/lint/context.sh`
   - If not found and required: **STOP** and ask (do not invent a substitute)
 - Truth lint (when TRUTH/canon surfaces touched; use repo-canonical command):
-  - Prefer: `bash tools/lint_truth.sh`
+  - Prefer: `bash tools/lint/truth.sh`
   - If not found and required: **STOP** and ask (do not invent a substitute)
 
 #### Skill capture (required during normal DP processing)
-- Workflow: run `ops/lib/skill/skill_lib.sh harvest` to auto-generate a draft with provenance and semantic collision checks.
+- Workflow: run `ops/lib/scripts/skill.sh harvest` to auto-generate a draft with provenance and semantic collision checks.
 - Review: inspect the draft in `storage/handoff/` for heuristic accuracy (Hot Zone and High Churn). Refine Invocation guidance and Solution. Do not edit the Provenance block.
-- Promote: run `ops/lib/skill/skill_lib.sh promote <draft_path>` or log "no new skill promoted" with a rationale in RESULTS.
+- Promote: run `ops/lib/scripts/skill.sh promote <draft_path>` or log "no new skill promoted" with a rationale in RESULTS.
 - Legacy capture is forbidden. Do not manually write skill files; the provenance block is required.
 - If a DP requires skill capture, the DP Target Files allowlist must include `SKILL.md`.
 - Proof required in RESULTS:
@@ -202,11 +202,13 @@ Partial receipts (e.g., missing OPEN artifacts when a session was started) are c
 
 ---
 
-## 3) CLOSEOUT (MANDATORY)
+## 4. Closeout (Mandatory)
 
 ### Worker closeout duties (end of session)
 - [ ] Produce/Update: `storage/handoff/DP-OPS-[ID]-RESULTS.md`
 - [ ] If canon/governance surfaces were changed, include **SoP.md** in scope and update it in the same PR slice.
+- [ ] Run `ops/bin/prune` (hygiene).
+- [ ] Run `ops/bin/llms` (refresh context bundles).
 - [ ] Ensure proof bundle checklist is satisfied (above). (No bundle = DISAPPROVE.)
 - [ ] Fill out the Mandatory Closing Block (see below).
 - [ ] Append a **TASK Work Log** entry (below) capturing:
@@ -231,7 +233,7 @@ Varied Wording provision: Each entry must use meaningfully distinct wording; cop
 
 ---
 
-## 3.1) THREAD TRANSITION (RESET / ARCHIVE RULE)
+## 4.1 Thread Transition (Reset / Archive Rule)
 **Purpose:** Prevent TASK from becoming a museum while preserving continuity.
 
 When a DP is **complete** (merged) or **ended** (canceled/superseded):
@@ -239,7 +241,7 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
    - outcome (merged/canceled/superseded)
    - pointer to the DP RESULTS file
    - `NEXT:` the single action (often “start new DP” or “await operator”)
-2) Reset sections **1) ACTIVE CONTEXT** and **2) CURRENT DISPATCH PACKET** to the next DP.
+2) Reset sections **2. Active Context** and **3. Current Dispatch Packet** to the next DP.
 3) Keep the Work Log, but separate threads with a visible divider line:
    - `---`
    - `THREAD START: DP-OPS-[NEWID]`
@@ -248,7 +250,7 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 
 ---
 
-## 4) WORK LOG (TIMESTAMPED CONTINUITY)
+## 5. Work Log (Timestamped Continuity)
 **Rule:** This is not a transcript. It’s the durable breadcrumb trail.  
 **Expectation:** Append a new timestamped entry on every DP closeout (no exceptions).  
 **Each entry ends with:** `NEXT: <one single action>`.
@@ -256,21 +258,22 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - **Example format:** `2026-01-27 14:05 — DP-OPS-0005: Example entry only. Verification: NOT RUN. Blockers: none. NEXT: follow-up.`
 - *[YYYY-MM-DD HH:MM]* — DP-OPS-[ID]: [short note]. Verification: [RUN/NOT RUN]. Blockers: [none/...]. NEXT: [single action]
 - *[YYYY-MM-DD HH:MM]* — [short note]. Verification: [..]. Blockers: [..]. NEXT: [single action]
-- *2026-01-27 14:26* — DP-OPS-0005: Hardened TASK (worker git authority + dump-as-command + Work Log expectation); synced DP lint to TASK headings; added TASK gating in .github; updated SoP. Verification: RUN (dp_lint OK; context_lint warnings). Blockers: none. NEXT: validate end-to-end DP flow with a small "toy DP" and ensure gates behave as intended.
-- *2026-01-27 17:20* — DP-OPS-0004: pruned SoP into untracked museum; adjusted context_lint to ignore historical SoP refs. Verification: RUN (context_lint clean; verify_tree 4 issues; lint_truth OK). Blockers: none. NEXT: review DP-OPS-0004 results and confirm closeout.
-- *2026-02-04 00:05* — DP-OPS-0019: Defined Context Hazard doctrine, added Context Hygiene directive, added negative constraints, and hardened context lint. Verification: RUN (dump, context_lint, lint_truth; context hazard toggle verified). Blockers: none. NEXT: begin operator closeout review.
-- *2026-01-29 10:16* — DP-OPS-0006: Added DP sanity check command and dump refiners examples in MANUAL; tightened AI branch authority in CONTRIBUTING. Verification: RUN (verify_tree 4 warnings; context_lint clean). Blockers: none. NEXT: operator review + commit.
-- *2026-01-29 12:05* — DP-OPS-0007: Aligned dp_lint with TASK + removed operator-artifact prerequisite pattern + clarified storage artifact handling. Verification: RUN (tools/dp_lint.sh --test). Blockers: none. NEXT: operator review + commit.
-- *2026-01-29 13:59* — DP-OPS-0008: Relaxed dp_lint heading matching; codified DP file placement and worker receipt rule; updated MANUAL; added dp_lint fixtures. Verification: RUN (dp_lint fixture ok/bad). Blockers: none. NEXT: operator review + commit.
+- *2026-01-27 14:26* — DP-OPS-0005: Hardened TASK (worker git authority + dump-as-command + Work Log expectation); synced DP lint to TASK headings; added TASK gating in .github; updated SoP. Verification: RUN (dp OK; context warnings). Blockers: none. NEXT: validate end-to-end DP flow with a small "toy DP" and ensure gates behave as intended.
+- *2026-01-27 17:20* — DP-OPS-0004: pruned SoP into untracked museum; adjusted context to ignore historical SoP refs. Verification: RUN (context clean; verify 4 issues; truth OK). Blockers: none. NEXT: review DP-OPS-0004 results and confirm closeout.
+- *2026-02-04 00:05* — DP-OPS-0019: Defined Context Hazard doctrine, added Context Hygiene directive, added negative constraints, and hardened context lint. Verification: RUN (dump, context, truth; context hazard toggle verified). Blockers: none. NEXT: begin operator closeout review.
+- *2026-01-29 10:16* — DP-OPS-0006: Added DP sanity check command and dump refiners examples in MANUAL; tightened AI branch authority in CONTRIBUTING. Verification: RUN (verify 4 warnings; context clean). Blockers: none. NEXT: operator review + commit.
+- *2026-01-29 12:05* — DP-OPS-0007: Aligned dp with TASK + removed operator-artifact prerequisite pattern + clarified storage artifact handling. Verification: RUN (tools/lint/dp.sh --test). Blockers: none. NEXT: operator review + commit.
+- *2026-01-29 13:59* — DP-OPS-0008: Relaxed dp heading matching; codified DP file placement and worker receipt rule; updated MANUAL; added dp fixtures. Verification: RUN (dp fixture ok/bad). Blockers: none. NEXT: operator review + commit.
 - *2026-01-29 17:12* — DP-OPS-TEST: Toy DP execution on work/boot_files_update@4a0494b5. Verification: RUN. Blockers: none. NEXT: Operator review receipt completeness.
 - *2026-01-29 18:12* — DP-OPS-FIX-01: Removed authoring-time artifacts block; confirmed Section III heading format. Verification: RUN (grep -n "## III. EXECUTION PLAN" TASK.md). Blockers: none. NEXT: re-run DP-OPS-TEST.
 - *2026-01-29 18:27* — DP-OPS-FIX-01: Removed authoring-time artifacts block; confirmed Section III heading single line; created receipt and refreshed OPEN and dump artifacts. Verification: RUN (git status --porcelain; git diff; grep -n "## III. EXECUTION PLAN" TASK.md). Blockers: none. NEXT: re-run DP-OPS-TEST.
 - *2026-01-29 18:41* — DP-OPS-FIX-01: Added scope lock for canon changes; required RESULTS Status block; refreshed receipt. Verification: RUN (git status --porcelain; git diff --name-only; git diff --stat; git diff; grep -n "## III. EXECUTION PLAN" TASK.md). Blockers: none. NEXT: re-run DP-OPS-TEST.
-- *2026-01-31 11:37* — DP-OPS-0009: Added DP code-fence formatting rule in TASK and logged the change in SoP. Verification: RUN (dump; context_lint; lint_truth). Blockers: none. NEXT: operator review + commit.
-- *2026-02-01 05:30* — DP-OPS-0010: Established Skills subsystem (SKILL.md + S-LEARN-01..05) and worker skill capture utility; updated TASK + library index + SoP. Verification: RUN (dump; context_lint; lint_truth; lint_library; verify_tree WARN; dp_lint --test). Blockers: none. NEXT: operator review + commit.
-- *2026-02-01 16:30* — DP-OPS-0011: Added harvest/promote/check workflow to skill_lib, updated canon docs, and promoted S-LEARN-07. Verification: RUN (dump bundle; context_lint; lint_truth; lint_library; verify_tree WARN; dp_lint --test; skill_lib check). Blockers: none. NEXT: operator review + commit.
-- *2026-02-01 19:03* — DP-OPS-0012: Added heuristics engine, semantic drift guard, and provenance enforcement for skill harvesting; updated canon docs and added S-LEARN-08. Verification: RUN (dump; context_lint; lint_truth; lint_library; verify_tree WARN; skill_lib check). Blockers: none. NEXT: operator review + commit.
-- *2026-02-01 20:10* — DP-OPS-0013: Refactored S-LEARN-01 through S-LEARN-05 with Museum Provenance, standardized headers, and Trap/Solution guidance. Verification: RUN (dump; context_lint; lint_truth). Blockers: none. NEXT: operator review + commit.
-- *2026-02-02 03:57* — DP-OPS-0014: Hardened S-LEARN-01 through S-LEARN-05 with stack-specific specifications and updated TASK receipt mandate; ran skill harvest with semantic collision override. Verification: RUN (dump; context_lint OK; lint_truth OK; lint_library OK; verify_tree PASS with 3 warnings: storage/archives, storage/documentation, storage/ToDo). Blockers: none. NEXT: operator review + commit.
-- *2026-02-02 04:39* — DP-OPS-0015: Consolidated S-LEARN-08 into S-LEARN-06 and hardened S-LEARN-06 and S-LEARN-07; updated index and ran skill harvest with semantic collision override. Verification: RUN (dump; context_lint OK; lint_truth OK with grep warnings for removed S-LEARN-08.md; lint_library OK; verify_tree PASS with 3 warnings: storage/archives, storage/documentation, storage/ToDo). Blockers: none. NEXT: operator review + commit.
-- *2026-02-03 11:32* — DP-OPS-0016: Hardened TASK context boundaries, receipt checklist, and closeout metadata; updated SoP. Verification: RUN (dump; context_lint OK; lint_truth OK). Blockers: none. NEXT: operator review + commit.
+- *2026-01-31 11:37* — DP-OPS-0009: Added DP code-fence formatting rule in TASK and logged the change in SoP. Verification: RUN (dump; context; truth). Blockers: none. NEXT: operator review + commit.
+- *2026-02-01 05:30* — DP-OPS-0010: Established Skills subsystem (SKILL.md + S-LEARN-01..05) and worker skill capture utility; updated TASK + library index + SoP. Verification: RUN (dump; context; truth; library; verify WARN; dp --test). Blockers: none. NEXT: operator review + commit.
+- *2026-02-01 16:30* — DP-OPS-0011: Added harvest/promote/check workflow to skill, updated canon docs, and promoted S-LEARN-07. Verification: RUN (dump bundle; context; truth; library; verify WARN; dp --test; skill check). Blockers: none. NEXT: operator review + commit.
+- *2026-02-01 19:03* — DP-OPS-0012: Added heuristics engine, semantic drift guard, and provenance enforcement for skill harvesting; updated canon docs and added S-LEARN-08. Verification: RUN (dump; context; truth; library; verify WARN; skill check). Blockers: none. NEXT: operator review + commit.
+- *2026-02-01 20:10* — DP-OPS-0013: Refactored S-LEARN-01 through S-LEARN-05 with Museum Provenance, standardized headers, and Trap/Solution guidance. Verification: RUN (dump; context; truth). Blockers: none. NEXT: operator review + commit.
+- *2026-02-02 03:57* — DP-OPS-0014: Hardened S-LEARN-01 through S-LEARN-05 with stack-specific specifications and updated TASK receipt mandate; ran skill harvest with semantic collision override. Verification: RUN (dump; context OK; truth OK; library OK; verify PASS with 3 warnings: storage/archives, storage/documentation, storage/ToDo). Blockers: none. NEXT: operator review + commit.
+- *2026-02-02 04:39* — DP-OPS-0015: Consolidated S-LEARN-08 into S-LEARN-06 and hardened S-LEARN-06 and S-LEARN-07; updated index and ran skill harvest with semantic collision override. Verification: RUN (dump; context OK; truth OK with grep warnings for removed S-LEARN-08.md; library OK; verify PASS with 3 warnings: storage/archives, storage/documentation, storage/ToDo). Blockers: none. NEXT: operator review + commit.
+- *2026-02-03 11:32* — DP-OPS-0016: Hardened TASK context boundaries, receipt checklist, and closeout metadata; updated SoP. Verification: RUN (dump; context OK; truth OK). Blockers: none. NEXT: operator review + commit.
+- *2026-02-04 11:39* — DP-OPS-0020: Implemented Phase Two Doctrine (canon compression, pruning, context bundles, style lint) and promoted S-LEARN-08. Verification: RUN (dump; context; truth; llms; prune; style failed: markdownlint missing). Blockers: markdownlint not installed. NEXT: operator review and decide on markdownlint installation.

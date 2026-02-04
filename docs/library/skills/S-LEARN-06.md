@@ -12,7 +12,7 @@
 Production payload work and platform maintenance.
 
 ## Invocation guidance
-Use this skill when ops/lib/skill/heuristics.sh fails to identify the correct Hot Zone, or when debugging complex regressions. The Trap: "I remember where the bug is." (Human memory is faulty). Solution: Let the git logs prove the location of friction.
+Use this skill when ops/lib/scripts/heuristics.sh fails to identify the correct Hot Zone, or when debugging complex regressions. The Trap: "I remember where the bug is." (Human memory is faulty). Solution: Let the git logs prove the location of friction.
 
 ## Drift preventers
 - Stop if the DP scope prevents shell access.

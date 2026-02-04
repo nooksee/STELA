@@ -43,10 +43,10 @@
 ### Validation (Lint)
 ~~~bash
 # Validate DP format before dispatch
-./tools/dp_lint.sh storage/dp/intake/DP-OPS-0050.md
+./tools/lint/dp.sh storage/dp/intake/DP-OPS-0050.md
 
 # Validate Context consistency
-./tools/context_lint.sh
+./tools/lint/context.sh
 ~~~
 
 ### Skills (Harvest + Promote)
@@ -54,13 +54,13 @@ Skills remain on-demand only and must not be placed in `ops/lib/manifests/CONTEX
 
 ~~~bash
 # Enforce Skills Context Hazard
-ops/lib/skill/skill_lib.sh check
+ops/lib/scripts/skill.sh check
 
 # Draft a skill candidate
-ops/lib/skill/skill_lib.sh harvest --name "skill-title" --context "when to use it" --solution "what to do"
+ops/lib/scripts/skill.sh harvest --name "skill-title" --context "when to use it" --solution "what to do"
 
 # Promote the draft into docs/library/skills and register it
-ops/lib/skill/skill_lib.sh promote storage/handoff/skill-draft-YYYYMMDD-HHMMSS-skill-title.md
+ops/lib/scripts/skill.sh promote storage/handoff/skill-draft-YYYYMMDD-HHMMSS-skill-title.md
 ~~~
 
 ---
