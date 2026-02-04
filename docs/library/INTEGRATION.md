@@ -18,7 +18,7 @@ Integration is a sequencing tool. It does not change governance rules.
 These workflows are standardized:
 
 - feature:
-  planner -> code-reviewer -> security-reviewer
+  integrator -> code-reviewer -> security-reviewer
 
 - bugfix:
   explorer -> code-reviewer

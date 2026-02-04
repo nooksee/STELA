@@ -21,7 +21,7 @@ Canon surface definitions live in `TRUTH.md`.
 - [ ] `ops/lib/manifests/CONTEXT.md` (required context set)
 - [ ] `docs/library/MAP.md` (continuity terrain)
 
-(OPEN is for Planner/DP Writer state refresh; Worker does not read OPEN).
+(OPEN is for Integrator/DP Writer state refresh; Worker does not read OPEN).
 DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
 
 **Job-specific canon (fill in per DP):**
@@ -37,10 +37,12 @@ DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
 - **Goal:** System Consolidation & Truth Enforcement.
 - **Constraint:** “My Local is Truth.”
 - **Current DP:** DP-OPS-[ID] — [TITLE]
-- **Work Branch (Integrator-created):** [EXACT branch name]
-- **Base HEAD (operator-provided):** [short-hash or “not provided”]
+- **Work Branch (Integrator-assigned OR Integrator-proposed (Operator-created)):** [EXACT branch name]
+- **Base HEAD (operator-provided):** [short-hash] or `Not provided` / `Current (draft; lock at merge)`
 - **Single Next Action:** [One sentence. No lists.]
 - **Blockers:** [None / describe]
+
+**Drafting note:** Provisional Work Branch and Base HEAD values are allowed during drafting but must be finalized before worker execution. Workers still stop on any freshness mismatch and do not create or switch branches.
 
 ---
 
@@ -51,7 +53,7 @@ DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
 ## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)
 Base Branch: [branch]  
 Required Work Branch: [branch]  
-Base HEAD: [hash]
+Base HEAD: [short-hash] (preferred) or `Not provided` / `Current (draft; lock at merge)`
 
 Required local re-check (worker runs; paste results in RESULTS):
 - `git rev-parse --abbrev-ref HEAD`
@@ -73,7 +75,7 @@ STOP if told to create or switch branches.
   - [Exact path]
   - [Exact path]
 
-(OPEN is for Planner/DP Writer state refresh; Worker does not read OPEN).
+(OPEN is for Integrator/DP Writer state refresh; Worker does not read OPEN).
 DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
 
 ---
@@ -143,6 +145,7 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
 - `./ops/bin/dump --scope=platform` (or repo-correct equivalent when scope differs)
 - If dump refiners are used, include this fallback line in the DP:
   - `Fallback: ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`
+- **Zero-Byte Check:** Verify dump is not empty (`test -s <path>`).
 - Context lint (use repo-canonical command):
   - Prefer: `bash tools/context_lint.sh`
   - If not found and required: **STOP** and ask (do not invent a substitute)
@@ -205,7 +208,7 @@ Partial receipts (e.g., missing OPEN artifacts when a session was started) are c
 - [ ] Produce/Update: `storage/handoff/DP-OPS-[ID]-RESULTS.md`
 - [ ] If canon/governance surfaces were changed, include **SoP.md** in scope and update it in the same PR slice.
 - [ ] Ensure proof bundle checklist is satisfied (above). (No bundle = DISAPPROVE.)
-- [ ] Fill out the Mandatory Closing Block (varied wording required).
+- [ ] Fill out the Mandatory Closing Block (see below).
 - [ ] Append a **TASK Work Log** entry (below) capturing:
   - what changed (high level)
   - gates/verification outcome (pass/fail or not run + reason)
