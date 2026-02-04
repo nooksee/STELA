@@ -1,5 +1,21 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-2026-01-27.md`.
 
+## 2026-02-04 — DP-OPS-0019: Context Hazard Guardrails
+
+- Purpose: Strengthen context doctrine and guardrails to keep library directories out of the global manifest.
+- What shipped:
+  - Defined Context Hazard in TRUTH and marked library directories as JIT-only.
+  - Added Context Hygiene directive in AGENTS to enforce hazard exclusion from the manifest.
+  - Added negative constraints to docs/CONTEXT and hardened context_lint to fail on library hazards.
+  - Updated TASK work log and recorded governance update in SoP.
+- Verification:
+  - `./ops/bin/dump --scope=platform`
+  - `bash tools/context_lint.sh`
+  - `bash tools/lint_truth.sh`
+- Risk / rollback:
+  - Risk: Low (governance and lint guard updates only).
+  - Rollback: revert `TRUTH.md`, `AGENTS.md`, `docs/CONTEXT.md`, `tools/context_lint.sh`, and `SoP.md`.
+
 ## 2026-02-04 — DP-OPS-0018: Proposal Protocol and Drafting Friction Reduction
 
 - Purpose: Reduce DP drafting deadlocks by allowing provisional branch and Base HEAD proposals while preserving worker git authority.
