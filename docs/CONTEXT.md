@@ -16,6 +16,11 @@ The authoritative list of required artifacts lives in:
 * `TASK.md` (Active Objective)
 * `AGENTS.md` (Jurisdiction)
 
+**Negative Constraints (Must Not Be In The Manifest):**
+* `docs/library/agents` (Library agents are JIT-only)
+* `docs/library/tasks` (Library tasks are JIT-only)
+* `docs/library/skills` (Library skills are JIT-only)
+
 ## 2. Ingestion Mechanics
 Context is not read casually; it is injected via tooling.
 * **Generation:** [`./ops/bin/open`](../ops/bin/open)

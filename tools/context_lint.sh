@@ -32,6 +32,25 @@ if [[ ! -f "${MANIFEST_PATH}" ]]; then
   exit 2
 fi
 
+# 1.1 Context Hazard Guard (library directories must not be in the manifest)
+hazard_patterns=(
+  "docs/library/agents"
+  "docs/library/tasks"
+  "docs/library/skills"
+)
+
+hazard_found=0
+for pattern in "${hazard_patterns[@]}"; do
+  if grep -n -F "${pattern}" "${MANIFEST_PATH}" >/dev/null; then
+    hazard_found=1
+    break
+  fi
+done
+
+if [[ $hazard_found -eq 1 ]]; then
+  fail "CONTEXT HAZARD: must not be in the global context."
+fi
+
 # 2. Extraction (Grab everything inside backticks)
 # We do not filter by directory. If it is backticked in the Manifest, we check it.
 mapfile -t required_artifacts < <(awk -F'`' 'NF >= 3 { for (i = 2; i <= NF; i += 2) print $i }' "${MANIFEST_PATH}" | grep -v "^$")

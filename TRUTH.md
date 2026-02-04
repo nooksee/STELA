@@ -22,6 +22,7 @@ Anti-drift invariants:
 - If uncertain: STOP; ask for the missing input. Do not assume.
 - Reuse-first; run a duplication check before creating new artifacts.
 - SSOT discipline: one canonical file per domain; other mentions are pointers.
+- Context Hazard: Library directories (`docs/library/agents`, `docs/library/tasks`, `docs/library/skills`) are JIT-only resources and must not reside in the global context manifest.
 - SoP is history only; no permanent rules live there.
 
 ## 3. STRUCTURE
