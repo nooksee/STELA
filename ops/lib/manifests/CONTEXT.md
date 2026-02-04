@@ -7,14 +7,15 @@ List required artifacts for session rehydration and context loading.
 Used by operators to ensure AI workers have a complete "Single Source of Truth" (SSOT).
 Mandatory pre-session check: run `tools/lint/context.sh`.
 
-## Canonical Context (The Core)
+## Small Bundle (Canonical Context)
 - `TRUTH.md` — Constitution and filing doctrine.
 - `SoP.md` — History ledger and state of play.
 - `TASK.md` — Active thread, DP contract, and work log.
 - `AGENTS.md` — Staffing protocol and behavioral logic standards.
 - `llms.txt` — Discovery entry point for AI agents.
 
-## Supporting Surfaces
+## Full Bundle (Supporting Surfaces)
+Full bundle adds these supporting surfaces on top of the Small bundle.
 - `docs/library/INDEX.md` — Curated operator surface index.
 - `docs/library/MANUAL.md` — Command mechanics and cheat sheet.
 - `docs/library/MAP.md` — Context wayfinding map.

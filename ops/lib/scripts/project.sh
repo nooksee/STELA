@@ -30,7 +30,7 @@ project_require_repo_root() {
 }
 
 project_registry_rel() {
-  printf "%s" "storage/PROJECT_REGISTRY.md"
+  printf "%s" "ops/lib/manifests/PROJECTS.md"
 }
 
 project_registry_path() {
@@ -38,21 +38,19 @@ project_registry_path() {
 }
 
 project_template_rel() {
-  printf "%s" "ops/lib/project/templates/default/README.md"
+  printf "%s" "ops/lib/project/SCAFFOLD.md"
 }
 
 project_template_path() {
   printf "%s/%s" "$PROJECT_REPO_ROOT" "$(project_template_rel)"
 }
 
-project_subdir_template_rel() {
-  local subdir="$1"
-  printf "%s" "ops/lib/project/templates/default/${subdir}/README.md"
+project_stela_template_rel() {
+  printf "%s" "ops/lib/project/STELA.md"
 }
 
-project_subdir_template_path() {
-  local subdir="$1"
-  printf "%s/%s" "$PROJECT_REPO_ROOT" "$(project_subdir_template_rel "$subdir")"
+project_stela_template_path() {
+  printf "%s/%s" "$PROJECT_REPO_ROOT" "$(project_stela_template_rel)"
 }
 
 project_require_registry() {
@@ -171,6 +169,7 @@ project_get_current_project_id() {
     /^Current[[:space:]]*:/ {
       sub(/^Current[[:space:]]*:[[:space:]]*/, "", $0)
       sub(/[[:space:]]+$/, "", $0)
+      if ($0 == "none" || $0 == "(none)" || $0 == "-") { exit }
       print $0
       exit
     }

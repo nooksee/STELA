@@ -1,5 +1,5 @@
 # AGENTS.md
-# Pointer-first agent constitution for Stela (no duplicated canon text).
+# Pointer-first agent constitution. Do not duplicate canon text.
 
 ## 1. Staffing Protocol
 - Operator (Human): Owns final decisions, approvals, and secrets. Performs all commits, pushes, and merges.
