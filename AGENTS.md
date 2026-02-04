@@ -36,3 +36,8 @@ All AI agents contributing to this repository shall adhere to these parameters:
 
 ## 4. Entry Points
 * llms.txt
+
+## 5. Drafting Proposal Protocol
+* **Integrator proposals:** A Integrator may propose a work branch name and Base HEAD when they are not yet provided.
+* **Operator authority:** The Operator creates branches and provides the final Base HEAD; Contractors do not create or switch branches.
+* **Provisional marking:** Any provisional value must be prefixed with `PROPOSED:` during drafting and must be removed or replaced with finalized values before any worker runs a DP.

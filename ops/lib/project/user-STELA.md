@@ -44,7 +44,7 @@ Located in `~/AGENTS.md`:
 
 | Agent | Purpose |
 |-------|---------|
-| planner | Feature implementation planning |
+| integrator | Feature implementation planning |
 | architect | System design and architecture |
 | code-reviewer | Code review for quality/security |
 | security-reviewer | Security vulnerability analysis |

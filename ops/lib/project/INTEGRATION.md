@@ -31,7 +31,7 @@ The orchestrator does not define agent behavior. It only:
 Default workflow mappings MUST match docs/library/tasks/B-TASK-03.md:
 
 - feature:
-  planner -> code-reviewer -> security-reviewer
+  integrator -> code-reviewer -> security-reviewer
 
 - bugfix:
   explorer -> code-reviewer

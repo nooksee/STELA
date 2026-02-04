@@ -1,17 +1,17 @@
-# Orchestrate Command
+# Integrate Command
 
 Sequential agent workflow for complex tasks.
 
 ## Usage
 
-`/ops/bin/project orchestrate [workflow-type] [task-description]`
+`/ops/bin/project integrate [workflow-type] [task-description]`
 
 ## Workflow Types
 
 ### feature
 Full feature implementation workflow:
 ```
-planner -> code-reviewer -> security-reviewer
+integrator -> code-reviewer -> security-reviewer
 ```
 
 ### bugfix
@@ -67,16 +67,16 @@ Between agents, create handoff document:
 ## Example: Feature Workflow
 
 ```
-/orchestrate feature "Add user authentication"
+/integrate feature "Add user authentication"
 ```
 
 Executes:
 
-1. **Planner Agent**
+1. **Integrator Agent**
    - Analyzes requirements
    - Creates implementation plan
    - Identifies dependencies
-   - Output: `HANDOFF: planner`
+   - Output: `HANDOFF: integrator`
 
 2. **Code Reviewer Agent**
    - Reviews implementation
@@ -97,7 +97,7 @@ INTEGRATION REPORT
 ====================
 Workflow: feature
 Task: Add user authentication
-Agents: planner -> code-reviewer -> security-reviewer
+Agents: integrator -> code-reviewer -> security-reviewer
 
 SUMMARY
 -------
@@ -105,7 +105,7 @@ SUMMARY
 
 AGENT OUTPUTS
 -------------
-Planner: [summary]
+Integrator: [summary]
 Code Reviewer: [summary]
 Security Reviewer: [summary]
 
@@ -153,12 +153,12 @@ $ARGUMENTS:
 ## Custom Workflow Example
 
 ```
-/orchestrate custom "architect,code-reviewer" "Redesign caching layer"
+/integrate custom "architect,code-reviewer" "Redesign caching layer"
 ```
 
 ## Tips
 
-1. **Start with planner** for complex features
+1. **Start with integrator** for complex features
 2. **Always include code-reviewer** before merge
 3. **Use security-reviewer** for auth/payment/PII
 4. **Keep handoffs concise** - focus on what next agent needs

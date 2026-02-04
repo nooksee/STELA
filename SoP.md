@@ -1,10 +1,27 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-2026-01-27.md`.
 
+## 2026-02-04 — DP-OPS-0018: Proposal Protocol and Drafting Friction Reduction
+
+- Purpose: Reduce DP drafting deadlocks by allowing provisional branch and Base HEAD proposals while preserving worker git authority.
+- What shipped:
+  - Updated TASK template to allow Integrator-assigned or Integrator-proposed (Operator-created) work branch labeling and to allow Base HEAD to be `Not provided` or `Current (draft; lock at merge)` during drafting, with a drafting note on finalization and worker stop rules.
+  - Added Drafting Proposal Protocol in AGENTS to permit Integrator proposals, require `PROPOSED:` prefixes during drafting, and reaffirm Operator-provided finalization and contractor branch limits.
+  - Added zero-byte dump verification in TASK receipt and clarified Mandatory Closing Block checklist wording.
+- Verification:
+  - `bash tools/verify_tree.sh`
+  - `bash tools/context_lint.sh`
+  - `bash tools/lint_truth.sh`
+  - `bash tools/dp_lint.sh --test`
+  - `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`
+- Risk / rollback:
+  - Risk: Low (governance text updates only).
+  - Rollback: revert `TASK.md`, `AGENTS.md`, and `SoP.md`.
+
 ## 2026-02-03 — DP-OPS-0016: Hardened TASK.md (context hygiene + mandatory closing block)
 
 - Purpose: Harden TASK worker context boundaries, receipt discipline, and closeout metadata structure.
 - What shipped:
-  - Removed OPEN from worker context load instructions and added the Planner-only OPEN rule plus disposable artifact prohibition.
+  - Removed OPEN from worker context load instructions and added the Integrator-only OPEN rule plus disposable artifact prohibition.
   - Expanded receipt checklist to require OPEN, OPEN-PORCELAIN, and dump artifacts with explicit failure conditions.
   - Added the Mandatory Closing Block with six distinct commit and PR metadata fields.
 - Verification:
