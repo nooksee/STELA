@@ -4,11 +4,19 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 OUT_DIR="${REPO_ROOT}"
+MANIFEST_PATH="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
+PROFILE=""
+PROJECT_OVERRIDE=""
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/llms [--out-dir=PATH]
+Usage: ops/bin/llms [--out-dir=PATH] [--profile=architect|security] [--project=ID]
 USAGE
+}
+
+die() {
+  echo "ERROR: $*" >&2
+  exit 1
 }
 
 for arg in "$@"; do
@@ -16,19 +24,44 @@ for arg in "$@"; do
     --out-dir=*)
       OUT_DIR="${arg#--out-dir=}"
       ;;
+    --profile=*)
+      PROFILE="${arg#--profile=}"
+      ;;
+    --project=*)
+      PROJECT_OVERRIDE="${arg#--project=}"
+      ;;
     -h|--help)
       usage
       exit 0
       ;;
     *)
-      echo "ERROR: Unknown arg: ${arg}" >&2
-      exit 1
+      die "Unknown arg: ${arg}"
       ;;
   esac
 done
 
+if [[ -n "$PROFILE" ]]; then
+  case "$PROFILE" in
+    architect|security)
+      ;;
+    *)
+      die "Unknown profile: ${PROFILE}"
+      ;;
+  esac
+fi
+
+if [[ ! -f "$MANIFEST_PATH" ]]; then
+  die "Missing manifest: ops/lib/manifests/CONTEXT.md"
+fi
+
+mkdir -p "$OUT_DIR"
+
 SMALL_OUT="${OUT_DIR}/llms-small.txt"
 FULL_OUT="${OUT_DIR}/llms-full.txt"
+PROFILE_OUT=""
+if [[ -n "$PROFILE" ]]; then
+  PROFILE_OUT="${OUT_DIR}/llms-${PROFILE}.txt"
+fi
 
 strip_toc() {
   awk '
@@ -70,76 +103,174 @@ emit_file() {
   local path="$1"
   local out_file="$2"
 
+  local abs_path="${REPO_ROOT}/${path}"
+  if [[ ! -f "$abs_path" ]]; then
+    die "Missing bundle file: ${path}"
+  fi
+
   printf '## %s\n' "$path" >> "$out_file"
   if [[ "$path" == "SoP.md" ]]; then
-    emit_sop_head "${REPO_ROOT}/${path}" | strip_toc | redact_stream >> "$out_file"
+    emit_sop_head "$abs_path" | strip_toc | redact_stream >> "$out_file"
   else
-    strip_toc < "${REPO_ROOT}/${path}" | redact_stream >> "$out_file"
+    strip_toc < "$abs_path" | redact_stream >> "$out_file"
   fi
   printf '\n\n' >> "$out_file"
 }
 
-include_small() {
-  local path="$1"
-  case "$path" in
-    TRUTH.md|AGENTS.md|SoP.md|docs/library/INDEX.md)
-      return 0
-      ;;
-    docs/library/skills/S-LEARN-0[1-9].md|docs/library/skills/S-LEARN-10.md)
-      return 0
-      ;;
-    *)
-      return 1
-      ;;
-  esac
+bundle_section_paths() {
+  local section="$1"
+  awk -v section="$section" '
+    BEGIN { in_section=0 }
+    $0 ~ /^## / {
+      if ($0 ~ section) { in_section=1; next }
+      if (in_section) { exit }
+    }
+    in_section { print }
+  ' "$MANIFEST_PATH" | awk -F"\`" 'NF >= 3 { for (i = 2; i <= NF; i += 2) print $i }'
 }
 
-include_full() {
-  local path="$1"
-  if include_small "$path"; then
+dedupe_paths() {
+  declare -A seen
+  local path
+  for path in "$@"; do
+    if [[ -z "${seen[$path]:-}" ]]; then
+      printf '%s\n' "$path"
+      seen[$path]=1
+    fi
+  done
+}
+
+validate_bundle_paths() {
+  local bundle_name="$1"
+  shift
+  local hazards=("docs/library/agents" "docs/library/tasks" "docs/library/skills")
+  local path hazard
+
+  for path in "$@"; do
+    for hazard in "${hazards[@]}"; do
+      if [[ "$path" == "$hazard"* ]]; then
+        die "Context hazard: ${bundle_name} includes ${path}"
+      fi
+    done
+  done
+}
+
+resolve_project_id() {
+  local project_id=""
+  if [[ -n "$PROJECT_OVERRIDE" ]]; then
+    printf '%s' "$PROJECT_OVERRIDE"
     return 0
   fi
-  case "$path" in
-    README.md)
-      return 0
+  if [[ -n "${PROJECT_ID:-}" ]]; then
+    printf '%s' "$PROJECT_ID"
+    return 0
+  fi
+  local manifest="${REPO_ROOT}/ops/lib/manifests/PROJECTS.md"
+  if [[ -f "$manifest" ]]; then
+    project_id="$(awk '/^Current[[:space:]]*:/ { sub(/^Current[[:space:]]*:[[:space:]]*/, "", $0); sub(/[[:space:]]+$/, "", $0); print $0; exit }' "$manifest")"
+  fi
+  printf '%s' "$project_id"
+}
+
+collect_global_docs() {
+  find "${REPO_ROOT}/docs" -type f -print | \
+    sed "s#^${REPO_ROOT}/##" | \
+    grep -E -v '^docs/library/(agents|tasks|skills)(/|$)' | \
+    sort
+}
+
+collect_project_docs() {
+  local project_id="$1"
+  local subdir="$2"
+  local dir="${REPO_ROOT}/projects/${project_id}/${subdir}"
+  if [[ ! -d "$dir" ]]; then
+    return 1
+  fi
+  find "$dir" -type f -print | sed "s#^${REPO_ROOT}/##" | sort
+}
+
+collect_profile_paths() {
+  local profile="$1"
+  local project_id
+  project_id="$(resolve_project_id)"
+
+  local -a paths=("TRUTH.md" "AGENTS.md")
+  local -a extra=()
+
+  case "$profile" in
+    architect)
+      if [[ -n "$project_id" ]]; then
+        mapfile -t extra < <(collect_project_docs "$project_id" "docs/CODEMAPS" || true)
+      fi
+      if (( ${#extra[@]} == 0 )); then
+        mapfile -t extra < <(collect_global_docs)
+      fi
       ;;
-    docs/library/*)
-      return 0
-      ;;
-    *)
-      return 1
+    security)
+      if [[ -n "$project_id" ]]; then
+        mapfile -t extra < <(collect_project_docs "$project_id" "docs/security" || true)
+      fi
+      if (( ${#extra[@]} == 0 )); then
+        local fallback="${REPO_ROOT}/docs/security"
+        if [[ -d "$fallback" ]]; then
+          mapfile -t extra < <(find "$fallback" -type f -print | sed "s#^${REPO_ROOT}/##" | sort)
+        fi
+      fi
       ;;
   esac
+
+  paths+=("${extra[@]}")
+  mapfile -t paths < <(dedupe_paths "${paths[@]}")
+  validate_bundle_paths "$profile profile" "${paths[@]}"
+  printf '%s\n' "${paths[@]}"
 }
+
+mapfile -t small_paths < <(bundle_section_paths 'Small Bundle')
+mapfile -t full_extra_paths < <(bundle_section_paths 'Full Bundle')
+
+if (( ${#small_paths[@]} == 0 )); then
+  die "No Small bundle paths found in ops/lib/manifests/CONTEXT.md"
+fi
+
+mapfile -t small_paths < <(dedupe_paths "${small_paths[@]}")
+mapfile -t full_paths < <(dedupe_paths "${small_paths[@]}" "${full_extra_paths[@]}")
+
+validate_bundle_paths "Small bundle" "${small_paths[@]}"
+validate_bundle_paths "Full bundle" "${full_paths[@]}"
 
 rm -f "$SMALL_OUT" "$FULL_OUT"
 
-declare -A seen_small
-declare -A seen_full
+for path in "${small_paths[@]}"; do
+  emit_file "$path" "$SMALL_OUT"
+done
 
-while IFS= read -r path; do
-  if include_small "$path"; then
-    if [[ -z "${seen_small[$path]:-}" ]]; then
-      emit_file "$path" "$SMALL_OUT"
-      seen_small[$path]=1
-    fi
-  fi
-  if include_full "$path"; then
-    if [[ -z "${seen_full[$path]:-}" ]]; then
-      emit_file "$path" "$FULL_OUT"
-      seen_full[$path]=1
-    fi
-  fi
-done < <(git ls-files | sort)
+for path in "${full_paths[@]}"; do
+  emit_file "$path" "$FULL_OUT"
+done
 
 if [[ ! -s "$SMALL_OUT" ]]; then
-  echo "ERROR: ${SMALL_OUT} is empty" >&2
-  exit 1
+  die "${SMALL_OUT} is empty"
 fi
 
 if [[ ! -s "$FULL_OUT" ]]; then
-  echo "ERROR: ${FULL_OUT} is empty" >&2
-  exit 1
+  die "${FULL_OUT} is empty"
 fi
 
-printf 'Wrote %s and %s\n' "$SMALL_OUT" "$FULL_OUT"
+written=("$SMALL_OUT" "$FULL_OUT")
+
+if [[ -n "$PROFILE" ]]; then
+  rm -f "$PROFILE_OUT"
+  mapfile -t profile_paths < <(collect_profile_paths "$PROFILE")
+  if (( ${#profile_paths[@]} == 0 )); then
+    die "Profile bundle is empty: ${PROFILE}"
+  fi
+  for path in "${profile_paths[@]}"; do
+    emit_file "$path" "$PROFILE_OUT"
+  done
+  if [[ ! -s "$PROFILE_OUT" ]]; then
+    die "${PROFILE_OUT} is empty"
+  fi
+  written+=("$PROFILE_OUT")
+fi
+
+printf 'Wrote %s\n' "${written[*]}"

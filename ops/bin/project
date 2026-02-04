@@ -1,1 +1,215 @@
-<PLACEHOLDER FILE>
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=/dev/null
+source "${REPO_ROOT}/ops/lib/scripts/project.sh"
+
+usage() {
+  cat <<'USAGE'
+Usage:
+  ops/bin/project init <id> [--name="Display Name"] [--notes="..."] [--dry-run] [--confirm]
+  ops/bin/project work <id> [--agent=name]
+  ops/bin/project status
+USAGE
+}
+
+cmd_init() {
+  local project_id=""
+  local display_name=""
+  local notes="-"
+  local dry_run=0
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --name=*)
+        display_name="${1#--name=}"
+        ;;
+      --notes=*)
+        notes="${1#--notes=}"
+        ;;
+      --dry-run)
+        dry_run=1
+        ;;
+      --confirm)
+        ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      *)
+        if [[ -z "$project_id" ]]; then
+          project_id="$1"
+        else
+          project_die "Unexpected arg: $1"
+        fi
+        ;;
+    esac
+    shift
+  done
+
+  if [[ -z "$project_id" ]]; then
+    project_die "Project ID is required."
+  fi
+
+  if ! project_is_valid_id "$project_id"; then
+    project_die "Invalid project ID: ${project_id}"
+  fi
+
+  if project_registry_has_id "$project_id"; then
+    project_die "Project already registered: ${project_id}"
+  fi
+
+  local project_dir="${PROJECT_REPO_ROOT}/projects/${project_id}"
+  if [[ -e "$project_dir" ]]; then
+    project_die "Project directory already exists: projects/${project_id}"
+  fi
+
+  if [[ -z "$display_name" ]]; then
+    display_name="$project_id"
+  fi
+
+  if [[ -z "$notes" ]]; then
+    notes="-"
+  fi
+
+  local scaffold_path
+  scaffold_path="$(project_template_path)"
+  if [[ ! -f "$scaffold_path" ]]; then
+    project_die "Missing scaffold template: ops/lib/project/SCAFFOLD.md"
+  fi
+
+  local stela_path
+  stela_path="$(project_stela_template_path)"
+  if [[ ! -f "$stela_path" ]]; then
+    project_die "Missing STELA template: ops/lib/project/STELA.md"
+  fi
+
+  local created_at
+  created_at="$(date -u '+%Y-%m-%d')"
+
+  if (( dry_run )); then
+    echo "DRY RUN: would create projects/${project_id}"
+    echo "DRY RUN: would write projects/${project_id}/README.md"
+    echo "DRY RUN: would write projects/${project_id}/STELA.md"
+    echo "DRY RUN: would register ${project_id} in ops/lib/manifests/PROJECTS.md"
+    return 0
+  fi
+
+  mkdir -p "$project_dir"
+  project_render_template "$scaffold_path" "$project_id" "$display_name" "$created_at" > "${project_dir}/README.md"
+  cp "$stela_path" "${project_dir}/STELA.md"
+  project_add_registry_entry "$project_id" "$display_name" "$created_at" "active" "projects/${project_id}" "$notes"
+
+  echo "Initialized project: ${project_id}"
+}
+
+cmd_work() {
+  local project_id=""
+  local agent=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --agent=*)
+        agent="${1#--agent=}"
+        ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      *)
+        if [[ -z "$project_id" ]]; then
+          project_id="$1"
+        else
+          project_die "Unexpected arg: $1"
+        fi
+        ;;
+    esac
+    shift
+  done
+
+  if [[ -z "$project_id" ]]; then
+    project_die "Project ID is required."
+  fi
+
+  if ! project_is_valid_id "$project_id"; then
+    project_die "Invalid project ID: ${project_id}"
+  fi
+
+  if ! project_registry_has_id "$project_id"; then
+    project_die "Project not registered: ${project_id}"
+  fi
+
+  local project_dir="${PROJECT_REPO_ROOT}/projects/${project_id}"
+  if [[ ! -d "$project_dir" ]]; then
+    project_die "Project directory missing: projects/${project_id}"
+  fi
+
+  local stela_rel="projects/${project_id}/STELA.md"
+  local readme_rel="projects/${project_id}/README.md"
+
+  if [[ ! -f "${PROJECT_REPO_ROOT}/${stela_rel}" ]]; then
+    project_die "Missing ${stela_rel}"
+  fi
+
+  if [[ ! -f "${PROJECT_REPO_ROOT}/${readme_rel}" ]]; then
+    project_die "Missing ${readme_rel}"
+  fi
+
+  local open_cmd=("${PROJECT_REPO_ROOT}/ops/bin/open" "--intent=Project work: ${project_id}" "--include=${stela_rel}" "--include=${readme_rel}" "--tag=project-${project_id}" "--out=auto")
+  if [[ -n "$agent" ]]; then
+    open_cmd+=("--agent=${agent}")
+  fi
+
+  "${open_cmd[@]}"
+}
+
+cmd_status() {
+  project_require_registry || exit 1
+
+  local rows
+  rows="$(project_registry_rows)"
+
+  if [[ -z "$rows" ]]; then
+    echo "No registered projects."
+    exit 0
+  fi
+
+  printf '%-20s %-20s %-12s %-10s %-30s %s\n' "project_id" "name" "created" "status" "root" "notes"
+  while IFS=$'\t' read -r id name created status root notes; do
+    printf '%-20s %-20s %-12s %-10s %-30s %s\n' "$id" "$name" "$created" "$status" "$root" "$notes"
+  done <<< "$rows"
+}
+
+main() {
+  project_require_repo_root
+
+  if [[ $# -lt 1 ]]; then
+    usage
+    exit 1
+  fi
+
+  local cmd="$1"
+  shift
+
+  case "$cmd" in
+    init)
+      cmd_init "$@"
+      ;;
+    work)
+      cmd_work "$@"
+      ;;
+    status)
+      cmd_status
+      ;;
+    -h|--help)
+      usage
+      ;;
+    *)
+      project_die "Unknown command: ${cmd}"
+      ;;
+  esac
+}
+
+main "$@"

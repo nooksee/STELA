@@ -1,10 +1,9 @@
-# Example Project STELA.md
+# Project STELA.md
 
-This is an example project-level STELA.md file. Place this in your project root.
+Project-level rules for a single project. Store at `projects/<ID>/STELA.md`.
 
 ## Project Overview
-
-[Brief description of your project - what it does, tech stack]
+Describe the project purpose, scope, and stack in a short paragraph.
 
 ## Critical Rules
 
@@ -13,12 +12,12 @@ This is an example project-level STELA.md file. Place this in your project root.
 - Many small files over few large files
 - High cohesion, low coupling
 - 200-400 lines typical, 800 max per file
-- Organize by feature/domain, not by type
+- Organize by feature and domain, not by type
 
 ### 2. Code Style
 
 - No emojis in code, comments, or documentation
-- Immutability always - never mutate objects or arrays
+- Immutability always; never mutate objects or arrays
 - No console.log in production code
 - Proper error handling with try/catch
 - Input validation with Zod or similar
@@ -96,3 +95,17 @@ DEBUG=false
 - Never commit to main directly
 - PRs require review
 - All tests must pass before merge
+
+<!--
+User-level overlay (deprecated).
+Do not create per-user STELA files. Use project-level STELA only.
+
+Legacy outline from user-STELA:
+- Agent-first, parallel execution, plan before execute, test-driven, security-first.
+- Modular rules: security, coding-style, testing, git-workflow, agents, patterns, performance.
+- Preferred agents: integrator, architect, code-reviewer, security-reviewer, build-error-resolver, refactor-cleaner, doc-updater.
+- Code style: no emojis, immutability, many small files, 200-400 lines typical, 800 max.
+- Git: conventional commits; test before commit; small focused commits.
+- Editor: NetBeans with agent panel, command palette, Vim mode.
+- Success metrics: tests pass, no security vulnerabilities, readable, requirements met.
+-->
