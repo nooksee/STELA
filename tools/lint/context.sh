@@ -11,7 +11,9 @@ else
   echo "ERROR: Must be run inside a git repository." >&2
   exit 1
 fi
-MANIFEST_PATH="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
+
+cd "$REPO_ROOT" || exit 1
+MANIFEST_PATH="ops/lib/manifests/CONTEXT.md"
 
 echo "Stela Context Verification"
 echo "Manifest: ops/lib/manifests/CONTEXT.md"
@@ -32,7 +34,7 @@ warn() {
 
 # 1. Manifest Check
 if [[ ! -f "${MANIFEST_PATH}" ]]; then
-  echo "CRITICAL: Manifest not found at ${MANIFEST_PATH}"
+  echo "CRITICAL: Manifest not found at ${REPO_ROOT}/${MANIFEST_PATH}"
   exit 2
 fi
 

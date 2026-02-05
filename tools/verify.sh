@@ -5,16 +5,16 @@ set -euo pipefail
 # Purpose: Ensure repo root contains only Platform artifacts and CMS payloads are contained in projects/.
 
 if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  ROOT_DIR="$(git rev-parse --show-toplevel)"
+  REPO_ROOT="$(git rev-parse --show-toplevel)"
 else
   echo "ERROR: Must be run inside a git repository." >&2
   exit 1
 fi
 
-cd "$ROOT_DIR"
+cd "$REPO_ROOT" || exit 1
 
 echo "Stela Repo Hygiene Verification"
-echo "Root: $ROOT_DIR"
+echo "Root: $REPO_ROOT"
 echo
 
 errors=0

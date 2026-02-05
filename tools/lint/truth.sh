@@ -40,7 +40,7 @@ else
   exit 1
 fi
 
-cd "$REPO_ROOT"
+cd "$REPO_ROOT" || exit 1
 
 echo "Stela Truth Verification"
 echo "------------------------"
@@ -60,18 +60,26 @@ warn() {
   warnings=$((warnings+1))
 }
 
-# Build the file list
-files="$(git ls-files "${scan_dirs[@]}" 2>/dev/null || true)"
-for f in "${root_files[@]}"; do
-  if [[ -f "$f" ]]; then
-    files="$files"$'\n'"$f"
+mapfile -t tracked_files < <(git ls-files "${scan_dirs[@]}" 2>/dev/null || true)
+files=()
+for file in "${tracked_files[@]}"; do
+  # Ignore unstaged deletions and other non-file tracked entries.
+  if [[ ! -f "$file" ]]; then
+    continue
+  fi
+  if [[ "$file" == "tools/lint/truth.sh" ]]; then
+    continue
+  fi
+  files+=("$file")
+done
+
+for file in "${root_files[@]}"; do
+  if [[ -f "$file" ]]; then
+    files+=("$file")
   fi
 done
 
-# Filter out this script itself to prevent self-flagging
-files="$(printf '%s\n' "$files" | grep -v "tools/lint/truth.sh" || true)"
-
-if [[ -z "${files//[[:space:]]/}" ]]; then
+if (( ${#files[@]} == 0 )); then
   echo "OK (No files to scan)"
   exit 0
 fi
@@ -80,7 +88,7 @@ fi
 echo "Scanning for typos (Stela)..."
 for token in "${forbidden_spellings[@]}"; do
   # grep word boundary, ignore case
-  matches="$(echo "$files" | xargs -r grep -nH -I -E "\b${token}\b" 2>/dev/null || true)"
+  matches="$(grep -nH -I -E "\b${token}\b" "${files[@]}" 2>/dev/null || true)"
   if [[ -n "$matches" ]]; then
     fail "Forbidden spelling found: '$token'" "$matches"
   fi
