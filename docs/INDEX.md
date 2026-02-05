@@ -13,7 +13,7 @@
 * [../TASK.md](../TASK.md) — The active work surface and Dispatch Packet contract.
 
 ## 3. Operations & Maps (Deep Dives)
-* [ops/INDEX.md](ops/INDEX.md) — Index of operational binaries and subsystems.
+* [ops/README.md](ops/README.md) — Ops Kernel architecture and subsystem overview.
 * [library/INDEX.md](library/INDEX.md) — Curated library of operator guides.
 * [library/MAP.md](library/MAP.md) — Continuity wayfinding for cross-session state.
 * [CONTEXT.md](CONTEXT.md) — Definition of required context artifacts.

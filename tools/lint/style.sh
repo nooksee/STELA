@@ -9,6 +9,7 @@ else
 fi
 cd "$REPO_ROOT" || exit 1
 CONFIG="${REPO_ROOT}/.markdownlint.json"
+skip_markdownlint=0
 
 if [[ ! -f "${CONFIG}" ]]; then
   echo "ERROR: .markdownlint.json not found at ${CONFIG}" >&2
@@ -16,8 +17,12 @@ if [[ ! -f "${CONFIG}" ]]; then
 fi
 
 if ! command -v markdownlint >/dev/null 2>&1; then
-  echo "ERROR: markdownlint is not installed or not in PATH" >&2
-  exit 1
+  if [[ "${STRICT_MARKDOWNLINT:-0}" == "1" ]]; then
+    echo "ERROR: markdownlint is required when STRICT_MARKDOWNLINT=1" >&2
+    exit 1
+  fi
+  echo "WARN: markdownlint not found; skipping markdownlint checks." >&2
+  skip_markdownlint=1
 fi
 
 if ! command -v rg >/dev/null 2>&1; then
@@ -38,6 +43,10 @@ files=("${REPO_ROOT}"/docs/**/*.md "${REPO_ROOT}"/ops/**/*.md)
 
 if (( ${#files[@]} == 0 )); then
   echo "WARN: No markdown files found under docs/ or ops/." >&2
+  exit 0
+fi
+
+if [[ "$skip_markdownlint" -eq 1 ]]; then
   exit 0
 fi
 

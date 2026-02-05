@@ -12,6 +12,9 @@ forbidden_spellings=(
   "Steela"
   "Stila"
   "Stella"
+  "Sheriff"
+  "Colonies"
+  "Crown"
 )
 
 # 2. Scope Definition (Expanded)

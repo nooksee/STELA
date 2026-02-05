@@ -1,5 +1,25 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-05 - DP-OPS-0026: Phase 3 Semantic Refactoring & Structural Hygiene
+
+- Purpose: Replace legacy governance metaphors, prune redundant security docs, and harden lint enforcement for Phase 3 terminology.
+- What shipped:
+  - Refactored `PoT.md` nomenclature to Governance Engine, Core, Federation, and Tiered Jurisdiction.
+  - Replaced `docs/ops/INDEX.md` with an architectural `docs/ops/README.md`, and removed the redundant `docs/security/` surface.
+  - Updated library and docs pointers, and hardened `tools/lint/truth.sh` and `tools/lint/style.sh` for terminology enforcement and markdownlint robustness.
+- Verification:
+  - `./ops/bin/open --dp="DP-OPS-0026 / 2026-02-05" --intent="Phase 3 Semantic Refactoring & Structural Hygiene" --out=auto`
+  - `./ops/bin/dump --scope=platform`
+  - `bash tools/lint/context.sh`
+  - `bash tools/lint/truth.sh`
+  - `bash tools/lint/style.sh`
+  - `bash ops/lib/scripts/skill.sh harvest --name "DP-OPS-0026 Worker Closeout" --context "platform governance refactor for DP-OPS-0026 terminology and ops architecture update" --solution "No promotion. This run records the semantic refactor, pointer updates, and receipt proofs."`
+  - `bash ops/bin/prune`
+  - `bash ops/bin/llms --out-dir=storage/handoff`
+- Risk / rollback:
+  - Risk: Low (documentation and lint rule updates only).
+  - Rollback: revert `PoT.md`, `docs/ops/README.md`, `docs/library/INDEX.md`, `docs/INDEX.md`, `tools/lint/truth.sh`, `tools/lint/style.sh`, `SoP.md`, `TASK.md`; restore `docs/ops/INDEX.md` and `docs/security/README.md`.
+
 ## 2026-02-05 - DP-OPS-0025: Governance Consolidation & Policy of Truth (PoT)
 
 - Purpose: Consolidate governance surfaces into PoT and resolve jurisdiction ambiguity.

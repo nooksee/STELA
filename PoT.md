@@ -31,8 +31,8 @@ Filing:
 - `ops/lib/manifests/CONTEXT.md` — required context set.
 - `llms.txt` — discovery entry point.
 
-## 2. The Sheriff (Enforcement)
-The Sheriff is the Integrator plus Automation (linters, repo-gates, and binaries).
+## 2. The Governance Engine (Enforcement)
+The Governance Engine is the Integrator plus Automation (linters, repo-gates, and binaries).
 Mandate:
 - Stop work.
 - Reject PRs.
@@ -42,13 +42,13 @@ Triggers:
 - Context hazard in the global manifest.
 - Scope breach or forbidden zone access.
 
-## 3. Jurisdiction (The Multi-verse)
+## 3. Jurisdiction (The Tiered Jurisdiction)
 
-### 3.1 The Crown (Platform)
+### 3.1 The Core (Platform)
 Scope: `ops/`, `docs/`, `tools/`, `.github/`, and root governance surfaces.
-Law: Absolute PoT enforcement. No contractions. Strict formatting. The Sheriff halts work on violations.
+Law: Absolute PoT enforcement. No contractions. Strict formatting. The Governance Engine halts work on violations.
 
-### 3.2 The Colonies (Projects)
+### 3.2 The Federation (Projects)
 Scope: `projects/`.
 Law: Structural adherence to platform governance. Each project must include `STELA.md`.
 Local law applies to project content. Contractions are allowed only when the project `STELA.md` permits them.
@@ -73,7 +73,7 @@ Platform automation still governs any platform surfaces touched during project w
 - Operational Directives: Contractor closeout skill harvesting uses ops/lib/scripts/skill.sh harvest for provenance.
 - Operational Directives: Contractor closeout skill harvesting forbids manual creation of docs/library/skills markdown files.
 - Operational Directives: Contractor closeout skill harvesting is mandatory for production payloads and optional for platform maintenance.
-- Jurisdiction note: The Colonies may permit contractions in project content when `STELA.md` allows them. Crown surfaces remain contraction-free.
+- Jurisdiction note: The Federation may permit contractions in project content when `STELA.md` allows them. Core surfaces remain contraction-free.
 
 ### 4.3 Hard Constraints (SSOT)
 - PoT.md
