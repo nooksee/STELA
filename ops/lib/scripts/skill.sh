@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
-SKILL_FILE="${REPO_ROOT}/SKILL.md"
+SKILL_FILE="${REPO_ROOT}/docs/library/SKILLS.md"
 INDEX_FILE="${REPO_ROOT}/docs/library/INDEX.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"

@@ -12,6 +12,68 @@ project_trim() {
   printf "%s" "$s"
 }
 
+project_resolve_agent_file() {
+  local target="$1"
+  local repo_root="${PROJECT_REPO_ROOT:-}"
+  local match=""
+  local match_count=0
+  local file name
+
+  if [[ -z "$repo_root" ]]; then
+    if ! repo_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+      project_die "git repo not found. Run from repo root."
+    fi
+  fi
+
+  for file in "${repo_root}"/docs/library/agents/R-AGENT-*.md; do
+    [[ -f "$file" ]] || continue
+    name="$(awk '
+      BEGIN { in_header=0 }
+      /^---[[:space:]]*$/ { if (in_header == 0) { in_header=1; next } else { exit } }
+      in_header && /^name:[[:space:]]*/ {
+        sub(/^name:[[:space:]]*/, "", $0)
+        print $0
+        exit
+      }
+    ' "$file")"
+    if [[ "$name" == "$target" ]]; then
+      match="$file"
+      match_count=$((match_count + 1))
+    fi
+  done
+
+  if (( match_count == 0 )); then
+    project_die "Agent not found: ${target}"
+  fi
+  if (( match_count > 1 )); then
+    project_die "Agent name is ambiguous: ${target}"
+  fi
+
+  printf "%s" "$match"
+}
+
+project_extract_agent_role() {
+  local file="$1"
+  local role
+
+  role="$(awk '
+    BEGIN { in_header=0; in_body=0 }
+    /^---[[:space:]]*$/ {
+      if (in_header == 0) { in_header=1; next }
+      in_body=1
+      next
+    }
+    in_body { print }
+  ' "$file")"
+
+  role="$(printf "%s\n" "$role" | sed "/./,\$!d")"
+  if [[ -z "$role" ]]; then
+    project_die "Agent role content missing: ${file}"
+  fi
+
+  printf "%s" "$role"
+}
+
 project_require_repo_root() {
   if ! command -v git >/dev/null 2>&1; then
     project_die "git is required but was not found on PATH."

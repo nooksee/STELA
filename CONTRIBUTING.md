@@ -1,60 +1,31 @@
-# Contributing to Stela
+# CONTRIBUTING.md
+# Pointer-first contribution protocol. Do not duplicate canon text.
 
-Welcome. You’re allowed to be clever here — but you must also be **traceable**. 😄
+## 1. Non-Negotiables
+- Do not push to `main`.
+- Work only on `work/*` branches.
+- Every PR must pass repo-gates.
 
-Source of truth for onboarding and workflow: `docs/QUICKSTART.md`.
+## 2. Security
+- Do not commit secrets.
+- Follow `SECURITY.md` for reporting guidance and security posture.
 
-## Non-negotiables
-- **No direct pushes to `main`.** Ever.
-- Work happens on **`work/*` branches** only.
-- Every PR must pass **repo-gates**.
+## 3. Standard Workflow
+- Create a branch named `work/<topic>-YYYY-MM-DD`.
+- Make small, reviewable changes.
+- Keep unrelated refactors out of the change set.
+- Review changes visually before commit.
+- Use clear commit messages.
+- Push the `work/*` branch, open a PR, wait for repo-gates, then merge.
 
-## Security policy
-See `SECURITY.md` for reporting guidance and security posture.
-Do not commit secrets to the repo.
+## 4. Provenance
+- Record imported or adapted external code in `docs/UPSTREAMS.md` or the correct truth-layer document.
+- Include source, purpose, changes, and known risks or limits.
 
-## The standard workflow (IDE-first)
-1) Create a branch
-- Name format: `work/<topic>-YYYY-MM-DD`
-- Examples:
-  - `work/readme-philosophy-2025-12-31`
-  - `work/docs-stylize-2025-12-31`
-
-2) Make changes (small batches)
-- Prefer small, reviewable PRs.
-- Keep “drive-by refactors” out of unrelated changes.
-
-3) Review changes visually
-- In IDE: **Team → Show Changes**
-- Sanity-check: do the changes match the intent?
-
-4) Commit
-- Use clear, boring commit messages. Boring is good.
-  - `docs: expand development philosophy`
-  - `chore: ignore IDE private settings`
-
-5) Push + PR
-- Push your `work/*` branch
-- Open PR
-- Wait for **repo-gates** ✅
-- Merge
-
-## Repo hygiene (IDE metadata)
-Do not commit private IDE settings:
-- `nbproject/private/*` should be ignored
-- If you ever accidentally tracked it, remove from index:
-  - `git rm --cached -r nbproject/private`
-
-## Provenance expectations
-If you import or adapt external code:
-- Add notes in `docs/UPSTREAMS.md` (or the appropriate truth-layer doc)
-- Include: source, purpose, what changed, and any known risks/limits
-
-## AI assistance
-AI may draft changes only on `work/*` branches.
-The Operator creates and switches branches.
-AI must STOP if it is not on the required work branch.
-AI never works on `main`.
-The Operator performs all commits, pushes, and merges.
-AI does not commit, push, or merge.
-Follow `AGENTS.md` for AI contribution rules and jurisdiction.
+## 5. AI Assistance
+- AI drafts changes only on `work/*` branches.
+- The Operator creates and switches branches.
+- AI stops if it is not on the required work branch.
+- AI never works on `main`.
+- The Operator performs all commits, pushes, and merges.
+- Follow `AGENTS.md` for AI contribution rules and jurisdiction.

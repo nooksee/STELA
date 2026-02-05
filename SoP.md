@@ -1,5 +1,31 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-05 - DP-OPS-0022: Factory Consolidation, Linter Root Fix, and Open Reversal
+
+- Purpose: Resolve linter path fragility, relocate the Skills registry to library canon, remove redundant integration documents, and move agent-resolution helpers from `ops/bin/open` into `ops/lib/scripts/project.sh`.
+- What shipped:
+  - Refactored `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/library.sh`, and `tools/verify.sh` to resolve repo root via `git rev-parse --show-toplevel` and fail fast outside git.
+  - Updated `tools/lint/truth.sh` to `cd` into `REPO_ROOT` before running `git ls-files`.
+  - Hardened `tools/lint/truth.sh` grep execution to suppress transient missing-file noise from unstaged deletes.
+  - Relocated `SKILL.md` to `docs/library/SKILLS.md` and updated pointers in `ops/lib/scripts/skill.sh`, `llms.txt`, and `docs/library/INDEX.md`.
+  - Expanded `docs/library/INDEX.md` with agent and task registry entries so restored Library Guard resolves registry drift cleanly.
+  - Deleted redundant docs `ops/lib/project/user-STELA.md`, `ops/lib/project/INTEGRATION.md`, and `docs/library/INTEGRATION.md`.
+  - Restored `ops/bin/open` to static behavior and transplanted helper logic into `ops/lib/scripts/project.sh` as `project_resolve_agent_file` and `project_extract_agent_role`.
+- Verification:
+  - `./ops/bin/dump --scope=platform`
+  - `bash tools/lint/context.sh`
+  - `bash tools/lint/truth.sh`
+  - `bash tools/lint/library.sh`
+  - `bash tools/verify.sh`
+  - `bash ops/lib/scripts/skill.sh harvest --name "DP-OPS-0022 Worker Closeout" --context "platform maintenance closeout for DP-OPS-0022" --solution "No promotion. This run records receipts and path migrations only." --force`
+  - `bash ops/lib/scripts/skill.sh check`
+  - `Skill promotion: no new skill promoted (platform maintenance closeout; draft retained for receipt evidence).`
+  - `bash ops/bin/prune`
+  - `bash ops/bin/llms --out-dir=storage/handoff`
+- Risk / rollback:
+  - Risk: Medium (the project binary still passes `--agent` and `--include` to `ops/bin/open`; follow-up alignment is required in a separate scoped change because `ops/bin/project` is out of DP allowlist).
+  - Rollback: revert `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/library.sh`, `tools/verify.sh`, `docs/library/SKILLS.md`, `ops/lib/scripts/skill.sh`, `llms.txt`, `docs/library/INDEX.md`, `ops/lib/scripts/project.sh`, `ops/bin/open`, deleted integration docs, and `SoP.md`.
+
 ## 2026-02-04 - DP-OPS-0021: Project Binary Interface & Dynamic Context
 
 - Purpose: Establish the Project Binary interface and dynamic context bundles for Phase 3 specialization.
@@ -7,7 +33,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - Refactored ops/bin/llms to read Small and Full bundles from the manifest and added profile slicing.
   - Added `--agent` and `--include` handling in ops/bin/open for persona and project context injection.
   - Implemented ops/bin/project with updated registry helpers and manifest.
-  - Updated ops/lib/project/STELA.md and added CONTRIBUTORY.md; tightened AGENTS and CONTEXT headings.
+  - Updated ops/lib/project/STELA.md and added [REMOVED].md; tightened AGENTS and CONTEXT headings.
 - Verification:
   - `./ops/bin/dump --scope=platform`
   - `bash tools/lint/context.sh`
@@ -16,7 +42,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - `./ops/bin/llms --out-dir=storage/handoff`
 - Risk / rollback:
   - Risk: Low (tooling and templates only).
-  - Rollback: revert `AGENTS.md`, `CONTRIBUTORY.md`, `ops/bin/llms`, `ops/bin/open`, `ops/bin/project`, `ops/lib/scripts/project.sh`, `ops/lib/manifests/CONTEXT.md`, `ops/lib/manifests/PROJECTS.md`, `ops/lib/project/STELA.md`, and `SoP.md`.
+  - Rollback: revert `AGENTS.md`, `[REMOVED].md`, `ops/bin/llms`, `ops/bin/open`, `ops/bin/project`, `ops/lib/scripts/project.sh`, `ops/lib/manifests/CONTEXT.md`, `ops/lib/manifests/PROJECTS.md`, `ops/lib/project/STELA.md`, and `SoP.md`.
 
 ## 2026-02-04 - DP-OPS-0020: Phase Two Doctrine (Truth, Hygiene, Style)
 
