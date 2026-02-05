@@ -13,8 +13,10 @@ else
   echo "ERROR: Must be run inside a git repository." >&2
   exit 1
 fi
-LIBRARY_INDEX="${REPO_ROOT}/docs/library/INDEX.md"
-LIBRARY_DIR="${REPO_ROOT}/docs/library"
+
+cd "$REPO_ROOT" || exit 1
+LIBRARY_INDEX="docs/library/INDEX.md"
+LIBRARY_DIR="docs/library"
 
 echo "Stela Library Verification"
 echo "Registry: docs/library/INDEX.md"
@@ -29,7 +31,7 @@ fail() {
 
 # 1. Parse Registry (Get all registered paths)
 if [[ ! -f "${LIBRARY_INDEX}" ]]; then
-  echo "CRITICAL: Registry file missing at ${LIBRARY_INDEX}"
+  echo "CRITICAL: Registry file missing at ${REPO_ROOT}/${LIBRARY_INDEX}"
   exit 2
 fi
 
@@ -49,7 +51,7 @@ mapfile -t registered_paths < <(awk -F'|' '
 # 2. Check for Dead Ends (Registry -> Disk)
 # Does every file claimed by the Index actually exist?
 for path in "${registered_paths[@]}"; do
-  if [[ ! -f "${REPO_ROOT}/${path}" ]]; then
+  if [[ ! -f "${path}" ]]; then
     fail "Dead End: Registry points to missing file '${path}'"
   fi
 done
@@ -58,7 +60,7 @@ done
 # Does every file in the library directory appear in the Index?
 while IFS= read -r file; do
   # Get repo-relative path for comparison
-  rel_path="${file#$REPO_ROOT/}"
+  rel_path="${file#${REPO_ROOT}/}"
   
   # The Registry itself is exempt from registration
   if [[ "$rel_path" == "docs/library/INDEX.md" ]]; then

@@ -157,12 +157,56 @@ cmd_work() {
     project_die "Missing ${readme_rel}"
   fi
 
-  local open_cmd=("${PROJECT_REPO_ROOT}/ops/bin/open" "--intent=Project work: ${project_id}" "--include=${stela_rel}" "--include=${readme_rel}" "--tag=project-${project_id}" "--out=auto")
-  if [[ -n "$agent" ]]; then
-    open_cmd+=("--agent=${agent}")
+  local branch_name
+  branch_name="$(git -C "${PROJECT_REPO_ROOT}" rev-parse --abbrev-ref HEAD)"
+  local head_short
+  head_short="$(git -C "${PROJECT_REPO_ROOT}" rev-parse --short=9 HEAD)"
+  local branch_slug
+  branch_slug="$(printf '%s' "$branch_name" | tr '/ ' '--' | tr -cd '[:alnum:]._-')"
+  if [[ -z "$branch_slug" ]]; then
+    branch_slug="unknown-branch"
   fi
 
-  "${open_cmd[@]}"
+  local artifact_rel="storage/handoff/OPEN-project-${project_id}-${branch_slug}-${head_short}.txt"
+  local artifact_abs="${PROJECT_REPO_ROOT}/${artifact_rel}"
+  mkdir -p "${PROJECT_REPO_ROOT}/storage/handoff"
+
+  local open_cmd=("${PROJECT_REPO_ROOT}/ops/bin/open" "--intent=Project work: ${project_id}" "--tag=project-${project_id}")
+  if ! "${open_cmd[@]}" > "$artifact_abs"; then
+    project_die "Failed to generate OPEN artifact for project: ${project_id}"
+  fi
+
+  {
+    echo
+    echo "[PROJECT CONTEXT: ${stela_rel}]"
+    echo '```text'
+    cat "${PROJECT_REPO_ROOT}/${stela_rel}"
+    echo
+    echo '```'
+    echo
+    echo "[PROJECT CONTEXT: ${readme_rel}]"
+    echo '```text'
+    cat "${PROJECT_REPO_ROOT}/${readme_rel}"
+    echo
+    echo '```'
+  } >> "$artifact_abs"
+
+  if [[ -n "$agent" ]]; then
+    local agent_file
+    agent_file="$(project_resolve_agent_file "$agent")"
+    local agent_role
+    agent_role="$(project_extract_agent_role "$agent_file")"
+
+    {
+      echo
+      echo "[AGENT CONTEXT: ${agent}]"
+      echo '```text'
+      printf '%s\n' "$agent_role"
+      echo '```'
+    } >> "$artifact_abs"
+  fi
+
+  echo "$artifact_rel"
 }
 
 cmd_status() {

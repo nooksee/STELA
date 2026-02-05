@@ -1,5 +1,26 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-05 - DP-OPS-0023: Phase 3 Activation (Project Binary Alignment & Linter Refactor)
+
+- Purpose: Restore `ops/bin/project work` after static `open` reversal by moving project and agent context injection into the project binary, then harden lint tools for root-safe execution.
+- What shipped:
+  - Refactored `ops/bin/project` `cmd_work` to call `ops/bin/open` without deprecated flags, capture OPEN output to `storage/handoff/`, append project STELA/README context, and inject agent role text resolved via `project_resolve_agent_file` and `project_extract_agent_role`.
+  - Hardened `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/library.sh`, and `tools/verify.sh` to resolve `REPO_ROOT` via git and force `cd "$REPO_ROOT" || exit 1` before file operations.
+  - Updated `tools/lint/truth.sh` file selection to filter missing tracked paths before grep so unstaged deletions do not produce scan noise.
+  - Verified Skills pointer surfaces were already aligned to `docs/library/SKILLS.md` in `ops/lib/scripts/skill.sh`, `llms.txt`, and `docs/library/INDEX.md`; no path edits were required in this slice.
+- Verification:
+  - `./ops/bin/dump --scope=platform`
+  - `bash tools/lint/context.sh`
+  - `bash tools/lint/truth.sh`
+  - `bash tools/lint/library.sh`
+  - `bash tools/verify.sh`
+  - `bash ops/lib/scripts/skill.sh harvest --name "DP-OPS-0023 Worker Closeout" --context "platform maintenance closeout for DP-OPS-0023" --solution "No promotion. This run records project binary alignment, linter hardening, and receipt proofs." --force`
+  - `bash ops/bin/prune`
+  - `bash ops/bin/llms --out-dir=storage/handoff`
+- Risk / rollback:
+  - Risk: Medium (project work prompt generation path changed from direct open flags to captured artifact assembly).
+  - Rollback: revert `ops/bin/project`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/library.sh`, `tools/verify.sh`, and `SoP.md`.
+
 ## 2026-02-05 - DP-OPS-0022: Factory Consolidation, Linter Root Fix, and Open Reversal
 
 - Purpose: Resolve linter path fragility, relocate the Skills registry to library canon, remove redundant integration documents, and move agent-resolution helpers from `ops/bin/open` into `ops/lib/scripts/project.sh`.
