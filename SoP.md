@@ -33,7 +33,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - Refactored ops/bin/llms to read Small and Full bundles from the manifest and added profile slicing.
   - Added `--agent` and `--include` handling in ops/bin/open for persona and project context injection.
   - Implemented ops/bin/project with updated registry helpers and manifest.
-  - Updated ops/lib/project/STELA.md and added CONTRIBUTORY.md; tightened AGENTS and CONTEXT headings.
+  - Updated ops/lib/project/STELA.md and added [REMOVED].md; tightened AGENTS and CONTEXT headings.
 - Verification:
   - `./ops/bin/dump --scope=platform`
   - `bash tools/lint/context.sh`
@@ -42,7 +42,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - `./ops/bin/llms --out-dir=storage/handoff`
 - Risk / rollback:
   - Risk: Low (tooling and templates only).
-  - Rollback: revert `AGENTS.md`, `CONTRIBUTORY.md`, `ops/bin/llms`, `ops/bin/open`, `ops/bin/project`, `ops/lib/scripts/project.sh`, `ops/lib/manifests/CONTEXT.md`, `ops/lib/manifests/PROJECTS.md`, `ops/lib/project/STELA.md`, and `SoP.md`.
+  - Rollback: revert `AGENTS.md`, `[REMOVED].md`, `ops/bin/llms`, `ops/bin/open`, `ops/bin/project`, `ops/lib/scripts/project.sh`, `ops/lib/manifests/CONTEXT.md`, `ops/lib/manifests/PROJECTS.md`, `ops/lib/project/STELA.md`, and `SoP.md`.
 
 ## 2026-02-04 - DP-OPS-0020: Phase Two Doctrine (Truth, Hygiene, Style)
 
