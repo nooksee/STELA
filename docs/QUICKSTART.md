@@ -4,13 +4,13 @@ This repo is governed. The fastest way to succeed here is to follow the rules *e
 
 ## 1. Onboarding (Read-in Order)
 **Operators (Human):**
-1. `TRUTH.md` — The Constitution (Filing Doctrine + Structure).
+1. `PoT.md` — The Policy of Truth (Constitution + Structure).
 2. `SoP.md` — The History Ledger (State of Play).
 3. `TASK.md` — The Active Work Surface (Current Objective).
 4. `docs/library/MANUAL.md` — Command Reference.
 
 **Agents (AI):**
-- Follow the jurisdictional read-in sequence defined in `AGENTS.md`.
+- Follow the jurisdictional read-in sequence defined in `PoT.md`.
 
 ## 2. Workflow Doctrine (Non-Negotiables)
 * **PR-Only:** No direct pushes to `main`. Ever.
@@ -19,7 +19,7 @@ This repo is governed. The fastest way to succeed here is to follow the rules *e
 
 ## 3. The SoP Rule (History Ledger)
 **Rule:** You only write to `SoP.md` if you alter **Canon** or **Governance**.
-* **Canon:** `TRUTH.md`, `TASK.md`, `ops/`, `docs/`, `.github/`.
+* **Canon:** `PoT.md`, `TASK.md`, `ops/`, `docs/`, `.github/`.
 * **Logic:** If you change the rules of the system, you must log the state change.
 * **Routine Work:** Standard code changes in `projects/` do *not* require an SoP entry unless they fundamentally shift the platform.
 

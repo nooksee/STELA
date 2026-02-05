@@ -1,5 +1,24 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-05 - DP-OPS-0025: Governance Consolidation & Policy of Truth (PoT)
+
+- Purpose: Consolidate governance surfaces into PoT and resolve jurisdiction ambiguity.
+- What shipped:
+  - Created `PoT.md` consolidating TRUTH, AGENTS, SECURITY, and CONTRIBUTING with the Mechanistic Doctrine, Sheriff enforcement, and Multi-verse jurisdiction.
+  - Updated governance pointers, manifests, and ops/bin tooling to reference `PoT.md`, and tombstoned `SECURITY.md` and `CONTRIBUTING.md`.
+  - Archived legacy `TRUTH.md` and `AGENTS.md` into `storage/archives/root/` with date suffixes.
+  - Updated `tools/lint/truth.sh` to scan `PoT.md` and refreshed context bundle inputs.
+- Verification:
+  - `./ops/bin/dump --scope=platform`
+  - `bash tools/lint/context.sh`
+  - `bash tools/lint/truth.sh`
+  - `bash ops/lib/scripts/skill.sh harvest --name "DP-OPS-0025 Worker Closeout" --context "platform governance consolidation for DP-OPS-0025" --solution "No promotion. This run records Policy of Truth consolidation, pointer updates, and receipt proofs." --force`
+  - `bash ops/bin/prune`
+  - `bash ops/bin/llms`
+- Risk / rollback:
+  - Risk: Medium (governance pointers and canon consolidation now depend on `PoT.md`).
+  - Rollback: revert `PoT.md`, `ops/lib/manifests/CONTEXT.md`, `tools/lint/truth.sh`, `TASK.md`, `docs/library/MAP.md`, `docs/library/INDEX.md`, `.github/copilot-instructions.md`, `SECURITY.md`, `CONTRIBUTING.md`, `SoP.md`, `docs/CONTEXT.md`, `docs/INDEX.md`, `docs/QUICKSTART.md`, `docs/GOVERNANCE.md`, `docs/library/MANUAL.md`, `README.md`, `llms.txt`, `ops/bin/dump`, `ops/bin/open`, `ops/bin/llms`, `ops/bin/help`, `llms-small.txt`, `llms-full.txt`, and restore `TRUTH.md` and `AGENTS.md` from `storage/archives/root/` archives.
+
 ## 2026-02-05 - DP-OPS-0024: Phase 3 Security Hardening & Autopoietic Compliance
 
 - Purpose: Enforce Phase 3 input sanitization, style enforcement, and project STELA validation to close audit gaps.

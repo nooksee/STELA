@@ -6,8 +6,7 @@ This document defines the specific surfaces that must be loaded to preserve gove
 
 ## 1. The Constitution (Immutable Law)
 *Rules that do not change without a governance event.*
-* **Constitution:** [`../../TRUTH.md`](../../TRUTH.md) — Invariants, filing doctrine, and structure (SSOT).
-* **Jurisdiction:** [`../../AGENTS.md`](../../AGENTS.md) — Staffing protocols and behavioral logic (Human vs AI).
+* **Policy of Truth:** [`../../PoT.md`](../../PoT.md) — Constitution, staffing, jurisdiction, and enforcement (SSOT).
 * **Discovery:** [`../../llms.txt`](../../llms.txt) — The machine-readable entry point.
 
 ## 2. The Ledger (Mutable State)

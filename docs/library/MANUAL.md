@@ -86,7 +86,7 @@ ops/lib/scripts/skill.sh promote storage/handoff/skill-draft-YYYYMMDD-HHMMSS-ski
 ---
 
 ## 4. Key Paths (Reference)
-* **Constitution:** [`../../TRUTH.md`](../../TRUTH.md)
+* **Constitution:** [`../../PoT.md`](../../PoT.md)
 * **Active Contract:** [`../../TASK.md`](../../TASK.md)
 * **History:** [`../../SoP.md`](../../SoP.md)
 * **Artifacts:** `storage/handoff/` (Results), `storage/dumps/` (State).

@@ -8,10 +8,9 @@ Used by operators to ensure AI workers have a complete "Single Source of Truth" 
 Mandatory pre-session check: run `tools/lint/context.sh`.
 
 ## Small Bundle (Canonical Context)
-- `TRUTH.md` — Constitution and filing doctrine.
+- `PoT.md` — Policy of Truth (constitution, staffing, jurisdiction, enforcement).
 - `SoP.md` — History ledger and state of play.
 - `TASK.md` — Active thread, DP contract, and work log.
-- `AGENTS.md` — Staffing protocol and behavioral logic standards.
 - `llms.txt` — Discovery entry point for AI agents.
 
 ## Full Bundle (Supporting Surfaces)
@@ -35,4 +34,4 @@ Full bundle adds these supporting surfaces on top of the Small bundle.
 ## Canon Links
 - docs/library/MANUAL.md
 - docs/library/MAP.md
-- AGENTS.md
+- PoT.md

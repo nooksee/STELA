@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Stela Truth Linter (Constitution Guard)
+# Stela Truth Linter (PoT Guard)
 # Purpose: Enforce canon spelling, catch legacy drift, and police governance terminology.
 # Scope: Authored surfaces only (ops/, docs/, tools/, .github/, and root Canon).
 # Ignores: projects/ (Work), storage/ (Trash), public_html/ (Runtime).
@@ -24,9 +24,8 @@ scan_dirs=(
 )
 
 root_files=(
-  "TRUTH.md"
+  "PoT.md"
   "TASK.md"
-  "AGENTS.md"
   "README.md"
   "SECURITY.md"
   "CONTRIBUTING.md"

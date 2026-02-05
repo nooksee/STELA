@@ -11,10 +11,9 @@ The authoritative list of required artifacts lives in:
 * [`ops/lib/manifests/CONTEXT.md`](../ops/lib/manifests/CONTEXT.md)
 
 **The Core Set (Must Load):**
-* `TRUTH.md` (Constitution)
+* `PoT.md` (Policy of Truth)
 * `SoP.md` (History)
 * `TASK.md` (Active Objective)
-* `AGENTS.md` (Jurisdiction)
 
 **Negative Constraints (Must Not Be In The Manifest):**
 * `docs/library/agents` (Library agents are JIT-only)
