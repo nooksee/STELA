@@ -4,7 +4,13 @@ set -euo pipefail
 # Stela Repo Hygiene Verification
 # Purpose: Ensure repo root contains only Platform artifacts and CMS payloads are contained in projects/.
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  ROOT_DIR="$(git rev-parse --show-toplevel)"
+else
+  echo "ERROR: Must be run inside a git repository." >&2
+  exit 1
+fi
+
 cd "$ROOT_DIR"
 
 echo "Stela Repo Hygiene Verification"

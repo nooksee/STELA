@@ -5,8 +5,12 @@ set -euo pipefail
 # Purpose: Verify that EVERY artifact listed in the Context Manifest exists.
 # Logic: If the Manifest claims it is context, it must be present.
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  REPO_ROOT="$(git rev-parse --show-toplevel)"
+else
+  echo "ERROR: Must be run inside a git repository." >&2
+  exit 1
+fi
 MANIFEST_PATH="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
 
 echo "Stela Context Verification"

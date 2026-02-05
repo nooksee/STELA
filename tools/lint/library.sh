@@ -7,8 +7,12 @@ set -euo pipefail
 # 1. No Dead Ends: All paths in INDEX.md must exist on disk.
 # 2. No Ghosts: All .md files in docs/library/ must be listed in INDEX.md.
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  REPO_ROOT="$(git rev-parse --show-toplevel)"
+else
+  echo "ERROR: Must be run inside a git repository." >&2
+  exit 1
+fi
 LIBRARY_INDEX="${REPO_ROOT}/docs/library/INDEX.md"
 LIBRARY_DIR="${REPO_ROOT}/docs/library"
 

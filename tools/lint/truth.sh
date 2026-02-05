@@ -33,6 +33,15 @@ root_files=(
   "llms.txt"
 )
 
+if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  REPO_ROOT="$(git rev-parse --show-toplevel)"
+else
+  echo "ERROR: Must be run inside a git repository." >&2
+  exit 1
+fi
+
+cd "$REPO_ROOT"
+
 echo "Stela Truth Verification"
 echo "------------------------"
 
@@ -71,7 +80,7 @@ fi
 echo "Scanning for typos (Stela)..."
 for token in "${forbidden_spellings[@]}"; do
   # grep word boundary, ignore case
-  matches="$(echo "$files" | xargs -r grep -nH -I -E "\b${token}\b" || true)"
+  matches="$(echo "$files" | xargs -r grep -nH -I -E "\b${token}\b" 2>/dev/null || true)"
   if [[ -n "$matches" ]]; then
     fail "Forbidden spelling found: '$token'" "$matches"
   fi

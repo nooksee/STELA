@@ -6,75 +6,16 @@ intent=""
 dp="(none)"
 out=""
 tag=""
-agent_name=""
-extra_context=()
-agent_role=""
-agent_file=""
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/open [--format=chatgpt|gemini] [--intent="..."] [--dp="DP-XXXX / YYYY-MM-DD"] [--out=auto] [--tag=token] [--agent=name] [--include=PATH]
+Usage: ops/bin/open [--format=chatgpt|gemini] [--intent="..."] [--dp="DP-XXXX / YYYY-MM-DD"] [--out=auto] [--tag=token]
 USAGE
 }
 
 die() {
   echo "ERROR: $*" >&2
   exit 1
-}
-
-resolve_agent_file() {
-  local target="$1"
-  local match=""
-  local match_count=0
-  local file name
-
-  for file in docs/library/agents/R-AGENT-*.md; do
-    [[ -f "$file" ]] || continue
-    name="$(awk '
-      BEGIN { in_header=0 }
-      /^---[[:space:]]*$/ { if (in_header == 0) { in_header=1; next } else { exit } }
-      in_header && /^name:[[:space:]]*/ {
-        sub(/^name:[[:space:]]*/, "", $0)
-        print $0
-        exit
-      }
-    ' "$file")"
-    if [[ "$name" == "$target" ]]; then
-      match="$file"
-      match_count=$((match_count + 1))
-    fi
-  done
-
-  if (( match_count == 0 )); then
-    die "Agent not found: ${target}"
-  fi
-  if (( match_count > 1 )); then
-    die "Agent name is ambiguous: ${target}"
-  fi
-
-  printf '%s' "$match"
-}
-
-extract_agent_role() {
-  local file="$1"
-  local role
-
-  role="$(awk '
-    BEGIN { in_header=0; in_body=0 }
-    /^---[[:space:]]*$/ {
-      if (in_header == 0) { in_header=1; next }
-      in_body=1
-      next
-    }
-    in_body { print }
-  ' "$file")"
-
-  role="$(printf '%s\n' "$role" | sed '/./,$!d')"
-  if [[ -z "$role" ]]; then
-    die "Agent role content missing: ${file}"
-  fi
-
-  printf '%s' "$role"
 }
 
 for arg in "$@"; do
@@ -93,12 +34,6 @@ for arg in "$@"; do
       ;;
     --tag=*)
       tag="${arg#--tag=}"
-      ;;
-    --agent=*)
-      agent_name="${arg#--agent=}"
-      ;;
-    --include=*)
-      extra_context+=("${arg#--include=}")
       ;;
     -h|--help)
       usage
@@ -156,23 +91,6 @@ required_files=(
   "ops/lib/manifests/CONTEXT.md"
 )
 
-if [[ -n "$agent_name" ]]; then
-  if [[ -z "$agent_name" ]]; then
-    die "--agent requires a value"
-  fi
-  agent_file="$(resolve_agent_file "$agent_name")"
-  agent_role="$(extract_agent_role "$agent_file")"
-fi
-
-if (( ${#extra_context[@]} > 0 )); then
-  for path in "${extra_context[@]}"; do
-    if [[ -z "$path" ]]; then
-      die "--include requires a value"
-    fi
-    required_files+=("$path")
-  done
-fi
-
 missing=()
 for path in "${required_files[@]}"; do
   if [[ ! -f "$path" ]]; then
@@ -192,21 +110,6 @@ if [[ "$format" == "gemini" ]]; then
   mode_line="Mode: reviewer stance. Prioritize risks, regressions, and missing tests."
 else
   mode_line="Mode: collaborator stance. Follow repo canon and request missing context."
-fi
-
-contractor_block="Contractor (assistant): Executes tasks, flags risks, asks when blocked."
-if [[ -n "$agent_role" ]]; then
-  contractor_block=$'Contractor (assistant):\n'
-  contractor_block+="$agent_role"
-fi
-
-extra_context_block=""
-if (( ${#extra_context[@]} > 0 )); then
-  extra_context_block=$'[ADDITIONAL CONTEXT]\n'
-  for path in "${extra_context[@]}"; do
-    extra_context_block+="- ${path}\n"
-  done
-  extra_context_block+=$'\n'
 fi
 
 emit() {
@@ -234,7 +137,7 @@ $mode_line
 
 [ROLE CONTRACT]
 Integrator (operator): Owns scope, priorities, and approvals.
-$contractor_block
+Contractor (assistant): Executes tasks, flags risks, asks when blocked.
 AI stance: Canon-first, explicit about unknowns, no invention.
 
 [DO / DON'T]
@@ -263,7 +166,6 @@ Don't:
 - docs/library/MAP.md
 - ops/lib/manifests/CONTEXT.md
 
-$extra_context_block
 [DUMP]
 - If you need full repo context, run: ./ops/bin/dump --scope=platform --format=chatgpt (or gemini).
 - For a file output: ./ops/bin/dump --scope=platform --format=chatgpt --out=auto
