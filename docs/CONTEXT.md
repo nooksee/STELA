@@ -3,8 +3,8 @@
 ## 0. Philosophy
 **Context is not memory; it is a file.**
 In a stateless system, "Context" is the precise set of artifacts required to rehydrate an agent (Human or AI) from zero to full operational awareness.
-* **If it's not in the Context, it doesn't exist.**
-* **If it's in the Context, it must be true.**
+* **If it is not in the Context, it does not exist.**
+* **If it is in the Context, it must be true.**
 
 ## 1. The Manifest (SSOT)
 The authoritative list of required artifacts lives in:
