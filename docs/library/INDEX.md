@@ -22,9 +22,8 @@ quickstart          | Onboarding & Workflow     | docs/QUICKSTART.md
 docs-front-door     | Docs Root Index           | docs/INDEX.md
 
 # --- 4. Subsystems (Deep Dives) ---
-ops-subsystem       | Ops Engine Room           | docs/ops/INDEX.md
+ops-subsystem       | Ops Engine Room           | docs/ops/README.md
 context-spec        | Context Rehydration       | docs/CONTEXT.md
-security-ops        | Security Operations       | docs/security/README.md
 
 # --- 5. Skills (Production Payloads / On-Demand) ---
 skills-template     | Skills Promotion Template | docs/library/SKILLS.md
