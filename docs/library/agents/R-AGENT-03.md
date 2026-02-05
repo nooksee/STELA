@@ -425,7 +425,7 @@ Before committing documentation:
 
 ## Best Practices
 
-1. **Single Source of Truth** - Generate from code, don't manually write
+1. **Single Source of Truth** - Generate from code, do not manually write
 2. **Freshness Timestamps** - Always include last updated date
 3. **Token Efficiency** - Keep codemaps under 500 lines each
 4. **Clear Structure** - Use consistent markdown formatting
@@ -450,5 +450,4 @@ Before committing documentation:
 
 ---
 
-**Remember**: Documentation that doesn't match reality is worse than no documentation. Always generate from source of truth (the actual code).
-
+**Remember**: Documentation that does not match reality is worse than no documentation. Always generate from source of truth (the actual code).

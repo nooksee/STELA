@@ -1,5 +1,27 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-05 - DP-OPS-0024: Phase 3 Security Hardening & Autopoietic Compliance
+
+- Purpose: Enforce Phase 3 input sanitization, style enforcement, and project STELA validation to close audit gaps.
+- What shipped:
+  - Hardened `ops/lib/scripts/project.sh` with strict token validation and realpath-based path validation for agent and registry access.
+  - Updated `tools/lint/style.sh` to fail on contraction tokens across `docs/` and `ops/` and require `rg`.
+  - Added `tools/lint/project.sh` to validate project STELA references against `docs/library/INDEX.md`.
+  - Updated `docs/library/MAP.md` to define Provider and Consumer root ontology.
+  - Removed contraction tokens from `ops/bin/open`, `docs/CONTEXT.md`, and agent guidance surfaces.
+- Verification:
+  - `./ops/bin/dump --scope=platform`
+  - `bash tools/lint/context.sh`
+  - `bash tools/lint/truth.sh`
+  - `bash tools/lint/project.sh`
+  - `bash tools/lint/style.sh`
+  - `bash ops/lib/scripts/skill.sh harvest --name "DP-OPS-0024 Worker Closeout" --context "platform maintenance closeout for DP-OPS-0024" --solution "No promotion. This run records security hardening, lint additions, and receipt proofs." --force`
+  - `bash ops/bin/prune`
+  - `bash ops/bin/llms`
+- Risk / rollback:
+  - Risk: Medium (project inputs now reject non-token display names and notes; style lint now blocks contractions in `docs/` and `ops/`).
+  - Rollback: revert `ops/lib/scripts/project.sh`, `tools/lint/style.sh`, `tools/lint/project.sh`, `docs/library/MAP.md`, `ops/bin/open`, `docs/CONTEXT.md`, `docs/library/agents/R-AGENT-03.md`, `docs/library/agents/R-AGENT-05.md`, `docs/library/agents/R-AGENT-06.md`, and `SoP.md`.
+
 ## 2026-02-05 - DP-OPS-0023: Phase 3 Activation (Project Binary Alignment & Linter Refactor)
 
 - Purpose: Restore `ops/bin/project work` after static `open` reversal by moving project and agent context injection into the project binary, then harden lint tools for root-safe execution.
@@ -28,7 +50,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - Refactored `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/library.sh`, and `tools/verify.sh` to resolve repo root via `git rev-parse --show-toplevel` and fail fast outside git.
   - Updated `tools/lint/truth.sh` to `cd` into `REPO_ROOT` before running `git ls-files`.
   - Hardened `tools/lint/truth.sh` grep execution to suppress transient missing-file noise from unstaged deletes.
-  - Relocated `SKILL.md` to `docs/library/SKILLS.md` and updated pointers in `ops/lib/scripts/skill.sh`, `llms.txt`, and `docs/library/INDEX.md`.
+  - Relocated `docs/library/SKILLS.md` to `docs/library/SKILLS.md` and updated pointers in `ops/lib/scripts/skill.sh`, `llms.txt`, and `docs/library/INDEX.md`.
   - Expanded `docs/library/INDEX.md` with agent and task registry entries so restored Library Guard resolves registry drift cleanly.
   - Deleted redundant docs `ops/lib/project/user-STELA.md`, `ops/lib/project/INTEGRATION.md`, and `docs/library/INTEGRATION.md`.
   - Restored `ops/bin/open` to static behavior and transplanted helper logic into `ops/lib/scripts/project.sh` as `project_resolve_agent_file` and `project_extract_agent_role`.
@@ -189,7 +211,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - What shipped:
   - Added `ops/lib/scripts/heuristics.sh` to analyze git diff and churn for provenance.
   - Updated `ops/lib/scripts/skill.sh` to source heuristics, enforce semantic collision checks, and auto-generate provenance.
-  - Updated `SKILL.md`, `TASK.md`, and `AGENTS.md` to document Phase 2 workflow and constraints.
+  - Updated `docs/library/SKILLS.md`, `TASK.md`, and `AGENTS.md` to document Phase 2 workflow and constraints.
   - Updated `docs/library/skills/S-LEARN-07.md` with heuristics-aware guidance.
   - Added `docs/library/skills/S-LEARN-08.md` and registered it in `docs/library/INDEX.md`.
 - Verification:
@@ -201,14 +223,14 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - `bash ops/lib/scripts/skill.sh check`
 - Risk / rollback:
   - Risk: Medium (new heuristics engine and workflow changes).
-  - Rollback: revert `ops/lib/scripts/heuristics.sh`, `ops/lib/scripts/skill.sh`, `SKILL.md`, `TASK.md`, `AGENTS.md`, `docs/library/skills/S-LEARN-07.md`, `docs/library/skills/S-LEARN-08.md`, `docs/library/INDEX.md`, and `SoP.md`.
+  - Rollback: revert `ops/lib/scripts/heuristics.sh`, `ops/lib/scripts/skill.sh`, `docs/library/SKILLS.md`, `TASK.md`, `AGENTS.md`, `docs/library/skills/S-LEARN-07.md`, `docs/library/skills/S-LEARN-08.md`, `docs/library/INDEX.md`, and `SoP.md`.
 
 ## 2026-02-01 — DP-OPS-0011: Autonomous Skill Harvesting Engine
 
 - Purpose: Upgrade the skill harvesting workflow with provenance capture, draft promotion, and Skills Context Hazard enforcement.
 - What shipped:
-  - Refactored `ops/lib/scripts/skill.sh` with harvest/promote/check subcommands, provenance capture, draft handling, collision-safe ID allocation (including `SKILL.md`), and context hazard enforcement.
-  - Documented the harvest workflow and promotion log in `SKILL.md`.
+  - Refactored `ops/lib/scripts/skill.sh` with harvest/promote/check subcommands, provenance capture, draft handling, collision-safe ID allocation (including `docs/library/SKILLS.md`), and context hazard enforcement.
+  - Documented the harvest workflow and promotion log in `docs/library/SKILLS.md`.
   - Updated `TASK.md`, `AGENTS.md`, and `docs/library/MANUAL.md` to document the workflow and closeout responsibilities.
   - Added `docs/library/skills/S-LEARN-07.md` and registered it in `docs/library/INDEX.md`.
 - Verification:
@@ -220,15 +242,15 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - `bash tools/lint/dp.sh --test`
 - Risk / rollback:
   - Risk: Medium (new skill workflow automation and canon updates).
-  - Rollback: revert `ops/lib/scripts/skill.sh`, `SKILL.md`, `TASK.md`, `AGENTS.md`, `docs/library/MANUAL.md`, `docs/library/INDEX.md`, `docs/library/skills/S-LEARN-07.md`, and `SoP.md`.
+  - Rollback: revert `ops/lib/scripts/skill.sh`, `docs/library/SKILLS.md`, `TASK.md`, `AGENTS.md`, `docs/library/MANUAL.md`, `docs/library/INDEX.md`, `docs/library/skills/S-LEARN-07.md`, and `SoP.md`.
 
 ## 2026-01-31 — DP-OPS-0010: Skills subsystem and skill capture
 
 - Purpose: Establish a Skills subsystem for production payload work with explicit Context Hazard and a worker-run capture step.
 - What shipped:
-  - Added `SKILL.md` as the promotion template for creating new S-LEARN-XX skills, including Context Hazard rules, candidate log, and promotion packet template.
+  - Added `docs/library/SKILLS.md` as the promotion template for creating new S-LEARN-XX skills, including Context Hazard rules, candidate log, and promotion packet template.
   - Added `docs/library/skills` with S-LEARN-01 through S-LEARN-05 for on-demand production payload guidance.
-  - Added `ops/lib/scripts/skill.sh` to append candidate entries and matching Promotion Packets to `SKILL.md`.
+  - Added `ops/lib/scripts/skill.sh` to append candidate entries and matching Promotion Packets to `docs/library/SKILLS.md`.
   - Updated `TASK.md` to require worker-run skill capture during normal DP processing, including allowlist and RESULTS proof rules.
   - Updated `docs/library/INDEX.md` to register Skills artifacts for Library Guard.
   - Recorded the Context Hazard decision to keep Skills out of `ops/lib/manifests/CONTEXT.md`.
@@ -241,7 +263,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - `bash tools/lint/dp.sh --test`
 - Risk / rollback:
   - Risk: Medium (new workflow and capture utility).
-  - Rollback: revert `SKILL.md`, `docs/library/skills/`, `ops/lib/scripts/skill.sh`, `docs/library/INDEX.md`, `TASK.md`, and `SoP.md`.
+  - Rollback: revert `docs/library/SKILLS.md`, `docs/library/skills/`, `ops/lib/scripts/skill.sh`, `docs/library/INDEX.md`, `TASK.md`, and `SoP.md`.
 
 ## 2026-01-31 — DP-OPS-0009: DP output code-fence rule
 

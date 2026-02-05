@@ -25,3 +25,8 @@ This document defines the specific surfaces that must be loaded to preserve gove
 * **Generation:** [`../../ops/bin/open`](../../ops/bin/open) — Creates the session prompt.
 * **Capture:** [`../../ops/bin/dump`](../../ops/bin/dump) — Serializes the platform.
 * **Validation:** [`../../ops/lib/manifests/CONTEXT.md`](../../ops/lib/manifests/CONTEXT.md) — The required context checklist.
+
+## 5. Root Ontology
+*Defines the Provider and Consumer relationship for Phase 3.*
+* **Provider Root:** `docs/library/` — Canonical guidance and reference surfaces.
+* **Consumer Root:** `projects/` — Project payloads that consume the library guidance.

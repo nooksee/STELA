@@ -12,6 +12,59 @@ project_trim() {
   printf "%s" "$s"
 }
 
+project_require_safe_token() {
+  local label="$1"
+  local value="$2"
+
+  if [[ -z "$value" ]]; then
+    project_die "Missing ${label}."
+  fi
+
+  if [[ ! "$value" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+    project_die "Invalid ${label}: ${value}"
+  fi
+}
+
+project_require_realpath() {
+  local path="$1"
+  local resolved=""
+
+  if ! command -v realpath >/dev/null 2>&1; then
+    project_die "realpath is required but was not found on PATH."
+  fi
+
+  if ! resolved="$(realpath "$path" 2>/dev/null)"; then
+    project_die "Failed to resolve path: ${path}"
+  fi
+
+  printf "%s" "$resolved"
+}
+
+project_require_path_under_root() {
+  local label="$1"
+  local repo_root="$2"
+  local path="$3"
+  local resolved=""
+  local root_resolved=""
+
+  if [[ -z "$path" ]]; then
+    project_die "Missing ${label} path."
+  fi
+
+  root_resolved="$(project_require_realpath "$repo_root")"
+  resolved="$(project_require_realpath "$path")"
+
+  case "$resolved" in
+    "$root_resolved"|"$root_resolved/"*)
+      ;;
+    *)
+      project_die "Resolved ${label} path escapes repo: ${path}"
+      ;;
+  esac
+
+  printf "%s" "$resolved"
+}
+
 project_resolve_agent_file() {
   local target="$1"
   local repo_root="${PROJECT_REPO_ROOT:-}"
@@ -19,11 +72,14 @@ project_resolve_agent_file() {
   local match_count=0
   local file name
 
+  project_require_safe_token "agent name" "$target"
+
   if [[ -z "$repo_root" ]]; then
     if ! repo_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
       project_die "git repo not found. Run from repo root."
     fi
   fi
+  repo_root="$(project_require_realpath "$repo_root")"
 
   for file in "${repo_root}"/docs/library/agents/R-AGENT-*.md; do
     [[ -f "$file" ]] || continue
@@ -49,13 +105,23 @@ project_resolve_agent_file() {
     project_die "Agent name is ambiguous: ${target}"
   fi
 
+  match="$(project_require_path_under_root "agent file" "$repo_root" "$match")"
   printf "%s" "$match"
 }
 
 project_extract_agent_role() {
   local file="$1"
+  local repo_root="${PROJECT_REPO_ROOT:-}"
   local role
 
+  if [[ -z "$repo_root" ]]; then
+    if ! repo_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+      project_die "git repo not found. Run from repo root."
+    fi
+  fi
+  repo_root="$(project_require_realpath "$repo_root")"
+
+  file="$(project_require_path_under_root "agent file" "$repo_root" "$file")"
   role="$(awk '
     BEGIN { in_header=0; in_body=0 }
     /^---[[:space:]]*$/ {
@@ -83,6 +149,7 @@ project_require_repo_root() {
   if ! repo_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
     project_die "git repo not found. Run from repo root."
   fi
+  repo_root="$(project_require_realpath "$repo_root")"
 
   if [[ "$(pwd -P)" != "$repo_root" ]]; then
     project_die "Run from repo root: $repo_root"
@@ -156,6 +223,7 @@ project_registry_rows() {
   local path
   project_require_registry
   path="$(project_registry_path)"
+  path="$(project_require_path_under_root "registry" "$PROJECT_REPO_ROOT" "$path")"
 
   awk -F'|' '
     function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s; }
@@ -178,6 +246,7 @@ project_registry_has_id() {
   local target_id="$1"
   local id name created status root notes
 
+  project_require_safe_token "project id" "$target_id"
   while IFS=$'\t' read -r id name created status root notes; do
     if [[ "$id" == "$target_id" ]]; then
       return 0
@@ -210,6 +279,11 @@ project_render_template() {
   local display_name="$3"
   local created_at="$4"
 
+  project_require_safe_token "project id" "$project_id"
+  project_require_safe_token "display name" "$display_name"
+  project_require_safe_token "created at" "$created_at"
+  template="$(project_require_path_under_root "template" "$PROJECT_REPO_ROOT" "$template")"
+
   local esc_id esc_name esc_date
   esc_id="$(project_escape_sed "$project_id")"
   esc_name="$(project_escape_sed "$display_name")"
@@ -226,6 +300,7 @@ project_get_current_project_id() {
   local path
   project_require_registry
   path="$(project_registry_path)"
+  path="$(project_require_path_under_root "registry" "$PROJECT_REPO_ROOT" "$path")"
 
   awk '
     /^Current[[:space:]]*:/ {
@@ -244,10 +319,12 @@ project_set_current_project_id() {
   rel="$(project_registry_rel)"
   path="$(project_registry_path)"
 
+  project_require_safe_token "project id" "$project_id"
   if [[ ! -f "$path" ]]; then
     echo "ERROR: Missing registry: $rel" >&2
     return 1
   fi
+  path="$(project_require_path_under_root "registry" "$PROJECT_REPO_ROOT" "$path")"
 
   tmp="$(mktemp)"
   if ! awk -v new_id="$project_id" '
@@ -281,10 +358,17 @@ project_add_registry_entry() {
   rel="$(project_registry_rel)"
   path="$(project_registry_path)"
 
+  project_require_safe_token "project id" "$project_id"
+  project_require_safe_token "display name" "$display_name"
+  project_require_safe_token "created at" "$created_at"
+  project_require_safe_token "status" "$status"
+  project_require_safe_token "notes" "$notes"
   if [[ ! -f "$path" ]]; then
     echo "ERROR: Missing registry: $rel" >&2
     return 1
   fi
+  path="$(project_require_path_under_root "registry" "$PROJECT_REPO_ROOT" "$path")"
+  project_require_path_under_root "root path" "$PROJECT_REPO_ROOT" "${PROJECT_REPO_ROOT}/${root_path}" >/dev/null
 
   tmp="$(mktemp)"
   local row="| $project_id | $display_name | $created_at | $status | $root_path | $notes |"

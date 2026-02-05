@@ -158,10 +158,10 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
 - Review: inspect the draft in `storage/handoff/` for heuristic accuracy (Hot Zone and High Churn). Refine Invocation guidance and Solution. Do not edit the Provenance block.
 - Promote: run `ops/lib/scripts/skill.sh promote <draft_path>` or log "no new skill promoted" with a rationale in RESULTS.
 - Legacy capture is forbidden. Do not manually write skill files; the provenance block is required.
-- If a DP requires skill capture, the DP Target Files allowlist must include `SKILL.md`.
+- If a DP requires skill capture, the DP Target Files allowlist must include `docs/library/SKILLS.md`.
 - Proof required in RESULTS:
   - Harvest-only: command invoked plus draft path and `ls storage/handoff/` output.
-  - Promotion: command invoked plus `grep -n "Promotion Packet:" SKILL.md` and `grep -n "docs/library/skills/S-LEARN-" docs/library/INDEX.md`.
+  - Promotion: command invoked plus `grep -n "Promotion Packet:" docs/library/SKILLS.md` and `grep -n "docs/library/skills/S-LEARN-" docs/library/INDEX.md`.
 
 #### Artifact bundle (required directory)
 - `storage/handoff/`
@@ -269,7 +269,7 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - *2026-01-29 18:27* — DP-OPS-FIX-01: Removed authoring-time artifacts block; confirmed Section III heading single line; created receipt and refreshed OPEN and dump artifacts. Verification: RUN (git status --porcelain; git diff; grep -n "## III. EXECUTION PLAN" TASK.md). Blockers: none. NEXT: re-run DP-OPS-TEST.
 - *2026-01-29 18:41* — DP-OPS-FIX-01: Added scope lock for canon changes; required RESULTS Status block; refreshed receipt. Verification: RUN (git status --porcelain; git diff --name-only; git diff --stat; git diff; grep -n "## III. EXECUTION PLAN" TASK.md). Blockers: none. NEXT: re-run DP-OPS-TEST.
 - *2026-01-31 11:37* — DP-OPS-0009: Added DP code-fence formatting rule in TASK and logged the change in SoP. Verification: RUN (dump; context; truth). Blockers: none. NEXT: operator review + commit.
-- *2026-02-01 05:30* — DP-OPS-0010: Established Skills subsystem (SKILL.md + S-LEARN-01..05) and worker skill capture utility; updated TASK + library index + SoP. Verification: RUN (dump; context; truth; library; verify WARN; dp --test). Blockers: none. NEXT: operator review + commit.
+- *2026-02-01 05:30* — DP-OPS-0010: Established Skills subsystem (docs/library/SKILLS.md + S-LEARN-01..05) and worker skill capture utility; updated TASK + library index + SoP. Verification: RUN (dump; context; truth; library; verify WARN; dp --test). Blockers: none. NEXT: operator review + commit.
 - *2026-02-01 16:30* — DP-OPS-0011: Added harvest/promote/check workflow to skill, updated canon docs, and promoted S-LEARN-07. Verification: RUN (dump bundle; context; truth; library; verify WARN; dp --test; skill check). Blockers: none. NEXT: operator review + commit.
 - *2026-02-01 19:03* — DP-OPS-0012: Added heuristics engine, semantic drift guard, and provenance enforcement for skill harvesting; updated canon docs and added S-LEARN-08. Verification: RUN (dump; context; truth; library; verify WARN; skill check). Blockers: none. NEXT: operator review + commit.
 - *2026-02-01 20:10* — DP-OPS-0013: Refactored S-LEARN-01 through S-LEARN-05 with Museum Provenance, standardized headers, and Trap/Solution guidance. Verification: RUN (dump; context; truth). Blockers: none. NEXT: operator review + commit.
@@ -277,3 +277,4 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - *2026-02-02 04:39* — DP-OPS-0015: Consolidated S-LEARN-08 into S-LEARN-06 and hardened S-LEARN-06 and S-LEARN-07; updated index and ran skill harvest with semantic collision override. Verification: RUN (dump; context OK; truth OK with grep warnings for removed S-LEARN-08.md; library OK; verify PASS with 3 warnings: storage/archives, storage/documentation, storage/ToDo). Blockers: none. NEXT: operator review + commit.
 - *2026-02-03 11:32* — DP-OPS-0016: Hardened TASK context boundaries, receipt checklist, and closeout metadata; updated SoP. Verification: RUN (dump; context OK; truth OK). Blockers: none. NEXT: operator review + commit.
 - *2026-02-04 11:39* — DP-OPS-0020: Implemented Phase Two Doctrine (canon compression, pruning, context bundles, style lint) and promoted S-LEARN-08. Verification: RUN (dump; context; truth; llms; prune; style failed: markdownlint missing). Blockers: markdownlint not installed. NEXT: operator review and decide on markdownlint installation.
+- *2026-02-05 13:01* — DP-OPS-0024: Hardened project input validation, added project STELA linting, enforced no-contraction checks, and documented root ontology. Verification: RUN (context OK; truth OK; project lint OK with no projects found; style FAIL: markdownlint missing; dump OK; prune OK; llms OK; skill harvest OK). Blockers: markdownlint missing. NEXT: operator closeout review.

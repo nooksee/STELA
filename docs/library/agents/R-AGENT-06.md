@@ -503,7 +503,7 @@ npm install --save-dev audit-ci
 3. **Fail Securely** - Errors should not expose data
 4. **Separation of Concerns** - Isolate security-critical code
 5. **Keep it Simple** - Complex code has more vulnerabilities
-6. **Don't Trust Input** - Validate and sanitize everything
+6. **Do Not Trust Input** - Validate and sanitize everything
 7. **Update Regularly** - Keep dependencies current
 8. **Monitor and Log** - Detect attacks in real-time
 
@@ -544,4 +544,3 @@ After security review:
 ---
 
 **Remember**: Security is not optional, especially for platforms handling real money. One vulnerability can cost users real financial losses. Be thorough, be paranoid, be proactive.
-
