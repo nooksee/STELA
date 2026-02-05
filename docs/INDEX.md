@@ -5,8 +5,7 @@
 * [library/MANUAL.md](library/MANUAL.md) — Operator command cheat sheet and mechanics.
 
 ## 1. The Constitution (Law & Logic)
-* [../TRUTH.md](../TRUTH.md) — Filing doctrine, invariants, and structure (SSOT).
-* [../AGENTS.md](../AGENTS.md) — Staffing protocols and behavioral logic (Human vs AI).
+* [../PoT.md](../PoT.md) — Policy of Truth: constitution, staffing, jurisdiction, and enforcement.
 * [GOVERNANCE.md](GOVERNANCE.md) — Project coherence, tone lanes, and non-negotiables.
 
 ## 2. The Ledger (State)

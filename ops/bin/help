@@ -59,13 +59,13 @@ ${bold}Stela Help${reset}
 ${dim}Explainable command index and quick start.${reset}
 
 ${bold}Commands${reset}
-  ${cyan}project${reset}  Manage TRUTH/TASK, status, and work log.
+  ${cyan}project${reset}  Manage PoT/TASK, status, and work log.
   ${cyan}open${reset}     Generate an OPEN prompt with freshness gate.
   ${cyan}dump${reset}     Capture platform state (excludes projects/).
   ${cyan}help${reset}     Search docs/: ./ops/bin/help <term>
 
 ${bold}Quick Start${reset}
-  1) Review canon: ${green}TRUTH.md${reset} and ${green}TASK.md${reset}
+  1) Review canon: ${green}PoT.md${reset} and ${green}TASK.md${reset}
   2) Capture context: ${green}./ops/bin/open --intent="..." --dp="DP-XXXX / YYYY-MM-DD"${reset}
   3) Dump platform: ${green}./ops/bin/dump --scope=platform --format=chatgpt${reset}
   4) Check status: ${green}./ops/bin/project status${reset}

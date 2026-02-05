@@ -1,34 +1,173 @@
-## TRUTH.md
-# TRUTH.md
+## PoT.md
+# PoT.md
+# Policy of Truth (PoT)
 
-## 1. Filing Doctrine
+## Preamble: Mechanistic Doctrine
+Mechanistic Doctrine: The system prevents action that violates policy. It does not request compliance.
+PoT is the single constitutional document for Stela governance. It supersedes TRUTH.md, AGENTS.md, SECURITY.md, and CONTRIBUTING.md. Legacy copies are archived.
+
+## 1. The Constitution (Physical Laws)
+
+### 1.1 Filing Doctrine
 Filing:
 - `ops/` = Run (binaries, manifests, automation).
 - `docs/` = Explain (manuals and rationale).
 - `projects/` = Work (payload code).
 - `storage/` = Trash (local artifacts, never canon).
 
-## 2. Axioms (Constitution)
-- Precedence: TRUTH is final authority; if conflict exists, stop and ask.
+### 1.2 Axioms
+- Precedence: PoT is final authority; if conflict exists, stop and ask.
 - SSOT: one canonical file per domain; other mentions are pointers.
-- Reuse-first: search ops/ for an existing template before creating a new artifact.
+- Reuse-first: search `ops/` for an existing template before creating a new artifact.
 - Context Hazard: any inclusion of `docs/library/agents`, `docs/library/tasks`, or `docs/library/skills` in the global context manifest is a failure.
 - Drift: any divergence between canon and repository state, or duplication of canon outside SSOT, is a failure state that requires stop and correction.
 - SoP: history ledger only; no permanent rules live there.
 
-## 3. Canon Surfaces
-- `TRUTH.md` - constitution and invariants.
-- `TASK.md` - active work surface and DP contract.
-- `SoP.md` - history ledger and shipment record.
-- `AGENTS.md` - staffing protocol and behavioral logic.
-- `docs/library/MANUAL.md` - operator mechanics.
-- `docs/library/MAP.md` - context wayfinding.
-- `ops/lib/manifests/CONTEXT.md` - required context set.
-- `llms.txt` - discovery entry point.
+### 1.3 Canon Surfaces
+- `PoT.md` — constitution, staffing, jurisdiction, and enforcement (SSOT).
+- `TASK.md` — active work surface and DP contract.
+- `SoP.md` — history ledger and shipment record.
+- `docs/library/MANUAL.md` — operator mechanics.
+- `docs/library/MAP.md` — context wayfinding.
+- `ops/lib/manifests/CONTEXT.md` — required context set.
+- `llms.txt` — discovery entry point.
+
+## 2. The Sheriff (Enforcement)
+The Sheriff is the Integrator plus Automation (linters, repo-gates, and binaries).
+Mandate:
+- Stop work.
+- Reject PRs.
+- Kill processes.
+Triggers:
+- Any PoT violation or canon drift.
+- Context hazard in the global manifest.
+- Scope breach or forbidden zone access.
+
+## 3. Jurisdiction (The Multi-verse)
+
+### 3.1 The Crown (Platform)
+Scope: `ops/`, `docs/`, `tools/`, `.github/`, and root governance surfaces.
+Law: Absolute PoT enforcement. No contractions. Strict formatting. The Sheriff halts work on violations.
+
+### 3.2 The Colonies (Projects)
+Scope: `projects/`.
+Law: Structural adherence to platform governance. Each project must include `STELA.md`.
+Local law applies to project content. Contractions are allowed only when the project `STELA.md` permits them.
+Platform automation still governs any platform surfaces touched during project work.
+
+## 4. Staffing & Logic
+
+### 4.1 Staffing Protocol
+- Operator (Human): Owns final decisions, approvals, and secrets. Performs all commits, pushes, and merges.
+- Integrator (Lead AI): Maintains governance, structural integrity, and auditing. Generates Dispatch Packets and detects system drift.
+- Contractor (Guest AI): Executes specific logic tasks and drafts implementation details within a defined scope.
+
+### 4.2 Behavioral Logic Standard
+- Linguistic Precision: No contractions.
+- Linguistic Precision: Quantitative reporting required for deviations from protocol.
+- Linguistic Precision: Absolute literalism; seek clarification for ambiguity before proceeding.
+- Operational Directives: Anti-drift governance; logic or files misaligned with PoT.md are a system failure.
+- Operational Directives: Context hygiene; ops/lib/manifests/CONTEXT.md must exclude docs/library/agents, docs/library/tasks, and docs/library/skills.
+- Operational Directives: Logic conflict resolution; stop until the Operator redefines parameters if a task violates PoT.md.
+- Operational Directives: Equilibrium maintenance; a task is complete only when SoP.md is updated.
+- Operational Directives: Reuse-first discipline; cross-reference ops/ templates before creating new artifacts.
+- Operational Directives: Contractor closeout skill harvesting uses ops/lib/scripts/skill.sh harvest for provenance.
+- Operational Directives: Contractor closeout skill harvesting forbids manual creation of docs/library/skills markdown files.
+- Operational Directives: Contractor closeout skill harvesting is mandatory for production payloads and optional for platform maintenance.
+- Jurisdiction note: The Colonies may permit contractions in project content when `STELA.md` allows them. Crown surfaces remain contraction-free.
+
+### 4.3 Hard Constraints (SSOT)
+- PoT.md
+- SoP.md
+- TASK.md
+- ops/lib/manifests/CONTEXT.md
+- docs/library/MANUAL.md
+- docs/library/MAP.md
+
+### 4.4 Entry Points
+- llms.txt
+
+### 4.5 Drafting Proposal Protocol
+- Integrator proposals: An Integrator may propose a work branch name and Base HEAD when they are not yet provided.
+- Operator authority: The Operator creates branches and provides the final Base HEAD; Contractors do not create or switch branches.
+- Provisional marking: Any provisional value must be prefixed with PROPOSED: during drafting and must be removed or replaced with finalized values before any worker runs a DP.
+
+## 5. Workflow & Security
+
+### 5.1 Non-Negotiables
+- Do not push to `main`.
+- Work only on `work/*` branches.
+- Every PR must pass repo-gates.
+
+### 5.2 Standard Workflow
+- Create a branch named `work/<topic>-YYYY-MM-DD`.
+- Make small, reviewable changes.
+- Keep unrelated refactors out of the change set.
+- Review changes visually before commit.
+- Use clear commit messages.
+- Push the `work/*` branch, open a PR, wait for repo-gates, then merge.
+
+### 5.3 Provenance
+- Record imported or adapted external code in `docs/UPSTREAMS.md` or the correct truth-layer document.
+- Include source, purpose, changes, and known risks or limits.
+
+### 5.4 Security Policy (Stela)
+Roles and access expectations are defined in PoT.md.
+
+#### Secrets Management
+- Never commit secrets, API keys, or credentials to the repo.
+- Use environment variables or a local secrets manager for sensitive values.
+- If a secret is exposed, rotate it and document the remediation.
+
+#### AI Usage Policy
+- AI assistance is allowed with human oversight.
+- All AI-proposed changes must be reviewed by a human operator.
+- Provide citations or provenance for external sources or non-trivial claims.
+
+#### Reporting Vulnerabilities
+Preferred:
+- Use a GitHub Security Advisory for this repository.
+
+If you cannot use GitHub Security Advisories:
+- Contact the repository owners via GitHub and request a private channel.
+- Do not disclose details publicly until coordinated.
+
+When reporting, include:
+- A clear description of the issue.
+- Minimal reproduction steps or proof-of-concept.
+- Affected files or versions (if known).
+- Suggested mitigations (optional, appreciated).
+
+#### Handling and Disclosure
+- Reports are acknowledged as soon as practical.
+- Fixes are prioritized by impact, exploitability, and clarity.
+- We aim for coordinated, responsible disclosure.
+
+#### Known Issues and Future Improvements
+- Legacy code paths include MD5 hashing that should be upgraded.
 
 
 ## SoP.md
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
+
+## 2026-02-05 - DP-OPS-0025: Governance Consolidation & Policy of Truth (PoT)
+
+- Purpose: Consolidate governance surfaces into PoT and resolve jurisdiction ambiguity.
+- What shipped:
+  - Created `PoT.md` consolidating TRUTH, AGENTS, SECURITY, and CONTRIBUTING with the Mechanistic Doctrine, Sheriff enforcement, and Multi-verse jurisdiction.
+  - Updated governance pointers, manifests, and ops/bin tooling to reference `PoT.md`, and tombstoned `SECURITY.md` and `CONTRIBUTING.md`.
+  - Archived legacy `TRUTH.md` and `AGENTS.md` into `storage/archives/root/` with date suffixes.
+  - Updated `tools/lint/truth.sh` to scan `PoT.md` and refreshed context bundle inputs.
+- Verification:
+  - `./ops/bin/dump --scope=platform`
+  - `bash tools/lint/context.sh`
+  - `bash tools/lint/truth.sh`
+  - `bash ops/lib/scripts/skill.sh harvest --name "DP-OPS-0025 Worker Closeout" --context "platform governance consolidation for DP-OPS-0025" --solution "No promotion. This run records Policy of Truth consolidation, pointer updates, and receipt proofs." --force`
+  - `bash ops/bin/prune`
+  - `bash ops/bin/llms`
+- Risk / rollback:
+  - Risk: Medium (governance pointers and canon consolidation now depend on `PoT.md`).
+  - Rollback: revert `PoT.md`, `ops/lib/manifests/CONTEXT.md`, `tools/lint/truth.sh`, `TASK.md`, `docs/library/MAP.md`, `docs/library/INDEX.md`, `.github/copilot-instructions.md`, `SECURITY.md`, `CONTRIBUTING.md`, `SoP.md`, `docs/CONTEXT.md`, `docs/INDEX.md`, `docs/QUICKSTART.md`, `docs/GOVERNANCE.md`, `docs/library/MANUAL.md`, `README.md`, `llms.txt`, `ops/bin/dump`, `ops/bin/open`, `ops/bin/llms`, `ops/bin/help`, `llms-small.txt`, `llms-full.txt`, and restore `TRUTH.md` and `AGENTS.md` from `storage/archives/root/` archives.
 
 ## 2026-02-05 - DP-OPS-0024: Phase 3 Security Hardening & Autopoietic Compliance
 
@@ -204,23 +343,6 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - Risk: Low (documentation and registry updates).
   - Rollback: revert `docs/library/skills/S-LEARN-06.md`, `docs/library/skills/S-LEARN-07.md`, `docs/library/INDEX.md`, and `SoP.md`.
 
-## 2026-02-02 — DP-OPS-0014: Skills System Hardening and Polishing
-
-- Purpose: Harden S-LEARN-01 through S-LEARN-05 with Stela stack concrete specs and enforce receipt bundle mandate in TASK.
-- What shipped:
-  - Rewrote S-LEARN-01 through S-LEARN-05 with stack-specific commands, traps, and isolation rules.
-  - Defined Zenith envelope and hook contract plus coding and security standards for the Next.js/FastAPI/Supabase stack.
-  - Updated TASK proof bundle checklist with automatic disapproval mandate.
-- Verification:
-  - `./ops/bin/dump --scope=platform`
-  - `bash tools/lint/context.sh`
-  - `bash tools/lint/truth.sh`
-  - `bash tools/lint/library.sh`
-  - `bash tools/verify.sh` (PASS with 3 warnings: storage/archives, storage/documentation, storage/ToDo)
-- Risk / rollback:
-  - Risk: Low (documentation-only skill and TASK updates).
-  - Rollback: revert `docs/library/skills/S-LEARN-01.md` through `docs/library/skills/S-LEARN-05.md`, `TASK.md`, and `SoP.md`.
-
 
 
 ## TASK.md
@@ -233,7 +355,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 > - **Top:** current Dispatch Packet (DP) intent + constraints
 > - **Bottom:** Work Log (timestamped continuity breadcrumbs + single next action)
 
-Canon surface definitions live in `TRUTH.md`.
+Canon surface definitions live in `PoT.md`.
 
 ---
 
@@ -241,8 +363,7 @@ Canon surface definitions live in `TRUTH.md`.
 **Rule:** No execution until the worker explicitly confirms these are loaded.
 
 **Must read (always):**
-- [ ] `TRUTH.md` (precedence + invariants)
-- [ ] `AGENTS.md` (jurisdiction / stop-and-ask)
+- [ ] `PoT.md` (constitution + jurisdiction)
 - [ ] `SoP.md` (merge-grade readiness ledger)
 - [ ] `ops/lib/manifests/CONTEXT.md` (required context set)
 - [ ] `docs/library/MAP.md` (continuity terrain)
@@ -255,7 +376,7 @@ DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
 - [ ] [path/to/file]
 
 **Loading discipline (worker must echo):**
-- “Loaded: TRUTH, AGENTS, SoP, CONTEXT, MAP (+ job-specific files).”
+- “Loaded: PoT, SoP, CONTEXT, MAP (+ job-specific files).”
 
 ---
 
@@ -296,7 +417,7 @@ STOP if told to create or switch branches.
 
 ## 3.2 Required Context Load (Read Before Doing Anything)
 **Worker must confirm loaded before acting:**
-- TRUTH, AGENTS, SoP, CONTEXT, MAP
+- PoT, SoP, CONTEXT, MAP
 - Plus any DP-scoped files listed here:
   - [Exact path]
   - [Exact path]
@@ -333,7 +454,7 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
   - Workers do not stage/commit/merge/push.
   - Workers only return diffs/results/receipt.
 
-- **Precedence:** If any conflict exists, **TRUTH.md wins**. If unclear, STOP and ask.
+- **Precedence:** If any conflict exists, **PoT.md wins**. If unclear, STOP and ask.
 
 - **Strict Stop Conditions (generic):**
   - STOP if any placeholder text remains in final outputs (`[ ... ]`, `TODO`, `TBD`, `...`).
@@ -375,7 +496,7 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
 - Context lint (use repo-canonical command):
   - Prefer: `bash tools/lint/context.sh`
   - If not found and required: **STOP** and ask (do not invent a substitute)
-- Truth lint (when TRUTH/canon surfaces touched; use repo-canonical command):
+- Truth lint (when PoT or canon surfaces touched; use repo-canonical command):
   - Prefer: `bash tools/lint/truth.sh`
   - If not found and required: **STOP** and ask (do not invent a substitute)
 
@@ -504,45 +625,7 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - *2026-02-03 11:32* — DP-OPS-0016: Hardened TASK context boundaries, receipt checklist, and closeout metadata; updated SoP. Verification: RUN (dump; context OK; truth OK). Blockers: none. NEXT: operator review + commit.
 - *2026-02-04 11:39* — DP-OPS-0020: Implemented Phase Two Doctrine (canon compression, pruning, context bundles, style lint) and promoted S-LEARN-08. Verification: RUN (dump; context; truth; llms; prune; style failed: markdownlint missing). Blockers: markdownlint not installed. NEXT: operator review and decide on markdownlint installation.
 - *2026-02-05 13:01* — DP-OPS-0024: Hardened project input validation, added project STELA linting, enforced no-contraction checks, and documented root ontology. Verification: RUN (context OK; truth OK; project lint OK with no projects found; style FAIL: markdownlint missing; dump OK; prune OK; llms OK; skill harvest OK). Blockers: markdownlint missing. NEXT: operator closeout review.
-
-
-## AGENTS.md
-# AGENTS.md
-# Pointer-first agent constitution. Do not duplicate canon text.
-
-## 1. Staffing Protocol
-- Operator (Human): Owns final decisions, approvals, and secrets. Performs all commits, pushes, and merges.
-- Integrator (Lead AI): Maintains governance, structural integrity, and auditing. Generates Dispatch Packets and detects system drift.
-- Contractor (Guest AI): Executes specific logic tasks and drafts implementation details within a defined scope.
-
-## 2. Behavioral Logic Standard
-- Linguistic Precision: No contractions.
-- Linguistic Precision: Quantitative reporting required for deviations from protocol.
-- Linguistic Precision: Absolute literalism; seek clarification for ambiguity before proceeding.
-- Operational Directives: Anti-drift governance; logic or files misaligned with TRUTH.md are a system failure.
-- Operational Directives: Context hygiene; ops/lib/manifests/CONTEXT.md must exclude docs/library/agents, docs/library/tasks, and docs/library/skills.
-- Operational Directives: Logic conflict resolution; stop until the Operator redefines parameters if a task violates TRUTH.md.
-- Operational Directives: Equilibrium maintenance; a task is complete only when SoP.md is updated.
-- Operational Directives: Reuse-first discipline; cross-reference ops/ templates before creating new artifacts.
-- Operational Directives: Contractor closeout skill harvesting uses ops/lib/scripts/skill.sh harvest for provenance.
-- Operational Directives: Contractor closeout skill harvesting forbids manual creation of docs/library/skills markdown files.
-- Operational Directives: Contractor closeout skill harvesting is mandatory for production payloads and optional for platform maintenance.
-
-## 3. Hard Constraints (SSOT)
-- TRUTH.md
-- SoP.md
-- TASK.md
-- ops/lib/manifests/CONTEXT.md
-- docs/library/MANUAL.md
-- docs/library/MAP.md
-
-## 4. Entry Points
-- llms.txt
-
-## 5. Drafting Proposal Protocol
-- Integrator proposals: An Integrator may propose a work branch name and Base HEAD when they are not yet provided.
-- Operator authority: The Operator creates branches and provides the final Base HEAD; Contractors do not create or switch branches.
-- Provisional marking: Any provisional value must be prefixed with PROPOSED: during drafting and must be removed or replaced with finalized values before any worker runs a DP.
+- *2026-02-05 15:12* — DP-OPS-0025: Consolidated governance into PoT, updated pointers and tooling, and archived TRUTH and AGENTS. Verification: RUN (open, dump, context, truth, skill harvest, prune, llms). Blockers: none. NEXT: operator review for merge.
 
 
 ## llms.txt
@@ -554,8 +637,7 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - llms-full.txt - Full context bundle (small + README + docs/library).
 
 ## 1. Governance & Jurisdictions
-- TRUTH.md - The system constitution and invariants.
-- AGENTS.md - Staffing protocols and behavioral logic standards.
+- PoT.md - Policy of Truth: constitution, staffing, jurisdiction, and enforcement.
 - docs/GOVERNANCE.md - Non-negotiables and project coherence rules.
 
 ## 2. State & Continuity
@@ -586,8 +668,8 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 # If a file is listed here, it is protected Canon.
 
 # --- 1. The Constitution (Law & Logic) ---
-system-constitution | Stela System Constitution | TRUTH.md
-agent-jurisdiction  | Staffing & Jurisdiction   | AGENTS.md
+system-constitution | Policy of Truth           | PoT.md
+agent-jurisdiction  | Staffing & Jurisdiction   | PoT.md
 project-governance  | Governance & Drift        | docs/GOVERNANCE.md
 
 # --- 2. The Ledger (State Persistence) ---
@@ -726,7 +808,7 @@ ops/lib/scripts/skill.sh promote storage/handoff/skill-draft-YYYYMMDD-HHMMSS-ski
 ---
 
 ## 4. Key Paths (Reference)
-* **Constitution:** [`../../TRUTH.md`](../../TRUTH.md)
+* **Constitution:** [`../../PoT.md`](../../PoT.md)
 * **Active Contract:** [`../../TASK.md`](../../TASK.md)
 * **History:** [`../../SoP.md`](../../SoP.md)
 * **Artifacts:** `storage/handoff/` (Results), `storage/dumps/` (State).
@@ -741,8 +823,7 @@ This document defines the specific surfaces that must be loaded to preserve gove
 
 ## 1. The Constitution (Immutable Law)
 *Rules that do not change without a governance event.*
-* **Constitution:** [`../../TRUTH.md`](../../TRUTH.md) — Invariants, filing doctrine, and structure (SSOT).
-* **Jurisdiction:** [`../../AGENTS.md`](../../AGENTS.md) — Staffing protocols and behavioral logic (Human vs AI).
+* **Policy of Truth:** [`../../PoT.md`](../../PoT.md) — Constitution, staffing, jurisdiction, and enforcement (SSOT).
 * **Discovery:** [`../../llms.txt`](../../llms.txt) — The machine-readable entry point.
 
 ## 2. The Ledger (Mutable State)
@@ -777,12 +858,11 @@ This project is built to resist entropy. We value structure over memory and expl
 ## 1. Non-Negotiables (Hard Rules)
 * **No Direct Pushes:** `main` is read-only. Work happens on `work/*` branches → PRs → Merge.
 * **Green Gates Only:** If `repo-gates` fail, the code is wrong, not the gate.
-* **Canon Supremacy:** When in doubt, `TRUTH.md` wins.
+* **Canon Supremacy:** When in doubt, `PoT.md` wins.
 
 ## 2. Canon Surfaces (Source of Truth)
 These files represent the immutable reality of the project.
-* `TRUTH.md` — Constitution, filing doctrine, and structure.
-* `AGENTS.md` — Jurisdiction, staffing, and logic standards.
+* `PoT.md` — Constitution, staffing, jurisdiction, and logic standards.
 * `SoP.md` — The historical ledger (State of Play).
 * `TASK.md` — The active contract (DP) and work log.
 * `docs/INDEX.md` — The system root.
@@ -793,13 +873,13 @@ These files represent the immutable reality of the project.
 * **Routine Work:** Standard feature work in `projects/` does not require SoP entries unless it changes the platform itself.
 
 ## 4. Staffing Protocol (Jurisdiction)
-Defined strictly in `AGENTS.md`:
+Defined strictly in `PoT.md`:
 * **Operator (Human):** Final authority. Owns approvals, commits, and secrets.
 * **Integrator (AI Lead):** Guardian of governance. Detects drift and maintains structure.
 * **Contractor (AI Guest):** Execution arm. Drafts logic but never commits.
 
 ## 5. AI Engagement Protocol
-* **Logic First:** All agents must adhere to the Behavioral Logic Standards in `AGENTS.md`.
+* **Logic First:** All agents must adhere to the Behavioral Logic Standards in `PoT.md`.
 * **DP Required:** No logic changes shall be proposed without an active Dispatch Packet (DP) in `TASK.md`.
 * **No Hallucinations:** Cite sources. Do not invent paths.
 

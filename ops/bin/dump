@@ -157,7 +157,7 @@ if [[ "$(pwd -P)" != "$repo_root" ]]; then
   die "Run from repo root: $repo_root"
 fi
 
-required_files=("TRUTH.md" "SoP.md" "AGENTS.md")
+required_files=("PoT.md" "SoP.md" "TASK.md")
 missing=()
 for path in "${required_files[@]}"; do
   if [[ ! -f "$path" ]]; then

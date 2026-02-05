@@ -81,9 +81,8 @@ open_out_path="storage/handoff/OPEN-${tag_prefix}${branch_safe}-${head_short}.tx
 : > "$open_out_path"
 
 required_files=(
-  "TRUTH.md"
+  "PoT.md"
   "SoP.md"
-  "AGENTS.md"
   "TASK.md"
   "docs/INDEX.md"
   "docs/library/MANUAL.md"
@@ -126,7 +125,7 @@ emit() {
 
 Stela OPEN PROMPT
 
-Adhere to the Behavioral Logic Standards defined in AGENTS.md.
+Adhere to the Behavioral Logic Standards defined in PoT.md.
 $mode_line
 
 [FRESHNESS GATE]
@@ -149,7 +148,7 @@ Do not:
 - Skip gates.
 
 [CONSTITUTION / FOCUS]
-- TRUTH.md
+- PoT.md
 
 [PRIMARY WORK SURFACE]
 - TASK.md (DP template + living work log)
@@ -157,10 +156,9 @@ Do not:
 - When drafting a DP: follow TASK headings/order; output only the DP; ask if required fields are missing.
 
 [CANON POINTERS]
-- TRUTH.md
+- PoT.md
 - TASK.md
 - SoP.md
-- AGENTS.md
 - docs/INDEX.md
 - docs/library/MANUAL.md
 - docs/library/MAP.md

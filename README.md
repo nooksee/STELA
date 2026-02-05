@@ -4,4 +4,4 @@ Stela is an explainability-first, provenance-forward CMS program with PR-only go
 
 [![repo-gates](https://github.com/[User]/stela-platform/actions/workflows/repo_gates.yml/badge.svg)](https://github.com/[User]/stela-platform/actions/workflows/repo_gates.yml)
 
-See TRUTH.md Section 1 for the developer guide.
+See PoT.md Section 1 for the developer guide.

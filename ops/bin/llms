@@ -194,7 +194,7 @@ collect_profile_paths() {
   local project_id
   project_id="$(resolve_project_id)"
 
-  local -a paths=("TRUTH.md" "AGENTS.md")
+  local -a paths=("PoT.md")
   local -a extra=()
 
   case "$profile" in

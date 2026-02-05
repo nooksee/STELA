@@ -6,8 +6,7 @@
 - llms-full.txt - Full context bundle (small + README + docs/library).
 
 ## 1. Governance & Jurisdictions
-- TRUTH.md - The system constitution and invariants.
-- AGENTS.md - Staffing protocols and behavioral logic standards.
+- PoT.md - Policy of Truth: constitution, staffing, jurisdiction, and enforcement.
 - docs/GOVERNANCE.md - Non-negotiables and project coherence rules.
 
 ## 2. State & Continuity

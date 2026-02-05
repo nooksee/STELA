@@ -7,8 +7,8 @@
 # If a file is listed here, it is protected Canon.
 
 # --- 1. The Constitution (Law & Logic) ---
-system-constitution | Stela System Constitution | TRUTH.md
-agent-jurisdiction  | Staffing & Jurisdiction   | AGENTS.md
+system-constitution | Policy of Truth           | PoT.md
+agent-jurisdiction  | Staffing & Jurisdiction   | PoT.md
 project-governance  | Governance & Drift        | docs/GOVERNANCE.md
 
 # --- 2. The Ledger (State Persistence) ---

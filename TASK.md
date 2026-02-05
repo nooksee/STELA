@@ -7,7 +7,7 @@
 > - **Top:** current Dispatch Packet (DP) intent + constraints
 > - **Bottom:** Work Log (timestamped continuity breadcrumbs + single next action)
 
-Canon surface definitions live in `TRUTH.md`.
+Canon surface definitions live in `PoT.md`.
 
 ---
 
@@ -15,8 +15,7 @@ Canon surface definitions live in `TRUTH.md`.
 **Rule:** No execution until the worker explicitly confirms these are loaded.
 
 **Must read (always):**
-- [ ] `TRUTH.md` (precedence + invariants)
-- [ ] `AGENTS.md` (jurisdiction / stop-and-ask)
+- [ ] `PoT.md` (constitution + jurisdiction)
 - [ ] `SoP.md` (merge-grade readiness ledger)
 - [ ] `ops/lib/manifests/CONTEXT.md` (required context set)
 - [ ] `docs/library/MAP.md` (continuity terrain)
@@ -29,7 +28,7 @@ DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
 - [ ] [path/to/file]
 
 **Loading discipline (worker must echo):**
-- “Loaded: TRUTH, AGENTS, SoP, CONTEXT, MAP (+ job-specific files).”
+- “Loaded: PoT, SoP, CONTEXT, MAP (+ job-specific files).”
 
 ---
 
@@ -70,7 +69,7 @@ STOP if told to create or switch branches.
 
 ## 3.2 Required Context Load (Read Before Doing Anything)
 **Worker must confirm loaded before acting:**
-- TRUTH, AGENTS, SoP, CONTEXT, MAP
+- PoT, SoP, CONTEXT, MAP
 - Plus any DP-scoped files listed here:
   - [Exact path]
   - [Exact path]
@@ -107,7 +106,7 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
   - Workers do not stage/commit/merge/push.
   - Workers only return diffs/results/receipt.
 
-- **Precedence:** If any conflict exists, **TRUTH.md wins**. If unclear, STOP and ask.
+- **Precedence:** If any conflict exists, **PoT.md wins**. If unclear, STOP and ask.
 
 - **Strict Stop Conditions (generic):**
   - STOP if any placeholder text remains in final outputs (`[ ... ]`, `TODO`, `TBD`, `...`).
@@ -149,7 +148,7 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
 - Context lint (use repo-canonical command):
   - Prefer: `bash tools/lint/context.sh`
   - If not found and required: **STOP** and ask (do not invent a substitute)
-- Truth lint (when TRUTH/canon surfaces touched; use repo-canonical command):
+- Truth lint (when PoT or canon surfaces touched; use repo-canonical command):
   - Prefer: `bash tools/lint/truth.sh`
   - If not found and required: **STOP** and ask (do not invent a substitute)
 
@@ -278,3 +277,4 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - *2026-02-03 11:32* — DP-OPS-0016: Hardened TASK context boundaries, receipt checklist, and closeout metadata; updated SoP. Verification: RUN (dump; context OK; truth OK). Blockers: none. NEXT: operator review + commit.
 - *2026-02-04 11:39* — DP-OPS-0020: Implemented Phase Two Doctrine (canon compression, pruning, context bundles, style lint) and promoted S-LEARN-08. Verification: RUN (dump; context; truth; llms; prune; style failed: markdownlint missing). Blockers: markdownlint not installed. NEXT: operator review and decide on markdownlint installation.
 - *2026-02-05 13:01* — DP-OPS-0024: Hardened project input validation, added project STELA linting, enforced no-contraction checks, and documented root ontology. Verification: RUN (context OK; truth OK; project lint OK with no projects found; style FAIL: markdownlint missing; dump OK; prune OK; llms OK; skill harvest OK). Blockers: markdownlint missing. NEXT: operator closeout review.
+- *2026-02-05 15:12* — DP-OPS-0025: Consolidated governance into PoT, updated pointers and tooling, and archived TRUTH and AGENTS. Verification: RUN (open, dump, context, truth, skill harvest, prune, llms). Blockers: none. NEXT: operator review for merge.
