@@ -31,8 +31,8 @@ Filing:
 - `ops/lib/manifests/CONTEXT.md` — required context set.
 - `llms.txt` — discovery entry point.
 
-## 2. The Governance Engine (Enforcement)
-The Governance Engine is the Integrator plus Automation (linters, repo-gates, and binaries).
+## 2. Enforcement
+Governance is the Integrator plus Automation (linters, repo-gates, and binaries).
 Mandate:
 - Stop work.
 - Reject PRs.
@@ -42,16 +42,16 @@ Triggers:
 - Context hazard in the global manifest.
 - Scope breach or forbidden zone access.
 
-## 3. Jurisdiction (The Tiered Jurisdiction)
+## 3. Jurisdiction
 
-### 3.1 The Core (Platform)
+### 3.1 Platform
 Scope: `ops/`, `docs/`, `tools/`, `.github/`, and root governance surfaces.
-Law: Absolute PoT enforcement. No contractions. Strict formatting. The Governance Engine halts work on violations.
+Law: Absolute PoT enforcement. No contractions. Strict formatting. Governance halts work on violations.
 
 ### 3.2 Projects
 Scope: `projects/`.
 Law: Structural adherence to platform governance. Each project must include `STELA.md`.
-Local law applies to project content. Contractions are allowed only when the project `STELA.md` permits them.
+Local law applies to project content.
 Platform automation still governs any platform surfaces touched during project work.
 
 ## 4. Staffing & Logic
