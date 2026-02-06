@@ -175,7 +175,7 @@ resolve_project_id() {
     printf '%s' "$PROJECT_ID"
     return 0
   fi
-  local manifest="${REPO_ROOT}/ops/lib/manifests/PROJECTS.md"
+  local manifest="${REPO_ROOT}/docs/ops/registry/PROJECTS.md"
   if [[ -f "$manifest" ]]; then
     project_id="$(awk '/^Current[[:space:]]*:/ { sub(/^Current[[:space:]]*:[[:space:]]*/, "", $0); sub(/[[:space:]]+$/, "", $0); print $0; exit }' "$manifest")"
   fi

@@ -19,6 +19,7 @@ Full bundle adds these supporting surfaces on top of the Small bundle.
 - `docs/library/MANUAL.md` — Command mechanics and cheat sheet.
 - `docs/library/MAP.md` — Context wayfinding map.
 - `docs/GOVERNANCE.md` — Project governance and non-negotiables.
+- `docs/ops/registry/PROJECTS.md` — Project registry (SSOT).
 
 ## Verification Tools
 - `tools/lint/context.sh` — Validates presence of manifest artifacts.
