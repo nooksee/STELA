@@ -48,7 +48,7 @@ Triggers:
 Scope: `ops/`, `docs/`, `tools/`, `.github/`, and root governance surfaces.
 Law: Absolute PoT enforcement. No contractions. Strict formatting. The Governance Engine halts work on violations.
 
-### 3.2 The Federation (Projects)
+### 3.2 Projects
 Scope: `projects/`.
 Law: Structural adherence to platform governance. Each project must include `STELA.md`.
 Local law applies to project content. Contractions are allowed only when the project `STELA.md` permits them.
@@ -73,7 +73,6 @@ Platform automation still governs any platform surfaces touched during project w
 - Operational Directives: Contractor closeout skill harvesting uses ops/lib/scripts/skill.sh harvest for provenance.
 - Operational Directives: Contractor closeout skill harvesting forbids manual creation of docs/library/skills markdown files.
 - Operational Directives: Contractor closeout skill harvesting is mandatory for production payloads and optional for platform maintenance.
-- Jurisdiction note: The Federation may permit contractions in project content when `STELA.md` allows them. Core surfaces remain contraction-free.
 
 ### 4.3 Hard Constraints (SSOT)
 - PoT.md
