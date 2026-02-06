@@ -12,5 +12,18 @@ Context Bundler (`ops/bin/llms`) compiles the canonical and supporting surfaces 
 
 Project Factory (`ops/bin/project`) orchestrates project intake and lifecycle alignment. It reads the project registry and templates in `ops/lib/` to generate or validate project payloads while keeping project work within platform governance.
 
-## 3. Interface Contract
+## 3. Specifications
+The authoritative technical specifications for operational binaries live under `docs/ops/specs/`.
+
+- `docs/ops/specs/dump.md`
+- `docs/ops/specs/help.md`
+- `docs/ops/specs/llms.md`
+- `docs/ops/specs/open.md`
+- `docs/ops/specs/project.md`
+- `docs/ops/specs/prune.md`
+
+## 4. Interface Contract
 The Ops Kernel is the executable companion to docs. Documentation explains and justifies; ops runs. Any new platform capability must ship as an ops binary or script with a corresponding doc pointer, not as procedural text in docs.
+
+## 5. Help and Discovery
+Use `./ops/bin/help <term>` to locate explanations, including the specs directory. The help binary prioritizes `docs/ops/specs/` for operational guidance.

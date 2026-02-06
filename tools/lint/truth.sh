@@ -30,8 +30,6 @@ root_files=(
   "PoT.md"
   "TASK.md"
   "README.md"
-  "SECURITY.md"
-  "CONTRIBUTING.md"
   "llms.txt"
 )
 

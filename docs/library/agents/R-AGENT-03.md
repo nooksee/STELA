@@ -274,7 +274,7 @@ See [docs/CODEMAPS/INDEX.md](docs/CODEMAPS/INDEX.md) for detailed architecture.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md)
+See [PoT.md](PoT.md)
 ```
 
 ## Scripts to Power Documentation

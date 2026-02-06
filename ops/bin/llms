@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 OUT_DIR="${REPO_ROOT}"
+ROOT_OUT_DIR="${REPO_ROOT}"
 MANIFEST_PATH="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
 PROFILE=""
 PROJECT_OVERRIDE=""
@@ -11,6 +12,10 @@ PROJECT_OVERRIDE=""
 usage() {
   cat <<'USAGE'
 Usage: ops/bin/llms [--out-dir=PATH] [--profile=architect|security] [--project=ID]
+
+Notes:
+- Bundles are always written to the repository root for Flat Truth visibility.
+- If --out-dir is set to a non-root path, a copy is also written to the root.
 USAGE
 }
 
@@ -55,12 +60,17 @@ if [[ ! -f "$MANIFEST_PATH" ]]; then
 fi
 
 mkdir -p "$OUT_DIR"
+mkdir -p "$ROOT_OUT_DIR"
 
 SMALL_OUT="${OUT_DIR}/llms-small.txt"
 FULL_OUT="${OUT_DIR}/llms-full.txt"
+ROOT_SMALL_OUT="${ROOT_OUT_DIR}/llms-small.txt"
+ROOT_FULL_OUT="${ROOT_OUT_DIR}/llms-full.txt"
 PROFILE_OUT=""
+ROOT_PROFILE_OUT=""
 if [[ -n "$PROFILE" ]]; then
   PROFILE_OUT="${OUT_DIR}/llms-${PROFILE}.txt"
+  ROOT_PROFILE_OUT="${ROOT_OUT_DIR}/llms-${PROFILE}.txt"
 fi
 
 strip_toc() {
@@ -257,6 +267,11 @@ if [[ ! -s "$FULL_OUT" ]]; then
 fi
 
 written=("$SMALL_OUT" "$FULL_OUT")
+if [[ "$OUT_DIR" != "$ROOT_OUT_DIR" ]]; then
+  cp "$SMALL_OUT" "$ROOT_SMALL_OUT"
+  cp "$FULL_OUT" "$ROOT_FULL_OUT"
+  written+=("$ROOT_SMALL_OUT" "$ROOT_FULL_OUT")
+fi
 
 if [[ -n "$PROFILE" ]]; then
   rm -f "$PROFILE_OUT"
@@ -271,6 +286,10 @@ if [[ -n "$PROFILE" ]]; then
     die "${PROFILE_OUT} is empty"
   fi
   written+=("$PROFILE_OUT")
+  if [[ "$OUT_DIR" != "$ROOT_OUT_DIR" ]]; then
+    cp "$PROFILE_OUT" "$ROOT_PROFILE_OUT"
+    written+=("$ROOT_PROFILE_OUT")
+  fi
 fi
 
 printf 'Wrote %s\n' "${written[*]}"
