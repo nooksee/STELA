@@ -25,7 +25,7 @@ This document defines the specific surfaces that must be loaded to preserve gove
 * **Capture:** [`../../ops/bin/dump`](../../ops/bin/dump) — Serializes the platform.
 * **Validation:** [`../../ops/lib/manifests/CONTEXT.md`](../../ops/lib/manifests/CONTEXT.md) — The required context checklist.
 
-## 5. Root Ontology
-*Defines the Provider and Consumer relationship for Phase 3.*
-* **Provider Root:** `docs/library/` — Canonical guidance and reference surfaces.
-* **Consumer Root:** `projects/` — Project payloads that consume the library guidance.
+## 5. Unified Jurisdiction
+*Policy of Truth governs all scopes without parallel authority.*
+* **Single Authority:** PoT is the sole authority across `ops/`, `docs/`, and `projects/`.
+* **Project Position:** Projects are payloads operating under PoT, not a separate provider or consumer tier.

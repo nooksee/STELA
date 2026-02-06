@@ -1,5 +1,23 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-06 - DP-OPS-0027: Re-Flatten Jurisdiction & Re-Establish Authority
+
+- Purpose: Re-flatten jurisdiction to PoT, remove multi-verse metaphors, and harden the project binary into a transparent open, dump, and STELA loader.
+- What shipped:
+  - Clarified linguistic precision to forbid contractions across all scopes.
+  - Refactored `ops/bin/project` into a transparent open and dump concatenation wrapper that appends `STELA.md`.
+  - Simplified `ops/lib/scripts/project.sh` to minimal validation helpers.
+  - Updated `docs/library/MAP.md` to remove the provider and consumer ontology and align with unified authority.
+- Verification:
+  - `./ops/bin/dump --scope=platform`
+  - `bash tools/lint/context.sh`
+  - `bash tools/lint/truth.sh`
+  - `bash ops/lib/scripts/skill.sh harvest --name "DP-OPS-0027 Worker Closeout" --context "unified jurisdiction and project binary transparency refactor" --solution "No promotion. This run records governance flattening, project wrapper refactor, and receipt proofs."`
+  - `bash -n ops/bin/project`
+- Risk / rollback:
+  - Risk: Medium (project work prompt generation path simplified).
+  - Rollback: revert `PoT.md`, `docs/library/MAP.md`, `ops/bin/project`, `ops/lib/scripts/project.sh`, and `SoP.md`.
+
 ## 2026-02-05 - DP-OPS-0026: Phase 3 Semantic Refactoring & Structural Hygiene
 
 - Purpose: Replace legacy governance metaphors, prune redundant security docs, and harden lint enforcement for Phase 3 terminology.
