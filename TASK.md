@@ -257,3 +257,4 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - **Example format:** `2026-01-27 14:05 — DP-OPS-0005: Example entry only. Verification: NOT RUN. Blockers: none. NEXT: follow-up.`
 - *[YYYY-MM-DD HH:MM]* — DP-OPS-[ID]: [short note]. Verification: [RUN/NOT RUN]. Blockers: [none/...]. NEXT: [single action]
 - *[YYYY-MM-DD HH:MM]* — [short note]. Verification: [..]. Blockers: [..]. NEXT: [single action]
+- *2026-02-06 21:27* — DP-OPS-0029: Agent system pointer-first refactor and registry relocation completed. Verification: RUN. Blockers: none. NEXT: prepare PR summary and RESULTS bundle.
