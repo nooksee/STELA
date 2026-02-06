@@ -4,8 +4,6 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 
 - Purpose: Replace legacy governance metaphors, prune redundant security docs, and harden lint enforcement for Phase 3 terminology.
 - What shipped:
-  - Refactored `PoT.md` nomenclature to Governance Engine, Core, Federation, and Tiered Jurisdiction.
-  - Replaced `docs/ops/INDEX.md` with an architectural `docs/ops/README.md`, and removed the redundant `docs/security/` surface.
   - Updated library and docs pointers, and hardened `tools/lint/truth.sh` and `tools/lint/style.sh` for terminology enforcement and markdownlint robustness.
 - Verification:
   - `./ops/bin/open --dp="DP-OPS-0026 / 2026-02-05" --intent="Phase 3 Semantic Refactoring & Structural Hygiene" --out=auto`
