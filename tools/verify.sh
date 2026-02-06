@@ -55,11 +55,11 @@ if [[ ! -d "storage/dumps" ]]; then
 fi
 
 # Drift check: warn on unexpected clutter in storage/
-# Allowed: README.md, .gitignore, handoff, dumps, dp, _scratch
+# Allowed: README.md, .gitignore, handoff, dumps, dp, _scratch, archives
 for item in storage/*; do
   name="$(basename "$item")"
   case "$name" in
-    README.md|.gitignore|handoff|dumps|dp|_scratch)
+    README.md|.gitignore|handoff|dumps|dp|_scratch|archives)
       ;;
     *)
       warn "Storage drift: unexpected item 'storage/$name'. Keep storage/ clean."

@@ -1,7 +1,7 @@
 # STELA TASK DASHBOARD (LIVING SURFACE)
 **Status:** ACTIVE  
-**Owner (Integrator):** [Name/Handle]  
-**Last Updated:** [YYYY-MM-DD]
+**Owner (Integrator):** Not provided  
+**Last Updated:** 2026-02-06
 
 > This file is the **single living surface** for the current work thread:
 > - **Top:** current Dispatch Packet (DP) intent + constraints
@@ -24,8 +24,9 @@ Canon surface definitions live in `PoT.md`.
 DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
 
 **Job-specific canon (fill in per DP):**
-- [ ] [path/to/file]
-- [ ] [path/to/file]
+- [ ] `tools/verify.sh`
+- [ ] `ops/bin/llms`
+- [ ] `ops/bin/prune`
 
 **Loading discipline (worker must echo):**
 - “Loaded: PoT, SoP, CONTEXT, MAP (+ job-specific files).”
@@ -35,11 +36,11 @@ DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
 ## 2. Active Context (Thread Header)
 - **Goal:** System Consolidation & Truth Enforcement.
 - **Constraint:** “My Local is Truth.”
-- **Current DP:** DP-OPS-[ID] — [TITLE]
-- **Work Branch (Integrator-assigned OR Integrator-proposed (Operator-created)):** [EXACT branch name]
-- **Base HEAD (operator-provided):** [short-hash] or `Not provided` / `Current (draft; lock at merge)`
-- **Single Next Action:** [One sentence. No lists.]
-- **Blockers:** [None / describe]
+- **Current DP:** DP-OPS-0030 — Pointer-First Agent Constitution & Hygiene
+- **Work Branch (Integrator-assigned OR Integrator-proposed (Operator-created)):** work/governance-refactor-2026-02-06
+- **Base HEAD (operator-provided):** cc26a4168
+- **Single Next Action:** Execute DP-OPS-0030 hygiene tasks and prepare receipts.
+- **Blockers:** None
 
 **Drafting note:** Provisional Work Branch and Base HEAD values are allowed during drafting but must be finalized before worker execution. Workers still stop on any freshness mismatch and do not create or switch branches.
 
@@ -250,11 +251,10 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 ---
 
 ## 5. Work Log (Timestamped Continuity)
-**Rule:** This is not a transcript. It’s the durable breadcrumb trail.  
+> **NOTICE:** This log is for the *active* DP only. Historical logs are archived in 'storage/archives/'. Do not rely on this log for long-term history.
+
+**Rule:** This is not a transcript. It is the durable breadcrumb trail.  
 **Expectation:** Append a new timestamped entry on every DP closeout (no exceptions).  
 **Each entry ends with:** `NEXT: <one single action>`.
 
-- **Example format:** `2026-01-27 14:05 — DP-OPS-0005: Example entry only. Verification: NOT RUN. Blockers: none. NEXT: follow-up.`
-- *[YYYY-MM-DD HH:MM]* — DP-OPS-[ID]: [short note]. Verification: [RUN/NOT RUN]. Blockers: [none/...]. NEXT: [single action]
-- *[YYYY-MM-DD HH:MM]* — [short note]. Verification: [..]. Blockers: [..]. NEXT: [single action]
-- *2026-02-06 21:27* — DP-OPS-0029: Agent system pointer-first refactor and registry relocation completed. Verification: RUN. Blockers: none. NEXT: prepare PR summary and RESULTS bundle.
+- *2026-02-06 22:45* — DP-OPS-0030: Governance refactor and context hygiene completed. Verification: RUN (context lint, truth lint, dump, open). Blockers: none. NEXT: deliver RESULTS bundle.
