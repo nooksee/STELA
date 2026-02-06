@@ -71,12 +71,43 @@ ${bold}Quick Start${reset}
   4) Check status: ${green}./ops/bin/project status${reset}
 
 ${bold}Search${reset}
-  ./ops/bin/help <term>  (grep -r in docs/ with line numbers)
+  ./ops/bin/help <term>  (prioritizes docs/ops/specs, then scans docs/)
+
+${bold}Specs${reset}
+  ${cyan}specs${reset}    List ops specification documents.
+  ${dim}Index:${reset} docs/ops/README.md
 EOF
+}
+
+show_specs() {
+  local spec_dir="docs/ops/specs"
+  if [[ ! -d "$spec_dir" ]]; then
+    say "Spec directory not found: ${spec_dir}"
+    return 1
+  fi
+  say "Ops specification documents:"
+  find "$spec_dir" -maxdepth 1 -type f -name "*.md" -print | sort
+}
+
+search_specs() {
+  local term="$1"
+  local spec_dir="docs/ops/specs"
+  local spec_matches=""
+  if [[ ! -d "$spec_dir" ]]; then
+    return 1
+  fi
+  spec_matches="$(grep -RIn --binary-files=without-match -- "$term" "$spec_dir" || true)"
+  if [[ -n "$spec_matches" ]]; then
+    say "Spec references for \"$term\" (docs/ops/specs prioritized):"
+    printf "%s\n" "$spec_matches"
+    return 0
+  fi
+  return 1
 }
 
 search_docs() {
   local term="$1"
+  local search_opts=()
   if [[ -z "$term" ]]; then
     die "Search term required."
   fi
@@ -85,7 +116,13 @@ search_docs() {
   fi
 
   say "Processing search for \"$term\"."
-  matches="$(grep -RIn --binary-files=without-match -- "$term" docs/ || true)"
+  if search_specs "$term"; then
+    say "Additional references in docs/ (excluding docs/ops/specs):"
+    search_opts+=(--exclude-dir=specs)
+  else
+    say "No spec references found. Scanning docs/."
+  fi
+  matches="$(grep -RIn --binary-files=without-match "${search_opts[@]}" -- "$term" docs/ || true)"
   if [[ -n "$matches" ]]; then
     say "I have located the following references regarding \"$term\":"
     printf "%s\n" "$matches"
@@ -107,6 +144,9 @@ case "${1:-}" in
     ;;
   -h|--help )
     usage
+    ;;
+  specs )
+    show_specs
     ;;
   * )
     search_docs "$1"

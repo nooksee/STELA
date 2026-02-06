@@ -85,4 +85,4 @@ if (( failures > 0 )); then
   exit 1
 fi
 
-echo "OK: Project STELA references verified."
+echo "OK: Project STELA references verified for agents, tasks, and skills."

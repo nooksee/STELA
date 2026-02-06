@@ -1,5 +1,24 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-06 - DP-OPS-0028: Mechanistic Jurisdiction Hardening & Forensic Ratification
+
+- Purpose: Ratify the forensic autopsy, enforce Flat Truth root bundle visibility, and expand operational specifications.
+- What shipped:
+  - Updated `ops/bin/llms` to enforce root bundle visibility and mirror bundles when a non-root output directory is requested.
+  - Clarified `tools/lint/project.sh` success output to confirm skills validation coverage.
+  - Populated `docs/ops/specs/` and indexed the specs in `docs/ops/README.md`.
+  - Strengthened `ops/bin/help` to prioritize specs and list them.
+- Verification:
+  - `./ops/bin/dump --scope=platform`
+  - `bash tools/lint/context.sh`
+  - `bash tools/lint/truth.sh`
+  - `bash ops/lib/scripts/skill.sh harvest --name "DP-OPS-0028 Worker Closeout" --context "forensic autopsy ratification, Flat Truth enforcement for llms bundles, ops specs expansion, and help discovery upgrades" --solution "No promotion. This run records forensic report canonization, llms root enforcement, ops specs documentation, help prioritization, and receipt proofs." --force`
+  - `bash ops/bin/prune`
+  - `./ops/bin/llms`
+- Risk / rollback:
+  - Risk: Medium (context bundle outputs now mirror to root and help search behavior is more opinionated).
+  - Rollback: revert `ops/bin/llms`, `tools/lint/project.sh`, `docs/ops/README.md`, `docs/ops/specs/`, `ops/bin/help`, and `SoP.md`.
+
 ## 2026-02-06 - DP-OPS-0027: Re-Flatten Jurisdiction & Re-Establish Authority
 
 - Purpose: Re-flatten jurisdiction to PoT, remove multi-verse metaphors, and harden the project binary into a transparent open, dump, and STELA loader.
@@ -40,8 +59,8 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 
 - Purpose: Consolidate governance surfaces into PoT and resolve jurisdiction ambiguity.
 - What shipped:
-  - Created `PoT.md` consolidating TRUTH, AGENTS, SECURITY, and CONTRIBUTING with the Mechanistic Doctrine, Sheriff enforcement, and Multi-verse jurisdiction.
-  - Updated governance pointers, manifests, and ops/bin tooling to reference `PoT.md`, and tombstoned `SECURITY.md` and `CONTRIBUTING.md`.
+  - Created `PoT.md` consolidating TRUTH, AGENTS, SECURITY, and CONTRIBUTING with the Mechanistic Doctrine.
+  - Updated governance pointers, manifests, and ops/bin tooling to reference `PoT.md`.
   - Archived legacy `TRUTH.md` and `AGENTS.md` into `storage/archives/root/` with date suffixes.
   - Updated `tools/lint/truth.sh` to scan `PoT.md` and refreshed context bundle inputs.
 - Verification:
@@ -53,7 +72,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - `bash ops/bin/llms`
 - Risk / rollback:
   - Risk: Medium (governance pointers and canon consolidation now depend on `PoT.md`).
-  - Rollback: revert `PoT.md`, `ops/lib/manifests/CONTEXT.md`, `tools/lint/truth.sh`, `TASK.md`, `docs/library/MAP.md`, `docs/library/INDEX.md`, `.github/copilot-instructions.md`, `SECURITY.md`, `CONTRIBUTING.md`, `SoP.md`, `docs/CONTEXT.md`, `docs/INDEX.md`, `docs/QUICKSTART.md`, `docs/GOVERNANCE.md`, `docs/library/MANUAL.md`, `README.md`, `llms.txt`, `ops/bin/dump`, `ops/bin/open`, `ops/bin/llms`, `ops/bin/help`, `llms-small.txt`, `llms-full.txt`, and restore `TRUTH.md` and `AGENTS.md` from `storage/archives/root/` archives.
+  - Rollback: revert `PoT.md`, `ops/lib/manifests/CONTEXT.md`, `tools/lint/truth.sh`, `TASK.md`, `docs/library/MAP.md`, `docs/library/INDEX.md`, `.github/copilot-instructions.md`, `SoP.md`, `docs/CONTEXT.md`, `docs/INDEX.md`, `docs/QUICKSTART.md`, `docs/GOVERNANCE.md`, `docs/library/MANUAL.md`, `README.md`, `llms.txt`, `ops/bin/dump`, `ops/bin/open`, `ops/bin/llms`, `ops/bin/help`, `llms-small.txt`, `llms-full.txt`, and restore `TRUTH.md` and `AGENTS.md` from `storage/archives/root/` archives.
 
 ## 2026-02-05 - DP-OPS-0024: Phase 3 Security Hardening & Autopoietic Compliance
 

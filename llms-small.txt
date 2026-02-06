@@ -4,7 +4,7 @@
 
 ## Preamble: Mechanistic Doctrine
 Mechanistic Doctrine: The system prevents action that violates policy. It does not request compliance.
-PoT is the single constitutional document for Stela governance. It supersedes TRUTH.md, AGENTS.md, SECURITY.md, and CONTRIBUTING.md. Legacy copies are archived.
+PoT is the single constitutional document for Stela governance. It supersedes SECURITY.md, and CONTRIBUTING.md.
 
 ## 1. The Constitution (Physical Laws)
 
@@ -32,8 +32,8 @@ Filing:
 - `ops/lib/manifests/CONTEXT.md` — required context set.
 - `llms.txt` — discovery entry point.
 
-## 2. The Sheriff (Enforcement)
-The Sheriff is the Integrator plus Automation (linters, repo-gates, and binaries).
+## 2. The [REMOVED] (Enforcement)
+The [REMOVED] is the Integrator plus Automation (linters, repo-gates, and binaries).
 Mandate:
 - Stop work.
 - Reject PRs.
@@ -43,13 +43,13 @@ Triggers:
 - Context hazard in the global manifest.
 - Scope breach or forbidden zone access.
 
-## 3. Jurisdiction (The Multi-verse)
+## 3. Jurisdiction (The Tiered Jurisdiction)
 
 ### 3.1 [REMOVED] (Platform)
 Scope: `ops/`, `docs/`, `tools/`, `.github/`, and root governance surfaces.
-Law: Absolute PoT enforcement. No contractions. Strict formatting. The Sheriff halts work on violations.
+Law: Absolute PoT enforcement. No contractions. Strict formatting. The [REMOVED] halts work on violations.
 
-### 3.2 The Colonies (Projects)
+### 3.2 The Federation (Projects)
 Scope: `projects/`.
 Law: Structural adherence to platform governance. Each project must include `STELA.md`.
 Local law applies to project content. Contractions are allowed only when the project `STELA.md` permits them.
@@ -74,7 +74,7 @@ Platform automation still governs any platform surfaces touched during project w
 - Operational Directives: Contractor closeout skill harvesting uses ops/lib/scripts/skill.sh harvest for provenance.
 - Operational Directives: Contractor closeout skill harvesting forbids manual creation of docs/library/skills markdown files.
 - Operational Directives: Contractor closeout skill harvesting is mandatory for production payloads and optional for platform maintenance.
-- Jurisdiction note: The Colonies may permit contractions in project content when `STELA.md` allows them. Crown surfaces remain contraction-free.
+- Jurisdiction note: The Federation may permit contractions in project content when `STELA.md` allows them. Core surfaces remain contraction-free.
 
 ### 4.3 Hard Constraints (SSOT)
 - PoT.md
@@ -150,12 +150,32 @@ When reporting, include:
 ## SoP.md
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-05 - DP-OPS-0026: Phase 3 Semantic Refactoring & Structural Hygiene
+
+- Purpose: Replace legacy governance metaphors, prune redundant security docs, and harden lint enforcement for Phase 3 terminology.
+- What shipped:
+  - Refactored `PoT.md` nomenclature to [REMOVED], Core, Federation, and Tiered Jurisdiction.
+  - Replaced `docs/ops/INDEX.md` with an architectural `docs/ops/README.md`, and removed the redundant `docs/security/` surface.
+  - Updated library and docs pointers, and hardened `tools/lint/truth.sh` and `tools/lint/style.sh` for terminology enforcement and markdownlint robustness.
+- Verification:
+  - `./ops/bin/open --dp="DP-OPS-0026 / 2026-02-05" --intent="Phase 3 Semantic Refactoring & Structural Hygiene" --out=auto`
+  - `./ops/bin/dump --scope=platform`
+  - `bash tools/lint/context.sh`
+  - `bash tools/lint/truth.sh`
+  - `bash tools/lint/style.sh`
+  - `bash ops/lib/scripts/skill.sh harvest --name "DP-OPS-0026 Worker Closeout" --context "platform governance refactor for DP-OPS-0026 terminology and ops architecture update" --solution "No promotion. This run records the semantic refactor, pointer updates, and receipt proofs."`
+  - `bash ops/bin/prune`
+  - `bash ops/bin/llms --out-dir=storage/handoff`
+- Risk / rollback:
+  - Risk: Low (documentation and lint rule updates only).
+  - Rollback: revert `PoT.md`, `docs/ops/README.md`, `docs/library/INDEX.md`, `docs/INDEX.md`, `tools/lint/truth.sh`, `tools/lint/style.sh`, `SoP.md`, `TASK.md`; restore `docs/ops/INDEX.md` and `docs/security/README.md`.
+
 ## 2026-02-05 - DP-OPS-0025: Governance Consolidation & Policy of Truth (PoT)
 
 - Purpose: Consolidate governance surfaces into PoT and resolve jurisdiction ambiguity.
 - What shipped:
-  - Created `PoT.md` consolidating TRUTH, AGENTS, SECURITY, and CONTRIBUTING with the Mechanistic Doctrine, Sheriff enforcement, and Multi-verse jurisdiction.
-  - Updated governance pointers, manifests, and ops/bin tooling to reference `PoT.md`, and tombstoned `SECURITY.md` and `CONTRIBUTING.md`.
+  - Created `PoT.md` consolidating TRUTH, AGENTS, SECURITY, and CONTRIBUTING with the Mechanistic Doctrine.
+  - Updated governance pointers, manifests, and ops/bin tooling to reference `PoT.md`.
   - Archived legacy `TRUTH.md` and `AGENTS.md` into `storage/archives/root/` with date suffixes.
   - Updated `tools/lint/truth.sh` to scan `PoT.md` and refreshed context bundle inputs.
 - Verification:
@@ -325,23 +345,6 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Risk / rollback:
   - Risk: Low (governance text updates only).
   - Rollback: revert `TASK.md` and `SoP.md`.
-
-## 2026-02-02 — DP-OPS-0015: Skills System Final Hardening and Consolidation
-
-- Purpose: Consolidate S-LEARN-08 into S-LEARN-06 and harden S-LEARN-06 and S-LEARN-07 with Trap and Solution patterns plus concrete commands.
-- What shipped:
-  - Moved Advanced Git Forensics to S-LEARN-06 and removed S-LEARN-08.
-  - Rewrote S-LEARN-06 and S-LEARN-07 with mandated Trap and Solution guidance and concrete command checks.
-  - Updated docs/library/INDEX.md to register S-LEARN-06 and refresh the S-LEARN-07 title.
-- Verification:
-  - `./ops/bin/dump --scope=platform`
-  - `bash tools/lint/context.sh`
-  - `bash tools/lint/truth.sh`
-  - `bash tools/lint/library.sh`
-  - `bash tools/verify.sh` (PASS with 3 warnings: storage/archives, storage/documentation, storage/ToDo)
-- Risk / rollback:
-  - Risk: Low (documentation and registry updates).
-  - Rollback: revert `docs/library/skills/S-LEARN-06.md`, `docs/library/skills/S-LEARN-07.md`, `docs/library/INDEX.md`, and `SoP.md`.
 
 
 
@@ -626,6 +629,7 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - *2026-02-04 11:39* — DP-OPS-0020: Implemented Phase Two Doctrine (canon compression, pruning, context bundles, style lint) and promoted S-LEARN-08. Verification: RUN (dump; context; truth; llms; prune; style failed: markdownlint missing). Blockers: markdownlint not installed. NEXT: operator review and decide on markdownlint installation.
 - *2026-02-05 13:01* — DP-OPS-0024: Hardened project input validation, added project STELA linting, enforced no-contraction checks, and documented root ontology. Verification: RUN (context OK; truth OK; project lint OK with no projects found; style FAIL: markdownlint missing; dump OK; prune OK; llms OK; skill harvest OK). Blockers: markdownlint missing. NEXT: operator closeout review.
 - *2026-02-05 15:12* — DP-OPS-0025: Consolidated governance into PoT, updated pointers and tooling, and archived TRUTH and AGENTS. Verification: RUN (open, dump, context, truth, skill harvest, prune, llms). Blockers: none. NEXT: operator review for merge.
+- *2026-02-05 17:11* — DP-OPS-0026: Refactored PoT terminology, replaced the ops index with an Ops Kernel README, removed redundant security docs, and hardened truth and style lints. Verification: RUN (open, dump, context, truth, style, skill harvest, prune, llms). Blockers: none. NEXT: operator review and merge.
 
 
 ## llms.txt

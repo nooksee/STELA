@@ -3,7 +3,7 @@
 
 ## Preamble: Mechanistic Doctrine
 Mechanistic Doctrine: The system prevents action that violates policy. It does not request compliance.
-PoT is the single constitutional document for Stela governance. It supersedes SECURITY.md, and CONTRIBUTING.md.
+PoT is the single constitutional document for Stela governance.
 
 ## 1. The Constitution (Physical Laws)
 
