@@ -1,11 +1,10 @@
-# PoT.md
 # Policy of Truth (PoT)
 
-## Preamble: Mechanistic Doctrine
-Mechanistic Doctrine: The system prevents action that violates policy. It does not request compliance.
+## Preamble: Doctrine
+The system prevents action that violates policy. It does not request compliance.
 PoT is the single constitutional document for Stela governance.
 
-## 1. The Constitution (Physical Laws)
+## 1. Physical Laws
 
 ### 1.1 Filing Doctrine
 Filing:
@@ -101,7 +100,7 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Record imported or adapted external code in `docs/UPSTREAMS.md` or the correct truth-layer document.
 - Include source, purpose, changes, and known risks or limits.
 
-### 5.4 Security Policy (Stela)
+### 5.4 Security Policy
 Roles and access expectations are defined in PoT.md.
 
 #### Secrets Management
@@ -134,4 +133,3 @@ When reporting, include:
 - We aim for coordinated, responsible disclosure.
 
 #### Known Issues and Future Improvements
-- Legacy code paths include MD5 hashing that should be upgraded.

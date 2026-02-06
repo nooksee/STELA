@@ -2,7 +2,7 @@
 # Pointer map to canonical docs and tools (no duplication).
 
 ## 0. Context Bundles
-- llms-small.txt - Small context bundle (TRUTH, AGENTS, SoP head 10, docs/library/INDEX.md, S-LEARN-01 through S-LEARN-10).
+- llms-small.txt - Small context bundle (PoT, SoP head 10, docs/library/INDEX.md).
 - llms-full.txt - Full context bundle (small + README + docs/library).
 
 ## 1. Governance & Jurisdictions
