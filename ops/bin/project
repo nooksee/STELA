@@ -9,111 +9,15 @@ source "${REPO_ROOT}/ops/lib/scripts/project.sh"
 usage() {
   cat <<'USAGE'
 Usage:
-  ops/bin/project init <id> [--name="Display Name"] [--notes="..."] [--dry-run] [--confirm]
-  ops/bin/project work <id> [--agent=name]
-  ops/bin/project status
+  ops/bin/project work <id>
 USAGE
-}
-
-cmd_init() {
-  local project_id=""
-  local display_name=""
-  local notes="-"
-  local dry_run=0
-
-  while [[ $# -gt 0 ]]; do
-    case "$1" in
-      --name=*)
-        display_name="${1#--name=}"
-        ;;
-      --notes=*)
-        notes="${1#--notes=}"
-        ;;
-      --dry-run)
-        dry_run=1
-        ;;
-      --confirm)
-        ;;
-      -h|--help)
-        usage
-        exit 0
-        ;;
-      *)
-        if [[ -z "$project_id" ]]; then
-          project_id="$1"
-        else
-          project_die "Unexpected arg: $1"
-        fi
-        ;;
-    esac
-    shift
-  done
-
-  if [[ -z "$project_id" ]]; then
-    project_die "Project ID is required."
-  fi
-
-  if ! project_is_valid_id "$project_id"; then
-    project_die "Invalid project ID: ${project_id}"
-  fi
-
-  if project_registry_has_id "$project_id"; then
-    project_die "Project already registered: ${project_id}"
-  fi
-
-  local project_dir="${PROJECT_REPO_ROOT}/projects/${project_id}"
-  if [[ -e "$project_dir" ]]; then
-    project_die "Project directory already exists: projects/${project_id}"
-  fi
-
-  if [[ -z "$display_name" ]]; then
-    display_name="$project_id"
-  fi
-
-  if [[ -z "$notes" ]]; then
-    notes="-"
-  fi
-
-  local scaffold_path
-  scaffold_path="$(project_template_path)"
-  if [[ ! -f "$scaffold_path" ]]; then
-    project_die "Missing scaffold template: ops/lib/project/SCAFFOLD.md"
-  fi
-
-  local stela_path
-  stela_path="$(project_stela_template_path)"
-  if [[ ! -f "$stela_path" ]]; then
-    project_die "Missing STELA template: ops/lib/project/STELA.md"
-  fi
-
-  local created_at
-  created_at="$(date -u '+%Y-%m-%d')"
-
-  if (( dry_run )); then
-    echo "DRY RUN: would create projects/${project_id}"
-    echo "DRY RUN: would write projects/${project_id}/README.md"
-    echo "DRY RUN: would write projects/${project_id}/STELA.md"
-    echo "DRY RUN: would register ${project_id} in ops/lib/manifests/PROJECTS.md"
-    return 0
-  fi
-
-  mkdir -p "$project_dir"
-  project_render_template "$scaffold_path" "$project_id" "$display_name" "$created_at" > "${project_dir}/README.md"
-  cp "$stela_path" "${project_dir}/STELA.md"
-  project_add_registry_entry "$project_id" "$display_name" "$created_at" "active" "projects/${project_id}" "$notes"
-
-  echo "Initialized project: ${project_id}"
 }
 
 cmd_work() {
   local project_id=""
-  local agent=""
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --agent=*)
-        agent="${1#--agent=}"
-        ;;
       -h|--help)
         usage
         exit 0
@@ -129,101 +33,67 @@ cmd_work() {
     shift
   done
 
-  if [[ -z "$project_id" ]]; then
-    project_die "Project ID is required."
-  fi
-
-  if ! project_is_valid_id "$project_id"; then
-    project_die "Invalid project ID: ${project_id}"
-  fi
-
-  if ! project_registry_has_id "$project_id"; then
-    project_die "Project not registered: ${project_id}"
-  fi
+  project_require_valid_id "$project_id"
 
   local project_dir="${PROJECT_REPO_ROOT}/projects/${project_id}"
+  local stela_rel="projects/${project_id}/STELA.md"
+  local stela_abs="${PROJECT_REPO_ROOT}/${stela_rel}"
+
   if [[ ! -d "$project_dir" ]]; then
     project_die "Project directory missing: projects/${project_id}"
   fi
 
-  local stela_rel="projects/${project_id}/STELA.md"
-  local readme_rel="projects/${project_id}/README.md"
-
-  if [[ ! -f "${PROJECT_REPO_ROOT}/${stela_rel}" ]]; then
+  if [[ ! -f "$stela_abs" ]]; then
     project_die "Missing ${stela_rel}"
-  fi
-
-  if [[ ! -f "${PROJECT_REPO_ROOT}/${readme_rel}" ]]; then
-    project_die "Missing ${readme_rel}"
   fi
 
   local branch_name
   branch_name="$(git -C "${PROJECT_REPO_ROOT}" rev-parse --abbrev-ref HEAD)"
   local head_short
-  head_short="$(git -C "${PROJECT_REPO_ROOT}" rev-parse --short=9 HEAD)"
-  local branch_slug
-  branch_slug="$(printf '%s' "$branch_name" | tr '/ ' '--' | tr -cd '[:alnum:]._-')"
-  if [[ -z "$branch_slug" ]]; then
-    branch_slug="unknown-branch"
+  head_short="$(git -C "${PROJECT_REPO_ROOT}" rev-parse --short HEAD)"
+  local branch_safe="${branch_name//\//-}"
+  if [[ -z "$branch_safe" ]]; then
+    branch_safe="unknown-branch"
   fi
 
-  local artifact_rel="storage/handoff/OPEN-project-${project_id}-${branch_slug}-${head_short}.txt"
-  local artifact_abs="${PROJECT_REPO_ROOT}/${artifact_rel}"
-  mkdir -p "${PROJECT_REPO_ROOT}/storage/handoff"
+  local handoff_dir="${PROJECT_REPO_ROOT}/storage/handoff"
+  local dump_dir="${PROJECT_REPO_ROOT}/storage/dumps"
+  mkdir -p "$handoff_dir"
+  mkdir -p "$dump_dir"
 
-  local open_cmd=("${PROJECT_REPO_ROOT}/ops/bin/open" "--intent=Project work: ${project_id}" "--tag=project-${project_id}")
-  if ! "${open_cmd[@]}" > "$artifact_abs"; then
+  local open_tag="project-${project_id}"
+  local open_path="${handoff_dir}/OPEN-${open_tag}-${branch_safe}-${head_short}.txt"
+  local dump_path="${dump_dir}/dump-platform-${branch_safe}-${head_short}.txt"
+
+  if ! "${PROJECT_REPO_ROOT}/ops/bin/open" --intent="Project work: ${project_id}" --tag="${open_tag}" >/dev/null; then
     project_die "Failed to generate OPEN artifact for project: ${project_id}"
   fi
 
-  {
-    echo
-    echo "[PROJECT CONTEXT: ${stela_rel}]"
-    echo '```text'
-    cat "${PROJECT_REPO_ROOT}/${stela_rel}"
-    echo
-    echo '```'
-    echo
-    echo "[PROJECT CONTEXT: ${readme_rel}]"
-    echo '```text'
-    cat "${PROJECT_REPO_ROOT}/${readme_rel}"
-    echo
-    echo '```'
-  } >> "$artifact_abs"
-
-  if [[ -n "$agent" ]]; then
-    local agent_file
-    agent_file="$(project_resolve_agent_file "$agent")"
-    local agent_role
-    agent_role="$(project_extract_agent_role "$agent_file")"
-
-    {
-      echo
-      echo "[AGENT CONTEXT: ${agent}]"
-      echo '```text'
-      printf '%s\n' "$agent_role"
-      echo '```'
-    } >> "$artifact_abs"
+  if ! "${PROJECT_REPO_ROOT}/ops/bin/dump" --scope=platform --format=chatgpt --out=auto >/dev/null; then
+    project_die "Failed to generate platform dump for project: ${project_id}"
   fi
+
+  if [[ ! -f "$open_path" ]]; then
+    project_die "OPEN artifact missing: ${open_path}"
+  fi
+
+  if [[ ! -f "$dump_path" ]]; then
+    project_die "Dump payload missing: ${dump_path}"
+  fi
+
+  local artifact_rel="storage/handoff/PROJECT-${project_id}-${branch_safe}-${head_short}.txt"
+  local artifact_abs="${PROJECT_REPO_ROOT}/${artifact_rel}"
+
+  {
+    cat "$open_path"
+    echo
+    cat "$dump_path"
+    echo
+    echo "===== PROJECT STELA ====="
+    cat "$stela_abs"
+  } > "$artifact_abs"
 
   echo "$artifact_rel"
-}
-
-cmd_status() {
-  project_require_registry || exit 1
-
-  local rows
-  rows="$(project_registry_rows)"
-
-  if [[ -z "$rows" ]]; then
-    echo "No registered projects."
-    exit 0
-  fi
-
-  printf '%-20s %-20s %-12s %-10s %-30s %s\n' "project_id" "name" "created" "status" "root" "notes"
-  while IFS=$'\t' read -r id name created status root notes; do
-    printf '%-20s %-20s %-12s %-10s %-30s %s\n' "$id" "$name" "$created" "$status" "$root" "$notes"
-  done <<< "$rows"
 }
 
 main() {
@@ -238,14 +108,8 @@ main() {
   shift
 
   case "$cmd" in
-    init)
-      cmd_init "$@"
-      ;;
     work)
       cmd_work "$@"
-      ;;
-    status)
-      cmd_status
       ;;
     -h|--help)
       usage

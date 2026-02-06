@@ -32,7 +32,7 @@ Filing:
 - `llms.txt` — discovery entry point.
 
 ## 2. Enforcement
-Governance is the Integrator plus Automation (linters, repo-gates, and binaries).
+Integrator plus Automation (linters, repo-gates, and binaries).
 Mandate:
 - Stop work.
 - Reject PRs.
@@ -43,16 +43,8 @@ Triggers:
 - Scope breach or forbidden zone access.
 
 ## 3. Jurisdiction
-
-### 3.1 Platform
-Scope: `ops/`, `docs/`, `tools/`, `.github/`, and root governance surfaces.
-Law: Absolute PoT enforcement. No contractions. Strict formatting. Governance halts work on violations.
-
-### 3.2 Projects
-Scope: `projects/`.
-Law: Structural adherence to platform governance. Each project must include `STELA.md`.
-Local law applies to project content.
-Platform automation still governs any platform surfaces touched during project work.
+Scope: `ops/`, `docs/`, `projects/`, `tools/`, `.github/`, and root governance surfaces.
+Law: PoT is the sole authority across all scopes. No parallel jurisdictions exist.
 
 ## 4. Staffing & Logic
 
@@ -62,7 +54,7 @@ Platform automation still governs any platform surfaces touched during project w
 - Contractor (Guest AI): Executes specific logic tasks and drafts implementation details within a defined scope.
 
 ### 4.2 Behavioral Logic Standard
-- Linguistic Precision: No contractions.
+- Linguistic Precision: No contractions across any scope, including projects.
 - Linguistic Precision: Quantitative reporting required for deviations from protocol.
 - Linguistic Precision: Absolute literalism; seek clarification for ambiguity before proceeding.
 - Operational Directives: Anti-drift governance; logic or files misaligned with PoT.md are a system failure.
