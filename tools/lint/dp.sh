@@ -217,7 +217,7 @@ extract_allowlist_backticks() {
 first_heading_line() {
   local path="$1"
   local pattern="$2"
-  awk -v r="$pattern" '$0 ~ r { print NR; exit }' "$path"
+  awk -v r="$pattern" 'BEGIN { IGNORECASE = 1 } $0 ~ r { print NR; exit }' "$path"
 }
 
 has_in_scope_section() {
@@ -242,41 +242,26 @@ has_objective_section() {
   return 1
 }
 
-lint_file() {
+heading_errors_for_scheme() {
   local path="$1"
-  failures=0
+  local scheme="$2"
+  local -n labels="$3"
+  local -n patterns="$4"
+  local thread_label="$5"
+  local thread_pattern="$6"
+  local work_label="$7"
+  local work_pattern="$8"
 
-  if [[ ! -f "$path" ]]; then
-    fail "Missing file: $path"
-    return 1
-  fi
-
-  # If TASK DP headings change, update this list in the same PR.
-  local headings=(
-    "## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)"
-    "## I) REQUIRED CONTEXT LOAD (READ BEFORE DOING ANYTHING)"
-    "## II) SCOPE & SAFETY"
-    "## III. EXECUTION PLAN (A–E CANON)"
-    "## 3) CLOSEOUT (MANDATORY)"
-  )
-
-  local heading_patterns=(
-    '^##[[:space:]]*0[.)]?[[:space:]]*FRESHNESS GATE'
-    '^##[[:space:]]*I[.)]?[[:space:]]*REQUIRED CONTEXT LOAD'
-    '^##[[:space:]]*II[.)]?[[:space:]]*SCOPE'
-    '^##[[:space:]]*III[.)]?[[:space:]]*EXECUTION PLAN'
-    '^##[[:space:]]*3[.)]?[[:space:]]*CLOSEOUT'
-  )
-
-  local heading_lines=()
+  local -a errors=()
+  local -a heading_lines=()
   local missing=0
   local line
   local i
 
-  for ((i=0; i<${#headings[@]}; i++)); do
-    line="$(first_heading_line "$path" "${heading_patterns[i]}")"
+  for ((i=0; i<${#labels[@]}; i++)); do
+    line="$(first_heading_line "$path" "${patterns[i]}")"
     if [[ -z "$line" ]]; then
-      fail "missing heading '${headings[i]}'"
+      errors+=("missing heading '${labels[i]}' (${scheme} scheme)")
       missing=1
       heading_lines+=("")
     else
@@ -287,40 +272,119 @@ lint_file() {
   if (( !missing )); then
     for ((i=0; i<${#heading_lines[@]}-1; i++)); do
       if (( heading_lines[i] >= heading_lines[i+1] )); then
-        fail "headings out of order: '${headings[i]}' should appear before '${headings[i+1]}'"
+        errors+=("headings out of order: '${labels[i]}' should appear before '${labels[i+1]}' (${scheme} scheme)")
         break
       fi
     done
   fi
 
   local closeout_line="${heading_lines[${#heading_lines[@]}-1]}"
-  local work_log_label="## 4) WORK LOG (TIMESTAMPED CONTINUITY)"
-  local work_log_pattern='^##[[:space:]]*4[.)]?[[:space:]]*WORK LOG'
   local work_log_line
-  work_log_line="$(first_heading_line "$path" "$work_log_pattern")"
+  local thread_line
+
+  work_log_line="$(first_heading_line "$path" "$work_pattern")"
   if [[ -z "$work_log_line" ]]; then
-    fail "missing heading '$work_log_label'"
-    missing=1
+    errors+=("missing heading '$work_label' (${scheme} scheme)")
   fi
 
-  local thread_label="## 3.1) THREAD TRANSITION (RESET / ARCHIVE RULE)"
-  local thread_pattern='^##[[:space:]]*(3\\.1|5)[.)]?[[:space:]]*THREAD TRANSITION'
-  local thread_line
   thread_line="$(first_heading_line "$path" "$thread_pattern")"
   if [[ -z "$thread_line" ]]; then
-    fail "missing heading '$thread_label' (or '## 5) THREAD TRANSITION / NEXT DP (OPTIONAL)')"
-    missing=1
+    errors+=("missing heading '$thread_label' (${scheme} scheme)")
   fi
 
   if [[ -n "$closeout_line" && -n "$work_log_line" ]]; then
     if (( work_log_line <= closeout_line )); then
-      fail "headings out of order: '$work_log_label' should appear after '${headings[${#headings[@]}-1]}'"
+      errors+=("headings out of order: '$work_label' should appear after '${labels[${#labels[@]}-1]}' (${scheme} scheme)")
     fi
   fi
 
   if [[ -n "$closeout_line" && -n "$thread_line" ]]; then
     if (( thread_line <= closeout_line )); then
-      fail "headings out of order: '$thread_label' should appear after '${headings[${#headings[@]}-1]}'"
+      errors+=("headings out of order: '$thread_label' should appear after '${labels[${#labels[@]}-1]}' (${scheme} scheme)")
+    fi
+  fi
+
+  if (( ${#errors[@]} )); then
+    printf '%s\n' "${errors[@]}"
+    return 1
+  fi
+
+  return 0
+}
+
+lint_file() {
+  local path="$1"
+  failures=0
+
+  if [[ ! -f "$path" ]]; then
+    fail "Missing file: $path"
+    return 1
+  fi
+
+  # If TASK DP headings change, update these lists and the --test fixtures.
+  local legacy_headings=(
+    "## 0. Freshness Gate (Must Pass Before Work)"
+    "## I) Required Context Load (Read Before Doing Anything)"
+    "## II) Scope & Safety"
+    "## III. Execution Plan (A-E Canon)"
+    "## 3) Closeout (Mandatory)"
+  )
+
+  local legacy_patterns=(
+    '^##[[:space:]]*0[.)]?[[:space:]]*FRESHNESS GATE'
+    '^##[[:space:]]*I[.)]?[[:space:]]*REQUIRED CONTEXT LOAD'
+    '^##[[:space:]]*II[.)]?[[:space:]]*SCOPE'
+    '^##[[:space:]]*III[.)]?[[:space:]]*EXECUTION PLAN'
+    '^##[[:space:]]*3[.)]?[[:space:]]*CLOSEOUT'
+  )
+
+  local legacy_thread_label="## 3.1) Thread Transition (Reset / Archive Rule)"
+  local legacy_thread_pattern='^##[[:space:]]*(3\\.1|5)[.)]?[[:space:]]*THREAD TRANSITION'
+  local legacy_work_label="## 4) Work Log (Timestamped Continuity)"
+  local legacy_work_pattern='^##[[:space:]]*4[.)]?[[:space:]]*WORK LOG'
+
+  local decimal_headings=(
+    "## 3.1 Freshness Gate (Must Pass Before Work)"
+    "## 3.2 Required Context Load (Read Before Doing Anything)"
+    "## 3.3 Scope and Safety"
+    "## 3.4 Execution Plan (A-E Canon)"
+    "## 4 Closeout (Mandatory)"
+  )
+
+  local decimal_patterns=(
+    '^##[[:space:]]*3\\.1[.)]?[[:space:]]*FRESHNESS GATE'
+    '^##[[:space:]]*3\\.2[.)]?[[:space:]]*REQUIRED CONTEXT LOAD'
+    '^##[[:space:]]*3\\.3[.)]?[[:space:]]*SCOPE'
+    '^##[[:space:]]*3\\.4[.)]?[[:space:]]*EXECUTION PLAN'
+    '^##[[:space:]]*4[.)]?[[:space:]]*CLOSEOUT'
+  )
+
+  local decimal_thread_label="## 4.1 Thread Transition (Reset / Archive Rule)"
+  local decimal_thread_pattern='^##[[:space:]]*4\\.1[.)]?[[:space:]]*THREAD TRANSITION'
+  local decimal_work_label="## 5 Work Log (Timestamped Continuity)"
+  local decimal_work_pattern='^##[[:space:]]*5[.)]?[[:space:]]*WORK LOG'
+
+  local legacy_errors
+  local decimal_errors
+
+  if legacy_errors="$(heading_errors_for_scheme "$path" "legacy" legacy_headings legacy_patterns "$legacy_thread_label" "$legacy_thread_pattern" "$legacy_work_label" "$legacy_work_pattern")"; then
+    :
+  else
+    decimal_errors="$(heading_errors_for_scheme "$path" "decimal" decimal_headings decimal_patterns "$decimal_thread_label" "$decimal_thread_pattern" "$decimal_work_label" "$decimal_work_pattern" || true)"
+    if [[ -z "$decimal_errors" ]]; then
+      :
+    else
+      if [[ -n "$legacy_errors" ]]; then
+        while IFS= read -r line; do
+          [[ -n "$line" ]] && fail "$line"
+        done <<< "$legacy_errors"
+      fi
+      if [[ -n "$decimal_errors" ]]; then
+        while IFS= read -r line; do
+          [[ -n "$line" ]] && fail "$line"
+        done <<< "$decimal_errors"
+      fi
+      fail "heading scheme not recognized. Accepted heading schemes: legacy (0/I/II/III/3 + 3.1 + 4) or decimal (3.1/3.2/3.3/3.4/4/4.1/5)."
     fi
   fi
 
@@ -343,12 +407,27 @@ lint_file() {
   check_required_field_any "Required Work Branch" "Work Branch"
   check_required_field "Base HEAD"
 
+  local has_ae=1
   local letter
   for letter in A B C D E; do
     if ! grep -nE "^###\\s*${letter}[.)]" "$path" >/dev/null; then
-      fail "missing heading '### ${letter})'"
+      has_ae=0
+      break
     fi
   done
+
+  local has_decimal=1
+  local idx
+  for idx in 1 2 3 4 5; do
+    if ! grep -nE "^###\\s*3\\.4\\.${idx}\\b" "$path" >/dev/null; then
+      has_decimal=0
+      break
+    fi
+  done
+
+  if (( !has_ae && !has_decimal )); then
+    fail "missing execution plan subheadings (accepts '### A)' through '### E)' or '### 3.4.1' through '### 3.4.5')"
+  fi
 
   if ! field_value_valid "Objective"; then
     if ! has_objective_section "$path" && ! has_in_scope_section "$path"; then
@@ -529,7 +608,77 @@ EOF
     exit 1
   fi
 
-  rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order"
+  tmp_decimal_valid="$(mktemp)"
+  cat <<'EOF' > "$tmp_decimal_valid"
+# DP-OPS-0002: Decimal Lint Test
+## 3.1 Freshness Gate (Must Pass Before Work)
+Base Branch: main
+Required Work Branch: work/decimal-lint-test
+Base HEAD: 13a2074d
+## 3.2 Required Context Load (Read Before Doing Anything)
+- Loaded: PoT, SoP, CONTEXT, MAP
+## 3.3 Scope and Safety
+- Objective: Validate decimal headings.
+### Target Files allowlist (hard gate)
+- tools/lint/dp.sh
+## 3.4 Execution Plan (A-E Canon)
+### 3.4.1 State
+Test state.
+### 3.4.2 Request
+1) Test request.
+### 3.4.3 Changelog
+- Test changelog.
+### 3.4.4 Patch / Diff
+- Test diff.
+### 3.4.5 Receipt (Required)
+- Test receipt.
+## 4 Closeout (Mandatory)
+- Closeout notes.
+## 4.1 Thread Transition (Reset / Archive Rule)
+- Transition notes.
+## 5 Work Log (Timestamped Continuity)
+- 2026-01-27 14:05 — DP-OPS-0002: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
+EOF
+
+  lint_file "$tmp_decimal_valid" >/dev/null
+
+  tmp_decimal_invalid="$(mktemp)"
+  cat <<'EOF' > "$tmp_decimal_invalid"
+# DP-OPS-0003: Decimal Lint Test Invalid
+## 3.1 Freshness Gate (Must Pass Before Work)
+Base Branch: main
+Required Work Branch: work/decimal-lint-test
+Base HEAD: 13a2074d
+## 3.3 Scope and Safety
+- Objective: Validate decimal heading failures.
+### Target Files allowlist (hard gate)
+- tools/lint/dp.sh
+## 3.4 Execution Plan (A-E Canon)
+### 3.4.1 State
+Test state.
+### 3.4.2 Request
+1) Test request.
+### 3.4.3 Changelog
+- Test changelog.
+### 3.4.4 Patch / Diff
+- Test diff.
+### 3.4.5 Receipt (Required)
+- Test receipt.
+## 4 Closeout (Mandatory)
+- Closeout notes.
+## 4.1 Thread Transition (Reset / Archive Rule)
+- Transition notes.
+## 5 Work Log (Timestamped Continuity)
+- 2026-01-27 14:05 — DP-OPS-0003: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
+EOF
+
+  if lint_file "$tmp_decimal_invalid" >/dev/null 2>&1; then
+    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid"
+    echo "FAIL: --test expected decimal heading detection to fail" >&2
+    exit 1
+  fi
+
+  rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid"
   echo "OK: --test passed"
 }
 
