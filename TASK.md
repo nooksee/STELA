@@ -34,11 +34,11 @@ DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
 ---
 
 ## 2. Active Context (Thread Header)
-- **Goal** : Replace Active Context with the new DP-OPS-0033 goal, branch, and base head.
-- **Current DP** : DP-OPS-0033 — Active Context reset
-- **Work Branch (Integrator-assigned OR Integrator-proposed (Operator-created))**: Not provided
-- **Base HEAD (operator-provided)**: Not provided
-- **Single Next Action**: Define DP-OPS-0033 goal, work branch, and base head.
+- **Goal** : Establish the agent promotion ledger, immunological agent linter, and promotion logging integration.
+- **Current DP** : DP-OPS-0034 — Agent System Hardening (Immune System)
+- **Work Branch (Integrator-assigned OR Integrator-proposed (Operator-created))**: work/agent-hardening-0034
+- **Base HEAD (operator-provided)**: cfbde022d
+- **Single Next Action**: Operator review DP-OPS-0034 results and merge.
 - **Blockers**: None
 
 **Drafting note:** Provisional Work Branch and Base HEAD values are allowed during drafting but must be finalized before worker execution. Workers still stop on any freshness mismatch and do not create or switch branches.
@@ -262,6 +262,8 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 - *2026-02-07 02:24* — DP-OPS-0031: Pointer-first agent constitution, llms discovery automation, and guardrail audit completed. Verification: RUN (context lint, truth lint, dump, llms, agent check). Blockers: none. NEXT: operator review DP-OPS-0031 results.
 - *2026-02-07 13:09* — THREAD END: DP-OPS-0032. Outcome: TASK.md DP boilerplate hardened and tools/lint/dp.sh aligned with TASK.md headings; ready for Operator review and merge. Evidence: storage/handoff/DP-OPS-0032-RESULTS.md. Verification: RUN (dump, verify, context lint, truth lint, library lint, dp lint). Blockers: none. NEXT: start DP-OPS-0033.
 ---
-THREAD START: DP-OPS-0033. Seed: Replace Active Context with the new DP-OPS-0033 goal, branch, and base head.
+THREAD START: DP-OPS-0034. Seed: Agent promotion ledger and immunological linter enforcement.
+
+- *2026-02-07 18:13* — DP-OPS-0034: Agent promotion ledger, immunological agent linter, promotion logging integration, and llms bundle refresh completed. Verification: RUN (./ops/bin/dump --scope=platform; test -s storage/dumps/dump-platform-work-agent-hardening-0034-cfbde022d.txt; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/lint/library.sh; bash tools/lint/agent.sh). Blockers: none. NEXT: Operator review DP-OPS-0034 RESULTS.
 
 <!-- DP SCOPE END -->

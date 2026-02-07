@@ -12,7 +12,6 @@ This index is navigation only. Registries in `docs/ops/registry/` are the single
 - `docs/MANUAL.md` — Operator console.
 - `docs/MAP.md` — Continuity map.
 - `docs/INDEX.md` — Docs root index.
-- `docs/QUICKSTART.md` — Onboarding and workflow.
 - `docs/ops/README.md` — Ops subsystem overview.
 - `docs/CONTEXT.md` — Context rehydration guide.
 

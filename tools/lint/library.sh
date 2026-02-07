@@ -40,6 +40,10 @@ require_file "$AGENTS_REGISTRY"
 require_file "$SKILLS_REGISTRY"
 require_file "$TASKS_REGISTRY"
 
+if ! bash tools/lint/agent.sh; then
+  fail "Agent linter failed. See output above."
+fi
+
 echo "Stela Library Verification"
 echo "Registry: docs/ops/registry/AGENTS.md"
 echo "Registry: docs/ops/registry/SKILLS.md"
