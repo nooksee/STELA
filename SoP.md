@@ -1,5 +1,11 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-07 02:08:45 UTC — DP-OPS-0031 Pointer-First Agent Constitution & System Hardening
+- Refactored R-AGENT-01 through R-AGENT-06 into pointer-first Markdown, removing legacy YAML metadata and embedding role details in prose.
+- Automated llms.txt generation in ops/bin/llms to keep the discovery map synchronized with repository state.
+- Added a guardrail audit command to ops/lib/scripts/agent.sh to enforce scope boundaries and detect context hazards.
+- Updated TASK.md active context to DP-OPS-0031 and recorded the DP-OPS-0031 work log entry.
+
 ## 2026-02-06 22:43:24 UTC — DP-OPS-0030 Governance Refactor & Hygiene
 - Updated `tools/verify.sh` to allow `storage/archives` in drift checks.
 - Added `storage/archives/.gitkeep` to ensure archive directory presence.

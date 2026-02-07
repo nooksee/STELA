@@ -292,4 +292,37 @@ if [[ -n "$PROFILE" ]]; then
   fi
 fi
 
+# Generate llms.txt (Discovery Map)
+LLMS_TXT="${ROOT_OUT_DIR}/llms.txt"
+{
+  echo "# Stela llms.txt"
+  echo "# Pointer map to canonical docs and tools (no duplication)."
+  echo
+  echo "## 0. Context Bundles"
+  echo "- llms-small.txt - Small context bundle (PoT, SoP head 10, docs/library/INDEX.md)."
+  echo "- llms-full.txt - Full context bundle (small + README + docs/library)."
+  echo
+  echo "## 1. Governance & Jurisdictions"
+  echo "- PoT.md - Policy of Truth: constitution, staffing, jurisdiction, and enforcement."
+  echo "- docs/GOVERNANCE.md - Non-negotiables and project coherence rules."
+  echo
+  echo "## 2. State & Continuity"
+  echo "- SoP.md - Historical ledger (State of Play)."
+  echo "- TASK.md - Active work surface, DP contract, and thread log."
+  echo "- docs/library/MAP.md - Wayfinding for cross-session state."
+  echo "- ops/lib/manifests/CONTEXT.md - Required context artifact checklist."
+  echo
+  echo "## 3. Operations & Manuals"
+  echo "- docs/library/MANUAL.md - Command mechanics and cheat sheet."
+  echo "- docs/library/INDEX.md - Curated index of approved operator surfaces."
+  echo "- docs/library/SKILLS.md - Skills promotion template and packet ledger."
+  echo "- docs/INDEX.md - Documentation front door."
+  echo
+  echo "## 4. Operational Binaries"
+  echo "- ops/bin/open - Prompt generation and freshness gate."
+  echo "- ops/bin/dump - State capture for agent ingestion."
+  echo "- ops/bin/help - Context-aware documentation search."
+} > "$LLMS_TXT"
+
+written+=("$LLMS_TXT")
 printf 'Wrote %s\n' "${written[*]}"

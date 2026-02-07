@@ -34,13 +34,12 @@ DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
 ---
 
 ## 2. Active Context (Thread Header)
-- **Goal:** System Consolidation & Truth Enforcement.
-- **Constraint:** “My Local is Truth.”
-- **Current DP:** DP-OPS-0030 — Pointer-First Agent Constitution & Hygiene
-- **Work Branch (Integrator-assigned OR Integrator-proposed (Operator-created)):** work/governance-refactor-2026-02-06
-- **Base HEAD (operator-provided):** cc26a4168
-- **Single Next Action:** Execute DP-OPS-0030 hygiene tasks and prepare receipts.
-- **Blockers:** None
+- **Goal** : Finalize the pointer-first agent constitution by removing legacy metadata, automating llms.txt discovery, and hardening the agent lifecycle against drift.
+- **Current DP** : DP-OPS-0031 — Pointer-First Agent Constitution & System Hardening
+- **Work Branch (Integrator-assigned OR Integrator-proposed (Operator-created))**: work/agent-constitution-0031
+- **Base HEAD (operator-provided)**: 343c3dc95
+- **Single Next Action**: Finalize DP-OPS-0031 receipts and operator handoff.
+- **Blockers**: None
 
 **Drafting note:** Provisional Work Branch and Base HEAD values are allowed during drafting but must be finalized before worker execution. Workers still stop on any freshness mismatch and do not create or switch branches.
 
@@ -258,3 +257,4 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 **Each entry ends with:** `NEXT: <one single action>`.
 
 - *2026-02-06 22:45* — DP-OPS-0030: Governance refactor and context hygiene completed. Verification: RUN (context lint, truth lint, dump, open). Blockers: none. NEXT: deliver RESULTS bundle.
+- *2026-02-07 02:24* — DP-OPS-0031: Pointer-first agent constitution, llms discovery automation, and guardrail audit completed. Verification: RUN (context lint, truth lint, dump, llms, agent check). Blockers: none. NEXT: operator review DP-OPS-0031 results.

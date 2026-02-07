@@ -27,6 +27,7 @@ usage() {
 Usage:
   ops/lib/scripts/agent.sh harvest --name "..." --dp "DP-OPS-XXXX" [--specialization "..."] [--summary "..."] [--skill S-LEARN-01] [--skills S-LEARN-01,S-LEARN-02] [--open PATH] [--dump PATH] [--objective "..."]
   ops/lib/scripts/agent.sh promote <draft_path> [--delete-draft]
+  ops/lib/scripts/agent.sh check|--check
 
 Notes:
 - harvest auto-detects OPEN and dump artifacts when omitted; use --open/--dump to override.
@@ -63,6 +64,49 @@ ensure_handoff_dir() {
 
 ensure_agents_dir() {
   mkdir -p "$AGENTS_DIR"
+}
+
+cmd_check_guardrail() {
+  require_repo_root
+
+  local failed=0
+
+  # 1. Check for Scope Boundary
+  local agent
+  local missing_boundary=0
+  if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
+    for agent in "${AGENTS_DIR}"/*.md; do
+      if ! grep -q "^## Scope Boundary" "$agent"; then
+        echo "FAIL: Missing '## Scope Boundary' in $(basename "$agent")"
+        failed=1
+        missing_boundary=1
+      fi
+    done
+  fi
+  if [[ $missing_boundary -eq 0 ]]; then
+    echo "PASS: All agents define Scope Boundaries."
+  fi
+
+  # 2. Context Hazard Check
+  # Agents cannot load the agent library. This prevents recursive definition loops.
+  local hazard_pattern="docs/library/agents"
+  local hazards=""
+  if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
+    hazards="$(grep -l "$hazard_pattern" "${AGENTS_DIR}"/*.md 2>/dev/null || true)"
+  fi
+  if [[ -n "$hazards" ]]; then
+    echo "FAIL: Context hazard detected (reference to agents dir) in:"
+    echo "$hazards"
+    failed=1
+  else
+    echo "PASS: No context hazard references to agents directory."
+  fi
+
+  if [[ $failed -eq 1 ]]; then
+    echo "FAILED."
+    exit 1
+  fi
+  echo "PASSED."
 }
 
 trim() {
@@ -764,6 +808,10 @@ main() {
     promote|--promote)
       shift
       cmd_promote "$@"
+      ;;
+    check|--check)
+      shift
+      cmd_check_guardrail "$@"
       ;;
     -h|--help)
       usage
