@@ -498,140 +498,44 @@ THREAD START: DP-OPS-0034. Seed: Agent promotion ledger and immunological linter
 - ops/bin/help - Context-aware documentation search.
 
 
-## docs/library/INDEX.md
-# Docs Library Index (Navigation)
+## docs/GOVERNANCE.md
+# Governance (Coherence & Drift Control)
 
-This index is navigation only. Registries in `docs/ops/registry/` are the single source of truth for agents, skills, tasks, and projects.
+## 0. Philosophy
+**Governance is not “process theater” — it is the product.**
+This project is built to resist entropy. We value structure over memory and explicit contracts over implicit knowledge.
 
-## Canon Surfaces
-- `PoT.md` — Policy of Truth and jurisdiction.
-- `docs/GOVERNANCE.md` — Governance and drift rules.
-- `SoP.md` — State of Play ledger.
-- `TASK.md` — Dispatch Packet contract and work log.
+## 1. Non-Negotiables (Hard Rules)
+* **No Direct Pushes:** `main` is read-only. Work happens on `work/*` branches → PRs → Merge.
+* **Green Gates Only:** If `repo-gates` fail, the code is wrong, not the gate.
+* **Canon Supremacy:** When in doubt, `PoT.md` wins.
 
-## Operator Interfaces
-- `docs/MANUAL.md` — Operator console.
-- `docs/MAP.md` — Continuity map.
-- `docs/INDEX.md` — Docs root index.
-- `docs/ops/README.md` — Ops subsystem overview.
-- `docs/CONTEXT.md` — Context rehydration guide.
+## 2. Canon Surfaces (Source of Truth)
+These files represent the immutable reality of the project.
+* `PoT.md` — Constitution, staffing, jurisdiction, and logic standards.
+* `SoP.md` — The historical ledger (State of Play).
+* `TASK.md` — The active contract (DP) and work log.
+* `docs/INDEX.md` — The system root.
 
-## Registries
-- `docs/ops/registry/AGENTS.md` — Canon agent registry.
-- `docs/ops/registry/SKILLS.md` — Canon skill registry.
-- `docs/ops/registry/TASKS.md` — Canon task registry.
-- `docs/ops/registry/PROJECTS.md` — Canon project registry.
+## 3. Change Management (The SoP Rule)
+**Rule:** You must write to `SoP.md` if (and only if) you alter **Canon** or **Governance** surfaces.
+* **Why:** We track changes to the *rules* of the system, not just the code.
+* **Routine Work:** Standard feature work in `projects/` does not require SoP entries unless it changes the platform itself.
 
+## 4. Staffing Protocol (Jurisdiction)
+Defined strictly in `PoT.md`:
+* **Operator (Human):** Final authority. Owns approvals, commits, and secrets.
+* **Integrator (AI Lead):** Guardian of governance. Detects drift and maintains structure.
+* **Contractor (AI Guest):** Execution arm. Drafts logic but never commits.
 
-## docs/MANUAL.md
-# System Manual (Command Console)
+## 5. AI Engagement Protocol
+* **Logic First:** All agents must adhere to the Behavioral Logic Standards in `PoT.md`.
+* **DP Required:** No logic changes shall be proposed without an active Dispatch Packet (DP) in `TASK.md`.
+* **No Hallucinations:** Cite sources. Do not invent paths.
 
-## 0. Mechanical Workflow
-**Execution Cycle:**
-1.  **Start:** `./ops/bin/open` (Generates prompt + freshness gate).
-2.  **Capture:** `./ops/bin/dump` (Serializes state).
-3.  **Assign:** Create DP in `TASK.md` + New Branch `work/topic-date`.
-4.  **Dispatch:** Hand DP to Worker (See Section 5).
-5.  **Review:** Verify `RECEIPT` (Proofs) vs `TASK.md` requirements.
-6.  **Close:** Merge PR + Update `SoP.md` (if Canon changed).
-
----
-
-## 1. Top Commands
-
-### Session Start (Open)
-~~~bash
-# Standard Open (Prints to stdout + saves to storage/handoff/)
-./ops/bin/open --intent="Refactor docs" --dp="DP-OPS-0050"
-
-# Auto-save convenience (Adds "OPEN saved: <path>" line)
-./ops/bin/open --intent="..." --out=auto
-~~~
-
-### State Capture (Dump)
-~~~bash
-# Platform Scope (Default - Excludes projects/)
-./ops/bin/dump --scope=platform --format=chatgpt --out=auto
-
-# Full Scope (Includes projects/ - auto-compressed)
-./ops/bin/dump --scope=full --format=chatgpt --out=auto
-
-# Receipt Bundle (Dump + Manifest inside tarball)
-./ops/bin/dump --scope=platform --out=auto --bundle
-~~~
-
-### Map (Auto-Generated Index)
-~~~bash
-# Refresh the auto-generated MAP block
-./ops/bin/map
-
-# Check mode (non-zero if MAP is stale)
-./ops/bin/map --check
-~~~
-
-### Context Snapshot (Context Archive)
-~~~bash
-# Assemble OPEN + DUMP archive for SoP linkage
-./ops/bin/context --dp=DP-OPS-0035
-~~~
-
-### Documentation (Help)
-~~~bash
-./ops/bin/help              # Show menu
-./ops/bin/help continuity   # Grep docs for "continuity"
-~~~
-
-### Validation (Lint)
-~~~bash
-# Validate DP format before dispatch
-./tools/lint/dp.sh storage/dp/intake/DP-OPS-0050.md
-
-# Validate Context consistency
-./tools/lint/context.sh
-~~~
-
-### Skills (Harvest + Promote)
-Skills remain on-demand only and must not be placed in `ops/lib/manifests/CONTEXT.md`.
-
-~~~bash
-# Enforce Skills Context Hazard
-ops/lib/scripts/skill.sh check
-
-# Draft a skill candidate
-ops/lib/scripts/skill.sh harvest --name "skill-title" --context "when to use it" --solution "what to do"
-
-# Promote the draft into docs/library/skills and register it
-ops/lib/scripts/skill.sh promote storage/handoff/skill-draft-YYYYMMDD-HHMMSS-skill-title.md
-~~~
-
----
-
-## 2. Dispatch Packet (DP) Mechanics
-**Placement:**
-* Drafts: `storage/dp/intake/`
-* Processed: `storage/dp/processed/`
-
-**Disapproval Triggers (When to Reject):**
-* ❌ Missing `RECEIPT` (Proof Bundle).
-* ❌ Verification steps reported as "NOT RUN".
-* ❌ `git diff --stat` does not match the claims.
-* ❌ Forbidden scope touched (Drift).
-
----
-
-## 3. Scope Definition
-* **Platform:** `ops/`, `docs/`, `tools/`, `.github/`. (OS).
-* **Project:** `projects/`. (Payload).
-* **Rule:** Default to `--scope=platform` unless the DP explicitly targets a project.
-
----
-
-## 4. Key Paths (Reference)
-* **Constitution:** [`../../PoT.md`](../../PoT.md)
-* **Active Contract:** [`../../TASK.md`](../../TASK.md)
-* **History:** [`../../SoP.md`](../../SoP.md)
-* **Artifacts:** `storage/handoff/` (Results), `storage/dumps/` (State).
-* **Archives:** `storage/archives/` (Museum).
+## 6. Tone Lanes
+* **Ops Lane (`ops/`, `docs/ops/`):** Checklist-heavy, precise, dry, no-fluff.
+* **Public Lane (`README.md`):** Human-centric, explanatory, welcoming.
 
 
 ## docs/MAP.md
@@ -680,54 +584,79 @@ No projects discovered.
 <!-- MAP-GENERATED:END -->
 
 
-## docs/GOVERNANCE.md
-# Governance (Coherence & Drift Control)
+## ops/lib/manifests/CONTEXT.md
+# Context Manifest
 
-## 0. Philosophy
-**Governance is not “process theater” — it is the product.**
-This project is built to resist entropy. We value structure over memory and explicit contracts over implicit knowledge.
+## Purpose
+List required artifacts for session rehydration and context loading.
 
-## 1. Non-Negotiables (Hard Rules)
-* **No Direct Pushes:** `main` is read-only. Work happens on `work/*` branches → PRs → Merge.
-* **Green Gates Only:** If `repo-gates` fail, the code is wrong, not the gate.
-* **Canon Supremacy:** When in doubt, `PoT.md` wins.
+## Scope
+Used by operators to ensure AI workers have a complete "Single Source of Truth" (SSOT).
+Mandatory pre-session check: run `tools/lint/context.sh`.
 
-## 2. Canon Surfaces (Source of Truth)
-These files represent the immutable reality of the project.
-* `PoT.md` — Constitution, staffing, jurisdiction, and logic standards.
-* `SoP.md` — The historical ledger (State of Play).
-* `TASK.md` — The active contract (DP) and work log.
-* `docs/INDEX.md` — The system root.
+## Small Bundle (Canonical Context)
+- `PoT.md` — Policy of Truth (constitution, staffing, jurisdiction, enforcement).
+- `SoP.md` — History ledger and state of play.
+- `TASK.md` — Active thread, DP contract, and work log.
+- `llms.txt` — Discovery entry point for AI agents.
 
-## 3. Change Management (The SoP Rule)
-**Rule:** You must write to `SoP.md` if (and only if) you alter **Canon** or **Governance** surfaces.
-* **Why:** We track changes to the *rules* of the system, not just the code.
-* **Routine Work:** Standard feature work in `projects/` does not require SoP entries unless it changes the platform itself.
+## Full Bundle (Supporting Surfaces)
+Full bundle adds these supporting surfaces on top of the Small bundle.
+- `docs/library/INDEX.md` — Curated operator surface index.
+- `docs/MANUAL.md` — Command mechanics and cheat sheet.
+- `docs/MAP.md` — Context wayfinding map.
+- `docs/GOVERNANCE.md` — Project governance and non-negotiables.
+- `docs/ops/registry/PROJECTS.md` — Project registry (SSOT).
 
-## 4. Staffing Protocol (Jurisdiction)
-Defined strictly in `PoT.md`:
-* **Operator (Human):** Final authority. Owns approvals, commits, and secrets.
-* **Integrator (AI Lead):** Guardian of governance. Detects drift and maintains structure.
-* **Contractor (AI Guest):** Execution arm. Drafts logic but never commits.
+## Verification Tools
+- `tools/lint/context.sh` — Validates presence of manifest artifacts.
+- `tools/lint/truth.sh` — Verifies spelling and canon integrity.
 
-## 5. AI Engagement Protocol
-* **Logic First:** All agents must adhere to the Behavioral Logic Standards in `PoT.md`.
-* **DP Required:** No logic changes shall be proposed without an active Dispatch Packet (DP) in `TASK.md`.
-* **No Hallucinations:** Cite sources. Do not invent paths.
+## Verification
+- Operator: Manually verify all "Canonical Context" files are provided in the dump.
 
-## 6. Tone Lanes
-* **Ops Lane (`ops/`, `docs/ops/`):** Checklist-heavy, precise, dry, no-fluff.
-* **Public Lane (`README.md`):** Human-centric, explanatory, welcoming.
+## Risk + Rollback
+- Risk: Missing artifacts lead to logic-drift or "hallucinated" repository structures.
+- Rollback: Re-run `ops/bin/open` and verify against this manifest.
+
+## Canon Links
+- docs/MANUAL.md
+- docs/MAP.md
+- PoT.md
 
 
-## docs/ops/registry/PROJECTS.md
-# Project Registry
+## ops/lib/manifests/LLMS.md
+# LLMS Bundle Manifest
 
-Current: none
+## Purpose
+Define scope-based context bundles for llms consumers.
 
-## Registry
+## Ops Bundle
+- `docs/MANUAL.md` - Command mechanics and top commands.
+- `docs/MAP.md` - Wayfinding map.
+- `ops/bin/open` - Session prompt generator.
+- `ops/bin/dump` - State capture tool.
+- `ops/bin/llms` - Context bundler.
+- `ops/bin/map` - MAP auto block maintainer.
+- `ops/bin/context` - Context context assembler.
+- `ops/bin/prune` - Archive hygiene.
+- `tools/lint/context.sh` - Context lint.
+- `tools/lint/llms.sh` - Bundle parity lint.
+- `tools/lint/truth.sh` - Canon spelling lint.
+- `docs/ops/specs/binaries/llms.md` - llms spec.
+- `docs/ops/specs/binaries/map.md` - map spec.
+- `docs/ops/specs/binaries/context.md` - context spec.
+- `docs/ops/specs/binaries/dump.md` - dump spec.
+- `docs/ops/specs/binaries/project.md` - project spec.
 
-| ID | Name | Root | Status | Notes |
-| --- | --- | --- | --- | --- |
+## Governance Bundle
+- `PoT.md` - Policy of Truth (constitution, staffing, jurisdiction, enforcement).
+- `SoP.md` - History ledger and state of play.
+- `TASK.md` - Active thread, DP contract, and work log.
+- `llms.txt` - Discovery entry point.
+- `docs/GOVERNANCE.md` - Project governance and non-negotiables.
+- `docs/MAP.md` - Wayfinding map.
+- `ops/lib/manifests/CONTEXT.md` - Required context checklist.
+- `ops/lib/manifests/LLMS.md` - Scope bundle definitions.
 
 

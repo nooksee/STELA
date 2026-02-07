@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+ARCHIVE_DIR="${REPO_ROOT}/storage/archives/context"
+DP_ID=""
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/context --dp=DP-OPS-0035
+USAGE
+}
+
+die() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --dp=*)
+      DP_ID="${arg#--dp=}"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      die "Unknown arg: ${arg}"
+      ;;
+  esac
+done
+
+if [[ -z "$DP_ID" ]]; then
+  die "--dp is required"
+fi
+
+if ! command -v git >/dev/null 2>&1; then
+  die "git is required but was not found on PATH."
+fi
+
+if ! repo_root="$(git -C "$REPO_ROOT" rev-parse --show-toplevel 2>/dev/null)"; then
+  die "git repo not found. Run from repo root."
+fi
+
+if [[ "$repo_root" != "$REPO_ROOT" ]]; then
+  die "Run from repo root: ${repo_root}"
+fi
+
+cd "$REPO_ROOT"
+
+head_hash="$(git -C "$REPO_ROOT" rev-parse HEAD)"
+head_short="$(git -C "$REPO_ROOT" rev-parse --short HEAD)"
+branch_name="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
+branch_safe="${branch_name//\//-}"
+dp_safe="${DP_ID//\//-}"
+
+open_output="$("${REPO_ROOT}/ops/bin/open" --out=auto)"
+open_path="$(printf '%s\n' "$open_output" | sed -n 's/^OPEN saved: //p' | tail -n 1)"
+porcelain_path="$(printf '%s\n' "$open_output" | sed -n 's/^- Porcelain saved: //p' | tail -n 1)"
+
+if [[ -z "$open_path" ]]; then
+  die "OPEN artifact path not found in open output."
+fi
+
+open_path="${open_path#./}"
+porcelain_path="${porcelain_path#./}"
+if [[ "$porcelain_path" == "(none)" ]]; then
+  porcelain_path=""
+fi
+
+dump_output="$("${REPO_ROOT}/ops/bin/dump" --scope=platform --format=chatgpt --out=auto --bundle)"
+dump_payload="$(printf '%s\n' "$dump_output" | sed -n 's/^Dump payload: //p' | tail -n 1)"
+dump_manifest="$(printf '%s\n' "$dump_output" | sed -n 's/^Dump manifest: //p' | tail -n 1)"
+dump_tarball="$(printf '%s\n' "$dump_output" | sed -n 's/^Dump tarball: //p' | tail -n 1)"
+
+if [[ -z "$dump_payload" || -z "$dump_manifest" ]]; then
+  die "Dump output did not include payload and manifest paths."
+fi
+
+dump_payload="${dump_payload#./}"
+dump_manifest="${dump_manifest#./}"
+dump_tarball="${dump_tarball#./}"
+
+require_file() {
+  local rel="$1"
+  local abs="${REPO_ROOT}/${rel}"
+  if [[ ! -f "$abs" ]]; then
+    die "Missing required file: ${rel}"
+  fi
+}
+
+require_file "$open_path"
+require_file "$dump_payload"
+require_file "$dump_manifest"
+if [[ -n "$porcelain_path" ]]; then
+  require_file "$porcelain_path"
+fi
+if [[ -n "$dump_tarball" && -f "${REPO_ROOT}/${dump_tarball}" ]]; then
+  : # tarball exists
+else
+  dump_tarball=""
+fi
+
+included_files=("$open_path" "$dump_payload" "$dump_manifest")
+if [[ -n "$porcelain_path" ]]; then
+  included_files+=("$porcelain_path")
+fi
+if [[ -n "$dump_tarball" ]]; then
+  included_files+=("$dump_tarball")
+fi
+
+tmp_dir="$(mktemp -d)"
+cleanup() {
+  rm -rf "$tmp_dir"
+}
+trap cleanup EXIT
+
+metadata_file="${tmp_dir}/context-metadata.txt"
+{
+  echo "DP: ${DP_ID}"
+  echo "HEAD: ${head_hash}"
+  echo "Included files:"
+  for item in "${included_files[@]}"; do
+    echo "- ${item}"
+  done
+} > "$metadata_file"
+
+mkdir -p "$ARCHIVE_DIR"
+archive_path="${ARCHIVE_DIR}/context-${dp_safe}-${branch_safe}-${head_short}.tar.xz"
+
+tar -cJf "$archive_path" -C "$REPO_ROOT" "${included_files[@]}" -C "$tmp_dir" "$(basename "$metadata_file")"
+
+printf './%s\n' "${archive_path#"$REPO_ROOT"/}"

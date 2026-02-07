@@ -79,6 +79,37 @@ for relative_path in "${required_artifacts[@]}"; do
   fi
 done
 
+# 4. Semantic Contamination Scan (canonical surfaces only)
+contamination_files=(
+  "PoT.md"
+  "SoP.md"
+  "TASK.md"
+  "docs/MAP.md"
+  "llms.txt"
+)
+
+contamination_patterns=(
+  '^<<< FILE BEGIN: docs/library/(agents|tasks|skills)/'
+  '^## docs/library/(agents|tasks|skills)/'
+  '^===== REPO DUMP ====='
+  '^===== REPO DUMP MANIFEST ====='
+)
+
+pattern_args=()
+for pattern in "${contamination_patterns[@]}"; do
+  pattern_args+=(-e "$pattern")
+done
+
+for file in "${contamination_files[@]}"; do
+  if [[ ! -f "${file}" ]]; then
+    warn "Semantic contamination scan skipped missing file: ${file}"
+    continue
+  fi
+  while IFS= read -r match; do
+    fail "Semantic contamination: ${file}:${match}"
+  done < <(grep -nE "${pattern_args[@]}" "${file}" 2>/dev/null || true)
+done
+
 echo "------------------------"
 if [[ $errors -eq 0 ]]; then
   if [[ $warnings -eq 0 ]]; then

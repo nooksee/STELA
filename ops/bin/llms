@@ -6,6 +6,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 OUT_DIR="${REPO_ROOT}"
 ROOT_OUT_DIR="${REPO_ROOT}"
 MANIFEST_PATH="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
+LLMS_MANIFEST_PATH="${REPO_ROOT}/ops/lib/manifests/LLMS.md"
 PROFILE=""
 PROJECT_OVERRIDE=""
 
@@ -58,6 +59,16 @@ fi
 if [[ ! -f "$MANIFEST_PATH" ]]; then
   die "Missing manifest: ops/lib/manifests/CONTEXT.md"
 fi
+if [[ ! -f "$LLMS_MANIFEST_PATH" ]]; then
+  die "Missing manifest: ops/lib/manifests/LLMS.md"
+fi
+
+if ! command -v git >/dev/null 2>&1; then
+  die "git is required but was not found on PATH."
+fi
+
+head_short="$(git -C "$REPO_ROOT" rev-parse --short HEAD)"
+head_time="$(git -C "$REPO_ROOT" show -s --format=%cI HEAD)"
 
 mkdir -p "$OUT_DIR"
 mkdir -p "$ROOT_OUT_DIR"
@@ -66,6 +77,10 @@ SMALL_OUT="${OUT_DIR}/llms-small.txt"
 FULL_OUT="${OUT_DIR}/llms-full.txt"
 ROOT_SMALL_OUT="${ROOT_OUT_DIR}/llms-small.txt"
 ROOT_FULL_OUT="${ROOT_OUT_DIR}/llms-full.txt"
+OPS_OUT="${OUT_DIR}/llms-ops.txt"
+GOV_OUT="${OUT_DIR}/llms-governance.txt"
+ROOT_OPS_OUT="${ROOT_OUT_DIR}/llms-ops.txt"
+ROOT_GOV_OUT="${ROOT_OUT_DIR}/llms-governance.txt"
 PROFILE_OUT=""
 ROOT_PROFILE_OUT=""
 if [[ -n "$PROFILE" ]]; then
@@ -128,7 +143,8 @@ emit_file() {
 }
 
 bundle_section_paths() {
-  local section="$1"
+  local manifest="$1"
+  local section="$2"
   awk -v section="$section" '
     BEGIN { in_section=0 }
     $0 ~ /^## / {
@@ -136,7 +152,7 @@ bundle_section_paths() {
       if (in_section) { exit }
     }
     in_section { print }
-  ' "$MANIFEST_PATH" | awk -F"\`" 'NF >= 3 { for (i = 2; i <= NF; i += 2) print $i }'
+  ' "$manifest" | awk -F"\`" 'NF >= 3 { for (i = 2; i <= NF; i += 2) print $i }'
 }
 
 dedupe_paths() {
@@ -235,20 +251,32 @@ collect_profile_paths() {
   printf '%s\n' "${paths[@]}"
 }
 
-mapfile -t small_paths < <(bundle_section_paths 'Small Bundle')
-mapfile -t full_extra_paths < <(bundle_section_paths 'Full Bundle')
+mapfile -t small_paths < <(bundle_section_paths "$MANIFEST_PATH" 'Small Bundle')
+mapfile -t full_extra_paths < <(bundle_section_paths "$MANIFEST_PATH" 'Full Bundle')
+mapfile -t ops_paths < <(bundle_section_paths "$LLMS_MANIFEST_PATH" 'Ops Bundle')
+mapfile -t governance_paths < <(bundle_section_paths "$LLMS_MANIFEST_PATH" 'Governance Bundle')
 
 if (( ${#small_paths[@]} == 0 )); then
   die "No Small bundle paths found in ops/lib/manifests/CONTEXT.md"
 fi
+if (( ${#ops_paths[@]} == 0 )); then
+  die "No Ops bundle paths found in ops/lib/manifests/LLMS.md"
+fi
+if (( ${#governance_paths[@]} == 0 )); then
+  die "No Governance bundle paths found in ops/lib/manifests/LLMS.md"
+fi
 
 mapfile -t small_paths < <(dedupe_paths "${small_paths[@]}")
 mapfile -t full_paths < <(dedupe_paths "${small_paths[@]}" "${full_extra_paths[@]}")
+mapfile -t ops_paths < <(dedupe_paths "${ops_paths[@]}")
+mapfile -t governance_paths < <(dedupe_paths "${governance_paths[@]}")
 
 validate_bundle_paths "Small bundle" "${small_paths[@]}"
 validate_bundle_paths "Full bundle" "${full_paths[@]}"
+validate_bundle_paths "Ops bundle" "${ops_paths[@]}"
+validate_bundle_paths "Governance bundle" "${governance_paths[@]}"
 
-rm -f "$SMALL_OUT" "$FULL_OUT"
+rm -f "$SMALL_OUT" "$FULL_OUT" "$OPS_OUT" "$GOV_OUT"
 
 for path in "${small_paths[@]}"; do
   emit_file "$path" "$SMALL_OUT"
@@ -258,6 +286,14 @@ for path in "${full_paths[@]}"; do
   emit_file "$path" "$FULL_OUT"
 done
 
+for path in "${ops_paths[@]}"; do
+  emit_file "$path" "$OPS_OUT"
+done
+
+for path in "${governance_paths[@]}"; do
+  emit_file "$path" "$GOV_OUT"
+done
+
 if [[ ! -s "$SMALL_OUT" ]]; then
   die "${SMALL_OUT} is empty"
 fi
@@ -265,12 +301,20 @@ fi
 if [[ ! -s "$FULL_OUT" ]]; then
   die "${FULL_OUT} is empty"
 fi
+if [[ ! -s "$OPS_OUT" ]]; then
+  die "${OPS_OUT} is empty"
+fi
+if [[ ! -s "$GOV_OUT" ]]; then
+  die "${GOV_OUT} is empty"
+fi
 
-written=("$SMALL_OUT" "$FULL_OUT")
+written=("$SMALL_OUT" "$FULL_OUT" "$OPS_OUT" "$GOV_OUT")
 if [[ "$OUT_DIR" != "$ROOT_OUT_DIR" ]]; then
   cp "$SMALL_OUT" "$ROOT_SMALL_OUT"
   cp "$FULL_OUT" "$ROOT_FULL_OUT"
-  written+=("$ROOT_SMALL_OUT" "$ROOT_FULL_OUT")
+  cp "$OPS_OUT" "$ROOT_OPS_OUT"
+  cp "$GOV_OUT" "$ROOT_GOV_OUT"
+  written+=("$ROOT_SMALL_OUT" "$ROOT_FULL_OUT" "$ROOT_OPS_OUT" "$ROOT_GOV_OUT")
 fi
 
 if [[ -n "$PROFILE" ]]; then
@@ -293,14 +337,20 @@ if [[ -n "$PROFILE" ]]; then
 fi
 
 # Generate llms.txt (Discovery Map)
-LLMS_TXT="${ROOT_OUT_DIR}/llms.txt"
+LLMS_TXT_OUT="${OUT_DIR}/llms.txt"
+LLMS_TXT_ROOT="${ROOT_OUT_DIR}/llms.txt"
 {
   echo "# Stela llms.txt"
+  echo "# HEAD: ${head_short}"
+  echo "# HEAD commit time: ${head_time}"
+  echo "# Refresh: ./ops/bin/llms"
   echo "# Pointer map to canonical docs and tools (no duplication)."
   echo
   echo "## 0. Context Bundles"
-  echo "- llms-small.txt - Small context bundle (PoT, SoP head 10, docs/library/INDEX.md)."
-  echo "- llms-full.txt - Full context bundle (small + README + docs/library)."
+  echo "- llms-small.txt - Small canonical bundle (PoT, SoP head 10, TASK, llms.txt)."
+  echo "- llms-full.txt - Full canonical bundle (small + docs/MANUAL.md, docs/MAP.md, docs/GOVERNANCE.md, docs/ops/registry/PROJECTS.md, docs/library/INDEX.md)."
+  echo "- llms-ops.txt - Ops bundle (manuals, ops binaries, lints, and specs)."
+  echo "- llms-governance.txt - Governance bundle (PoT, SoP, TASK, governance docs, and manifests)."
   echo
   echo "## 1. Governance & Jurisdictions"
   echo "- PoT.md - Policy of Truth: constitution, staffing, jurisdiction, and enforcement."
@@ -311,6 +361,7 @@ LLMS_TXT="${ROOT_OUT_DIR}/llms.txt"
   echo "- TASK.md - Active work surface, DP contract, and thread log."
   echo "- docs/MAP.md - Wayfinding for cross-session state."
   echo "- ops/lib/manifests/CONTEXT.md - Required context artifact checklist."
+  echo "- ops/lib/manifests/LLMS.md - Scope bundle manifest for llms outputs."
   echo
   echo "## 3. Operations & Manuals"
   echo "- docs/MANUAL.md - Command mechanics and cheat sheet."
@@ -321,8 +372,15 @@ LLMS_TXT="${ROOT_OUT_DIR}/llms.txt"
   echo "## 4. Operational Binaries"
   echo "- ops/bin/open - Prompt generation and freshness gate."
   echo "- ops/bin/dump - State capture for agent ingestion."
+  echo "- ops/bin/llms - Context bundle generation and llms.txt refresh."
+  echo "- ops/bin/map - Auto-generated MAP block maintenance."
+  echo "- ops/bin/context - Context archive assembly (OPEN + DUMP)."
   echo "- ops/bin/help - Context-aware documentation search."
-} > "$LLMS_TXT"
+} > "$LLMS_TXT_OUT"
 
-written+=("$LLMS_TXT")
+written+=("$LLMS_TXT_OUT")
+if [[ "$OUT_DIR" != "$ROOT_OUT_DIR" ]]; then
+  cp "$LLMS_TXT_OUT" "$LLMS_TXT_ROOT"
+  written+=("$LLMS_TXT_ROOT")
+fi
 printf 'Wrote %s\n' "${written[*]}"

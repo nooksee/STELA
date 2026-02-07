@@ -265,5 +265,6 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 THREAD START: DP-OPS-0034. Seed: Agent promotion ledger and immunological linter enforcement.
 
 - *2026-02-07 18:13* — DP-OPS-0034: Agent promotion ledger, immunological agent linter, promotion logging integration, and llms bundle refresh completed. Verification: RUN (./ops/bin/dump --scope=platform; test -s storage/dumps/dump-platform-work-agent-hardening-0034-cfbde022d.txt; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/lint/library.sh; bash tools/lint/agent.sh). Blockers: none. NEXT: Operator review DP-OPS-0034 RESULTS.
+- *2026-02-07 21:36* — DP-OPS-0035: Context lifecycle hardening (semantic contamination lint, context archive, MAP auto-block, and scope-based llms bundles) completed. Verification: RUN (./ops/bin/dump --scope=platform; test -s storage/dumps/dump-platform-work-context-lifecycle-hardening-4605e6fd3.txt; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/lint/llms.sh; ./tools/verify.sh). Blockers: none. NEXT: Operator review DP-OPS-0035 RESULTS.
 
 <!-- DP SCOPE END -->
