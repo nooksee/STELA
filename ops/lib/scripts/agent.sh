@@ -5,6 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 AGENTS_DIR="${REPO_ROOT}/docs/library/agents"
 AGENTS_REGISTRY="${REPO_ROOT}/docs/ops/registry/AGENTS.md"
+AGENTS_LEDGER="${REPO_ROOT}/docs/library/AGENTS.md"
 SOP_FILE="${REPO_ROOT}/SoP.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
@@ -54,6 +55,19 @@ require_repo_root() {
 
 require_registry() {
   require_file "$AGENTS_REGISTRY"
+}
+
+require_agents_ledger() {
+  require_file "$AGENTS_LEDGER"
+}
+
+require_agents_ledger_sections() {
+  if ! grep -q "^## Candidate Log" "$AGENTS_LEDGER"; then
+    die "Agent ledger missing Candidate Log section."
+  fi
+  if ! grep -q "^## Promotion Log" "$AGENTS_LEDGER"; then
+    die "Agent ledger missing Promotion Log section."
+  fi
 }
 
 ensure_handoff_dir() {
@@ -430,22 +444,110 @@ insert_registry_entry() {
   mv "$tmp" "$AGENTS_REGISTRY"
 }
 
-append_sop_entry() {
-  local agent_id="$1"
-  local name="$2"
-  local dp_id="$3"
+append_candidate_log() {
+  local name="$1"
+  local dp_id="$2"
+  local draft_path="$3"
   local timestamp
   timestamp="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 
-  cat <<EOF >> "$SOP_FILE"
+  require_agents_ledger
+  require_agents_ledger_sections
 
-## ${timestamp} — Agent Promotion
-- Promoted ${agent_id} (${name}) from ${dp_id}.
+  local entry_file
+  entry_file="$(mktemp)"
+  cat <<EOF > "$entry_file"
+
+- ${timestamp}
+  - Candidate name: ${name}
+  - DP provenance: ${dp_id}
+  - Draft path: ${draft_path}
 EOF
+
+  local tmp
+  tmp="$(mktemp)"
+
+  if ! awk -v entry_file="$entry_file" '
+    BEGIN { in_section=0; inserted=0 }
+    function emit_entry() {
+      while ((getline line < entry_file) > 0) { print line }
+      close(entry_file)
+    }
+    /^## Candidate Log/ { in_section=1 }
+    /^## Promotion Log/ {
+      if (in_section && inserted == 0) { emit_entry(); inserted=1 }
+      in_section=0
+    }
+    {
+      if (in_section && $0 ~ /^- No entries recorded yet\./) next
+      print
+    }
+    END { if (inserted == 0) exit 2 }
+  ' "$AGENTS_LEDGER" > "$tmp"; then
+    status=$?
+    rm -f "$tmp" "$entry_file"
+    if [[ "$status" -eq 2 ]]; then
+      die "Agent ledger missing Promotion Log section."
+    fi
+    die "Failed to update docs/library/AGENTS.md candidate log."
+  fi
+
+  mv "$tmp" "$AGENTS_LEDGER"
+  rm -f "$entry_file"
+}
+
+append_promotion_log() {
+  local agent_id="$1"
+  local name="$2"
+  local specialization="$3"
+  local dp_id="$4"
+  local agent_path="$5"
+  local timestamp
+  timestamp="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+
+  require_agents_ledger
+  require_agents_ledger_sections
+
+  local entry_file
+  entry_file="$(mktemp)"
+  cat <<EOF > "$entry_file"
+
+- ${timestamp}
+  - Agent ID: ${agent_id}
+  - Name: ${name}
+  - Specialization: ${specialization}
+  - DP provenance: ${dp_id}
+  - Promoted file: ${agent_path}
+EOF
+
+  local tmp
+  tmp="$(mktemp)"
+
+  if ! awk '
+    BEGIN { in_section=0; seen=0 }
+    /^## Promotion Log/ { in_section=1; seen=1 }
+    {
+      if (in_section && $0 ~ /^- No entries recorded yet\./) next
+      print
+    }
+    END { if (seen == 0) exit 2 }
+  ' "$AGENTS_LEDGER" > "$tmp"; then
+    status=$?
+    rm -f "$tmp" "$entry_file"
+    if [[ "$status" -eq 2 ]]; then
+      die "Agent ledger missing Promotion Log section."
+    fi
+    die "Failed to update docs/library/AGENTS.md promotion log."
+  fi
+
+  cat "$entry_file" >> "$tmp"
+  mv "$tmp" "$AGENTS_LEDGER"
+  rm -f "$entry_file"
 }
 
 cmd_harvest() {
   require_repo_root
+  require_agents_ledger
   ensure_handoff_dir
 
   local name=""
@@ -612,6 +714,8 @@ EOF
   redact_stream < "$tmp" > "$draft_path"
   rm -f "$tmp"
 
+  append_candidate_log "$name" "$dp_id" "$draft_path"
+
   echo "$draft_path"
 }
 
@@ -648,6 +752,7 @@ select_latest_draft() {
 cmd_promote() {
   require_repo_root
   require_registry
+  require_agents_ledger
   ensure_handoff_dir
   ensure_agents_dir
 
@@ -742,8 +847,7 @@ cmd_promote() {
   local registry_row
   registry_row="| ${agent_id} | ${name} | ${dp_id} | ${specialization} |"
   insert_registry_entry "$registry_row"
-
-  append_sop_entry "$agent_id" "$name" "$dp_id"
+  append_promotion_log "$agent_id" "$name" "$specialization" "$dp_id" "$agent_path"
 
   if (( delete_draft == 1 )); then
     rm -f "$draft_path"

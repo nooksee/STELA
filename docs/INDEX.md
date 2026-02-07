@@ -1,7 +1,6 @@
 # Documentation Index (Front Door)
 
 ## 0. Primary Read-in (Start Here)
-* [QUICKSTART.md](QUICKSTART.md) — The onboarding sequence and workflow doctrine.
 * [MANUAL.md](MANUAL.md) — Operator command and mechanics.
 
 ## 1. The Constitution (Law & Logic)

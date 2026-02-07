@@ -1,5 +1,13 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-07 18:11:29 UTC — DP-OPS-0034 Agent System Hardening (Immune System)
+- Created `docs/library/AGENTS.md` promotion ledger and workflow template.
+- Added `tools/lint/agent.sh` immunological linter for agent surfaces.
+- Updated `ops/lib/scripts/agent.sh` to log harvest and promote events in `docs/library/AGENTS.md` and removed SoP promotion side effects.
+- Updated `tools/lint/library.sh` to run the agent linter.
+- Updated `docs/library/INDEX.md` to link the agent promotion ledger.
+- Refreshed `llms-small.txt`, `llms-full.txt`, and `llms.txt`.
+
 ## 2026-02-07 15:41:19 UTC — DP-OPS-0033 Registry Consolidation and Agent Testing Regime
 - Created SSOT registries for skills and tasks in docs/ops/registry.
 - Refactored docs/library/INDEX.md into navigation-only links for registries.
