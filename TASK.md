@@ -1,7 +1,7 @@
 # STELA TASK DASHBOARD (LIVING SURFACE)
 **Status:** ACTIVE  
 **Owner (Integrator):** Not provided  
-**Last Updated:** 2026-02-06
+**Last Updated:** 2026-02-07
 
 > This file is the **single living surface** for the current work thread:
 > - **Top:** current Dispatch Packet (DP) intent + constraints
@@ -34,11 +34,11 @@ DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
 ---
 
 ## 2. Active Context (Thread Header)
-- **Goal** : Finalize the pointer-first agent constitution by removing legacy metadata, automating llms.txt discovery, and hardening the agent lifecycle against drift.
-- **Current DP** : DP-OPS-0031 — Pointer-First Agent Constitution & System Hardening
-- **Work Branch (Integrator-assigned OR Integrator-proposed (Operator-created))**: work/agent-constitution-0031
-- **Base HEAD (operator-provided)**: 343c3dc95
-- **Single Next Action**: Finalize DP-OPS-0031 receipts and operator handoff.
+- **Goal** : Replace Active Context with the new DP-OPS-0033 goal, branch, and base head.
+- **Current DP** : DP-OPS-0033 — Active Context reset
+- **Work Branch (Integrator-assigned OR Integrator-proposed (Operator-created))**: Not provided
+- **Base HEAD (operator-provided)**: Not provided
+- **Single Next Action**: Define DP-OPS-0033 goal, work branch, and base head.
 - **Blockers**: None
 
 **Drafting note:** Provisional Work Branch and Base HEAD values are allowed during drafting but must be finalized before worker execution. Workers still stop on any freshness mismatch and do not create or switch branches.
@@ -47,12 +47,14 @@ DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
 
 ## 3. Current Dispatch Packet (DP) - Stela Standard (A-E)
 **Formatting rule:** When emitted in chat, the entire DP must be enclosed in a single fenced code block (start to end).
-# DP-OPS-[ID]: [TITLE]
+# DP-OPS-0000: Example Title (replace with the real DP id and title before worker execution)
+
+<!-- DP SCOPE BEGIN -->
 
 ## 3.1 Freshness Gate (Must Pass Before Work)
-Base Branch: [branch]  
-Required Work Branch: [branch]  
-Base HEAD: [short-hash] (preferred) or `Not provided` / `Current (draft; lock at merge)`
+Base Branch: use the operator-provided base branch name  
+Required Work Branch: use the operator-provided work branch (must already exist)  
+Base HEAD: use the operator-provided short hash; if drafting, write `Not provided` or `Current (draft; lock at merge)`
 
 Required local re-check (worker runs; paste results in RESULTS):
 - `git rev-parse --abbrev-ref HEAD`
@@ -71,8 +73,8 @@ STOP if told to create or switch branches.
 **Worker must confirm loaded before acting:**
 - PoT, SoP, CONTEXT, MAP
 - Plus any DP-scoped files listed here:
-  - [Exact path]
-  - [Exact path]
+  - Exact path to each DP-scoped file
+  - Additional exact path if needed
 
 (OPEN is for Integrator/DP Writer state refresh; Worker does not read OPEN).
 DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
@@ -80,15 +82,15 @@ DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
 ---
 
 ## 3.3 Scope and Safety
-- **Objective:** [One sentence goal]
+- **Objective:** One sentence goal describing the intended outcome.
 
 - **Non-Goals (optional, drift-killer):**
-  - [What is explicitly NOT being done]
-  - [What must NOT expand]
+  - What is explicitly not being done.
+  - What must not expand.
 
 ### Target Files allowlist (hard gate)
-- [path/to/file1]
-- [path/to/file2]
+- Exact path to each allowed file.
+- Exact path to any additional allowed file.
 
 Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly allows new files.
 
@@ -109,7 +111,7 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
 - **Precedence:** If any conflict exists, **PoT.md wins**. If unclear, STOP and ask.
 
 - **Strict Stop Conditions (generic):**
-  - STOP if any placeholder text remains in final outputs (`[ ... ]`, `TODO`, `TBD`, `...`).
+  - STOP if any placeholder text remains in final outputs (square-bracket tokens, to-do markers, to-be-determined markers, or standalone ellipses).
   - STOP if required DP inputs are missing (do not guess).
   - STOP if IDs / naming constraints in the DP are inconsistent (when applicable).
 
@@ -118,22 +120,22 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
 ## 3.4 Execution Plan (A-E Canon)
 
 ### 3.4.1 State
-- **Context:** [Why we are doing this]
-- **Drift:** [What is currently wrong]
-- **Desired State:** [What “correct” looks like]
+- **Context:** Why we are doing this.
+- **Drift:** What is currently wrong.
+- **Desired State:** What correct looks like.
 
 ### 3.4.2 Request
 **Numbered tasks (concrete, no vibes):**
-1) [Do X]
-2) [Do Y]
-3) [If blocked, STOP and use BLOCKED shape]
+1) Do the first concrete task.
+2) Do the next concrete task.
+3) If blocked, STOP and use BLOCKED shape.
 
 **Required Content (optional; use when doc/governance changes demand exact text/format):**
-- [Specify required sections/format rules/quality bar as needed]
+- Specify required sections, format rules, or quality bar as needed.
 
 ### 3.4.3 Changelog
 - **Log (human-readable, 1–6 bullets):**
-  - [What changed]
+  - Summarize what changed.
 
 ### 3.4.4 Patch / Diff
 - **Format:** Unified diff (preferred) or anchored snippets.
@@ -166,10 +168,10 @@ Allowlist rule: exact paths only; use `(new)` prefix only when the DP explicitly
 - `storage/handoff/`
 
 #### Proof bundle checklist (required; naming pattern over exact names)
-- `storage/handoff/DP-OPS--RESULTS.md` (required)
-- `storage/handoff/OPEN-PORCELAIN-[work-branch]-[hash].txt` (required)
-- `storage/handoff/OPEN-[work-branch]-[hash].txt` (required)
-- `storage/dumps/dump-full-...` (or platform scope as applicable)
+- `storage/handoff/DP-OPS-0000-RESULTS.md` (use actual DP id)
+- `storage/handoff/OPEN-PORCELAIN-work-branch-hash.txt` (use actual work branch and short hash)
+- `storage/handoff/OPEN-work-branch-hash.txt` (use actual work branch and short hash)
+- `storage/dumps/dump-full-YYYY-MM-DD-HHMMSS.txt` (use actual dump filename)
 - `git diff --name-only` (include in RESULTS)
 - `git diff --stat` (include in RESULTS)
 - `NEXT:` one single action (include in RESULTS)
@@ -194,8 +196,8 @@ Partial receipts (e.g., missing OPEN artifacts when a session was started) are c
 
 **Storage artifact flow (local-only, untracked):**
 - OPEN and OPEN-PORCELAIN outputs land in `storage/handoff/`.
-- Dump bundles land in `storage/dumps/`.
-- Results receipts land in `storage/handoff/DP-OPS-0000-RESULTS.md` (pattern).
+- Dump bundles land in `storage/dumps/dump-full-YYYY-MM-DD-HHMMSS.txt` (example; use actual dump filename).
+- Results receipts land in `storage/handoff/DP-OPS-0000-RESULTS.md` (example; use actual DP id).
 - Operator stores DP drafts under `storage/dp/intake/` and moves or copies to `storage/dp/processed/` after completion (or when reusing a previously executed DP).
 - These are retention paths only; they are not worker prerequisites unless the DP explicitly says so.
 
@@ -204,13 +206,13 @@ Partial receipts (e.g., missing OPEN artifacts when a session was started) are c
 ## 4. Closeout (Mandatory)
 
 ### Worker closeout duties (end of session)
-- [ ] Produce/Update: `storage/handoff/DP-OPS-[ID]-RESULTS.md`
-- [ ] If canon/governance surfaces were changed, include **SoP.md** in scope and update it in the same PR slice.
-- [ ] Run `ops/bin/prune` (hygiene).
-- [ ] Run `ops/bin/llms` (refresh context bundles).
-- [ ] Ensure proof bundle checklist is satisfied (above). (No bundle = DISAPPROVE.)
-- [ ] Fill out the Mandatory Closing Block (see below).
-- [ ] Append a **TASK Work Log** entry (below) capturing:
+- Produce or update: `storage/handoff/DP-OPS-0000-RESULTS.md` (use actual DP id).
+- If canon/governance surfaces were changed, include **SoP.md** in scope and update it in the same PR slice.
+- Run `ops/bin/prune` (hygiene).
+- Run `ops/bin/llms` (refresh context bundles).
+- Ensure proof bundle checklist is satisfied (above). (No bundle = DISAPPROVE.)
+- Fill out the Mandatory Closing Block (see below).
+- Append a **TASK Work Log** entry (below) capturing:
   - what changed (high level)
   - gates/verification outcome (pass/fail or not run + reason)
   - blockers (if any)
@@ -226,9 +228,9 @@ Varied Wording provision: Each entry must use meaningfully distinct wording; cop
 6. Review Conversation Starter (markdown)
 
 ### Integrator/operator closeout duties
-- [ ] Review diff vs DP scope/forbidden zones
-- [ ] Run repo-gates / required checks
-- [ ] Commit/push/open PR/merge (operator-controlled)
+- Review diff vs DP scope/forbidden zones.
+- Run repo-gates / required checks.
+- Commit/push/open PR/merge (operator-controlled).
 
 ---
 
@@ -243,7 +245,7 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 2) Reset sections **2. Active Context** and **3. Current Dispatch Packet** to the next DP.
 3) Keep the Work Log, but separate threads with a visible divider line:
    - `---`
-   - `THREAD START: DP-OPS-[NEWID]`
+   - `THREAD START: DP-OPS-0000` (use the actual next DP id)
 
 (If the Work Log gets too long, it’s acceptable to keep only the most recent thread’s entries here and move older thread logs into the DP RESULTS file—only when explicitly directed.)
 
@@ -258,3 +260,8 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 
 - *2026-02-06 22:45* — DP-OPS-0030: Governance refactor and context hygiene completed. Verification: RUN (context lint, truth lint, dump, open). Blockers: none. NEXT: deliver RESULTS bundle.
 - *2026-02-07 02:24* — DP-OPS-0031: Pointer-first agent constitution, llms discovery automation, and guardrail audit completed. Verification: RUN (context lint, truth lint, dump, llms, agent check). Blockers: none. NEXT: operator review DP-OPS-0031 results.
+- *2026-02-07 13:09* — THREAD END: DP-OPS-0032. Outcome: TASK.md DP boilerplate hardened and tools/lint/dp.sh aligned with TASK.md headings; ready for Operator review and merge. Evidence: storage/handoff/DP-OPS-0032-RESULTS.md. Verification: RUN (dump, verify, context lint, truth lint, library lint, dp lint). Blockers: none. NEXT: start DP-OPS-0033.
+---
+THREAD START: DP-OPS-0033. Seed: Replace Active Context with the new DP-OPS-0033 goal, branch, and base head.
+
+<!-- DP SCOPE END -->

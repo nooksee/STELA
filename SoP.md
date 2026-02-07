@@ -1,5 +1,10 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-07 13:07:38 UTC — DP-OPS-0032 Harden TASK DP Boilerplate and Align DP Lint
+- Hardened TASK.md DP boilerplate with explicit DP scope markers and sanitized placeholders.
+- Updated tools/lint/dp.sh to accept decimal DP headings alongside the legacy format and expanded tests for both formats.
+- Ran verification: ./ops/bin/dump --scope=platform (non-zero), bash tools/verify.sh, bash tools/lint/context.sh, bash tools/lint/truth.sh, bash tools/lint/library.sh, bash tools/lint/dp.sh --test.
+
 ## 2026-02-07 02:08:45 UTC — DP-OPS-0031 Pointer-First Agent Constitution & System Hardening
 - Refactored R-AGENT-01 through R-AGENT-06 into pointer-first Markdown, removing legacy YAML metadata and embedding role details in prose.
 - Automated llms.txt generation in ops/bin/llms to keep the discovery map synchronized with repository state.
