@@ -139,6 +139,13 @@ When reporting, include:
 ## SoP.md
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-07 21:35:35 UTC — DP-OPS-0035 Context Lifecycle Hardening (Semantic Lint, Context Snapshot, Map, Scope Bundles)
+- Added `ops/bin/map` and `ops/bin/context` with specifications for MAP auto-block maintenance and context archive assembly.
+- Added `ops/lib/manifests/LLMS.md` plus new scope bundles (`llms-ops.txt`, `llms-governance.txt`) and HEAD-derived `llms.txt` freshness metadata.
+- Hardened context lint with semantic contamination detection and expanded llms lint coverage.
+- Updated `docs/MAP.md` auto-generated block and `docs/MANUAL.md` Top Commands for map and snapshot workflows.
+- Context Snapshot archive path pattern for this DP: `storage/archives/context/context-DP-OPS-0035-work-context-lifecycle-hardening-4605e6fd3.tar.xz`.
+
 ## 2026-02-07 18:11:29 UTC — DP-OPS-0034 Agent System Hardening (Immune System)
 - Created `docs/library/AGENTS.md` promotion ledger and workflow template.
 - Added `tools/lint/agent.sh` immunological linter for agent surfaces.
@@ -447,17 +454,23 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 THREAD START: DP-OPS-0034. Seed: Agent promotion ledger and immunological linter enforcement.
 
 - *2026-02-07 18:13* — DP-OPS-0034: Agent promotion ledger, immunological agent linter, promotion logging integration, and llms bundle refresh completed. Verification: RUN (./ops/bin/dump --scope=platform; test -s storage/dumps/dump-platform-work-agent-hardening-0034-cfbde022d.txt; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/lint/library.sh; bash tools/lint/agent.sh). Blockers: none. NEXT: Operator review DP-OPS-0034 RESULTS.
+- *2026-02-07 21:36* — DP-OPS-0035: Context lifecycle hardening (semantic contamination lint, snapshot archive, MAP auto-block, and scope-based llms bundles) completed. Verification: RUN (./ops/bin/dump --scope=platform; test -s storage/dumps/dump-platform-work-context-lifecycle-hardening-4605e6fd3.txt; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/lint/llms.sh; ./tools/verify.sh). Blockers: none. NEXT: Operator review DP-OPS-0035 RESULTS.
 
 <!-- DP SCOPE END -->
 
 
 ## llms.txt
 # Stela llms.txt
+# HEAD: 4605e6fd3
+# HEAD commit time: 2026-02-07T13:48:28-05:00
+# Refresh: ./ops/bin/llms
 # Pointer map to canonical docs and tools (no duplication).
 
 ## 0. Context Bundles
-- llms-small.txt - Small context bundle (PoT, SoP head 10, docs/library/INDEX.md).
-- llms-full.txt - Full context bundle (small + README + docs/library).
+- llms-small.txt - Small canonical bundle (PoT, SoP head 10, TASK, llms.txt).
+- llms-full.txt - Full canonical bundle (small + docs/MANUAL.md, docs/MAP.md, docs/GOVERNANCE.md, docs/ops/registry/PROJECTS.md, docs/library/INDEX.md).
+- llms-ops.txt - Ops bundle (manuals, ops binaries, lints, and specs).
+- llms-governance.txt - Governance bundle (PoT, SoP, TASK, governance docs, and manifests).
 
 ## 1. Governance & Jurisdictions
 - PoT.md - Policy of Truth: constitution, staffing, jurisdiction, and enforcement.
@@ -468,6 +481,7 @@ THREAD START: DP-OPS-0034. Seed: Agent promotion ledger and immunological linter
 - TASK.md - Active work surface, DP contract, and thread log.
 - docs/MAP.md - Wayfinding for cross-session state.
 - ops/lib/manifests/CONTEXT.md - Required context artifact checklist.
+- ops/lib/manifests/LLMS.md - Scope bundle manifest for llms outputs.
 
 ## 3. Operations & Manuals
 - docs/MANUAL.md - Command mechanics and cheat sheet.
@@ -478,6 +492,9 @@ THREAD START: DP-OPS-0034. Seed: Agent promotion ledger and immunological linter
 ## 4. Operational Binaries
 - ops/bin/open - Prompt generation and freshness gate.
 - ops/bin/dump - State capture for agent ingestion.
+- ops/bin/llms - Context bundle generation and llms.txt refresh.
+- ops/bin/map - Auto-generated MAP block maintenance.
+- ops/bin/context - Context archive assembly (OPEN + DUMP).
 - ops/bin/help - Context-aware documentation search.
 
 

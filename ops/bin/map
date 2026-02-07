@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+MAP_FILE="${REPO_ROOT}/docs/MAP.md"
+BEGIN_MARKER="<!-- MAP-GENERATED:BEGIN -->"
+END_MARKER="<!-- MAP-GENERATED:END -->"
+CHECK_MODE=0
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/map [--check]
+USAGE
+}
+
+die() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --check)
+      CHECK_MODE=1
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      die "Unknown arg: ${arg}"
+      ;;
+  esac
+done
+
+if ! command -v git >/dev/null 2>&1; then
+  die "git is required but was not found on PATH."
+fi
+
+if ! repo_root="$(git -C "$REPO_ROOT" rev-parse --show-toplevel 2>/dev/null)"; then
+  die "git repo not found. Run from repo root."
+fi
+
+if [[ "$repo_root" != "$REPO_ROOT" ]]; then
+  die "Run from repo root: ${repo_root}"
+fi
+
+cd "$REPO_ROOT"
+
+if [[ ! -f "$MAP_FILE" ]]; then
+  die "Missing docs/MAP.md"
+fi
+
+begin_count="$(grep -cF "$BEGIN_MARKER" "$MAP_FILE" || true)"
+end_count="$(grep -cF "$END_MARKER" "$MAP_FILE" || true)"
+if (( begin_count != 1 || end_count != 1 )); then
+  die "docs/MAP.md must contain exactly one auto-generated block."
+fi
+
+emit_directory_index() {
+  cat <<'EOF'
+### Directory Index
+- ops/ - Run (binaries, manifests, automation).
+- tools/ - Lints and verification tooling.
+- docs/ - Manuals, specs, and governance surfaces.
+- storage/ - Local artifacts and archives (untracked).
+EOF
+}
+
+emit_project_list() {
+  echo "### Projects"
+  mapfile -t stela_files < <(find "$REPO_ROOT/projects" -mindepth 2 -maxdepth 2 -name "STELA.md" -print 2>/dev/null | LC_ALL=C sort)
+  if (( ${#stela_files[@]} == 0 )); then
+    echo "No projects discovered."
+    return 0
+  fi
+  local i=1
+  local stela rel project_id
+  for stela in "${stela_files[@]}"; do
+    rel="${stela#"$REPO_ROOT"/}"
+    project_id="$(basename "$(dirname "$stela")")"
+    echo "${i}. ${project_id} - \`${rel}\`"
+    i=$((i + 1))
+  done
+}
+
+generate_block() {
+  echo "$BEGIN_MARKER"
+  emit_directory_index
+  echo
+  emit_project_list
+  echo "$END_MARKER"
+}
+
+tmp_block="$(mktemp)"
+tmp_out="$(mktemp)"
+cleanup() {
+  rm -f "$tmp_block" "$tmp_out"
+}
+trap cleanup EXIT
+
+generate_block > "$tmp_block"
+
+awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" -v block_file="$tmp_block" '
+  BEGIN {
+    in_block=0
+    block=""
+    while ((getline line < block_file) > 0) {
+      block = block line ORS
+    }
+    close(block_file)
+  }
+  $0 == begin {
+    printf "%s", block
+    in_block=1
+    next
+  }
+  $0 == end {
+    in_block=0
+    next
+  }
+  !in_block { print }
+' "$MAP_FILE" > "$tmp_out"
+
+if diff -u "$MAP_FILE" "$tmp_out" >/dev/null; then
+  echo "OK: docs/MAP.md is up to date."
+  exit 0
+fi
+
+if (( CHECK_MODE == 1 )); then
+  echo "ERROR: docs/MAP.md is stale. Run ./ops/bin/map." >&2
+  exit 1
+fi
+
+mv "$tmp_out" "$MAP_FILE"
+echo "Updated docs/MAP.md."

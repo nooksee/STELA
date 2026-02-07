@@ -1,16 +1,18 @@
 # Technical Specification: ops/bin/llms
 
 ## Technical Specifications
-- Manifest Parsing: reads `ops/lib/manifests/CONTEXT.md` and builds small and full bundle path lists.
+- Manifest Parsing: reads `ops/lib/manifests/CONTEXT.md` for small and full bundles, plus `ops/lib/manifests/LLMS.md` for scope bundles.
 - Hazard Exclusion: rejects any bundle path that resolves to `docs/library/agents`, `docs/library/tasks`, or `docs/library/skills`.
 - Redaction: strips common secret patterns before writing output.
-- Output Bundles: generates `llms-small.txt` and `llms-full.txt`, plus optional profile bundles.
+- Output Bundles: generates `llms-small.txt`, `llms-full.txt`, `llms-ops.txt`, and `llms-governance.txt`, plus optional profile bundles.
 - Flat Truth Enforcement: always writes bundles to the repository root. If `--out-dir` is provided, it also writes a copy there.
 - Profile Support: supports `--profile=architect|security` with optional `--project=<id>` override.
+- Freshness Metadata: `llms.txt` includes HEAD short hash, HEAD commit timestamp, and the refresh command.
 
 ## Requirements
 - Must run from the repository root.
 - Requires `ops/lib/manifests/CONTEXT.md` to exist and list valid files.
+- Requires `ops/lib/manifests/LLMS.md` to exist and list valid files.
 - Requires write access to the repository root and to any `--out-dir` target.
 
 ## Usage

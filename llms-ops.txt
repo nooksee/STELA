@@ -1,0 +1,2155 @@
+## docs/MANUAL.md
+# System Manual (Command Console)
+
+## 0. Mechanical Workflow
+**Execution Cycle:**
+1.  **Start:** `./ops/bin/open` (Generates prompt + freshness gate).
+2.  **Capture:** `./ops/bin/dump` (Serializes state).
+3.  **Assign:** Create DP in `TASK.md` + New Branch `work/topic-date`.
+4.  **Dispatch:** Hand DP to Worker (See Section 5).
+5.  **Review:** Verify `RECEIPT` (Proofs) vs `TASK.md` requirements.
+6.  **Close:** Merge PR + Update `SoP.md` (if Canon changed).
+
+---
+
+## 1. Top Commands
+
+### Session Start (Open)
+~~~bash
+# Standard Open (Prints to stdout + saves to storage/handoff/)
+./ops/bin/open --intent="Refactor docs" --dp="DP-OPS-0050"
+
+# Auto-save convenience (Adds "OPEN saved: <path>" line)
+./ops/bin/open --intent="..." --out=auto
+~~~
+
+### State Capture (Dump)
+~~~bash
+# Platform Scope (Default - Excludes projects/)
+./ops/bin/dump --scope=platform --format=chatgpt --out=auto
+
+# Full Scope (Includes projects/ - auto-compressed)
+./ops/bin/dump --scope=full --format=chatgpt --out=auto
+
+# Receipt Bundle (Dump + Manifest inside tarball)
+./ops/bin/dump --scope=platform --out=auto --bundle
+~~~
+
+### Map (Auto-Generated Index)
+~~~bash
+# Refresh the auto-generated MAP block
+./ops/bin/map
+
+# Check mode (non-zero if MAP is stale)
+./ops/bin/map --check
+~~~
+
+### Context Snapshot (Context Archive)
+~~~bash
+# Assemble OPEN + DUMP archive for SoP linkage
+./ops/bin/context --dp=DP-OPS-0035
+~~~
+
+### Documentation (Help)
+~~~bash
+./ops/bin/help              # Show menu
+./ops/bin/help continuity   # Grep docs for "continuity"
+~~~
+
+### Validation (Lint)
+~~~bash
+# Validate DP format before dispatch
+./tools/lint/dp.sh storage/dp/intake/DP-OPS-0050.md
+
+# Validate Context consistency
+./tools/lint/context.sh
+~~~
+
+### Skills (Harvest + Promote)
+Skills remain on-demand only and must not be placed in `ops/lib/manifests/CONTEXT.md`.
+
+~~~bash
+# Enforce Skills Context Hazard
+ops/lib/scripts/skill.sh check
+
+# Draft a skill candidate
+ops/lib/scripts/skill.sh harvest --name "skill-title" --context "when to use it" --solution "what to do"
+
+# Promote the draft into docs/library/skills and register it
+ops/lib/scripts/skill.sh promote storage/handoff/skill-draft-YYYYMMDD-HHMMSS-skill-title.md
+~~~
+
+---
+
+## 2. Dispatch Packet (DP) Mechanics
+**Placement:**
+* Drafts: `storage/dp/intake/`
+* Processed: `storage/dp/processed/`
+
+**Disapproval Triggers (When to Reject):**
+* ❌ Missing `RECEIPT` (Proof Bundle).
+* ❌ Verification steps reported as "NOT RUN".
+* ❌ `git diff --stat` does not match the claims.
+* ❌ Forbidden scope touched (Drift).
+
+---
+
+## 3. Scope Definition
+* **Platform:** `ops/`, `docs/`, `tools/`, `.github/`. (OS).
+* **Project:** `projects/`. (Payload).
+* **Rule:** Default to `--scope=platform` unless the DP explicitly targets a project.
+
+---
+
+## 4. Key Paths (Reference)
+* **Constitution:** [`../../PoT.md`](../../PoT.md)
+* **Active Contract:** [`../../TASK.md`](../../TASK.md)
+* **History:** [`../../SoP.md`](../../SoP.md)
+* **Artifacts:** `storage/handoff/` (Results), `storage/dumps/` (State).
+* **Archives:** `storage/archives/` (Museum).
+
+
+## docs/MAP.md
+# Continuity Map (State Persistence)
+
+## 0. Philosophy
+**The repo is stateless; the Map provides the memory.**
+This document defines the specific surfaces that must be loaded to preserve governance, history, and active intent across sessions.
+
+## 1. The Constitution (Immutable Law)
+*Rules that do not change without a governance event.*
+* **Policy of Truth:** [`../../PoT.md`](../../PoT.md) — Constitution, staffing, jurisdiction, and enforcement (SSOT).
+* **Discovery:** [`../../llms.txt`](../../llms.txt) — The machine-readable entry point.
+
+## 2. The Ledger (Mutable State)
+*Living records of what has happened and what is happening.*
+* **History:** [`../../SoP.md`](../../SoP.md) — The State of Play. (What shipped, when, why).
+* **Active Contract:** [`../../TASK.md`](../../TASK.md) — The Dispatch Packet. (Current objective and work log).
+
+## 3. The Interface (Wayfinding)
+*Operator-facing manuals for navigation.*
+* **Command Console:** [`MANUAL.md`](MANUAL.md) — Mechanics and top commands.
+* **Curated Index:** [`INDEX.md`](INDEX.md) — The approved library of operator guidance.
+
+## 4. The Bridge (Ingestion Tools)
+*Mechanisms that move state from disk to context.*
+* **Generation:** [`../../ops/bin/open`](../../ops/bin/open) — Creates the session prompt.
+* **Capture:** [`../../ops/bin/dump`](../../ops/bin/dump) — Serializes the platform.
+* **Validation:** [`../../ops/lib/manifests/CONTEXT.md`](../../ops/lib/manifests/CONTEXT.md) — The required context checklist.
+
+## 5. Unified Jurisdiction
+*Policy of Truth governs all scopes without parallel authority.*
+* **Single Authority:** PoT is the sole authority across `ops/`, `docs/`, and `projects/`.
+* **Project Position:** Projects are payloads operating under PoT, not a separate provider or consumer tier.
+
+## 6. Auto-Generated Index
+<!-- MAP-GENERATED:BEGIN -->
+### Directory Index
+- ops/ - Run (binaries, manifests, automation).
+- tools/ - Lints and verification tooling.
+- docs/ - Manuals, specs, and governance surfaces.
+- storage/ - Local artifacts and archives (untracked).
+
+### Projects
+No projects discovered.
+<!-- MAP-GENERATED:END -->
+
+
+## ops/bin/open
+#!/usr/bin/env bash
+set -euo pipefail
+
+format="chatgpt"
+intent=""
+dp="(none)"
+out=""
+tag=""
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/open [--format=chatgpt|gemini] [--intent="..."] [--dp="DP-XXXX / YYYY-MM-DD"] [--out=auto] [--tag=token]
+USAGE
+}
+
+die() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --format=chatgpt|--format=gemini)
+      format="${arg#--format=}"
+      ;;
+    --intent=*)
+      intent="${arg#--intent=}"
+      ;;
+    --dp=*)
+      dp="${arg#--dp=}"
+      ;;
+    --out=auto)
+      out="auto"
+      ;;
+    --tag=*)
+      tag="${arg#--tag=}"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      die "Unknown arg: $arg"
+      ;;
+  esac
+done
+
+branch="$(git rev-parse --abbrev-ref HEAD)"
+head_short="$(git rev-parse --short HEAD)"
+branch_safe="${branch//\//-}"
+
+tag_prefix=""
+if [[ -n "$tag" ]]; then
+  tag_prefix="${tag}-"
+fi
+
+status_summary="clean"
+porcelain_count=0
+porcelain_saved="(none)"
+porcelain_output=""
+porcelain_preview=""
+
+porcelain_raw="$(git status --porcelain || true)"
+
+if [[ -n "$porcelain_raw" ]]; then
+  porcelain_count="$(printf "%s\n" "$porcelain_raw" | wc -l | tr -d '[:space:]')"
+  status_summary="dirty"
+  porcelain_saved="storage/handoff/OPEN-PORCELAIN-${tag_prefix}${branch_safe}-${head_short}.txt"
+  printf "%s\n" "$porcelain_raw" > "$porcelain_saved"
+
+  if (( porcelain_count <= 200 )); then
+    porcelain_output="$porcelain_raw"
+  else
+    porcelain_preview="$(printf "%s\n" "$porcelain_raw" | head -n 50)"
+  fi
+fi
+
+last_commit="$(git log -1 --oneline)"
+
+open_out_path="storage/handoff/OPEN-${tag_prefix}${branch_safe}-${head_short}.txt"
+: > "$open_out_path"
+
+required_files=(
+  "PoT.md"
+  "SoP.md"
+  "TASK.md"
+  "docs/INDEX.md"
+  "docs/MANUAL.md"
+  "docs/MAP.md"
+  "ops/lib/manifests/CONTEXT.md"
+)
+
+missing=()
+for path in "${required_files[@]}"; do
+  if [[ ! -f "$path" ]]; then
+    missing+=("$path")
+  fi
+done
+
+if (( ${#missing[@]} > 0 )); then
+  echo "ERROR: expected files missing. Run from repo root." >&2
+  for path in "${missing[@]}"; do
+    echo "  - $path" >&2
+  done
+  exit 1
+fi
+
+if [[ "$format" == "gemini" ]]; then
+  mode_line="Mode: reviewer stance. Prioritize risks, regressions, and missing tests."
+else
+  mode_line="Mode: collaborator stance. Follow repo canon and request missing context."
+fi
+
+emit() {
+  if [[ -n "$open_out_path" ]]; then
+    tee -a "$open_out_path"
+  else
+    cat
+  fi
+}
+
+{
+  cat <<EOF
+===== OPEN PROMPT =====
+
+Stela OPEN PROMPT
+
+Adhere to the Behavioral Logic Standards defined in PoT.md.
+$mode_line
+
+[FRESHNESS GATE]
+- Active branch: $branch
+- HEAD short hash: $head_short
+- DP id/date (if applicable): $dp
+- Intent for today: $intent
+
+[ROLE CONTRACT]
+Integrator (operator): Owns scope, priorities, and approvals.
+Contractor (assistant): Executes tasks, flags risks, asks when blocked.
+AI stance: Canon-first, explicit about unknowns, no invention.
+
+[DO / DO NOT]
+Do:
+- PR-only changes; no main edits.
+- Run required gates before close.
+Do not:
+- Edit main directly.
+- Skip gates.
+
+[CONSTITUTION / FOCUS]
+- PoT.md
+
+[PRIMARY WORK SURFACE]
+- TASK.md (DP template + living work log)
+- TASK does NOT auto-load unless it is included in your dump/attachments.
+- When drafting a DP: follow TASK headings/order; output only the DP; ask if required fields are missing.
+
+[CANON POINTERS]
+- PoT.md
+- TASK.md
+- SoP.md
+- docs/INDEX.md
+- docs/MANUAL.md
+- docs/MAP.md
+- ops/lib/manifests/CONTEXT.md
+
+[DUMP]
+- If you need full repo context, run: ./ops/bin/dump --scope=platform --format=chatgpt (or gemini).
+- For a file output: ./ops/bin/dump --scope=platform --format=chatgpt --out=auto
+
+[GIT STATE]
+- Working tree: $status_summary
+- Porcelain entries: $porcelain_count
+- Porcelain saved: $porcelain_saved
+- Last commit: $last_commit
+EOF
+
+if [[ "$status_summary" == "dirty" ]]; then
+  if (( porcelain_count <= 200 )); then
+    cat <<EOF
+- Porcelain (git status --porcelain):
+$porcelain_output
+EOF
+  else
+    cat <<EOF
+- Porcelain preview (truncated to 50 lines):
+$porcelain_preview
+EOF
+  fi
+fi
+
+  cat <<EOF
+
+[NEXT OPERATOR MOVES]
+- ./ops/bin/dump --scope=platform --format=chatgpt
+
+[OPERATOR CONTEXT]
+- If any canon pointers are missing, say so.
+
+===== END OPEN PROMPT =====
+EOF
+} | emit
+
+# IMPORTANT: do not append this line into the OPEN artifact.
+if [[ "$out" == "auto" ]]; then
+  printf 'OPEN saved: %s\n' "$open_out_path"
+fi
+
+
+## ops/bin/dump
+#!/usr/bin/env bash
+set -euo pipefail
+
+scope="platform"
+format="chatgpt"
+out_path=""
+compress_mode=""
+bundle_mode=0
+max_lines=0
+target=""
+
+# Optional refiners (apply after scope selection)
+include_dirs=()
+exclude_dirs=()
+ignore_patterns=()
+
+# Binary handling:
+# - meta (default): omit bytes; include size + sha256
+# - raw: emit raw bytes (may be huge / not LLM-friendly)
+# - base64: emit base64 text (huge, but safe in text streams)
+include_binary="meta"
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/dump [--scope=platform|full|project] [--target=<slug>] [--format=chatgpt|gemini|claude]
+                   [--max-lines=n] [--out=path|auto] [--compress=tar.xz] [--bundle]
+                   [--include-binary=meta|raw|base64]
+                   [--include-dir=DIR] [--exclude-dir=DIR] [--ignore-file=GLOB]
+
+Notes:
+- Scopes select tracked files via `git ls-files` (deterministic).
+- Refiners further restrict selection after scope:
+  - --include-dir restricts output to files under DIR (may be repeated).
+  - --exclude-dir removes files under DIR (may be repeated).
+  - --ignore-file removes files matching a glob against the repo-relative path (may be repeated).
+- Binary default is metadata-only (size + sha256). Use --include-binary=raw for literal bytes.
+USAGE
+}
+
+die() {
+  echo "ERROR: $*" >&2
+  usage >&2
+  exit 1
+}
+
+norm_dir() {
+  local d="$1"
+  d="${d#./}"
+  d="${d%/}"
+  printf "%s" "$d"
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --scope=platform|--scope=full|--scope=project)
+      scope="${arg#--scope=}"
+      ;;
+    --target=*)
+      target="${arg#--target=}"
+      if [[ -z "$target" ]]; then
+        die "--target requires a value"
+      fi
+      ;;
+    --format=chatgpt|--format=gemini|--format=claude)
+      format="${arg#--format=}"
+      ;;
+    --max-lines=*)
+      max_lines="${arg#--max-lines=}"
+      if [[ -z "$max_lines" ]]; then
+        die "--max-lines requires a value"
+      fi
+      if ! [[ "$max_lines" =~ ^[0-9]+$ ]]; then
+        die "--max-lines must be a non-negative integer"
+      fi
+      ;;
+    --out=*)
+      out_path="${arg#--out=}"
+      if [[ -z "$out_path" ]]; then
+        die "--out requires a path"
+      fi
+      if [[ "$out_path" == "auto.tar.xz" ]]; then
+        out_path="auto"
+        compress_mode="tar.xz"
+      fi
+      ;;
+    --compress=tar.xz)
+      compress_mode="tar.xz"
+      ;;
+    --bundle|--bundle=receipt)
+      bundle_mode=1
+      ;;
+    --include-binary=meta|--include-binary=raw|--include-binary=base64)
+      include_binary="${arg#--include-binary=}"
+      ;;
+    --include-dir=*)
+      d="$(norm_dir "${arg#--include-dir=}")"
+      [[ -n "$d" ]] || die "--include-dir requires a value"
+      include_dirs+=("$d")
+      ;;
+    --exclude-dir=*)
+      d="$(norm_dir "${arg#--exclude-dir=}")"
+      [[ -n "$d" ]] || die "--exclude-dir requires a value"
+      exclude_dirs+=("$d")
+      ;;
+    --ignore-file=*)
+      p="${arg#--ignore-file=}"
+      [[ -n "$p" ]] || die "--ignore-file requires a value"
+      ignore_patterns+=("$p")
+      ;;
+    *)
+      die "Unknown argument: $arg"
+      ;;
+  esac
+done
+
+if [[ "$scope" == "project" && -z "$target" ]]; then
+  die "--scope=project requires --target=<slug>"
+fi
+
+if [[ "$scope" != "project" && -n "$target" ]]; then
+  die "--target is only valid with --scope=project"
+fi
+
+if [[ -n "$target" && "$target" == */* ]]; then
+  die "--target must be a project slug"
+fi
+
+if [[ -n "$out_path" && "$out_path" != "auto" && -z "$compress_mode" ]]; then
+  case "$out_path" in
+    *.tar.xz)
+      compress_mode="tar.xz"
+      ;;
+  esac
+fi
+
+if [[ -n "$compress_mode" && -z "$out_path" ]]; then
+  die "--compress requires --out"
+fi
+
+if [[ "$bundle_mode" -eq 1 && -n "$out_path" && -z "$compress_mode" ]]; then
+  compress_mode="tar.xz"
+fi
+
+if [[ "$scope" == "full" && "$out_path" == "auto" && -z "$compress_mode" ]]; then
+  compress_mode="tar.xz"
+fi
+
+if ! command -v git >/dev/null 2>&1; then
+  die "git is required but was not found on PATH."
+fi
+
+if ! repo_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+  die "git repo not found. Run from repo root."
+fi
+
+if [[ "$(pwd -P)" != "$repo_root" ]]; then
+  die "Run from repo root: $repo_root"
+fi
+
+required_files=("PoT.md" "SoP.md" "TASK.md")
+missing=()
+for path in "${required_files[@]}"; do
+  if [[ ! -f "$path" ]]; then
+    missing+=("$path")
+  fi
+done
+if (( ${#missing[@]} > 0 )); then
+  echo "ERROR: expected files missing. Run from repo root." >&2
+  for path in "${missing[@]}"; do
+    echo "  - $path" >&2
+  done
+  exit 1
+fi
+
+for dir in docs tools ops .github; do
+  if [[ ! -d "$dir" ]]; then
+    missing+=("$dir/")
+  fi
+done
+if (( ${#missing[@]} > 0 )); then
+  echo "ERROR: expected directories missing. Run from repo root." >&2
+  for path in "${missing[@]}"; do
+    echo "  - $path" >&2
+  done
+  exit 1
+fi
+
+if [[ "$scope" == "project" ]]; then
+  if [[ ! -d "projects/$target" ]]; then
+    die "Project not found: projects/$target"
+  fi
+fi
+
+mkdir -p "$repo_root/storage/handoff"
+mkdir -p "$repo_root/storage/dumps"
+
+remote_url="$(git remote get-url origin 2>/dev/null || true)"
+if [[ -n "$remote_url" ]]; then
+  repo_name="$(basename -s .git "$remote_url")"
+else
+  repo_name="$(basename "$repo_root")"
+fi
+
+branch="$(git rev-parse --abbrev-ref HEAD)"
+head_short="$(git rev-parse --short HEAD)"
+branch_safe="${branch//\//-}"
+dump_base="dump-${scope}-${branch_safe}-${head_short}"
+payload_path="$repo_root/storage/dumps/${dump_base}.txt"
+manifest_path="$repo_root/storage/dumps/${dump_base}.manifest.txt"
+
+format_label="$format"
+case "$format" in
+  chatgpt) format_label="ChatGPT" ;;
+  gemini) format_label="Gemini" ;;
+  claude) format_label="Claude" ;;
+esac
+
+path_in_any_dir() {
+  local path="$1"
+  shift
+  local d
+  for d in "$@"; do
+    if [[ "$path" == "$d"/* || "$path" == "$d" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+path_matches_any_glob() {
+  local path="$1"
+  shift
+  local g
+  for g in "$@"; do
+    case "$path" in
+      $g) return 0 ;;
+    esac
+  done
+  return 1
+}
+
+include_by_scope() {
+  local path="$1"
+  case "$scope" in
+    full)
+      return 0
+      ;;
+    platform)
+      [[ "$path" != projects/* ]]
+      return $?
+      ;;
+    project)
+      if [[ "$path" == "projects/$target/"* ]]; then
+        return 0
+      fi
+      [[ "$path" != projects/* ]]
+      return $?
+      ;;
+  esac
+}
+
+include_file() {
+  local path="$1"
+
+  # Scope gate
+  if ! include_by_scope "$path"; then
+    return 1
+  fi
+
+  # Refiners
+  if (( ${#include_dirs[@]} > 0 )); then
+    if ! path_in_any_dir "$path" "${include_dirs[@]}"; then
+      return 1
+    fi
+  fi
+
+  if (( ${#exclude_dirs[@]} > 0 )); then
+    if path_in_any_dir "$path" "${exclude_dirs[@]}"; then
+      return 1
+    fi
+  fi
+
+  if (( ${#ignore_patterns[@]} > 0 )); then
+    if path_matches_any_glob "$path" "${ignore_patterns[@]}"; then
+      return 1
+    fi
+  fi
+
+  return 0
+}
+
+files=()
+mapfile -t all_files < <(git ls-files)
+for path in "${all_files[@]}"; do
+  if include_file "$path"; then
+    files+=("$path")
+  fi
+done
+
+if (( ${#files[@]} == 0 )); then
+  die "No files selected for scope: $scope"
+fi
+
+output_target=""
+archive_path=""
+if [[ -n "$out_path" ]]; then
+  if [[ "$out_path" == "auto" ]]; then
+    if [[ "$compress_mode" == "tar.xz" ]]; then
+      output_target="$repo_root/storage/dumps/${dump_base}.tar.xz"
+    else
+      output_target="$payload_path"
+    fi
+  elif [[ "$out_path" = /* ]]; then
+    output_target="$out_path"
+  else
+    output_target="$repo_root/$out_path"
+  fi
+fi
+if [[ -z "$output_target" ]]; then
+  archive_path="$repo_root/storage/dumps/${dump_base}.tar.xz"
+elif [[ "$compress_mode" == "tar.xz" ]]; then
+  archive_path="$output_target"
+fi
+mkdir -p "$(dirname "$payload_path")"
+if [[ -n "$output_target" ]]; then
+  mkdir -p "$(dirname "$output_target")"
+fi
+
+display_path() {
+  local path="$1"
+  if [[ -z "$path" ]]; then
+    return 0
+  fi
+  if [[ "$path" == "$repo_root"/* ]]; then
+    printf "./%s" "${path#"$repo_root"/}"
+  else
+    printf "%s" "$(basename "$path")"
+  fi
+}
+
+count_lines() {
+  awk 'END { print NR }' "$1"
+}
+
+emit_file_contents() {
+  local path="$1"
+  local suppress_pipe_errors="$2"
+  local max="$3"
+  if [[ ! -f "$path" ]]; then
+    echo "(missing file)"
+    return 0
+  fi
+  if (( max > 0 )); then
+    if [[ "$suppress_pipe_errors" -eq 1 ]]; then
+      awk -v max="$max" '{
+        total++
+        if (total <= max) {
+          print
+        }
+      }
+      END {
+        if (total > max) {
+          print "(...truncated at " max " lines; use --max-lines=0 for complete)"
+        }
+      }' "$path" 2>/dev/null || true
+    else
+      awk -v max="$max" '{
+        total++
+        if (total <= max) {
+          print
+        }
+      }
+      END {
+        if (total > max) {
+          print "(...truncated at " max " lines; use --max-lines=0 for complete)"
+        }
+      }' "$path"
+    fi
+  else
+    if [[ "$suppress_pipe_errors" -eq 1 ]]; then
+      cat "$path" 2>/dev/null || true
+    else
+      cat "$path"
+    fi
+  fi
+}
+
+is_binary_file() {
+  local path="$1"
+  # Treat empty as text.
+  if [[ ! -s "$path" ]]; then
+    return 1
+  fi
+  # grep -Iq returns 0 if file looks like text.
+  if LC_ALL=C grep -Iq . "$path" 2>/dev/null; then
+    return 1
+  fi
+  return 0
+}
+
+file_size_bytes() {
+  local path="$1"
+  if command -v wc >/dev/null 2>&1; then
+    wc -c < "$path" | tr -d '[:space:]'
+  else
+    echo "unknown"
+  fi
+}
+
+file_sha256() {
+  local path="$1"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$path" | awk '{print $1}'
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$path" | awk '{print $1}'
+  elif command -v openssl >/dev/null 2>&1; then
+    openssl dgst -sha256 "$path" | awk '{print $NF}'
+  else
+    echo "sha256-unavailable"
+  fi
+}
+
+emit_binary_block() {
+  local path="$1"
+  local bytes sha
+  bytes="$(file_size_bytes "$path")"
+  sha="$(file_sha256 "$path")"
+
+  case "$include_binary" in
+    meta)
+      echo "(binary; content omitted)"
+      echo "BINARY-META:"
+      echo "- path: $path"
+      echo "- bytes: $bytes"
+      echo "- sha256: $sha"
+      ;;
+    raw)
+      echo "(binary; raw bytes follow)"
+      cat "$path" || true
+      ;;
+    base64)
+      echo "(binary; base64 follows)"
+      if command -v base64 >/dev/null 2>&1; then
+        # GNU base64 supports -w; BSD doesn't. Try -w then fallback.
+        base64 -w 76 "$path" 2>/dev/null || base64 "$path" 2>/dev/null || true
+      else
+        echo "(base64 unavailable)"
+        echo "BINARY-META:"
+        echo "- path: $path"
+        echo "- bytes: $bytes"
+        echo "- sha256: $sha"
+      fi
+      ;;
+  esac
+}
+
+is_file_truncated() {
+  local path="$1"
+  local lines
+
+  if [[ ! -f "$path" ]]; then
+    return 1
+  fi
+
+  if (( max_lines > 0 )); then
+    # Only applies to text emission.
+    if is_binary_file "$path"; then
+      return 1
+    fi
+    lines=$(count_lines "$path")
+    if (( lines > max_lines )); then
+      return 0
+    fi
+  fi
+  return 1
+}
+
+emit_dump() {
+  local suppress_pipe_errors=0
+  local files_count
+  local truncated_files=0
+  local binary_files=0
+
+  if [[ -p /proc/$$/fd/1 ]]; then
+    suppress_pipe_errors=1
+    exec 2>/dev/null
+  fi
+
+  files_count=${#files[@]}
+  for path in "${files[@]}"; do
+    if is_file_truncated "$path"; then
+      truncated_files=$((truncated_files + 1))
+    fi
+    if is_binary_file "$path"; then
+      binary_files=$((binary_files + 1))
+    fi
+  done
+
+  echo "===== REPO DUMP ====="
+  echo "Dump generated by [System] at ./"
+  echo "Repo: $repo_name"
+  echo "Branch: $branch"
+  echo "HEAD: $head_short"
+  echo "Scope: $scope"
+  if [[ "$scope" == "project" ]]; then
+    echo "Target: $target"
+  fi
+  echo "Format: $format_label"
+  echo "Files included: $files_count"
+  echo "Binary files: $binary_files"
+  echo "Truncated text files: $truncated_files"
+  case "$scope" in
+    platform) echo "Excluded dirs (scope): projects/" ;;
+    project)  echo "Excluded dirs (scope): projects/* (except projects/$target/)" ;;
+    full)     echo "Excluded dirs (scope): none" ;;
+  esac
+  if (( ${#include_dirs[@]} > 0 )); then
+    echo "Include dirs (refiner): ${include_dirs[*]}"
+  else
+    echo "Include dirs (refiner): (none)"
+  fi
+  if (( ${#exclude_dirs[@]} > 0 )); then
+    echo "Exclude dirs (refiner): ${exclude_dirs[*]}"
+  else
+    echo "Exclude dirs (refiner): (none)"
+  fi
+  if (( ${#ignore_patterns[@]} > 0 )); then
+    echo "Ignore globs (refiner): ${ignore_patterns[*]}"
+  else
+    echo "Ignore globs (refiner): (none)"
+  fi
+  echo "Binary handling: $include_binary"
+  echo "Max lines (text): $max_lines"
+  echo "===== DUMP PAYLOAD BEGIN ====="
+  echo "[INDEX]"
+  for path in "${files[@]}"; do
+    echo "- $path"
+  done
+  echo ""
+  echo "[FILE CONTENTS]"
+  for path in "${files[@]}"; do
+    echo "<<< FILE BEGIN: $path"
+    if [[ -f "$path" ]] && is_binary_file "$path"; then
+      emit_binary_block "$path"
+    else
+      emit_file_contents "$path" "$suppress_pipe_errors" "$max_lines"
+    fi
+    echo ">>> FILE END: $path"
+    echo ""
+  done
+  echo "===== DUMP PAYLOAD END ====="
+}
+
+emit_manifest() {
+  local path="$1"
+  local payload="$2"
+  local output="$3"
+  local files_count="${#files[@]}"
+  {
+    echo "Dump Manifest"
+    echo "Branch: $branch"
+    echo "HEAD: $head_short"
+    echo "Scope: $scope"
+    if [[ "$scope" == "project" ]]; then
+      echo "Target: $target"
+    fi
+    echo "Format: $format_label"
+    echo "Binary handling: $include_binary"
+    echo "Max lines (text): $max_lines"
+    if (( ${#include_dirs[@]} > 0 )); then
+      echo "Include dirs (refiner): ${include_dirs[*]}"
+    fi
+    if (( ${#exclude_dirs[@]} > 0 )); then
+      echo "Exclude dirs (refiner): ${exclude_dirs[*]}"
+    fi
+    if (( ${#ignore_patterns[@]} > 0 )); then
+      echo "Ignore globs (refiner): ${ignore_patterns[*]}"
+    fi
+    echo "Dump payload: $(display_path "$payload")"
+    if [[ -n "$output" ]]; then
+      echo "Output target: $(display_path "$output")"
+    else
+      echo "Output target: (stdout)"
+    fi
+    echo "Files included: $files_count"
+    echo "Included files:"
+    for p in "${files[@]}"; do
+      echo "- $p"
+    done
+  } > "$path"
+}
+
+emit_dump > "$payload_path"
+
+manifest_output="$output_target"
+if [[ -z "$manifest_output" && -n "$archive_path" ]]; then
+  manifest_output="$archive_path"
+fi
+
+if [[ "$bundle_mode" -eq 1 ]]; then
+  emit_manifest "$manifest_path" "$payload_path" "$manifest_output"
+fi
+
+if [[ -z "$output_target" ]]; then
+  cat "$payload_path"
+fi
+
+if [[ -n "$archive_path" ]]; then
+  if ! command -v tar >/dev/null 2>&1; then
+    die "tar is required for dump archive output but was not found on PATH."
+  fi
+  tar_items=()
+  tar_items+=("$(basename "$payload_path")")
+  if [[ "$bundle_mode" -eq 1 ]]; then
+    tar_items+=("$(basename "$manifest_path")")
+  fi
+  tar -cJf "$archive_path" -C "$(dirname "$payload_path")" "${tar_items[@]}"
+elif [[ -n "$output_target" && "$output_target" != "$payload_path" ]]; then
+  cp "$payload_path" "$output_target"
+fi
+
+if [[ "$bundle_mode" -eq 0 ]]; then
+  emit_manifest "$manifest_path" "$payload_path" "$manifest_output"
+fi
+
+echo "Dump payload: $(display_path "$payload_path")"
+if [[ -n "$archive_path" ]]; then
+  echo "Dump tarball: $(display_path "$archive_path")"
+fi
+echo "Dump manifest: $(display_path "$manifest_path")"
+
+
+## ops/bin/llms
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+OUT_DIR="${REPO_ROOT}"
+ROOT_OUT_DIR="${REPO_ROOT}"
+MANIFEST_PATH="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
+LLMS_MANIFEST_PATH="${REPO_ROOT}/ops/lib/manifests/LLMS.md"
+PROFILE=""
+PROJECT_OVERRIDE=""
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/llms [--out-dir=PATH] [--profile=architect|security] [--project=ID]
+
+Notes:
+- Bundles are always written to the repository root for Flat Truth visibility.
+- If --out-dir is set to a non-root path, a copy is also written to the root.
+USAGE
+}
+
+die() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --out-dir=*)
+      OUT_DIR="${arg#--out-dir=}"
+      ;;
+    --profile=*)
+      PROFILE="${arg#--profile=}"
+      ;;
+    --project=*)
+      PROJECT_OVERRIDE="${arg#--project=}"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      die "Unknown arg: ${arg}"
+      ;;
+  esac
+done
+
+if [[ -n "$PROFILE" ]]; then
+  case "$PROFILE" in
+    architect|security)
+      ;;
+    *)
+      die "Unknown profile: ${PROFILE}"
+      ;;
+  esac
+fi
+
+if [[ ! -f "$MANIFEST_PATH" ]]; then
+  die "Missing manifest: ops/lib/manifests/CONTEXT.md"
+fi
+if [[ ! -f "$LLMS_MANIFEST_PATH" ]]; then
+  die "Missing manifest: ops/lib/manifests/LLMS.md"
+fi
+
+if ! command -v git >/dev/null 2>&1; then
+  die "git is required but was not found on PATH."
+fi
+
+head_short="$(git -C "$REPO_ROOT" rev-parse --short HEAD)"
+head_time="$(git -C "$REPO_ROOT" show -s --format=%cI HEAD)"
+
+mkdir -p "$OUT_DIR"
+mkdir -p "$ROOT_OUT_DIR"
+
+SMALL_OUT="${OUT_DIR}/llms-small.txt"
+FULL_OUT="${OUT_DIR}/llms-full.txt"
+ROOT_SMALL_OUT="${ROOT_OUT_DIR}/llms-small.txt"
+ROOT_FULL_OUT="${ROOT_OUT_DIR}/llms-full.txt"
+OPS_OUT="${OUT_DIR}/llms-ops.txt"
+GOV_OUT="${OUT_DIR}/llms-governance.txt"
+ROOT_OPS_OUT="${ROOT_OUT_DIR}/llms-ops.txt"
+ROOT_GOV_OUT="${ROOT_OUT_DIR}/llms-governance.txt"
+PROFILE_OUT=""
+ROOT_PROFILE_OUT=""
+if [[ -n "$PROFILE" ]]; then
+  PROFILE_OUT="${OUT_DIR}/llms-${PROFILE}.txt"
+  ROOT_PROFILE_OUT="${ROOT_OUT_DIR}/llms-${PROFILE}.txt"
+fi
+
+strip_toc() {
+  awk '
+    BEGIN { skip=0 }
+    /^## (Table of Contents|Contents|TOC)$/ { skip=1; next }
+    skip && /^# / { skip=0 }
+    skip && /^## / { skip=0 }
+    !skip { print }
+  '
+}
+
+redact_stream() {
+  sed -E \
+    -e 's/AKIA[0-9A-Z]{16}/[REDACTED]/g' \
+    -e 's/ASIA[0-9A-Z]{16}/[REDACTED]/g' \
+    -e 's/AIza[0-9A-Za-z_-]{35}/[REDACTED]/g' \
+    -e 's/xox[baprs]-[0-9A-Za-z-]{10,48}/[REDACTED]/g' \
+    -e 's/ghp_[0-9A-Za-z]{36}/[REDACTED]/g' \
+    -e 's/ghs_[0-9A-Za-z]{36}/[REDACTED]/g' \
+    -e 's/-----BEGIN [A-Z ]+ PRIVATE KEY-----/[REDACTED PRIVATE KEY]/g'
+}
+
+emit_sop_head() {
+  local file="$1"
+  local limit=10
+  awk -v limit="$limit" '
+    BEGIN { count=0 }
+    /^## [0-9]{4}-[0-9]{2}-[0-9]{2} / {
+      count++
+      if (count > limit) {
+        exit
+      }
+    }
+    { print }
+  ' "$file"
+}
+
+emit_file() {
+  local path="$1"
+  local out_file="$2"
+
+  local abs_path="${REPO_ROOT}/${path}"
+  if [[ ! -f "$abs_path" ]]; then
+    die "Missing bundle file: ${path}"
+  fi
+
+  printf '## %s\n' "$path" >> "$out_file"
+  if [[ "$path" == "SoP.md" ]]; then
+    emit_sop_head "$abs_path" | strip_toc | redact_stream >> "$out_file"
+  else
+    strip_toc < "$abs_path" | redact_stream >> "$out_file"
+  fi
+  printf '\n\n' >> "$out_file"
+}
+
+bundle_section_paths() {
+  local manifest="$1"
+  local section="$2"
+  awk -v section="$section" '
+    BEGIN { in_section=0 }
+    $0 ~ /^## / {
+      if ($0 ~ section) { in_section=1; next }
+      if (in_section) { exit }
+    }
+    in_section { print }
+  ' "$manifest" | awk -F"\`" 'NF >= 3 { for (i = 2; i <= NF; i += 2) print $i }'
+}
+
+dedupe_paths() {
+  declare -A seen
+  local path
+  for path in "$@"; do
+    if [[ -z "${seen[$path]:-}" ]]; then
+      printf '%s\n' "$path"
+      seen[$path]=1
+    fi
+  done
+}
+
+validate_bundle_paths() {
+  local bundle_name="$1"
+  shift
+  local hazards=("docs/library/agents" "docs/library/tasks" "docs/library/skills")
+  local path hazard
+
+  for path in "$@"; do
+    for hazard in "${hazards[@]}"; do
+      if [[ "$path" == "$hazard"* ]]; then
+        die "Context hazard: ${bundle_name} includes ${path}"
+      fi
+    done
+  done
+}
+
+resolve_project_id() {
+  local project_id=""
+  if [[ -n "$PROJECT_OVERRIDE" ]]; then
+    printf '%s' "$PROJECT_OVERRIDE"
+    return 0
+  fi
+  if [[ -n "${PROJECT_ID:-}" ]]; then
+    printf '%s' "$PROJECT_ID"
+    return 0
+  fi
+  local manifest="${REPO_ROOT}/docs/ops/registry/PROJECTS.md"
+  if [[ -f "$manifest" ]]; then
+    project_id="$(awk '/^Current[[:space:]]*:/ { sub(/^Current[[:space:]]*:[[:space:]]*/, "", $0); sub(/[[:space:]]+$/, "", $0); print $0; exit }' "$manifest")"
+  fi
+  printf '%s' "$project_id"
+}
+
+collect_global_docs() {
+  find "${REPO_ROOT}/docs" -type f -print | \
+    sed "s#^${REPO_ROOT}/##" | \
+    grep -E -v '^docs/library/(agents|tasks|skills)(/|$)' | \
+    sort
+}
+
+collect_project_docs() {
+  local project_id="$1"
+  local subdir="$2"
+  local dir="${REPO_ROOT}/projects/${project_id}/${subdir}"
+  if [[ ! -d "$dir" ]]; then
+    return 1
+  fi
+  find "$dir" -type f -print | sed "s#^${REPO_ROOT}/##" | sort
+}
+
+collect_profile_paths() {
+  local profile="$1"
+  local project_id
+  project_id="$(resolve_project_id)"
+
+  local -a paths=("PoT.md")
+  local -a extra=()
+
+  case "$profile" in
+    architect)
+      if [[ -n "$project_id" ]]; then
+        mapfile -t extra < <(collect_project_docs "$project_id" "docs/CODEMAPS" || true)
+      fi
+      if (( ${#extra[@]} == 0 )); then
+        mapfile -t extra < <(collect_global_docs)
+      fi
+      ;;
+    security)
+      if [[ -n "$project_id" ]]; then
+        mapfile -t extra < <(collect_project_docs "$project_id" "docs/security" || true)
+      fi
+      if (( ${#extra[@]} == 0 )); then
+        local fallback="${REPO_ROOT}/docs/security"
+        if [[ -d "$fallback" ]]; then
+          mapfile -t extra < <(find "$fallback" -type f -print | sed "s#^${REPO_ROOT}/##" | sort)
+        fi
+      fi
+      ;;
+  esac
+
+  paths+=("${extra[@]}")
+  mapfile -t paths < <(dedupe_paths "${paths[@]}")
+  validate_bundle_paths "$profile profile" "${paths[@]}"
+  printf '%s\n' "${paths[@]}"
+}
+
+mapfile -t small_paths < <(bundle_section_paths "$MANIFEST_PATH" 'Small Bundle')
+mapfile -t full_extra_paths < <(bundle_section_paths "$MANIFEST_PATH" 'Full Bundle')
+mapfile -t ops_paths < <(bundle_section_paths "$LLMS_MANIFEST_PATH" 'Ops Bundle')
+mapfile -t governance_paths < <(bundle_section_paths "$LLMS_MANIFEST_PATH" 'Governance Bundle')
+
+if (( ${#small_paths[@]} == 0 )); then
+  die "No Small bundle paths found in ops/lib/manifests/CONTEXT.md"
+fi
+if (( ${#ops_paths[@]} == 0 )); then
+  die "No Ops bundle paths found in ops/lib/manifests/LLMS.md"
+fi
+if (( ${#governance_paths[@]} == 0 )); then
+  die "No Governance bundle paths found in ops/lib/manifests/LLMS.md"
+fi
+
+mapfile -t small_paths < <(dedupe_paths "${small_paths[@]}")
+mapfile -t full_paths < <(dedupe_paths "${small_paths[@]}" "${full_extra_paths[@]}")
+mapfile -t ops_paths < <(dedupe_paths "${ops_paths[@]}")
+mapfile -t governance_paths < <(dedupe_paths "${governance_paths[@]}")
+
+validate_bundle_paths "Small bundle" "${small_paths[@]}"
+validate_bundle_paths "Full bundle" "${full_paths[@]}"
+validate_bundle_paths "Ops bundle" "${ops_paths[@]}"
+validate_bundle_paths "Governance bundle" "${governance_paths[@]}"
+
+rm -f "$SMALL_OUT" "$FULL_OUT" "$OPS_OUT" "$GOV_OUT"
+
+for path in "${small_paths[@]}"; do
+  emit_file "$path" "$SMALL_OUT"
+done
+
+for path in "${full_paths[@]}"; do
+  emit_file "$path" "$FULL_OUT"
+done
+
+for path in "${ops_paths[@]}"; do
+  emit_file "$path" "$OPS_OUT"
+done
+
+for path in "${governance_paths[@]}"; do
+  emit_file "$path" "$GOV_OUT"
+done
+
+if [[ ! -s "$SMALL_OUT" ]]; then
+  die "${SMALL_OUT} is empty"
+fi
+
+if [[ ! -s "$FULL_OUT" ]]; then
+  die "${FULL_OUT} is empty"
+fi
+if [[ ! -s "$OPS_OUT" ]]; then
+  die "${OPS_OUT} is empty"
+fi
+if [[ ! -s "$GOV_OUT" ]]; then
+  die "${GOV_OUT} is empty"
+fi
+
+written=("$SMALL_OUT" "$FULL_OUT" "$OPS_OUT" "$GOV_OUT")
+if [[ "$OUT_DIR" != "$ROOT_OUT_DIR" ]]; then
+  cp "$SMALL_OUT" "$ROOT_SMALL_OUT"
+  cp "$FULL_OUT" "$ROOT_FULL_OUT"
+  cp "$OPS_OUT" "$ROOT_OPS_OUT"
+  cp "$GOV_OUT" "$ROOT_GOV_OUT"
+  written+=("$ROOT_SMALL_OUT" "$ROOT_FULL_OUT" "$ROOT_OPS_OUT" "$ROOT_GOV_OUT")
+fi
+
+if [[ -n "$PROFILE" ]]; then
+  rm -f "$PROFILE_OUT"
+  mapfile -t profile_paths < <(collect_profile_paths "$PROFILE")
+  if (( ${#profile_paths[@]} == 0 )); then
+    die "Profile bundle is empty: ${PROFILE}"
+  fi
+  for path in "${profile_paths[@]}"; do
+    emit_file "$path" "$PROFILE_OUT"
+  done
+  if [[ ! -s "$PROFILE_OUT" ]]; then
+    die "${PROFILE_OUT} is empty"
+  fi
+  written+=("$PROFILE_OUT")
+  if [[ "$OUT_DIR" != "$ROOT_OUT_DIR" ]]; then
+    cp "$PROFILE_OUT" "$ROOT_PROFILE_OUT"
+    written+=("$ROOT_PROFILE_OUT")
+  fi
+fi
+
+# Generate llms.txt (Discovery Map)
+LLMS_TXT_OUT="${OUT_DIR}/llms.txt"
+LLMS_TXT_ROOT="${ROOT_OUT_DIR}/llms.txt"
+{
+  echo "# Stela llms.txt"
+  echo "# HEAD: ${head_short}"
+  echo "# HEAD commit time: ${head_time}"
+  echo "# Refresh: ./ops/bin/llms"
+  echo "# Pointer map to canonical docs and tools (no duplication)."
+  echo
+  echo "## 0. Context Bundles"
+  echo "- llms-small.txt - Small canonical bundle (PoT, SoP head 10, TASK, llms.txt)."
+  echo "- llms-full.txt - Full canonical bundle (small + docs/MANUAL.md, docs/MAP.md, docs/GOVERNANCE.md, docs/ops/registry/PROJECTS.md, docs/library/INDEX.md)."
+  echo "- llms-ops.txt - Ops bundle (manuals, ops binaries, lints, and specs)."
+  echo "- llms-governance.txt - Governance bundle (PoT, SoP, TASK, governance docs, and manifests)."
+  echo
+  echo "## 1. Governance & Jurisdictions"
+  echo "- PoT.md - Policy of Truth: constitution, staffing, jurisdiction, and enforcement."
+  echo "- docs/GOVERNANCE.md - Non-negotiables and project coherence rules."
+  echo
+  echo "## 2. State & Continuity"
+  echo "- SoP.md - Historical ledger (State of Play)."
+  echo "- TASK.md - Active work surface, DP contract, and thread log."
+  echo "- docs/MAP.md - Wayfinding for cross-session state."
+  echo "- ops/lib/manifests/CONTEXT.md - Required context artifact checklist."
+  echo "- ops/lib/manifests/LLMS.md - Scope bundle manifest for llms outputs."
+  echo
+  echo "## 3. Operations & Manuals"
+  echo "- docs/MANUAL.md - Command mechanics and cheat sheet."
+  echo "- docs/library/INDEX.md - Curated index of approved operator surfaces."
+  echo "- docs/library/SKILLS.md - Skills promotion template and packet ledger."
+  echo "- docs/INDEX.md - Documentation front door."
+  echo
+  echo "## 4. Operational Binaries"
+  echo "- ops/bin/open - Prompt generation and freshness gate."
+  echo "- ops/bin/dump - State capture for agent ingestion."
+  echo "- ops/bin/llms - Context bundle generation and llms.txt refresh."
+  echo "- ops/bin/map - Auto-generated MAP block maintenance."
+  echo "- ops/bin/context - Context archive assembly (OPEN + DUMP)."
+  echo "- ops/bin/help - Context-aware documentation search."
+} > "$LLMS_TXT_OUT"
+
+written+=("$LLMS_TXT_OUT")
+if [[ "$OUT_DIR" != "$ROOT_OUT_DIR" ]]; then
+  cp "$LLMS_TXT_OUT" "$LLMS_TXT_ROOT"
+  written+=("$LLMS_TXT_ROOT")
+fi
+printf 'Wrote %s\n' "${written[*]}"
+
+
+## ops/bin/map
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+MAP_FILE="${REPO_ROOT}/docs/MAP.md"
+BEGIN_MARKER="<!-- MAP-GENERATED:BEGIN -->"
+END_MARKER="<!-- MAP-GENERATED:END -->"
+CHECK_MODE=0
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/map [--check]
+USAGE
+}
+
+die() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --check)
+      CHECK_MODE=1
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      die "Unknown arg: ${arg}"
+      ;;
+  esac
+done
+
+if ! command -v git >/dev/null 2>&1; then
+  die "git is required but was not found on PATH."
+fi
+
+if ! repo_root="$(git -C "$REPO_ROOT" rev-parse --show-toplevel 2>/dev/null)"; then
+  die "git repo not found. Run from repo root."
+fi
+
+if [[ "$repo_root" != "$REPO_ROOT" ]]; then
+  die "Run from repo root: ${repo_root}"
+fi
+
+cd "$REPO_ROOT"
+
+if [[ ! -f "$MAP_FILE" ]]; then
+  die "Missing docs/MAP.md"
+fi
+
+begin_count="$(grep -cF "$BEGIN_MARKER" "$MAP_FILE" || true)"
+end_count="$(grep -cF "$END_MARKER" "$MAP_FILE" || true)"
+if (( begin_count != 1 || end_count != 1 )); then
+  die "docs/MAP.md must contain exactly one auto-generated block."
+fi
+
+emit_directory_index() {
+  cat <<'EOF'
+### Directory Index
+- ops/ - Run (binaries, manifests, automation).
+- tools/ - Lints and verification tooling.
+- docs/ - Manuals, specs, and governance surfaces.
+- storage/ - Local artifacts and archives (untracked).
+EOF
+}
+
+emit_project_list() {
+  echo "### Projects"
+  mapfile -t stela_files < <(find "$REPO_ROOT/projects" -mindepth 2 -maxdepth 2 -name "STELA.md" -print 2>/dev/null | LC_ALL=C sort)
+  if (( ${#stela_files[@]} == 0 )); then
+    echo "No projects discovered."
+    return 0
+  fi
+  local i=1
+  local stela rel project_id
+  for stela in "${stela_files[@]}"; do
+    rel="${stela#"$REPO_ROOT"/}"
+    project_id="$(basename "$(dirname "$stela")")"
+    echo "${i}. ${project_id} - \`${rel}\`"
+    i=$((i + 1))
+  done
+}
+
+generate_block() {
+  echo "$BEGIN_MARKER"
+  emit_directory_index
+  echo
+  emit_project_list
+  echo "$END_MARKER"
+}
+
+tmp_block="$(mktemp)"
+tmp_out="$(mktemp)"
+cleanup() {
+  rm -f "$tmp_block" "$tmp_out"
+}
+trap cleanup EXIT
+
+generate_block > "$tmp_block"
+
+awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" -v block_file="$tmp_block" '
+  BEGIN {
+    in_block=0
+    block=""
+    while ((getline line < block_file) > 0) {
+      block = block line ORS
+    }
+    close(block_file)
+  }
+  $0 == begin {
+    printf "%s", block
+    in_block=1
+    next
+  }
+  $0 == end {
+    in_block=0
+    next
+  }
+  !in_block { print }
+' "$MAP_FILE" > "$tmp_out"
+
+if diff -u "$MAP_FILE" "$tmp_out" >/dev/null; then
+  echo "OK: docs/MAP.md is up to date."
+  exit 0
+fi
+
+if (( CHECK_MODE == 1 )); then
+  echo "ERROR: docs/MAP.md is stale. Run ./ops/bin/map." >&2
+  exit 1
+fi
+
+mv "$tmp_out" "$MAP_FILE"
+echo "Updated docs/MAP.md."
+
+
+## ops/bin/context
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+ARCHIVE_DIR="${REPO_ROOT}/storage/archives/context"
+DP_ID=""
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/context --dp=DP-OPS-0035
+USAGE
+}
+
+die() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --dp=*)
+      DP_ID="${arg#--dp=}"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      die "Unknown arg: ${arg}"
+      ;;
+  esac
+done
+
+if [[ -z "$DP_ID" ]]; then
+  die "--dp is required"
+fi
+
+if ! command -v git >/dev/null 2>&1; then
+  die "git is required but was not found on PATH."
+fi
+
+if ! repo_root="$(git -C "$REPO_ROOT" rev-parse --show-toplevel 2>/dev/null)"; then
+  die "git repo not found. Run from repo root."
+fi
+
+if [[ "$repo_root" != "$REPO_ROOT" ]]; then
+  die "Run from repo root: ${repo_root}"
+fi
+
+cd "$REPO_ROOT"
+
+head_hash="$(git -C "$REPO_ROOT" rev-parse HEAD)"
+head_short="$(git -C "$REPO_ROOT" rev-parse --short HEAD)"
+branch_name="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
+branch_safe="${branch_name//\//-}"
+dp_safe="${DP_ID//\//-}"
+
+open_output="$("${REPO_ROOT}/ops/bin/open" --out=auto)"
+open_path="$(printf '%s\n' "$open_output" | sed -n 's/^OPEN saved: //p' | tail -n 1)"
+porcelain_path="$(printf '%s\n' "$open_output" | sed -n 's/^- Porcelain saved: //p' | tail -n 1)"
+
+if [[ -z "$open_path" ]]; then
+  die "OPEN artifact path not found in open output."
+fi
+
+open_path="${open_path#./}"
+porcelain_path="${porcelain_path#./}"
+if [[ "$porcelain_path" == "(none)" ]]; then
+  porcelain_path=""
+fi
+
+dump_output="$("${REPO_ROOT}/ops/bin/dump" --scope=platform --format=chatgpt --out=auto --bundle)"
+dump_payload="$(printf '%s\n' "$dump_output" | sed -n 's/^Dump payload: //p' | tail -n 1)"
+dump_manifest="$(printf '%s\n' "$dump_output" | sed -n 's/^Dump manifest: //p' | tail -n 1)"
+dump_tarball="$(printf '%s\n' "$dump_output" | sed -n 's/^Dump tarball: //p' | tail -n 1)"
+
+if [[ -z "$dump_payload" || -z "$dump_manifest" ]]; then
+  die "Dump output did not include payload and manifest paths."
+fi
+
+dump_payload="${dump_payload#./}"
+dump_manifest="${dump_manifest#./}"
+dump_tarball="${dump_tarball#./}"
+
+require_file() {
+  local rel="$1"
+  local abs="${REPO_ROOT}/${rel}"
+  if [[ ! -f "$abs" ]]; then
+    die "Missing required file: ${rel}"
+  fi
+}
+
+require_file "$open_path"
+require_file "$dump_payload"
+require_file "$dump_manifest"
+if [[ -n "$porcelain_path" ]]; then
+  require_file "$porcelain_path"
+fi
+if [[ -n "$dump_tarball" && -f "${REPO_ROOT}/${dump_tarball}" ]]; then
+  : # tarball exists
+else
+  dump_tarball=""
+fi
+
+included_files=("$open_path" "$dump_payload" "$dump_manifest")
+if [[ -n "$porcelain_path" ]]; then
+  included_files+=("$porcelain_path")
+fi
+if [[ -n "$dump_tarball" ]]; then
+  included_files+=("$dump_tarball")
+fi
+
+tmp_dir="$(mktemp -d)"
+cleanup() {
+  rm -rf "$tmp_dir"
+}
+trap cleanup EXIT
+
+metadata_file="${tmp_dir}/context-metadata.txt"
+{
+  echo "DP: ${DP_ID}"
+  echo "HEAD: ${head_hash}"
+  echo "Included files:"
+  for item in "${included_files[@]}"; do
+    echo "- ${item}"
+  done
+} > "$metadata_file"
+
+mkdir -p "$ARCHIVE_DIR"
+archive_path="${ARCHIVE_DIR}/context-${dp_safe}-${branch_safe}-${head_short}.tar.xz"
+
+tar -cJf "$archive_path" -C "$REPO_ROOT" "${included_files[@]}" -C "$tmp_dir" "$(basename "$metadata_file")"
+
+printf './%s\n' "${archive_path#"$REPO_ROOT"/}"
+
+
+## ops/bin/prune
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+SOP_FILE="${REPO_ROOT}/SoP.md"
+TASK_FILE="${REPO_ROOT}/TASK.md"
+ARCHIVE_DIR="${REPO_ROOT}/storage/archives/root"
+HANDOFF_DIR="${REPO_ROOT}/storage/handoff"
+THRESHOLD=30
+
+if [[ ! -f "${SOP_FILE}" ]]; then
+  echo "ERROR: SoP.md not found at ${SOP_FILE}" >&2
+  exit 1
+fi
+
+entry_count="$(grep -cE '^## [0-9]{4}-[0-9]{2}-[0-9]{2} ' "${SOP_FILE}" || true)"
+
+if [[ -z "${entry_count}" ]]; then
+  entry_count=0
+fi
+
+echo "SoP entries: ${entry_count}"
+
+if (( entry_count > THRESHOLD )); then
+  mkdir -p "${ARCHIVE_DIR}"
+  tmp_keep="$(mktemp)"
+
+  awk -v threshold="${THRESHOLD}" -v keep_file="${tmp_keep}" -v archive_dir="${ARCHIVE_DIR}" '
+    BEGIN { entry=0; archive_file="" }
+    /^## [0-9]{4}-[0-9]{2}-[0-9]{2} / {
+      entry++
+      if (entry > threshold) {
+        match($0, /^## ([0-9]{4})-([0-9]{2})-([0-9]{2})/, parts)
+        archive_file = archive_dir "/SoP-archive-" parts[1] "-" parts[2] ".md"
+      }
+    }
+    {
+      if (entry <= threshold) {
+        print $0 >> keep_file
+      } else {
+        print $0 >> archive_file
+      }
+    }
+  ' "${SOP_FILE}"
+
+  mv "${tmp_keep}" "${SOP_FILE}"
+  echo "Archived entries beyond ${THRESHOLD}."
+else
+  echo "SoP within threshold (${THRESHOLD})."
+fi
+
+if [[ -d "${HANDOFF_DIR}" ]]; then
+  dp_id="${DP_ID:-}"
+  if [[ -z "${dp_id}" && -f "${TASK_FILE}" ]]; then
+    dp_id="$(awk '/\*\*Current DP\*\*/ {sub(/.*\*\*Current DP\*\*:[[:space:]]*/, "", $0); print $0; exit}' "${TASK_FILE}" | awk '{print $1}')"
+    if [[ "${dp_id}" == *"["* || "${dp_id}" == *"]"* ]]; then
+      dp_id=""
+    fi
+  fi
+
+  deleted=0
+  kept=0
+
+  while IFS= read -r -d '' file; do
+    base="$(basename "${file}")"
+    if [[ -n "${dp_id}" && "${base}" == *"${dp_id}"* ]]; then
+      kept=$((kept + 1))
+      continue
+    fi
+    rm -f "${file}"
+    deleted=$((deleted + 1))
+  done < <(find "${HANDOFF_DIR}" -type f -mtime +7 -print0)
+
+  echo "Handoff cleanup: deleted ${deleted}, kept ${kept}."
+fi
+
+
+## tools/lint/context.sh
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Stela Context Linter (Manifest Supremacy)
+# Purpose: Verify that EVERY artifact listed in the Context Manifest exists.
+# Logic: If the Manifest claims it is context, it must be present.
+
+if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  REPO_ROOT="$(git rev-parse --show-toplevel)"
+else
+  echo "ERROR: Must be run inside a git repository." >&2
+  exit 1
+fi
+
+cd "$REPO_ROOT" || exit 1
+MANIFEST_PATH="ops/lib/manifests/CONTEXT.md"
+
+echo "Stela Context Verification"
+echo "Manifest: ops/lib/manifests/CONTEXT.md"
+echo "------------------------"
+
+errors=0
+warnings=0
+
+fail() {
+  echo "FAIL: $1" >&2
+  errors=$((errors+1))
+}
+
+warn() {
+  echo "WARN: $1" >&2
+  warnings=$((warnings+1))
+}
+
+# 1. Manifest Check
+if [[ ! -f "${MANIFEST_PATH}" ]]; then
+  echo "CRITICAL: Manifest not found at ${REPO_ROOT}/${MANIFEST_PATH}"
+  exit 2
+fi
+
+# 1.1 Context Hazard Guard (library directories must not be in the manifest)
+hazard_patterns=(
+  "docs/library/agents"
+  "docs/library/tasks"
+  "docs/library/skills"
+)
+
+hazard_found=0
+for pattern in "${hazard_patterns[@]}"; do
+  if grep -n -F "${pattern}" "${MANIFEST_PATH}" >/dev/null; then
+    hazard_found=1
+    break
+  fi
+done
+
+if [[ $hazard_found -eq 1 ]]; then
+  fail "CONTEXT HAZARD: must not be in the global context."
+fi
+
+# 2. Extraction (Grab everything inside backticks)
+# We do not filter by directory. If it is backticked in the Manifest, we check it.
+mapfile -t required_artifacts < <(awk -F'`' 'NF >= 3 { for (i = 2; i <= NF; i += 2) print $i }' "${MANIFEST_PATH}" | grep -v "^$")
+
+if (( ${#required_artifacts[@]} == 0 )); then
+  warn "Manifest appears empty (no backticked paths found)."
+else
+  echo "Verifying ${#required_artifacts[@]} artifacts..."
+fi
+
+# 3. Verification Loop
+for relative_path in "${required_artifacts[@]}"; do
+  # Handle special cases or command snippets if necessary.
+  # For now, we assume the Manifest strictly lists file paths in backticks.
+  
+  target="${REPO_ROOT}/${relative_path}"
+  
+  if [[ ! -e "${target}" ]]; then
+    fail "Missing required context: '${relative_path}'"
+  fi
+done
+
+# 4. Semantic Contamination Scan (canonical surfaces only)
+contamination_files=(
+  "PoT.md"
+  "SoP.md"
+  "TASK.md"
+  "docs/MAP.md"
+  "llms.txt"
+)
+
+contamination_patterns=(
+  '^<<< FILE BEGIN: docs/library/(agents|tasks|skills)/'
+  '^## docs/library/(agents|tasks|skills)/'
+  '^===== REPO DUMP ====='
+  '^===== REPO DUMP MANIFEST ====='
+)
+
+pattern_args=()
+for pattern in "${contamination_patterns[@]}"; do
+  pattern_args+=(-e "$pattern")
+done
+
+for file in "${contamination_files[@]}"; do
+  if [[ ! -f "${file}" ]]; then
+    warn "Semantic contamination scan skipped missing file: ${file}"
+    continue
+  fi
+  while IFS= read -r match; do
+    fail "Semantic contamination: ${file}:${match}"
+  done < <(grep -nE "${pattern_args[@]}" "${file}" 2>/dev/null || true)
+done
+
+echo "------------------------"
+if [[ $errors -eq 0 ]]; then
+  if [[ $warnings -eq 0 ]]; then
+    echo "OK: Context Complete."
+  else
+    echo "PASS (with $warnings warnings)."
+  fi
+  exit 0
+else
+  echo "FAILED: $errors missing artifact(s)."
+  exit 1
+fi
+
+
+## tools/lint/llms.sh
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+GEN_BIN="${REPO_ROOT}/ops/bin/llms"
+
+if [[ ! -x "${GEN_BIN}" ]]; then
+  echo "ERROR: llms not found or not executable at ${GEN_BIN}" >&2
+  exit 1
+fi
+
+required_files=(
+  "llms-small.txt"
+  "llms-full.txt"
+  "llms-ops.txt"
+  "llms-governance.txt"
+  "llms.txt"
+)
+
+missing=0
+for file in "${required_files[@]}"; do
+  if [[ ! -f "${REPO_ROOT}/${file}" ]]; then
+    echo "ERROR: missing ${file} in repo root" >&2
+    missing=1
+  fi
+done
+
+if (( missing > 0 )); then
+  exit 1
+fi
+
+work_dir="$(mktemp -d)"
+cleanup() {
+  rm -rf "${work_dir}"
+}
+trap cleanup EXIT
+
+"${GEN_BIN}" --out-dir="${work_dir}"
+
+diff -u "${REPO_ROOT}/llms-small.txt" "${work_dir}/llms-small.txt"
+diff -u "${REPO_ROOT}/llms-full.txt" "${work_dir}/llms-full.txt"
+diff -u "${REPO_ROOT}/llms-ops.txt" "${work_dir}/llms-ops.txt"
+diff -u "${REPO_ROOT}/llms-governance.txt" "${work_dir}/llms-governance.txt"
+diff -u "${REPO_ROOT}/llms.txt" "${work_dir}/llms.txt"
+
+echo "OK: llms bundles match generated output."
+
+
+## tools/lint/truth.sh
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Stela Truth Linter (PoT Guard)
+# Purpose: Enforce canon spelling, catch legacy drift, and police governance terminology.
+# Scope: Authored surfaces only (ops/, docs/, tools/, .github/, and root Canon).
+# Ignores: projects/ (Work), storage/ (Trash), public_html/ (Runtime).
+
+# 1. Forbidden Spellings (Hard Fail)
+# Typos of the platform name "Stela".
+forbidden_spellings=(
+  "Steela"
+  "Stila"
+  "Stella"
+  "Sheriff"
+  "Colonies"
+  "Crown"
+)
+
+# 2. Scope Definition (Expanded)
+# We now scan ops/ and the root Canon files, which were previously ignored.
+scan_dirs=(
+  "docs"
+  "tools"
+  ".github"
+  "ops"
+)
+
+root_files=(
+  "PoT.md"
+  "TASK.md"
+  "README.md"
+  "llms.txt"
+)
+
+if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  REPO_ROOT="$(git rev-parse --show-toplevel)"
+else
+  echo "ERROR: Must be run inside a git repository." >&2
+  exit 1
+fi
+
+cd "$REPO_ROOT" || exit 1
+
+echo "Stela Truth Verification"
+echo "------------------------"
+
+failures=0
+warnings=0
+
+fail() {
+  echo "FAIL: $1" >&2
+  echo "      $2" >&2
+  failures=$((failures+1))
+}
+
+warn() {
+  echo "WARN: $1" >&2
+  echo "      $2" >&2
+  warnings=$((warnings+1))
+}
+
+mapfile -t tracked_files < <(git ls-files "${scan_dirs[@]}" 2>/dev/null || true)
+files=()
+for file in "${tracked_files[@]}"; do
+  # Ignore unstaged deletions and other non-file tracked entries.
+  if [[ ! -f "$file" ]]; then
+    continue
+  fi
+  if [[ "$file" == "tools/lint/truth.sh" ]]; then
+    continue
+  fi
+  files+=("$file")
+done
+
+for file in "${root_files[@]}"; do
+  if [[ -f "$file" ]]; then
+    files+=("$file")
+  fi
+done
+
+if (( ${#files[@]} == 0 )); then
+  echo "OK (No files to scan)"
+  exit 0
+fi
+
+# Check 1: Forbidden Spellings (Hard Fail)
+echo "Scanning for typos (Stela)..."
+for token in "${forbidden_spellings[@]}"; do
+  # grep word boundary, ignore case
+  matches="$(grep -nH -I -E "\b${token}\b" "${files[@]}" 2>/dev/null || true)"
+  if [[ -n "$matches" ]]; then
+    fail "Forbidden spelling found: '$token'" "$matches"
+  fi
+done
+
+echo "------------------------"
+if [[ $failures -eq 0 ]]; then
+  if [[ $warnings -eq 0 ]]; then
+    echo "OK: Truth Integrity Verified."
+  else
+    echo "PASS (with $warnings warnings)."
+  fi
+  exit 0
+else
+  echo "FAILED: $failures error(s) detected."
+  exit 1
+fi
+
+
+## docs/ops/specs/binaries/llms.md
+# Technical Specification: ops/bin/llms
+
+## Technical Specifications
+- Manifest Parsing: reads `ops/lib/manifests/CONTEXT.md` for small and full bundles, plus `ops/lib/manifests/LLMS.md` for scope bundles.
+- Hazard Exclusion: rejects any bundle path that resolves to `docs/library/agents`, `docs/library/tasks`, or `docs/library/skills`.
+- Redaction: strips common secret patterns before writing output.
+- Output Bundles: generates `llms-small.txt`, `llms-full.txt`, `llms-ops.txt`, and `llms-governance.txt`, plus optional profile bundles.
+- Flat Truth Enforcement: always writes bundles to the repository root. If `--out-dir` is provided, it also writes a copy there.
+- Profile Support: supports `--profile=architect|security` with optional `--project=<id>` override.
+- Freshness Metadata: `llms.txt` includes HEAD short hash, HEAD commit timestamp, and the refresh command.
+
+## Requirements
+- Must run from the repository root.
+- Requires `ops/lib/manifests/CONTEXT.md` to exist and list valid files.
+- Requires `ops/lib/manifests/LLMS.md` to exist and list valid files.
+- Requires write access to the repository root and to any `--out-dir` target.
+
+## Usage
+- `./ops/bin/llms`
+- `./ops/bin/llms --profile=architect`
+- `./ops/bin/llms --project=example-project --profile=security`
+
+## Forensic Insight
+`ops/bin/llms` is the Context Bundler. Flat Truth requires the bundle to remain visible at the repository root to prevent a hidden, stale, or competing truth surface.
+
+
+## docs/ops/specs/binaries/map.md
+# Technical Specification: ops/bin/map
+
+## Technical Specifications
+- Deterministic update: rewrites only the auto-generated block inside `docs/MAP.md`.
+- Sentinel control: uses HTML comment markers to bound the writable block.
+- Directory index: emits a top-level index for `ops/`, `tools/`, `docs/`, and `storage/`.
+- Project discovery: enumerates any `projects/*/STELA.md` files found at runtime.
+- Check mode: `--check` exits non-zero if `docs/MAP.md` would change.
+
+## Requirements
+- Must run from the repository root.
+- Requires `docs/MAP.md` to contain the auto-generated sentinel block.
+- Requires write access to `docs/MAP.md` (unless `--check` is used).
+
+## Usage
+- `./ops/bin/map`
+- `./ops/bin/map --check`
+
+## Forensic Insight
+`ops/bin/map` is the Wayfinding Maintainer. It keeps a stable, auto-generated map block without overwriting manual narrative prose.
+
+
+## docs/ops/specs/binaries/context.md
+# Technical Specification: ops/bin/context
+
+## Technical Specifications
+- Executes `ops/bin/open --out=auto` and captures the OPEN artifact (plus PORCELAIN if present).
+- Executes `ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`.
+- Assembles a single archive under `storage/archives/context/`.
+- Archive contents: OPEN artifact, optional OPEN-PORCELAIN artifact, dump payload, dump manifest, optional dump tarball, and a metadata file.
+- Metadata file includes the DP id, HEAD hash, and included filenames.
+- Prints the relative archive path for SoP linkage.
+
+## Requirements
+- Must run from the repository root.
+- Requires `ops/bin/open` and `ops/bin/dump` to be executable.
+- Requires write access to `storage/archives/context/`.
+
+## Usage
+- `./ops/bin/context --dp=DP-OPS-0035`
+
+## Forensic Insight
+`ops/bin/context` is the Context Archivist. It produces a single ingestion archive so audits can trace exactly what was provided to the session.
+
+
+## docs/ops/specs/binaries/dump.md
+# Technical Specification: ops/bin/dump
+
+## Technical Specifications
+- Deterministic Selection: uses `git ls-files` to select tracked files for dumping.
+- Scope Controls: supports `--scope=platform|full|project` and requires `--target=<slug>` for project scope.
+- Refiners: supports `--include-dir`, `--exclude-dir`, and `--ignore-file` filters after scope selection.
+- Output Control: supports `--out=auto|path`, `--compress=tar.xz`, and `--bundle` for receipt-ready archives.
+- Binary Handling: supports `--include-binary=meta|raw|base64`, defaulting to metadata only.
+- Manifest: emits a manifest file alongside the dump payload for receipt tracking.
+
+## Requirements
+- Must run from the repository root with git available on PATH.
+- Requires `PoT.md`, `SoP.md`, `TASK.md`, and the `docs/`, `tools/`, `ops/`, and `.github/` directories to exist.
+- Requires `storage/dumps/` and `storage/handoff/` to be writable.
+
+## Usage
+- `./ops/bin/dump --scope=platform --format=chatgpt`
+- `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`
+- `./ops/bin/dump --scope=project --target=example-project --format=chatgpt`
+
+## Forensic Insight
+`ops/bin/dump` is the Observer. It forces a deterministic, auditable snapshot into the context window, preventing hidden files or untracked artifacts from reshaping the governance narrative.
+
+
+## docs/ops/specs/binaries/project.md
+# Technical Specification: ops/bin/project
+
+## Technical Specifications
+- Entry Point: accepts `work <id>` as the primary command.
+- Validation: enforces project ID validation via `ops/lib/scripts/project.sh`.
+- OPEN and Dump: calls `ops/bin/open` and `ops/bin/dump` to generate session artifacts.
+- Assembly: concatenates the OPEN artifact, the platform dump, and the project `STELA.md` into a single handoff file.
+- Output: writes `storage/handoff/PROJECT-<id>-<branch>-<hash>.txt` and prints the relative path.
+
+## Requirements
+- Must run from the repository root.
+- Requires `projects/<id>/STELA.md` to exist.
+- Requires `ops/bin/open`, `ops/bin/dump`, and `ops/lib/scripts/project.sh` to be executable.
+- Requires `storage/handoff/` and `storage/dumps/` to be writable.
+
+## Usage
+- `./ops/bin/project work example-project`
+
+## Forensic Insight
+`ops/bin/project` is the Workflow Orchestrator. Its deterministic assembly path prevents project files from overriding platform law and keeps the governance wrapper intact.
+
+

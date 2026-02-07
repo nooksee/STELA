@@ -34,6 +34,21 @@
 ./ops/bin/dump --scope=platform --out=auto --bundle
 ~~~
 
+### Map (Auto-Generated Index)
+~~~bash
+# Refresh the auto-generated MAP block
+./ops/bin/map
+
+# Check mode (non-zero if MAP is stale)
+./ops/bin/map --check
+~~~
+
+### Context Snapshot (Context Archive)
+~~~bash
+# Assemble OPEN + DUMP archive for SoP linkage
+./ops/bin/context --dp=DP-OPS-0035
+~~~
+
 ### Documentation (Help)
 ~~~bash
 ./ops/bin/help              # Show menu

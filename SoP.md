@@ -1,5 +1,12 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-07 21:35:35 UTC — DP-OPS-0035 Context Lifecycle Hardening (Semantic Lint, Context Snapshot, Map, Scope Bundles)
+- Added `ops/bin/map` and `ops/bin/context` with specifications for MAP auto-block maintenance and context archive assembly.
+- Added `ops/lib/manifests/LLMS.md` plus new scope bundles (`llms-ops.txt`, `llms-governance.txt`) and HEAD-derived `llms.txt` freshness metadata.
+- Hardened context lint with semantic contamination detection and expanded llms lint coverage.
+- Updated `docs/MAP.md` auto-generated block and `docs/MANUAL.md` Top Commands for map and snapshot workflows.
+- Context Snapshot archive path pattern for this DP: `storage/archives/context/context-DP-OPS-0035-work-context-lifecycle-hardening-4605e6fd3.tar.xz`.
+
 ## 2026-02-07 18:11:29 UTC — DP-OPS-0034 Agent System Hardening (Immune System)
 - Created `docs/library/AGENTS.md` promotion ledger and workflow template.
 - Added `tools/lint/agent.sh` immunological linter for agent surfaces.

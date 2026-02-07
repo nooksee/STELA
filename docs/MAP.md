@@ -29,3 +29,15 @@ This document defines the specific surfaces that must be loaded to preserve gove
 *Policy of Truth governs all scopes without parallel authority.*
 * **Single Authority:** PoT is the sole authority across `ops/`, `docs/`, and `projects/`.
 * **Project Position:** Projects are payloads operating under PoT, not a separate provider or consumer tier.
+
+## 6. Auto-Generated Index
+<!-- MAP-GENERATED:BEGIN -->
+### Directory Index
+- ops/ - Run (binaries, manifests, automation).
+- tools/ - Lints and verification tooling.
+- docs/ - Manuals, specs, and governance surfaces.
+- storage/ - Local artifacts and archives (untracked).
+
+### Projects
+No projects discovered.
+<!-- MAP-GENERATED:END -->
