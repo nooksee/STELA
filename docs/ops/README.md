@@ -15,12 +15,12 @@ Project Factory (`ops/bin/project`) orchestrates project intake and lifecycle al
 ## 3. Specifications
 The authoritative technical specifications for operational binaries live under `docs/ops/specs/`.
 
-- `docs/ops/specs/dump.md`
-- `docs/ops/specs/help.md`
-- `docs/ops/specs/llms.md`
-- `docs/ops/specs/open.md`
-- `docs/ops/specs/project.md`
-- `docs/ops/specs/prune.md`
+- `docs/ops/specs/binaries/dump.md`
+- `docs/ops/specs/binaries/help.md`
+- `docs/ops/specs/binaries/llms.md`
+- `docs/ops/specs/binaries/open.md`
+- `docs/ops/specs/binaries/project.md`
+- `docs/ops/specs/binaries/prune.md`
 
 ## 4. Interface Contract
 The Ops Kernel is the executable companion to docs. Documentation explains and justifies; ops runs. Any new platform capability must ship as an ops binary or script with a corresponding doc pointer, not as procedural text in docs.

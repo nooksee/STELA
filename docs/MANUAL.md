@@ -1,6 +1,6 @@
-# Operator Manual (Command Console)
+# System Manual (Command Console)
 
-## 0. The Loop (Mechanical Workflow)
+## 0. Mechanical Workflow
 **Execution Cycle:**
 1.  **Start:** `./ops/bin/open` (Generates prompt + freshness gate).
 2.  **Capture:** `./ops/bin/dump` (Serializes state).
@@ -11,7 +11,7 @@
 
 ---
 
-## 1. Top Commands (Cheat Sheet)
+## 1. Top Commands
 
 ### Session Start (Open)
 ~~~bash
@@ -79,8 +79,8 @@ ops/lib/scripts/skill.sh promote storage/handoff/skill-draft-YYYYMMDD-HHMMSS-ski
 ---
 
 ## 3. Scope Definition
-* **Platform:** `ops/`, `docs/`, `tools/`, `.github/`. (The OS).
-* **Project:** `projects/`. (The Payload).
+* **Platform:** `ops/`, `docs/`, `tools/`, `.github/`. (OS).
+* **Project:** `projects/`. (Payload).
 * **Rule:** Default to `--scope=platform` unless the DP explicitly targets a project.
 
 ---
@@ -90,3 +90,4 @@ ops/lib/scripts/skill.sh promote storage/handoff/skill-draft-YYYYMMDD-HHMMSS-ski
 * **Active Contract:** [`../../TASK.md`](../../TASK.md)
 * **History:** [`../../SoP.md`](../../SoP.md)
 * **Artifacts:** `storage/handoff/` (Results), `storage/dumps/` (State).
+* **Archives:** `storage/archives/` (Museum).

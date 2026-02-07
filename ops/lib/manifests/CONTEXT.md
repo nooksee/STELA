@@ -16,8 +16,8 @@ Mandatory pre-session check: run `tools/lint/context.sh`.
 ## Full Bundle (Supporting Surfaces)
 Full bundle adds these supporting surfaces on top of the Small bundle.
 - `docs/library/INDEX.md` — Curated operator surface index.
-- `docs/library/MANUAL.md` — Command mechanics and cheat sheet.
-- `docs/library/MAP.md` — Context wayfinding map.
+- `docs/MANUAL.md` — Command mechanics and cheat sheet.
+- `docs/MAP.md` — Context wayfinding map.
 - `docs/GOVERNANCE.md` — Project governance and non-negotiables.
 - `docs/ops/registry/PROJECTS.md` — Project registry (SSOT).
 
@@ -33,6 +33,6 @@ Full bundle adds these supporting surfaces on top of the Small bundle.
 - Rollback: Re-run `ops/bin/open` and verify against this manifest.
 
 ## Canon Links
-- docs/library/MANUAL.md
-- docs/library/MAP.md
+- docs/MANUAL.md
+- docs/MAP.md
 - PoT.md

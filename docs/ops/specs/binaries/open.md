@@ -9,7 +9,7 @@
 
 ## Requirements
 - Must run from the repository root with git available on PATH.
-- Requires `PoT.md`, `SoP.md`, `TASK.md`, `docs/INDEX.md`, `docs/library/MANUAL.md`, `docs/library/MAP.md`, and `ops/lib/manifests/CONTEXT.md` to exist.
+- Requires `PoT.md`, `SoP.md`, `TASK.md`, `docs/INDEX.md`, `docs/MANUAL.md`, `docs/MAP.md`, and `ops/lib/manifests/CONTEXT.md` to exist.
 - Requires the `storage/handoff/` directory to be writable.
 
 ## Usage

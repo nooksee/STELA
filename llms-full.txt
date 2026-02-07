@@ -26,8 +26,8 @@ Filing:
 - `PoT.md` — constitution, staffing, jurisdiction, and enforcement (SSOT).
 - `TASK.md` — active work surface and DP contract.
 - `SoP.md` — history ledger and shipment record.
-- `docs/library/MANUAL.md` — operator mechanics.
-- `docs/library/MAP.md` — context wayfinding.
+- `docs/MANUAL.md` — operator mechanics.
+- `docs/MAP.md` — context wayfinding.
 - `ops/lib/manifests/CONTEXT.md` — required context set.
 - `llms.txt` — discovery entry point.
 
@@ -71,8 +71,8 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - SoP.md
 - TASK.md
 - ops/lib/manifests/CONTEXT.md
-- docs/library/MANUAL.md
-- docs/library/MAP.md
+- docs/MANUAL.md
+- docs/MAP.md
 
 ### 4.4 Entry Points
 - llms.txt
@@ -180,7 +180,7 @@ Canon surface definitions live in `PoT.md`.
 - [ ] `PoT.md` (constitution + jurisdiction)
 - [ ] `SoP.md` (merge-grade readiness ledger)
 - [ ] `ops/lib/manifests/CONTEXT.md` (required context set)
-- [ ] `docs/library/MAP.md` (continuity terrain)
+- [ ] `docs/MAP.md` (continuity terrain)
 
 (OPEN is for Integrator/DP Writer state refresh; Worker does not read OPEN).
 DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
@@ -437,11 +437,11 @@ When a DP is **complete** (merged) or **ended** (canceled/superseded):
 ## 2. State & Continuity
 - SoP.md - Historical ledger (State of Play).
 - TASK.md - Active work surface, DP contract, and thread log.
-- docs/library/MAP.md - Wayfinding for cross-session state.
+- docs/MAP.md - Wayfinding for cross-session state.
 - ops/lib/manifests/CONTEXT.md - Required context artifact checklist.
 
 ## 3. Operations & Manuals
-- docs/library/MANUAL.md - Command mechanics and cheat sheet.
+- docs/MANUAL.md - Command mechanics.
 - docs/library/INDEX.md - Curated index of approved operator surfaces.
 - docs/library/SKILLS.md - Skills promotion template and packet ledger.
 - docs/INDEX.md - Documentation front door.
@@ -471,8 +471,8 @@ state-of-play       | SoP (History Ledger)      | SoP.md
 active-contract     | TASK (Dispatch Packet)    | TASK.md
 
 # --- 3. The Console (Operator Interfaces) ---
-operator-manual     | Operator Console          | docs/library/MANUAL.md
-continuity-map      | State Topology            | docs/library/MAP.md
+operator-manual     | Operator Console          | docs/MANUAL.md
+continuity-map      | State Topology            | docs/MAP.md
 quickstart          | Onboarding & Workflow     | docs/QUICKSTART.md
 docs-front-door     | Docs Root Index           | docs/INDEX.md
 
@@ -513,7 +513,7 @@ task-b-task-09      | Task: Refresh + Conform DP  | docs/library/tasks/B-TASK-09
 task-b-task-10      | Task: Refresh + Audit       | docs/library/tasks/B-TASK-10.md
 
 
-## docs/library/MANUAL.md
+## docs/MANUAL.md
 # Operator Manual (Command Console)
 
 ## 0. The Loop (Mechanical Workflow)
@@ -608,7 +608,7 @@ ops/lib/scripts/skill.sh promote storage/handoff/skill-draft-YYYYMMDD-HHMMSS-ski
 * **Artifacts:** `storage/handoff/` (Results), `storage/dumps/` (State).
 
 
-## docs/library/MAP.md
+## docs/MAP.md
 # Continuity Map (State Persistence)
 
 ## 0. Philosophy

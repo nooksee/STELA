@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 SKILL_FILE="${REPO_ROOT}/docs/library/SKILLS.md"
-INDEX_FILE="${REPO_ROOT}/docs/library/INDEX.md"
+SKILLS_REGISTRY="${REPO_ROOT}/docs/ops/registry/SKILLS.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
 SKILLS_DIR="${REPO_ROOT}/docs/library/skills"
@@ -52,7 +52,7 @@ require_file() {
 
 require_repo_root() {
   require_file "$SKILL_FILE"
-  require_file "$INDEX_FILE"
+  require_file "$SKILLS_REGISTRY"
   require_file "$TASK_FILE"
   require_file "$CONTEXT_MANIFEST"
 }
@@ -277,7 +277,7 @@ next_skill_id() {
         max_id=$((10#$num))
       fi
     fi
-  done < <(grep -oE 'S-LEARN-[0-9]+' "$INDEX_FILE" "$SKILL_FILE" 2>/dev/null || true)
+  done < <(grep -oE 'S-LEARN-[0-9]+' "$SKILLS_REGISTRY" 2>/dev/null || true)
 
   local next_id=$((max_id + 1))
   local next_id_fmt
@@ -325,41 +325,31 @@ insert_into_section() {
   mv "$tmp" "$target"
 }
 
-insert_skill_index_entry() {
-  local entry="$1"
+insert_skill_registry_entry() {
+  local row="$1"
   local tmp
   tmp="$(mktemp)"
 
-  if grep -Fq "|" <<< "$entry"; then
-    :
-  else
-    die "Invalid index entry format"
-  fi
-
-  if ! awk -v entry="$entry" '
-    BEGIN { in_section=0; inserted=0 }
+  if ! awk -v row="$row" '
+    BEGIN { inserted=0 }
     {
-      if ($0 ~ /^# --- 5\. Skills /) { in_section=1; print; next }
-      if (in_section && $0 ~ /^# --- /) {
-        if (!inserted) { print entry; inserted=1 }
-        in_section=0
-      }
       print
+      if (!inserted && $0 ~ /^\|[[:space:]]*---/) {
+        print row
+        inserted=1
+      }
     }
-    END {
-      if (!inserted && in_section) { print entry; inserted=1 }
-      if (!inserted) { exit 2 }
-    }
-  ' "$INDEX_FILE" > "$tmp"; then
+    END { if (!inserted) exit 2 }
+  ' "$SKILLS_REGISTRY" > "$tmp"; then
     status=$?
     rm -f "$tmp"
     if [[ "$status" -eq 2 ]]; then
-      die "Skills section not found in docs/library/INDEX.md"
+      die "Skills registry table not found in docs/ops/registry/SKILLS.md"
     fi
-    die "Failed to update docs/library/INDEX.md"
+    die "Failed to update docs/ops/registry/SKILLS.md"
   fi
 
-  mv "$tmp" "$INDEX_FILE"
+  mv "$tmp" "$SKILLS_REGISTRY"
 }
 
 validate_candidate() {
@@ -624,14 +614,13 @@ cmd_promote() {
   awk -v header="# ${skill_id}: ${title}" 'NR==1 { print header; next } { print }' "$draft_path" > "$tmp_skill"
   mv "$tmp_skill" "$skill_path"
 
-  local index_entry
-  index_entry="skill-${skill_id,,} | Skill: ${title} | docs/library/skills/${skill_id}.md"
-
-  if grep -Fq "docs/library/skills/${skill_id}.md" "$INDEX_FILE"; then
-    die "docs/library/INDEX.md already contains ${skill_id}"
+  if grep -Fq "| ${skill_id} |" "$SKILLS_REGISTRY"; then
+    die "docs/ops/registry/SKILLS.md already contains ${skill_id}"
   fi
 
-  insert_skill_index_entry "$index_entry"
+  local registry_row
+  registry_row="| ${skill_id} | Skill: ${title} | docs/library/skills/${skill_id}.md | |"
+  insert_skill_registry_entry "$registry_row"
 
   local timestamp
   timestamp="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
@@ -662,7 +651,7 @@ EOF
 <a id="${anchor_id}"></a>
 ### Promotion Packet: ${skill_id} - ${title}
 - Candidate name: ${title}
-- Proposed Skill ID: ${skill_id} (rule: choose the next available numeric ID not already present in docs/library/skills or registered in docs/library/INDEX.md)
+  - Proposed Skill ID: ${skill_id} (rule: choose the next available numeric ID not already present in docs/library/skills or registered in docs/ops/registry/SKILLS.md)
 - Scope: production payloads only; not platform maintenance
 - Invocation guidance: Use this skill when a DP explicitly requests ${title}. Apply the solution as documented in docs/library/skills/${skill_id}.md.
 - Drift preventers:
@@ -671,7 +660,7 @@ EOF
   - Negative check: Do not add Skills to ops/lib/manifests/CONTEXT.md
 - Definition of Done:
   - ${skill_id} created under docs/library/skills and matches scope and drift preventers
-  - docs/library/INDEX.md updated with a stable topic key and correct path
+  - docs/ops/registry/SKILLS.md updated with the new skill entry
   - SoP.md updated if canon or governance surfaces changed
   - Proof bundle updated in storage/handoff with diff outputs
 - Verification (capture command output in RESULTS):
@@ -740,7 +729,7 @@ EOF
 <a id="${anchor_id}"></a>
 ### Promotion Packet: ${skill_id} - ${name}
 - Candidate name: ${name}
-- Proposed Skill ID: ${skill_id} (rule: choose the next available numeric ID not already present in docs/library/skills or registered in docs/library/INDEX.md)
+  - Proposed Skill ID: ${skill_id} (rule: choose the next available numeric ID not already present in docs/library/skills or registered in docs/ops/registry/SKILLS.md)
 - Scope: production payloads only; not platform maintenance
 - Invocation guidance: Use this skill when ${context}. Apply the solution: ${solution}.
 - Drift preventers:
@@ -749,7 +738,7 @@ EOF
   - Negative check: Do not add Skills to ops/lib/manifests/CONTEXT.md
 - Definition of Done:
   - ${skill_id} created under docs/library/skills and matches scope and drift preventers
-  - docs/library/INDEX.md updated with a stable topic key and correct path
+  - docs/ops/registry/SKILLS.md updated with the new skill entry
   - SoP.md updated if canon or governance surfaces changed
   - Proof bundle updated in storage/handoff with diff outputs
 - Verification (capture command output in RESULTS):

@@ -16,7 +16,7 @@ This document defines the specific surfaces that must be loaded to preserve gove
 
 ## 3. The Interface (Wayfinding)
 *Operator-facing manuals for navigation.*
-* **Command Console:** [`MANUAL.md`](MANUAL.md) — Mechanics, cheat sheets, and top commands.
+* **Command Console:** [`MANUAL.md`](MANUAL.md) — Mechanics and top commands.
 * **Curated Index:** [`INDEX.md`](INDEX.md) — The approved library of operator guidance.
 
 ## 4. The Bridge (Ingestion Tools)
