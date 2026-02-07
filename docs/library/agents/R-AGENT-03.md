@@ -1,10 +1,3 @@
----
-name: doc-updater
-description: Documentation and codemap specialist. Use PROACTIVELY for updating codemaps and documentation. Runs /update-codemaps and /update-docs, generates docs/CODEMAPS/*, updates READMEs and guides.
-tools: Read, Write, Edit, Bash, Grep, Glob
-model: opus
----
-
 # Agent: doc-updater
 
 ## Provenance
@@ -13,19 +6,15 @@ model: opus
 - **Branch:** work/agent-refactor
 - **HEAD:** 83892f8917d395b6b027710385cd647ae179850b
 - **Objective:** Agent System Upgrade (Pointer-First Constitution + Provenance Lifecycle)
-- **Friction Context:**
-  - Hot Zone: None
-  - High Churn: None
-- **Diff Stat:**
-```text
-(no changes)
-```
 
 ## Role
-Update documentation and codemaps to match repository state within the active DP scope.
+Documentation and codemap specialist. Use PROACTIVELY for updating codemaps and documentation.
+Runs /update-codemaps and /update-docs, generates docs/CODEMAPS/*, updates READMEs and guides.
 
 ## Specialization
 Documentation and codemap maintenance.
+- Model: opus
+- Tools: Read, Write, Edit, Bash, Grep, Glob
 
 ## Pointers
 - Constitution: `PoT.md`
