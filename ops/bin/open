@@ -85,8 +85,8 @@ required_files=(
   "SoP.md"
   "TASK.md"
   "docs/INDEX.md"
-  "docs/library/MANUAL.md"
-  "docs/library/MAP.md"
+  "docs/MANUAL.md"
+  "docs/MAP.md"
   "ops/lib/manifests/CONTEXT.md"
 )
 
@@ -160,8 +160,8 @@ Do not:
 - TASK.md
 - SoP.md
 - docs/INDEX.md
-- docs/library/MANUAL.md
-- docs/library/MAP.md
+- docs/MANUAL.md
+- docs/MAP.md
 - ops/lib/manifests/CONTEXT.md
 
 [DUMP]

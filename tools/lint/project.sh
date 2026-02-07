@@ -19,11 +19,16 @@ fi
 
 cd "$REPO_ROOT" || exit 1
 
-INDEX_FILE="docs/library/INDEX.md"
-if [[ ! -f "$INDEX_FILE" ]]; then
-  echo "ERROR: Missing library index at ${INDEX_FILE}" >&2
-  exit 1
-fi
+AGENTS_REGISTRY="docs/ops/registry/AGENTS.md"
+SKILLS_REGISTRY="docs/ops/registry/SKILLS.md"
+TASKS_REGISTRY="docs/ops/registry/TASKS.md"
+
+for registry in "$AGENTS_REGISTRY" "$SKILLS_REGISTRY" "$TASKS_REGISTRY"; do
+  if [[ ! -f "$registry" ]]; then
+    echo "ERROR: Missing registry at ${registry}" >&2
+    exit 1
+  fi
+done
 
 mapfile -t stela_files < <(find "${REPO_ROOT}/projects" -maxdepth 2 -name "STELA.md" -print | sort)
 
@@ -35,17 +40,38 @@ fi
 declare -A valid_agents
 while IFS= read -r token; do
   valid_agents["$token"]=1
-done < <(rg -o "R-AGENT-[0-9]{2,}" "$INDEX_FILE" | sort -u)
+done < <(awk -F'|' '
+  $0 ~ /^\\|/ && $0 !~ /^\\|[[:space:]]*---/ {
+    id=$2
+    gsub(/^[[:space:]]+/, "", id)
+    gsub(/[[:space:]]+$/, "", id)
+    if (id != "ID" && id != "") print id
+  }
+' "$AGENTS_REGISTRY" | sort -u)
 
 declare -A valid_tasks
 while IFS= read -r token; do
   valid_tasks["$token"]=1
-done < <(rg -o "B-TASK-[0-9]{2,}" "$INDEX_FILE" | sort -u)
+done < <(awk -F'|' '
+  $0 ~ /^\\|/ && $0 !~ /^\\|[[:space:]]*---/ {
+    id=$2
+    gsub(/^[[:space:]]+/, "", id)
+    gsub(/[[:space:]]+$/, "", id)
+    if (id != "ID" && id != "") print id
+  }
+' "$TASKS_REGISTRY" | sort -u)
 
 declare -A valid_skills
 while IFS= read -r token; do
   valid_skills["$token"]=1
-done < <(rg -o "S-LEARN-[0-9]{2,}" "$INDEX_FILE" | sort -u)
+done < <(awk -F'|' '
+  $0 ~ /^\\|/ && $0 !~ /^\\|[[:space:]]*---/ {
+    id=$2
+    gsub(/^[[:space:]]+/, "", id)
+    gsub(/[[:space:]]+$/, "", id)
+    if (id != "ID" && id != "") print id
+  }
+' "$SKILLS_REGISTRY" | sort -u)
 
 failures=0
 

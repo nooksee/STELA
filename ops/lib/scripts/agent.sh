@@ -5,7 +5,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 AGENTS_DIR="${REPO_ROOT}/docs/library/agents"
 AGENTS_REGISTRY="${REPO_ROOT}/docs/ops/registry/AGENTS.md"
-INDEX_FILE="${REPO_ROOT}/docs/library/INDEX.md"
 SOP_FILE="${REPO_ROOT}/SoP.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
@@ -48,7 +47,6 @@ require_file() {
 }
 
 require_repo_root() {
-  require_file "$INDEX_FILE"
   require_file "$SOP_FILE"
   require_file "$TASK_FILE"
   require_file "$CONTEXT_MANIFEST"
@@ -405,37 +403,6 @@ next_agent_id() {
   printf 'R-AGENT-%s' "$next_id_fmt"
 }
 
-insert_agent_index_entry() {
-  local entry="$1"
-  local tmp
-  tmp="$(mktemp)"
-
-  if ! awk -v entry="$entry" '
-    BEGIN { in_section=0; inserted=0 }
-    {
-      if ($0 ~ /^# --- 6\. Agents /) { in_section=1; print; next }
-      if (in_section && $0 ~ /^# --- /) {
-        if (!inserted) { print entry; inserted=1 }
-        in_section=0
-      }
-      print
-    }
-    END {
-      if (!inserted && in_section) { print entry; inserted=1 }
-      if (!inserted) { exit 2 }
-    }
-  ' "$INDEX_FILE" > "$tmp"; then
-    status=$?
-    rm -f "$tmp"
-    if [[ "$status" -eq 2 ]]; then
-      die "Agents section not found in docs/library/INDEX.md"
-    fi
-    die "Failed to update docs/library/INDEX.md"
-  fi
-
-  mv "$tmp" "$INDEX_FILE"
-}
-
 insert_registry_entry() {
   local row="$1"
   local tmp
@@ -767,15 +734,6 @@ cmd_promote() {
   ' "$draft_path" > "$tmp_agent" || die "Failed to rewrite draft header"
 
   mv "$tmp_agent" "$agent_path"
-
-  local index_entry
-  index_entry="agent-${agent_id,,} | Agent: ${name} | docs/library/agents/${agent_id}.md"
-
-  if grep -Fq "docs/library/agents/${agent_id}.md" "$INDEX_FILE"; then
-    die "docs/library/INDEX.md already contains ${agent_id}"
-  fi
-
-  insert_agent_index_entry "$index_entry"
 
   if grep -Fq "| ${agent_id} |" "$AGENTS_REGISTRY"; then
     die "docs/ops/registry/AGENTS.md already contains ${agent_id}"

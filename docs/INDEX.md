@@ -2,7 +2,7 @@
 
 ## 0. Primary Read-in (Start Here)
 * [QUICKSTART.md](QUICKSTART.md) — The onboarding sequence and workflow doctrine.
-* [library/MANUAL.md](library/MANUAL.md) — Operator command cheat sheet and mechanics.
+* [MANUAL.md](MANUAL.md) — Operator command and mechanics.
 
 ## 1. The Constitution (Law & Logic)
 * [../PoT.md](../PoT.md) — Policy of Truth: constitution, staffing, jurisdiction, and enforcement.
@@ -15,5 +15,5 @@
 ## 3. Operations & Maps (Deep Dives)
 * [ops/README.md](ops/README.md) — Ops Kernel architecture and subsystem overview.
 * [library/INDEX.md](library/INDEX.md) — Curated library of operator guides.
-* [library/MAP.md](library/MAP.md) — Continuity wayfinding for cross-session state.
+* [MAP.md](MAP.md) — Continuity wayfinding for cross-session state.
 * [CONTEXT.md](CONTEXT.md) — Definition of required context artifacts.

@@ -25,8 +25,8 @@ Filing:
 - `PoT.md` — constitution, staffing, jurisdiction, and enforcement (SSOT).
 - `TASK.md` — active work surface and DP contract.
 - `SoP.md` — history ledger and shipment record.
-- `docs/library/MANUAL.md` — operator mechanics.
-- `docs/library/MAP.md` — context wayfinding.
+- `docs/MANUAL.md` — operator mechanics.
+- `docs/MAP.md` — context wayfinding.
 - `ops/lib/manifests/CONTEXT.md` — required context set.
 - `llms.txt` — discovery entry point.
 
@@ -70,8 +70,8 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - SoP.md
 - TASK.md
 - ops/lib/manifests/CONTEXT.md
-- docs/library/MANUAL.md
-- docs/library/MAP.md
+- docs/MANUAL.md
+- docs/MAP.md
 
 ### 4.4 Entry Points
 - llms.txt

@@ -4,5 +4,5 @@ Current: none
 
 ## Registry
 
-| project_id | name | created | status | root | notes |
-| --- | --- | --- | --- | --- | --- |
+| ID | Name | Root | Status | Notes |
+| --- | --- | --- | --- | --- |

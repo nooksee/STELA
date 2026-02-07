@@ -1,5 +1,12 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-07 15:41:19 UTC — DP-OPS-0033 Registry Consolidation and Agent Testing Regime
+- Created SSOT registries for skills and tasks in docs/ops/registry.
+- Refactored docs/library/INDEX.md into navigation-only links for registries.
+- Updated agent and skill scripts to write to registry files only.
+- Updated library and project linters to read from registry files.
+- Added tools/test/agent.sh for agent pointer integrity checks.
+
 ## 2026-02-07 13:07:38 UTC — DP-OPS-0032 Harden TASK DP Boilerplate and Align DP Lint
 - Hardened TASK.md DP boilerplate with explicit DP scope markers and sanitized placeholders.
 - Updated tools/lint/dp.sh to accept decimal DP headings alongside the legacy format and expanded tests for both formats.

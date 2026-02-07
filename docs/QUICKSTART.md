@@ -7,7 +7,7 @@ This repo is governed. The fastest way to succeed here is to follow the rules *e
 1. `PoT.md` — The Policy of Truth (Constitution + Structure).
 2. `SoP.md` — The History Ledger (State of Play).
 3. `TASK.md` — The Active Work Surface (Current Objective).
-4. `docs/library/MANUAL.md` — Command Reference.
+4. `docs/MANUAL.md` — Command Reference.
 
 **Agents (AI):**
 - Follow the jurisdictional read-in sequence defined in `PoT.md`.

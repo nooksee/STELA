@@ -18,7 +18,7 @@ Canon surface definitions live in `PoT.md`.
 - [ ] `PoT.md` (constitution + jurisdiction)
 - [ ] `SoP.md` (merge-grade readiness ledger)
 - [ ] `ops/lib/manifests/CONTEXT.md` (required context set)
-- [ ] `docs/library/MAP.md` (continuity terrain)
+- [ ] `docs/MAP.md` (continuity terrain)
 
 (OPEN is for Integrator/DP Writer state refresh; Worker does not read OPEN).
 DISPOSABLE ARTIFACTS (chat logs, etc.) MUST NOT BE REFERENCED OR INCLUDED.
