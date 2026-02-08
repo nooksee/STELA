@@ -1,5 +1,9 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-08 16:30:36 UTC — DP-OPS-0037 Task Import and Porting
+- Classified legacy task imports in `docs/library/tasks/imports/`; no new canon tasks or skills promoted (imports were duplicates or obsolete for current tooling).
+- Removed obsolete and duplicate imports from `docs/library/tasks/imports/` after verification.
+
 ## 2026-02-08 02:02:24 UTC — DP-OPS-0036 Task System Upgrade (Pointer-First Constitution + Harvest/Promote + Lint)
 - Added Task Promotion Ledger at `docs/library/TASKS.md` with doctrine, packet schema, and append-only logs.
 - Added `ops/lib/scripts/task.sh` harvest, promote, and check workflows aligned with agent and skill automation.
