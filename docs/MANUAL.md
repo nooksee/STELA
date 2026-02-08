@@ -78,6 +78,20 @@ ops/lib/scripts/skill.sh harvest --name "skill-title" --context "when to use it"
 ops/lib/scripts/skill.sh promote storage/handoff/skill-draft-YYYYMMDD-HHMMSS-skill-title.md
 ~~~
 
+### Tasks (Harvest + Promote)
+Tasks remain on-demand only and must not be placed in `ops/lib/manifests/CONTEXT.md`.
+
+~~~bash
+# Enforce Tasks Context Hazard
+ops/lib/scripts/task.sh check
+
+# Draft a task candidate
+ops/lib/scripts/task.sh harvest --id B-TASK-01 --name "task-title" --objective "one sentence objective"
+
+# Promote the draft into docs/library/tasks and register it
+ops/lib/scripts/task.sh promote storage/handoff/task-draft-B-TASK-01-YYYYMMDD-task-title.md
+~~~
+
 ---
 
 ## 2. Dispatch Packet (DP) Mechanics

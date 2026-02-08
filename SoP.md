@@ -1,5 +1,12 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-08 02:02:24 UTC — DP-OPS-0036 Task System Upgrade (Pointer-First Constitution + Harvest/Promote + Lint)
+- Added Task Promotion Ledger at `docs/library/TASKS.md` with doctrine, packet schema, and append-only logs.
+- Added `ops/lib/scripts/task.sh` harvest, promote, and check workflows aligned with agent and skill automation.
+- Added `tools/lint/task.sh` and integrated Task linting into `tools/lint/library.sh`.
+- Refactored B-TASK-01 through B-TASK-10 into the pointer-first schema with provenance, pointers, execution logic, and scope boundaries.
+- Updated `docs/MANUAL.md` to document Task workflows and the JIT-only hazard.
+
 ## 2026-02-07 21:35:35 UTC — DP-OPS-0035 Context Lifecycle Hardening (Semantic Lint, Context Snapshot, Map, Scope Bundles)
 - Added `ops/bin/map` and `ops/bin/context` with specifications for MAP auto-block maintenance and context archive assembly.
 - Added `ops/lib/manifests/LLMS.md` plus new scope bundles (`llms-ops.txt`, `llms-governance.txt`) and HEAD-derived `llms.txt` freshness metadata.

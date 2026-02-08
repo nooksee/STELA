@@ -44,6 +44,10 @@ if ! bash tools/lint/agent.sh; then
   fail "Agent linter failed. See output above."
 fi
 
+if ! bash tools/lint/task.sh; then
+  fail "Task linter failed. See output above."
+fi
+
 echo "Stela Library Verification"
 echo "Registry: docs/ops/registry/AGENTS.md"
 echo "Registry: docs/ops/registry/SKILLS.md"

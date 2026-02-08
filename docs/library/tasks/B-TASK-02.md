@@ -1,59 +1,34 @@
-# Verification Command
+# Task: Verification Command
 
-Run comprehensive verification on current codebase state.
+## Provenance
+- **Captured:** 2026-02-08 01:51:44 UTC
+- **DP-ID:** DP-OPS-0036
+- **Branch:** work/task-hardening-0036
+- **HEAD:** eeafcc36cda18155944a5441eaebe7fba4856cf8
+- **Objective:** Bring the Task subsystem to pointer-first parity with Agents and Skills by adding a Task promotion ledger, a harvest and promote workflow, and lint enforcement, while refactoring B-TASK-01 through B-TASK-10 to the strict schema and aligning the registry.
 
-## Instructions
+## Orchestration
+- **Primary Agent:** R-AGENT-02 (code-reviewer)
+- **Supporting Agents:** (none)
 
-Execute verification in this exact order:
+## Pointers
+- **Constitution:** `PoT.md`
+- **Governance:** `docs/GOVERNANCE.md`
+- **Contract:** `TASK.md`
+- **Registry:** `docs/ops/registry/TASKS.md`
+- **Toolchain:** `tools/verify.sh`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/library.sh`, `tools/lint/dp.sh`
+- **JIT Skills:** `docs/library/skills/S-LEARN-01.md`
+- **Reference Docs:** `docs/MANUAL.md`
 
-1. **Build Check**
-   - Run the build command for this project
-   - If it fails, report errors and STOP
+## Execution Logic
+1. Run `bash tools/verify.sh` and stop if it fails.
+2. Run `bash tools/lint/context.sh` and stop if it fails.
+3. If canon or governance surfaces changed, run `bash tools/lint/truth.sh` and stop if it fails.
+4. Run `bash tools/lint/library.sh` and stop if it fails.
+5. If the DP format is in scope, run `bash tools/lint/dp.sh --test` and stop if it fails.
+6. Record pass or fail outcomes in RESULTS.
 
-2. **Type Check**
-   - Run TypeScript/type checker
-   - Report all errors with file:line
-
-3. **Lint Check**
-   - Run linter
-   - Report warnings and errors
-
-4. **Test Suite**
-   - Run all tests
-   - Report pass/fail count
-   - Report coverage percentage
-
-5. **Console.log Audit**
-   - Search for console.log in source files
-   - Report locations
-
-6. **Git Status**
-   - Show uncommitted changes
-   - Show files modified since last commit
-
-## Output
-
-Produce a concise verification report:
-
-```
-VERIFICATION: [PASS/FAIL]
-
-Build:    [OK/FAIL]
-Types:    [OK/X errors]
-Lint:     [OK/X issues]
-Tests:    [X/Y passed, Z% coverage]
-Secrets:  [OK/X found]
-Logs:     [OK/X console.logs]
-
-Ready for PR: [YES/NO]
-```
-
-If any critical issues, list them with fix suggestions.
-
-## Arguments
-
-$ARGUMENTS can be:
-- `quick` - Only build + types
-- `full` - All checks (default)
-- `pre-commit` - Checks relevant for commits
-- `pre-pr` - Full checks plus security scan
+## Scope Boundary
+- **Allowed:** Run only the verification commands listed in this task and report results.
+- **Forbidden:** Do not modify files or bypass failing gates.
+- **Stop Conditions:** Stop if any required command fails or if required inputs are missing.
