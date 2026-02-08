@@ -1,165 +1,34 @@
-# Integrate Command
+# Task: Integrate Command
 
-Sequential agent workflow for complex tasks.
+## Provenance
+- **Captured:** 2026-02-08 01:51:44 UTC
+- **DP-ID:** DP-OPS-0036
+- **Branch:** work/task-hardening-0036
+- **HEAD:** eeafcc36cda18155944a5441eaebe7fba4856cf8
+- **Objective:** Bring the Task subsystem to pointer-first parity with Agents and Skills by adding a Task promotion ledger, a harvest and promote workflow, and lint enforcement, while refactoring B-TASK-01 through B-TASK-10 to the strict schema and aligning the registry.
 
-## Usage
+## Orchestration
+- **Primary Agent:** R-AGENT-04 (integrator)
+- **Supporting Agents:** R-AGENT-02 (code-reviewer), R-AGENT-06 (security-reviewer)
 
-`/ops/bin/project integrate [workflow-type] [task-description]`
+## Pointers
+- **Constitution:** `PoT.md`
+- **Governance:** `docs/GOVERNANCE.md`
+- **Contract:** `TASK.md`
+- **Registry:** `docs/ops/registry/TASKS.md`
+- **Toolchain:** `ops/bin/open`, `ops/bin/dump`
+- **JIT Skills:** `docs/library/skills/S-LEARN-06.md`
+- **Reference Docs:** `docs/MANUAL.md`
 
-## Workflow Types
+## Execution Logic
+1. Run `ops/bin/open --intent="Integration run" --out=auto` and capture the generated OPEN artifact.
+2. Run `ops/bin/dump --scope=platform --format=chatgpt --out=auto` and capture the dump artifact.
+3. Use `docs/library/agents/R-AGENT-04.md` to produce the integration plan and the first handoff.
+4. Use `docs/library/agents/R-AGENT-02.md` to perform code review and append a second handoff.
+5. If the scope includes security-sensitive changes, use `docs/library/agents/R-AGENT-06.md` to perform security review and append the final handoff.
+6. Compile a final integration report that references each handoff artifact.
 
-### feature
-Full feature implementation workflow:
-```
-integrator -> code-reviewer -> security-reviewer
-```
-
-### bugfix
-Bug investigation and fix workflow:
-```
-explorer -> code-reviewer
-```
-
-### refactor
-Safe refactoring workflow:
-```
-architect -> code-reviewer
-```
-
-### security
-Security-focused review:
-```
-security-reviewer -> code-reviewer -> architect
-```
-
-## Execution Pattern
-
-For each agent in the workflow:
-
-1. **Invoke agent** with context from previous agent
-2. **Collect output** as structured handoff document
-3. **Pass to next agent** in chain
-4. **Aggregate results** into final report
-
-## Handoff Document Format
-
-Between agents, create handoff document:
-
-```markdown
-## HANDOFF: [previous-agent] -> [next-agent]
-
-### Context
-[Summary of what was done]
-
-### Findings
-[Key discoveries or decisions]
-
-### Files Modified
-[List of files touched]
-
-### Open Questions
-[Unresolved items for next agent]
-
-### Recommendations
-[Suggested next steps]
-```
-
-## Example: Feature Workflow
-
-```
-/integrate feature "Add user authentication"
-```
-
-Executes:
-
-1. **Integrator Agent**
-   - Analyzes requirements
-   - Creates implementation plan
-   - Identifies dependencies
-   - Output: `HANDOFF: integrator`
-
-2. **Code Reviewer Agent**
-   - Reviews implementation
-   - Checks for issues
-   - Suggests improvements
-   - Output: `HANDOFF: code-reviewer -> security-reviewer`
-
-3. **Security Reviewer Agent**
-   - Security audit
-   - Vulnerability check
-   - Final approval
-   - Output: Final Report
-
-## Final Report Format
-
-```
-INTEGRATION REPORT
-====================
-Workflow: feature
-Task: Add user authentication
-Agents: integrator -> code-reviewer -> security-reviewer
-
-SUMMARY
--------
-[One paragraph summary]
-
-AGENT OUTPUTS
--------------
-Integrator: [summary]
-Code Reviewer: [summary]
-Security Reviewer: [summary]
-
-FILES CHANGED
--------------
-[List all files modified]
-
-TEST RESULTS
-------------
-[Test pass/fail summary]
-
-SECURITY STATUS
----------------
-[Security findings]
-
-RECOMMENDATION
---------------
-[SHIP / NEEDS WORK / BLOCKED]
-```
-
-## Parallel Execution
-
-For independent checks, run agents in parallel:
-
-```markdown
-### Parallel Phase
-Run simultaneously:
-- code-reviewer (quality)
-- security-reviewer (security)
-- architect (design)
-
-### Merge Results
-Combine outputs into single report
-```
-
-## Arguments
-
-$ARGUMENTS:
-- `feature <description>` - Full feature workflow
-- `bugfix <description>` - Bug fix workflow
-- `refactor <description>` - Refactoring workflow
-- `security <description>` - Security review workflow
-- `custom <agents> <description>` - Custom agent sequence
-
-## Custom Workflow Example
-
-```
-/integrate custom "architect,code-reviewer" "Redesign caching layer"
-```
-
-## Tips
-
-1. **Start with integrator** for complex features
-2. **Always include code-reviewer** before merge
-3. **Use security-reviewer** for auth/payment/PII
-4. **Keep handoffs concise** - focus on what next agent needs
-5. **Run verification** between agents if needed
+## Scope Boundary
+- **Allowed:** Orchestrate the agent sequence for the active DP and record handoffs.
+- **Forbidden:** Do not bypass required reviews or add new agents without DP approval.
+- **Stop Conditions:** Stop if required artifacts are missing or if any mandated agent handoff is incomplete.
