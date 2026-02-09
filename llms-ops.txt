@@ -79,6 +79,20 @@ ops/lib/scripts/skill.sh harvest --name "skill-title" --context "when to use it"
 ops/lib/scripts/skill.sh promote storage/handoff/skill-draft-YYYYMMDD-HHMMSS-skill-title.md
 ~~~
 
+### Tasks (Harvest + Promote)
+Tasks remain on-demand only and must not be placed in `ops/lib/manifests/CONTEXT.md`.
+
+~~~bash
+# Enforce Tasks Context Hazard
+ops/lib/scripts/task.sh check
+
+# Draft a task candidate
+ops/lib/scripts/task.sh harvest --id B-TASK-01 --name "task-title" --objective "one sentence objective"
+
+# Promote the draft into docs/library/tasks and register it
+ops/lib/scripts/task.sh promote storage/handoff/task-draft-B-TASK-01-YYYYMMDD-task-title.md
+~~~
+
 ---
 
 ## 2. Dispatch Packet (DP) Mechanics
@@ -86,11 +100,17 @@ ops/lib/scripts/skill.sh promote storage/handoff/skill-draft-YYYYMMDD-HHMMSS-ski
 * Drafts: `storage/dp/intake/`
 * Processed: `storage/dp/processed/`
 
+**Operator Prompts:**
+* `docs/ops/specs/prompts.md` — Operator prompt stances and usage.
+
 **Disapproval Triggers (When to Reject):**
 * ❌ Missing `RECEIPT` (Proof Bundle).
 * ❌ Verification steps reported as "NOT RUN".
 * ❌ `git diff --stat` does not match the claims.
 * ❌ Forbidden scope touched (Drift).
+
+**Allowlist Rule:**
+* **Rule:** If a DP includes the llms command, the allowlist must include `llms.txt`, `llms-small.txt`, `llms-full.txt`, `llms-ops.txt`, and `llms-governance.txt`.
 
 ---
 
@@ -206,6 +226,45 @@ done
 branch="$(git rev-parse --abbrev-ref HEAD)"
 head_short="$(git rev-parse --short HEAD)"
 branch_safe="${branch//\//-}"
+
+update_task_session_state() {
+  local task_path="TASK.md"
+  if [[ ! -f "$task_path" ]]; then
+    return 0
+  fi
+
+  local tmp_file
+  tmp_file="$(mktemp)"
+  awk -v branch="$branch" -v head="$head_short" '
+    {
+      line = $0
+      if ($0 ~ /^[[:space:]]*[-*]?[[:space:]]*Active Branch:/) {
+        prefix = $0
+        sub(/:.*/, "", prefix)
+        suffix = ""
+        pos = index($0, "(")
+        if (pos > 0) {
+          suffix = " " substr($0, pos)
+        }
+        line = prefix ": " branch suffix
+      }
+      if ($0 ~ /^[[:space:]]*[-*]?[[:space:]]*Base HEAD:/) {
+        prefix = $0
+        sub(/:.*/, "", prefix)
+        suffix = ""
+        pos = index($0, "(")
+        if (pos > 0) {
+          suffix = " " substr($0, pos)
+        }
+        line = prefix ": " head suffix
+      }
+      print line
+    }
+  ' "$task_path" > "$tmp_file"
+  mv "$tmp_file" "$task_path"
+}
+
+update_task_session_state
 
 tag_prefix=""
 if [[ -n "$tag" ]]; then

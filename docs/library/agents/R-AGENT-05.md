@@ -24,7 +24,6 @@ Refactor and dead-code cleanup.
 - JIT skills:
   - `docs/library/skills/S-LEARN-01.md`
   - `docs/library/skills/S-LEARN-04.md`
-  - `docs/library/skills/S-LEARN-06.md`
 
 ## Scope Boundary
 Identify and remove dead code or duplication while preserving behavior within the active DP scope.

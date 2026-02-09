@@ -10,6 +10,3 @@ Authoritative registry for canon skills.
 | S-LEARN-03 | Skill: Zenith Reference | docs/library/skills/S-LEARN-03.md | |
 | S-LEARN-04 | Skill: Coding Standards | docs/library/skills/S-LEARN-04.md | |
 | S-LEARN-05 | Skill: Security Protocols | docs/library/skills/S-LEARN-05.md | |
-| S-LEARN-06 | Skill: Advanced Git Forensics | docs/library/skills/S-LEARN-06.md | |
-| S-LEARN-07 | Skill: Harvest and Promote Skills | docs/library/skills/S-LEARN-07.md | |
-| S-LEARN-08 | Skill: Prune SoP and Regenerate Context Bundles | docs/library/skills/S-LEARN-08.md | |
