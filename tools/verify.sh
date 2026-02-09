@@ -67,7 +67,43 @@ for item in storage/*; do
   esac
 done
 
-# 3. Project Structure Check
+# 3. Filing Doctrine Checks
+if ! command -v file >/dev/null 2>&1; then
+  fail "Missing dependency: file (required for binary checks)"
+else
+  doc_binaries=()
+  while IFS= read -r -d '' doc_path; do
+    encoding="$(file -b --mime-encoding "$doc_path")"
+    if [[ "$encoding" == "binary" ]]; then
+      doc_binaries+=("$doc_path")
+    fi
+  done < <(find docs -type f -print0)
+
+  if (( ${#doc_binaries[@]} > 0 )); then
+    for doc_path in "${doc_binaries[@]}"; do
+      fail "Filing Doctrine violation: binary file in docs/: $doc_path"
+    done
+  fi
+fi
+
+ops_markdown=()
+while IFS= read -r -d '' ops_path; do
+  ops_markdown+=("$ops_path")
+done < <(find ops -type f -name '*.md' -print0)
+
+if (( ${#ops_markdown[@]} > 0 )); then
+  for ops_path in "${ops_markdown[@]}"; do
+    case "$ops_path" in
+      ops/lib/manifests/*|ops/lib/project/*)
+        ;;
+      *)
+        fail "Filing Doctrine violation: loose markdown in ops/: $ops_path"
+        ;;
+    esac
+  done
+fi
+
+# 4. Project Structure Check
 # Every project folder must have a README.md (minimal valid artifact)
 if [[ -d "projects" ]]; then
   for proj in projects/*; do

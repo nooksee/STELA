@@ -30,10 +30,10 @@ if ! command -v rg >/dev/null 2>&1; then
   exit 1
 fi
 
-contraction_pattern="\\b(don't|can't|won't|it's|shouldn't|didn't)\\b"
-contraction_hits="$(rg -n -i --glob '!**/.github/**' "$contraction_pattern" "${REPO_ROOT}/docs" "${REPO_ROOT}/ops" || true)"
+contraction_pattern="\\b(ain't|aren't|can't|couldn't|didn't|doesn't|don't|hadn't|hasn't|haven't|isn't|mightn't|mustn't|needn't|shan't|shouldn't|wasn't|weren't|won't|wouldn't|it's|that's|there's|here's|who's|what's|where's|when's|why's|how's|let's|i'm|you're|we're|they're|i've|you've|we've|they've|i'll|you'll|we'll|they'll|i'd|you'd|we'd|they'd)\\b"
+contraction_hits="$(rg -n -i --glob '*.md' --glob '!**/storage/**' --glob '!**/.git/**' "$contraction_pattern" "${REPO_ROOT}" || true)"
 if [[ -n "$contraction_hits" ]]; then
-  echo "ERROR: Contractions found in docs/ or ops/:" >&2
+  echo "ERROR: Contractions found in markdown files:" >&2
   echo "$contraction_hits" >&2
   exit 1
 fi

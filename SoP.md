@@ -1,5 +1,13 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-09 00:03:18 UTC — DP-OPS-0038 Pointer-First Agent Constitution and Task Governance Refactor
+- Replaced TRUTH.md with PoT.md in CI workflows and Copilot instructions to remove ghost canon.
+- Refactored TASK.md to the pointer-first dashboard schema and updated work log structure.
+- Updated ops/bin/open to inject session state into TASK.md automatically.
+- Hardened tools/lint/style.sh and tools/verify.sh for contraction enforcement and filing doctrine checks.
+- Updated tools/lint/dp.sh to validate the pointer-first TASK schema.
+- Updated docs/GOVERNANCE.md to point governance back to PoT.md.
+
 ## 2026-02-08 16:30:36 UTC — DP-OPS-0037 Task Import and Porting
 - Classified legacy task imports in `docs/library/tasks/imports/`; no new canon tasks or skills promoted (imports were duplicates or obsolete for current tooling).
 - Removed obsolete and duplicate imports from `docs/library/tasks/imports/` after verification.

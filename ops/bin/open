@@ -49,6 +49,45 @@ branch="$(git rev-parse --abbrev-ref HEAD)"
 head_short="$(git rev-parse --short HEAD)"
 branch_safe="${branch//\//-}"
 
+update_task_session_state() {
+  local task_path="TASK.md"
+  if [[ ! -f "$task_path" ]]; then
+    return 0
+  fi
+
+  local tmp_file
+  tmp_file="$(mktemp)"
+  awk -v branch="$branch" -v head="$head_short" '
+    {
+      line = $0
+      if ($0 ~ /^[[:space:]]*[-*]?[[:space:]]*Active Branch:/) {
+        prefix = $0
+        sub(/:.*/, "", prefix)
+        suffix = ""
+        pos = index($0, "(")
+        if (pos > 0) {
+          suffix = " " substr($0, pos)
+        }
+        line = prefix ": " branch suffix
+      }
+      if ($0 ~ /^[[:space:]]*[-*]?[[:space:]]*Base HEAD:/) {
+        prefix = $0
+        sub(/:.*/, "", prefix)
+        suffix = ""
+        pos = index($0, "(")
+        if (pos > 0) {
+          suffix = " " substr($0, pos)
+        }
+        line = prefix ": " head suffix
+      }
+      print line
+    }
+  ' "$task_path" > "$tmp_file"
+  mv "$tmp_file" "$task_path"
+}
+
+update_task_session_state
+
 tag_prefix=""
 if [[ -n "$tag" ]]; then
   tag_prefix="${tag}-"
