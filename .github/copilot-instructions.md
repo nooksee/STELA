@@ -16,7 +16,7 @@ You are a guest contractor on **Stela**. You operate under Integrator governance
 1.  PoT.md (Policy of Truth + Filing Doctrine)
 2.  SoP.md (History Ledger)
 3.  TASK.md (Active Work Surface)
-4.  docs/INDEX.md (Navigation)
+4.  docs/MAP.md (Continuity Map)
 
 ## Operational Responsibilities
 * **Drift Mitigation:** Prioritize existing patterns in ops/ and docs/ to reduce redundancy.

@@ -26,7 +26,7 @@ jobs:
 
             // "Canon" = anything that changes project meaning, except museum logs.
             const canonChanged = names.some(n =>
-              n === "TRUTH.md" ||
+              n === "PoT.md" ||
               n === "TASK.md" ||
               n.startsWith("docs/") ||
               n === ".github/copilot-instructions.md"

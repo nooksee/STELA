@@ -242,6 +242,84 @@ has_objective_section() {
   return 1
 }
 
+is_task_file() {
+  local path="$1"
+  if grep -nE '^#[[:space:]]*STELA TASK DASHBOARD' "$path" >/dev/null; then
+    return 0
+  fi
+  if grep -nE '^##[[:space:]]*1\\.[[:space:]]*Session State' "$path" >/dev/null; then
+    return 0
+  fi
+  return 1
+}
+
+lint_task() {
+  local path="$1"
+  failures=0
+
+  local task_headings=(
+    "## 1. Session State (The Anchor)"
+    "## 2. Logic Pointers (The Law)"
+    "## 3. Current Dispatch Packet (DP)"
+    "## 4. Closeout (Mandatory)"
+    "## 5. Work Log (Timestamped Continuity)"
+  )
+
+  local task_patterns=(
+    '^##[[:space:]]*1\\.[[:space:]]*SESSION STATE'
+    '^##[[:space:]]*2\\.[[:space:]]*LOGIC POINTERS'
+    '^##[[:space:]]*3\\.[[:space:]]*CURRENT DISPATCH PACKET'
+    '^##[[:space:]]*4\\.[[:space:]]*CLOSEOUT'
+    '^##[[:space:]]*5\\.[[:space:]]*WORK LOG'
+  )
+
+  local -a heading_lines=()
+  local missing=0
+  local line
+  local i
+
+  for ((i=0; i<${#task_headings[@]}; i++)); do
+    line="$(first_heading_line "$path" "${task_patterns[i]}")"
+    if [[ -z "$line" ]]; then
+      fail "missing heading '${task_headings[i]}' (task scheme)"
+      missing=1
+      heading_lines+=("")
+    else
+      heading_lines+=("$line")
+    fi
+  done
+
+  if (( !missing )); then
+    for ((i=0; i<${#heading_lines[@]}-1; i++)); do
+      if (( heading_lines[i] >= heading_lines[i+1] )); then
+        fail "headings out of order: '${task_headings[i]}' should appear before '${task_headings[i+1]}' (task scheme)"
+        break
+      fi
+    done
+  fi
+
+  check_required_field "Active Branch"
+  check_required_field "Base HEAD"
+  check_required_field "Context Manifest"
+
+  local token
+  for token in "${PLACEHOLDER_TOKENS[@]}"; do
+    if grep -Fq -- "$token" "$path"; then
+      fail "placeholder token found: $token"
+    fi
+  done
+
+  if has_standalone_ellipsis "$path"; then
+    fail "placeholder token found: ..."
+  fi
+
+  if (( failures )); then
+    return 1
+  fi
+
+  echo "OK: TASK lint passed"
+}
+
 heading_errors_for_scheme() {
   local path="$1"
   local scheme="$2"
@@ -493,6 +571,15 @@ lint_file() {
   echo "OK: DP lint passed"
 }
 
+lint_path() {
+  local path="$1"
+  if is_task_file "$path"; then
+    lint_task "$path"
+  else
+    lint_file "$path"
+  fi
+}
+
 run_test() {
   local tmp_valid
   local tmp_invalid
@@ -530,7 +617,7 @@ Test state.
 - 2026-01-27 14:05 — DP-OPS-0001: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
 EOF
 
-  lint_file "$tmp_valid" >/dev/null
+  lint_path "$tmp_valid" >/dev/null
 
   tmp_invalid="$(mktemp)"
   cat <<'EOF' > "$tmp_invalid"
@@ -564,7 +651,7 @@ Test state.
 - 2026-01-27 14:05 — DP-OPS-0001: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
 EOF
 
-  if lint_file "$tmp_invalid" >/dev/null 2>&1; then
+  if lint_path "$tmp_invalid" >/dev/null 2>&1; then
     rm -f "$tmp_valid" "$tmp_invalid"
     echo "FAIL: --test expected placeholder detection to fail" >&2
     exit 1
@@ -602,7 +689,7 @@ Test state.
 - 2026-01-27 14:05 — DP-OPS-0001: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
 EOF
 
-  if lint_file "$tmp_order" >/dev/null 2>&1; then
+  if lint_path "$tmp_order" >/dev/null 2>&1; then
     rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order"
     echo "FAIL: --test expected heading order detection to fail" >&2
     exit 1
@@ -640,7 +727,7 @@ Test state.
 - 2026-01-27 14:05 — DP-OPS-0002: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
 EOF
 
-  lint_file "$tmp_decimal_valid" >/dev/null
+  lint_path "$tmp_decimal_valid" >/dev/null
 
   tmp_decimal_invalid="$(mktemp)"
   cat <<'EOF' > "$tmp_decimal_invalid"
@@ -672,13 +759,72 @@ Test state.
 - 2026-01-27 14:05 — DP-OPS-0003: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
 EOF
 
-  if lint_file "$tmp_decimal_invalid" >/dev/null 2>&1; then
+  if lint_path "$tmp_decimal_invalid" >/dev/null 2>&1; then
     rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid"
     echo "FAIL: --test expected decimal heading detection to fail" >&2
     exit 1
   fi
 
-  rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid"
+  tmp_task_valid="$(mktemp)"
+  cat <<'EOF' > "$tmp_task_valid"
+# STELA TASK DASHBOARD (LIVING SURFACE)
+Status: ACTIVE
+Owner: Integrator
+Last Updated: 2026-02-08
+
+## 1. Session State (The Anchor)
+Pointer: storage/handoff/OPEN-*.txt
+Active Branch: work/task-lint-test
+Base HEAD: 13a2074d
+Context Manifest: ops/lib/manifests/CONTEXT.md
+
+## 2. Logic Pointers (The Law)
+Primary Constraint: PoT.md wins in all conflicts.
+
+## 3. Current Dispatch Packet (DP)
+DP-OPS-0004: Task Lint Test
+
+## 4. Closeout (Mandatory)
+Requirement: Populate storage/handoff/DP-OPS-0004-RESULTS.md.
+
+## 5. Work Log (Timestamped Continuity)
+- 2026-01-27 14:05 — DP-OPS-0004: Task lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
+EOF
+
+  lint_path "$tmp_task_valid" >/dev/null
+
+  tmp_task_invalid="$(mktemp)"
+  cat <<'EOF' > "$tmp_task_invalid"
+# STELA TASK DASHBOARD (LIVING SURFACE)
+Status: ACTIVE
+Owner: Integrator
+Last Updated: 2026-02-08
+
+## 1. Session State (The Anchor)
+Pointer: storage/handoff/OPEN-*.txt
+Base HEAD: 13a2074d
+Context Manifest: ops/lib/manifests/CONTEXT.md
+
+## 2. Logic Pointers (The Law)
+Primary Constraint: PoT.md wins in all conflicts.
+
+## 3. Current Dispatch Packet (DP)
+DP-OPS-0005: Task Lint Test Invalid
+
+## 4. Closeout (Mandatory)
+Requirement: Populate storage/handoff/DP-OPS-0005-RESULTS.md.
+
+## 5. Work Log (Timestamped Continuity)
+- 2026-01-27 14:05 — DP-OPS-0005: Task lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
+EOF
+
+  if lint_path "$tmp_task_invalid" >/dev/null 2>&1; then
+    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_task_valid" "$tmp_task_invalid"
+    echo "FAIL: --test expected task heading detection to fail" >&2
+    exit 1
+  fi
+
+  rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_task_valid" "$tmp_task_invalid"
   echo "OK: --test passed"
 }
 
@@ -701,16 +847,16 @@ case "${1:-}" in
     fi
     tmp_stdin="$(mktemp)"
     cat > "$tmp_stdin"
-    lint_file "$tmp_stdin"
+    lint_path "$tmp_stdin"
     rm -f "$tmp_stdin"
     ;;
   -)
     tmp_stdin="$(mktemp)"
     cat > "$tmp_stdin"
-    lint_file "$tmp_stdin"
+    lint_path "$tmp_stdin"
     rm -f "$tmp_stdin"
     ;;
   *)
-    lint_file "$1"
+    lint_path "$1"
     ;;
 esac
