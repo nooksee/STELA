@@ -141,7 +141,7 @@ check_semantic_collision() {
   local collision_count=0
   local threshold=2
   local file
-  for file in "$skills_dir"/*.md "$drafts_dir"/skill-draft-*.md; do
+  for file in "$skills_dir"/*.md "$drafts_dir"/skill-*.md; do
     if [[ ! -f "$file" ]]; then
       continue
     fi

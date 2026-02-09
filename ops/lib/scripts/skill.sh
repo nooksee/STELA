@@ -8,7 +8,7 @@ SKILLS_REGISTRY="${REPO_ROOT}/docs/ops/registry/SKILLS.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
 SKILLS_DIR="${REPO_ROOT}/docs/library/skills"
-HANDOFF_DIR="${REPO_ROOT}/storage/handoff"
+HANDOFF_DIR="${REPO_ROOT}/storage/archives/skills"
 HEURISTICS_LIB="${SCRIPT_DIR}/heuristics.sh"
 
 if [[ -f "$HEURISTICS_LIB" ]]; then
@@ -472,9 +472,9 @@ cmd_harvest() {
 
   while :; do
     if [[ $counter -eq 0 ]]; then
-      draft_path="${HANDOFF_DIR}/skill-draft-$(date -u '+%Y%m%d-%H%M%S')-${slug}.md"
+      draft_path="${HANDOFF_DIR}/skill-$(date -u '+%Y%m%d-%H%M%S')-${slug}.md"
     else
-      draft_path="${HANDOFF_DIR}/skill-draft-$(date -u '+%Y%m%d-%H%M%S')-${slug}-${counter}.md"
+      draft_path="${HANDOFF_DIR}/skill-$(date -u '+%Y%m%d-%H%M%S')-${slug}-${counter}.md"
     fi
     if [[ ! -e "$draft_path" ]]; then
       break
@@ -522,7 +522,7 @@ EOF
 
 select_latest_draft() {
   local draft_path=""
-  mapfile -t drafts < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name 'skill-draft-*.md' | sort)
+  mapfile -t drafts < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name 'skill-*.md' | sort)
   if (( ${#drafts[@]} == 0 )); then
     die "No draft found in storage/handoff"
   fi
