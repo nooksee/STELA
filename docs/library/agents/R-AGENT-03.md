@@ -23,8 +23,6 @@ Documentation and codemap maintenance.
 - Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/library.sh`, `tools/verify.sh`
 - JIT skills:
   - `docs/library/skills/S-LEARN-01.md`
-  - `docs/library/skills/S-LEARN-06.md`
-  - `docs/library/skills/S-LEARN-08.md`
 
 ## Scope Boundary
 Operate only within the active DP scope and defer to canon surfaces for governance and behavioral rules.

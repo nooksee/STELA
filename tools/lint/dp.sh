@@ -418,27 +418,7 @@ lint_file() {
   fi
 
   # If TASK DP headings change, update these lists and the --test fixtures.
-  local legacy_headings=(
-    "## 0. Freshness Gate (Must Pass Before Work)"
-    "## I) Required Context Load (Read Before Doing Anything)"
-    "## II) Scope & Safety"
-    "## III. Execution Plan (A-E Canon)"
-    "## 3) Closeout (Mandatory)"
-  )
-
-  local legacy_patterns=(
-    '^##[[:space:]]*0[.)]?[[:space:]]*FRESHNESS GATE'
-    '^##[[:space:]]*I[.)]?[[:space:]]*REQUIRED CONTEXT LOAD'
-    '^##[[:space:]]*II[.)]?[[:space:]]*SCOPE'
-    '^##[[:space:]]*III[.)]?[[:space:]]*EXECUTION PLAN'
-    '^##[[:space:]]*3[.)]?[[:space:]]*CLOSEOUT'
-  )
-
-  local legacy_thread_label="## 3.1) Thread Transition (Reset / Archive Rule)"
-  local legacy_thread_pattern='^##[[:space:]]*(3\\.1|5)[.)]?[[:space:]]*THREAD TRANSITION'
-  local legacy_work_label="## 4) Work Log (Timestamped Continuity)"
-  local legacy_work_pattern='^##[[:space:]]*4[.)]?[[:space:]]*WORK LOG'
-
+  # Decimal scheme only (3.1/3.2/3.3/3.4/4/4.1/5).
   local decimal_headings=(
     "## 3.1 Freshness Gate (Must Pass Before Work)"
     "## 3.2 Required Context Load (Read Before Doing Anything)"
@@ -460,28 +440,15 @@ lint_file() {
   local decimal_work_label="## 5 Work Log (Timestamped Continuity)"
   local decimal_work_pattern='^##[[:space:]]*5[.)]?[[:space:]]*WORK LOG'
 
-  local legacy_errors
   local decimal_errors
 
-  if legacy_errors="$(heading_errors_for_scheme "$path" "legacy" legacy_headings legacy_patterns "$legacy_thread_label" "$legacy_thread_pattern" "$legacy_work_label" "$legacy_work_pattern")"; then
+  if decimal_errors="$(heading_errors_for_scheme "$path" "decimal" decimal_headings decimal_patterns "$decimal_thread_label" "$decimal_thread_pattern" "$decimal_work_label" "$decimal_work_pattern")"; then
     :
   else
-    decimal_errors="$(heading_errors_for_scheme "$path" "decimal" decimal_headings decimal_patterns "$decimal_thread_label" "$decimal_thread_pattern" "$decimal_work_label" "$decimal_work_pattern" || true)"
-    if [[ -z "$decimal_errors" ]]; then
-      :
-    else
-      if [[ -n "$legacy_errors" ]]; then
-        while IFS= read -r line; do
-          [[ -n "$line" ]] && fail "$line"
-        done <<< "$legacy_errors"
-      fi
-      if [[ -n "$decimal_errors" ]]; then
-        while IFS= read -r line; do
-          [[ -n "$line" ]] && fail "$line"
-        done <<< "$decimal_errors"
-      fi
-      fail "heading scheme not recognized. Accepted heading schemes: legacy (0/I/II/III/3 + 3.1 + 4) or decimal (3.1/3.2/3.3/3.4/4/4.1/5)."
-    fi
+    while IFS= read -r line; do
+      [[ -n "$line" ]] && fail "$line"
+    done <<< "$decimal_errors"
+    fail "heading scheme not recognized. Accepted heading scheme: decimal (3.1/3.2/3.3/3.4/4/4.1/5)."
   fi
 
   if ! grep -nE '^#\s*DP-[A-Z]+-[0-9]{4,}([_-]v[0-9]+)?(: .+)?$' "$path" >/dev/null; then
@@ -644,32 +611,32 @@ run_test() {
   tmp_valid="$(mktemp)"
   cat <<'EOF' > "$tmp_valid"
 # DP-OPS-0001: Lint Test
-## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)
-* **Base Branch:** work/boot_files_update
-* **Work Branch:** work/boot_files_update
-* **Base HEAD:** 13a2074d
-## I) REQUIRED CONTEXT LOAD (READ BEFORE DOING ANYTHING)
-* **Loaded:** OPEN, TRUTH, AGENTS, SoP
-## II) SCOPE & SAFETY
-* **Objective:** Validate lint headings and required fields.
+## 3.1 Freshness Gate (Must Pass Before Work)
+Base Branch: main
+Required Work Branch: work/boot_files_update
+Base HEAD: 13a2074d
+## 3.2 Required Context Load (Read Before Doing Anything)
+- Loaded: PoT, SoP, CONTEXT, MAP
+## 3.3 Scope and Safety
+- Objective: Validate lint headings and required fields.
 ### Target Files allowlist (hard gate)
 - tools/lint/dp.sh
-## III) EXECUTION PLAN (A–E CANON)
-### A) STATE / CONTEXT
+## 3.4 Execution Plan (A-E Canon)
+### 3.4.1 State
 Test state.
-### B) REQUEST
+### 3.4.2 Request
 1) Test request.
-### C) CHANGELOG NOTES
+### 3.4.3 Changelog
 - Test changelog.
-### D) PATCH / DIFF OUTPUT
+### 3.4.4 Patch / Diff
 - Test diff.
-### E) RECEIPT (REQUIRED)
+### 3.4.5 Receipt (Required)
 - Test receipt.
-## 3. CLOSEOUT (MANDATORY)
+## 4 Closeout (Mandatory)
 - Closeout notes.
-## 3.1) THREAD TRANSITION (RESET / ARCHIVE RULE)
+## 4.1 Thread Transition (Reset / Archive Rule)
 - Transition notes.
-## 4) WORK LOG (TIMESTAMPED CONTINUITY)
+## 5 Work Log (Timestamped Continuity)
 - 2026-01-27 14:05 — DP-OPS-0001: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
 EOF
 
@@ -678,32 +645,32 @@ EOF
   tmp_invalid="$(mktemp)"
   cat <<'EOF' > "$tmp_invalid"
 # DP-OPS-0001: Lint Test
-## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)
-* **Base Branch:** work/boot_files_update
-* **Work Branch:** work/boot_files_update
-* **Base HEAD:** 13a2074d
-## I) REQUIRED CONTEXT LOAD (READ BEFORE DOING ANYTHING)
-* **Loaded:** OPEN, TRUTH, AGENTS, SoP
-## II) SCOPE & SAFETY
-* **Objective:** TBD
+## 3.1 Freshness Gate (Must Pass Before Work)
+Base Branch: main
+Required Work Branch: work/boot_files_update
+Base HEAD: 13a2074d
+## 3.2 Required Context Load (Read Before Doing Anything)
+- Loaded: PoT, SoP, CONTEXT, MAP
+## 3.3 Scope and Safety
+- Objective: TBD
 ### Target Files allowlist (hard gate)
 - tools/lint/dp.sh
-## III) EXECUTION PLAN (A–E CANON)
-### A) STATE
+## 3.4 Execution Plan (A-E Canon)
+### 3.4.1 State
 Test state.
-### B) REQUEST
+### 3.4.2 Request
 1) Test request.
-### C) CHANGELOG
+### 3.4.3 Changelog
 - Test changelog.
-### D) PATCH / DIFF
+### 3.4.4 Patch / Diff
 - Test diff.
-### E) RECEIPT (REQUIRED)
+### 3.4.5 Receipt (Required)
 - Test receipt.
-## 3) CLOSEOUT (MANDATORY)
+## 4 Closeout (Mandatory)
 - Closeout notes.
-## 3.1) THREAD TRANSITION (RESET / ARCHIVE RULE)
+## 4.1 Thread Transition (Reset / Archive Rule)
 - Transition notes.
-## 4) WORK LOG (TIMESTAMPED CONTINUITY)
+## 5 Work Log (Timestamped Continuity)
 - 2026-01-27 14:05 — DP-OPS-0001: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
 EOF
 
@@ -716,32 +683,32 @@ EOF
   tmp_order="$(mktemp)"
   cat <<'EOF' > "$tmp_order"
 # DP-OPS-0001: Lint Test
-## 0. FRESHNESS GATE (MUST PASS BEFORE WORK)
-* **Base Branch:** work/boot_files_update
-* **Work Branch:** work/boot_files_update
-* **Base HEAD:** 13a2074d
-## III) EXECUTION PLAN (A–E CANON)
-## II) SCOPE & SAFETY
-* **Objective:** Validate lint headings and required fields.
+## 3.1 Freshness Gate (Must Pass Before Work)
+Base Branch: main
+Required Work Branch: work/boot_files_update
+Base HEAD: 13a2074d
+## 3.4 Execution Plan (A-E Canon)
+## 3.3 Scope and Safety
+- Objective: Validate lint headings and required fields.
 ### Target Files allowlist (hard gate)
 - tools/lint/dp.sh
-## I) REQUIRED CONTEXT LOAD (READ BEFORE DOING ANYTHING)
-* **Loaded:** OPEN, TRUTH, AGENTS, SoP
-### A) STATE
+## 3.2 Required Context Load (Read Before Doing Anything)
+- Loaded: PoT, SoP, CONTEXT, MAP
+### 3.4.1 State
 Test state.
-### B) REQUEST
+### 3.4.2 Request
 1) Test request.
-### C) CHANGELOG
+### 3.4.3 Changelog
 - Test changelog.
-### D) PATCH / DIFF
+### 3.4.4 Patch / Diff
 - Test diff.
-### E) RECEIPT (REQUIRED)
+### 3.4.5 Receipt (Required)
 - Test receipt.
-## 3) CLOSEOUT (MANDATORY)
+## 4 Closeout (Mandatory)
 - Closeout notes.
-## 3.1) THREAD TRANSITION (RESET / ARCHIVE RULE)
+## 4.1 Thread Transition (Reset / Archive Rule)
 - Transition notes.
-## 4) WORK LOG (TIMESTAMPED CONTINUITY)
+## 5 Work Log (Timestamped Continuity)
 - 2026-01-27 14:05 — DP-OPS-0001: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
 EOF
 

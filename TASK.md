@@ -5,8 +5,8 @@ Last Updated: 2026-02-09
 
 ## 1. Session State (The Anchor)
 Pointer: storage/handoff/OPEN-*.txt (The generated session context)
-Active Branch: work/constitution-refactor-0038 (Must match OPEN artifact)
-Base HEAD: eccc11128 (Must match OPEN artifact)
+Active Branch: work/governance-hardening-0038b (Must match OPEN artifact)
+Base HEAD: a80d295e9 (Must match OPEN artifact)
 Context Manifest: ops/lib/manifests/CONTEXT.md (Checked by tools/lint/context.sh)
 
 ## 2. Logic Pointers (The Law)
@@ -90,3 +90,5 @@ Does the pointer-first TASK dashboard and toolchain enforcement match the Refact
 2026-02-08 16:30 - THREAD START: DP-OPS-0038. Seed: Pointer-First Constitution Refactor (Ghost Canon elimination, TASK schema replacement, Toolchain hardening).
 2026-02-08 16:35 - DP-OPS-0038: Defined work branch work/constitution-refactor-0038 and Base HEAD eccc11128. Prepared for dispatch. NEXT: Execute DP-OPS-0038.
 2026-02-09 00:20 - DP-OPS-0038: Replaced ghost canon references, refactored TASK.md to the pointer-first dashboard, and hardened toolchain enforcement. Verification: RUN (style lint, verify, context lint, truth lint, dp lint test, dump). Blockers: ops/bin/llms not run due to allowlist scope. NEXT: Operator review DP-OPS-0038 results.
+2026-02-09 15:07 - DP-OPS-0038B: Added PoT read-in order and system failure states, exempted TASK.md dirty-state, updated dp lint to decimal-only, and logged SoP entry. Verification: RUN (tools/lint/context.sh, tools/lint/truth.sh, tools/verify.sh, ops/bin/dump, tools/lint/dp.sh --test). NOT RUN: ops/bin/llms (allowlist excludes llms bundles). Blockers: ops/bin/llms deferred pending scope approval. NEXT: Operator review RESULTS and decide on llms refresh scope.
+2026-02-09 15:13 - DP-OPS-0038B: Expanded scope to refresh llms bundles via ops/bin/llms. Verification: RUN (ops/bin/llms). Blockers: none. NEXT: Operator review updated RESULTS.

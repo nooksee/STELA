@@ -30,16 +30,25 @@ Filing:
 - `ops/lib/manifests/CONTEXT.md` — required context set.
 - `llms.txt` — discovery entry point.
 
+Source of Truth Read-in Order:
+1. `PoT.md`: The Constitution. Physical laws, staffing, jurisdiction. The final authority.
+2. `SoP.md`: The History. State of Play ledger. Context on *why* things are the way they are.
+3. `TASK.md`: The Contract. Active work surface. Contains the current Dispatch Packet (DP).
+4. `docs/MAP.md`: The Terrain. Continuity map for navigating the repository context.
+
 ## 2. Enforcement
 Integrator plus Automation (linters, repo-gates, and binaries).
 Mandate:
 - Stop work.
 - Reject PRs.
 - Kill processes.
-Triggers:
-- Any PoT violation or canon drift.
-- Context hazard in the global manifest.
-- Scope breach or forbidden zone access.
+System Failure States (Drift Triggers):
+| Failure Type | Definition | System Response |
+| :---- | :---- | :---- |
+| **Canon Drift** | Divergence between `PoT.md` and repo state. | **STOP WORK.** Reject PR. |
+| **Context Hazard** | Including `library/` docs in `CONTEXT.md`. | **STOP WORK.** Automated lint failure. |
+| **Dirty State** | Uncommitted changes in `main` (except `TASK.md`). | **STOP WORK.** Worker complaint/halt. |
+| **Ambiguity** | Instructions capable of multiple interpretations. | **STOP WORK.** Request clarification. |
 
 ## 3. Jurisdiction
 Scope: `ops/`, `docs/`, `projects/`, `tools/`, `.github/`, and root governance surfaces.

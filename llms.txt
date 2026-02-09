@@ -1,6 +1,6 @@
 # Stela llms.txt
-# HEAD: 4605e6fd3
-# HEAD commit time: 2026-02-07T13:48:28-05:00
+# HEAD: a80d295e9
+# HEAD commit time: 2026-02-08T20:40:48-05:00
 # Refresh: ./ops/bin/llms
 # Pointer map to canonical docs and tools (no duplication).
 

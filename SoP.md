@@ -1,5 +1,10 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-09 15:01:14 UTC — DP-OPS-0038B Governance Hardening (Read-in Order and Failure States)
+- Added the Source of Truth Read-in Order and System Failure States tables to PoT.md, including the TASK.md dirty-state exemption.
+- Hardened tools/lint/dp.sh to accept decimal DP headings only and refreshed its embedded fixtures.
+- Refreshed llms bundles via ops/bin/llms after the governance hardening updates.
+
 ## 2026-02-09 00:03:18 UTC — DP-OPS-0038 Pointer-First Agent Constitution and Task Governance Refactor
 - Replaced TRUTH.md with PoT.md in CI workflows and Copilot instructions to remove ghost canon.
 - Refactored TASK.md to the pointer-first dashboard schema and updated work log structure.
@@ -16,7 +21,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Added Task Promotion Ledger at `docs/library/TASKS.md` with doctrine, packet schema, and append-only logs.
 - Added `ops/lib/scripts/task.sh` harvest, promote, and check workflows aligned with agent and skill automation.
 - Added `tools/lint/task.sh` and integrated Task linting into `tools/lint/library.sh`.
-- Refactored B-TASK-01 through B-TASK-10 into the pointer-first schema with provenance, pointers, execution logic, and scope boundaries.
+- Refactored B-TASK-01 through B-TASK-06 into the pointer-first schema with provenance, pointers, execution logic, and scope boundaries.
 - Updated `docs/MANUAL.md` to document Task workflows and the JIT-only hazard.
 
 ## 2026-02-07 21:35:35 UTC — DP-OPS-0035 Context Lifecycle Hardening (Semantic Lint, Context Snapshot, Map, Scope Bundles)

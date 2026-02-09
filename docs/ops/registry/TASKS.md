@@ -10,7 +10,3 @@ Authoritative registry for canon tasks.
 | B-TASK-04 | Task: Plan Command | docs/library/tasks/B-TASK-04.md | |
 | B-TASK-05 | Task: Refactor Clean | docs/library/tasks/B-TASK-05.md | |
 | B-TASK-06 | Task: Update Documentation | docs/library/tasks/B-TASK-06.md | |
-| B-TASK-07 | Task: Refresh + Discuss | docs/library/tasks/B-TASK-07.md | |
-| B-TASK-08 | Task: Refresh + Draft DP | docs/library/tasks/B-TASK-08.md | |
-| B-TASK-09 | Task: Refresh + Conform DP | docs/library/tasks/B-TASK-09.md | |
-| B-TASK-10 | Task: Refresh + Audit | docs/library/tasks/B-TASK-10.md | |

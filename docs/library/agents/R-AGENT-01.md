@@ -24,7 +24,6 @@ Architecture planning and system design.
 - JIT skills:
   - `docs/library/skills/S-LEARN-02.md`
   - `docs/library/skills/S-LEARN-03.md`
-  - `docs/library/skills/S-LEARN-06.md`
 
 ## Scope Boundary
 Operate only within the active DP scope and defer to canon surfaces for governance and behavioral rules.

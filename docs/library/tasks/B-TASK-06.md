@@ -5,7 +5,7 @@
 - **DP-ID:** DP-OPS-0036
 - **Branch:** work/task-hardening-0036
 - **HEAD:** eeafcc36cda18155944a5441eaebe7fba4856cf8
-- **Objective:** Bring the Task subsystem to pointer-first parity with Agents and Skills by adding a Task promotion ledger, a harvest and promote workflow, and lint enforcement, while refactoring B-TASK-01 through B-TASK-10 to the strict schema and aligning the registry.
+- **Objective:** Bring the Task subsystem to pointer-first parity with Agents and Skills by adding a Task promotion ledger, a harvest and promote workflow, and lint enforcement, while refactoring B-TASK-01 through B-TASK-06 to the strict schema and aligning the registry.
 
 ## Orchestration
 - **Primary Agent:** R-AGENT-03 (doc-updater)
