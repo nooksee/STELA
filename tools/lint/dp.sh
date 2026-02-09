@@ -65,6 +65,24 @@ has_standalone_ellipsis() {
   return 1
 }
 
+has_llms_invocation() {
+  local path="$1"
+  if grep -nE '`(\./ops/bin/llms|ops/bin/llms)`' "$path" >/dev/null; then
+    return 0
+  fi
+  awk '
+    BEGIN { in_block = 0; found = 0 }
+    /^[[:space:]]*```/ || /^[[:space:]]*~~~/ { in_block = !in_block; next }
+    in_block {
+      if ($0 ~ /(^|[[:space:]])(\.\/ops\/bin\/llms|ops\/bin\/llms)([[:space:]]|$)/) {
+        found = 1
+        exit
+      }
+    }
+    END { exit found ? 0 : 1 }
+  ' "$path"
+}
+
 field_value() {
   local label="$1"
   awk -v label="$label" '
@@ -530,10 +548,12 @@ lint_file() {
     fi
   fi
 
+  local -a normalized_allowlist=()
   if (( ${#allowlist[@]} == 0 )); then
     fail "Target Files allowlist missing or empty"
   else
     local entry
+    local normalized
     for entry in "${allowlist[@]}"; do
       entry="$(trim "$entry")"
       entry="$(strip_backticks "$entry")"
@@ -542,19 +562,54 @@ lint_file() {
         continue
       fi
 
-      if [[ "$entry" =~ ^\(new\)[[:space:]]* ]]; then
-        entry="${entry#(new)}"
-        entry="$(trim "$entry")"
-        if [[ -z "$entry" ]]; then
+      normalized="$entry"
+      if [[ "$normalized" =~ ^\(new\)[[:space:]]* ]]; then
+        normalized="${normalized#(new)}"
+        normalized="$(trim "$normalized")"
+        if [[ -z "$normalized" ]]; then
           fail "Target Files allowlist '(new)' entry missing path"
+        else
+          normalized_allowlist+=("${normalized#./}")
         fi
         continue
       fi
 
+      normalized_allowlist+=("${normalized#./}")
       if [[ ! -e "$entry" ]]; then
         fail "Target Files allowlist path missing: $entry (use '(new)' prefix if new)"
       fi
     done
+  fi
+
+  if (( ${#normalized_allowlist[@]} )) && has_llms_invocation "$path"; then
+    local -a required_llms=(
+      "llms.txt"
+      "llms-small.txt"
+      "llms-full.txt"
+      "llms-ops.txt"
+      "llms-governance.txt"
+    )
+    local -a missing_llms=()
+    local required
+    local entry
+    local found
+
+    for required in "${required_llms[@]}"; do
+      found=0
+      for entry in "${normalized_allowlist[@]}"; do
+        if [[ "$entry" == "$required" ]]; then
+          found=1
+          break
+        fi
+      done
+      if (( !found )); then
+        missing_llms+=("$required")
+      fi
+    done
+
+    if (( ${#missing_llms[@]} )); then
+      echo "WARN: llms allowlist missing required root outputs: ${missing_llms[*]}" >&2
+    fi
   fi
 
   local fallback='Fallback: ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle'
@@ -584,6 +639,7 @@ run_test() {
   local tmp_valid
   local tmp_invalid
   local tmp_order
+  local tmp_llms_warn
 
   tmp_valid="$(mktemp)"
   cat <<'EOF' > "$tmp_valid"
@@ -652,7 +708,7 @@ Test state.
 EOF
 
   if lint_path "$tmp_invalid" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid"
+    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_llms_warn"
     echo "FAIL: --test expected placeholder detection to fail" >&2
     exit 1
   fi
@@ -690,7 +746,7 @@ Test state.
 EOF
 
   if lint_path "$tmp_order" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order"
+    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_llms_warn"
     echo "FAIL: --test expected heading order detection to fail" >&2
     exit 1
   fi
@@ -760,8 +816,63 @@ Test state.
 EOF
 
   if lint_path "$tmp_decimal_invalid" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid"
+    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn"
     echo "FAIL: --test expected decimal heading detection to fail" >&2
+    exit 1
+  fi
+
+  tmp_llms_warn="$(mktemp)"
+  cat <<'EOF' > "$tmp_llms_warn"
+# DP-OPS-0006: Decimal Lint Test llms Warning
+## 3.1 Freshness Gate (Must Pass Before Work)
+Base Branch: main
+Required Work Branch: work/decimal-lint-test
+Base HEAD: 13a2074d
+## 3.2 Required Context Load (Read Before Doing Anything)
+- Loaded: PoT, SoP, CONTEXT, MAP
+## 3.3 Scope and Safety
+- Objective: Validate llms allowlist warnings.
+### Target Files allowlist (hard gate)
+- tools/lint/dp.sh
+- llms.txt
+- llms-small.txt
+## 3.4 Execution Plan (A-E Canon)
+### 3.4.1 State
+Test state.
+### 3.4.2 Request
+1) Run llms command.
+### 3.4.3 Changelog
+- Test changelog.
+### 3.4.4 Patch / Diff
+~~~bash
+./ops/bin/llms --out-dir=.
+~~~
+### 3.4.5 Receipt (Required)
+- Test receipt.
+## 4 Closeout (Mandatory)
+- Closeout notes.
+## 4.1 Thread Transition (Reset / Archive Rule)
+- Transition notes.
+## 5 Work Log (Timestamped Continuity)
+- 2026-01-27 14:05 — DP-OPS-0006: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
+EOF
+
+  local output
+  if ! output="$(lint_path "$tmp_llms_warn" 2>&1)"; then
+    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn"
+    echo "FAIL: --test expected llms warning DP to pass" >&2
+    exit 1
+  fi
+
+  if [[ "$output" != *"WARN: llms allowlist missing required root outputs:"* ]]; then
+    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn"
+    echo "FAIL: --test expected llms allowlist warning to emit" >&2
+    exit 1
+  fi
+
+  if [[ "$output" != *"llms-full.txt"* ]]; then
+    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn"
+    echo "FAIL: --test expected llms allowlist warning to list missing outputs" >&2
     exit 1
   fi
 
@@ -819,12 +930,12 @@ Requirement: Populate storage/handoff/DP-OPS-0005-RESULTS.md.
 EOF
 
   if lint_path "$tmp_task_invalid" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_task_valid" "$tmp_task_invalid"
+    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn" "$tmp_task_valid" "$tmp_task_invalid"
     echo "FAIL: --test expected task heading detection to fail" >&2
     exit 1
   fi
 
-  rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_task_valid" "$tmp_task_invalid"
+  rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn" "$tmp_task_valid" "$tmp_task_invalid"
   echo "OK: --test passed"
 }
 

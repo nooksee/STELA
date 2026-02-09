@@ -99,11 +99,17 @@ ops/lib/scripts/task.sh promote storage/handoff/task-draft-B-TASK-01-YYYYMMDD-ta
 * Drafts: `storage/dp/intake/`
 * Processed: `storage/dp/processed/`
 
+**Operator Prompts:**
+* `docs/ops/specs/prompts.md` — Operator prompt stances and usage.
+
 **Disapproval Triggers (When to Reject):**
 * ❌ Missing `RECEIPT` (Proof Bundle).
 * ❌ Verification steps reported as "NOT RUN".
 * ❌ `git diff --stat` does not match the claims.
 * ❌ Forbidden scope touched (Drift).
+
+**Allowlist Rule:**
+* **Rule:** If a DP includes the llms command, the allowlist must include `llms.txt`, `llms-small.txt`, `llms-full.txt`, `llms-ops.txt`, and `llms-governance.txt`.
 
 ---
 
