@@ -27,7 +27,7 @@ These prompts codify the four operational stances used for Stela operator workfl
 3. Constraint: Preserve original intent; update format only.
 4. Schema: Strictly follow `TASK.md` headings and order.
 5. Do not invent file paths. Use the dump for verification.
-**Output:** The corrected Dispatch Packet only.
+**Output only:** The full Dispatch Packet enclosed in a markdown code block (```markdown).
 
 ## 3. Architect (Refresh + Draft DP)
 **Use when:** Creating a new DP from a plan or conversation.
@@ -39,7 +39,7 @@ These prompts codify the four operational stances used for Stela operator workfl
 4. Constraints: Do not invent file paths; use the dump.
 5. Do not invent file paths. Use the dump for verification.
 **Addendum:** If the DP plan includes an llms command invocation or a context bundle refresh objective, the DP allowlist must include the repository root outputs: llms.txt, llms-small.txt, llms-full.txt, llms-ops.txt, and llms-governance.txt. These are repository root files and must be allowlisted before running the llms command.
-**Output:** The full Dispatch Packet only.
+**Output only:** The full Dispatch Packet enclosed in a markdown code block (```markdown).
 
 ## 4. Analyst (Refresh + Discuss)
 **Use when:** Analyzing the codebase without intent to edit.

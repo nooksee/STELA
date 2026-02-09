@@ -5,8 +5,8 @@ Last Updated: 2026-02-09
 
 ## 1. Session State (The Anchor)
 Pointer: storage/handoff/OPEN-*.txt (The generated session context)
-Active Branch: work/governance-hardening-0038b (Must match OPEN artifact)
-Base HEAD: a80d295e9 (Must match OPEN artifact)
+Active Branch: main (Must match OPEN artifact)
+Base HEAD: b23416cf8 (Must match OPEN artifact)
 Context Manifest: ops/lib/manifests/CONTEXT.md (Checked by tools/lint/context.sh)
 
 ## 2. Logic Pointers (The Law)
