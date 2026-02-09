@@ -9,7 +9,7 @@ AGENTS_LEDGER="${REPO_ROOT}/docs/library/AGENTS.md"
 SOP_FILE="${REPO_ROOT}/SoP.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
-HANDOFF_DIR="${REPO_ROOT}/storage/handoff"
+HANDOFF_DIR="${REPO_ROOT}/storage/archives/agents"
 DUMPS_DIR="${REPO_ROOT}/storage/dumps"
 HEURISTICS_LIB="${SCRIPT_DIR}/heuristics.sh"
 
@@ -643,9 +643,9 @@ cmd_harvest() {
 
   while :; do
     if [[ $counter -eq 0 ]]; then
-      draft_path="${HANDOFF_DIR}/agent-draft-$(date -u '+%Y%m%d')-${slug}.md"
+      draft_path="${HANDOFF_DIR}/agent-$(date -u '+%Y%m%d')-${slug}.md"
     else
-      draft_path="${HANDOFF_DIR}/agent-draft-$(date -u '+%Y%m%d')-${slug}-${counter}.md"
+      draft_path="${HANDOFF_DIR}/agent-$(date -u '+%Y%m%d')-${slug}-${counter}.md"
     fi
     if [[ ! -e "$draft_path" ]]; then
       break
@@ -721,7 +721,7 @@ EOF
 
 select_latest_draft() {
   local draft_path=""
-  mapfile -t drafts < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name 'agent-draft-*.md' | sort)
+  mapfile -t drafts < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name 'agent-*.md' | sort)
   if (( ${#drafts[@]} == 0 )); then
     die "No draft found in storage/handoff"
   fi

@@ -8,7 +8,7 @@ TASKS_REGISTRY="${REPO_ROOT}/docs/ops/registry/TASKS.md"
 TASKS_LEDGER="${REPO_ROOT}/docs/library/TASKS.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
-HANDOFF_DIR="${REPO_ROOT}/storage/handoff"
+HANDOFF_DIR="${REPO_ROOT}/storage/archives/tasks"
 HEURISTICS_LIB="${SCRIPT_DIR}/heuristics.sh"
 
 if [[ -f "$HEURISTICS_LIB" ]]; then
@@ -322,7 +322,7 @@ PROMO_LOG
 
 select_latest_draft() {
   local draft_path=""
-  mapfile -t drafts < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name 'task-draft-*.md' | sort)
+  mapfile -t drafts < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name 'task-*.md' | sort)
   if (( ${#drafts[@]} == 0 )); then
     die "No draft found in storage/handoff"
   fi
@@ -491,9 +491,9 @@ cmd_harvest() {
 
   while :; do
     if [[ $counter -eq 0 ]]; then
-      draft_path="${HANDOFF_DIR}/task-draft-${task_id}-$(date -u '+%Y%m%d')-${slug}.md"
+      draft_path="${HANDOFF_DIR}/task-${task_id}-$(date -u '+%Y%m%d')-${slug}.md"
     else
-      draft_path="${HANDOFF_DIR}/task-draft-${task_id}-$(date -u '+%Y%m%d')-${slug}-${counter}.md"
+      draft_path="${HANDOFF_DIR}/task-${task_id}-$(date -u '+%Y%m%d')-${slug}-${counter}.md"
     fi
     if [[ ! -e "$draft_path" ]]; then
       break

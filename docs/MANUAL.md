@@ -75,7 +75,7 @@ ops/lib/scripts/skill.sh check
 ops/lib/scripts/skill.sh harvest --name "skill-title" --context "when to use it" --solution "what to do"
 
 # Promote the draft into docs/library/skills and register it
-ops/lib/scripts/skill.sh promote storage/handoff/skill-draft-YYYYMMDD-HHMMSS-skill-title.md
+ops/lib/scripts/skill.sh promote storage/archives/skills/skill-YYYYMMDD-HHMMSS-skill-title.md
 ~~~
 
 ### Tasks (Harvest + Promote)
@@ -89,7 +89,7 @@ ops/lib/scripts/task.sh check
 ops/lib/scripts/task.sh harvest --id B-TASK-01 --name "task-title" --objective "one sentence objective"
 
 # Promote the draft into docs/library/tasks and register it
-ops/lib/scripts/task.sh promote storage/handoff/task-draft-B-TASK-01-YYYYMMDD-task-title.md
+ops/lib/scripts/task.sh promote storage/archives/tasks/task-B-TASK-01-YYYYMMDD-task-title.md
 ~~~
 
 ---
@@ -100,7 +100,7 @@ ops/lib/scripts/task.sh promote storage/handoff/task-draft-B-TASK-01-YYYYMMDD-ta
 * Processed: `storage/dp/processed/`
 
 **Operator Prompts:**
-* `docs/ops/specs/prompts` — Operator prompt stances and usage.
+* `docs/ops/prompts` — Operator prompt stances and usage.
 
 **Disapproval Triggers (When to Reject):**
 * ❌ Missing `RECEIPT` (Proof Bundle).
