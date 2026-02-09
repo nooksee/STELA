@@ -100,7 +100,7 @@ ops/lib/scripts/task.sh promote storage/handoff/task-draft-B-TASK-01-YYYYMMDD-ta
 * Processed: `storage/dp/processed/`
 
 **Operator Prompts:**
-* `docs/ops/specs/prompts.md` — Operator prompt stances and usage.
+* `docs/ops/specs/prompts` — Operator prompt stances and usage.
 
 **Disapproval Triggers (When to Reject):**
 * ❌ Missing `RECEIPT` (Proof Bundle).
