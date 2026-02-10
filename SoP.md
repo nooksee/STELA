@@ -1,5 +1,10 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-10 03:35:02 UTC — DP-OPS-0040 Architectural Certification and Stress Testing
+- Hardened tools/lint/style.sh to detect ASCII and Unicode apostrophe contractions across markdown.
+- Tightened tools/verify.sh filing doctrine enforcement by rejecting non-markdown artifacts in docs/.
+- Expanded tools/test/agent.sh with pointer existence checks and drift injection coverage; ran agent test plus style, verify, context, and truth lints.
+
 ## 2026-02-10 01:27:17 UTC — DP-OPS-0039 Task System Certification (Closeout + Quantitative Rigor)
 - Updated task doctrine to require explicit Closeout pointers in Execution Logic and quantitative reporting capture in RESULTS.
 - Hardened tools/lint/task.sh to enforce Closeout pointers in final execution steps.

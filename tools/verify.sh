@@ -86,6 +86,17 @@ else
   fi
 fi
 
+doc_non_markdown=()
+while IFS= read -r -d '' doc_path; do
+  doc_non_markdown+=("$doc_path")
+done < <(find docs -type f ! -name '*.md' -print0)
+
+if (( ${#doc_non_markdown[@]} > 0 )); then
+  for doc_path in "${doc_non_markdown[@]}"; do
+    fail "Filing Doctrine violation: non-markdown file in docs/: $doc_path"
+  done
+fi
+
 ops_markdown=()
 while IFS= read -r -d '' ops_path; do
   ops_markdown+=("$ops_path")
