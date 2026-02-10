@@ -1,11 +1,11 @@
 # Task: Update Documentation
 
 ## Provenance
-- **Captured:** 2026-02-08 01:51:44 UTC
-- **DP-ID:** DP-OPS-0036
-- **Branch:** work/task-hardening-0036
-- **HEAD:** eeafcc36cda18155944a5441eaebe7fba4856cf8
-- **Objective:** Bring the Task subsystem to pointer-first parity with Agents and Skills by adding a Task promotion ledger, a harvest and promote workflow, and lint enforcement, while refactoring B-TASK-01 through B-TASK-06 to the strict schema and aligning the registry.
+- **Captured:** 2026-02-10 01:27:17 UTC
+- **DP-ID:** DP-OPS-0039
+- **Branch:** work/task-serviceability-0038
+- **HEAD:** 03f47297e
+- **Objective:** Certify the B-TASK library for serviceable execution by enforcing explicit Closeout pointers, strengthening quantitative reporting expectations, and hardening task lint to prevent drift.
 
 ## Orchestration
 - **Primary Agent:** R-AGENT-03 (doc-updater)
@@ -26,8 +26,9 @@
 3. Update documentation within the allowlist and align references to `docs/MANUAL.md` and `docs/MAP.md`.
 4. Run `bash tools/lint/style.sh` and stop if it fails.
 5. Record updated documents and verification outcomes in RESULTS.
+6. Complete Closeout per `TASK.md` Section 4.
 
 ## Scope Boundary
-- **Allowed:** Update documentation files within the DP allowlist.
+- **Allowed:** Update documentation files within the DP allowlist and perform Closeout duties per `TASK.md` Section 4.
 - **Forbidden:** Do not edit files outside the allowlist or skip lint checks.
 - **Stop Conditions:** Stop if any required command fails or if required inputs are missing.

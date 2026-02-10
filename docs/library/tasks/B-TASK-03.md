@@ -1,11 +1,11 @@
 # Task: Integrate Command
 
 ## Provenance
-- **Captured:** 2026-02-08 01:51:44 UTC
-- **DP-ID:** DP-OPS-0036
-- **Branch:** work/task-hardening-0036
-- **HEAD:** eeafcc36cda18155944a5441eaebe7fba4856cf8
-- **Objective:** Bring the Task subsystem to pointer-first parity with Agents and Skills by adding a Task promotion ledger, a harvest and promote workflow, and lint enforcement, while refactoring B-TASK-01 through B-TASK-06 to the strict schema and aligning the registry.
+- **Captured:** 2026-02-10 01:27:17 UTC
+- **DP-ID:** DP-OPS-0039
+- **Branch:** work/task-serviceability-0038
+- **HEAD:** 03f47297e
+- **Objective:** Certify the B-TASK library for serviceable execution by enforcing explicit Closeout pointers, strengthening quantitative reporting expectations, and hardening task lint to prevent drift.
 
 ## Orchestration
 - **Primary Agent:** R-AGENT-04 (integrator)
@@ -27,8 +27,9 @@
 4. Use `docs/library/agents/R-AGENT-02.md` to perform code review and append a second handoff.
 5. If the scope includes security-sensitive changes, use `docs/library/agents/R-AGENT-06.md` to perform security review and append the final handoff.
 6. Compile a final integration report that references each handoff artifact.
+7. Complete Closeout per `TASK.md` Section 4.
 
 ## Scope Boundary
-- **Allowed:** Orchestrate the agent sequence for the active DP and record handoffs.
+- **Allowed:** Orchestrate the agent sequence for the active DP, record handoffs, and perform Closeout duties per `TASK.md` Section 4.
 - **Forbidden:** Do not bypass required reviews or add new agents without DP approval.
 - **Stop Conditions:** Stop if required artifacts are missing or if any mandated agent handoff is incomplete.

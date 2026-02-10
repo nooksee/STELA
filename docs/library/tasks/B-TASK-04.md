@@ -1,11 +1,11 @@
 # Task: Plan Command
 
 ## Provenance
-- **Captured:** 2026-02-08 01:51:44 UTC
-- **DP-ID:** DP-OPS-0036
-- **Branch:** work/task-hardening-0036
-- **HEAD:** eeafcc36cda18155944a5441eaebe7fba4856cf8
-- **Objective:** Bring the Task subsystem to pointer-first parity with Agents and Skills by adding a Task promotion ledger, a harvest and promote workflow, and lint enforcement, while refactoring B-TASK-01 through B-TASK-06 to the strict schema and aligning the registry.
+- **Captured:** 2026-02-10 01:27:17 UTC
+- **DP-ID:** DP-OPS-0039
+- **Branch:** work/task-serviceability-0038
+- **HEAD:** 03f47297e
+- **Objective:** Certify the B-TASK library for serviceable execution by enforcing explicit Closeout pointers, strengthening quantitative reporting expectations, and hardening task lint to prevent drift.
 
 ## Orchestration
 - **Primary Agent:** R-AGENT-04 (integrator)
@@ -26,8 +26,9 @@
 3. Use `docs/library/agents/R-AGENT-04.md` to draft the implementation plan and capture phases, risks, and dependencies.
 4. If architecture changes are required, use `docs/library/agents/R-AGENT-01.md` to review and adjust the plan.
 5. Present the plan and wait for explicit approval before execution.
+6. Complete Closeout per `TASK.md` Section 4.
 
 ## Scope Boundary
-- **Allowed:** Produce a plan and gather approvals for the active DP.
+- **Allowed:** Produce a plan, gather approvals for the active DP, and perform Closeout duties per `TASK.md` Section 4.
 - **Forbidden:** Do not begin implementation before approval.
 - **Stop Conditions:** Stop if required inputs are missing or if approval is not granted.

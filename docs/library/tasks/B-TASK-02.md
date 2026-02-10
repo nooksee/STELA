@@ -1,11 +1,11 @@
 # Task: Verification Command
 
 ## Provenance
-- **Captured:** 2026-02-08 01:51:44 UTC
-- **DP-ID:** DP-OPS-0036
-- **Branch:** work/task-hardening-0036
-- **HEAD:** eeafcc36cda18155944a5441eaebe7fba4856cf8
-- **Objective:** Bring the Task subsystem to pointer-first parity with Agents and Skills by adding a Task promotion ledger, a harvest and promote workflow, and lint enforcement, while refactoring B-TASK-01 through B-TASK-06 to the strict schema and aligning the registry.
+- **Captured:** 2026-02-10 01:27:17 UTC
+- **DP-ID:** DP-OPS-0039
+- **Branch:** work/task-serviceability-0038
+- **HEAD:** 03f47297e
+- **Objective:** Certify the B-TASK library for serviceable execution by enforcing explicit Closeout pointers, strengthening quantitative reporting expectations, and hardening task lint to prevent drift.
 
 ## Orchestration
 - **Primary Agent:** R-AGENT-02 (code-reviewer)
@@ -27,8 +27,9 @@
 4. Run `bash tools/lint/library.sh` and stop if it fails.
 5. If the DP format is in scope, run `bash tools/lint/dp.sh --test` and stop if it fails.
 6. Record pass or fail outcomes in RESULTS.
+7. Complete Closeout per `TASK.md` Section 4.
 
 ## Scope Boundary
-- **Allowed:** Run only the verification commands listed in this task and report results.
+- **Allowed:** Run only the verification commands listed in this task, report results, and perform Closeout duties per `TASK.md` Section 4.
 - **Forbidden:** Do not modify files or bypass failing gates.
 - **Stop Conditions:** Stop if any required command fails or if required inputs are missing.
