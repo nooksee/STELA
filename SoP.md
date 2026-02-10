@@ -1,5 +1,11 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-10 21:18:35 UTC — DP-OPS-0044 TASK Contract Hardening and Prompt Alignment
+- Objective: Harden TASK.md instruction-following by enforcing Base HEAD alignment for gate artifacts, updating E-PROMPT attachments and refresh guidance, codifying anchor hygiene in docs/MANUAL.md, and refreshing llms bundles.
+- Verification: bash tools/lint/context.sh; bash tools/lint/style.sh; bash tools/lint/truth.sh; bash tools/lint/dp.sh --test; bash tools/lint/dp.sh TASK.md; bash tools/verify.sh.
+- Dump: storage/dumps/dump-platform-work-task-hardening-0044-5fa75cb2.txt.
+- Context refresh: ./ops/bin/llms --out-dir=/home/nos4r2/dev/nukece.
+
 ## 2026-02-10 18:03:22 UTC — DP-OPS-0043 Task Subsystem Hardening and Harvester Certification
 - Objective: Certify the Task subsystem as pointer-first and serviceable by aligning ops/lib/scripts/task.sh with tools/lint/task.sh requirements, enforcing registry ID collision locks, and hardening promotion and lint gates to prevent placeholder drift and missing Closeout pointers.
 - Verification: bash tools/lint/style.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/lint/task.sh; bash tools/lint/library.sh; bash tools/verify.sh; ops/lib/scripts/task.sh check; ./ops/bin/context --dp=DP-OPS-0043; ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle; ./ops/bin/llms --out-dir=.

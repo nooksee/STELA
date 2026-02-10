@@ -32,6 +32,13 @@ strip_backticks() {
   printf '%s' "$value"
 }
 
+extract_hash() {
+  local value="$1"
+  local match
+  match="$(printf '%s' "$value" | grep -oE '[0-9a-f]{7,}' | head -n1 || true)"
+  printf '%s' "$match"
+}
+
 PLACEHOLDER_TOKENS=(
   "TBD"
   "<fill"
@@ -319,6 +326,30 @@ lint_task() {
   check_required_field "Active Branch"
   check_required_field "Base HEAD"
   check_required_field "Context Manifest"
+
+  local base_head_raw
+  local base_head
+  base_head_raw="$(field_value "Base HEAD")"
+  base_head_raw="$(trim "$base_head_raw")"
+  base_head_raw="$(strip_backticks "$base_head_raw")"
+  base_head="$(extract_hash "$base_head_raw")"
+  if [[ -z "$base_head" ]]; then
+    fail "missing or invalid Base HEAD hash"
+  else
+    local -a gate_labels=("OPEN" "OPEN-PORCELAIN" "Dump" "Dump Manifest")
+    local gate_label
+    local line
+    for gate_label in "${gate_labels[@]}"; do
+      line="$(grep -nE "^[[:space:]]*[-*][[:space:]]*${gate_label}[[:space:]]*:" "$path" | head -n1 || true)"
+      if [[ -z "$line" ]]; then
+        fail "missing gate artifact line: ${gate_label}"
+        continue
+      fi
+      if [[ "$line" != *"$base_head"* ]]; then
+        fail "gate artifact '${gate_label}' does not include Base HEAD ${base_head}"
+      fi
+    done
+  fi
 
   local token
   for token in "${PLACEHOLDER_TOKENS[@]}"; do
@@ -861,6 +892,20 @@ Primary Constraint: PoT.md wins in all conflicts.
 
 ## 3. Current Dispatch Packet (DP)
 DP-OPS-0004: Task Lint Test
+
+### 3.1 Freshness Gate (Must Pass Before Work)
+Base Branch: main
+Required Work Branch: work/task-lint-test
+Base HEAD: 13a2074d
+
+Gate Artifacts (Must Match):
+- OPEN: storage/handoff/OPEN-work-task-lint-test-13a2074d.txt
+- OPEN-PORCELAIN: storage/handoff/OPEN-PORCELAIN-work-task-lint-test-13a2074d.txt
+- Dump: storage/dumps/dump-platform-work-task-lint-test-13a2074d.txt
+- Dump Manifest: storage/dumps/dump-platform-work-task-lint-test-13a2074d.manifest.txt
+
+Gate Commands (Must Pass):
+- bash tools/lint/context.sh
 
 ## 4. Closeout (Mandatory)
 Requirement: Populate storage/handoff/DP-OPS-0004-RESULTS.md.
