@@ -259,8 +259,8 @@ Last Updated: 2026-02-10
 
 ## 1. Session State (The Anchor)
 Pointer: storage/handoff/OPEN-*.txt (The generated session context)
-Active Branch: work/task-harvester-hardening-0043 (Must match OPEN artifact)
-Base HEAD: 1b4325f9 (Must match OPEN artifact)
+Active Branch: work/task-hardening-0044 (Must match OPEN artifact)
+Base HEAD: 5fa75cb2 (Must match OPEN artifact)
 Context Manifest: ops/lib/manifests/CONTEXT.md (Checked by tools/lint/context.sh)
 
 ## 2. Logic Pointers (The Law)
@@ -278,52 +278,57 @@ Primary Constraint: PoT.md (Policy of Truth) wins in all conflicts.
 - Truth Integrity: tools/lint/truth.sh (Enforces canon spelling).
 
 ## 3. Current Dispatch Packet (DP)
-DP-OPS-0043: Task Subsystem Hardening and Harvester Certification
+DP-OPS-0044: Optimizing TASK.md for LLM Instruction Following
 
 ### 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Required Work Branch: work/task-harvester-hardening-0043
-Base HEAD: 1b4325f9
+Required Work Branch: work/task-hardening-0044
+Base HEAD: 5fa75cb2
 
 Gate Artifacts (Must Match):
-- OPEN: storage/handoff/OPEN-main-1b4325f9.txt
-- Porcelain: storage/handoff/OPEN-PORCELAIN-main-1b4325f9.txt
-- Dump: storage/handoff/dump-full-main-1b4325f9.txt
-- Dump Manifest: storage/handoff/dump-full-main-1b4325f9.manifest.txt
+- OPEN: storage/handoff/OPEN-work-task-hardening-0044-5fa75cb2.txt
+- OPEN-PORCELAIN: storage/handoff/OPEN-PORCELAIN-work-task-hardening-0044-5fa75cb2.txt
+- Dump: storage/dumps/dump-platform-work-task-hardening-0044-5fa75cb2.txt
+- Dump Manifest: storage/dumps/dump-platform-work-task-hardening-0044-5fa75cb2.manifest.txt
 
 Gate Commands (Must Pass):
 - bash tools/lint/context.sh
 
 ### 3.2 Required Context Load (Read Before Doing Anything)
 - Loaded: PoT, SoP, TASK, CONTEXT, MAP
-- PoT.md (Governance, Git Authority, Behavioral Standard, Hard Constraints)
-- TASK.md (DP decimal schema, scope boundary, closeout requirements)
-- SoP.md (Recent DP patterns and verification expectations)
-- docs/ops/registry/TASKS.md (Task registry SSOT)
-- docs/library/TASKS.md (Task promotion ledger)
-- ops/lib/scripts/task.sh (Task harvester and promoter)
-- ops/lib/scripts/heuristics.sh (Provenance block generator)
-- tools/lint/task.sh (Task linter and enforcement surface)
-- tools/lint/dp.sh (DP structure validator)
+- PoT.md (Jurisdiction, Git Authority, Behavioral Standard, Hard Constraints)
+- TASK.md (Task dashboard schema, active DP schema, closeout and thread rules)
+- SoP.md (Recent DP patterns, verification expectations, drift history)
+- docs/MANUAL.md (Operator mechanics and hygiene doctrine)
+- tools/lint/dp.sh (DP lint and TASK schema enforcement)
+- docs/ops/prompts/E-PROMPT-02.md (Conform stance)
+- docs/ops/prompts/E-PROMPT-03.md (Draft stance)
+- docs/ops/prompts/E-PROMPT-04.md (Read-only stance)
+- ops/bin/llms (Context bundle generator behavior and outputs)
 
 ### 3.3 Scope and Safety
-Objective: Certify the Task subsystem as pointer-first and serviceable by aligning ops/lib/scripts/task.sh with tools/lint/task.sh requirements, enforcing registry ID collision locks, and hardening promotion and lint gates to prevent placeholder drift and missing Closeout pointers.
+Objective: Harden TASK.md instruction-following reliability by eliminating session-anchor mismatch vectors (Base HEAD vs. gate artifacts), codifying the required OPEN-PORCELAIN and dump manifest contract in prompts, and enforcing the contract via tools/lint/dp.sh TASK lint. Refresh llms bundles after the contract change.
 
 Constraints:
 - No scope expansion beyond the allowlist.
 - No new directories.
-- No edits to ops/lib/manifests/CONTEXT.md that introduce docs/library/tasks or B-TASK references.
+- No edits to ops/lib/manifests/CONTEXT.md.
 - No direct work on main. All changes occur on the required work branch.
-- Stop on any lint failure (context, truth, style, verify, task, library) until resolved within scope.
+- Stop on any lint failure until resolved within scope.
+- Success targets:
+  - 0 failures from: bash tools/lint/context.sh, bash tools/lint/style.sh, bash tools/lint/truth.sh, bash tools/lint/dp.sh, bash tools/verify.sh
+  - 0 TASK lint mismatches for Base HEAD versus gate artifact filenames.
+  - 100% of E-PROMPT-02/03/04 attachments include OPEN-PORCELAIN and dump manifest (in addition to OPEN and dump).
 
-Target Files allowlist (hard gate):
-- ops/lib/scripts/task.sh
-- ops/lib/scripts/heuristics.sh
-- tools/lint/task.sh
-- docs/library/TASKS.md
-- docs/ops/registry/TASKS.md
+### Target Files allowlist (hard gate)
 - TASK.md
+- tools/lint/dp.sh
+- docs/MANUAL.md
+- docs/ops/prompts/E-PROMPT-02.md
+- docs/ops/prompts/E-PROMPT-03.md
+- docs/ops/prompts/E-PROMPT-04.md
 - SoP.md
+- ops/lib/manifests/LLMS.md
 - llms.txt
 - llms-small.txt
 - llms-full.txt
@@ -333,192 +338,116 @@ Target Files allowlist (hard gate):
 ### 3.4 Execution Plan (A-E Canon)
 
 #### 3.4.1 State
-- Current state is anchored by OPEN and dump artifacts at Base HEAD 1b4325f9 on branch main, with a known working tree modification to TASK.md recorded in the OPEN porcelain snapshot.
-- ops/lib/scripts/task.sh harvest currently emits an Execution Logic template that can omit the required final Closeout pointer expected by tools/lint/task.sh, creating a systemic drift vector for newly harvested tasks.
-- ops/lib/scripts/task.sh does not currently enforce a registry collision lock for B-TASK IDs prior to draft generation, allowing duplicate ID drafts and ledger noise.
-- tools/lint/task.sh enforces structural integrity and a Closeout pointer gate, but does not fully prevent placeholder drift in Orchestration and Scope Boundary fields for promoted tasks.
-- Success criteria:
-  - 0 task lint failures on existing library tasks.
-  - 0 registry collision paths permitted by task harvester.
-  - 100% of harvested templates include a final Closeout pointer line containing Closeout, TASK.md, and Section 4.
-  - Placeholder drift prevention tightened so that promoted tasks cannot retain Not provided for key operational fields.
+- Active session anchors show Base HEAD 5fa75cb2 and a working-tree modification to TASK.md (per OPEN porcelain).
+- TASK.md currently contains a Base HEAD value that does not match the gate artifact filenames listed under the active DP, creating a silent drift vector (session anchor mismatch).
+- tools/lint/dp.sh TASK lint currently validates presence and order of TASK headings and required fields, but does not enforce that TASK.md gate artifact filenames embed the current Base HEAD.
+- docs/ops/prompts/E-PROMPT-02.md, E-PROMPT-03.md, and E-PROMPT-04.md attachments do not require OPEN-PORCELAIN and dump manifest, despite TASK.md treating them as required gate artifacts.
+- llms bundle refresh is required after TASK.md and prompt-contract changes, and it touches repository root llms outputs (must be allowlisted).
 
 #### 3.4.2 Request
 1) Pre-flight and branch hygiene
-   1. Run `bash tools/lint/context.sh` to validate ops/lib/manifests/CONTEXT.md alignment.
-   2. Capture session anchors:
-      - `./ops/bin/open --intent="DP-OPS-0043 Task subsystem hardening" --dp=DP-OPS-0043 --out=auto`
+   1. Run `bash tools/lint/context.sh`.
+   2. Create work branch: `git switch -c work/task-hardening-0044`.
+   3. Re-run session capture on the work branch (to bind filenames and Base HEAD):
+      - `./ops/bin/open --intent="DP-OPS-0044 TASK contract hardening" --dp=DP-OPS-0044 --out=auto`
       - `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`
-   3. Create the work branch from Base HEAD and ensure all work occurs there:
-      - `git switch -c work/task-harvester-hardening-0043`
-   4. Reconcile the pre-existing TASK.md working tree modification:
-      - Either retain it as the session-state update for DP-OPS-0043, or revert and regenerate via ops/bin/open on the work branch.
-      - Ensure the final committed TASK.md state matches the OPEN artifact generated during this DP execution.
+   4. Update TASK.md gate artifacts under DP-OPS-0044 so filenames embed the current Base HEAD and match the newly generated OPEN, OPEN-PORCELAIN, dump, and dump manifest artifacts.
 
-2) Harden ops/lib/scripts/task.sh (harvest, promote, validation)
-   1. Add a registry collision lock for harvest:
-      - Parse docs/ops/registry/TASKS.md and fail-fast if the provided B-TASK ID already exists.
-      - Emit a deterministic error message referencing docs/ops/registry/TASKS.md and the list or check workflow.
-   2. Align harvested draft template with lint expectations:
-      - Ensure Execution Logic final step is a Closeout pointer: "Closeout: Complete Closeout per `TASK.md` Section 4."
-      - Ensure the final step contains Closeout, TASK.md, and Section 4 for compatibility with tools/lint/task.sh.
-      - Remove or demote any template step that could become the last step without the Closeout pointer.
-   3. Strengthen candidate validation in task.sh promote path:
-      - Require that Execution Logic includes a final Closeout pointer line before promotion.
-      - Require non-placeholder values for Orchestration and Scope Boundary key fields prior to promotion:
-        - Primary Agent, Supporting Agents
-        - Allowed, Forbidden, Stop Conditions
-   4. Correct messaging drift and path accuracy:
-      - Fix select_latest_draft error strings to reference storage/archives/tasks (not storage/handoff) when no drafts exist.
+2) TASK.md contract hardening (instruction-following stability)
+   1. Update TASK.md Current Dispatch Packet to DP-OPS-0044 with a title that matches this DP.
+   2. Ensure the DP section uses the existing decimal schema and contains no placeholder tokens and no standalone ellipses.
+   3. Ensure the Freshness Gate explicitly lists all four gate artifacts (OPEN, OPEN-PORCELAIN, Dump, Dump Manifest) and that each filename includes the Base HEAD string.
+   4. Ensure the Thread Transition section remains explicit and mandates a THREAD END entry on closeout.
 
-3) Harden tools/lint/task.sh (repository enforcement)
-   1. Extend placeholder drift checks beyond the current minimum:
-      - Fail if Orchestration fields contain placeholder values (Not provided, TODO, TBD, ENTER_, REPLACE_, bracket markers).
-      - Fail if Scope Boundary fields contain placeholder values (Allowed, Forbidden, Stop Conditions).
-   2. Preserve existing closeout enforcement:
-      - Maintain the final-step Closeout pointer gate (Closeout + TASK.md + Section 4).
-   3. Maintain pointer-first constraints:
-      - Do not relax existing required pointers (PoT.md, docs/GOVERNANCE.md, TASK.md) checks.
+3) Enforce the contract in tools/lint/dp.sh (TASK lint)
+   1. Extend lint_task to parse TASK.md Base HEAD and fail if any required gate artifact filename does not contain that Base HEAD value.
+   2. Extend lint_task to fail if any of the required gate artifact lines are missing (OPEN, OPEN-PORCELAIN, Dump, Dump Manifest).
+   3. Keep existing placeholder token and ellipsis detection intact.
 
-4) Certification tests (behavioral, collision, drift)
-   1. Collision test (must fail):
-      - Attempt harvest with an existing ID (example: B-TASK-01) and confirm the registry lock aborts before file creation and before ledger modification.
-   2. Template test (must pass):
-      - Harvest a draft with a new ID and confirm the draft contains the Closeout final step pointer.
-      - If harvest writes a candidate log entry, record the behavior and either retain it (if acceptable) or revert it before final commit, depending on whether the DP intends to record the probe in docs/library/TASKS.md.
-   3. Lint pass (must pass):
-      - `bash tools/lint/task.sh`
-      - `bash tools/lint/library.sh`
+4) Update operator doctrine in docs/MANUAL.md
+   1. Codify a "refresh anchors" rule: when Base HEAD changes (or when a new OPEN is generated), the TASK.md gate artifacts must be updated to match, or work must stop.
+   2. Codify the "clean after use" rule: THREAD END is mandatory at closeout, and the next session begins from a fresh OPEN artifact.
 
-5) Full verification and context outputs
-   - bash tools/lint/style.sh
+5) Update prompts to reflect TASK.md contract changes (E-PROMPT-XX)
+   1. Update docs/ops/prompts/E-PROMPT-02.md attachments to require: OPEN, OPEN-PORCELAIN, dump, dump manifest, and Old-DP.md where applicable.
+   2. Update docs/ops/prompts/E-PROMPT-03.md attachments to require: OPEN, OPEN-PORCELAIN, dump, dump manifest, and plan.md.
+   3. Update docs/ops/prompts/E-PROMPT-04.md attachments to require: OPEN, OPEN-PORCELAIN, dump, dump manifest.
+   4. Update the shared "Refresh state" instruction lines in those prompts to reference all required artifacts, not OPEN and dump only.
+
+6) Context refresh (Authorized by allowlist)
+   1. Run `./ops/bin/llms --out-dir=.` to refresh:
+      - llms.txt, llms-small.txt, llms-full.txt, llms-ops.txt, llms-governance.txt
+      - ops/lib/manifests/LLMS.md
+
+7) Verification (stop on first failure)
    - bash tools/lint/context.sh
+   - bash tools/lint/style.sh
    - bash tools/lint/truth.sh
-   - bash tools/lint/task.sh
-   - bash tools/lint/library.sh
+   - bash tools/lint/dp.sh --test
+   - bash tools/lint/dp.sh TASK.md
    - bash tools/verify.sh
-   - ops/lib/scripts/task.sh check
-   - ./ops/bin/context --dp=DP-OPS-0043
-   - ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
-   - ./ops/bin/llms --out-dir=.
 
 #### 3.4.3 Changelog
-- ops/lib/scripts/task.sh
-  - Add registry collision lock for harvest against docs/ops/registry/TASKS.md.
-  - Ensure harvested template always ends with a Closeout pointer line referencing TASK.md Section 4.
-  - Tighten promotion validation to reject drafts with placeholder Orchestration and Scope Boundary fields.
-  - Correct draft selection messaging to match storage/archives/tasks location.
-- tools/lint/task.sh
-  - Add enforcement for non-placeholder Orchestration and Scope Boundary fields in promoted tasks.
-  - Preserve existing pointer-first and Closeout final-step checks.
-- TASK.md
-  - Update Current DP pointer to DP-OPS-0043 and session anchors consistent with OPEN artifact generated during execution.
-- SoP.md
-  - Append DP-OPS-0043 entry with exact verification commands run and outputs captured.
-- llms*.txt
-  - Refresh scope bundles after toolchain changes to ensure discovery outputs remain synchronized.
+- TASK.md: Update current DP to DP-OPS-0044; repair Base HEAD to gate artifact filename alignment; retain explicit thread transition rules.
+- tools/lint/dp.sh: Harden TASK lint to enforce Base HEAD to gate artifact filename match and require all four gate artifacts.
+- docs/MANUAL.md: Add explicit operational hygiene rules for anchor refresh and thread closeout.
+- docs/ops/prompts/E-PROMPT-02.md: Require OPEN-PORCELAIN and dump manifest in attachments and refresh instructions.
+- docs/ops/prompts/E-PROMPT-03.md: Require OPEN-PORCELAIN and dump manifest in attachments and refresh instructions.
+- docs/ops/prompts/E-PROMPT-04.md: Require OPEN-PORCELAIN and dump manifest in attachments and refresh instructions.
+- ops/lib/manifests/LLMS.md and llms*.txt: Refreshed via ops/bin/llms (allowed and expected).
 
 #### 3.4.4 Patch / Diff
 ~~~bash
-# Preconditions
+# Pre-flight
 bash tools/lint/context.sh
-git switch -c work/task-harvester-hardening-0043
 
-# Edit within allowlist only
-$EDITOR ops/lib/scripts/task.sh
-$EDITOR tools/lint/task.sh
+# Branch
+git switch -c work/task-hardening-0044
 
-# Collision test (expected failure)
-ops/lib/scripts/task.sh harvest --id B-TASK-01 --name "Collision Probe" --objective "Validate registry lock" --dp DP-OPS-0043 || true
-
-# Template test (expected success)
-ops/lib/scripts/task.sh harvest --id B-TASK-99 --name "Harvester Closeout Probe" --objective "Validate Closeout template emission" --dp DP-OPS-0043
-
-# Lints and verification
-bash tools/lint/style.sh
-bash tools/lint/context.sh
-bash tools/lint/truth.sh
-bash tools/lint/task.sh
-bash tools/lint/library.sh
-bash tools/verify.sh
-ops/lib/scripts/task.sh check
-
-# Context and dump outputs
-./ops/bin/context --dp=DP-OPS-0043
+# Refresh anchors (produce matching filenames for Base HEAD)
+./ops/bin/open --intent="DP-OPS-0044 TASK contract hardening" --dp=DP-OPS-0044 --out=auto
 ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
 
-# llms refresh (allowed by allowlist)
+# Edit contract + enforcement + prompts
+$EDITOR TASK.md
+$EDITOR tools/lint/dp.sh
+$EDITOR docs/MANUAL.md
+$EDITOR docs/ops/prompts/E-PROMPT-02.md
+$EDITOR docs/ops/prompts/E-PROMPT-03.md
+$EDITOR docs/ops/prompts/E-PROMPT-04.md
+
+# Context refresh (Authorized by allowlist)
 ./ops/bin/llms --out-dir=.
 
-# Diff review
-git diff --stat
-git diff
+# Verification
+bash tools/lint/context.sh
+bash tools/lint/style.sh
+bash tools/lint/truth.sh
+bash tools/lint/dp.sh --test
+bash tools/lint/dp.sh TASK.md
+bash tools/verify.sh
 ~~~
 
 #### 3.4.5 Receipt (Required)
-- storage/handoff/DP-OPS-0043-RESULTS.md populated with:
-  - OPEN and Porcelain artifact paths generated during execution.
-  - Dump bundle path and manifest path generated during execution.
-  - Context snapshot archive name produced by ops/bin/context --dp=DP-OPS-0043.
-  - Command transcript list (exact commands executed) and pass/fail outcomes.
-  - Collision test result (expected failure) including the exact error message.
-  - Template test evidence showing the harvested draft contains the final Closeout pointer line.
-  - Lint outputs (style, context, truth, task, library) and verify output (pass/fail).
-  - llms generation note: which llms files changed and why.
-  - git diff summary (file list and line counts) constrained to the allowlist.
+- Populate: storage/handoff/DP-OPS-0044-RESULTS.md with:
+  - Raw outputs (unredacted) for all verification commands listed in 3.4.4.
+  - `git status --porcelain` output.
+  - `git diff --stat` output, and an explicit statement that all changed files are within the allowlist.
+  - A short excerpt from TASK.md showing:
+    - Base HEAD value.
+    - Gate Artifacts lines whose filenames embed the same Base HEAD.
+  - Confirmation that llms.txt and the other llms outputs reflect the refreshed state after the TASK.md contract update.
 
-## 4. Closeout (Mandatory)
-- Update TASK.md:
-  - Current DP set to DP-OPS-0043 and session state matches the OPEN artifact generated during DP execution.
-- Update SoP.md:
-  - Append DP-OPS-0043 entry with a concise change summary and verification commands run.
-- Populate storage/handoff/DP-OPS-0043-RESULTS.md with the Receipt items.
-- Confirm no off-allowlist edits are present in the final git diff.
+## 4 Closeout (Mandatory)
+- Update TASK.md: Set Current Dispatch Packet to DP-OPS-0044 and ensure the DP section is internally consistent (Base HEAD, gate artifacts, branch, allowlist, and thread rules).
+- Update SoP.md: Append a log entry describing the TASK contract hardening, prompt updates, lint enforcement changes, and llms refresh.
+- Verify: No off-allowlist edits (validate via git diff and tools/verify.sh).
 
-### 4.1 Thread Transition (Reset / Archive Rule)
-- Close the DP thread in TASK.md Work Log with a THREAD END line after execution completes.
-- Ensure the next thread begins with a fresh OPEN artifact and a clean scope boundary.
-- If any temporary probe artifacts were created for certification, ensure repository-tracked surfaces remain consistent and lint-clean at thread end.
+## 4.1 Thread Transition (Reset / Archive Rule)
+- Append a THREAD END entry to the TASK.md Work Log for DP-OPS-0044 at completion.
+- Ensure the next session begins with a fresh OPEN artifact and matching dump artifacts.
 
-### Mandatory Closing Block
-Constraint: Final Squash Stub must differ significantly from Primary Commit Header.
-1. Primary Commit Header: DP-OPS-0043 task subsystem hardening and harvester certification
-2. Pull Request Title: DP-OPS-0043 Task Subsystem Hardening and Harvester Certification
-3. Pull Request Description:
-
-### Summary
-- Added registry collision locking, Closeout template enforcement, and promotion validation gates in `ops/lib/scripts/task.sh`.
-- Hardened `tools/lint/task.sh` placeholder drift enforcement for Scope Boundary fields.
-- Refreshed llms bundles after task harvester and lint gate updates.
-- Updated TASK.md and SoP.md for DP-OPS-0043 closeout.
-
-### Testing
-- bash tools/lint/style.sh
-- bash tools/lint/context.sh
-- bash tools/lint/truth.sh
-- bash tools/lint/task.sh
-- bash tools/lint/library.sh
-- bash tools/verify.sh
-- ops/lib/scripts/task.sh check
-- ./ops/bin/context --dp=DP-OPS-0043
-- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
-- ./ops/bin/llms --out-dir=.
-
-4. Final Squash Stub: Lock task harvesting against registry collisions and enforce Closeout-ready promotion and lint gates
-5. Extended Technical Manifest:
-- ops/lib/scripts/task.sh
-- tools/lint/task.sh
-- TASK.md
-- SoP.md
-- llms.txt
-- llms-small.txt
-- llms-full.txt
-- llms-ops.txt
-- llms-governance.txt
-6. Review Conversation Starter:
-Does the task harvester and linter hardening fully prevent registry collisions and placeholder drift while preserving Closeout pointer compliance?
-
-## 5. Work Log (Timestamped Continuity)
+## 5 Work Log (Timestamped Continuity)
 2026-02-08 16:30 - THREAD START: DP-OPS-0038. Seed: Pointer-First Constitution Refactor (Ghost Canon elimination, TASK schema replacement, Toolchain hardening).
 2026-02-08 16:35 - DP-OPS-0038: Defined work branch work/constitution-refactor-0038 and Base HEAD eccc11128. Prepared for dispatch. NEXT: Execute DP-OPS-0038.
 2026-02-09 00:20 - DP-OPS-0038: Replaced ghost canon references, refactored TASK.md to the pointer-first dashboard, and hardened toolchain enforcement. Verification: RUN (style lint, verify, context lint, truth lint, dp lint test, dump). Blockers: ops/bin/llms not run due to allowlist scope. NEXT: Operator review DP-OPS-0038 results.
@@ -530,6 +459,7 @@ Does the task harvester and linter hardening fully prevent registry collisions a
 2026-02-10 17:45 - THREAD START: DP-OPS-0043. Seed: Task Subsystem Hardening and Harvester Certification. Base HEAD: 1b4325f9.
 2026-02-10 18:00 - DP-OPS-0043: Hardened task harvester and lint gates, enforced Closeout pointer and placeholder drift checks, refreshed llms bundles, and captured results. Verification: RUN (bash tools/lint/style.sh, bash tools/lint/context.sh, bash tools/lint/truth.sh, bash tools/lint/task.sh, bash tools/lint/library.sh, bash tools/verify.sh, ops/lib/scripts/task.sh check, ./ops/bin/context --dp=DP-OPS-0043, ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle, ./ops/bin/llms --out-dir=.). Blockers: none. NEXT: Operator review DP-OPS-0043 results.
 2026-02-10 18:02 - THREAD END: DP-OPS-0043. Verification: RUN (bash tools/lint/style.sh, bash tools/lint/context.sh, bash tools/lint/truth.sh, bash tools/lint/task.sh, bash tools/lint/library.sh, bash tools/verify.sh, ops/lib/scripts/task.sh check, ./ops/bin/context --dp=DP-OPS-0043, ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle, ./ops/bin/llms --out-dir=.).
+- 2026-02-10 19:00 — THREAD START: DP-OPS-0044. Seed: TASK.md instruction-following hardening (anchor match enforcement) and prompt contract alignment. Base HEAD: 5fa75cb2. Verification: NOT RUN. Blockers: none. NEXT: Execute 3.4 and capture RESULTS.
 
 
 ## llms.txt
@@ -607,6 +537,10 @@ This index is navigation only. Registries in `docs/ops/registry/` are the single
 4.  **Dispatch:** Hand DP to Worker (See Section 5).
 5.  **Review:** Verify `RECEIPT` (Proofs) vs `TASK.md` requirements.
 6.  **Close:** Merge PR + Update `SoP.md` (if Canon changed).
+
+**Anchor Hygiene:**
+- Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md gate artifacts to match before any work continues.
+- Clean after use: append a THREAD END entry at closeout and start the next session from a fresh OPEN artifact with matching dump artifacts.
 
 ---
 

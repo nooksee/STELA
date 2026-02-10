@@ -9,6 +9,10 @@
 5.  **Review:** Verify `RECEIPT` (Proofs) vs `TASK.md` requirements.
 6.  **Close:** Merge PR + Update `SoP.md` (if Canon changed).
 
+**Anchor Hygiene:**
+- Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md gate artifacts to match before any work continues.
+- Clean after use: append a THREAD END entry at closeout and start the next session from a fresh OPEN artifact with matching dump artifacts.
+
 ---
 
 ## 1. Top Commands
