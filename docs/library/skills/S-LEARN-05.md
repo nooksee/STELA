@@ -9,30 +9,22 @@
   - High Churn: Permission Logic
 
 ## Scope
-Production payload work only.
-Not platform maintenance.
+Production payload work only. Not platform maintenance.
 
-## Invocation guidance
-Use this skill when configuring database access, API surfaces, or auth flows.
-**The Trap:** "Service Role" usage in client-side code.
-**Solution:** Never expose service keys. Use RLS.
+## Invocation Guidance
+Use when configuring database access, API surfaces, or auth flows.
 
-## Drift preventers
-- Stop if a secret is found in code (even commented out).
-- Stop if an API route allows `*` CORS in production configuration.
+## Pointers
+- Constitution: `PoT.md`
+- Governance: `docs/GOVERNANCE.md`
+- Contract: `TASK.md`
+- Registry: `docs/ops/registry/SKILLS.md`
+- Reference docs: `docs/MANUAL.md`
 
-## Procedure
-1) **Supabase RLS (Row Level Security):**
-   - **Mandate:** RLS must be enabled on ALL public tables.
-   - **Policy:** Explicitly define `SELECT`, `INSERT`, `UPDATE`, `DELETE` policies.
-   - **Trap:** `USING (true)` (Public access).
-   - **Solution:** `USING (auth.uid() = user_id)`.
-2) **FastAPI CORS:**
-   - Define `allow_origins` from environment variables.
-   - **Negative Check:** Do not allow `allow_origins=["*"]` unless explicitly scoped to a development-only branch logic.
-3) **Input Validation:**
-   - **Frontend:** Validate forms with Zod before submission.
-   - **Backend:** Validate payloads with Pydantic. Relying on frontend validation is a security failure.
-4) **Dependency Hygiene:**
-   - Pin versions in `package.json` / `requirements.txt`.
-   - Run `npm audit` / `pip-audit` if available.
+## Requirements
+- RLS must be enabled on all public tables with explicit `SELECT`, `INSERT`, `UPDATE`, and `DELETE` policies.
+- Do not use permissive RLS policies like `USING (true)` on public data.
+- CORS `allow_origins` must be environment-driven and must not be `*` for production.
+- Validate inputs in the frontend with Zod and in the backend with Pydantic.
+- Pin dependency versions and run `npm audit` or `pip-audit` when available.
+- Never store secrets in code or comments.

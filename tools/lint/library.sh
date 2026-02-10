@@ -36,6 +36,25 @@ require_file() {
   fi
 }
 
+normalize_token() {
+  local value="$1"
+  if [[ "$value" == ./* ]]; then
+    value="${value#./}"
+  fi
+  printf '%s' "$value"
+}
+
+extract_section() {
+  local section="$1"
+  local path="$2"
+  awk -v section="$section" '
+    BEGIN { in_section=0 }
+    $0 == section { in_section=1; next }
+    /^## / { if (in_section) exit }
+    in_section { print }
+  ' "$path"
+}
+
 require_file "$AGENTS_REGISTRY"
 require_file "$SKILLS_REGISTRY"
 require_file "$TASKS_REGISTRY"
@@ -144,6 +163,77 @@ while IFS= read -r file; do
     fail "Ghost Artifact: '${rel_path}' exists but is not registered in TASKS.md"
   fi
 done < <(find "${LIBRARY_DIR}/tasks" -type f -name "*.md")
+
+skills_dir="${LIBRARY_DIR}/skills"
+if compgen -G "${skills_dir}/*.md" > /dev/null; then
+  for skill in "${skills_dir}"/*.md; do
+    skill_name="$(basename "$skill")"
+
+    provenance_count="$(grep -c "^## Provenance$" "$skill" || true)"
+    if [[ "$provenance_count" -eq 0 ]]; then
+      fail "${skill_name} missing required section '## Provenance'"
+    elif [[ "$provenance_count" -gt 1 ]]; then
+      fail "${skill_name} has duplicate section '## Provenance'"
+    fi
+
+    pointers_section="$(extract_section "## Pointers" "$skill")"
+    if [[ -z "$pointers_section" ]]; then
+      fail "${skill_name} missing required section '## Pointers'"
+      continue
+    fi
+
+    mapfile -t pointer_tokens < <(printf '%s\n' "$pointers_section" | { grep -oE '`[^`]+`' || true; } | sed -e 's/`//g')
+    if (( ${#pointer_tokens[@]} == 0 )); then
+      fail "${skill_name} Pointers section has no backticked paths"
+    fi
+
+    for token in "${pointer_tokens[@]}"; do
+      normalized="$(normalize_token "$token")"
+      if [[ "$normalized" == *" "* ]]; then
+        continue
+      fi
+      if [[ "$normalized" == /* || "$normalized" == ~* ]]; then
+        fail "${skill_name} pointer token uses absolute or home path '${token}'"
+        continue
+      fi
+      case "$normalized" in
+        PoT.md|TASK.md|docs/*|ops/*|tools/*|*.md|*.sh)
+          if [[ ! -e "$normalized" ]]; then
+            fail "${skill_name} pointer token '${token}' does not exist"
+          fi
+          ;;
+      esac
+    done
+
+    if grep -Eq '^[[:space:]]*[0-9]+\.[[:space:]]' "$skill"; then
+      fail "${skill_name} contains numbered list steps; skills must be pointer-first"
+    fi
+  done
+fi
+
+duplicate_patterns=(
+  "git status --porcelain"
+  "npm run lint"
+  "ruff check"
+  "flake8"
+  "npm run build"
+  "npm run test"
+  "pytest"
+  "git diff --stat"
+)
+
+if compgen -G "${LIBRARY_DIR}/tasks/*.md" > /dev/null; then
+  for task in "${LIBRARY_DIR}/tasks"/*.md; do
+    if grep -q "S-LEARN-01" "$task"; then
+      task_name="$(basename "$task")"
+      for pattern in "${duplicate_patterns[@]}"; do
+        if grep -Fq "$pattern" "$task"; then
+          fail "Duplicate verification instructions in '${task_name}' referencing S-LEARN-01: '${pattern}'"
+        fi
+      done
+    fi
+  done
+fi
 if [[ $failures -eq 0 ]]; then
   echo "OK: Library Integrity Verified."
   exit 0

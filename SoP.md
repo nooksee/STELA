@@ -1,5 +1,10 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-10 15:03:09 UTC — DP-OPS-0041 Skills System Overhaul
+- Objective: Certify the Skills subsystem as pointer-first and serviceable by aligning S-LEARN-01 through S-LEARN-06, the skills registry, and enforcement tooling with binary gates.
+- Verification: bash tools/lint/style.sh; bash tools/lint/library.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/verify.sh; ops/lib/scripts/skill.sh check.
+- Dump: storage/dumps/dump-platform-work-skills-system-overhaul-0041.txt.
+
 ## 2026-02-10 03:35:02 UTC — DP-OPS-0040 Architectural Certification and Stress Testing
 - Hardened tools/lint/style.sh to detect ASCII and Unicode apostrophe contractions across markdown.
 - Tightened tools/verify.sh filing doctrine enforcement by rejecting non-markdown artifacts in docs/.
