@@ -5,7 +5,7 @@
 This file is the operator-facing promotion template for creating new S-LEARN-XX skills. Use `ops/lib/scripts/skill.sh` to append candidates and generate Promotion Packets.
 
 ## Harvest Engine workflow
-- `ops/lib/scripts/skill.sh harvest` creates a draft in `storage/handoff/` with autonomous provenance and semantic collision checks.
+- `ops/lib/scripts/skill.sh harvest` creates a draft in `storage/archives/skills/` with autonomous provenance and semantic collision checks.
 - Review and refine the draft before promotion. Do not edit the Provenance block.
 - `ops/lib/scripts/skill.sh promote` promotes a draft into `docs/library/skills/S-LEARN-XX.md` and registers it in `docs/library/INDEX.md`.
 - `ops/lib/scripts/skill.sh check` enforces the Skills Context Hazard against `ops/lib/manifests/CONTEXT.md`.

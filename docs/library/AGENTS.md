@@ -5,10 +5,12 @@
 This file is the operator-facing promotion workflow for canon agents. Use `ops/lib/scripts/agent.sh` to append candidates and promotion entries.
 
 ## Harvest Engine Workflow
-- `ops/lib/scripts/agent.sh harvest` creates a draft in `storage/handoff/` with provenance and a pointer-first skeleton.
+- `ops/lib/scripts/agent.sh harvest-check` prints Pattern Density candidate clusters without creating drafts.
+- `ops/lib/scripts/agent.sh harvest` creates a draft in `storage/archives/agents/` with provenance and a pointer-first skeleton.
 - Review and refine the draft before promotion. Do not edit the Provenance block.
 - `ops/lib/scripts/agent.sh promote` promotes a draft into `docs/library/agents/`, updates `docs/ops/registry/AGENTS.md`, and appends to this ledger.
 - `ops/lib/scripts/agent.sh check` audits scope boundaries and context hazards.
+- Run `ops/lib/scripts/agent.sh harvest-check` at DP closeout when the DP classification is System Overhaul, Architecture Refactor, or Certification.
 
 ## Promotion Packet Template
 ### Promotion Packet: Agent Promotion
@@ -26,7 +28,7 @@ This file is the operator-facing promotion workflow for canon agents. Use `ops/l
   - Context hazard: do not add `docs/library/agents` or `docs/library/skills` to `ops/lib/manifests/CONTEXT.md`.
   - Registry alignment: refuse promotion if registry and file set diverge.
 - Definition of Done:
-  - Draft exists in `storage/handoff/` with a complete Provenance block.
+  - Draft exists in `storage/archives/agents/` with a complete Provenance block.
   - `docs/library/agents/` contains the promoted agent file with required sections (`## Pointers`, `## Scope Boundary`).
   - `docs/ops/registry/AGENTS.md` updated with the new agent ID, name, DP provenance, and specialization.
   - `docs/library/AGENTS.md` updated with candidate and promotion log entries.

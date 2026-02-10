@@ -46,6 +46,29 @@ extract_pointers_section() {
   ' "$path"
 }
 
+section_has_content() {
+  local section="$1"
+  local path="$2"
+  awk -v section="$section" '
+    BEGIN { in_section=0; found=0; has_content=0 }
+    $0 == section { in_section=1; found=1; next }
+    in_section {
+      if ($0 ~ /^## /) { exit }
+      if ($0 ~ /[^[:space:]]/) { has_content=1; exit }
+    }
+    END { if (!found || !has_content) exit 1 }
+  ' "$path"
+}
+
+provenance_field_present() {
+  local field="$1"
+  local path="$2"
+  if ! grep -nE "^[[:space:]]*- \\*\\*${field}\\*\\*:[[:space:]]*[^[:space:]]|^[[:space:]]*- \\*\\*${field}:\\*\\*[[:space:]]*[^[:space:]]" "$path" >/dev/null; then
+    return 1
+  fi
+  return 0
+}
+
 require_file "$AGENTS_REGISTRY"
 
 if [[ ! -d "$AGENTS_DIR" ]]; then
@@ -112,19 +135,28 @@ if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
   for agent in "${AGENTS_DIR}"/*.md; do
     agent_name="$(basename "$agent")"
 
-    pointers_count="$(grep -c '^## Pointers$' "$agent" || true)"
-    if [[ "$pointers_count" -eq 0 ]]; then
-      fail "Level 1: ${agent_name} missing required '## Pointers' section"
-    elif [[ "$pointers_count" -gt 1 ]]; then
-      fail "Level 1: ${agent_name} has duplicate '## Pointers' sections"
-    fi
+    required_sections=("## Provenance" "## Role" "## Specialization" "## Pointers" "## Scope Boundary")
+    for section in "${required_sections[@]}"; do
+      section_count="$(grep -c "^${section}$" "$agent" || true)"
+      if [[ "$section_count" -eq 0 ]]; then
+        fail "Level 1: ${agent_name} missing required '${section}' section"
+        continue
+      fi
+      if [[ "$section_count" -gt 1 ]]; then
+        fail "Level 1: ${agent_name} has duplicate '${section}' sections"
+        continue
+      fi
+      if ! section_has_content "$section" "$agent"; then
+        fail "Level 1: ${agent_name} section '${section}' is empty"
+      fi
+    done
 
-    scope_count="$(grep -c '^## Scope Boundary$' "$agent" || true)"
-    if [[ "$scope_count" -eq 0 ]]; then
-      fail "Level 1: ${agent_name} missing required '## Scope Boundary' section"
-    elif [[ "$scope_count" -gt 1 ]]; then
-      fail "Level 1: ${agent_name} has duplicate '## Scope Boundary' sections"
-    fi
+    required_fields=("Captured" "DP-ID" "Branch" "HEAD" "Objective")
+    for field in "${required_fields[@]}"; do
+      if ! provenance_field_present "$field" "$agent"; then
+        fail "Level 1: ${agent_name} missing Provenance field '${field}'"
+      fi
+    done
 
     pointers_section="$(extract_pointers_section "$agent")"
     toolchain_lines="$(printf '%s\n' "$pointers_section" | grep -E '^[[:space:]]*-[[:space:]]*Authorized toolchain:' || true)"
@@ -135,6 +167,13 @@ if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
     elif [[ "$toolchain_count" -gt 1 ]]; then
       fail "Level 1: ${agent_name} has duplicate Authorized toolchain entries"
     fi
+
+    required_pointer_tokens=("PoT.md" "docs/GOVERNANCE.md" "TASK.md")
+    for token in "${required_pointer_tokens[@]}"; do
+      if ! grep -q "\`$token\`" <<< "$pointers_section"; then
+        fail "Level 1: ${agent_name} missing required pointer '${token}'"
+      fi
+    done
 
     mapfile -t pointer_tokens < <(printf '%s\n' "$pointers_section" | grep -oE '`[^`]+`' | sed -e 's/`//g' || true)
     for token in "${pointer_tokens[@]}"; do
@@ -173,6 +212,9 @@ if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
     done
 
     hazard_patterns=(
+      'storage/archives/agents'
+      'storage/archives/'
+      'storage/archives'
       'storage/handoff'
       'storage/dumps'
       'OPEN-[A-Za-z0-9._-]+\\.txt'

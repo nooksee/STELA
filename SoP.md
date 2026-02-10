@@ -1,5 +1,54 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-10 16:52:29 UTC — DP-OPS-0042 Agent System Certification and Harvester Hardening
+- Objective: Certify the Agent subsystem as pointer-first and serviceable by aligning R-AGENT-01 through R-AGENT-06, synchronizing the agent registry and promotion ledger, and hardening enforcement tooling and the agent harvester logic so that low-frequency role emergence can be detected via Pattern Density (tool-and-pointer cluster recurrence).
+- Verification: bash tools/lint/style.sh; bash tools/lint/agent.sh; bash tools/lint/library.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/verify.sh; ops/lib/scripts/agent.sh check; ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle; ./ops/bin/llms.
+- Dump: storage/dumps/dump-platform-work-agent-system-certification-0042-5b51900d.txt.
+
+1. Primary Commit Header: DP-OPS-0042 agent system certification and harvester hardening
+2. Pull Request Title: DP-OPS-0042 Agent System Certification and Harvester Hardening
+3. Pull Request Description:
+
+### Summary
+- Hardened `ops/lib/scripts/agent.sh` with Pattern Density heuristics for low-frequency agent candidacy detection.
+- Tightened `tools/lint/agent.sh` to enforce strict agent schema and context hazard rejection.
+- Recertified `R-AGENT-01` through `R-AGENT-06` and synchronized `docs/ops/registry/AGENTS.md`.
+- Refreshed llms bundles via `ops/bin/llms` after enforcement and canon surface updates.
+
+### Testing
+- bash tools/lint/style.sh
+- bash tools/lint/agent.sh
+- bash tools/lint/library.sh
+- bash tools/lint/context.sh
+- bash tools/lint/truth.sh
+- bash tools/verify.sh
+- ops/lib/scripts/agent.sh check
+- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
+- ./ops/bin/llms
+
+4. Final Squash Stub: Enforce agent certification gates and harden role emergence harvesting logic
+5. Extended Technical Manifest:
+- ops/lib/scripts/agent.sh
+- ops/lib/scripts/heuristics.sh
+- tools/lint/agent.sh
+- docs/library/AGENTS.md
+- docs/ops/registry/AGENTS.md
+- docs/library/agents/R-AGENT-01.md
+- docs/library/agents/R-AGENT-02.md
+- docs/library/agents/R-AGENT-03.md
+- docs/library/agents/R-AGENT-04.md
+- docs/library/agents/R-AGENT-05.md
+- docs/library/agents/R-AGENT-06.md
+- llms.txt
+- llms-small.txt
+- llms-full.txt
+- llms-ops.txt
+- llms-governance.txt
+- TASK.md
+- SoP.md
+6. Review Conversation Starter:
+Does the Pattern Density heuristic in the agent harvester correctly balance low emergence frequency with rigorous capture, while avoiding semantic collisions with existing canon agents?
+
 ## 2026-02-10 15:03:09 UTC — DP-OPS-0041 Skills System Overhaul
 - Objective: Certify the Skills subsystem as pointer-first and serviceable by aligning S-LEARN-01 through S-LEARN-06, the skills registry, and enforcement tooling with binary gates.
 - Verification: bash tools/lint/style.sh; bash tools/lint/library.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/verify.sh; ops/lib/scripts/skill.sh check.
