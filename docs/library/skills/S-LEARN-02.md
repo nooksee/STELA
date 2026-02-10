@@ -11,31 +11,19 @@
 ## Scope
 Production payload work only. Not platform maintenance.
 
-## Invocation guidance
-Use this skill when initializing or refactoring project payloads. The Trap: Mixing paradigms (e.g., using Django patterns in FastAPI, or Pages Router in App Router). Solution: Adhere strictly to the Stela Stack definitions below.
+## Invocation Guidance
+Use when initializing or refactoring project payloads.
 
-## Drift preventers
-- Stop if the DP attempts to introduce a new language or framework (e.g., Go, Vue, NestJS) without explicit Operator override.
-- Strict Isolation: Project code must not import from ops/ or docs/.
+## Pointers
+- Constitution: `PoT.md`
+- Governance: `docs/GOVERNANCE.md`
+- Contract: `TASK.md`
+- Registry: `docs/ops/registry/SKILLS.md`
+- Project registry: `docs/ops/registry/PROJECTS.md`
+- Project rules template: `ops/lib/project/STELA.md`
+- Reference docs: `docs/MANUAL.md`
 
-## Procedure
-1) Directory Authority:
-   - Frontend code lives under `src/`.
-   - Backend code lives under `app/`.
-2) Frontend Stack (Web):
-   - Framework: Next.js 14+ (App Router).
-   - Language: TypeScript (Strict).
-   - UI: Tailwind CSS + Shadcn/UI (Copy-paste component ownership).
-   - Structure: `src/app`, `src/components`, `src/lib`.
-3) Backend Stack (API):
-   - Framework: FastAPI (Python 3.11+).
-   - Interface: REST (JSON) + OpenAPI (Auto-generated).
-   - Structure: `app/main.py`, `app/routers/`, `app/schemas/` (Pydantic).
-4) Data & State:
-   - Database: Supabase (Postgres).
-   - Auth: Supabase Auth.
-   - Caching: Redis (if required).
-5) Deployment Contract:
-   - Config: Environment variables ONLY (Read from `process.env` or `os.environ`).
-   - Secrets: Never committed.
-   - Docker: Multi-stage builds required for production artifacts.
+## Guardrails
+- Do not introduce new languages or frameworks without explicit Operator override.
+- Project payload code must not import from `ops/` or `docs/`.
+- Project stack rules live in per-project STELA files under `projects/`.

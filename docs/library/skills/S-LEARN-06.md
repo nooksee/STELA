@@ -12,24 +12,19 @@
 Applies to platform maintenance and production payload work.
 Use when a change touches security, data access, build pipelines, or frequently edited subsystems.
 
-## Invocation guidance
-Use this skill when a diff includes hot zones or high churn files.
-**The Trap:** Reviewing the diff in isolation and missing volatility signals.
-**Solution:** Identify hot zones, measure churn, and flag unstable areas explicitly.
+## Invocation Guidance
+Use when a diff includes hot zones or high churn files.
 
-## Drift preventers
-- Stop if a hot zone change lacks a clear owner or verification evidence.
-- Stop if churn indicators are present and RESULTS does not include the evidence trail.
+## Pointers
+- Constitution: `PoT.md`
+- Governance: `docs/GOVERNANCE.md`
+- Contract: `TASK.md`
+- Registry: `docs/ops/registry/SKILLS.md`
+- Reference docs: `docs/MANUAL.md`
 
-## Procedure
-1) Hot Zone Identification:
-   - Flag auth, permissions, data access, migrations, payment flows, and build or deploy scripts.
-   - Treat changes in `ops/`, `tools/`, or governance surfaces as hot zones by default.
-2) Churn Detection:
-   - Run `git log --name-only -n 20 -- <path>` for touched files.
-   - Look for repeated edits, reversals, or frequent reverts in the recent history.
-3) Forensic Notes:
-   - Record churn signals and repeated hotspots in RESULTS with file paths and counts.
-   - If churn is high, require additional verification or review.
-4) Risk Elevation:
-   - Escalate severity for hot zone changes with weak tests or missing validation output.
+## Forensics Requirements
+- Identify hot zones in auth, permissions, data access, migrations, payment flows, and build or deploy scripts.
+- Treat changes in `ops/`, `tools/`, or governance surfaces as hot zones by default.
+- Measure churn with `git log` scoped to touched files and record repeat edits.
+- Record churn signals and verification evidence in RESULTS with file paths and counts.
+- Escalate risk when hot zone changes lack owners or verification evidence.

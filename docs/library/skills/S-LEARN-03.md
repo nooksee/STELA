@@ -11,33 +11,18 @@
 ## Scope
 Production payload work only. Not platform maintenance.
 
-## Invocation guidance
-Use this skill when implementing API surfaces or data fetching hooks. The Trap: Inconsistent error parsing causes frontend crashes. Solution: Enforce the Zenith Envelope on the server and the Zenith Hook on the client.
+## Invocation Guidance
+Use when implementing API surfaces or data fetching hooks.
 
-## Drift preventers
-- Stop if endpoints return raw arrays or bare primitives.
-- Stop if hooks expose raw fetch states without normalization.
+## Pointers
+- Constitution: `PoT.md`
+- Governance: `docs/GOVERNANCE.md`
+- Contract: `TASK.md`
+- Registry: `docs/ops/registry/SKILLS.md`
+- Reference docs: `docs/MANUAL.md`
 
-## Procedure
-1) The Zenith Envelope (Server Response):
-   - Envelope type: `{ ok: boolean, data: T, error: { code, message }, meta: any }`.
-   - All JSON responses must match:
-```json
-{ "ok": true, "data": {"...": "..."}, "error": null, "meta": { "trace_id": "..." } }
-```
-   - On Error: `"ok": false, "data": null, "error": { "code": "E_...", "message": "Human readable" }`.
-2) The Zenith Hook (Client State):
-   - Custom hooks must return:
-```ts
-{
-  data: T | null;
-  loading: boolean;
-  error: string | null;
-  refresh: () => Promise<void>;
-}
-```
-   - Define the Fetch Hook Pattern: `useZenithQuery<T>`.
-   - The Trap: isLoading sticking to true on failure.
-   - Solution: Ensure `finally { loading = false }` block.
-3) Normalization:
-   - The Client Wrapper must intercept non-200 HTTP statuses and convert them into the Zenith Error format before the component sees them.
+## Specification
+- Server responses use the Zenith envelope fields `ok`, `data`, `error`, and `meta`.
+- Error responses set `ok` to `false`, `data` to `null`, and populate `error.code` and `error.message`.
+- Client hooks expose normalized state keys `data`, `loading`, `error`, and `refresh`.
+- Client wrappers normalize non-200 responses into the Zenith error envelope before UI consumption.
