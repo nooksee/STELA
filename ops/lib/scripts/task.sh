@@ -46,6 +46,25 @@ require_repo_root() {
   require_file "$CONTEXT_MANIFEST"
 }
 
+task_id_exists() {
+  local task_id="$1"
+  if [[ -z "$task_id" ]]; then
+    return 1
+  fi
+  if awk -v task_id="$task_id" -F'|' '
+    $0 ~ /^\|/ && $0 !~ /^\|[[:space:]]*---/ {
+      id=$2
+      gsub(/^[[:space:]]+/, "", id)
+      gsub(/[[:space:]]+$/, "", id)
+      if (id == task_id) { found=1; exit }
+    }
+    END { exit found ? 0 : 1 }
+  ' "$TASKS_REGISTRY"; then
+    return 0
+  fi
+  return 1
+}
+
 require_tasks_ledger_sections() {
   if ! grep -q "^## Candidate Log" "$TASKS_LEDGER"; then
     die "Task ledger missing Candidate Log section."
@@ -209,6 +228,9 @@ validate_candidate() {
   require_field_value "Objective" "$path"
   require_field_value "Primary Agent" "$path"
   require_field_value "Supporting Agents" "$path"
+  require_field_value "Allowed" "$path"
+  require_field_value "Forbidden" "$path"
+  require_field_value "Stop Conditions" "$path"
 
   if ! grep -q 'PoT.md' "$path"; then
     die "Draft missing PoT.md pointer in Pointers section."
@@ -218,6 +240,23 @@ validate_candidate() {
   fi
   if ! grep -q 'TASK.md' "$path"; then
     die "Draft missing TASK.md pointer in Pointers section."
+  fi
+
+  local execution_section
+  execution_section="$(awk -v section="## Execution Logic" '
+    BEGIN { in_section=0 }
+    $0 == section { in_section=1; next }
+    /^## / { if (in_section) exit }
+    in_section { print }
+  ' "$path")"
+
+  local last_step
+  last_step="$(printf '%s\n' "$execution_section" | awk '/^[[:space:]]*[0-9]+\\.[[:space:]]/ {line=$0} END {print line}')"
+  if [[ -z "$last_step" ]]; then
+    die "Draft Execution Logic missing numbered steps."
+  fi
+  if ! grep -q "Closeout" <<< "$last_step" || ! grep -q "TASK.md" <<< "$last_step" || ! grep -qi "Section 4" <<< "$last_step"; then
+    die "Draft Execution Logic missing final Closeout pointer to TASK.md Section 4."
   fi
 }
 
@@ -324,7 +363,7 @@ select_latest_draft() {
   local draft_path=""
   mapfile -t drafts < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name 'task-*.md' | sort)
   if (( ${#drafts[@]} == 0 )); then
-    die "No draft found in storage/handoff"
+    die "No draft found in ${HANDOFF_DIR}"
   fi
   if (( ${#drafts[@]} == 1 )); then
     echo "${drafts[0]}"
@@ -477,6 +516,9 @@ cmd_harvest() {
   if [[ ! "$task_id" =~ ^B-TASK-[0-9]{2,}$ ]]; then
     die "Task ID must match B-TASK-XX"
   fi
+  if task_id_exists "$task_id"; then
+    die "Task ID ${task_id} already exists in docs/ops/registry/TASKS.md. Review the registry or run ops/lib/scripts/task.sh check before harvesting."
+  fi
 
   local base_ref="main"
   local head_ref="HEAD"
@@ -528,6 +570,7 @@ ${provenance_block}
 2. Execution: Not provided.
 3. Verification: Not provided.
 4. Correction: Not provided.
+5. Closeout: Complete Closeout per \`TASK.md\` Section 4.
 
 ## Scope Boundary
 - **Allowed:** Not provided.

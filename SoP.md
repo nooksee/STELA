@@ -1,5 +1,10 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-10 18:03:22 UTC — DP-OPS-0043 Task Subsystem Hardening and Harvester Certification
+- Objective: Certify the Task subsystem as pointer-first and serviceable by aligning ops/lib/scripts/task.sh with tools/lint/task.sh requirements, enforcing registry ID collision locks, and hardening promotion and lint gates to prevent placeholder drift and missing Closeout pointers.
+- Verification: bash tools/lint/style.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/lint/task.sh; bash tools/lint/library.sh; bash tools/verify.sh; ops/lib/scripts/task.sh check; ./ops/bin/context --dp=DP-OPS-0043; ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle; ./ops/bin/llms --out-dir=.
+- Dump: storage/dumps/dump-platform-work-task-harvester-hardening-0043-1b4325f9.txt.
+
 ## 2026-02-10 16:52:29 UTC — DP-OPS-0042 Agent System Certification and Harvester Hardening
 - Objective: Certify the Agent subsystem as pointer-first and serviceable by aligning R-AGENT-01 through R-AGENT-06, synchronizing the agent registry and promotion ledger, and hardening enforcement tooling and the agent harvester logic so that low-frequency role emergence can be detected via Pattern Density (tool-and-pointer cluster recurrence).
 - Verification: bash tools/lint/style.sh; bash tools/lint/agent.sh; bash tools/lint/library.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/verify.sh; ops/lib/scripts/agent.sh check; ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle; ./ops/bin/llms.

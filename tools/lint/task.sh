@@ -188,6 +188,14 @@ if compgen -G "${TASKS_DIR}/*.md" > /dev/null; then
       fi
     done
 
+    for label in "Allowed" "Forbidden" "Stop Conditions"; do
+      value="$(field_value "$label" "$task")"
+      value="$(echo "$value" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+      if is_placeholder_value "$value"; then
+        fail "${task_name} missing or placeholder value for '${label}'"
+      fi
+    done
+
     pointers_section="$(extract_section "## Pointers" "$task")"
 
     if ! grep -q 'PoT.md' <<< "$pointers_section"; then
