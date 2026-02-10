@@ -148,6 +148,12 @@ When reporting, include:
 ## SoP.md
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-10 01:27:17 UTC — DP-OPS-0039 Task System Certification (Closeout + Quantitative Rigor)
+- Updated task doctrine to require explicit Closeout pointers in Execution Logic and quantitative reporting capture in RESULTS.
+- Hardened tools/lint/task.sh to enforce Closeout pointers in final execution steps.
+- Refactored B-TASK-01 through B-TASK-06 to include Closeout pointers, expanded reporting requirements, and Closeout scope allowances.
+- Added S-LEARN-06 Hot Zone Forensics guidance and registered it in the skills registry.
+
 ## 2026-02-09 15:01:14 UTC — DP-OPS-0038B Governance Hardening (Read-in Order and Failure States)
 - Added the Source of Truth Read-in Order and System Failure States tables to PoT.md, including the TASK.md dirty-state exemption.
 - Hardened tools/lint/dp.sh to accept decimal DP headings only and refreshed its embedded fixtures.
@@ -205,13 +211,6 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Added a guardrail audit command to ops/lib/scripts/agent.sh to enforce scope boundaries and detect context hazards.
 - Updated TASK.md active context to DP-OPS-0031 and recorded the DP-OPS-0031 work log entry.
 
-## 2026-02-06 22:43:24 UTC — DP-OPS-0030 Governance Refactor & Hygiene
-- Updated `tools/verify.sh` to allow `storage/archives` in drift checks.
-- Added `storage/archives/.gitkeep` to ensure archive directory presence.
-- Cleared `TASK.md` Work Log history and added an active DP notice.
-- Ran `ops/bin/prune`; SoP remains within threshold with no archive move required.
-- Refreshed `llms-small.txt` and `llms-full.txt`.
-
 
 
 ## TASK.md
@@ -222,8 +221,8 @@ Last Updated: 2026-02-09
 
 ## 1. Session State (The Anchor)
 Pointer: storage/handoff/OPEN-*.txt (The generated session context)
-Active Branch: work/governance-hardening-0038b (Must match OPEN artifact)
-Base HEAD: a80d295e9 (Must match OPEN artifact)
+Active Branch: work/task-serviceability-0038 (Must match OPEN artifact)
+Base HEAD: 03f47297e (Must match OPEN artifact)
 Context Manifest: ops/lib/manifests/CONTEXT.md (Checked by tools/lint/context.sh)
 
 ## 2. Logic Pointers (The Law)
@@ -313,8 +312,8 @@ Does the pointer-first TASK dashboard and toolchain enforcement match the Refact
 
 ## llms.txt
 # Stela llms.txt
-# HEAD: 4605e6fd3
-# HEAD commit time: 2026-02-07T13:48:28-05:00
+# HEAD: a80d295e9
+# HEAD commit time: 2026-02-08T20:40:48-05:00
 # Refresh: ./ops/bin/llms
 # Pointer map to canonical docs and tools (no duplication).
 

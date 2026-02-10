@@ -242,6 +242,15 @@ if compgen -G "${TASKS_DIR}/*.md" > /dev/null; then
         fi
       fi
     done <<< "$execution_section"
+
+    last_step="$(printf '%s\n' "$execution_section" | awk '/^[[:space:]]*[0-9]+\.[[:space:]]/ {line=$0} END {print line}')"
+    if [[ -z "$last_step" ]]; then
+      fail "${task_name} has no numbered steps in Execution Logic"
+    else
+      if ! grep -q "Closeout" <<< "$last_step" || ! grep -q "TASK.md" <<< "$last_step" || ! grep -qi "Section 4" <<< "$last_step"; then
+        fail "${task_name} missing final Closeout pointer in Execution Logic (TASK.md Section 4)"
+      fi
+    fi
   done
 fi
 

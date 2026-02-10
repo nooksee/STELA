@@ -8,6 +8,8 @@ This file is the operator-facing promotion workflow for canon tasks. Use `ops/li
 - Provenance is required for every task promotion.
 - Reuse-first: if an existing workflow or script exists, use it and point to it.
 - Orchestration only: tasks coordinate agents, skills, and tools. Tasks do not duplicate logic.
+- Execution Logic must end with an explicit Closeout step that points to `TASK.md` Section 4.
+- Quantitative reporting: when tools return counts or pass or fail summaries, paste the outputs into RESULTS.
 
 ## Harvest Engine Workflow
 - `ops/lib/scripts/task.sh harvest` creates a draft in `storage/handoff/` with provenance and a pointer-first skeleton.
@@ -22,9 +24,10 @@ This file is the operator-facing promotion workflow for canon tasks. Use `ops/li
   - Task ID: `B-TASK-XX`.
   - DP provenance: DP ID, branch, HEAD, and objective.
   - Pointer set: authorized toolchain, required agents, JIT skills, and reference docs.
+  - Execution Logic: final step points to the Closeout routine in `TASK.md` Section 4.
   - Drift preventers: scope boundary, stop conditions, and registry alignment.
   - Definition of Done: promotion artifacts, registry updates, lint passes, and SoP updates when required.
-- Verification (capture command output in RESULTS):
+- Verification (paste command output summaries into RESULTS when available):
   - `./ops/bin/dump --scope=platform`
   - `bash tools/lint/context.sh`
   - `bash tools/lint/truth.sh` (required when canon or governance surfaces change)

@@ -1,5 +1,11 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-10 01:27:17 UTC — DP-OPS-0039 Task System Certification (Closeout + Quantitative Rigor)
+- Updated task doctrine to require explicit Closeout pointers in Execution Logic and quantitative reporting capture in RESULTS.
+- Hardened tools/lint/task.sh to enforce Closeout pointers in final execution steps.
+- Refactored B-TASK-01 through B-TASK-06 to include Closeout pointers, expanded reporting requirements, and Closeout scope allowances.
+- Added S-LEARN-06 Hot Zone Forensics guidance and registered it in the skills registry.
+
 ## 2026-02-09 15:01:14 UTC — DP-OPS-0038B Governance Hardening (Read-in Order and Failure States)
 - Added the Source of Truth Read-in Order and System Failure States tables to PoT.md, including the TASK.md dirty-state exemption.
 - Hardened tools/lint/dp.sh to accept decimal DP headings only and refreshed its embedded fixtures.

@@ -10,3 +10,4 @@ Authoritative registry for canon skills.
 | S-LEARN-03 | Skill: Zenith Reference | docs/library/skills/S-LEARN-03.md | |
 | S-LEARN-04 | Skill: Coding Standards | docs/library/skills/S-LEARN-04.md | |
 | S-LEARN-05 | Skill: Security Protocols | docs/library/skills/S-LEARN-05.md | |
+| S-LEARN-06 | Skill: Hot Zone Forensics | docs/library/skills/S-LEARN-06.md | |
