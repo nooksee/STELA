@@ -170,3 +170,66 @@ check_semantic_collision() {
 
   return 0
 }
+
+check_agent_collision() {
+  local title="$1"
+  local agents_dir="$2"
+  local drafts_dir="${3:-}"
+
+  if [[ -z "$title" ]]; then
+    return 0
+  fi
+
+  if [[ ! -d "$agents_dir" && ( -z "$drafts_dir" || ! -d "$drafts_dir" ) ]]; then
+    return 0
+  fi
+
+  local clean_title
+  clean_title="$(printf '%s' "$title" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9 ' ' ')"
+
+  read -r -a raw_words <<< "$clean_title"
+  local words=()
+  local word
+  for word in "${raw_words[@]}"; do
+    if [[ "$word" =~ ^(the|and|for|with|use|how|to|agent|agents|role|roles|assistant|helpers|helper|guide|guidance|overview|practice|best)$ ]]; then
+      continue
+    fi
+    if (( ${#word} < 3 )); then
+      continue
+    fi
+    words+=("$word")
+  done
+
+  if (( ${#words[@]} == 0 )); then
+    return 0
+  fi
+
+  local collision_count=0
+  local file
+  for file in "$agents_dir"/*.md "$drafts_dir"/agent-*.md; do
+    if [[ ! -f "$file" ]]; then
+      continue
+    fi
+
+    local match_count=0
+    local content
+    content="$(tr '[:upper:]' '[:lower:]' < "$file")"
+
+    for word in "${words[@]}"; do
+      if grep -qF "$word" <<< "$content"; then
+        match_count=$((match_count + 1))
+      fi
+    done
+
+    if (( match_count >= 2 )); then
+      printf '%s\n' "$(basename "$file")"
+      collision_count=$((collision_count + 1))
+    fi
+  done
+
+  if (( collision_count > 0 )); then
+    return 1
+  fi
+
+  return 0
+}

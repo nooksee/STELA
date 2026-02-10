@@ -1,12 +1,12 @@
 # STELA TASK DASHBOARD (LIVING SURFACE)
 Status: ACTIVE
 Owner: Integrator
-Last Updated: 2026-02-09
+Last Updated: 2026-02-10
 
 ## 1. Session State (The Anchor)
 Pointer: storage/handoff/OPEN-*.txt (The generated session context)
-Active Branch: main (Must match OPEN artifact)
-Base HEAD: 2dc63dd5f (Must match OPEN artifact)
+Active Branch: work/agent-system-certification-0042 (Must match OPEN artifact)
+Base HEAD: 5b51900d (Must match OPEN artifact)
 Context Manifest: ops/lib/manifests/CONTEXT.md (Checked by tools/lint/context.sh)
 
 ## 2. Logic Pointers (The Law)
@@ -24,67 +24,91 @@ Primary Constraint: PoT.md (Policy of Truth) wins in all conflicts.
 - Truth Integrity: tools/lint/truth.sh (Enforces canon spelling).
 
 ## 3. Current Dispatch Packet (DP)
-DP-OPS-0038: Pointer-First Agent Constitution and Task Governance Refactor
+DP-OPS-0042: Agent System Certification and Harvester Hardening
 
 ### 3.1 Scope Boundary
-Objective: Transition Stela to a pointer-first agent constitution by removing ghost canon, refactoring TASK.md into a deterministic dashboard, and hardening the ops toolchain to enforce the Filing Doctrine.
+Objective: Certify the Agent subsystem as pointer-first and serviceable by aligning R-AGENT-01 through R-AGENT-06, synchronizing the agent registry and promotion ledger, and hardening enforcement tooling and the agent harvester logic so that low-frequency role emergence can be detected via Pattern Density (tool-and-pointer cluster recurrence).
 Allowlist (Hard Gate):
-- .github/workflows/sop_policing.yml
-- .github/copilot-instructions.md
-- docs/GOVERNANCE.md
-- ops/bin/open
-- tools/lint/style.sh
-- tools/lint/dp.sh
-- tools/verify.sh
+- ops/lib/scripts/agent.sh
+- ops/lib/scripts/heuristics.sh
+- tools/lint/agent.sh
+- docs/library/AGENTS.md
+- docs/ops/registry/AGENTS.md
+- docs/library/agents/R-AGENT-01.md
+- docs/library/agents/R-AGENT-02.md
+- docs/library/agents/R-AGENT-03.md
+- docs/library/agents/R-AGENT-04.md
+- docs/library/agents/R-AGENT-05.md
+- docs/library/agents/R-AGENT-06.md
+- ops/bin/llms
+- llms.txt
+- llms-small.txt
+- llms-full.txt
+- llms-ops.txt
+- llms-governance.txt
 - TASK.md
 - SoP.md
 
 Stop Condition: Any edit outside the Allowlist is a system failure. STOP immediately.
 
 ### 3.2 Execution Plan
-1. Context Load: Verify OPEN artifact matches git branch and HEAD.
-2. Registry Cleanse: Replace TRUTH.md with PoT.md and align read-in order to docs/MAP.md.
-3. Task Refactor: Replace TASK.md with the pointer-first schema and update session state automation.
-4. Toolchain Alignment: Enforce contraction checks, filing doctrine checks, and DP structure checks.
-5. Verification and Receipt: Run required gates, generate dump, and capture RESULTS.
+1. Preflight and branch discipline: run ops/bin/open, confirm work branch on base head, and avoid main edits.
+2. Harvester hardening: implement Pattern Density, deterministic harvest-check output, collision avoidance, and archives alignment in ops/lib/scripts/agent.sh and ops/lib/scripts/heuristics.sh.
+3. Linter hardening: enforce agent schema, provenance fields, pointer validation, and context hazard rejection in tools/lint/agent.sh.
+4. Recertification and registry sync: update R-AGENT-01 through R-AGENT-06, docs/library/AGENTS.md, and docs/ops/registry/AGENTS.md for DP-OPS-0042.
+5. Verification and receipt: run required gates, generate dump bundle, refresh llms bundles, and record RESULTS, SoP, and Work Log entries.
 
 ### 3.3 Skill Integration
-Harvest and promote via ops/lib/scripts/skill.sh.
-Constraint: Do not edit docs/library/SKILLS.md manually.
+Use ops/lib/scripts/skill.sh only when a new skill candidate is required; do not edit docs/library/SKILLS.md manually.
 
 ## 4. Closeout (Mandatory)
-Requirement: Populate storage/handoff/DP-OPS-0038-RESULTS.md and append the following block.
+Requirement: Populate storage/handoff/DP-OPS-0042-RESULTS.md and append the following block.
 
 ### Mandatory Closing Block
 Constraint: Final Squash Stub must differ significantly from Primary Commit Header.
-1. Primary Commit Header: DP-OPS-0038 pointer-first task dashboard and toolchain enforcement
-2. Pull Request Title: DP-OPS-0038 pointer-first task governance refactor
+1. Primary Commit Header: DP-OPS-0042 agent system certification and harvester hardening
+2. Pull Request Title: DP-OPS-0042 Agent System Certification and Harvester Hardening
 3. Pull Request Description:
+
 ### Summary
-- Replaced TRUTH.md references with PoT.md in CI and Copilot guidance.
-- Refactored TASK.md to a pointer-first dashboard with session state automation.
-- Tightened style, verify, and DP lint gates.
-- Simplified docs/GOVERNANCE.md into PoT pointers.
+- Hardened `ops/lib/scripts/agent.sh` with Pattern Density heuristics for low-frequency agent candidacy detection.
+- Tightened `tools/lint/agent.sh` to enforce strict agent schema and context hazard rejection.
+- Recertified `R-AGENT-01` through `R-AGENT-06` and synchronized `docs/ops/registry/AGENTS.md`.
+- Refreshed llms bundles via `ops/bin/llms` after enforcement and canon surface updates.
 
 ### Testing
 - bash tools/lint/style.sh
-- bash tools/verify.sh
+- bash tools/lint/agent.sh
+- bash tools/lint/library.sh
 - bash tools/lint/context.sh
 - bash tools/lint/truth.sh
-- bash tools/lint/dp.sh --test
-4. Final Squash Stub: Refactor TASK governance and enforcement tooling for pointer-first ops
+- bash tools/verify.sh
+- ops/lib/scripts/agent.sh check
+- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
+- ./ops/bin/llms
+
+4. Final Squash Stub: Enforce agent certification gates and harden role emergence harvesting logic
 5. Extended Technical Manifest:
-.github/workflows/sop_policing.yml
-.github/copilot-instructions.md
-docs/GOVERNANCE.md
-ops/bin/open
-tools/lint/style.sh
-tools/verify.sh
-tools/lint/dp.sh
-TASK.md
-SoP.md
+- ops/lib/scripts/agent.sh
+- ops/lib/scripts/heuristics.sh
+- tools/lint/agent.sh
+- docs/library/AGENTS.md
+- docs/ops/registry/AGENTS.md
+- docs/library/agents/R-AGENT-01.md
+- docs/library/agents/R-AGENT-02.md
+- docs/library/agents/R-AGENT-03.md
+- docs/library/agents/R-AGENT-04.md
+- docs/library/agents/R-AGENT-05.md
+- docs/library/agents/R-AGENT-06.md
+- llms.txt
+- llms-small.txt
+- llms-full.txt
+- llms-ops.txt
+- llms-governance.txt
+- TASK.md
+- SoP.md
 6. Review Conversation Starter:
-Does the pointer-first TASK dashboard and toolchain enforcement match the Refactoring Strategy Section 5.1 expectations?
+Does the Pattern Density heuristic in the agent harvester correctly balance low emergence frequency with rigorous capture, while avoiding semantic collisions with existing canon agents?
 
 ## 5. Work Log (Timestamped Continuity)
 2026-02-08 16:30 - THREAD START: DP-OPS-0038. Seed: Pointer-First Constitution Refactor (Ghost Canon elimination, TASK schema replacement, Toolchain hardening).
@@ -92,3 +116,5 @@ Does the pointer-first TASK dashboard and toolchain enforcement match the Refact
 2026-02-09 00:20 - DP-OPS-0038: Replaced ghost canon references, refactored TASK.md to the pointer-first dashboard, and hardened toolchain enforcement. Verification: RUN (style lint, verify, context lint, truth lint, dp lint test, dump). Blockers: ops/bin/llms not run due to allowlist scope. NEXT: Operator review DP-OPS-0038 results.
 2026-02-09 15:07 - DP-OPS-0038B: Added PoT read-in order and system failure states, exempted TASK.md dirty-state, updated dp lint to decimal-only, and logged SoP entry. Verification: RUN (tools/lint/context.sh, tools/lint/truth.sh, tools/verify.sh, ops/bin/dump, tools/lint/dp.sh --test). NOT RUN: ops/bin/llms (allowlist excludes llms bundles). Blockers: ops/bin/llms deferred pending scope approval. NEXT: Operator review RESULTS and decide on llms refresh scope.
 2026-02-09 15:13 - DP-OPS-0038B: Expanded scope to refresh llms bundles via ops/bin/llms. Verification: RUN (ops/bin/llms). Blockers: none. NEXT: Operator review updated RESULTS.
+2026-02-10 16:36 - THREAD START: DP-OPS-0042. Seed: Agent System Certification and Harvester Hardening (Pattern Density emergence, linter tightening, recertification, registry sync, llms refresh). Base HEAD: 5b51900d.
+2026-02-10 16:52 - THREAD END: DP-OPS-0042. Verification: RUN (bash tools/lint/style.sh, bash tools/lint/agent.sh, bash tools/lint/library.sh, bash tools/lint/context.sh, bash tools/lint/truth.sh, bash tools/verify.sh, ops/lib/scripts/agent.sh check, ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle, ./ops/bin/llms).

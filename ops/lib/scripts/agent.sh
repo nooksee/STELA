@@ -10,6 +10,7 @@ SOP_FILE="${REPO_ROOT}/SoP.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
 HANDOFF_DIR="${REPO_ROOT}/storage/archives/agents"
+OPEN_DIR="${REPO_ROOT}/storage/handoff"
 DUMPS_DIR="${REPO_ROOT}/storage/dumps"
 HEURISTICS_LIB="${SCRIPT_DIR}/heuristics.sh"
 
@@ -20,17 +21,20 @@ else
   detect_hot_zone() { echo "None"; }
   detect_high_churn() { echo "None"; }
   generate_provenance_block() { echo "## Provenance"; }
+  check_agent_collision() { return 0; }
 fi
 
 usage() {
   cat <<'USAGE'
 Usage:
   ops/lib/scripts/agent.sh harvest --name "..." --dp "DP-OPS-XXXX" [--specialization "..."] [--summary "..."] [--skill S-LEARN-01] [--skills S-LEARN-01,S-LEARN-02] [--open PATH] [--dump PATH] [--objective "..."]
+  ops/lib/scripts/agent.sh harvest-check|--harvest-check
   ops/lib/scripts/agent.sh promote <draft_path> [--delete-draft]
   ops/lib/scripts/agent.sh check|--check
 
 Notes:
 - harvest auto-detects OPEN and dump artifacts when omitted; use --open/--dump to override.
+- harvest-check prints Pattern Density candidate clusters without creating drafts.
 - promote enforces pointer-first gates and PoT duplication linting.
 USAGE
 }
@@ -183,7 +187,7 @@ redact_stream() {
 }
 
 select_latest_open() {
-  mapfile -t opens < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name 'OPEN-*.txt' | grep -v 'OPEN-PORCELAIN-' | sort)
+  mapfile -t opens < <(find "$OPEN_DIR" -maxdepth 1 -type f -name 'OPEN-*.txt' | grep -v 'OPEN-PORCELAIN-' | sort)
   if (( ${#opens[@]} == 0 )); then
     die "No OPEN artifacts found in storage/handoff"
   fi
@@ -237,6 +241,330 @@ select_latest_dump() {
 collect_manifest_paths() {
   awk -F'`' 'NF >= 3 { for (i = 2; i <= NF; i += 2) print $i }' "$CONTEXT_MANIFEST" | \
     awk 'NF' | awk '!seen[$0]++'
+}
+
+normalize_pointer_token() {
+  local token="$1"
+  token="${token#./}"
+  case "$token" in
+    MANUAL.md)
+      echo "docs/MANUAL.md"
+      ;;
+    MAP.md)
+      echo "docs/MAP.md"
+      ;;
+    GOVERNANCE.md)
+      echo "docs/GOVERNANCE.md"
+      ;;
+    PoT.md)
+      echo "PoT.md"
+      ;;
+    TASK.md)
+      echo "TASK.md"
+      ;;
+    *)
+      echo "$token"
+      ;;
+  esac
+}
+
+canonical_pointers() {
+  printf '%s\n' "PoT.md" "docs/MANUAL.md" "docs/MAP.md" "docs/GOVERNANCE.md" "TASK.md"
+}
+
+is_canonical_pointer() {
+  case "$1" in
+    "PoT.md"|"docs/MANUAL.md"|"docs/MAP.md"|"docs/GOVERNANCE.md"|"TASK.md")
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+extract_verification_tools() {
+  local entry="$1"
+  local lines
+  lines="$(printf '%s\n' "$entry" | grep -E 'Verification:' || true)"
+  if [[ -z "$lines" ]]; then
+    return 0
+  fi
+
+  local matches
+  matches="$(printf '%s\n' "$lines" | \
+    sed -E 's/.*Verification:[[:space:]]*//g' | \
+    grep -oE '(\\./)?(ops/bin|ops/lib/scripts|tools/lint|tools/test|tools/verify\\.sh)[A-Za-z0-9._/-]*' || true)"
+  if [[ -z "$matches" ]]; then
+    return 0
+  fi
+
+  printf '%s\n' "$matches" | sed -E 's|^\\./||' | sort -u
+}
+
+extract_pointer_tokens() {
+  local entry="$1"
+  local matches
+  matches="$(printf '%s\n' "$entry" | grep -oE '[A-Za-z0-9._/-]+\\.md' || true)"
+  if [[ -z "$matches" ]]; then
+    return 0
+  fi
+
+  printf '%s\n' "$matches" | sed -E 's|^\\./||' | sort -u
+}
+
+collect_recent_sop_entries() {
+  local limit="${1:-30}"
+  local count=0
+  local entry=""
+  local line
+
+  while IFS= read -r line; do
+    if [[ "$line" =~ ^##[[:space:]]+ ]]; then
+      if [[ -n "$entry" ]]; then
+        printf '%s\0' "$entry"
+        count=$((count + 1))
+        if (( count >= limit )); then
+          return 0
+        fi
+      fi
+      entry="$line"
+      continue
+    fi
+    if [[ -n "$entry" ]]; then
+      entry+=$'\n'"$line"
+    fi
+  done < "$SOP_FILE"
+
+  if [[ -n "$entry" && $count -lt $limit ]]; then
+    printf '%s\0' "$entry"
+  fi
+}
+
+join_list() {
+  if (( $# == 0 )); then
+    printf ''
+    return 0
+  fi
+  printf '%s\n' "$@" | awk 'NF {printf "%s%s", sep, $0; sep=", "} END {print ""}'
+}
+
+base_token() {
+  local value="$1"
+  local base
+  base="$(basename "$value")"
+  base="${base%.md}"
+  base="${base%.sh}"
+  base="$(printf '%s' "$base" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-')"
+  base="${base#-}"
+  base="${base%-}"
+  printf '%s' "$base"
+}
+
+suggest_candidate_name() {
+  local tools_csv="$1"
+  local pointers_csv="$2"
+  local hot_zone="$3"
+
+  local -a parts=()
+  local part
+
+  if [[ -n "$hot_zone" && "$hot_zone" != "None" ]]; then
+    part="$(base_token "$hot_zone")"
+    if [[ -n "$part" ]]; then
+      parts+=("$part")
+    fi
+  fi
+
+  IFS=',' read -r -a tool_list <<< "$tools_csv"
+  for part in "${tool_list[@]}"; do
+    part="$(trim "$part")"
+    if [[ -n "$part" && "$part" != "none" ]]; then
+      part="$(base_token "$part")"
+      if [[ -n "$part" ]]; then
+        parts+=("$part")
+      fi
+      break
+    fi
+  done
+
+  IFS=',' read -r -a pointer_list <<< "$pointers_csv"
+  for part in "${pointer_list[@]}"; do
+    part="$(trim "$part")"
+    if [[ -n "$part" ]] && ! is_canonical_pointer "$part"; then
+      part="$(base_token "$part")"
+      if [[ -n "$part" ]]; then
+        parts+=("$part")
+      fi
+      break
+    fi
+  done
+
+  local -A seen=()
+  local -a unique=()
+  for part in "${parts[@]}"; do
+    if [[ -n "$part" && -z "${seen[$part]+set}" ]]; then
+      seen["$part"]=1
+      unique+=("$part")
+    fi
+  done
+
+  if (( ${#unique[@]} == 0 )); then
+    printf 'pattern-density-agent'
+    return 0
+  fi
+
+  printf '%s\n' "${unique[@]}" | paste -sd '-' -
+}
+
+suggest_candidate_specialization() {
+  local tools_csv="$1"
+  local pointers_csv="$2"
+  local hot_zone="$3"
+
+  if [[ -z "$tools_csv" ]]; then
+    tools_csv="none"
+  fi
+  if [[ -z "$pointers_csv" ]]; then
+    pointers_csv="none"
+  fi
+
+  if [[ -n "$hot_zone" && "$hot_zone" != "None" ]]; then
+    printf 'Pattern Density monitoring for tool cluster [%s] with pointer cluster [%s]; Hot Zone: %s.' "$tools_csv" "$pointers_csv" "$hot_zone"
+  else
+    printf 'Pattern Density monitoring for tool cluster [%s] with pointer cluster [%s].' "$tools_csv" "$pointers_csv"
+  fi
+}
+
+render_pattern_density_report() {
+  local limit="${1:-30}"
+
+  require_file "$SOP_FILE"
+
+  local hot_zone
+  hot_zone="$(detect_hot_zone "main" "HEAD" "$REPO_ROOT")"
+  if [[ -z "$hot_zone" ]]; then
+    hot_zone="None"
+  fi
+
+  declare -A cluster_counts=()
+  declare -A cluster_tools=()
+  declare -A cluster_pointers=()
+  declare -A cluster_dps=()
+  declare -A cluster_seen=()
+
+  local entry
+  while IFS= read -r -d '' entry; do
+    local dp_id
+    dp_id="$(grep -oE 'DP-[A-Z]+-[0-9]+[A-Z]*' <<< "$entry" | head -n 1 || true)"
+    if [[ -z "$dp_id" ]]; then
+      continue
+    fi
+
+    local -a tools=()
+    mapfile -t tools < <(extract_verification_tools "$entry")
+    if (( ${#tools[@]} == 0 )); then
+      tools=("none")
+    fi
+
+    local -a pointers=()
+    local -a raw_pointers=()
+    mapfile -t raw_pointers < <(extract_pointer_tokens "$entry")
+    local pointer
+    for pointer in "${raw_pointers[@]}"; do
+      pointer="$(normalize_pointer_token "$pointer")"
+      pointers+=("$pointer")
+    done
+    mapfile -t raw_pointers < <(canonical_pointers)
+    for pointer in "${raw_pointers[@]}"; do
+      pointers+=("$pointer")
+    done
+
+    local tools_sorted
+    tools_sorted="$(printf '%s\n' "${tools[@]}" | awk 'NF' | sort -u)"
+    local pointers_sorted
+    pointers_sorted="$(printf '%s\n' "${pointers[@]}" | awk 'NF' | sort -u)"
+
+    local tools_inline
+    mapfile -t tools_array <<< "$tools_sorted"
+    tools_inline="$(join_list "${tools_array[@]}")"
+    local pointers_inline
+    mapfile -t pointers_array <<< "$pointers_sorted"
+    pointers_inline="$(join_list "${pointers_array[@]}")"
+
+    local cluster_key="tools:${tools_inline}||pointers:${pointers_inline}"
+    local seen_key="${cluster_key}::${dp_id}"
+    if [[ -n "${cluster_seen[$seen_key]+set}" ]]; then
+      continue
+    fi
+
+    cluster_seen["$seen_key"]=1
+    cluster_counts["$cluster_key"]=$(( ${cluster_counts["$cluster_key"]:-0} + 1 ))
+    cluster_tools["$cluster_key"]="$tools_inline"
+    cluster_pointers["$cluster_key"]="$pointers_inline"
+    cluster_dps["$cluster_key"]+="${dp_id}"$'\n'
+  done < <(collect_recent_sop_entries "$limit")
+
+  echo "Pattern Density Report"
+  echo "Source: SoP.md (most recent ${limit} entries)"
+  echo "Threshold: 3 distinct DPs"
+  echo "Hot Zone: ${hot_zone}"
+  echo "------------------------"
+
+  local candidate_lines
+  candidate_lines="$(for key in "${!cluster_counts[@]}"; do
+    local count="${cluster_counts[$key]}"
+    if (( count >= 3 )); then
+      printf '%s|%s\n' "$count" "$key"
+    fi
+  done | sort -t'|' -k1,1nr -k2,2)"
+
+  if [[ -z "$candidate_lines" ]]; then
+    echo "No candidate clusters detected."
+    return 0
+  fi
+
+  local rank=1
+  while IFS='|' read -r count key; do
+    if [[ -z "$key" ]]; then
+      continue
+    fi
+
+    local tools_inline="${cluster_tools[$key]}"
+    local pointers_inline="${cluster_pointers[$key]}"
+    local dps_inline
+    mapfile -t dps_array < <(printf '%s' "${cluster_dps[$key]}" | awk 'NF' | sort -u)
+    dps_inline="$(join_list "${dps_array[@]}")"
+
+    local suggested_name
+    suggested_name="$(suggest_candidate_name "$tools_inline" "$pointers_inline" "$hot_zone")"
+
+    local collision_files=()
+    local collision_output=""
+    local collision_status=0
+    collision_output="$(check_agent_collision "$suggested_name" "$AGENTS_DIR" "$HANDOFF_DIR")" || collision_status=$?
+    if (( collision_status != 0 )); then
+      mapfile -t collision_files <<< "$collision_output"
+      suggested_name="(collision detected; suppressed)"
+    fi
+
+    local suggested_specialization
+    suggested_specialization="$(suggest_candidate_specialization "$tools_inline" "$pointers_inline" "$hot_zone")"
+
+    echo "${rank}. Count: ${count}"
+    echo "Tool cluster: ${tools_inline}"
+    echo "Pointer cluster: ${pointers_inline}"
+    echo "DPs: ${dps_inline}"
+    echo "Suggested name: ${suggested_name}"
+    echo "Suggested specialization: ${suggested_specialization}"
+    if (( ${#collision_files[@]} > 0 )); then
+      local collisions_inline
+      collisions_inline="$(join_list "${collision_files[@]}")"
+      echo "Collision candidates: ${collisions_inline}"
+    fi
+    echo "------------------------"
+    rank=$((rank + 1))
+  done <<< "$candidate_lines"
 }
 
 normalize_skill() {
@@ -719,11 +1047,16 @@ EOF
   echo "$draft_path"
 }
 
+cmd_harvest_check() {
+  require_repo_root
+  render_pattern_density_report 30
+}
+
 select_latest_draft() {
   local draft_path=""
   mapfile -t drafts < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name 'agent-*.md' | sort)
   if (( ${#drafts[@]} == 0 )); then
-    die "No draft found in storage/handoff"
+    die "No draft found in storage/archives/agents"
   fi
   if (( ${#drafts[@]} == 1 )); then
     echo "${drafts[0]}"
@@ -866,6 +1199,10 @@ main() {
     harvest|--harvest)
       shift
       cmd_harvest "$@"
+      ;;
+    harvest-check|--harvest-check)
+      shift
+      cmd_harvest_check "$@"
       ;;
     promote|--promote)
       shift

@@ -1,26 +1,25 @@
 # Agent: doc-updater
 
 ## Provenance
-- **Captured:** 2026-02-06 21:21:15 UTC
-- **DP-ID:** DP-OPS-0029
-- **Branch:** work/agent-refactor
-- **HEAD:** 83892f8917d395b6b027710385cd647ae179850b
-- **Objective:** Agent System Upgrade (Pointer-First Constitution + Provenance Lifecycle)
+- **Captured:** 2026-02-10 16:36:02 UTC
+- **DP-ID:** DP-OPS-0042
+- **Branch:** work/agent-system-certification-0042
+- **HEAD:** 5b51900de76be989621867983196b6d5e089a95b
+- **Objective:** Agent System Certification and Harvester Hardening (Pattern Density emergence, linter tightening, recertification, registry sync, llms refresh)
 
 ## Role
-Documentation and codemap specialist. Use PROACTIVELY for updating codemaps and documentation.
-Runs /update-codemaps and /update-docs, generates docs/CODEMAPS/*, updates READMEs and guides.
+Maintains documentation and codemap surfaces within the active DP scope.
 
 ## Specialization
 Documentation and codemap maintenance.
-- Model: opus
-- Tools: Read, Write, Edit, Bash, Grep, Glob
 
 ## Pointers
 - Constitution: `PoT.md`
 - Governance/Jurisdiction: `docs/GOVERNANCE.md`
+- Operator mechanics: `docs/MANUAL.md`
+- Continuity map: `docs/MAP.md`
 - Output contract: `TASK.md`
-- Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/library.sh`, `tools/verify.sh`
+- Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/agent.sh`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/library.sh`, `tools/verify.sh`
 - JIT skills:
   - `docs/library/skills/S-LEARN-01.md`
 
