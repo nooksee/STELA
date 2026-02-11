@@ -6,6 +6,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 MAP_FILE="${REPO_ROOT}/docs/MAP.md"
 BEGIN_MARKER="<!-- MAP-GENERATED:BEGIN -->"
 END_MARKER="<!-- MAP-GENERATED:END -->"
+TMP_DIR="${REPO_ROOT}/storage/tmp"
 CHECK_MODE=0
 
 usage() {
@@ -93,8 +94,9 @@ generate_block() {
   echo "$END_MARKER"
 }
 
-tmp_block="$(mktemp)"
-tmp_out="$(mktemp)"
+mkdir -p "$TMP_DIR"
+tmp_block="$(mktemp "${TMP_DIR}/stela-map-block.XXXXXX")"
+tmp_out="$(mktemp "${TMP_DIR}/stela-map-out.XXXXXX")"
 cleanup() {
   rm -f "$tmp_block" "$tmp_out"
 }

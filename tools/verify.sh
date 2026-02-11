@@ -53,13 +53,16 @@ fi
 if [[ ! -d "storage/dumps" ]]; then
   fail "Missing required storage: 'storage/dumps/'"
 fi
+if [[ ! -d "storage/tmp" ]]; then
+  fail "Missing required storage: 'storage/tmp/'"
+fi
 
 # Drift check: warn on unexpected clutter in storage/
-# Allowed: README.md, .gitignore, handoff, dumps, dp, _scratch, archives
+# Allowed: README.md, .gitignore, handoff, dumps, dp, _scratch, archives, tmp
 for item in storage/*; do
   name="$(basename "$item")"
   case "$name" in
-    README.md|.gitignore|handoff|dumps|dp|_scratch|archives)
+    README.md|.gitignore|handoff|dumps|dp|_scratch|archives|tmp)
       ;;
     *)
       warn "Storage drift: unexpected item 'storage/$name'. Keep storage/ clean."

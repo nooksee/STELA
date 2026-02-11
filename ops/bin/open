@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+TMP_DIR="${REPO_ROOT}/storage/tmp"
+
 format="chatgpt"
 intent=""
 dp="(none)"
@@ -56,7 +60,8 @@ update_task_session_state() {
   fi
 
   local tmp_file
-  tmp_file="$(mktemp)"
+  mkdir -p "$TMP_DIR"
+  tmp_file="$(mktemp "${TMP_DIR}/stela-open.XXXXXX")"
   awk -v branch="$branch" -v head="$head_short" '
     {
       line = $0

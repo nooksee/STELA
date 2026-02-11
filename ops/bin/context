@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 ARCHIVE_DIR="${REPO_ROOT}/storage/archives/context"
+TMP_DIR="${REPO_ROOT}/storage/tmp"
 DP_ID=""
 
 usage() {
@@ -111,7 +112,8 @@ if [[ -n "$dump_tarball" ]]; then
   included_files+=("$dump_tarball")
 fi
 
-tmp_dir="$(mktemp -d)"
+mkdir -p "$TMP_DIR"
+tmp_dir="$(mktemp -d "${TMP_DIR}/stela-context.XXXXXX")"
 cleanup() {
   rm -rf "$tmp_dir"
 }
