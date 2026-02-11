@@ -43,6 +43,8 @@ Out-dir must be absolute. Use `$(pwd)`.
 
 4. Log
 Update SoP.md with a DP entry that includes verification receipts.
+Copy TASK.md Section 5 Work Log into the SoP.md DP entry (or reference it in DP-OPS-XXXX-RESULTS.md and link from SoP.md).
+Reset TASK.md Section 5 Work Log to "(No active thread)" before Step 5 (Prune).
 
 5. Prune
 Run local hygiene prune for the DP.

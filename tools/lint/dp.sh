@@ -54,7 +54,7 @@ PLACEHOLDER_TOKENS=(
 )
 
 TASK_PROMPT="Populate during execution; do not pre-fill in TASK.md."
-CLOSEOUT_INSTRUCTION="(Generate at closeout; do not pre-fill in TASK.md)"
+CLOSEOUT_INSTRUCTION="(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)"
 
 contains_placeholder() {
   local text="$1"
@@ -338,43 +338,57 @@ check_task_plan_headings() {
 
 check_task_scope_baseline() {
   local path="$1"
-  local prompt="$TASK_PROMPT"
-  local -a required_lines=(
-    "Objective: ${prompt}"
-    "In scope: ${prompt}"
-    "Out of scope: ${prompt}"
-    "Safety and invariants: ${prompt}"
-    "Target Files allowlist (hard gate):"
-    "- ${prompt}"
-  )
-  local line
-
-  for line in "${required_lines[@]}"; do
-    if ! grep -Fx -- "$line" "$path" >/dev/null; then
-      fail "missing scope baseline line: $line"
-    fi
-  done
-
   local issue
-  if issue="$(awk -v prompt="$prompt" '
-    BEGIN { in_scope=0 }
+  if issue="$(awk '
+    BEGIN { in_scope=0; obj=0; ins=0; outs=0; saf=0; allow=0; allow_item=0 }
     /^### 3\.3 / { in_scope=1; next }
     /^### 3\.4 / { in_scope=0 }
     in_scope {
-      if ($0 ~ /^[[:space:]]*$/) { next }
-      if ($0 == "Objective: " prompt) { next }
-      if ($0 == "In scope: " prompt) { next }
-      if ($0 == "Out of scope: " prompt) { next }
-      if ($0 == "Safety and invariants: " prompt) { next }
-      if ($0 == "Target Files allowlist (hard gate):") { next }
-      if ($0 == "- " prompt) { next }
-      print $0
-      exit 1
+      if ($0 ~ /^Objective:/) {
+        obj=1
+        sub(/^Objective:[[:space:]]*/, "", $0)
+        if ($0 ~ /^[[:space:]]*$/) { print "Objective missing value"; exit 1 }
+        next
+      }
+      if ($0 ~ /^In scope:/) {
+        ins=1
+        sub(/^In scope:[[:space:]]*/, "", $0)
+        if ($0 ~ /^[[:space:]]*$/) { print "In scope missing value"; exit 1 }
+        next
+      }
+      if ($0 ~ /^Out of scope:/) {
+        outs=1
+        sub(/^Out of scope:[[:space:]]*/, "", $0)
+        if ($0 ~ /^[[:space:]]*$/) { print "Out of scope missing value"; exit 1 }
+        next
+      }
+      if ($0 ~ /^Safety and invariants:/) {
+        saf=1
+        sub(/^Safety and invariants:[[:space:]]*/, "", $0)
+        if ($0 ~ /^[[:space:]]*$/) { print "Safety and invariants missing value"; exit 1 }
+        next
+      }
+      if ($0 ~ /^Target Files allowlist \(hard gate\):/) {
+        allow=1
+        next
+      }
+      if (allow && $0 ~ /^[[:space:]]*[-*][[:space:]]+/) {
+        allow_item=1
+        next
+      }
+    }
+    END {
+      if (!obj) { print "missing Objective line"; exit 1 }
+      if (!ins) { print "missing In scope line"; exit 1 }
+      if (!outs) { print "missing Out of scope line"; exit 1 }
+      if (!saf) { print "missing Safety and invariants line"; exit 1 }
+      if (!allow) { print "missing Target Files allowlist heading"; exit 1 }
+      if (!allow_item) { print "Target Files allowlist missing entries"; exit 1 }
     }
   ' "$path")"; then
     :
   else
-    fail "scope section contains non-template content: $issue"
+    fail "scope section invalid: $issue"
   fi
 }
 
@@ -384,23 +398,40 @@ check_task_plan_baseline() {
   local issue
 
   if issue="$(awk -v prompt="$prompt" '
-    BEGIN { in_plan=0; expect_prompt=0 }
+    BEGIN { in_plan=0; heading=""; content=0; in_receipt=0 }
     /^### 3\.4 / { in_plan=1; next }
-    /^## 4[.)]/ { in_plan=0 }
-    in_plan {
-      if ($0 ~ /^#### 3\.4\.[1-5] /) { expect_prompt=1; next }
-      if ($0 ~ /^[[:space:]]*$/) { next }
-      if (expect_prompt) {
-        if ($0 == prompt) { expect_prompt=0; next }
-        print "expected execution plan prompt after heading, found: " $0
+    /^## 4[.)]/ {
+      if (in_plan && heading != "" && content == 0) {
+        print "missing execution plan content after heading: " heading
         exit 1
       }
-      print "unexpected execution plan content: " $0
-      exit 1
+      exit
+    }
+    in_plan {
+      if ($0 ~ /^#### 3\.4\.[1-5] /) {
+        if (heading != "" && content == 0) {
+          print "missing execution plan content after heading: " heading
+          exit 1
+        }
+        heading=$0
+        content=0
+        if ($0 ~ /^#### 3\.4\.5 /) {
+          in_receipt=1
+        } else {
+          in_receipt=0
+        }
+        next
+      }
+      if ($0 ~ /^[[:space:]]*$/) { next }
+      if (in_receipt && $0 == prompt) {
+        print "receipt section still uses template prompt"
+        exit 1
+      }
+      content=1
     }
     END {
-      if (expect_prompt) {
-        print "missing execution plan prompt after heading"
+      if (in_plan && heading != "" && content == 0) {
+        print "missing execution plan content after heading: " heading
         exit 1
       }
     }
@@ -1188,14 +1219,15 @@ Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
 Base HEAD: 13a2074d (Must match session context output)
 
 Gate Artifacts (Must Match):
-- OPEN: Base HEAD 13a2074d
-- OPEN-PORCELAIN: Base HEAD 13a2074d
-- Dump: Base HEAD 13a2074d
-- Dump Manifest: Base HEAD 13a2074d
+- OPEN: storage/handoff/OPEN-main-13a2074d.txt (Base HEAD 13a2074d)
+- OPEN-PORCELAIN: storage/handoff/OPEN-PORCELAIN-main-13a2074d.txt (Base HEAD 13a2074d) or (none)
+- Dump: storage/dumps/dump-full-main-13a2074d.txt (Base HEAD 13a2074d)
+- Dump Manifest: storage/dumps/dump-full-main-13a2074d.manifest.txt (Base HEAD 13a2074d)
 
 Preconditions:
 - No commits on main.
 - Working tree must be clean before execution begins.
+- If any artifact filename hash does not equal Base HEAD, regenerate artifacts and stop.
 - If Base HEAD changes, regenerate gate artifacts and update this gate before proceeding.
 - Mandatory artifacts (every execution, no exceptions): OPEN, OPEN-PORCELAIN, dump payload, dump manifest, and DP-OPS-XXXX-RESULTS.md.
 
@@ -1209,8 +1241,6 @@ Read these in order before making edits:
 3. TASK.md
 4. docs/MAP.md
 5. docs/MANUAL.md
-6. tools/lint/dp.sh
-7. ops/bin/prune
 
 ### 3.3 Scope and Safety
 Objective: Populate during execution; do not pre-fill in TASK.md.
@@ -1236,7 +1266,8 @@ Populate during execution; do not pre-fill in TASK.md.
 Populate during execution; do not pre-fill in TASK.md.
 
 #### 3.4.5 Receipt (Proofs to collect)
-Populate during execution; do not pre-fill in TASK.md.
+- Artifacts captured: OPEN, OPEN-PORCELAIN (or none), dump payload, dump manifest, DP-OPS-XXXX-RESULTS.md.
+- Gates run: bash tools/lint/context.sh, bash tools/lint/style.sh, bash tools/lint/truth.sh, bash tools/lint/dp.sh TASK.md, bash tools/verify.sh.
 
 ## 4. Closeout (Mandatory)
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
@@ -1245,22 +1276,22 @@ Mandatory Closing Block
 Varied Wording provision: Each entry must use meaningfully distinct wording; copy or minor tense changes are not acceptable. Entry 4 must differ from Entry 1.
 
 Primary Commit Header (plaintext)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Pull Request Title (plaintext)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Pull Request Description (markdown)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Final Squash Stub (plaintext) (Must differ from #1)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Extended Technical Manifest (plaintext)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Review Conversation Starter (markdown)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 ## 4.1 Thread Transition (Reset / Archive Rule)
 - Append a THREAD END entry to the TASK.md Work Log at completion.
@@ -1295,14 +1326,15 @@ Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
 Base HEAD: 13a2074d (Must match session context output)
 
 Gate Artifacts (Must Match):
-- OPEN: Base HEAD 13a2074d
-- OPEN-PORCELAIN: Base HEAD 13a2074d
-- Dump: Base HEAD 13a2074d
-- Dump Manifest: Base HEAD 13a2074d
+- OPEN: storage/handoff/OPEN-main-13a2074d.txt (Base HEAD 13a2074d)
+- OPEN-PORCELAIN: storage/handoff/OPEN-PORCELAIN-main-13a2074d.txt (Base HEAD 13a2074d) or (none)
+- Dump: storage/dumps/dump-full-main-13a2074d.txt (Base HEAD 13a2074d)
+- Dump Manifest: storage/dumps/dump-full-main-13a2074d.manifest.txt (Base HEAD 13a2074d)
 
 Preconditions:
 - No commits on main.
 - Working tree must be clean before execution begins.
+- If any artifact filename hash does not equal Base HEAD, regenerate artifacts and stop.
 - If Base HEAD changes, regenerate gate artifacts and update this gate before proceeding.
 - Mandatory artifacts (every execution, no exceptions): OPEN, OPEN-PORCELAIN, dump payload, dump manifest, and DP-OPS-XXXX-RESULTS.md.
 
@@ -1316,8 +1348,6 @@ Read these in order before making edits:
 3. TASK.md
 4. docs/MAP.md
 5. docs/MANUAL.md
-6. tools/lint/dp.sh
-7. ops/bin/prune
 
 ### 3.3 Scope and Safety
 Objective: Populate during execution; do not pre-fill in TASK.md.
@@ -1343,29 +1373,30 @@ Populate during execution; do not pre-fill in TASK.md.
 Populate during execution; do not pre-fill in TASK.md.
 
 #### 3.4.5 Receipt (Proofs to collect)
-Populate during execution; do not pre-fill in TASK.md.
+- Artifacts captured: OPEN, OPEN-PORCELAIN (or none), dump payload, dump manifest, DP-OPS-XXXX-RESULTS.md.
+- Gates run: bash tools/lint/context.sh, bash tools/lint/style.sh, bash tools/lint/truth.sh, bash tools/lint/dp.sh TASK.md, bash tools/verify.sh.
 
 ## 4. Closeout (Mandatory)
 Mandatory Closing Block
 Varied Wording provision: Each entry must use meaningfully distinct wording; copy or minor tense changes are not acceptable. Entry 4 must differ from Entry 1.
 
 Primary Commit Header (plaintext)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Pull Request Title (plaintext)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Pull Request Description (markdown)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Final Squash Stub (plaintext) (Must differ from #1)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Extended Technical Manifest (plaintext)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Review Conversation Starter (markdown)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 ## 4.1 Thread Transition (Reset / Archive Rule)
 - Append a THREAD END entry to the TASK.md Work Log at completion.
@@ -1405,14 +1436,15 @@ Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
 Base HEAD: 13a2074d (Must match session context output)
 
 Gate Artifacts (Must Match):
-- OPEN: Base HEAD 13a2074d
-- OPEN-PORCELAIN: Base HEAD 13a2074d
-- Dump: Base HEAD 13a2074d
-- Dump Manifest: Base HEAD 13a2074d
+- OPEN: storage/handoff/OPEN-main-13a2074d.txt (Base HEAD 13a2074d)
+- OPEN-PORCELAIN: storage/handoff/OPEN-PORCELAIN-main-13a2074d.txt (Base HEAD 13a2074d) or (none)
+- Dump: storage/dumps/dump-full-main-13a2074d.txt (Base HEAD 13a2074d)
+- Dump Manifest: storage/dumps/dump-full-main-13a2074d.manifest.txt (Base HEAD 13a2074d)
 
 Preconditions:
 - No commits on main.
 - Working tree must be clean before execution begins.
+- If any artifact filename hash does not equal Base HEAD, regenerate artifacts and stop.
 - If Base HEAD changes, regenerate gate artifacts and update this gate before proceeding.
 - Mandatory artifacts (every execution, no exceptions): OPEN, OPEN-PORCELAIN, dump payload, dump manifest, and DP-OPS-XXXX-RESULTS.md.
 
@@ -1426,8 +1458,6 @@ Read these in order before making edits:
 3. TASK.md
 4. docs/MAP.md
 5. docs/MANUAL.md
-6. tools/lint/dp.sh
-7. ops/bin/prune
 
 ### 3.3 Scope and Safety
 Objective: Populate during execution; do not pre-fill in TASK.md.
@@ -1453,29 +1483,30 @@ Populate during execution; do not pre-fill in TASK.md.
 Populate during execution; do not pre-fill in TASK.md.
 
 #### 3.4.5 Receipt (Proofs to collect)
-Populate during execution; do not pre-fill in TASK.md.
+- Artifacts captured: OPEN, OPEN-PORCELAIN (or none), dump payload, dump manifest, DP-OPS-XXXX-RESULTS.md.
+- Gates run: bash tools/lint/context.sh, bash tools/lint/style.sh, bash tools/lint/truth.sh, bash tools/lint/dp.sh TASK.md, bash tools/verify.sh.
 
 ## 4. Closeout (Mandatory)
 Mandatory Closing Block
 Varied Wording provision: Each entry must use meaningfully distinct wording; copy or minor tense changes are not acceptable. Entry 4 must differ from Entry 1.
 
 Primary Commit Header (plaintext)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Pull Request Title (plaintext)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Pull Request Description (markdown)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Final Squash Stub (plaintext) (Must differ from #1)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Extended Technical Manifest (plaintext)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Review Conversation Starter (markdown)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 ## 4.1 Thread Transition (Reset / Archive Rule)
 - Append a THREAD END entry to the TASK.md Work Log at completion.

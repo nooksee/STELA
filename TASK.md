@@ -35,16 +35,17 @@ Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
 Base HEAD: 0000000 (Must match session context output)
 
 Gate Artifacts (Must Match):
-- OPEN: Base HEAD 0000000
-- OPEN-PORCELAIN: Base HEAD 0000000
-- Dump: Base HEAD 0000000
-- Dump Manifest: Base HEAD 0000000
+- OPEN: storage/handoff/OPEN-main-0000000.txt (Base HEAD 0000000)
+- OPEN-PORCELAIN: storage/handoff/OPEN-PORCELAIN-main-0000000.txt (Base HEAD 0000000) or (none)
+- Dump: storage/dumps/dump-full-main-0000000.txt (Base HEAD 0000000)
+- Dump Manifest: storage/dumps/dump-full-main-0000000.manifest.txt (Base HEAD 0000000)
 
 Preconditions:
 - No commits on main.
 - Working tree must be clean before execution begins.
+- If any artifact filename hash does not equal Base HEAD, regenerate artifacts and stop.
 - If Base HEAD changes, regenerate gate artifacts and update this gate before proceeding.
-- Mandatory artifacts (every execution, no exceptions): OPEN, OPEN-PORCELAIN, dump payload, dump manifest, and DP-OPS-XXXX-RESULTS.md.
+- Mandatory artifacts (every execution, no exceptions): OPEN, OPEN-PORCELAIN, dump payload, dump manifest, and DP-OPS-0050-RESULTS.md.
 
 Gate Commands (Must Pass):
 - bash tools/lint/context.sh
@@ -56,8 +57,6 @@ Read these in order before making edits:
 3. TASK.md
 4. docs/MAP.md
 5. docs/MANUAL.md
-6. tools/lint/dp.sh
-7. ops/bin/prune
 
 ### 3.3 Scope and Safety
 Objective: Populate during execution; do not pre-fill in TASK.md.
@@ -83,7 +82,8 @@ Populate during execution; do not pre-fill in TASK.md.
 Populate during execution; do not pre-fill in TASK.md.
 
 #### 3.4.5 Receipt (Proofs to collect)
-Populate during execution; do not pre-fill in TASK.md.
+- Artifacts captured: OPEN, OPEN-PORCELAIN (or none), dump payload, dump manifest, DP-OPS-XXXX-RESULTS.md.
+- Gates run: bash tools/lint/context.sh, bash tools/lint/style.sh, bash tools/lint/truth.sh, bash tools/lint/dp.sh TASK.md, bash tools/verify.sh.
 
 ## 4. Closeout (Mandatory)
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
@@ -95,25 +95,26 @@ Mandatory Closing Block
 Varied Wording provision: Each entry must use meaningfully distinct wording; copy or minor tense changes are not acceptable. Entry 4 must differ from Entry 1.
 
 Primary Commit Header (plaintext)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Pull Request Title (plaintext)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Pull Request Description (markdown)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Final Squash Stub (plaintext) (Must differ from #1)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Extended Technical Manifest (plaintext)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Review Conversation Starter (markdown)
-(Generate at closeout; do not pre-fill in TASK.md)
+(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 ## 4.1 Thread Transition (Reset / Archive Rule)
 - Append a THREAD END entry to the TASK.md Work Log at completion.
+- Reset Section 5 Work Log to "(No active thread)" before running ./ops/bin/prune --scrub.
 - Execute Routing Closeout scrub only after all receipts and SoP logging are complete.
 
 ## 5. Work Log (Timestamped Continuity)
