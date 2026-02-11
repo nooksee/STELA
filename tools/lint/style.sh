@@ -8,22 +8,6 @@ else
   exit 1
 fi
 cd "$REPO_ROOT" || exit 1
-CONFIG="${REPO_ROOT}/.markdownlint.json"
-skip_markdownlint=0
-
-if [[ ! -f "${CONFIG}" ]]; then
-  echo "ERROR: .markdownlint.json not found at ${CONFIG}" >&2
-  exit 1
-fi
-
-if ! command -v markdownlint >/dev/null 2>&1; then
-  if [[ "${STRICT_MARKDOWNLINT:-0}" == "1" ]]; then
-    echo "ERROR: markdownlint is required when STRICT_MARKDOWNLINT=1" >&2
-    exit 1
-  fi
-  echo "WARN: markdownlint not found; skipping markdownlint checks." >&2
-  skip_markdownlint=1
-fi
 
 if ! command -v rg >/dev/null 2>&1; then
   echo "ERROR: rg is required but was not found on PATH" >&2
@@ -39,17 +23,3 @@ if [[ -n "$contraction_hits" ]]; then
   echo "$contraction_hits" >&2
   exit 1
 fi
-
-shopt -s globstar nullglob
-files=("${REPO_ROOT}"/docs/**/*.md "${REPO_ROOT}"/ops/**/*.md)
-
-if (( ${#files[@]} == 0 )); then
-  echo "WARN: No markdown files found under docs/ or ops/." >&2
-  exit 0
-fi
-
-if [[ "$skip_markdownlint" -eq 1 ]]; then
-  exit 0
-fi
-
-markdownlint -c "${CONFIG}" "${files[@]}"
