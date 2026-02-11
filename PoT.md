@@ -142,3 +142,9 @@ When reporting, include:
 - We aim for coordinated, responsible disclosure.
 
 #### Known Issues and Future Improvements
+
+### 5.5 Branching Doctrine (SSoT)
+- Immutable Trunk: main is verified state; direct pushes are forbidden.
+- Work Namespace: all work occurs on work/* branches.
+- Naming Schema: work/<dp-id>-<topic> or work/<topic>-YYYY-MM-DD.
+- Drift Prevention: branches outside schema are trash and subject to pruning.

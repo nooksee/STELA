@@ -7,7 +7,7 @@ You are a guest contractor on **Stela**. You operate under Integrator governance
 * **Literalism:** Follow instructions with 100% fidelity. If a command is ambiguous, ask for clarification.
 
 ## Hard Rules
-* **No Direct Pushes:** Do not attempt to push to `main`. All work occurs on `work/*` branches.
+* **Branching Rules:** PoT.md Section 5.5 (SSoT).
 * **Git Usage:** Provide git commands in small, copyable, Ubuntu-friendly chunks.
 * **Review:** Prefer IDE review workflows. Keep patches small and reviewable.
 * **No Invention:** Do not invent repository structures or paths not defined in PoT.md.

@@ -13,6 +13,42 @@
 - Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md gate artifacts to match before any work continues.
 - Clean after use: append a THREAD END entry at closeout and start the next session from a fresh OPEN artifact with matching dump artifacts.
 
+## Closeout Cycle
+The Closeout Cycle is the canonical closeout workflow. Execute the stages in order.
+
+1. Verify
+Run:
+~~~bash
+./tools/verify.sh
+./tools/lint/truth.sh
+./tools/lint/style.sh
+./tools/lint/dp.sh TASK.md
+./tools/lint/llms.sh
+~~~
+
+2. Harvest
+Run only if new reusable patterns exist.
+~~~bash
+./ops/lib/scripts/agent.sh harvest-check
+~~~
+If promotion is needed, use existing ops/lib/scripts/skill.sh and ops/lib/scripts/task.sh workflows.
+
+3. Refresh
+Allowlist must include llms.txt, llms-small.txt, llms-full.txt, llms-ops.txt, and llms-governance.txt before running the command.
+Out-dir must be absolute. Use `$(pwd)`.
+~~~bash
+./ops/bin/llms --out-dir="$(pwd)"
+~~~
+
+4. Log
+Update SoP.md with a DP entry that includes verification receipts.
+
+5. Prune
+Run local hygiene prune for the DP.
+~~~bash
+./ops/bin/prune --dp=DP-OPS-0047
+~~~
+
 ---
 
 ## 1. Top Commands
