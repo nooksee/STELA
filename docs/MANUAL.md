@@ -37,6 +37,7 @@ If promotion is needed, use existing ops/lib/scripts/skill.sh and ops/lib/script
 Allowlist must include llms.txt, llms-small.txt, llms-full.txt, llms-ops.txt, and llms-governance.txt before running the command.
 Out-dir must be absolute. Use `$(pwd)`.
 ~~~bash
+./ops/bin/map
 ./ops/bin/llms --out-dir="$(pwd)"
 ~~~
 
@@ -46,7 +47,7 @@ Update SoP.md with a DP entry that includes verification receipts.
 5. Prune
 Run local hygiene prune for the DP.
 ~~~bash
-./ops/bin/prune --dp=DP-OPS-0047
+./ops/bin/prune --dp=DP-OPS-0048 --scrub
 ~~~
 
 ---

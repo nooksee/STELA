@@ -19,6 +19,7 @@ Filing:
 - Reuse-first: search `ops/` for an existing template before creating a new artifact.
 - Context Hazard: any inclusion of `docs/library/agents`, `docs/library/tasks`, or `docs/library/skills` in the global context manifest is a failure.
 - Drift: any divergence between canon and repository state, or duplication of canon outside SSOT, is a failure state that requires stop and correction.
+- Metabolic Law: "Forever Now" requires Routing Closeout; failure is a system failure state.
 - SoP: history ledger only; no permanent rules live there.
 
 ### 1.3 Canon Surfaces
@@ -64,6 +65,7 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 ### 4.2 Behavioral Logic Standard
 - Linguistic Precision: No contractions across any scope, including projects.
 - Linguistic Precision: Quantitative reporting required for deviations from protocol.
+- Generation Mandate: Verification outputs must be generated, not pre-filled or assumed.
 - Linguistic Precision: Absolute literalism; seek clarification for ambiguity before proceeding.
 - Operational Directives: Anti-drift governance; logic or files misaligned with PoT.md are a system failure.
 - Operational Directives: Context hygiene; ops/lib/manifests/CONTEXT.md must exclude docs/library/agents, docs/library/tasks, and docs/library/skills.
