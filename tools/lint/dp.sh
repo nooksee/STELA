@@ -53,6 +53,9 @@ PLACEHOLDER_TOKENS=(
   "[List exact files to touch]"
 )
 
+TASK_PROMPT="Populate during execution; do not pre-fill in TASK.md."
+CLOSEOUT_INSTRUCTION="(Generate at closeout; do not pre-fill in TASK.md)"
+
 contains_placeholder() {
   local text="$1"
   local token
@@ -245,6 +248,282 @@ first_heading_line() {
   awk -v r="$pattern" 'BEGIN { IGNORECASE = 1 } $0 ~ r { print NR; exit }' "$path"
 }
 
+check_task_subsections() {
+  local path="$1"
+  local -a labels=(
+    "### 3.1 Freshness Gate (Must Pass Before Work)"
+    "### 3.2 Required Context Load (Read Before Doing Anything)"
+    "### 3.3 Scope and Safety"
+    "### 3.4 Execution Plan (A-E Canon)"
+  )
+  local -a patterns=(
+    '^###[[:space:]]*3\\.1[.)]?[[:space:]]*FRESHNESS GATE'
+    '^###[[:space:]]*3\\.2[.)]?[[:space:]]*REQUIRED CONTEXT LOAD'
+    '^###[[:space:]]*3\\.3[.)]?[[:space:]]*SCOPE'
+    '^###[[:space:]]*3\\.4[.)]?[[:space:]]*EXECUTION PLAN'
+  )
+
+  local -a heading_lines=()
+  local missing=0
+  local line
+  local i
+
+  for ((i=0; i<${#labels[@]}; i++)); do
+    line="$(first_heading_line "$path" "${patterns[i]}")"
+    if [[ -z "$line" ]]; then
+      fail "missing heading '${labels[i]}' (task dp substructure)"
+      missing=1
+      heading_lines+=("")
+    else
+      heading_lines+=("$line")
+    fi
+  done
+
+  if (( !missing )); then
+    for ((i=0; i<${#heading_lines[@]}-1; i++)); do
+      if (( heading_lines[i] >= heading_lines[i+1] )); then
+        fail "headings out of order: '${labels[i]}' should appear before '${labels[i+1]}' (task dp substructure)"
+        break
+      fi
+    done
+  fi
+
+  if ! grep -nE '^###[[:space:]]*DP-' "$path" >/dev/null; then
+    fail "missing DP header line (expected '### DP-...')"
+  fi
+}
+
+check_task_plan_headings() {
+  local path="$1"
+  local -a labels=(
+    "#### 3.4.1 State (What is true now)"
+    "#### 3.4.2 Request (What we are changing)"
+    "#### 3.4.3 Changelog (Planned edits)"
+    "#### 3.4.4 Patch / Diff (Implementation details)"
+    "#### 3.4.5 Receipt (Proofs to collect)"
+  )
+  local -a patterns=(
+    '^####[[:space:]]*3\\.4\\.1[.)]?[[:space:]]*STATE'
+    '^####[[:space:]]*3\\.4\\.2[.)]?[[:space:]]*REQUEST'
+    '^####[[:space:]]*3\\.4\\.3[.)]?[[:space:]]*CHANGELOG'
+    '^####[[:space:]]*3\\.4\\.4[.)]?[[:space:]]*PATCH'
+    '^####[[:space:]]*3\\.4\\.5[.)]?[[:space:]]*RECEIPT'
+  )
+
+  local -a heading_lines=()
+  local missing=0
+  local line
+  local i
+
+  for ((i=0; i<${#labels[@]}; i++)); do
+    line="$(first_heading_line "$path" "${patterns[i]}")"
+    if [[ -z "$line" ]]; then
+      fail "missing heading '${labels[i]}' (task execution plan)"
+      missing=1
+      heading_lines+=("")
+    else
+      heading_lines+=("$line")
+    fi
+  done
+
+  if (( !missing )); then
+    for ((i=0; i<${#heading_lines[@]}-1; i++)); do
+      if (( heading_lines[i] >= heading_lines[i+1] )); then
+        fail "headings out of order: '${labels[i]}' should appear before '${labels[i+1]}' (task execution plan)"
+        break
+      fi
+    done
+  fi
+}
+
+check_task_scope_baseline() {
+  local path="$1"
+  local prompt="$TASK_PROMPT"
+  local -a required_lines=(
+    "Objective: ${prompt}"
+    "In scope: ${prompt}"
+    "Out of scope: ${prompt}"
+    "Safety and invariants: ${prompt}"
+    "Target Files allowlist (hard gate):"
+    "- ${prompt}"
+  )
+  local line
+
+  for line in "${required_lines[@]}"; do
+    if ! grep -Fx -- "$line" "$path" >/dev/null; then
+      fail "missing scope baseline line: $line"
+    fi
+  done
+
+  local issue
+  if issue="$(awk -v prompt="$prompt" '
+    BEGIN { in_scope=0 }
+    /^### 3\.3 / { in_scope=1; next }
+    /^### 3\.4 / { in_scope=0 }
+    in_scope {
+      if ($0 ~ /^[[:space:]]*$/) { next }
+      if ($0 == "Objective: " prompt) { next }
+      if ($0 == "In scope: " prompt) { next }
+      if ($0 == "Out of scope: " prompt) { next }
+      if ($0 == "Safety and invariants: " prompt) { next }
+      if ($0 == "Target Files allowlist (hard gate):") { next }
+      if ($0 == "- " prompt) { next }
+      print $0
+      exit 1
+    }
+  ' "$path")"; then
+    :
+  else
+    fail "scope section contains non-template content: $issue"
+  fi
+}
+
+check_task_plan_baseline() {
+  local path="$1"
+  local prompt="$TASK_PROMPT"
+  local issue
+
+  if issue="$(awk -v prompt="$prompt" '
+    BEGIN { in_plan=0; expect_prompt=0 }
+    /^### 3\.4 / { in_plan=1; next }
+    /^## 4[.)]/ { in_plan=0 }
+    in_plan {
+      if ($0 ~ /^#### 3\.4\.[1-5] /) { expect_prompt=1; next }
+      if ($0 ~ /^[[:space:]]*$/) { next }
+      if (expect_prompt) {
+        if ($0 == prompt) { expect_prompt=0; next }
+        print "expected execution plan prompt after heading, found: " $0
+        exit 1
+      }
+      print "unexpected execution plan content: " $0
+      exit 1
+    }
+    END {
+      if (expect_prompt) {
+        print "missing execution plan prompt after heading"
+        exit 1
+      }
+    }
+  ' "$path")"; then
+    :
+  else
+    fail "$issue"
+  fi
+}
+
+check_task_closeout_baseline() {
+  local path="$1"
+  local instruction="$CLOSEOUT_INSTRUCTION"
+  local -a labels=(
+    "Primary Commit Header (plaintext)"
+    "Pull Request Title (plaintext)"
+    "Pull Request Description (markdown)"
+    "Final Squash Stub (plaintext) (Must differ from #1)"
+    "Extended Technical Manifest (plaintext)"
+    "Review Conversation Starter (markdown)"
+  )
+  local label
+
+  if ! grep -nF "Mandatory Closing Block" "$path" >/dev/null; then
+    fail "missing Mandatory Closing Block"
+    return
+  fi
+
+  for label in "${labels[@]}"; do
+    if ! grep -Fx -- "$label" "$path" >/dev/null; then
+      fail "missing closeout label: $label"
+    fi
+  done
+
+  local instruction_count
+  instruction_count="$(awk -v instr="$instruction" '
+    BEGIN { in_block=0; count=0 }
+    /^[[:space:]]*Mandatory Closing Block/ { in_block=1; next }
+    /^## 4\.1 / { in_block=0 }
+    in_block && $0 == instr { count++ }
+    END { print count }
+  ' "$path")"
+
+  if [[ "$instruction_count" != "6" ]]; then
+    fail "closeout instruction placeholder count mismatch (expected 6, got ${instruction_count})"
+  fi
+
+  local issue
+  if issue="$(awk -v instr="$instruction" '
+    BEGIN { in_block=0 }
+    /^[[:space:]]*Mandatory Closing Block/ { in_block=1; next }
+    /^## 4\.1 / { in_block=0 }
+    in_block {
+      if ($0 ~ /^[[:space:]]*$/) { next }
+      if ($0 == instr) { next }
+      if ($0 == "Varied Wording provision: Each entry must use meaningfully distinct wording; copy or minor tense changes are not acceptable. Entry 4 must differ from Entry 1.") { next }
+      if ($0 ~ /^[[:space:]]*Primary Commit Header/) { next }
+      if ($0 ~ /^[[:space:]]*Pull Request Title/) { next }
+      if ($0 ~ /^[[:space:]]*Pull Request Description/) { next }
+      if ($0 ~ /^[[:space:]]*Final Squash Stub/) { next }
+      if ($0 ~ /^[[:space:]]*Extended Technical Manifest/) { next }
+      if ($0 ~ /^[[:space:]]*Review Conversation Starter/) { next }
+      print $0
+      exit 1
+    }
+  ' "$path")"; then
+    :
+  else
+    fail "closeout block contains non-template content: $issue"
+  fi
+}
+
+check_task_thread_transition() {
+  local path="$1"
+  if ! grep -nE '^##[[:space:]]*4\.1[.)]?[[:space:]]*Thread Transition' "$path" >/dev/null; then
+    fail "missing heading '## 4.1 Thread Transition (Reset / Archive Rule)' (task scheme)"
+  fi
+}
+
+check_task_work_log_baseline() {
+  local path="$1"
+  local marker="(No active thread)"
+  local issue
+  local rc
+
+  if issue="$(awk -v marker="$marker" '
+    BEGIN { in_log=0; found=0 }
+    /^## 5\. Work Log/ { in_log=1; next }
+    {
+      if (!in_log) { next }
+      if ($0 ~ /^[[:space:]]*$/) { next }
+      if (!found && $0 == marker) { found=1; next }
+      print $0
+      exit 1
+    }
+    END {
+      if (!in_log) { exit 2 }
+      if (!found) { exit 3 }
+    }
+  ' "$path")"; then
+    rc=0
+  else
+    rc=$?
+  fi
+
+  case "$rc" in
+    0)
+      ;;
+    1)
+      fail "Work Log contains non-template content: $issue"
+      ;;
+    2)
+      fail "missing Work Log section"
+      ;;
+    3)
+      fail "Work Log missing baseline marker: ${marker}"
+      ;;
+    *)
+      fail "Work Log validation failed"
+      ;;
+  esac
+}
+
 has_in_scope_section() {
   local path="$1"
   if grep -nE '^[[:space:]]*(###\s+)?In scope\b' "$path" >/dev/null; then
@@ -361,6 +640,14 @@ lint_task() {
   if has_standalone_ellipsis "$path"; then
     fail "placeholder token found: ..."
   fi
+
+  check_task_subsections "$path"
+  check_task_plan_headings "$path"
+  check_task_scope_baseline "$path"
+  check_task_plan_baseline "$path"
+  check_task_closeout_baseline "$path"
+  check_task_thread_transition "$path"
+  check_task_work_log_baseline "$path"
 
   if (( failures )); then
     return 1
@@ -638,6 +925,8 @@ run_test() {
   local tmp_invalid
   local tmp_order
   local tmp_llms_warn
+  local tmp_task_missing_field
+  local tmp_task_dirty_log
 
   tmp_valid="$(mktemp)"
   cat <<'EOF' > "$tmp_valid"
@@ -882,42 +1171,108 @@ Owner: Integrator
 Last Updated: 2026-02-08
 
 ## 1. Session State (The Anchor)
-Pointer: storage/handoff/OPEN-*.txt
-Active Branch: work/task-lint-test
-Base HEAD: 13a2074d
-Context Manifest: ops/lib/manifests/CONTEXT.md
+Pointer: Session context output (generated by ops/bin/open)
+Active Branch: main (Must match session context output)
+Base HEAD: 13a2074d (Must match session context output)
+Context Manifest: ops/lib/manifests/CONTEXT.md (Checked by tools/lint/context.sh)
 
 ## 2. Logic Pointers (The Law)
-Primary Constraint: PoT.md wins in all conflicts.
+Primary Constraint: PoT.md (Policy of Truth).
 
 ## 3. Current Dispatch Packet (DP)
-DP-OPS-0004: Task Lint Test
+### DP-XXXX: (Template)
 
 ### 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Required Work Branch: work/task-lint-test
-Base HEAD: 13a2074d
+Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
+Base HEAD: 13a2074d (Must match session context output)
 
 Gate Artifacts (Must Match):
-- OPEN: storage/handoff/OPEN-work-task-lint-test-13a2074d.txt
-- OPEN-PORCELAIN: storage/handoff/OPEN-PORCELAIN-work-task-lint-test-13a2074d.txt
-- Dump: storage/dumps/dump-platform-work-task-lint-test-13a2074d.txt
-- Dump Manifest: storage/dumps/dump-platform-work-task-lint-test-13a2074d.manifest.txt
+- OPEN: Base HEAD 13a2074d
+- OPEN-PORCELAIN: Base HEAD 13a2074d
+- Dump: Base HEAD 13a2074d
+- Dump Manifest: Base HEAD 13a2074d
+
+Preconditions:
+- No commits on main.
+- Working tree must be clean before execution begins.
+- If Base HEAD changes, regenerate gate artifacts and update this gate before proceeding.
+- Mandatory artifacts (every execution, no exceptions): OPEN, OPEN-PORCELAIN, dump payload, dump manifest, and DP-OPS-XXXX-RESULTS.md.
 
 Gate Commands (Must Pass):
 - bash tools/lint/context.sh
 
+### 3.2 Required Context Load (Read Before Doing Anything)
+Read these in order before making edits:
+1. PoT.md
+2. SoP.md
+3. TASK.md
+4. docs/MAP.md
+5. docs/MANUAL.md
+6. tools/lint/dp.sh
+7. ops/bin/prune
+
+### 3.3 Scope and Safety
+Objective: Populate during execution; do not pre-fill in TASK.md.
+In scope: Populate during execution; do not pre-fill in TASK.md.
+Out of scope: Populate during execution; do not pre-fill in TASK.md.
+Safety and invariants: Populate during execution; do not pre-fill in TASK.md.
+
+Target Files allowlist (hard gate):
+- Populate during execution; do not pre-fill in TASK.md.
+
+### 3.4 Execution Plan (A-E Canon)
+
+#### 3.4.1 State (What is true now)
+Populate during execution; do not pre-fill in TASK.md.
+
+#### 3.4.2 Request (What we are changing)
+Populate during execution; do not pre-fill in TASK.md.
+
+#### 3.4.3 Changelog (Planned edits)
+Populate during execution; do not pre-fill in TASK.md.
+
+#### 3.4.4 Patch / Diff (Implementation details)
+Populate during execution; do not pre-fill in TASK.md.
+
+#### 3.4.5 Receipt (Proofs to collect)
+Populate during execution; do not pre-fill in TASK.md.
+
 ## 4. Closeout (Mandatory)
-Requirement: Populate storage/handoff/DP-OPS-0004-RESULTS.md.
+- Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
+
+Mandatory Closing Block
+Varied Wording provision: Each entry must use meaningfully distinct wording; copy or minor tense changes are not acceptable. Entry 4 must differ from Entry 1.
+
+Primary Commit Header (plaintext)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+Pull Request Title (plaintext)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+Pull Request Description (markdown)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+Final Squash Stub (plaintext) (Must differ from #1)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+Extended Technical Manifest (plaintext)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+Review Conversation Starter (markdown)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+## 4.1 Thread Transition (Reset / Archive Rule)
+- Append a THREAD END entry to the TASK.md Work Log at completion.
 
 ## 5. Work Log (Timestamped Continuity)
-- 2026-01-27 14:05 — DP-OPS-0004: Task lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
+(No active thread)
 EOF
 
   lint_path "$tmp_task_valid" >/dev/null
 
-  tmp_task_invalid="$(mktemp)"
-  cat <<'EOF' > "$tmp_task_invalid"
+  tmp_task_missing_field="$(mktemp)"
+  cat <<'EOF' > "$tmp_task_missing_field"
 # STELA TASK DASHBOARD (LIVING SURFACE)
 Status: ACTIVE
 Owner: Integrator
@@ -932,22 +1287,210 @@ Context Manifest: ops/lib/manifests/CONTEXT.md
 Primary Constraint: PoT.md wins in all conflicts.
 
 ## 3. Current Dispatch Packet (DP)
-DP-OPS-0005: Task Lint Test Invalid
+### DP-XXXX: (Template)
+
+### 3.1 Freshness Gate (Must Pass Before Work)
+Base Branch: main
+Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
+Base HEAD: 13a2074d (Must match session context output)
+
+Gate Artifacts (Must Match):
+- OPEN: Base HEAD 13a2074d
+- OPEN-PORCELAIN: Base HEAD 13a2074d
+- Dump: Base HEAD 13a2074d
+- Dump Manifest: Base HEAD 13a2074d
+
+Preconditions:
+- No commits on main.
+- Working tree must be clean before execution begins.
+- If Base HEAD changes, regenerate gate artifacts and update this gate before proceeding.
+- Mandatory artifacts (every execution, no exceptions): OPEN, OPEN-PORCELAIN, dump payload, dump manifest, and DP-OPS-XXXX-RESULTS.md.
+
+Gate Commands (Must Pass):
+- bash tools/lint/context.sh
+
+### 3.2 Required Context Load (Read Before Doing Anything)
+Read these in order before making edits:
+1. PoT.md
+2. SoP.md
+3. TASK.md
+4. docs/MAP.md
+5. docs/MANUAL.md
+6. tools/lint/dp.sh
+7. ops/bin/prune
+
+### 3.3 Scope and Safety
+Objective: Populate during execution; do not pre-fill in TASK.md.
+In scope: Populate during execution; do not pre-fill in TASK.md.
+Out of scope: Populate during execution; do not pre-fill in TASK.md.
+Safety and invariants: Populate during execution; do not pre-fill in TASK.md.
+
+Target Files allowlist (hard gate):
+- Populate during execution; do not pre-fill in TASK.md.
+
+### 3.4 Execution Plan (A-E Canon)
+
+#### 3.4.1 State (What is true now)
+Populate during execution; do not pre-fill in TASK.md.
+
+#### 3.4.2 Request (What we are changing)
+Populate during execution; do not pre-fill in TASK.md.
+
+#### 3.4.3 Changelog (Planned edits)
+Populate during execution; do not pre-fill in TASK.md.
+
+#### 3.4.4 Patch / Diff (Implementation details)
+Populate during execution; do not pre-fill in TASK.md.
+
+#### 3.4.5 Receipt (Proofs to collect)
+Populate during execution; do not pre-fill in TASK.md.
 
 ## 4. Closeout (Mandatory)
-Requirement: Populate storage/handoff/DP-OPS-0005-RESULTS.md.
+Mandatory Closing Block
+Varied Wording provision: Each entry must use meaningfully distinct wording; copy or minor tense changes are not acceptable. Entry 4 must differ from Entry 1.
+
+Primary Commit Header (plaintext)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+Pull Request Title (plaintext)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+Pull Request Description (markdown)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+Final Squash Stub (plaintext) (Must differ from #1)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+Extended Technical Manifest (plaintext)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+Review Conversation Starter (markdown)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+## 4.1 Thread Transition (Reset / Archive Rule)
+- Append a THREAD END entry to the TASK.md Work Log at completion.
 
 ## 5. Work Log (Timestamped Continuity)
-- 2026-01-27 14:05 — DP-OPS-0005: Task lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
+(No active thread)
 EOF
 
-  if lint_path "$tmp_task_invalid" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn" "$tmp_task_valid" "$tmp_task_invalid"
-    echo "FAIL: --test expected task heading detection to fail" >&2
+  if lint_path "$tmp_task_missing_field" >/dev/null 2>&1; then
+    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn" "$tmp_task_valid" "$tmp_task_missing_field" "$tmp_task_dirty_log"
+    echo "FAIL: --test expected task required field detection to fail" >&2
     exit 1
   fi
 
-  rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn" "$tmp_task_valid" "$tmp_task_invalid"
+  tmp_task_dirty_log="$(mktemp)"
+  cat <<'EOF' > "$tmp_task_dirty_log"
+# STELA TASK DASHBOARD (LIVING SURFACE)
+Status: ACTIVE
+Owner: Integrator
+Last Updated: 2026-02-08
+
+## 1. Session State (The Anchor)
+Pointer: Session context output (generated by ops/bin/open)
+Active Branch: main (Must match session context output)
+Base HEAD: 13a2074d (Must match session context output)
+Context Manifest: ops/lib/manifests/CONTEXT.md (Checked by tools/lint/context.sh)
+
+## 2. Logic Pointers (The Law)
+Primary Constraint: PoT.md (Policy of Truth).
+
+## 3. Current Dispatch Packet (DP)
+### DP-XXXX: (Template)
+
+### 3.1 Freshness Gate (Must Pass Before Work)
+Base Branch: main
+Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
+Base HEAD: 13a2074d (Must match session context output)
+
+Gate Artifacts (Must Match):
+- OPEN: Base HEAD 13a2074d
+- OPEN-PORCELAIN: Base HEAD 13a2074d
+- Dump: Base HEAD 13a2074d
+- Dump Manifest: Base HEAD 13a2074d
+
+Preconditions:
+- No commits on main.
+- Working tree must be clean before execution begins.
+- If Base HEAD changes, regenerate gate artifacts and update this gate before proceeding.
+- Mandatory artifacts (every execution, no exceptions): OPEN, OPEN-PORCELAIN, dump payload, dump manifest, and DP-OPS-XXXX-RESULTS.md.
+
+Gate Commands (Must Pass):
+- bash tools/lint/context.sh
+
+### 3.2 Required Context Load (Read Before Doing Anything)
+Read these in order before making edits:
+1. PoT.md
+2. SoP.md
+3. TASK.md
+4. docs/MAP.md
+5. docs/MANUAL.md
+6. tools/lint/dp.sh
+7. ops/bin/prune
+
+### 3.3 Scope and Safety
+Objective: Populate during execution; do not pre-fill in TASK.md.
+In scope: Populate during execution; do not pre-fill in TASK.md.
+Out of scope: Populate during execution; do not pre-fill in TASK.md.
+Safety and invariants: Populate during execution; do not pre-fill in TASK.md.
+
+Target Files allowlist (hard gate):
+- Populate during execution; do not pre-fill in TASK.md.
+
+### 3.4 Execution Plan (A-E Canon)
+
+#### 3.4.1 State (What is true now)
+Populate during execution; do not pre-fill in TASK.md.
+
+#### 3.4.2 Request (What we are changing)
+Populate during execution; do not pre-fill in TASK.md.
+
+#### 3.4.3 Changelog (Planned edits)
+Populate during execution; do not pre-fill in TASK.md.
+
+#### 3.4.4 Patch / Diff (Implementation details)
+Populate during execution; do not pre-fill in TASK.md.
+
+#### 3.4.5 Receipt (Proofs to collect)
+Populate during execution; do not pre-fill in TASK.md.
+
+## 4. Closeout (Mandatory)
+Mandatory Closing Block
+Varied Wording provision: Each entry must use meaningfully distinct wording; copy or minor tense changes are not acceptable. Entry 4 must differ from Entry 1.
+
+Primary Commit Header (plaintext)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+Pull Request Title (plaintext)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+Pull Request Description (markdown)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+Final Squash Stub (plaintext) (Must differ from #1)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+Extended Technical Manifest (plaintext)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+Review Conversation Starter (markdown)
+(Generate at closeout; do not pre-fill in TASK.md)
+
+## 4.1 Thread Transition (Reset / Archive Rule)
+- Append a THREAD END entry to the TASK.md Work Log at completion.
+
+## 5. Work Log (Timestamped Continuity)
+2026-01-27 14:05 — DP-OPS-0005: Task lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
+EOF
+
+  if lint_path "$tmp_task_dirty_log" >/dev/null 2>&1; then
+    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn" "$tmp_task_valid" "$tmp_task_missing_field" "$tmp_task_dirty_log"
+    echo "FAIL: --test expected task Work Log baseline detection to fail" >&2
+    exit 1
+  fi
+
+  rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn" "$tmp_task_valid" "$tmp_task_missing_field" "$tmp_task_dirty_log"
   echo "OK: --test passed"
 }
 

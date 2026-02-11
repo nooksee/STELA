@@ -21,3 +21,6 @@ jobs:
       # NEW: Enforce Library Registry
       - name: Library Guard
         run: bash tools/lint/library.sh
+
+      - name: DP lint (TASK baseline)
+        run: bash tools/lint/dp.sh TASK.md
