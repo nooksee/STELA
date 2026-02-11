@@ -14,6 +14,42 @@
 - Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md gate artifacts to match before any work continues.
 - Clean after use: append a THREAD END entry at closeout and start the next session from a fresh OPEN artifact with matching dump artifacts.
 
+## Closeout Cycle
+The Closeout Cycle is the canonical closeout workflow. Execute the stages in order.
+
+1. Verify
+Run:
+~~~bash
+./tools/verify.sh
+./tools/lint/truth.sh
+./tools/lint/style.sh
+./tools/lint/dp.sh TASK.md
+./tools/lint/llms.sh
+~~~
+
+2. Harvest
+Run only if new reusable patterns exist.
+~~~bash
+./ops/lib/scripts/agent.sh harvest-check
+~~~
+If promotion is needed, use existing ops/lib/scripts/skill.sh and ops/lib/scripts/task.sh workflows.
+
+3. Refresh
+Allowlist must include llms.txt, llms-small.txt, llms-full.txt, llms-ops.txt, and llms-governance.txt before running the command.
+Out-dir must be absolute. Use `$(pwd)`.
+~~~bash
+./ops/bin/llms --out-dir="$(pwd)"
+~~~
+
+4. Log
+Update SoP.md with a DP entry that includes verification receipts.
+
+5. Prune
+Run local hygiene prune for the DP.
+~~~bash
+./ops/bin/prune --dp=DP-OPS-0047
+~~~
+
 ---
 
 ## 1. Top Commands
@@ -1739,6 +1775,34 @@ TASK_FILE="${REPO_ROOT}/TASK.md"
 ARCHIVE_DIR="${REPO_ROOT}/storage/archives/root"
 HANDOFF_DIR="${REPO_ROOT}/storage/handoff"
 THRESHOLD=30
+DP_TARGET=""
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/prune [--dp=DP-ID]
+USAGE
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --dp=*)
+      DP_TARGET="${arg#--dp=}"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "ERROR: Unknown arg: ${arg}" >&2
+      exit 1
+      ;;
+  esac
+done
+
+if [[ -n "${DP_TARGET}" && -z "${DP_TARGET// }" ]]; then
+  echo "ERROR: --dp requires a non-empty value" >&2
+  exit 1
+fi
 
 if [[ ! -f "${SOP_FILE}" ]]; then
   echo "ERROR: SoP.md not found at ${SOP_FILE}" >&2
@@ -1781,13 +1845,45 @@ else
   echo "SoP within threshold (${THRESHOLD})."
 fi
 
+if [[ -n "${DP_TARGET}" ]]; then
+  echo "Pruning artifacts for Dispatch Packet: ${DP_TARGET}"
+  deleted=0
+  for dir in "${HANDOFF_DIR}" "${REPO_ROOT}/storage/dumps" "${REPO_ROOT}/storage/_scratch"; do
+    if [[ ! -d "${dir}" ]]; then
+      continue
+    fi
+    while IFS= read -r -d '' file; do
+      base="$(basename "${file}")"
+      if [[ "${base}" == ".gitkeep" ]]; then
+        continue
+      fi
+      rm -f "${file}"
+      echo "Deleted: ${file}"
+      deleted=$((deleted + 1))
+    done < <(find "${dir}" -type f -name "*${DP_TARGET}*" ! -name '.gitkeep' -print0)
+  done
+  if (( deleted == 0 )); then
+    echo "No artifacts found for ${DP_TARGET}."
+  else
+    echo "Removed ${deleted} artifacts."
+  fi
+  exit 0
+fi
+
 if [[ -d "${HANDOFF_DIR}" ]]; then
   dp_id="${DP_ID:-}"
   if [[ -z "${dp_id}" && -f "${TASK_FILE}" ]]; then
-    dp_id="$(awk '/\*\*Current DP\*\*/ {sub(/.*\*\*Current DP\*\*:[[:space:]]*/, "", $0); print $0; exit}' "${TASK_FILE}" | awk '{print $1}')"
-    if [[ "${dp_id}" == *"["* || "${dp_id}" == *"]"* ]]; then
-      dp_id=""
-    fi
+    dp_id="$(awk '
+      $0 ~ /^## 3\\. Current Dispatch Packet \\(DP\\)/ { in_dp=1; next }
+      in_dp && /^## / { exit }
+      in_dp && /^### DP-/ {
+        line=$0
+        sub(/^### /, "", line)
+        sub(/:.*/, "", line)
+        print line
+        exit
+      }
+    ' "${TASK_FILE}")"
   fi
 
   deleted=0
@@ -1795,13 +1891,16 @@ if [[ -d "${HANDOFF_DIR}" ]]; then
 
   while IFS= read -r -d '' file; do
     base="$(basename "${file}")"
+    if [[ "${base}" == ".gitkeep" ]]; then
+      continue
+    fi
     if [[ -n "${dp_id}" && "${base}" == *"${dp_id}"* ]]; then
       kept=$((kept + 1))
       continue
     fi
     rm -f "${file}"
     deleted=$((deleted + 1))
-  done < <(find "${HANDOFF_DIR}" -type f -mtime +7 -print0)
+  done < <(find "${HANDOFF_DIR}" -type f -mtime +7 ! -name '.gitkeep' -print0)
 
   echo "Handoff cleanup: deleted ${deleted}, kept ${kept}."
 fi
