@@ -1,5 +1,10 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-11 03:41:05 UTC — DP-OPS-0046 Pointer-First Constitution Refinement
+- Objective: Refined TASK.md to pointer-first contract by removing duplicated canon text, refreshed llms context bundles, and captured results receipt.
+- Verification: bash tools/lint/context.sh; bash tools/lint/style.sh; bash tools/lint/truth.sh; bash tools/lint/library.sh; bash tools/lint/dp.sh --test; bash tools/lint/dp.sh TASK.md; bash tools/verify.sh.
+- Context refresh: ./ops/bin/llms --out-dir=/home/nos4r2/dev/nukece.
+
 ## 2026-02-11 01:52:19 UTC — DP-OPS-0045 Reconstructing and Perfecting TASK.md
 - Objective: Reconstructed TASK.md template, restoring Session State and Logic Pointers, hardening the Freshness Gate to four HEAD-bound artifacts, and mandating results file protocol.
 - Verification: bash tools/lint/style.sh; bash tools/lint/library.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/verify.sh; bash tools/lint/dp.sh TASK.md.
