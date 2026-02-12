@@ -131,6 +131,7 @@ scrub_task() {
       skip_scope=0
       in_plan=0
       skip_plan=0
+      in_session_state=0
       in_legacy_gate_artifacts=0
       in_legacy_gate_commands=0
     }
@@ -151,15 +152,31 @@ scrub_task() {
       print "### DP-XXXX: (Template)"
       next
     }
+    /^## 1\. Session State/ {
+      in_session_state=1
+      print
+      next
+    }
+    /^## 2\./ {
+      in_session_state=0
+      print
+      next
+    }
     /^[[:space:]]*Pointer:/ {
       print "Pointer: " pointer
       next
     }
     /^[[:space:]]*Active Branch:/ {
-      print "Active Branch: " branch " (Must match session context output)"
+      if (in_session_state) {
+        next
+      }
+      print
       next
     }
     /^[[:space:]]*Base HEAD:/ {
+      if (in_session_state) {
+        next
+      }
       print "Base HEAD: " base_head " (Must match session context output)"
       next
     }

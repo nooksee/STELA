@@ -51,7 +51,7 @@ System Failure States (Drift Triggers):
 | :---- | :---- | :---- |
 | **Canon Drift** | Divergence between `PoT.md` and repo state. | **STOP WORK.** Reject PR. |
 | **Context Hazard** | Including `library/` docs in `CONTEXT.md`. | **STOP WORK.** Automated lint failure. |
-| **Dirty State** | Uncommitted changes in `main` (except `TASK.md`). | **STOP WORK.** Worker complaint/halt. |
+| **Dirty State** | Uncommitted changes in `main`. | **STOP WORK.** Worker complaint/halt. |
 | **Ambiguity** | Instructions capable of multiple interpretations. | **STOP WORK.** Request clarification. |
 
 ## 3. Jurisdiction

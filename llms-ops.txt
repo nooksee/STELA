@@ -11,7 +11,7 @@
 6.  **Close:** Merge PR + Update `SoP.md` (if Canon changed).
 
 **Anchor Hygiene:**
-- Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md gate artifacts to match before any work continues.
+- Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md pointer references to the newest OPEN artifact and RESULTS receipts before any work continues; do not rewrite inline branch/hash state in TASK.md.
 - Clean after use: append a THREAD END entry at closeout and start the next session from a fresh OPEN artifact with matching dump artifacts.
 
 ## Closeout Cycle
@@ -224,7 +224,6 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-TMP_DIR="${REPO_ROOT}/storage/tmp"
 
 format="chatgpt"
 intent=""
@@ -273,46 +272,6 @@ done
 branch="$(git rev-parse --abbrev-ref HEAD)"
 head_short="$(git rev-parse --short HEAD)"
 branch_safe="${branch//\//-}"
-
-update_task_session_state() {
-  local task_path="TASK.md"
-  if [[ ! -f "$task_path" ]]; then
-    return 0
-  fi
-
-  local tmp_file
-  mkdir -p "$TMP_DIR"
-  tmp_file="$(mktemp "${TMP_DIR}/stela-open.XXXXXX")"
-  awk -v branch="$branch" -v head="$head_short" '
-    {
-      line = $0
-      if ($0 ~ /^[[:space:]]*[-*]?[[:space:]]*Active Branch:/) {
-        prefix = $0
-        sub(/:.*/, "", prefix)
-        suffix = ""
-        pos = index($0, "(")
-        if (pos > 0) {
-          suffix = " " substr($0, pos)
-        }
-        line = prefix ": " branch suffix
-      }
-      if ($0 ~ /^[[:space:]]*[-*]?[[:space:]]*Base HEAD:/) {
-        prefix = $0
-        sub(/:.*/, "", prefix)
-        suffix = ""
-        pos = index($0, "(")
-        if (pos > 0) {
-          suffix = " " substr($0, pos)
-        }
-        line = prefix ": " head suffix
-      }
-      print line
-    }
-  ' "$task_path" > "$tmp_file"
-  mv "$tmp_file" "$task_path"
-}
-
-update_task_session_state
 
 tag_prefix=""
 if [[ -n "$tag" ]]; then
@@ -1910,6 +1869,7 @@ scrub_task() {
       skip_scope=0
       in_plan=0
       skip_plan=0
+      in_session_state=0
       in_legacy_gate_artifacts=0
       in_legacy_gate_commands=0
     }
@@ -1930,15 +1890,31 @@ scrub_task() {
       print "### DP-XXXX: (Template)"
       next
     }
+    /^## 1\. Session State/ {
+      in_session_state=1
+      print
+      next
+    }
+    /^## 2\./ {
+      in_session_state=0
+      print
+      next
+    }
     /^[[:space:]]*Pointer:/ {
       print "Pointer: " pointer
       next
     }
     /^[[:space:]]*Active Branch:/ {
-      print "Active Branch: " branch " (Must match session context output)"
+      if (in_session_state) {
+        next
+      }
+      print
       next
     }
     /^[[:space:]]*Base HEAD:/ {
+      if (in_session_state) {
+        next
+      }
       print "Base HEAD: " base_head " (Must match session context output)"
       next
     }

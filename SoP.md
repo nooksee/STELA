@@ -1,5 +1,10 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-12 05:24:50 UTC — DP-OPS-0054 TASK Surface Stabilization (OPEN Read-Only + Lint Alignment)
+- Objective: Regressed `ops/bin/open` to tracked-file read-only behavior (no TASK.md mutation), stabilized TASK.md Session State to pointer-first shape (no inline Active Branch/Base HEAD), aligned `tools/lint/dp.sh` and `tools/lint/task.sh` with the stabilized contract, removed the PoT dirty-state TASK exception, updated workflow canon docs, and refreshed root llms bundles.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `bash tools/verify.sh`; `./ops/bin/map --check`.
+- Functional receipts: `./ops/bin/open --intent="DP-OPS-0054 read-only verification" --dp="DP-OPS-0054"` (confirmed `OPEN_READ_ONLY_OK` with unchanged `git status --porcelain`); `./ops/bin/map`; `./ops/bin/llms --out-dir="$(pwd)"`.
+
 ## 2026-02-12 00:07:59 UTC — DP-OPS-0051 System Remediation and Pointer-First TASK Dashboard
 - Objective: Eliminated TASK.md ghost-canon drift vectors by switching the Freshness Gate to pointer-first governance, aligned TASK lint enforcement in tools/lint/dp.sh, updated ops/bin/prune scrub behavior to strip legacy static blocks, repaired DP-OPS-0050 ledger continuity, and refreshed llms bundles after governance-surface edits.
 - Verification: bash tools/lint/context.sh; bash tools/lint/dp.sh --test; bash tools/lint/dp.sh TASK.md; bash tools/lint/style.sh; bash tools/lint/truth.sh; bash tools/verify.sh; ./ops/bin/map --check.

@@ -90,6 +90,12 @@ if [[ -n "$contraction_hits" ]]; then
   echo "$contraction_hits" >&2
 fi
 
+legacy_task_state_hits="$(rg -n -e 'Active Branch:' -e 'Base HEAD: .*Must match session context output' -e 'Gate Artifacts \\(Must Match\\)' -e 'Gate Commands \\(Must Pass\\)' -e 'update TASK\\.md gate artifacts' "$TASKS_DIR" 2>/dev/null || true)"
+if [[ -n "$legacy_task_state_hits" ]]; then
+  fail "Legacy TASK inline state mutation language found in task files."
+  echo "$legacy_task_state_hits" >&2
+fi
+
 mapfile -t registry_rows < <(awk -F'|' '
   $0 ~ /^\|/ && $0 !~ /^\|[[:space:]]*---/ {
     id=$2; name=$3; path=$4
