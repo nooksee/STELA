@@ -27,8 +27,8 @@ Staffing Protocol: PoT.md Section 4.1.
 Style: tools/lint/style.sh
 Context: tools/lint/context.sh
 Truth: tools/lint/truth.sh
-DP lint: tools/lint/dp.sh
-TASK lint: tools/lint/task.sh
+DP lint: tools/lint/dp.sh (enforces DP transaction rules in Section 3; does not enforce TASK container schema)
+TASK lint: tools/lint/task.sh (sole TASK surface/container schema enforcer)
 Repo verify: tools/verify.sh
 llms parity: tools/lint/llms.sh
 
@@ -110,6 +110,9 @@ Notes:
 #### 3.2.2 DP-scoped load order (per DP)
 - tools/lint/dp.sh
 - tools/lint/task.sh
+- ops/bin/prune
+- docs/ops/specs/surfaces/task.md
+- docs/ops/specs/binaries/prune.md
 - docs/ops/specs/binaries/open.md (pointer reference only; OPEN behavior is not modified in this DP)
 
 ### 3.3 Scope and Safety
@@ -206,6 +209,7 @@ RESULTS requirements (must appear near top of DP-OPS-XXXX-RESULTS.md):
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md with a DP entry at completion, including objective summary and verification commands run.
 - Run scrub at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-XXXX --scrub.
+- Scrub safety invariant: prune scrub must lint staged TASK output with tools/lint/task.sh and only replace TASK.md if lint passes.
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
 Mandatory Closing Block (write to RESULTS, not here)
