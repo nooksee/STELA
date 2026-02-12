@@ -156,6 +156,21 @@ When reporting, include:
 ## SoP.md
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-12 19:54:20 UTC — DP-OPS-0056 Task Subsystem Hardening and Prune Safety Invariants
+- Objective: Hardened Task subsystem governance by making `tools/lint/task.sh` the sole TASK container enforcer, refactoring `tools/lint/dp.sh` to DP Section 3 transaction enforcement only, removing legacy versioning language from task-surface governance text, and adding prune scrub lint guardrails with narrower DP-target pruning scope.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0056"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0056-2026-02-12-fdc5d080.txt`.
+
+## 2026-02-12 17:36:43 UTC — DP-OPS-0055 Receipt Refresh and Verification Capture
+- Objective: Confirmed `docs/MANUAL.md` dispatch contract note coverage (DP Preflight Gate ordering plus worker-input/OPEN reading rule), retained the V2 TASK + lint + TASK surface spec changes for DP-OPS-0055, and refreshed receipt artifacts in `storage/handoff/DP-OPS-0055-RESULTS.md`.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0055"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0055-task-surface-contract-lock-9baf3978.txt`.
+
+## 2026-02-12 16:32:23 UTC — DP-OPS-0055 TASK Surface Contract Lock (V2 Promotion + Lint Adoption + Surface Spec)
+- Objective: Promoted the V2 TASK contract into `TASK.md`, enforced the contract in `tools/lint/task.sh` and `tools/lint/dp.sh` (including DP Preflight Gate and anti-degradation checks), added the TASK surface spec at `docs/ops/specs/surfaces/task.md`, and aligned `docs/MANUAL.md` with the new dispatch and receipt rules.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0055"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0055-task-surface-contract-lock-9baf3978.txt`; `./ops/bin/prune --dp=DP-OPS-0055 --scrub`.
+
 ## 2026-02-12 05:24:50 UTC — DP-OPS-0054 TASK Surface Stabilization (OPEN Read-Only + Lint Alignment)
 - Objective: Regressed `ops/bin/open` to tracked-file read-only behavior (no TASK.md mutation), stabilized TASK.md Session State to pointer-first shape (no inline Active Branch/Base HEAD), aligned `tools/lint/dp.sh` and `tools/lint/task.sh` with the stabilized contract, removed the PoT dirty-state TASK exception, updated workflow canon docs, and refreshed root llms bundles.
 - Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `bash tools/verify.sh`; `./ops/bin/map --check`.
@@ -193,79 +208,27 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Dump: storage/dumps/dump-platform-work-task-hardening-0044-5fa75cb2.txt.
 - Context refresh: ./ops/bin/llms --out-dir=/home/nos4r2/dev/nukece.
 
-## 2026-02-10 18:03:22 UTC — DP-OPS-0043 Task Subsystem Hardening and Harvester Certification
-- Objective: Certify the Task subsystem as pointer-first and serviceable by aligning ops/lib/scripts/task.sh with tools/lint/task.sh requirements, enforcing registry ID collision locks, and hardening promotion and lint gates to prevent placeholder drift and missing Closeout pointers.
-- Verification: bash tools/lint/style.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/lint/task.sh; bash tools/lint/library.sh; bash tools/verify.sh; ops/lib/scripts/task.sh check; ./ops/bin/context --dp=DP-OPS-0043; ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle; ./ops/bin/llms --out-dir=.
-- Dump: storage/dumps/dump-platform-work-task-harvester-hardening-0043-1b4325f9.txt.
-
-## 2026-02-10 16:52:29 UTC — DP-OPS-0042 Agent System Certification and Harvester Hardening
-- Objective: Certify the Agent subsystem as pointer-first and serviceable by aligning R-AGENT-01 through R-AGENT-06, synchronizing the agent registry and promotion ledger, and hardening enforcement tooling and the agent harvester logic so that low-frequency role emergence can be detected via Pattern Density (tool-and-pointer cluster recurrence).
-- Verification: bash tools/lint/style.sh; bash tools/lint/agent.sh; bash tools/lint/library.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/verify.sh; ops/lib/scripts/agent.sh check; ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle; ./ops/bin/llms.
-- Dump: storage/dumps/dump-platform-work-agent-system-certification-0042-5b51900d.txt.
-
-1. Primary Commit Header: DP-OPS-0042 agent system certification and harvester hardening
-2. Pull Request Title: DP-OPS-0042 Agent System Certification and Harvester Hardening
-3. Pull Request Description:
-
-### Summary
-- Hardened `ops/lib/scripts/agent.sh` with Pattern Density heuristics for low-frequency agent candidacy detection.
-- Tightened `tools/lint/agent.sh` to enforce strict agent schema and context hazard rejection.
-- Recertified `R-AGENT-01` through `R-AGENT-06` and synchronized `docs/ops/registry/AGENTS.md`.
-- Refreshed llms bundles via `ops/bin/llms` after enforcement and canon surface updates.
-
-### Testing
-- bash tools/lint/style.sh
-- bash tools/lint/agent.sh
-- bash tools/lint/library.sh
-- bash tools/lint/context.sh
-- bash tools/lint/truth.sh
-- bash tools/verify.sh
-- ops/lib/scripts/agent.sh check
-- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
-- ./ops/bin/llms
-
-4. Final Squash Stub: Enforce agent certification gates and harden role emergence harvesting logic
-5. Extended Technical Manifest:
-- ops/lib/scripts/agent.sh
-- ops/lib/scripts/heuristics.sh
-- tools/lint/agent.sh
-- docs/library/AGENTS.md
-- docs/ops/registry/AGENTS.md
-- docs/library/agents/R-AGENT-01.md
-- docs/library/agents/R-AGENT-02.md
-- docs/library/agents/R-AGENT-03.md
-- docs/library/agents/R-AGENT-04.md
-- docs/library/agents/R-AGENT-05.md
-- docs/library/agents/R-AGENT-06.md
-- llms.txt
-- llms-small.txt
-- llms-full.txt
-- llms-ops.txt
-- llms-governance.txt
-- TASK.md
-- SoP.md
-6. Review Conversation Starter:
-Does the Pattern Density heuristic in the agent harvester correctly balance low emergence frequency with rigorous capture, while avoiding semantic collisions with existing canon agents?
-
-## 2026-02-10 15:03:09 UTC — DP-OPS-0041 Skills System Overhaul
-- Objective: Certify the Skills subsystem as pointer-first and serviceable by aligning S-LEARN-01 through S-LEARN-06, the skills registry, and enforcement tooling with binary gates.
-- Verification: bash tools/lint/style.sh; bash tools/lint/library.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/verify.sh; ops/lib/scripts/skill.sh check.
-- Dump: storage/dumps/dump-platform-work-skills-system-overhaul-0041.txt.
-
 
 
 ## TASK.md
-# STELA TASK DASHBOARD (LIVING SURFACE)
+# STELA TASK DASHBOARD
 Status: ACTIVE
 Owner: Integrator
 Last Updated: 2026-02-12
 
-## 1. Session State (The Anchor)
-Pointer: Session context output (generated by ops/bin/open)
-Context Manifest: ops/lib/manifests/CONTEXT.md (Checked by tools/lint/context.sh)
+## 1. Session State
+Pointer: storage/handoff/OPEN-<branch>-<short-hash>.txt (most recent session context output; generated by ops/bin/open)
+Context Manifest: ops/lib/manifests/CONTEXT.md (checked by tools/lint/context.sh)
 
-## 2. Logic Pointers (The Law)
+Session State contract:
+- Session State is pointer-first. Do not write inline branch or hash state here.
+- OPEN (and OPEN-PORCELAIN when dirty) is the session state snapshot.
+- RESULTS is the audit record for the DP.
+- TASK is the stable routing surface.
+
+## 2. Logic Pointers
 Primary Constraint: PoT.md (Policy of Truth).
+Surface Contract Spec: docs/ops/specs/surfaces/task.md.
 
 ### 2.1 Governance Pointers
 Jurisdiction: PoT.md Section 3.
@@ -273,46 +236,94 @@ Git Authority: PoT.md Section 4.1.
 Behavioral Standard: PoT.md Section 4.2.
 Staffing Protocol: PoT.md Section 4.1.
 
-### 2.2 Execution Pointers (The Toolchain)
-Linguistic Precision: tools/lint/style.sh.
-Structure Verification: tools/verify.sh.
-Context Hygiene: tools/lint/context.sh.
-Truth Integrity: tools/lint/truth.sh.
-DP Validation: tools/lint/dp.sh.
-llms Integrity: tools/lint/llms.sh.
+### 2.2 Enforcement and Gates
+Style: tools/lint/style.sh
+Context: tools/lint/context.sh
+Truth: tools/lint/truth.sh
+DP lint: tools/lint/dp.sh
+TASK lint: tools/lint/task.sh
+Repo verify: tools/verify.sh
+llms parity: tools/lint/llms.sh
 
 ## 3. Current Dispatch Packet (DP)
+
+Section-by-section authoring protocol:
+- Write Section 3.1. Run the gate. Stop on mismatch. Freeze 3.1.
+- Write Section 3.2. Confirm canon load. Freeze 3.2.
+- Write Section 3.3. Lock scope and allowlist. Freeze 3.3.
+- Write Section 3.4 in order (3.4.1 through 3.4.5). Freeze each subsection when complete.
+- Do not revise earlier sections to justify later work. If scope changes, end the thread and draft a new DP.
+
+Freeze Rule:
+- If a completed DP subsection changes later, append an AMENDMENT block in RESULTS; otherwise DP is FAIL.
+
+AMENDMENT: minimum fields
+- Reopened section:
+- Reason:
+- Impact:
+- Allowlist change (none or exact paths):
+
+Input discipline (hard rule):
+- Worker receives only the DP text. Worker does not require OPEN or DUMP attachments.
+- DP writer must not attach or cite disposable artifacts (rough notes, chat logs, scratch drafts, throwaway excerpts).
+- DP writer must not include pasted bundles (OPEN, DUMP payloads, manifests) inside the DP body.
+- Canon pointers only. Evidence belongs in storage artifacts and RESULTS.
+
 ### DP-XXXX: (Template)
 
 ### 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
 Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
-Base HEAD: 0000000 (Must match session context output)
+Base HEAD: 0000000 (must match session context output)
+
+Required local re-check (worker runs; paste outputs in RESULTS):
+- git rev-parse --abbrev-ref HEAD
+- git rev-parse --short HEAD
+- git status --porcelain
 
 Preconditions:
 - No commits on main.
 - Working tree must be clean before execution begins.
 - If Base HEAD changes, regenerate session artifacts from canonical tools before proceeding.
 
-Canonical pointers (no duplicated canon text in TASK.md):
-- Behavioral logic and drift authority: PoT.md.
-- Closeout mechanics and command canon: docs/MANUAL.md.
-- Gate canon: tools/lint/context.sh and tools/verify.sh.
-- Artifact and scrub canon: ops/bin/open, ops/bin/dump, and ops/bin/prune.
+STOP conditions:
+- STOP if any mismatch (branch, Base HEAD, missing work branch).
+- STOP if working tree is dirty before execution begins.
+- STOP if told to create or switch branches.
+
+### 3.1.1 DP Preflight Gate (Run Before Any Edits)
+Purpose:
+- Catch malformed DP or TASK schema before work begins.
+
+Worker runs (paste outcome in RESULTS):
+- bash tools/lint/dp.sh --test
+- bash tools/lint/dp.sh TASK.md
+- bash tools/lint/task.sh
+
+STOP if any preflight check fails.
 
 ### 3.2 Required Context Load (Read Before Doing Anything)
-Read these in order before making edits:
+
+#### 3.2.1 Canon load order (always)
+Worker must confirm loaded before edits begin:
 1. PoT.md
 2. SoP.md
 3. TASK.md
 4. docs/MAP.md
 5. docs/MANUAL.md
-6. tools/lint/context.sh
-7. tools/verify.sh
-8. tools/lint/dp.sh
-9. ops/bin/open
-10. ops/bin/dump
-11. ops/bin/prune
+6. ops/lib/manifests/CONTEXT.md
+
+Notes:
+- Worker does not read OPEN. OPEN is for Integrator state refresh and for receipts.
+- Disposable artifacts must not be referenced or included.
+- Worker input is the DP text only.
+- DP writer must not attach or cite disposable artifacts.
+- DP writer must not embed pasted bundles.
+
+#### 3.2.2 DP-scoped load order (per DP)
+- tools/lint/dp.sh
+- tools/lint/task.sh
+- docs/ops/specs/binaries/open.md (pointer reference only; OPEN behavior is not modified in this DP)
 
 ### 3.3 Scope and Safety
 Objective: Populate during execution; do not pre-fill in TASK.md.
@@ -323,64 +334,120 @@ Safety and invariants: Populate during execution; do not pre-fill in TASK.md.
 Target Files allowlist (hard gate):
 - Populate during execution; do not pre-fill in TASK.md.
 
-### 3.4 Execution Plan (A-E Canon)
+llms allowlist rule:
+- If the DP plan includes an llms invocation or a context bundle refresh objective, the allowlist must include:
+  - llms.txt
+  - llms-small.txt
+  - llms-full.txt
+  - llms-ops.txt
+  - llms-governance.txt
 
-#### 3.4.1 State (What is true now)
+### 3.4 Execution Plan (A–E)
+
+#### 3.4.1 State
 Populate during execution; do not pre-fill in TASK.md.
 
-#### 3.4.2 Request (What we are changing)
+#### 3.4.2 Request
 Populate during execution; do not pre-fill in TASK.md.
 
-#### 3.4.3 Changelog (Planned edits)
+#### 3.4.3 Changelog
 Populate during execution; do not pre-fill in TASK.md.
 
-#### 3.4.4 Patch / Diff (Implementation details)
+#### 3.4.4 Patch / Diff
 Populate during execution; do not pre-fill in TASK.md.
 
-#### 3.4.5 Receipt (Proofs to collect)
-- Artifacts captured: OPEN, OPEN-PORCELAIN (or none), dump payload, dump manifest, DP-OPS-XXXX-RESULTS.md.
-- Gates run: bash tools/lint/context.sh, bash tools/lint/style.sh, bash tools/lint/truth.sh, bash tools/lint/dp.sh TASK.md, bash tools/verify.sh.
+#### 3.4.5 Receipt (Proofs to collect) — MUST RUN
+Rule:
+- If any required proof is missing, DP is FAIL.
+- Proofs must match the allowlist.
 
-## 4. Closeout (Mandatory)
+A) Capture session artifacts (record printed paths in RESULTS)
+- ./ops/bin/open --out=auto --dp="DP-OPS-XXXX"
+- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
+- Zero-byte check: test -s <dump_payload_path>
+
+B) Gates (record PASS or FAIL in RESULTS; if NOT RUN, include reason + risk)
+- bash tools/lint/context.sh
+- bash tools/lint/style.sh
+- bash tools/lint/truth.sh
+- bash tools/lint/dp.sh --test
+- bash tools/lint/dp.sh TASK.md
+- bash tools/lint/task.sh
+- bash tools/lint/llms.sh
+- ./tools/verify.sh
+
+C) Refresh (only when in-scope; must be allowlisted)
+- ./ops/bin/map
+- ./ops/bin/llms --out-dir="$(pwd)"
+
+D) Diff proof (paste outputs in RESULTS)
+- git diff --name-only
+- git diff --stat
+
+E) Optional capture (conditional, record RUN or NOT RUN + reason)
+Skill capture (only if the DP produced reusable workflow knowledge):
+- ops/lib/scripts/skill.sh harvest
+- Review draft under storage/handoff/
+- If promoting: ops/lib/scripts/skill.sh promote <draft_path>
+- If not promoting: record "no skill promoted" with one sentence rationale
+
+Task capture (only if the DP produced reusable TASK protocol improvements):
+- Record what changed in TASK protocol surfaces and why
+- Do not create new canon files unless explicitly allowlisted
+
+RESULTS requirements (must appear near top of DP-OPS-XXXX-RESULTS.md):
+- Status
+  - Scope summary:
+  - Tracked change:
+  - Verification:
+- Freshness Gate outputs (branch, HEAD, porcelain)
+- Receipt pointers (relative paths)
+  - OPEN:
+  - OPEN-PORCELAIN (or "none" + reason):
+  - Dump payload:
+  - Dump manifest:
+  - Dump bundle (if any):
+- Verification outcomes (RUN or NOT RUN + reason + risk)
+- git diff --name-only output
+- git diff --stat output
+- Required pasted outputs: Freshness Gate outputs, receipt pointers, verification outcomes, git diff --name-only, git diff --stat.
+- NEXT: one single action
+- Mandatory Closing Block required in RESULTS.
+- Mandatory Closing Block (commit header, PR title/description, squash stub, technical manifest, review starter)
+
+## 4. Closeout
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md with a DP entry at completion, including objective summary and verification commands run.
-- Run Routing Closeout scrub at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-XXXX --scrub.
-- Ensure the next session begins with refreshed session context output and matching state capture artifacts.
+- Run scrub at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-XXXX --scrub.
+- Ensure the next session begins with refreshed session artifacts and matching receipts.
 
-Mandatory Closing Block
-Varied Wording provision: Each entry must use meaningfully distinct wording; copy or minor tense changes are not acceptable. Entry 4 must differ from Entry 1.
-
+Mandatory Closing Block (write to RESULTS, not here)
 Primary Commit Header (plaintext)
 (Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
-
 Pull Request Title (plaintext)
 (Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
-
 Pull Request Description (markdown)
 (Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
-
 Final Squash Stub (plaintext) (Must differ from #1)
 (Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
-
 Extended Technical Manifest (plaintext)
 (Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
-
 Review Conversation Starter (markdown)
 (Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
-## 4.1 Thread Transition (Reset / Archive Rule)
-- Append a THREAD END entry to the TASK.md Work Log at completion.
-- Reset Section 5 Work Log to "(No active thread)" before running ./ops/bin/prune --scrub.
-- Execute Routing Closeout scrub only after all receipts and SoP logging are complete.
+## 4.1 Thread Transition
+- Append a THREAD END entry to the Work Log at completion.
+- Reset Work Log to "(No active thread)" before running prune scrub.
+- Execute scrub only after receipts and SoP logging are complete.
 
-## 5. Work Log (Timestamped Continuity)
+## 5. Work Log
 (No active thread)
 
 
 ## llms.txt
 # Stela llms.txt
-# HEAD: 088b6100
-# HEAD commit time: 2026-02-11T19:14:23-05:00
+# HEAD: fdc5d080
+# HEAD commit time: 2026-02-12T12:57:01-05:00
 # Refresh: ./ops/bin/llms
 # Pointer map to canonical docs and tools (no duplication).
 
