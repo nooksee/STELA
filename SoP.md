@@ -1,5 +1,16 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-12 00:07:59 UTC — DP-OPS-0051 System Remediation and Pointer-First TASK Dashboard
+- Objective: Eliminated TASK.md ghost-canon drift vectors by switching the Freshness Gate to pointer-first governance, aligned TASK lint enforcement in tools/lint/dp.sh, updated ops/bin/prune scrub behavior to strip legacy static blocks, repaired DP-OPS-0050 ledger continuity, and refreshed llms bundles after governance-surface edits.
+- Verification: bash tools/lint/context.sh; bash tools/lint/dp.sh --test; bash tools/lint/dp.sh TASK.md; bash tools/lint/style.sh; bash tools/lint/truth.sh; bash tools/verify.sh; ./ops/bin/map --check.
+- Functional receipts: ./ops/bin/prune --dp=DP-OPS-0050; ./ops/bin/llms; ./ops/bin/map --check; ./ops/bin/prune --dp=DP-OPS-0051 --scrub (captured in DP-OPS-0051-RESULTS.md).
+
+## 2026-02-12 00:02:54 UTC — DP-OPS-0050 Closeout Ledger Repair (Partial Closeout + Scrub Failure)
+- Objective: Repaired ledger continuity for DP-OPS-0050 by explicitly recording that the prior session closed verification gates but did not complete full routing closeout.
+- Verification (partial closeout receipts): bash tools/lint/context.sh; bash tools/lint/style.sh; bash tools/lint/truth.sh; bash tools/lint/dp.sh TASK.md; bash tools/verify.sh.
+- Deviations and anomalies: session began from a dirty tree under operator instruction; `./ops/bin/prune --dp=DP-OPS-0050 --scrub` was intentionally not run; TASK closeout state remained partial and required DP-OPS-0051 remediation.
+- Forensic cleanup command: `./ops/bin/prune --dp=DP-OPS-0050`.
+
 ## 2026-02-11 05:10:37 UTC — DP-OPS-0047 Harden TASK Closeout Cycle and Prune Logic
 - Objective: Hardened the closeout workflow into a five-stage cycle with docs/MANUAL.md as the pointer target, consolidated branching doctrine into PoT.md, extended ops/bin/prune with DP-scoped pruning, and refreshed llms bundles.
 - Verification: bash tools/verify.sh; bash tools/lint/truth.sh; bash tools/lint/style.sh; bash tools/lint/dp.sh TASK.md; bash tools/lint/llms.sh.

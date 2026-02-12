@@ -34,21 +34,16 @@ Base Branch: main
 Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
 Base HEAD: 0000000 (Must match session context output)
 
-Gate Artifacts (Must Match):
-- OPEN: storage/handoff/OPEN-main-0000000.txt (Base HEAD 0000000)
-- OPEN-PORCELAIN: storage/handoff/OPEN-PORCELAIN-main-0000000.txt (Base HEAD 0000000) or (none)
-- Dump: storage/dumps/dump-full-main-0000000.txt (Base HEAD 0000000)
-- Dump Manifest: storage/dumps/dump-full-main-0000000.manifest.txt (Base HEAD 0000000)
-
 Preconditions:
 - No commits on main.
 - Working tree must be clean before execution begins.
-- If any artifact filename hash does not equal Base HEAD, regenerate artifacts and stop.
-- If Base HEAD changes, regenerate gate artifacts and update this gate before proceeding.
-- Mandatory artifacts (every execution, no exceptions): OPEN, OPEN-PORCELAIN, dump payload, dump manifest, and DP-OPS-0050-RESULTS.md.
+- If Base HEAD changes, regenerate session artifacts from canonical tools before proceeding.
 
-Gate Commands (Must Pass):
-- bash tools/lint/context.sh
+Canonical pointers (no duplicated canon text in TASK.md):
+- Behavioral logic and drift authority: PoT.md.
+- Closeout mechanics and command canon: docs/MANUAL.md.
+- Gate canon: tools/lint/context.sh and tools/verify.sh.
+- Artifact and scrub canon: ops/bin/open, ops/bin/dump, and ops/bin/prune.
 
 ### 3.2 Required Context Load (Read Before Doing Anything)
 Read these in order before making edits:
@@ -57,6 +52,12 @@ Read these in order before making edits:
 3. TASK.md
 4. docs/MAP.md
 5. docs/MANUAL.md
+6. tools/lint/context.sh
+7. tools/verify.sh
+8. tools/lint/dp.sh
+9. ops/bin/open
+10. ops/bin/dump
+11. ops/bin/prune
 
 ### 3.3 Scope and Safety
 Objective: Populate during execution; do not pre-fill in TASK.md.

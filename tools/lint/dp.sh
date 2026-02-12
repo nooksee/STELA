@@ -645,21 +645,47 @@ lint_task() {
   base_head="$(extract_hash "$base_head_raw")"
   if [[ -z "$base_head" ]]; then
     fail "missing or invalid Base HEAD hash"
-  else
-    local -a gate_labels=("OPEN" "OPEN-PORCELAIN" "Dump" "Dump Manifest")
-    local gate_label
-    local line
-    for gate_label in "${gate_labels[@]}"; do
-      line="$(grep -nE "^[[:space:]]*[-*][[:space:]]*${gate_label}[[:space:]]*:" "$path" | head -n1 || true)"
-      if [[ -z "$line" ]]; then
-        fail "missing gate artifact line: ${gate_label}"
-        continue
-      fi
-      if [[ "$line" != *"$base_head"* ]]; then
-        fail "gate artifact '${gate_label}' does not include Base HEAD ${base_head}"
-      fi
-    done
   fi
+
+  local -a required_pointers=(
+    "PoT.md"
+    "docs/MANUAL.md"
+    "tools/lint/context.sh"
+    "tools/verify.sh"
+    "ops/bin/open"
+    "ops/bin/dump"
+    "ops/bin/prune"
+  )
+  local pointer
+  for pointer in "${required_pointers[@]}"; do
+    if ! grep -Fq -- "$pointer" "$path"; then
+      fail "missing pointer-first canon reference: ${pointer}"
+    fi
+  done
+
+  if grep -nE '^[[:space:]]*Gate Artifacts \(Must Match\):' "$path" >/dev/null; then
+    fail "legacy static gate artifact block is forbidden in TASK.md"
+  fi
+  if grep -nE '^[[:space:]]*Gate Commands \(Must Pass\):' "$path" >/dev/null; then
+    fail "legacy static gate command block is forbidden in TASK.md"
+  fi
+  if grep -nE 'Mandatory artifacts \(every execution, no exceptions\)' "$path" >/dev/null; then
+    fail "legacy mandatory artifacts line is forbidden in TASK.md"
+  fi
+
+  local -a static_gate_filename_patterns=(
+    '^[[:space:]]*[-*][[:space:]]*OPEN:[[:space:]]*storage/handoff/OPEN-'
+    '^[[:space:]]*[-*][[:space:]]*OPEN-PORCELAIN:[[:space:]]*storage/handoff/OPEN-PORCELAIN-'
+    '^[[:space:]]*[-*][[:space:]]*Dump:[[:space:]]*storage/dumps/dump-full-'
+    '^[[:space:]]*[-*][[:space:]]*Dump Manifest:[[:space:]]*storage/dumps/dump-full-'
+  )
+  local static_pattern
+  for static_pattern in "${static_gate_filename_patterns[@]}"; do
+    if grep -nE -- "$static_pattern" "$path" >/dev/null; then
+      fail "legacy static artifact filename list detected in TASK.md"
+      break
+    fi
+  done
 
   local token
   for token in "${PLACEHOLDER_TOKENS[@]}"; do
@@ -1218,21 +1244,16 @@ Base Branch: main
 Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
 Base HEAD: 13a2074d (Must match session context output)
 
-Gate Artifacts (Must Match):
-- OPEN: storage/handoff/OPEN-main-13a2074d.txt (Base HEAD 13a2074d)
-- OPEN-PORCELAIN: storage/handoff/OPEN-PORCELAIN-main-13a2074d.txt (Base HEAD 13a2074d) or (none)
-- Dump: storage/dumps/dump-full-main-13a2074d.txt (Base HEAD 13a2074d)
-- Dump Manifest: storage/dumps/dump-full-main-13a2074d.manifest.txt (Base HEAD 13a2074d)
-
 Preconditions:
 - No commits on main.
 - Working tree must be clean before execution begins.
-- If any artifact filename hash does not equal Base HEAD, regenerate artifacts and stop.
-- If Base HEAD changes, regenerate gate artifacts and update this gate before proceeding.
-- Mandatory artifacts (every execution, no exceptions): OPEN, OPEN-PORCELAIN, dump payload, dump manifest, and DP-OPS-XXXX-RESULTS.md.
+- If Base HEAD changes, regenerate session artifacts from canonical tools before proceeding.
 
-Gate Commands (Must Pass):
-- bash tools/lint/context.sh
+Canonical pointers (no duplicated canon text in TASK.md):
+- Behavioral logic and drift authority: PoT.md.
+- Closeout mechanics and command canon: docs/MANUAL.md.
+- Gate canon: tools/lint/context.sh and tools/verify.sh.
+- Artifact and scrub canon: ops/bin/open, ops/bin/dump, and ops/bin/prune.
 
 ### 3.2 Required Context Load (Read Before Doing Anything)
 Read these in order before making edits:
@@ -1241,6 +1262,12 @@ Read these in order before making edits:
 3. TASK.md
 4. docs/MAP.md
 5. docs/MANUAL.md
+6. tools/lint/context.sh
+7. tools/verify.sh
+8. tools/lint/dp.sh
+9. ops/bin/open
+10. ops/bin/dump
+11. ops/bin/prune
 
 ### 3.3 Scope and Safety
 Objective: Populate during execution; do not pre-fill in TASK.md.
@@ -1325,21 +1352,16 @@ Base Branch: main
 Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
 Base HEAD: 13a2074d (Must match session context output)
 
-Gate Artifacts (Must Match):
-- OPEN: storage/handoff/OPEN-main-13a2074d.txt (Base HEAD 13a2074d)
-- OPEN-PORCELAIN: storage/handoff/OPEN-PORCELAIN-main-13a2074d.txt (Base HEAD 13a2074d) or (none)
-- Dump: storage/dumps/dump-full-main-13a2074d.txt (Base HEAD 13a2074d)
-- Dump Manifest: storage/dumps/dump-full-main-13a2074d.manifest.txt (Base HEAD 13a2074d)
-
 Preconditions:
 - No commits on main.
 - Working tree must be clean before execution begins.
-- If any artifact filename hash does not equal Base HEAD, regenerate artifacts and stop.
-- If Base HEAD changes, regenerate gate artifacts and update this gate before proceeding.
-- Mandatory artifacts (every execution, no exceptions): OPEN, OPEN-PORCELAIN, dump payload, dump manifest, and DP-OPS-XXXX-RESULTS.md.
+- If Base HEAD changes, regenerate session artifacts from canonical tools before proceeding.
 
-Gate Commands (Must Pass):
-- bash tools/lint/context.sh
+Canonical pointers (no duplicated canon text in TASK.md):
+- Behavioral logic and drift authority: PoT.md.
+- Closeout mechanics and command canon: docs/MANUAL.md.
+- Gate canon: tools/lint/context.sh and tools/verify.sh.
+- Artifact and scrub canon: ops/bin/open, ops/bin/dump, and ops/bin/prune.
 
 ### 3.2 Required Context Load (Read Before Doing Anything)
 Read these in order before making edits:
@@ -1348,6 +1370,12 @@ Read these in order before making edits:
 3. TASK.md
 4. docs/MAP.md
 5. docs/MANUAL.md
+6. tools/lint/context.sh
+7. tools/verify.sh
+8. tools/lint/dp.sh
+9. ops/bin/open
+10. ops/bin/dump
+11. ops/bin/prune
 
 ### 3.3 Scope and Safety
 Objective: Populate during execution; do not pre-fill in TASK.md.
@@ -1435,21 +1463,16 @@ Base Branch: main
 Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
 Base HEAD: 13a2074d (Must match session context output)
 
-Gate Artifacts (Must Match):
-- OPEN: storage/handoff/OPEN-main-13a2074d.txt (Base HEAD 13a2074d)
-- OPEN-PORCELAIN: storage/handoff/OPEN-PORCELAIN-main-13a2074d.txt (Base HEAD 13a2074d) or (none)
-- Dump: storage/dumps/dump-full-main-13a2074d.txt (Base HEAD 13a2074d)
-- Dump Manifest: storage/dumps/dump-full-main-13a2074d.manifest.txt (Base HEAD 13a2074d)
-
 Preconditions:
 - No commits on main.
 - Working tree must be clean before execution begins.
-- If any artifact filename hash does not equal Base HEAD, regenerate artifacts and stop.
-- If Base HEAD changes, regenerate gate artifacts and update this gate before proceeding.
-- Mandatory artifacts (every execution, no exceptions): OPEN, OPEN-PORCELAIN, dump payload, dump manifest, and DP-OPS-XXXX-RESULTS.md.
+- If Base HEAD changes, regenerate session artifacts from canonical tools before proceeding.
 
-Gate Commands (Must Pass):
-- bash tools/lint/context.sh
+Canonical pointers (no duplicated canon text in TASK.md):
+- Behavioral logic and drift authority: PoT.md.
+- Closeout mechanics and command canon: docs/MANUAL.md.
+- Gate canon: tools/lint/context.sh and tools/verify.sh.
+- Artifact and scrub canon: ops/bin/open, ops/bin/dump, and ops/bin/prune.
 
 ### 3.2 Required Context Load (Read Before Doing Anything)
 Read these in order before making edits:
@@ -1458,6 +1481,12 @@ Read these in order before making edits:
 3. TASK.md
 4. docs/MAP.md
 5. docs/MANUAL.md
+6. tools/lint/context.sh
+7. tools/verify.sh
+8. tools/lint/dp.sh
+9. ops/bin/open
+10. ops/bin/dump
+11. ops/bin/prune
 
 ### 3.3 Scope and Safety
 Objective: Populate during execution; do not pre-fill in TASK.md.

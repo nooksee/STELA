@@ -131,6 +131,8 @@ scrub_task() {
       skip_scope=0
       in_plan=0
       skip_plan=0
+      in_legacy_gate_artifacts=0
+      in_legacy_gate_commands=0
     }
     function emit_instruction() {
       print closeout_instruction
@@ -169,20 +171,36 @@ scrub_task() {
       print "Required Work Branch: " work_branch
       next
     }
-    /^[[:space:]]*[-*][[:space:]]*OPEN-PORCELAIN:/ {
-      print "- OPEN-PORCELAIN: storage/handoff/OPEN-PORCELAIN-" branch "-" base_head ".txt (Base HEAD " base_head ") or (none)"
+    /^[[:space:]]*Gate Artifacts \(Must Match\):/ {
+      in_legacy_gate_artifacts=1
       next
     }
-    /^[[:space:]]*[-*][[:space:]]*OPEN:/ {
-      print "- OPEN: storage/handoff/OPEN-" branch "-" base_head ".txt (Base HEAD " base_head ")"
+    in_legacy_gate_artifacts {
+      if ($0 ~ /^[[:space:]]*Preconditions:/) {
+        in_legacy_gate_artifacts=0
+        print
+      }
       next
     }
-    /^[[:space:]]*[-*][[:space:]]*Dump Manifest:/ {
-      print "- Dump Manifest: storage/dumps/dump-full-" branch "-" base_head ".manifest.txt (Base HEAD " base_head ")"
+    /^[[:space:]]*Gate Commands \(Must Pass\):/ {
+      in_legacy_gate_commands=1
       next
     }
-    /^[[:space:]]*[-*][[:space:]]*Dump:/ {
-      print "- Dump: storage/dumps/dump-full-" branch "-" base_head ".txt (Base HEAD " base_head ")"
+    in_legacy_gate_commands {
+      if ($0 ~ /^### 3\.2 /) {
+        in_legacy_gate_commands=0
+        print
+      }
+      next
+    }
+    /^[[:space:]]*[-*][[:space:]]*If any artifact filename hash does not equal Base HEAD, regenerate artifacts and stop\./ {
+      next
+    }
+    /^[[:space:]]*[-*][[:space:]]*Mandatory artifacts \(every execution, no exceptions\):/ {
+      next
+    }
+    /^[[:space:]]*[-*][[:space:]]*If Base HEAD changes, regenerate gate artifacts and update this gate before proceeding\./ {
+      print "- If Base HEAD changes, regenerate session artifacts from canonical tools before proceeding."
       next
     }
     /^[[:space:]]*Mandatory Closing Block/ {
