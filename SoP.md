@@ -1,5 +1,15 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-12 17:36:43 UTC — DP-OPS-0055 Receipt Refresh and Verification Capture
+- Objective: Confirmed `docs/MANUAL.md` dispatch contract note coverage (DP Preflight Gate ordering plus worker-input/OPEN reading rule), retained the V2 TASK + lint + TASK surface spec changes for DP-OPS-0055, and refreshed receipt artifacts in `storage/handoff/DP-OPS-0055-RESULTS.md`.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0055"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0055-task-surface-contract-lock-9baf3978.txt`.
+
+## 2026-02-12 16:32:23 UTC — DP-OPS-0055 TASK Surface Contract Lock (V2 Promotion + Lint Adoption + Surface Spec)
+- Objective: Promoted the V2 TASK contract into `TASK.md`, enforced the contract in `tools/lint/task.sh` and `tools/lint/dp.sh` (including DP Preflight Gate and anti-degradation checks), added the TASK surface spec at `docs/ops/specs/surfaces/task.md`, and aligned `docs/MANUAL.md` with the new dispatch and receipt rules.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0055"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0055-task-surface-contract-lock-9baf3978.txt`; `./ops/bin/prune --dp=DP-OPS-0055 --scrub`.
+
 ## 2026-02-12 05:24:50 UTC — DP-OPS-0054 TASK Surface Stabilization (OPEN Read-Only + Lint Alignment)
 - Objective: Regressed `ops/bin/open` to tracked-file read-only behavior (no TASK.md mutation), stabilized TASK.md Session State to pointer-first shape (no inline Active Branch/Base HEAD), aligned `tools/lint/dp.sh` and `tools/lint/task.sh` with the stabilized contract, removed the PoT dirty-state TASK exception, updated workflow canon docs, and refreshed root llms bundles.
 - Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `bash tools/verify.sh`; `./ops/bin/map --check`.
