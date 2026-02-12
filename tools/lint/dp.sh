@@ -248,16 +248,30 @@ first_heading_line() {
   awk -v r="$pattern" 'BEGIN { IGNORECASE = 1 } $0 ~ r { print NR; exit }' "$path"
 }
 
+extract_block() {
+  local path="$1"
+  local start_pattern="$2"
+  local stop_pattern="$3"
+  awk -v start_regex="$start_pattern" -v stop_regex="$stop_pattern" '
+    BEGIN { in_block=0 }
+    $0 ~ start_regex { in_block=1; next }
+    in_block && $0 ~ stop_regex { exit }
+    in_block { print }
+  ' "$path"
+}
+
 check_task_subsections() {
   local path="$1"
   local -a labels=(
     "### 3.1 Freshness Gate (Must Pass Before Work)"
+    "### 3.1.1 DP Preflight Gate (Run Before Any Edits)"
     "### 3.2 Required Context Load (Read Before Doing Anything)"
     "### 3.3 Scope and Safety"
     "### 3.4 Execution Plan (A-E Canon)"
   )
   local -a patterns=(
     '^###[[:space:]]*3\\.1[.)]?[[:space:]]*FRESHNESS GATE'
+    '^###[[:space:]]*3\\.1\\.1[.)]?[[:space:]]*DP PREFLIGHT GATE'
     '^###[[:space:]]*3\\.2[.)]?[[:space:]]*REQUIRED CONTEXT LOAD'
     '^###[[:space:]]*3\\.3[.)]?[[:space:]]*SCOPE'
     '^###[[:space:]]*3\\.4[.)]?[[:space:]]*EXECUTION PLAN'
@@ -333,6 +347,153 @@ check_task_plan_headings() {
         break
       fi
     done
+  fi
+}
+
+check_task_freeze_rule() {
+  local path="$1"
+  local freeze_count
+  freeze_count="$(grep -c '^Freeze Rule:$' "$path" || true)"
+  if [[ "$freeze_count" != "1" ]]; then
+    fail "TASK v2 requires exactly one Freeze Rule block"
+  fi
+  if ! grep -Fq 'AMENDMENT:' "$path"; then
+    fail "TASK v2 Freeze Rule must require AMENDMENT entries"
+  fi
+}
+
+check_task_preflight_gate_contract() {
+  local path="$1"
+  local preflight_block
+  preflight_block="$(extract_block "$path" '^### 3[.]1[.]1' '^### 3[.]2')"
+
+  if [[ -z "$preflight_block" ]]; then
+    fail "TASK v2 missing DP Preflight Gate block"
+    return
+  fi
+
+  local -a required_lines=(
+    "bash tools/lint/dp.sh --test"
+    "bash tools/lint/dp.sh TASK.md"
+    "bash tools/lint/task.sh"
+    "STOP if any preflight check fails."
+  )
+  local req
+  for req in "${required_lines[@]}"; do
+    if ! grep -Fq -- "$req" <<< "$preflight_block"; then
+      fail "TASK v2 preflight block missing line: ${req}"
+    fi
+  done
+}
+
+check_task_context_load_contract() {
+  local path="$1"
+  local canon_block
+  canon_block="$(extract_block "$path" '^#### 3[.]2[.]1' '^#### 3[.]2[.]2')"
+  if [[ -z "$canon_block" ]]; then
+    fail "TASK v2 missing canon load order block (3.2.1)"
+    return
+  fi
+
+  local -a canon_expected=(
+    "1. PoT.md"
+    "2. SoP.md"
+    "3. TASK.md"
+    "4. docs/MAP.md"
+    "5. docs/MANUAL.md"
+    "6. ops/lib/manifests/CONTEXT.md"
+  )
+  local expected
+  for expected in "${canon_expected[@]}"; do
+    if ! grep -Fxq -- "$expected" <<< "$canon_block"; then
+      fail "TASK v2 canon load order missing '${expected}'"
+    fi
+  done
+
+  local canon_count
+  canon_count="$(grep -cE '^[[:space:]]*[0-9]+\.[[:space:]]' <<< "$canon_block" || true)"
+  if [[ "$canon_count" != "6" ]]; then
+    fail "TASK v2 canon load order must include exactly six numbered items"
+  fi
+
+  if grep -nE '(tools/|ops/bin/|docs/ops/specs/)' <<< "$canon_block" >/dev/null; then
+    fail "TASK v2 canon load order is bloated; tools and binaries belong under 3.2.2"
+  fi
+
+  local scoped_block
+  scoped_block="$(extract_block "$path" '^#### 3[.]2[.]2' '^### 3[.]3')"
+  local -a scoped_expected=(
+    "tools/lint/dp.sh"
+    "tools/lint/task.sh"
+    "docs/ops/specs/binaries/open.md"
+  )
+  for expected in "${scoped_expected[@]}"; do
+    if ! grep -Fq -- "$expected" <<< "$scoped_block"; then
+      fail "TASK v2 DP-scoped load order missing '${expected}'"
+    fi
+  done
+
+  if ! grep -Fq 'Worker does not read OPEN.' <<< "$canon_block"; then
+    fail "TASK v2 context notes must state that worker does not read OPEN"
+  fi
+  if ! grep -Fq 'Worker input is the DP text only.' <<< "$canon_block"; then
+    fail "TASK v2 context notes must state DP text-only worker input"
+  fi
+  if ! grep -Fq 'DP writer must not attach or cite disposable artifacts.' <<< "$canon_block"; then
+    fail "TASK v2 context notes must forbid disposable artifact citations"
+  fi
+  if ! grep -Fq 'DP writer must not embed pasted bundles.' <<< "$canon_block"; then
+    fail "TASK v2 context notes must forbid pasted bundles"
+  fi
+}
+
+check_task_open_read_policy() {
+  local path="$1"
+  local open_issue
+  if open_issue="$(awk '
+    BEGIN { IGNORECASE=1 }
+    {
+      line=tolower($0)
+      if (line ~ /read[[:space:]]+open/ || line ~ /open[[:space:]]+is[[:space:]]+required[[:space:]]+reading/) {
+        if (line ~ /does not read open/) { next }
+        if (line ~ /not required reading/) { next }
+        print $0
+        exit 1
+      }
+    }
+  ' "$path")"; then
+    :
+  else
+    fail "TASK contains forbidden OPEN-reading directive: ${open_issue}"
+  fi
+}
+
+check_task_receipt_contract() {
+  local path="$1"
+  local receipt_block
+  receipt_block="$(extract_block "$path" '^#### 3[.]4[.]5' '^## 4[.]')"
+  if [[ -z "$receipt_block" ]]; then
+    fail "TASK v2 missing receipt block"
+    return
+  fi
+
+  if ! grep -Eq '\./ops/bin/open[[:space:]]+--out=auto[[:space:]]+--dp=' <<< "$receipt_block"; then
+    fail "TASK v2 receipt contract missing executable OPEN command"
+  fi
+  if ! grep -Eq '\./ops/bin/dump[[:space:]]+--scope=platform[[:space:]]+--format=chatgpt[[:space:]]+--out=auto[[:space:]]+--bundle' <<< "$receipt_block"; then
+    fail "TASK v2 receipt contract missing executable DUMP command"
+  fi
+  if ! grep -Fq 'git diff --name-only' <<< "$receipt_block"; then
+    fail "TASK v2 receipt contract missing git diff --name-only proof command"
+  fi
+  if ! grep -Fq 'git diff --stat' <<< "$receipt_block"; then
+    fail "TASK v2 receipt contract missing git diff --stat proof command"
+  fi
+  if ! grep -iq 'required pasted outputs' <<< "$receipt_block"; then
+    fail "TASK v2 receipt contract missing required pasted outputs language"
+  fi
+  if ! grep -Fq 'Mandatory Closing Block required in RESULTS' <<< "$receipt_block"; then
+    fail "TASK v2 receipt contract missing Mandatory Closing Block requirement"
   fi
 }
 
@@ -577,6 +738,73 @@ has_objective_section() {
   return 1
 }
 
+check_dp_preflight_gate() {
+  local path="$1"
+  if ! grep -nEi '^##[[:space:]]*3\.1\.1[.)]?[[:space:]]*DP PREFLIGHT GATE' "$path" >/dev/null; then
+    fail "missing heading '## 3.1.1 DP Preflight Gate (Run Before Any Edits)'"
+    return
+  fi
+
+  local preflight_block
+  preflight_block="$(extract_block "$path" '^##[[:space:]]*3[.]1[.]1' '^##[[:space:]]*3[.]2')"
+  local -a required_preflight=(
+    "bash tools/lint/dp.sh --test"
+    "bash tools/lint/dp.sh TASK.md"
+    "bash tools/lint/task.sh"
+  )
+  local req
+  for req in "${required_preflight[@]}"; do
+    if ! grep -Fq -- "$req" <<< "$preflight_block"; then
+      fail "DP preflight gate missing command: ${req}"
+    fi
+  done
+}
+
+check_dp_disposable_input_hazards() {
+  local path="$1"
+  local issue
+
+  if issue="$(awk '
+    BEGIN { IGNORECASE=1 }
+    /storage\/_scratch\/|storage\/tmp\/|scratch draft|throwaway notes|throwaway memo/ {
+      print $0
+      exit 1
+    }
+  ' "$path")"; then
+    :
+  else
+    fail "DP references disposable artifact input: ${issue}"
+  fi
+
+  if issue="$(awk '
+    BEGIN { IGNORECASE=1 }
+    {
+      line=tolower($0)
+      if ((line ~ /attach/ || line ~ /attachment/) && (line ~ /open/ || line ~ /dump/)) {
+        if (line ~ /do not/ || line ~ /must not/ || line ~ /not required/) { next }
+        print $0
+        exit 1
+      }
+    }
+  ' "$path")"; then
+    :
+  else
+    fail "DP requests OPEN/DUMP as attachments instead of executable receipts: ${issue}"
+  fi
+
+  if issue="$(awk '
+    BEGIN { IGNORECASE=1 }
+    /BEGIN[[:space:]]+OPEN|END[[:space:]]+OPEN|BEGIN[[:space:]]+DUMP|END[[:space:]]+DUMP|pasted[[:space:]]+bundle|raw[[:space:]]+open[[:space:]]+payload|raw[[:space:]]+dump[[:space:]]+payload/ {
+      print $0
+      exit 1
+    }
+  ' "$path")"; then
+    :
+  else
+    fail "DP embeds OPEN/DUMP payload markers instead of pointer references: ${issue}"
+  fi
+}
+
 is_task_file() {
   local path="$1"
   if grep -nE '^#[[:space:]]*STELA TASK DASHBOARD' "$path" >/dev/null; then
@@ -641,7 +869,8 @@ lint_task() {
   pointer_raw="$(field_value "Pointer")"
   pointer_raw="$(trim "$pointer_raw")"
   pointer_raw="$(strip_backticks "$pointer_raw")"
-  if [[ "$pointer_raw" != "Session context output (generated by ops/bin/open)" ]]; then
+  local v2_pointer_pattern='^storage/handoff/OPEN-<branch>-<short-hash>[.]txt([[:space:]]*[(].*[)])?$'
+  if [[ "$pointer_raw" != "Session context output (generated by ops/bin/open)" ]] && [[ ! "$pointer_raw" =~ $v2_pointer_pattern ]]; then
     fail "Pointer must equal 'Session context output (generated by ops/bin/open)'"
   fi
 
@@ -652,7 +881,10 @@ lint_task() {
     /^## 2\./ { in_session=0 }
     in_session {
       if ($0 ~ /^[[:space:]]*Active Branch:/) { print "Active Branch"; exit 1 }
+      if ($0 ~ /^[[:space:]]*Branch:/) { print "Branch"; exit 1 }
       if ($0 ~ /^[[:space:]]*Base HEAD:/) { print "Base HEAD"; exit 1 }
+      if ($0 ~ /work\/[[:alnum:]_.-]+/) { print "work branch mirror"; exit 1 }
+      if ($0 ~ /[0-9a-f]{7,}/) { print "hash mirror"; exit 1 }
     }
   ' "$path")"; then
     :
@@ -673,8 +905,11 @@ lint_task() {
   local -a required_pointers=(
     "PoT.md"
     "docs/MANUAL.md"
+    "docs/ops/specs/surfaces/task.md"
     "tools/lint/context.sh"
     "tools/verify.sh"
+    "tools/lint/dp.sh"
+    "tools/lint/task.sh"
     "ops/bin/open"
     "ops/bin/dump"
     "ops/bin/prune"
@@ -722,9 +957,14 @@ lint_task() {
   fi
 
   check_task_subsections "$path"
+  check_task_freeze_rule "$path"
+  check_task_preflight_gate_contract "$path"
+  check_task_context_load_contract "$path"
+  check_task_open_read_policy "$path"
   check_task_plan_headings "$path"
   check_task_scope_baseline "$path"
   check_task_plan_baseline "$path"
+  check_task_receipt_contract "$path"
   check_task_closeout_baseline "$path"
   check_task_thread_transition "$path"
   check_task_work_log_baseline "$path"
@@ -867,6 +1107,8 @@ lint_file() {
   check_required_field "Base Branch"
   check_required_field_any "Required Work Branch" "Work Branch"
   check_required_field "Base HEAD"
+  check_dp_preflight_gate "$path"
+  check_dp_disposable_input_hazards "$path"
 
   local has_ae=1
   local letter
@@ -1003,22 +1245,27 @@ lint_path() {
 run_test() {
   local tmp_valid
   local tmp_invalid
-  local tmp_order
-  local tmp_llms_warn
-  local tmp_task_missing_field
-  local tmp_task_dirty_log
+  local tmp_missing_preflight
+  local tmp_disposable
+  local tmp_task_valid
+  local tmp_task_invalid
+  local tmp_task_dirty
 
   tmp_valid="$(mktemp)"
   cat <<'EOF' > "$tmp_valid"
 # DP-OPS-0001: Lint Test
 ## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Required Work Branch: work/boot_files_update
+Required Work Branch: work/dp-ops-0001-lint
 Base HEAD: 13a2074d
+## 3.1.1 DP Preflight Gate (Run Before Any Edits)
+- bash tools/lint/dp.sh --test
+- bash tools/lint/dp.sh TASK.md
+- bash tools/lint/task.sh
 ## 3.2 Required Context Load (Read Before Doing Anything)
-- Loaded: PoT, SoP, CONTEXT, MAP
+- Loaded: PoT.md, SoP.md, TASK.md, docs/MAP.md, docs/MANUAL.md, ops/lib/manifests/CONTEXT.md.
 ## 3.3 Scope and Safety
-- Objective: Validate lint headings and required fields.
+- Objective: Validate V2 lint headings and required fields.
 ### Target Files allowlist (hard gate)
 - tools/lint/dp.sh
 ## 3.4 Execution Plan (A-E Canon)
@@ -1044,211 +1291,132 @@ EOF
 
   tmp_invalid="$(mktemp)"
   cat <<'EOF' > "$tmp_invalid"
-# DP-OPS-0001: Lint Test
+# DP-OPS-0002: Lint Placeholder Test
 ## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Required Work Branch: work/boot_files_update
+Required Work Branch: work/dp-ops-0002-lint
 Base HEAD: 13a2074d
+## 3.1.1 DP Preflight Gate (Run Before Any Edits)
+- bash tools/lint/dp.sh --test
+- bash tools/lint/dp.sh TASK.md
+- bash tools/lint/task.sh
 ## 3.2 Required Context Load (Read Before Doing Anything)
-- Loaded: PoT, SoP, CONTEXT, MAP
+- Loaded: PoT.md, SoP.md, TASK.md.
 ## 3.3 Scope and Safety
-- Objective: TBD
+Objective: TBD
 ### Target Files allowlist (hard gate)
 - tools/lint/dp.sh
 ## 3.4 Execution Plan (A-E Canon)
 ### 3.4.1 State
-Test state.
+State text.
 ### 3.4.2 Request
-1) Test request.
+Request text.
 ### 3.4.3 Changelog
-- Test changelog.
+Changelog text.
 ### 3.4.4 Patch / Diff
-- Test diff.
+Patch text.
 ### 3.4.5 Receipt (Required)
-- Test receipt.
+Receipt text.
 ## 4 Closeout (Mandatory)
-- Closeout notes.
+Closeout text.
 ## 4.1 Thread Transition (Reset / Archive Rule)
-- Transition notes.
-## 5 Work Log (Timestamped Continuity)
-- 2026-01-27 14:05 — DP-OPS-0001: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
-EOF
-
-  if lint_path "$tmp_invalid" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_llms_warn"
-    echo "FAIL: --test expected placeholder detection to fail" >&2
-    exit 1
-  fi
-
-  tmp_order="$(mktemp)"
-  cat <<'EOF' > "$tmp_order"
-# DP-OPS-0001: Lint Test
-## 3.1 Freshness Gate (Must Pass Before Work)
-Base Branch: main
-Required Work Branch: work/boot_files_update
-Base HEAD: 13a2074d
-## 3.4 Execution Plan (A-E Canon)
-## 3.3 Scope and Safety
-- Objective: Validate lint headings and required fields.
-### Target Files allowlist (hard gate)
-- tools/lint/dp.sh
-## 3.2 Required Context Load (Read Before Doing Anything)
-- Loaded: PoT, SoP, CONTEXT, MAP
-### 3.4.1 State
-Test state.
-### 3.4.2 Request
-1) Test request.
-### 3.4.3 Changelog
-- Test changelog.
-### 3.4.4 Patch / Diff
-- Test diff.
-### 3.4.5 Receipt (Required)
-- Test receipt.
-## 4 Closeout (Mandatory)
-- Closeout notes.
-## 4.1 Thread Transition (Reset / Archive Rule)
-- Transition notes.
-## 5 Work Log (Timestamped Continuity)
-- 2026-01-27 14:05 — DP-OPS-0001: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
-EOF
-
-  if lint_path "$tmp_order" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_llms_warn"
-    echo "FAIL: --test expected heading order detection to fail" >&2
-    exit 1
-  fi
-
-  tmp_decimal_valid="$(mktemp)"
-  cat <<'EOF' > "$tmp_decimal_valid"
-# DP-OPS-0002: Decimal Lint Test
-## 3.1 Freshness Gate (Must Pass Before Work)
-Base Branch: main
-Required Work Branch: work/decimal-lint-test
-Base HEAD: 13a2074d
-## 3.2 Required Context Load (Read Before Doing Anything)
-- Loaded: PoT, SoP, CONTEXT, MAP
-## 3.3 Scope and Safety
-- Objective: Validate decimal headings.
-### Target Files allowlist (hard gate)
-- tools/lint/dp.sh
-## 3.4 Execution Plan (A-E Canon)
-### 3.4.1 State
-Test state.
-### 3.4.2 Request
-1) Test request.
-### 3.4.3 Changelog
-- Test changelog.
-### 3.4.4 Patch / Diff
-- Test diff.
-### 3.4.5 Receipt (Required)
-- Test receipt.
-## 4 Closeout (Mandatory)
-- Closeout notes.
-## 4.1 Thread Transition (Reset / Archive Rule)
-- Transition notes.
+Thread text.
 ## 5 Work Log (Timestamped Continuity)
 - 2026-01-27 14:05 — DP-OPS-0002: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
 EOF
 
-  lint_path "$tmp_decimal_valid" >/dev/null
+  if lint_path "$tmp_invalid" >/dev/null 2>&1; then
+    rm -f "$tmp_valid" "$tmp_invalid"
+    echo "FAIL: --test expected placeholder detection to fail" >&2
+    exit 1
+  fi
 
-  tmp_decimal_invalid="$(mktemp)"
-  cat <<'EOF' > "$tmp_decimal_invalid"
-# DP-OPS-0003: Decimal Lint Test Invalid
+  tmp_missing_preflight="$(mktemp)"
+  cat <<'EOF' > "$tmp_missing_preflight"
+# DP-OPS-0003: Missing Preflight
 ## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Required Work Branch: work/decimal-lint-test
+Required Work Branch: work/dp-ops-0003-lint
 Base HEAD: 13a2074d
+## 3.2 Required Context Load (Read Before Doing Anything)
+- Loaded: PoT.md, SoP.md, TASK.md.
 ## 3.3 Scope and Safety
-- Objective: Validate decimal heading failures.
+Objective: Validate preflight requirement.
 ### Target Files allowlist (hard gate)
 - tools/lint/dp.sh
 ## 3.4 Execution Plan (A-E Canon)
 ### 3.4.1 State
-Test state.
+State text.
 ### 3.4.2 Request
-1) Test request.
+Request text.
 ### 3.4.3 Changelog
-- Test changelog.
+Changelog text.
 ### 3.4.4 Patch / Diff
-- Test diff.
+Patch text.
 ### 3.4.5 Receipt (Required)
-- Test receipt.
+Receipt text.
 ## 4 Closeout (Mandatory)
-- Closeout notes.
+Closeout text.
 ## 4.1 Thread Transition (Reset / Archive Rule)
-- Transition notes.
+Thread text.
 ## 5 Work Log (Timestamped Continuity)
 - 2026-01-27 14:05 — DP-OPS-0003: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
 EOF
 
-  if lint_path "$tmp_decimal_invalid" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn"
-    echo "FAIL: --test expected decimal heading detection to fail" >&2
+  if lint_path "$tmp_missing_preflight" >/dev/null 2>&1; then
+    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_missing_preflight"
+    echo "FAIL: --test expected preflight heading detection to fail" >&2
     exit 1
   fi
 
-  tmp_llms_warn="$(mktemp)"
-  cat <<'EOF' > "$tmp_llms_warn"
-# DP-OPS-0006: Decimal Lint Test llms Warning
+  tmp_disposable="$(mktemp)"
+  cat <<'EOF' > "$tmp_disposable"
+# DP-OPS-0004: Disposable Input Test
 ## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Required Work Branch: work/decimal-lint-test
+Required Work Branch: work/dp-ops-0004-lint
 Base HEAD: 13a2074d
+## 3.1.1 DP Preflight Gate (Run Before Any Edits)
+- bash tools/lint/dp.sh --test
+- bash tools/lint/dp.sh TASK.md
+- bash tools/lint/task.sh
 ## 3.2 Required Context Load (Read Before Doing Anything)
-- Loaded: PoT, SoP, CONTEXT, MAP
+- Required input: storage/_scratch/notes.md
 ## 3.3 Scope and Safety
-- Objective: Validate llms allowlist warnings.
+Objective: Validate disposable input rejection.
 ### Target Files allowlist (hard gate)
 - tools/lint/dp.sh
-- llms.txt
-- llms-small.txt
 ## 3.4 Execution Plan (A-E Canon)
 ### 3.4.1 State
-Test state.
+State text.
 ### 3.4.2 Request
-1) Run llms command.
+Request text.
 ### 3.4.3 Changelog
-- Test changelog.
+Changelog text.
 ### 3.4.4 Patch / Diff
-~~~bash
-./ops/bin/llms --out-dir=.
-~~~
+Patch text.
 ### 3.4.5 Receipt (Required)
-- Test receipt.
+Receipt text.
 ## 4 Closeout (Mandatory)
-- Closeout notes.
+Closeout text.
 ## 4.1 Thread Transition (Reset / Archive Rule)
-- Transition notes.
+Thread text.
 ## 5 Work Log (Timestamped Continuity)
-- 2026-01-27 14:05 — DP-OPS-0006: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
+- 2026-01-27 14:05 — DP-OPS-0004: Lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
 EOF
 
-  local output
-  if ! output="$(lint_path "$tmp_llms_warn" 2>&1)"; then
-    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn"
-    echo "FAIL: --test expected llms warning DP to pass" >&2
-    exit 1
-  fi
-
-  if [[ "$output" != *"WARN: llms allowlist missing required root outputs:"* ]]; then
-    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn"
-    echo "FAIL: --test expected llms allowlist warning to emit" >&2
-    exit 1
-  fi
-
-  if [[ "$output" != *"llms-full.txt"* ]]; then
-    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn"
-    echo "FAIL: --test expected llms allowlist warning to list missing outputs" >&2
+  if lint_path "$tmp_disposable" >/dev/null 2>&1; then
+    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_missing_preflight" "$tmp_disposable"
+    echo "FAIL: --test expected disposable input detection to fail" >&2
     exit 1
   fi
 
   tmp_task_valid="$(mktemp)"
   cat <<'EOF' > "$tmp_task_valid"
-# STELA TASK DASHBOARD (LIVING SURFACE)
+# STELA TASK DASHBOARD
 Status: ACTIVE
 Owner: Integrator
-Last Updated: 2026-02-08
+Last Updated: 2026-02-12
 
 ## 1. Session State (The Anchor)
 Pointer: Session context output (generated by ops/bin/open)
@@ -1256,39 +1424,64 @@ Context Manifest: ops/lib/manifests/CONTEXT.md (Checked by tools/lint/context.sh
 
 ## 2. Logic Pointers (The Law)
 Primary Constraint: PoT.md (Policy of Truth).
+Surface Contract Spec: docs/ops/specs/surfaces/task.md.
+Lint Enforcement: tools/lint/dp.sh and tools/lint/task.sh.
+
+Freeze Rule:
+- After dispatch, the active DP is frozen.
+- Any change to scope, allowlist, gates, or receipt requirements must be recorded as `AMENDMENT:` lines inside Section 3 before execution continues.
 
 ## 3. Current Dispatch Packet (DP)
 ### DP-XXXX: (Template)
 
 ### 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
-Base HEAD: 13a2074d (Must match session context output)
+Required Work Branch: work/dp-ops-XXXX-task-surface-contract-lock
+Base HEAD: 13a2074d
 
-Preconditions:
-- No commits on main.
-- Working tree must be clean before execution begins.
-- If Base HEAD changes, regenerate session artifacts from canonical tools before proceeding.
+Required local re-check (worker runs; paste results in RESULTS):
+- git rev-parse --abbrev-ref HEAD
+- git rev-parse --short HEAD
+- git status --porcelain
 
-Canonical pointers (no duplicated canon text in TASK.md):
-- Behavioral logic and drift authority: PoT.md.
-- Closeout mechanics and command canon: docs/MANUAL.md.
-- Gate canon: tools/lint/context.sh and tools/verify.sh.
-- Artifact and scrub canon: ops/bin/open, ops/bin/dump, and ops/bin/prune.
+STOP if any mismatch.
+STOP if Required Work Branch is missing.
+STOP if told to create or switch branches.
+STOP if working tree is dirty before execution begins.
+
+### 3.1.1 DP Preflight Gate (Run Before Any Edits)
+Purpose:
+- Catch malformed DP or TASK schema before work begins.
+
+Worker runs (paste outcome in RESULTS):
+- bash tools/lint/dp.sh --test
+- bash tools/lint/dp.sh TASK.md
+- bash tools/lint/task.sh
+
+STOP if any preflight check fails.
 
 ### 3.2 Required Context Load (Read Before Doing Anything)
-Read these in order before making edits:
+
+#### 3.2.1 Canon load order (always)
+Worker must confirm loaded before edits begin:
 1. PoT.md
 2. SoP.md
 3. TASK.md
 4. docs/MAP.md
 5. docs/MANUAL.md
-6. tools/lint/context.sh
-7. tools/verify.sh
-8. tools/lint/dp.sh
-9. ops/bin/open
-10. ops/bin/dump
-11. ops/bin/prune
+6. ops/lib/manifests/CONTEXT.md
+
+Notes:
+- Worker does not read OPEN. OPEN is for Integrator state refresh and for receipts.
+- Disposable artifacts must not be referenced or included.
+- Worker input is the DP text only.
+- DP writer must not attach or cite disposable artifacts.
+- DP writer must not embed pasted bundles.
+
+#### 3.2.2 DP-scoped load order (per DP)
+- tools/lint/dp.sh
+- tools/lint/task.sh
+- docs/ops/specs/binaries/open.md (pointer reference only; OPEN behavior is not modified in this DP)
 
 ### 3.3 Scope and Safety
 Objective: Populate during execution; do not pre-fill in TASK.md.
@@ -1300,6 +1493,12 @@ Target Files allowlist (hard gate):
 - Populate during execution; do not pre-fill in TASK.md.
 
 ### 3.4 Execution Plan (A-E Canon)
+DP Authoring Protocol (section-by-section):
+- 3.4.1 State: facts only.
+- 3.4.2 Request: numbered change requests.
+- 3.4.3 Changelog: planned file deltas.
+- 3.4.4 Patch / Diff: implementation details.
+- 3.4.5 Receipt: executable proofs and required pasted outputs.
 
 #### 3.4.1 State (What is true now)
 Populate during execution; do not pre-fill in TASK.md.
@@ -1313,12 +1512,42 @@ Populate during execution; do not pre-fill in TASK.md.
 #### 3.4.4 Patch / Diff (Implementation details)
 Populate during execution; do not pre-fill in TASK.md.
 
-#### 3.4.5 Receipt (Proofs to collect)
-- Artifacts captured: OPEN, OPEN-PORCELAIN (or none), dump payload, dump manifest, DP-OPS-XXXX-RESULTS.md.
-- Gates run: bash tools/lint/context.sh, bash tools/lint/style.sh, bash tools/lint/truth.sh, bash tools/lint/dp.sh TASK.md, bash tools/verify.sh.
+#### 3.4.5 Receipt (Proofs to collect) — MUST RUN
+Rule:
+- If any required proof is missing, DP is FAIL.
+- Proofs must match the allowlist.
+
+A) Capture session artifacts (record printed paths in RESULTS)
+- ./ops/bin/open --out=auto --dp="DP-OPS-XXXX"
+- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
+- Zero-byte check: test -s <dump_payload_path>
+
+B) Gates (record PASS/FAIL in RESULTS; if NOT RUN, include reason + risk)
+- bash tools/lint/context.sh
+- bash tools/lint/style.sh
+- bash tools/lint/truth.sh
+- bash tools/lint/dp.sh --test
+- bash tools/lint/dp.sh TASK.md
+- bash tools/lint/task.sh
+- bash tools/lint/llms.sh
+- ./tools/verify.sh
+
+C) Diff proof (paste outputs in RESULTS)
+- git diff --name-only
+- git diff --stat
+
+D) RESULTS file (required)
+- storage/handoff/DP-OPS-XXXX-RESULTS.md must include:
+  - Status block (Scope summary, Tracked change, Verification)
+  - Receipt pointers (OPEN, OPEN-PORCELAIN or none + reason, dump payload, dump manifest, dump bundle if any)
+  - Verification outcomes (RUN/NOT RUN + reason + risk)
+  - required pasted outputs (paths, diffs, verification outcomes)
+  - NEXT: one single action
+  - Mandatory Closing Block required in RESULTS
 
 ## 4. Closeout (Mandatory)
-- Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
+- Follow docs/MANUAL.md Closeout Cycle (Verify, Harvest, Refresh, Log, Prune).
+- Run: ./ops/bin/prune --dp=DP-OPS-XXXX --scrub (after receipts and SoP logging).
 
 Mandatory Closing Block
 Varied Wording provision: Each entry must use meaningfully distinct wording; copy or minor tense changes are not acceptable. Entry 4 must differ from Entry 1.
@@ -1350,122 +1579,12 @@ EOF
 
   lint_path "$tmp_task_valid" >/dev/null
 
-  tmp_task_missing_field="$(mktemp)"
-  cat <<'EOF' > "$tmp_task_missing_field"
-# STELA TASK DASHBOARD (LIVING SURFACE)
+  tmp_task_invalid="$(mktemp)"
+  cat <<'EOF' > "$tmp_task_invalid"
+# STELA TASK DASHBOARD
 Status: ACTIVE
 Owner: Integrator
-Last Updated: 2026-02-08
-
-## 1. Session State (The Anchor)
-Pointer: storage/handoff/OPEN-*.txt
-Base HEAD: 13a2074d
-Context Manifest: ops/lib/manifests/CONTEXT.md
-
-## 2. Logic Pointers (The Law)
-Primary Constraint: PoT.md wins in all conflicts.
-
-## 3. Current Dispatch Packet (DP)
-### DP-XXXX: (Template)
-
-### 3.1 Freshness Gate (Must Pass Before Work)
-Base Branch: main
-Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
-Base HEAD: 13a2074d (Must match session context output)
-
-Preconditions:
-- No commits on main.
-- Working tree must be clean before execution begins.
-- If Base HEAD changes, regenerate session artifacts from canonical tools before proceeding.
-
-Canonical pointers (no duplicated canon text in TASK.md):
-- Behavioral logic and drift authority: PoT.md.
-- Closeout mechanics and command canon: docs/MANUAL.md.
-- Gate canon: tools/lint/context.sh and tools/verify.sh.
-- Artifact and scrub canon: ops/bin/open, ops/bin/dump, and ops/bin/prune.
-
-### 3.2 Required Context Load (Read Before Doing Anything)
-Read these in order before making edits:
-1. PoT.md
-2. SoP.md
-3. TASK.md
-4. docs/MAP.md
-5. docs/MANUAL.md
-6. tools/lint/context.sh
-7. tools/verify.sh
-8. tools/lint/dp.sh
-9. ops/bin/open
-10. ops/bin/dump
-11. ops/bin/prune
-
-### 3.3 Scope and Safety
-Objective: Populate during execution; do not pre-fill in TASK.md.
-In scope: Populate during execution; do not pre-fill in TASK.md.
-Out of scope: Populate during execution; do not pre-fill in TASK.md.
-Safety and invariants: Populate during execution; do not pre-fill in TASK.md.
-
-Target Files allowlist (hard gate):
-- Populate during execution; do not pre-fill in TASK.md.
-
-### 3.4 Execution Plan (A-E Canon)
-
-#### 3.4.1 State (What is true now)
-Populate during execution; do not pre-fill in TASK.md.
-
-#### 3.4.2 Request (What we are changing)
-Populate during execution; do not pre-fill in TASK.md.
-
-#### 3.4.3 Changelog (Planned edits)
-Populate during execution; do not pre-fill in TASK.md.
-
-#### 3.4.4 Patch / Diff (Implementation details)
-Populate during execution; do not pre-fill in TASK.md.
-
-#### 3.4.5 Receipt (Proofs to collect)
-- Artifacts captured: OPEN, OPEN-PORCELAIN (or none), dump payload, dump manifest, DP-OPS-XXXX-RESULTS.md.
-- Gates run: bash tools/lint/context.sh, bash tools/lint/style.sh, bash tools/lint/truth.sh, bash tools/lint/dp.sh TASK.md, bash tools/verify.sh.
-
-## 4. Closeout (Mandatory)
-Mandatory Closing Block
-Varied Wording provision: Each entry must use meaningfully distinct wording; copy or minor tense changes are not acceptable. Entry 4 must differ from Entry 1.
-
-Primary Commit Header (plaintext)
-(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
-
-Pull Request Title (plaintext)
-(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
-
-Pull Request Description (markdown)
-(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
-
-Final Squash Stub (plaintext) (Must differ from #1)
-(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
-
-Extended Technical Manifest (plaintext)
-(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
-
-Review Conversation Starter (markdown)
-(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
-
-## 4.1 Thread Transition (Reset / Archive Rule)
-- Append a THREAD END entry to the TASK.md Work Log at completion.
-
-## 5. Work Log (Timestamped Continuity)
-(No active thread)
-EOF
-
-  if lint_path "$tmp_task_missing_field" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn" "$tmp_task_valid" "$tmp_task_missing_field" "$tmp_task_dirty_log"
-    echo "FAIL: --test expected task required field detection to fail" >&2
-    exit 1
-  fi
-
-  tmp_task_dirty_log="$(mktemp)"
-  cat <<'EOF' > "$tmp_task_dirty_log"
-# STELA TASK DASHBOARD (LIVING SURFACE)
-Status: ACTIVE
-Owner: Integrator
-Last Updated: 2026-02-08
+Last Updated: 2026-02-12
 
 ## 1. Session State (The Anchor)
 Pointer: Session context output (generated by ops/bin/open)
@@ -1474,102 +1593,89 @@ Context Manifest: ops/lib/manifests/CONTEXT.md (Checked by tools/lint/context.sh
 ## 2. Logic Pointers (The Law)
 Primary Constraint: PoT.md (Policy of Truth).
 
+Freeze Rule:
+- After dispatch, the active DP is frozen.
+- Any change to scope must be recorded as `AMENDMENT:` lines.
+
 ## 3. Current Dispatch Packet (DP)
 ### DP-XXXX: (Template)
-
 ### 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
-Base HEAD: 13a2074d (Must match session context output)
-
-Preconditions:
-- No commits on main.
-- Working tree must be clean before execution begins.
-- If Base HEAD changes, regenerate session artifacts from canonical tools before proceeding.
-
-Canonical pointers (no duplicated canon text in TASK.md):
-- Behavioral logic and drift authority: PoT.md.
-- Closeout mechanics and command canon: docs/MANUAL.md.
-- Gate canon: tools/lint/context.sh and tools/verify.sh.
-- Artifact and scrub canon: ops/bin/open, ops/bin/dump, and ops/bin/prune.
-
+Required Work Branch: work/dp-ops-XXXX-task-surface-contract-lock
+Base HEAD: 13a2074d
+### 3.1.1 DP Preflight Gate (Run Before Any Edits)
+- bash tools/lint/dp.sh --test
+- bash tools/lint/dp.sh TASK.md
+- bash tools/lint/task.sh
 ### 3.2 Required Context Load (Read Before Doing Anything)
-Read these in order before making edits:
+#### 3.2.1 Canon load order (always)
 1. PoT.md
 2. SoP.md
 3. TASK.md
 4. docs/MAP.md
 5. docs/MANUAL.md
-6. tools/lint/context.sh
-7. tools/verify.sh
-8. tools/lint/dp.sh
-9. ops/bin/open
-10. ops/bin/dump
-11. ops/bin/prune
-
+6. ops/lib/manifests/CONTEXT.md
+Notes:
+- Worker must read OPEN before edits.
+#### 3.2.2 DP-scoped load order (per DP)
+- tools/lint/dp.sh
+- tools/lint/task.sh
+- docs/ops/specs/binaries/open.md
 ### 3.3 Scope and Safety
-Objective: Populate during execution; do not pre-fill in TASK.md.
-In scope: Populate during execution; do not pre-fill in TASK.md.
-Out of scope: Populate during execution; do not pre-fill in TASK.md.
-Safety and invariants: Populate during execution; do not pre-fill in TASK.md.
-
+Objective: Test invalid OPEN read policy.
+In scope: None.
+Out of scope: None.
+Safety and invariants: None.
 Target Files allowlist (hard gate):
-- Populate during execution; do not pre-fill in TASK.md.
-
+- TASK.md
 ### 3.4 Execution Plan (A-E Canon)
-
 #### 3.4.1 State (What is true now)
-Populate during execution; do not pre-fill in TASK.md.
-
+State.
 #### 3.4.2 Request (What we are changing)
-Populate during execution; do not pre-fill in TASK.md.
-
+Request.
 #### 3.4.3 Changelog (Planned edits)
-Populate during execution; do not pre-fill in TASK.md.
-
+Changelog.
 #### 3.4.4 Patch / Diff (Implementation details)
-Populate during execution; do not pre-fill in TASK.md.
-
+Patch.
 #### 3.4.5 Receipt (Proofs to collect)
-- Artifacts captured: OPEN, OPEN-PORCELAIN (or none), dump payload, dump manifest, DP-OPS-XXXX-RESULTS.md.
-- Gates run: bash tools/lint/context.sh, bash tools/lint/style.sh, bash tools/lint/truth.sh, bash tools/lint/dp.sh TASK.md, bash tools/verify.sh.
-
+- git diff --name-only
+- git diff --stat
 ## 4. Closeout (Mandatory)
 Mandatory Closing Block
-Varied Wording provision: Each entry must use meaningfully distinct wording; copy or minor tense changes are not acceptable. Entry 4 must differ from Entry 1.
-
 Primary Commit Header (plaintext)
 (Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
-
 Pull Request Title (plaintext)
 (Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
-
 Pull Request Description (markdown)
 (Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
-
 Final Squash Stub (plaintext) (Must differ from #1)
 (Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
-
 Extended Technical Manifest (plaintext)
 (Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
-
 Review Conversation Starter (markdown)
 (Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
-
 ## 4.1 Thread Transition (Reset / Archive Rule)
-- Append a THREAD END entry to the TASK.md Work Log at completion.
-
+- Transition.
 ## 5. Work Log (Timestamped Continuity)
-2026-01-27 14:05 — DP-OPS-0005: Task lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review.
+(No active thread)
 EOF
 
-  if lint_path "$tmp_task_dirty_log" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn" "$tmp_task_valid" "$tmp_task_missing_field" "$tmp_task_dirty_log"
+  if lint_path "$tmp_task_invalid" >/dev/null 2>&1; then
+    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_task_valid" "$tmp_task_invalid"
+    echo "FAIL: --test expected OPEN-reading detection to fail" >&2
+    exit 1
+  fi
+
+  tmp_task_dirty="$(mktemp)"
+  awk '{ gsub(/\(No active thread\)/, "2026-01-27 14:05 — DP-OPS-0005: Task lint test entry. Verification: NOT RUN. Blockers: none. NEXT: review."); print }' "$tmp_task_valid" > "$tmp_task_dirty"
+
+  if lint_path "$tmp_task_dirty" >/dev/null 2>&1; then
+    rm -f "$tmp_valid" "$tmp_invalid" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_task_valid" "$tmp_task_invalid" "$tmp_task_dirty"
     echo "FAIL: --test expected task Work Log baseline detection to fail" >&2
     exit 1
   fi
 
-  rm -f "$tmp_valid" "$tmp_invalid" "$tmp_order" "$tmp_decimal_valid" "$tmp_decimal_invalid" "$tmp_llms_warn" "$tmp_task_valid" "$tmp_task_missing_field" "$tmp_task_dirty_log"
+  rm -f "$tmp_valid" "$tmp_invalid" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_task_valid" "$tmp_task_invalid" "$tmp_task_dirty"
   echo "OK: --test passed"
 }
 

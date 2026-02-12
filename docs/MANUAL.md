@@ -9,6 +9,10 @@
 5.  **Review:** Verify `RECEIPT` (Proofs) vs `TASK.md` requirements.
 6.  **Close:** Merge PR + Update `SoP.md` (if Canon changed).
 
+**Dispatch Contract Notes:**
+- The DP Preflight Gate runs after the Freshness Gate and before any edits.
+- Worker input is DP text only; OPEN is for integrator refresh and receipt pointers and is not required reading for workers.
+
 **Anchor Hygiene:**
 - Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md pointer references to the newest OPEN artifact and RESULTS receipts before any work continues; do not rewrite inline branch/hash state in TASK.md.
 - Clean after use: append a THREAD END entry at closeout and start the next session from a fresh OPEN artifact with matching dump artifacts.
@@ -25,6 +29,7 @@ Run:
 ./tools/lint/dp.sh TASK.md
 ./tools/lint/llms.sh
 ~~~
+Confirm that the RESULTS file contains executable receipt outputs (artifact paths, verification outcomes, `git diff --name-only`, `git diff --stat`, and the Mandatory Closing Block).
 
 2. Harvest
 Run only if new reusable patterns exist.
@@ -44,6 +49,7 @@ Out-dir must be absolute. Use `$(pwd)`.
 4. Log
 Update SoP.md with a DP entry that includes verification receipts.
 Copy TASK.md Section 5 Work Log into the SoP.md DP entry (or reference it in DP-OPS-XXXX-RESULTS.md and link from SoP.md).
+Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, with reason and risk for each NOT RUN item.
 Reset TASK.md Section 5 Work Log to "(No active thread)" before Step 5 (Prune).
 
 5. Prune
