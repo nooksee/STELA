@@ -3,7 +3,6 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-TMP_DIR="${REPO_ROOT}/storage/tmp"
 
 format="chatgpt"
 intent=""
@@ -52,46 +51,6 @@ done
 branch="$(git rev-parse --abbrev-ref HEAD)"
 head_short="$(git rev-parse --short HEAD)"
 branch_safe="${branch//\//-}"
-
-update_task_session_state() {
-  local task_path="TASK.md"
-  if [[ ! -f "$task_path" ]]; then
-    return 0
-  fi
-
-  local tmp_file
-  mkdir -p "$TMP_DIR"
-  tmp_file="$(mktemp "${TMP_DIR}/stela-open.XXXXXX")"
-  awk -v branch="$branch" -v head="$head_short" '
-    {
-      line = $0
-      if ($0 ~ /^[[:space:]]*[-*]?[[:space:]]*Active Branch:/) {
-        prefix = $0
-        sub(/:.*/, "", prefix)
-        suffix = ""
-        pos = index($0, "(")
-        if (pos > 0) {
-          suffix = " " substr($0, pos)
-        }
-        line = prefix ": " branch suffix
-      }
-      if ($0 ~ /^[[:space:]]*[-*]?[[:space:]]*Base HEAD:/) {
-        prefix = $0
-        sub(/:.*/, "", prefix)
-        suffix = ""
-        pos = index($0, "(")
-        if (pos > 0) {
-          suffix = " " substr($0, pos)
-        }
-        line = prefix ": " head suffix
-      }
-      print line
-    }
-  ' "$task_path" > "$tmp_file"
-  mv "$tmp_file" "$task_path"
-}
-
-update_task_session_state
 
 tag_prefix=""
 if [[ -n "$tag" ]]; then

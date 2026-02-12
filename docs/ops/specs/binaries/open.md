@@ -5,6 +5,7 @@
 - Dirty State Capture: writes `storage/handoff/OPEN-PORCELAIN-<tag>-<branch>-<hash>.txt` when the working tree is dirty.
 - Intent Injection: injects `--intent` and `--dp` into the prompt header.
 - Canon Injection: lists PoT, TASK, SoP, and other canon pointers in the OPEN artifact.
+- Tracked-File Read-Only: must not modify tracked files (including `TASK.md`); writes are limited to `storage/handoff/OPEN-*.txt` and `storage/handoff/OPEN-PORCELAIN-*.txt`.
 - Output Artifact: writes `storage/handoff/OPEN-<tag>-<branch>-<hash>.txt` and optionally echoes the path when `--out=auto` is used.
 
 ## Requirements

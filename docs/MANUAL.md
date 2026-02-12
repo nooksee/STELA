@@ -10,7 +10,7 @@
 6.  **Close:** Merge PR + Update `SoP.md` (if Canon changed).
 
 **Anchor Hygiene:**
-- Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md gate artifacts to match before any work continues.
+- Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md pointer references to the newest OPEN artifact and RESULTS receipts before any work continues; do not rewrite inline branch/hash state in TASK.md.
 - Clean after use: append a THREAD END entry at closeout and start the next session from a fresh OPEN artifact with matching dump artifacts.
 
 ## Closeout Cycle
