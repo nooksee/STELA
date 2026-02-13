@@ -156,6 +156,11 @@ When reporting, include:
 ## SoP.md
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-13 01:11:36 UTC — DP-OPS-0057 Ops Surface Operational Certification (Registries + Specs)
+- Objective: Certified ops registry and specification discoverability by replacing the prompt registry placeholder, adding authoritative registries for binaries/lint/test/tools/scripts, creating pointer-first specs for lint tools, verify/test surfaces, and ops helper scripts, updating the llms ops bundle manifest pointers, and refreshing MAP plus llms outputs.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0057"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s <dump_payload_path>`; `./ops/bin/map`; `./ops/bin/llms --out-dir="$(pwd)"`; `./ops/bin/prune --dp=DP-OPS-0057 --scrub`.
+
 ## 2026-02-12 19:54:20 UTC — DP-OPS-0056 Task Subsystem Hardening and Prune Safety Invariants
 - Objective: Hardened Task subsystem governance by making `tools/lint/task.sh` the sole TASK container enforcer, refactoring `tools/lint/dp.sh` to DP Section 3 transaction enforcement only, removing legacy versioning language from task-surface governance text, and adding prune scrub lint guardrails with narrower DP-target pruning scope.
 - Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
@@ -202,12 +207,6 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Verification: bash tools/lint/style.sh; bash tools/lint/library.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/verify.sh; bash tools/lint/dp.sh TASK.md.
 - Dump: storage/dumps/dump-platform-work-task-perfection-0045-4b581538.txt.
 
-## 2026-02-10 21:18:35 UTC — DP-OPS-0044 TASK Contract Hardening and Prompt Alignment
-- Objective: Harden TASK.md instruction-following by enforcing Base HEAD alignment for gate artifacts, updating E-PROMPT attachments and refresh guidance, codifying anchor hygiene in docs/MANUAL.md, and refreshing llms bundles.
-- Verification: bash tools/lint/context.sh; bash tools/lint/style.sh; bash tools/lint/truth.sh; bash tools/lint/dp.sh --test; bash tools/lint/dp.sh TASK.md; bash tools/verify.sh.
-- Dump: storage/dumps/dump-platform-work-task-hardening-0044-5fa75cb2.txt.
-- Context refresh: ./ops/bin/llms --out-dir=/home/nos4r2/dev/nukece.
-
 
 
 ## TASK.md
@@ -240,8 +239,8 @@ Staffing Protocol: PoT.md Section 4.1.
 Style: tools/lint/style.sh
 Context: tools/lint/context.sh
 Truth: tools/lint/truth.sh
-DP lint: tools/lint/dp.sh
-TASK lint: tools/lint/task.sh
+DP lint: tools/lint/dp.sh (enforces DP transaction rules in Section 3; does not enforce TASK container schema)
+TASK lint: tools/lint/task.sh (sole TASK surface/container schema enforcer)
 Repo verify: tools/verify.sh
 llms parity: tools/lint/llms.sh
 
@@ -323,6 +322,9 @@ Notes:
 #### 3.2.2 DP-scoped load order (per DP)
 - tools/lint/dp.sh
 - tools/lint/task.sh
+- ops/bin/prune
+- docs/ops/specs/surfaces/task.md
+- docs/ops/specs/binaries/prune.md
 - docs/ops/specs/binaries/open.md (pointer reference only; OPEN behavior is not modified in this DP)
 
 ### 3.3 Scope and Safety
@@ -419,6 +421,7 @@ RESULTS requirements (must appear near top of DP-OPS-XXXX-RESULTS.md):
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md with a DP entry at completion, including objective summary and verification commands run.
 - Run scrub at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-XXXX --scrub.
+- Scrub safety invariant: prune scrub must lint staged TASK output with tools/lint/task.sh and only replace TASK.md if lint passes.
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
 Mandatory Closing Block (write to RESULTS, not here)
@@ -446,8 +449,8 @@ Review Conversation Starter (markdown)
 
 ## llms.txt
 # Stela llms.txt
-# HEAD: fdc5d080
-# HEAD commit time: 2026-02-12T12:57:01-05:00
+# HEAD: d760e443
+# HEAD commit time: 2026-02-12T16:42:43-05:00
 # Refresh: ./ops/bin/llms
 # Pointer map to canonical docs and tools (no duplication).
 

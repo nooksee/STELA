@@ -5,25 +5,32 @@
 Under the Filing Doctrine, `ops/` is Run: executable logic, manifests, and automation that enforce the Policy of Truth and the platform boundary.
 
 ## 1. Architecture
-The Ops Kernel is the executable layer that turns governance into action. It owns the binaries, shared scripts, and manifests that drive platform behavior. It is the only place runtime logic belongs.
+The Ops Kernel is the executable layer that turns governance into action. It owns binaries, shared scripts, and manifests that drive platform behavior. Runtime logic belongs in `ops/` and `tools/` with pointer-first documentation in `docs/ops/`.
 
 ## 2. Core Subsystems
-Context Bundler (`ops/bin/llms`) compiles the canonical and supporting surfaces into session bundles, applying context hazard exclusion rules and scope selection. It is the bridge between canon and the live session.
+Context Bundler (`ops/bin/llms`) compiles canonical and supporting surfaces into session bundles while enforcing context hazard exclusion rules.
 
-Project Factory (`ops/bin/project`) orchestrates project intake and lifecycle alignment. It reads the project registry and templates in `ops/lib/` to generate or validate project payloads while keeping project work within platform governance.
+Project Factory (`ops/bin/project`) orchestrates project intake and lifecycle alignment through registry-driven templates and validation helpers.
 
-## 3. Specifications
-The authoritative technical specifications for operational binaries live under `docs/ops/specs/`.
+## 3. Registries
+The authoritative operational registries live in `docs/ops/registry/`.
 
-- `docs/ops/specs/binaries/dump.md`
-- `docs/ops/specs/binaries/help.md`
-- `docs/ops/specs/binaries/llms.md`
-- `docs/ops/specs/binaries/open.md`
-- `docs/ops/specs/binaries/project.md`
-- `docs/ops/specs/binaries/prune.md`
+- `docs/ops/registry/PROMPTS.md`
+- `docs/ops/registry/BINARIES.md`
+- `docs/ops/registry/LINT.md`
+- `docs/ops/registry/TEST.md`
+- `docs/ops/registry/TOOLS.md`
+- `docs/ops/registry/SCRIPTS.md`
 
-## 4. Interface Contract
-The Ops Kernel is the executable companion to docs. Documentation explains and justifies; ops runs. Any new platform capability must ship as an ops binary or script with a corresponding doc pointer, not as procedural text in docs.
+## 4. Specifications
+Technical specifications are pointer-first and grouped by executable surface.
 
-## 5. Help and Discovery
-Use `./ops/bin/help <term>` to locate explanations, including the specs directory. The help binary prioritizes `docs/ops/specs/` for operational guidance.
+- Binary specs: `docs/ops/specs/binaries/`
+- Tool specs: `docs/ops/specs/tools/`
+- Script specs: `docs/ops/specs/scripts/`
+
+## 5. Interface Contract
+The Ops Kernel is the executable companion to docs. Documentation explains and justifies; ops runs. New operational capability must ship as executable logic with a registry entry and spec pointer.
+
+## 6. Help and Discovery
+Use `./ops/bin/help <term>` to locate operational guidance. `./ops/bin/help` prioritizes specs and registry surfaces under `docs/ops/`.
