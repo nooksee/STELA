@@ -21,6 +21,7 @@ Filing:
 - Drift: any divergence between canon and repository state, or duplication of canon outside SSOT, is a failure state that requires stop and correction.
 - Routing Closeout; failure is a system failure state.
 - SoP: history ledger only; no permanent rules live there.
+- PoW: proof ledger only; execution evidence pointers live there.
 - System: everything the system proves is actually true.
 - Truth: primitive predicate governed by specific rules rather than a mere definition.
 - Action: deception or incoherence are inherently destabilizing and must be resolved.
@@ -29,6 +30,7 @@ Filing:
 - `PoT.md` — constitution, staffing, jurisdiction, and enforcement (SSOT).
 - `TASK.md` — active work surface and DP contract.
 - `SoP.md` — history ledger and shipment record.
+- `PoW.md` — proof ledger and execution evidence pointers.
 - `docs/MANUAL.md` — operator mechanics.
 - `docs/MAP.md` — context wayfinding.
 - `ops/lib/manifests/CONTEXT.md` — required context set.
@@ -37,8 +39,9 @@ Filing:
 Source of Truth Read-in Order:
 1. `PoT.md`: The Constitution. Physical laws, staffing, jurisdiction. The final authority.
 2. `SoP.md`: The History. State of Play ledger. Context on *why* things are the way they are.
-3. `TASK.md`: The Contract. Active work surface. Contains the current Dispatch Packet (DP).
-4. `docs/MAP.md`: The Terrain. Continuity map for navigating the repository context.
+3. `PoW.md`: The Proof Ledger. Validate evidence pointers before state-changing maintenance.
+4. `TASK.md`: The Contract. Active work surface. Contains the current Dispatch Packet (DP).
+5. `docs/MAP.md`: The Terrain. Continuity map for navigating the repository context.
 
 ## 2. Enforcement
 Integrator plus Automation (linters, repo-gates, and binaries).
@@ -70,6 +73,7 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Linguistic Precision: Quantitative reporting required for deviations from protocol.
 - Generation Mandate: Verification outputs must be generated, not pre-filled or assumed.
 - Linguistic Precision: Absolute literalism; seek clarification for ambiguity before proceeding.
+- Relatability Mandate: Universal accessibility via vernacular optimization and anecdotal grounding.
 - Operational Directives: Anti-drift governance; logic or files misaligned with PoT.md are a system failure.
 - Operational Directives: Context hygiene; ops/lib/manifests/CONTEXT.md must exclude docs/library/agents, docs/library/tasks, and docs/library/skills.
 - Operational Directives: Logic conflict resolution; stop until the Operator redefines parameters if a task violates PoT.md.
@@ -148,5 +152,3 @@ When reporting, include:
 - Reports are acknowledged as soon as practical.
 - Fixes are prioritized by impact, exploitability, and clarity.
 - We aim for coordinated, responsible disclosure.
-
-#### Known Issues and Future Improvements

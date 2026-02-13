@@ -84,6 +84,36 @@ extract_block() {
   ' "$path"
 }
 
+results_label_regex='^(Primary Commit Header [(]plaintext[)]|Pull Request Title [(]plaintext[)]|Pull Request Description [(]markdown[)]|Final Squash Stub [(]plaintext[)]( [(]Must differ from #1[)]| [(]must differ from Primary Commit Header[)])?|Extended Technical Manifest [(]plaintext[)]|Review Conversation Starter [(]markdown[)])$'
+
+extract_results_closing_block() {
+  local path="$1"
+  awk '
+    BEGIN { in_block=0 }
+    /^##[[:space:]]*Mandatory Closing Block[[:space:]]*$/ { in_block=1; next }
+    in_block { print }
+  ' "$path"
+}
+
+extract_results_field_block() {
+  local path="$1"
+  local start_pattern="$2"
+  awk -v start_regex="$start_pattern" -v label_regex="$results_label_regex" '
+    BEGIN { in_block=0 }
+    $0 ~ start_regex { in_block=1; next }
+    in_block && $0 ~ label_regex { exit }
+    in_block { print }
+  ' "$path"
+}
+
+field_block_nonempty() {
+  local value="$1"
+  if [[ -z "$(printf '%s\n' "$value" | sed '/^[[:space:]]*$/d')" ]]; then
+    return 1
+  fi
+  return 0
+}
+
 field_value() {
   local label="$1"
   local path="$2"
@@ -554,6 +584,105 @@ check_disposable_input_hazards() {
   fi
 }
 
+lint_results_path() {
+  local path="$1"
+  failures=0
+
+  local closing_tmp
+  closing_tmp="$(mktemp)"
+  extract_results_closing_block "$path" > "$closing_tmp"
+
+  if [[ ! -s "$closing_tmp" ]]; then
+    rm -f "$closing_tmp"
+    fail "RESULTS file missing Mandatory Closing Block"
+    return 1
+  fi
+
+  local -a required_label_patterns=(
+    '^Primary Commit Header [(]plaintext[)][[:space:]]*$'
+    '^Pull Request Title [(]plaintext[)][[:space:]]*$'
+    '^Pull Request Description [(]markdown[)][[:space:]]*$'
+    '^Final Squash Stub [(]plaintext[)]( [(]Must differ from #1[)]| [(]must differ from Primary Commit Header[)])?[[:space:]]*$'
+    '^Extended Technical Manifest [(]plaintext[)][[:space:]]*$'
+    '^Review Conversation Starter [(]markdown[)][[:space:]]*$'
+  )
+
+  local pattern
+  for pattern in "${required_label_patterns[@]}"; do
+    if ! grep -Eq "$pattern" "$closing_tmp"; then
+      fail "RESULTS missing required Mandatory Closing Block label matching pattern: ${pattern}"
+    fi
+  done
+
+  local primary_header
+  local pr_title
+  local final_stub
+  local extended_manifest
+  local pr_description
+  local review_starter
+
+  primary_header="$(extract_results_field_block "$closing_tmp" '^Primary Commit Header [(]plaintext[)][[:space:]]*$')"
+  pr_title="$(extract_results_field_block "$closing_tmp" '^Pull Request Title [(]plaintext[)][[:space:]]*$')"
+  final_stub="$(extract_results_field_block "$closing_tmp" '^Final Squash Stub [(]plaintext[)]( [(]Must differ from #1[)]| [(]must differ from Primary Commit Header[)])?[[:space:]]*$')"
+  extended_manifest="$(extract_results_field_block "$closing_tmp" '^Extended Technical Manifest [(]plaintext[)][[:space:]]*$')"
+  pr_description="$(extract_results_field_block "$closing_tmp" '^Pull Request Description [(]markdown[)][[:space:]]*$')"
+  review_starter="$(extract_results_field_block "$closing_tmp" '^Review Conversation Starter [(]markdown[)][[:space:]]*$')"
+
+  local -a strict_labels=(
+    "Primary Commit Header (plaintext)"
+    "Pull Request Title (plaintext)"
+    "Final Squash Stub (plaintext)"
+    "Extended Technical Manifest (plaintext)"
+  )
+  local -a strict_values=(
+    "$primary_header"
+    "$pr_title"
+    "$final_stub"
+    "$extended_manifest"
+  )
+
+  local i
+  for ((i=0; i<${#strict_labels[@]}; i++)); do
+    if ! field_block_nonempty "${strict_values[i]}"; then
+      fail "RESULTS strict field empty: ${strict_labels[i]}"
+      continue
+    fi
+    if grep -Eq '\*|_|`|\[|\]' <<< "${strict_values[i]}"; then
+      fail "RESULTS strict field contains forbidden markdown tokens (* _ \` [ ]): ${strict_labels[i]}"
+    fi
+  done
+
+  if ! field_block_nonempty "$pr_description"; then
+    fail "RESULTS permissive field empty: Pull Request Description (markdown)"
+  fi
+  if ! field_block_nonempty "$review_starter"; then
+    fail "RESULTS permissive field empty: Review Conversation Starter (markdown)"
+  fi
+
+  if grep -Eiq 'ENTER[[:space:]_-]*DESCRIPTION[[:space:]_-]*HERE|PLACEHOLDER' <<< "$pr_description"; then
+    fail "RESULTS permissive field contains placeholder text: Pull Request Description (markdown)"
+  fi
+  if grep -Eiq 'ENTER[[:space:]_-]*DESCRIPTION[[:space:]_-]*HERE|PLACEHOLDER' <<< "$review_starter"; then
+    fail "RESULTS permissive field contains placeholder text: Review Conversation Starter (markdown)"
+  fi
+
+  local primary_first
+  local final_first
+  primary_first="$(printf '%s\n' "$primary_header" | sed -n '/[^[:space:]]/ { s/^[[:space:]]*//; s/[[:space:]]*$//; p; q; }')"
+  final_first="$(printf '%s\n' "$final_stub" | sed -n '/[^[:space:]]/ { s/^[[:space:]]*//; s/[[:space:]]*$//; p; q; }')"
+  if [[ -n "$primary_first" && -n "$final_first" && "$primary_first" == "$final_first" ]]; then
+    fail "RESULTS Final Squash Stub must differ from Primary Commit Header"
+  fi
+
+  rm -f "$closing_tmp"
+
+  if (( failures )); then
+    return 1
+  fi
+
+  echo "OK: DP RESULTS lint passed"
+}
+
 lint_payload() {
   local path="$1"
   failures=0
@@ -593,6 +722,11 @@ lint_path() {
     return 1
   fi
 
+  if [[ "$path" == *-RESULTS.md ]]; then
+    lint_results_path "$path"
+    return $?
+  fi
+
   local payload_tmp
   payload_tmp="$(mktemp)"
 
@@ -619,6 +753,9 @@ run_test() {
   local tmp_llms_core_nonexplicit
   local tmp_task_wrapper
   local tmp_task_invalid
+  local tmp_results_valid
+  local tmp_results_invalid_strict
+  local tmp_results_invalid_permissive
 
   tmp_valid="$(mktemp)"
   cat <<'TESTDP' > "$tmp_valid"
@@ -754,7 +891,7 @@ Patch.
 TESTDP
 
   if lint_path "$tmp_invalid_placeholder" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid_placeholder"
+    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict" "$tmp_results_invalid_permissive" "$tmp_task_wrapper" "$tmp_task_invalid"
     echo "FAIL: --test expected placeholder detection to fail" >&2
     exit 1
   fi
@@ -822,7 +959,7 @@ Patch.
 TESTDP
 
   if lint_path "$tmp_missing_preflight" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight"
+    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict" "$tmp_results_invalid_permissive" "$tmp_task_wrapper" "$tmp_task_invalid"
     echo "FAIL: --test expected preflight command detection to fail" >&2
     exit 1
   fi
@@ -892,7 +1029,7 @@ Patch.
 TESTDP
 
   if lint_path "$tmp_disposable" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit"
+    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict" "$tmp_results_invalid_permissive" "$tmp_task_wrapper" "$tmp_task_invalid"
     echo "FAIL: --test expected disposable input detection to fail" >&2
     exit 1
   fi
@@ -962,7 +1099,7 @@ Patch.
 TESTDP
 
   if lint_path "$tmp_llms_full_context" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit"
+    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict" "$tmp_results_invalid_permissive" "$tmp_task_wrapper" "$tmp_task_invalid"
     echo "FAIL: --test expected llms-full context detection to fail" >&2
     exit 1
   fi
@@ -1098,8 +1235,96 @@ Patch.
 TESTDP
 
   if lint_path "$tmp_llms_core_nonexplicit" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit"
+    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict" "$tmp_results_invalid_permissive" "$tmp_task_wrapper" "$tmp_task_invalid"
     echo "FAIL: --test expected llms-core explicitness detection to fail" >&2
+    exit 1
+  fi
+
+  tmp_results_valid="$(mktemp --suffix=-RESULTS.md)"
+  cat <<'TESTRESULTS' > "$tmp_results_valid"
+# DP-OPS-0099 RESULTS
+
+## Mandatory Closing Block
+Primary Commit Header (plaintext)
+DP-OPS-0099 validate results lint path
+
+Pull Request Title (plaintext)
+DP-OPS-0099 Validate RESULTS lint path
+
+Pull Request Description (markdown)
+### Summary
+- Added RESULTS mandatory closing block checks.
+
+Final Squash Stub (plaintext) (Must differ from #1)
+Validate RESULTS mandatory closing block rules
+
+Extended Technical Manifest (plaintext)
+tools/lint/dp.sh
+
+Review Conversation Starter (markdown)
+Does this validator enforce strict plaintext versus permissive markdown fields correctly?
+TESTRESULTS
+
+  lint_path "$tmp_results_valid" >/dev/null
+
+  tmp_results_invalid_strict="$(mktemp --suffix=-RESULTS.md)"
+  cat <<'TESTRESULTS' > "$tmp_results_invalid_strict"
+# DP-OPS-0099 RESULTS
+
+## Mandatory Closing Block
+Primary Commit Header (plaintext)
+*invalid markdown token*
+
+Pull Request Title (plaintext)
+DP-OPS-0099 Validate RESULTS lint path
+
+Pull Request Description (markdown)
+### Summary
+- Added RESULTS mandatory closing block checks.
+
+Final Squash Stub (plaintext) (Must differ from #1)
+Validate RESULTS mandatory closing block rules
+
+Extended Technical Manifest (plaintext)
+tools/lint/dp.sh
+
+Review Conversation Starter (markdown)
+Does this validator enforce strict plaintext versus permissive markdown fields correctly?
+TESTRESULTS
+
+  if lint_path "$tmp_results_invalid_strict" >/dev/null 2>&1; then
+    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict"
+    echo "FAIL: --test expected strict RESULTS field markdown token detection to fail" >&2
+    exit 1
+  fi
+
+  tmp_results_invalid_permissive="$(mktemp --suffix=-RESULTS.md)"
+  cat <<'TESTRESULTS' > "$tmp_results_invalid_permissive"
+# DP-OPS-0099 RESULTS
+
+## Mandatory Closing Block
+Primary Commit Header (plaintext)
+DP-OPS-0099 validate results lint path
+
+Pull Request Title (plaintext)
+DP-OPS-0099 Validate RESULTS lint path
+
+Pull Request Description (markdown)
+ENTER DESCRIPTION HERE
+
+Final Squash Stub (plaintext) (Must differ from #1)
+Validate RESULTS mandatory closing block rules
+
+Extended Technical Manifest (plaintext)
+tools/lint/dp.sh
+
+Review Conversation Starter (markdown)
+Does this validator enforce strict plaintext versus permissive markdown fields correctly?
+TESTRESULTS
+
+  if lint_path "$tmp_results_invalid_permissive" >/dev/null 2>&1; then
+    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict" "$tmp_results_invalid_permissive"
+    echo "FAIL: --test expected permissive RESULTS placeholder detection to fail" >&2
     exit 1
   fi
 
@@ -1233,12 +1458,12 @@ Patch.
 TESTTASK
 
   if lint_path "$tmp_task_invalid" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_task_wrapper" "$tmp_task_invalid"
+    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict" "$tmp_results_invalid_permissive" "$tmp_task_wrapper" "$tmp_task_invalid"
     echo "FAIL: --test expected receipt requirement detection to fail" >&2
     exit 1
   fi
 
-  rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_task_wrapper" "$tmp_task_invalid"
+  rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict" "$tmp_results_invalid_permissive" "$tmp_task_wrapper" "$tmp_task_invalid"
   echo "OK: --test passed"
 }
 

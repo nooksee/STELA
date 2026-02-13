@@ -17,6 +17,12 @@ forbidden_spellings=(
   "Crown"
 )
 
+# 1.1 Forbidden Legacy Phrases (Hard Fail)
+forbidden_legacy_phrases=(
+  "Living Document"
+  "Living Work Log"
+)
+
 # 2. Scope Definition (Expanded)
 # We now scan ops/ and the root Canon files, which were previously ignored.
 scan_dirs=(
@@ -28,9 +34,13 @@ scan_dirs=(
 
 root_files=(
   "PoT.md"
+  "SoP.md"
+  "PoW.md"
   "TASK.md"
   "README.md"
   "llms.txt"
+  "llms-core.txt"
+  "llms-full.txt"
 )
 
 if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -91,6 +101,14 @@ for token in "${forbidden_spellings[@]}"; do
   matches="$(grep -nH -I -E "\b${token}\b" "${files[@]}" 2>/dev/null || true)"
   if [[ -n "$matches" ]]; then
     fail "Forbidden spelling found: '$token'" "$matches"
+  fi
+done
+
+echo "Scanning for forbidden legacy terminology..."
+for phrase in "${forbidden_legacy_phrases[@]}"; do
+  matches="$(grep -nH -I -F "${phrase}" "${files[@]}" 2>/dev/null || true)"
+  if [[ -n "$matches" ]]; then
+    fail "Forbidden legacy phrase found: '${phrase}'" "$matches"
   fi
 done
 

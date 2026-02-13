@@ -22,6 +22,7 @@ Filing:
 - Drift: any divergence between canon and repository state, or duplication of canon outside SSOT, is a failure state that requires stop and correction.
 - Routing Closeout; failure is a system failure state.
 - SoP: history ledger only; no permanent rules live there.
+- PoW: proof ledger only; execution evidence pointers live there.
 - System: everything the system proves is actually true.
 - Truth: primitive predicate governed by specific rules rather than a mere definition.
 - Action: deception or incoherence are inherently destabilizing and must be resolved.
@@ -30,6 +31,7 @@ Filing:
 - `PoT.md` — constitution, staffing, jurisdiction, and enforcement (SSOT).
 - `TASK.md` — active work surface and DP contract.
 - `SoP.md` — history ledger and shipment record.
+- `PoW.md` — proof ledger and execution evidence pointers.
 - `docs/MANUAL.md` — operator mechanics.
 - `docs/MAP.md` — context wayfinding.
 - `ops/lib/manifests/CONTEXT.md` — required context set.
@@ -38,8 +40,9 @@ Filing:
 Source of Truth Read-in Order:
 1. `PoT.md`: The Constitution. Physical laws, staffing, jurisdiction. The final authority.
 2. `SoP.md`: The History. State of Play ledger. Context on *why* things are the way they are.
-3. `TASK.md`: The Contract. Active work surface. Contains the current Dispatch Packet (DP).
-4. `docs/MAP.md`: The Terrain. Continuity map for navigating the repository context.
+3. `PoW.md`: The Proof Ledger. Validate evidence pointers before state-changing maintenance.
+4. `TASK.md`: The Contract. Active work surface. Contains the current Dispatch Packet (DP).
+5. `docs/MAP.md`: The Terrain. Continuity map for navigating the repository context.
 
 ## 2. Enforcement
 Integrator plus Automation (linters, repo-gates, and binaries).
@@ -156,6 +159,11 @@ When reporting, include:
 ## SoP.md
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-13 19:41:30 UTC — DP-OPS-0060 TASK Template Archival and PoW Ledger
+- Objective: Added a root `PoW.md` proof ledger with strict entry schema, updated canon/manual/manifest wayfinding to include PoW, refactored `ops/bin/prune` for dual-ledger targeting plus deterministic dry-run and embedded TASK-template extraction, hardened truth lint for legacy terminology, and extended DP lint to validate Mandatory Closing Block fields for RESULTS artifacts.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0060-RESULTS.md`.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0060"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0060-2026-02-13-ae8cc7b2.txt`; `./ops/bin/prune --dry-run`; `./ops/bin/prune --target=pow --dry-run`; `./ops/bin/llms --out-dir="$(pwd)"`; `./ops/bin/map`.
+
 ## 2026-02-13 15:46:47 UTC — DP-OPS-0059 One Truth Context Engine (Unified Manifests, Unified Synthesizer, Bundle Deprecation)
 - Objective: Replaced split execution/discovery context pipelines with One Truth layering (`CORE.md`, `OPS.md`, `DISCOVERY.md`), introduced `ops/lib/scripts/synthesize.sh` as the single manifest parser/hazard enforcer/emitter, wrapped `ops/bin/context` and `ops/bin/llms` around the unified synthesizer, deprecated/removing redundant llms slice bundles, and hardened prompt + lint policy for llms refresh and DP context-load constraints.
 - Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
@@ -203,18 +211,112 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Deviations and anomalies: session began from a dirty tree under operator instruction; `./ops/bin/prune --dp=DP-OPS-0050 --scrub` was intentionally not run; TASK closeout state remained partial and required DP-OPS-0051 remediation.
 - Forensic cleanup command: `./ops/bin/prune --dp=DP-OPS-0050`.
 
-## 2026-02-11 05:10:37 UTC — DP-OPS-0047 Harden TASK Closeout Cycle and Prune Logic
-- Objective: Hardened the closeout workflow into a five-stage cycle with docs/MANUAL.md as the pointer target, consolidated branching doctrine into PoT.md, extended ops/bin/prune with DP-scoped pruning, and refreshed llms bundles.
-- Verification: bash tools/verify.sh; bash tools/lint/truth.sh; bash tools/lint/style.sh; bash tools/lint/dp.sh TASK.md; bash tools/lint/llms.sh.
-- Functional receipts: ./ops/bin/llms --out-dir=/home/nos4r2/dev/nukece; ./ops/bin/prune --dp=DP-OPS-0047.
 
+
+## PoW.md
+Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/PoW-archive-YYYY-MM.md`.
+
+# Proof of Work Ledger (PoW)
+
+## Purpose
+- `PoW.md` is the root execution-proof ledger.
+- Entries are append-only and must be machine-safe to parse.
+- Each entry records the exact evidence pointers that justify state-changing work.
+
+## Operator Guidance
+- Use the exact field order and labels defined below.
+- Do not embed raw OPEN or DUMP payloads in this file.
+- Receipt pointers must reference committed artifacts before ledger pruning is allowed.
+- Record both `OPEN` and `DUMP` pointers with each completed DP entry.
+
+## Entry Header Pattern
+- `## YYYY-MM-DD HH:MM:SS UTC — DP-OPS-XXXX <summary>`
+
+## Required Entry Schema (Strict Order)
+- `- Packet ID: DP-OPS-XXXX`
+- `- Timestamp: YYYY-MM-DDTHH:MM:SSZ`
+- `- Work Branch: work/<topic>-YYYY-MM-DD`
+- `- Base HEAD: <short-hash>`
+- `- Scope: platform|full|<explicit scope>`
+- `- Target Files allowlist:`
+- `  - <path>`
+- `- Receipt pointers:`
+- `  - RESULTS: storage/handoff/DP-OPS-XXXX-RESULTS.md`
+- `  - OPEN: storage/handoff/OPEN-<branch>-<short-hash>.txt`
+- `  - DUMP: storage/dumps/dump-<scope>-<branch>-<short-hash>.txt`
+- `- Verification commands:`
+- `  - <command>`
+- `- Notes: <audit note>`
+
+## 2026-02-13 19:41:30 UTC — DP-OPS-0060 TASK Template Archival and PoW Ledger
+- Packet ID: DP-OPS-0060
+- Timestamp: 2026-02-13T19:41:30Z
+- Work Branch: work/dp-ops-0060-2026-02-13
+- Base HEAD: ae8cc7b2
+- Scope: platform
+- Target Files allowlist:
+  - PoT.md
+  - SoP.md
+  - PoW.md
+  - TASK.md
+  - docs/MAP.md
+  - docs/MANUAL.md
+  - ops/lib/manifests/CORE.md
+  - docs/ops/specs/binaries/prune.md
+  - docs/ops/specs/surfaces/task.md
+  - ops/bin/open
+  - ops/bin/prune
+  - ops/bin/llms
+  - tools/lint/dp.sh
+  - tools/lint/truth.sh
+  - llms.txt
+  - llms-core.txt
+  - llms-full.txt
+- Receipt pointers:
+  - RESULTS: storage/handoff/DP-OPS-0060-RESULTS.md
+  - OPEN: storage/handoff/OPEN-work-dp-ops-0060-2026-02-13-ae8cc7b2.txt
+  - DUMP: storage/dumps/dump-platform-work-dp-ops-0060-2026-02-13-ae8cc7b2.txt
+- Verification commands:
+  - bash tools/lint/context.sh
+  - bash tools/lint/style.sh
+  - bash tools/lint/truth.sh
+  - bash tools/lint/dp.sh --test
+  - bash tools/lint/dp.sh TASK.md
+  - bash tools/lint/task.sh
+  - bash tools/lint/llms.sh
+  - ./tools/verify.sh
+  - ./ops/bin/prune --dry-run
+  - ./ops/bin/prune --target=pow --dry-run
+  - bash tools/lint/dp.sh storage/handoff/DP-OPS-0060-RESULTS.md
+- Notes: Root PoW surface introduced; prune now supports dual-ledger dry-run simulation and TASK template extraction contract.
+
+## Template
+Copy this block when appending a new entry.
+
+```md
+## YYYY-MM-DD HH:MM:SS UTC — DP-OPS-XXXX <summary>
+- Packet ID: DP-OPS-XXXX
+- Timestamp: YYYY-MM-DDTHH:MM:SSZ
+- Work Branch: work/<topic>-YYYY-MM-DD
+- Base HEAD: <short-hash>
+- Scope: platform
+- Target Files allowlist:
+  - <path>
+- Receipt pointers:
+  - RESULTS: storage/handoff/DP-OPS-XXXX-RESULTS.md
+  - OPEN: storage/handoff/OPEN-<branch>-<short-hash>.txt
+  - DUMP: storage/dumps/dump-<scope>-<branch>-<short-hash>.txt
+- Verification commands:
+  - <command>
+- Notes: <audit note>
+```
 
 
 ## TASK.md
 # STELA TASK DASHBOARD
 Status: ACTIVE
 Owner: Integrator
-Last Updated: 2026-02-12
+Last Updated: 2026-02-13
 
 ## 1. Session State
 Pointer: Session context output (generated by ops/bin/open)
@@ -363,6 +465,9 @@ Populate during execution; do not pre-fill in TASK.md.
 - bash tools/lint/task.sh
 - bash tools/lint/llms.sh
 - ./tools/verify.sh
+- ./ops/bin/prune --dry-run
+- ./ops/bin/prune --target=pow --dry-run
+- bash tools/lint/dp.sh storage/handoff/DP-OPS-XXXX-RESULTS.md
 - git diff --name-only
 - git diff --stat
 - Required pasted outputs: receipts, verification outcomes, and diff output.
@@ -370,7 +475,7 @@ Populate during execution; do not pre-fill in TASK.md.
 
 ## 4. Closeout
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
-- Update SoP.md with a DP entry at completion, including objective summary and verification commands run.
+- Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
 - Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-XXXX --scrub.
 - Use ./ops/bin/prune --reset-task only for explicit TASK baseline reset after Work Log clear.
@@ -413,6 +518,7 @@ This document defines the specific surfaces that must be loaded to preserve gove
 ## 2. The Ledger (Mutable State)
 *Living records of what has happened and what is happening.*
 * **History:** [`../../SoP.md`](../../SoP.md) — The State of Play. (What shipped, when, why).
+* **Proof:** [`../../PoW.md`](../../PoW.md) — Proof of Work ledger. (What evidence was produced and where it is stored).
 * **Active Contract:** [`../../TASK.md`](../../TASK.md) — The Dispatch Packet. (Current objective and work log).
 
 ## 3. The Interface (Wayfinding)
@@ -422,6 +528,7 @@ This document defines the specific surfaces that must be loaded to preserve gove
 
 ## 4. The Bridge (Ingestion Tools)
 *Mechanisms that move state from disk to context.*
+* **Proof-First Read Order:** `PoT.md` → `SoP.md` → `PoW.md` → `TASK.md` → `docs/MAP.md`.
 * **Generation:** [`../../ops/bin/open`](../../ops/bin/open) — Creates the session prompt.
 * **Capture:** [`../../ops/bin/dump`](../../ops/bin/dump) — Serializes the platform.
 * **Validation:** [`../../ops/lib/manifests/CONTEXT.md`](../../ops/lib/manifests/CONTEXT.md) — The required context checklist.

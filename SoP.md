@@ -1,5 +1,10 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-13 19:41:30 UTC — DP-OPS-0060 TASK Template Archival and PoW Ledger
+- Objective: Added a root `PoW.md` proof ledger with strict entry schema, updated canon/manual/manifest wayfinding to include PoW, refactored `ops/bin/prune` for dual-ledger targeting plus deterministic dry-run and embedded TASK-template extraction, hardened truth lint for legacy terminology, and extended DP lint to validate Mandatory Closing Block fields for RESULTS artifacts.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0060-RESULTS.md`.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0060"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0060-2026-02-13-ae8cc7b2.txt`; `./ops/bin/prune --dry-run`; `./ops/bin/prune --target=pow --dry-run`; `./ops/bin/llms --out-dir="$(pwd)"`; `./ops/bin/map`.
+
 ## 2026-02-13 15:46:47 UTC — DP-OPS-0059 One Truth Context Engine (Unified Manifests, Unified Synthesizer, Bundle Deprecation)
 - Objective: Replaced split execution/discovery context pipelines with One Truth layering (`CORE.md`, `OPS.md`, `DISCOVERY.md`), introduced `ops/lib/scripts/synthesize.sh` as the single manifest parser/hazard enforcer/emitter, wrapped `ops/bin/context` and `ops/bin/llms` around the unified synthesizer, deprecated/removing redundant llms slice bundles, and hardened prompt + lint policy for llms refresh and DP context-load constraints.
 - Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
