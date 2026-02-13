@@ -12,6 +12,7 @@ This document defines the specific surfaces that must be loaded to preserve gove
 ## 2. The Ledger (Mutable State)
 *Living records of what has happened and what is happening.*
 * **History:** [`../../SoP.md`](../../SoP.md) — The State of Play. (What shipped, when, why).
+* **Proof:** [`../../PoW.md`](../../PoW.md) — Proof of Work ledger. (What evidence was produced and where it is stored).
 * **Active Contract:** [`../../TASK.md`](../../TASK.md) — The Dispatch Packet. (Current objective and work log).
 
 ## 3. The Interface (Wayfinding)
@@ -21,6 +22,7 @@ This document defines the specific surfaces that must be loaded to preserve gove
 
 ## 4. The Bridge (Ingestion Tools)
 *Mechanisms that move state from disk to context.*
+* **Proof-First Read Order:** `PoT.md` → `SoP.md` → `PoW.md` → `TASK.md` → `docs/MAP.md`.
 * **Generation:** [`../../ops/bin/open`](../../ops/bin/open) — Creates the session prompt.
 * **Capture:** [`../../ops/bin/dump`](../../ops/bin/dump) — Serializes the platform.
 * **Validation:** [`../../ops/lib/manifests/CONTEXT.md`](../../ops/lib/manifests/CONTEXT.md) — The required context checklist.

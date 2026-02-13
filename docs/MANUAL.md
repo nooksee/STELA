@@ -27,6 +27,7 @@ Run:
 ./tools/lint/truth.sh
 ./tools/lint/style.sh
 ./tools/lint/dp.sh TASK.md
+./tools/lint/dp.sh storage/handoff/DP-OPS-XXXX-RESULTS.md
 ./tools/lint/llms.sh
 ~~~
 Confirm that the RESULTS file contains executable receipt outputs (artifact paths, verification outcomes, `git diff --name-only`, `git diff --stat`, and the Mandatory Closing Block).
@@ -39,7 +40,7 @@ Run only if new reusable patterns exist.
 If promotion is needed, use existing ops/lib/scripts/skill.sh and ops/lib/scripts/task.sh workflows.
 
 3. Refresh
-Allowlist must include llms.txt, llms-small.txt, llms-full.txt, llms-ops.txt, and llms-governance.txt before running the command.
+Allowlist must include `llms.txt`, `llms-core.txt`, and `llms-full.txt` before running the command.
 Out-dir must be absolute. Use `$(pwd)`.
 ~~~bash
 ./ops/bin/map
@@ -47,8 +48,10 @@ Out-dir must be absolute. Use `$(pwd)`.
 ~~~
 
 4. Log
-Update SoP.md with a DP entry that includes verification receipts.
-Copy TASK.md Section 5 Work Log into the SoP.md DP entry (or reference it in DP-OPS-XXXX-RESULTS.md and link from SoP.md).
+Update `SoP.md` with a DP entry that includes verification receipts.
+Update `PoW.md` with a proof entry using the strict schema (Packet ID, Timestamp, Work Branch, Base HEAD, Scope, Target Files allowlist, Receipt pointers, Verification commands, Notes).
+`PoW.md` receipt pointers must include `RESULTS`, `OPEN`, and `DUMP` artifact paths.
+Copy TASK.md Section 5 Work Log into the SoP.md DP entry (or reference it in `DP-OPS-XXXX-RESULTS.md` and link from SoP.md).
 Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, with reason and risk for each NOT RUN item.
 Reset TASK.md Section 5 Work Log to "(No active thread)" before Step 5 (Prune).
 
@@ -158,7 +161,7 @@ ops/lib/scripts/task.sh promote storage/archives/tasks/task-B-TASK-01-YYYYMMDD-t
 * ❌ Forbidden scope touched (Drift).
 
 **Allowlist Rule:**
-* **Rule:** If a DP includes the llms command, the allowlist must include `llms.txt`, `llms-small.txt`, `llms-full.txt`, `llms-ops.txt`, and `llms-governance.txt`.
+* **Rule:** If a DP includes the llms command, the allowlist must include `llms.txt`, `llms-core.txt`, and `llms-full.txt`.
 
 ---
 
