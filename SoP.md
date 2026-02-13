@@ -1,5 +1,11 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-13 03:17:37 UTC — DP-OPS-0058 Tooling Safety and Protocol Hardening
+- Objective: Hardened `ops/bin/prune` with an uncommitted RESULTS guard and explicit `--reset-task`, decoupled `--scrub` from TASK reset behavior, and aligned TASK/spec protocol surfaces with CI receipt and closeout requirements.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
+- Protocol: Verify → Generate Results → COMMIT (Operator Only) → Prune.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0058"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s <dump_payload_path>`; `./ops/bin/prune --dp=DP-OPS-0058`; `./ops/bin/prune --scrub`.
+
 ## 2026-02-13 01:11:36 UTC — DP-OPS-0057 Ops Surface Operational Certification (Registries + Specs)
 - Objective: Certified ops registry and specification discoverability by replacing the prompt registry placeholder, adding authoritative registries for binaries/lint/test/tools/scripts, creating pointer-first specs for lint tools, verify/test surfaces, and ops helper scripts, updating the llms ops bundle manifest pointers, and refreshing MAP plus llms outputs.
 - Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.

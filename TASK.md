@@ -158,28 +158,23 @@ Populate during execution; do not pre-fill in TASK.md.
 ## 4. Closeout
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md with a DP entry at completion, including objective summary and verification commands run.
-- Run scrub at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-XXXX --scrub.
-- Scrub safety invariant: prune scrub must lint staged TASK output with tools/lint/task.sh and only replace TASK.md if lint passes.
+- Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
+- Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-XXXX --scrub.
+- Use ./ops/bin/prune --reset-task only for explicit TASK baseline reset after Work Log clear.
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
-Mandatory Closing Block (write to RESULTS, not here)
+Mandatory Closing Block
 Primary Commit Header (plaintext)
-(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Pull Request Title (plaintext)
-(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Pull Request Description (markdown)
-(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Final Squash Stub (plaintext) (Must differ from #1)
-(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Extended Technical Manifest (plaintext)
-(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 Review Conversation Starter (markdown)
-(Write to DP-OPS-XXXX-RESULTS.md; do not pre-fill in TASK.md)
 
 ## 4.1 Thread Transition
 - Append a THREAD END entry to the Work Log at completion.

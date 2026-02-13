@@ -15,7 +15,10 @@
 - Separation of concerns is strict: DP lint does not duplicate TASK container validation.
 
 ## Prune Sequencing
-- Run receipts and verification first.
-- Update `SoP.md` and RESULTS artifacts.
-- Run `./ops/bin/prune --dp=<id> --scrub` after receipt logging.
-- Scrub is hygiene only and must not redefine canon policy.
+- Run verification gates first.
+- Author RESULTS after verification gates pass.
+- Operator commits before any prune step.
+- Run prune last:
+  - `./ops/bin/prune --dp=<id> --scrub` for hygiene-only cleanup (must not rewrite `TASK.md`).
+  - `./ops/bin/prune --reset-task` only for explicit TASK baseline reset after Work Log clear.
+  - Prune aborts with a fatal safety violation if matching RESULTS artifacts are uncommitted.
