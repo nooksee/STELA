@@ -1,15 +1,18 @@
 ## Hygiene (Refresh + Conform DP)
-**Use when:** Updating an old or broken DP to the current TASK.md standard.
-**Attach:** OPEN, OPEN-PORCELAIN, dump, dump manifest, Old-DP.md (when applicable).
-**Process:**
+Use when: Updating an old or broken DP to the current TASK standard.
+Attach: OPEN, dump, Old-DP.md.
 
-- Refresh state using the attached OPEN, OPEN-PORCELAIN, dump, and dump manifest artifacts.
+Process:
+- Refresh state using the attached OPEN artifact and dump.
 - Follow PoT.md for logic and TASK.md for structure.
 - Output only the format specified by the stance.
 
-1. CONFORM <DP-ID> TO CURRENT `TASK.md` headings and order.
-2. Source material: Attached `Old-DP.md`.
-3. Constraint: Preserve original intent; update format only.
-4. Schema: Strictly follow `TASK.md` headings and order.
-5. Do not invent file paths. Use the dump for verification.
-**Output only:** The full Dispatch Packet enclosed in a markdown code block (```markdown).
+1. CONFORM <DP-ID> to current TASK.md headings, order, and contract language.
+2. Source material: Attached Old-DP.md (intent only).
+3. Constraint: Preserve original intent; update format/schema only.
+4. Input discipline (must enforce in the conformed DP):
+   - Worker input is DP text only.
+   - No disposable artifact citations.
+   - No pasted bundles inside the DP body.
+5. Do not invent file paths; use the dump for verification.
+Output only: The full Dispatch Packet enclosed in a markdown code block (```markdown).

@@ -333,6 +333,32 @@ check_canon_load_order() {
   fi
 }
 
+check_context_load_llms_rules() {
+  local path="$1"
+  local context_block
+  local core_line
+
+  context_block="$(extract_block "$path" '^#{2,6}[[:space:]]*3[.]2' '^#{2,6}[[:space:]]*3[.]3')"
+  if [[ -z "$context_block" ]]; then
+    fail "missing context load block (3.2)"
+    return
+  fi
+
+  if grep -Eq '(^|[^[:alnum:]_-])llms-full[.]txt([^[:alnum:]_-]|$)' <<< "$context_block"; then
+    fail "context load must not reference llms-full.txt"
+  fi
+
+  while IFS= read -r core_line; do
+    core_line="$(trim "$core_line")"
+    if [[ -z "$core_line" ]]; then
+      continue
+    fi
+    if ! grep -Eiq '(explicit|lightweight|alignment)' <<< "$core_line"; then
+      fail "llms-core.txt is allowed only when explicitly marked as lightweight alignment usage"
+    fi
+  done < <(grep -Ei '(^|[^[:alnum:]_-])llms-core[.]txt([^[:alnum:]_-]|$)' <<< "$context_block" || true)
+}
+
 extract_allowlist_entries() {
   local path="$1"
   awk '
@@ -356,6 +382,19 @@ extract_allowlist_entries() {
       }
     }
   ' "$path"
+}
+
+allowlist_contains() {
+  local needle="$1"
+  local listed
+
+  for listed in "${normalized_allowlist[@]}"; do
+    listed="$(trim "$(strip_backticks "$listed")")"
+    if [[ "$listed" == "$needle" ]]; then
+      return 0
+    fi
+  done
+  return 1
 }
 
 check_allowlist() {
@@ -396,34 +435,8 @@ check_allowlist() {
   fi
 
   if has_llms_invocation "$path"; then
-    local -a required_llms=(
-      "llms.txt"
-      "llms-small.txt"
-      "llms-full.txt"
-      "llms-ops.txt"
-      "llms-governance.txt"
-    )
-    local required
-    local listed
-    local found
-    local -a missing_llms=()
-
-    for required in "${required_llms[@]}"; do
-      found=0
-      for listed in "${normalized_allowlist[@]}"; do
-        listed="$(trim "$(strip_backticks "$listed")")"
-        if [[ "$listed" == "$required" ]]; then
-          found=1
-          break
-        fi
-      done
-      if (( !found )); then
-        missing_llms+=("$required")
-      fi
-    done
-
-    if (( ${#missing_llms[@]} )); then
-      echo "WARN: llms allowlist missing required root outputs: ${missing_llms[*]}" >&2
+    if ! allowlist_contains "ops/bin/llms" && ! allowlist_contains "./ops/bin/llms"; then
+      echo "WARN: llms invocation detected but allowlist does not include ops/bin/llms" >&2
     fi
   fi
 }
@@ -560,6 +573,7 @@ lint_payload() {
   check_required_fields "$path" "$template_mode"
   check_preflight_gate "$path"
   check_canon_load_order "$path"
+  check_context_load_llms_rules "$path"
   check_allowlist "$path" "$template_mode"
   check_receipt_contract "$path"
   check_disposable_input_hazards "$path"
@@ -600,6 +614,9 @@ run_test() {
   local tmp_invalid_placeholder
   local tmp_missing_preflight
   local tmp_disposable
+  local tmp_llms_full_context
+  local tmp_llms_core_lightweight
+  local tmp_llms_core_nonexplicit
   local tmp_task_wrapper
   local tmp_task_invalid
 
@@ -875,8 +892,214 @@ Patch.
 TESTDP
 
   if lint_path "$tmp_disposable" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable"
+    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit"
     echo "FAIL: --test expected disposable input detection to fail" >&2
+    exit 1
+  fi
+
+  tmp_llms_full_context="$(mktemp)"
+  cat <<'TESTDP' > "$tmp_llms_full_context"
+# DP-OPS-0007: llms-full Context Ban
+## 3.1 Freshness Gate (Must Pass Before Work)
+Base Branch: main
+Required Work Branch: work/dp-ops-0007-lint
+Base HEAD: fdc5d080
+
+## 3.1.1 DP Preflight Gate (Run Before Any Edits)
+- bash tools/lint/dp.sh --test
+- bash tools/lint/dp.sh TASK.md
+- bash tools/lint/task.sh
+
+## 3.2 Required Context Load (Read Before Doing Anything)
+
+### 3.2.1 Canon load order (always)
+1. PoT.md
+2. SoP.md
+3. TASK.md
+4. docs/MAP.md
+5. docs/MANUAL.md
+6. ops/lib/manifests/CONTEXT.md
+
+### 3.2.2 DP-scoped load order (per DP)
+- tools/lint/task.sh
+- tools/lint/dp.sh
+- llms-full.txt
+
+## 3.3 Scope and Safety
+Objective: Validate llms-full context ban.
+In scope: DP lint only.
+Out of scope: none.
+Safety and invariants: none.
+
+Target Files allowlist (hard gate):
+- tools/lint/dp.sh
+
+## 3.4 Execution Plan (A-E)
+### 3.4.1 State
+State.
+### 3.4.2 Request
+Request.
+### 3.4.3 Changelog
+Changelog.
+### 3.4.4 Patch / Diff
+Patch.
+### 3.4.5 Receipt (Proofs to collect) — MUST RUN
+- ./ops/bin/open --out=auto --dp="DP-OPS-0007"
+- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
+- Zero-byte check: test -s <dump_payload_path>
+- bash tools/lint/context.sh
+- bash tools/lint/style.sh
+- bash tools/lint/truth.sh
+- bash tools/lint/dp.sh --test
+- bash tools/lint/dp.sh TASK.md
+- bash tools/lint/task.sh
+- bash tools/lint/llms.sh
+- ./tools/verify.sh
+- git diff --name-only
+- git diff --stat
+- Required pasted outputs: receipts, verification outcomes, and diff output.
+- Mandatory Closing Block required in RESULTS.
+TESTDP
+
+  if lint_path "$tmp_llms_full_context" >/dev/null 2>&1; then
+    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit"
+    echo "FAIL: --test expected llms-full context detection to fail" >&2
+    exit 1
+  fi
+
+  tmp_llms_core_lightweight="$(mktemp)"
+  cat <<'TESTDP' > "$tmp_llms_core_lightweight"
+# DP-OPS-0008: llms-core Lightweight
+## 3.1 Freshness Gate (Must Pass Before Work)
+Base Branch: main
+Required Work Branch: work/dp-ops-0008-lint
+Base HEAD: fdc5d080
+
+## 3.1.1 DP Preflight Gate (Run Before Any Edits)
+- bash tools/lint/dp.sh --test
+- bash tools/lint/dp.sh TASK.md
+- bash tools/lint/task.sh
+
+## 3.2 Required Context Load (Read Before Doing Anything)
+
+### 3.2.1 Canon load order (always)
+1. PoT.md
+2. SoP.md
+3. TASK.md
+4. docs/MAP.md
+5. docs/MANUAL.md
+6. ops/lib/manifests/CONTEXT.md
+
+### 3.2.2 DP-scoped load order (per DP)
+- tools/lint/task.sh
+- tools/lint/dp.sh
+- llms-core.txt (explicit lightweight alignment check)
+
+## 3.3 Scope and Safety
+Objective: Validate llms-core lightweight allowance.
+In scope: DP lint only.
+Out of scope: none.
+Safety and invariants: none.
+
+Target Files allowlist (hard gate):
+- tools/lint/dp.sh
+
+## 3.4 Execution Plan (A-E)
+### 3.4.1 State
+State.
+### 3.4.2 Request
+Request.
+### 3.4.3 Changelog
+Changelog.
+### 3.4.4 Patch / Diff
+Patch.
+### 3.4.5 Receipt (Proofs to collect) — MUST RUN
+- ./ops/bin/open --out=auto --dp="DP-OPS-0008"
+- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
+- Zero-byte check: test -s <dump_payload_path>
+- bash tools/lint/context.sh
+- bash tools/lint/style.sh
+- bash tools/lint/truth.sh
+- bash tools/lint/dp.sh --test
+- bash tools/lint/dp.sh TASK.md
+- bash tools/lint/task.sh
+- bash tools/lint/llms.sh
+- ./tools/verify.sh
+- git diff --name-only
+- git diff --stat
+- Required pasted outputs: receipts, verification outcomes, and diff output.
+- Mandatory Closing Block required in RESULTS.
+TESTDP
+
+  lint_path "$tmp_llms_core_lightweight" >/dev/null
+
+  tmp_llms_core_nonexplicit="$(mktemp)"
+  cat <<'TESTDP' > "$tmp_llms_core_nonexplicit"
+# DP-OPS-0009: llms-core Non-Explicit
+## 3.1 Freshness Gate (Must Pass Before Work)
+Base Branch: main
+Required Work Branch: work/dp-ops-0009-lint
+Base HEAD: fdc5d080
+
+## 3.1.1 DP Preflight Gate (Run Before Any Edits)
+- bash tools/lint/dp.sh --test
+- bash tools/lint/dp.sh TASK.md
+- bash tools/lint/task.sh
+
+## 3.2 Required Context Load (Read Before Doing Anything)
+
+### 3.2.1 Canon load order (always)
+1. PoT.md
+2. SoP.md
+3. TASK.md
+4. docs/MAP.md
+5. docs/MANUAL.md
+6. ops/lib/manifests/CONTEXT.md
+
+### 3.2.2 DP-scoped load order (per DP)
+- tools/lint/task.sh
+- tools/lint/dp.sh
+- llms-core.txt
+
+## 3.3 Scope and Safety
+Objective: Validate llms-core non-explicit failure.
+In scope: DP lint only.
+Out of scope: none.
+Safety and invariants: none.
+
+Target Files allowlist (hard gate):
+- tools/lint/dp.sh
+
+## 3.4 Execution Plan (A-E)
+### 3.4.1 State
+State.
+### 3.4.2 Request
+Request.
+### 3.4.3 Changelog
+Changelog.
+### 3.4.4 Patch / Diff
+Patch.
+### 3.4.5 Receipt (Proofs to collect) — MUST RUN
+- ./ops/bin/open --out=auto --dp="DP-OPS-0009"
+- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
+- Zero-byte check: test -s <dump_payload_path>
+- bash tools/lint/context.sh
+- bash tools/lint/style.sh
+- bash tools/lint/truth.sh
+- bash tools/lint/dp.sh --test
+- bash tools/lint/dp.sh TASK.md
+- bash tools/lint/task.sh
+- bash tools/lint/llms.sh
+- ./tools/verify.sh
+- git diff --name-only
+- git diff --stat
+- Required pasted outputs: receipts, verification outcomes, and diff output.
+- Mandatory Closing Block required in RESULTS.
+TESTDP
+
+  if lint_path "$tmp_llms_core_nonexplicit" >/dev/null 2>&1; then
+    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit"
+    echo "FAIL: --test expected llms-core explicitness detection to fail" >&2
     exit 1
   fi
 
@@ -1010,12 +1233,12 @@ Patch.
 TESTTASK
 
   if lint_path "$tmp_task_invalid" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_task_wrapper" "$tmp_task_invalid"
+    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_task_wrapper" "$tmp_task_invalid"
     echo "FAIL: --test expected receipt requirement detection to fail" >&2
     exit 1
   fi
 
-  rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_task_wrapper" "$tmp_task_invalid"
+  rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_task_wrapper" "$tmp_task_invalid"
   echo "OK: --test passed"
 }
 

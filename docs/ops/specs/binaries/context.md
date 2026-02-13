@@ -1,20 +1,21 @@
 # Technical Specification: ops/bin/context
 
 ## Technical Specifications
-- Executes `ops/bin/open --out=auto` and captures the OPEN artifact (plus PORCELAIN if present).
-- Executes `ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`.
-- Assembles a single archive under `storage/archives/context/`.
-- Archive contents: OPEN artifact, optional OPEN-PORCELAIN artifact, dump payload, dump manifest, optional dump tarball, and a metadata file.
-- Metadata file includes the DP id, HEAD hash, and included filenames.
-- Prints the relative archive path for SoP linkage.
+- Wrapper over `ops/lib/scripts/synthesize.sh`.
+- Defaults to `ops/lib/manifests/OPS.md` for session synthesis.
+- Executes `ops/bin/open --out=auto` and injects the OPEN artifact into the emitted session stream.
+- Supports `--manifest=<path>` override for alternate layer synthesis.
+- Supports `--out=auto|<path>` to persist the assembled session stream.
 
 ## Requirements
 - Must run from the repository root.
-- Requires `ops/bin/open` and `ops/bin/dump` to be executable.
-- Requires write access to `storage/archives/context/`.
+- Requires `ops/bin/open` and `ops/lib/scripts/synthesize.sh` to be executable.
+- Requires write access to `storage/handoff/` and `storage/tmp/` when `--out` is used.
 
 ## Usage
-- `./ops/bin/context --dp=DP-OPS-0035`
+- `./ops/bin/context`
+- `./ops/bin/context --out=auto`
+- `./ops/bin/context --manifest=ops/lib/manifests/DISCOVERY.md --out=auto`
 
 ## Forensic Insight
-`ops/bin/context` is the Context Archivist. It produces a single ingestion archive so audits can trace exactly what was provided to the session.
+`ops/bin/context` is the session entrypoint wrapper. It binds OPEN state and synthesized OPS-layer context into one deterministic stream from the unified engine.

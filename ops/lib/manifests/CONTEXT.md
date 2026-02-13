@@ -1,38 +1,28 @@
 # Context Manifest
 
 ## Purpose
-List required artifacts for session rehydration and context loading.
+Canonical pointer surface for One Truth context layering.
 
-## Scope
-Used by operators to ensure AI workers have a complete "Single Source of Truth" (SSOT).
-Mandatory pre-session check: run `tools/lint/context.sh`.
+## Layer Hierarchy
+- Layer 0 (Immutable Core): `ops/lib/manifests/CORE.md`
+- Layer 1 (Session Ops): `ops/lib/manifests/OPS.md`
+- Layer 2 (Discovery): `ops/lib/manifests/DISCOVERY.md`
 
-## Small Bundle (Canonical Context)
-- `PoT.md` — Policy of Truth (constitution, staffing, jurisdiction, enforcement).
-- `SoP.md` — History ledger and state of play.
-- `TASK.md` — Active thread, DP contract, and work log.
-- `llms.txt` — Discovery entry point for AI agents.
+## Canonical Membership Sources
+- `ops/lib/manifests/CORE.md`
+- `ops/lib/manifests/OPS.md`
+- `ops/lib/manifests/DISCOVERY.md`
 
-## Full Bundle (Supporting Surfaces)
-Full bundle adds these supporting surfaces on top of the Small bundle.
-- `docs/library/INDEX.md` — Curated operator surface index.
-- `docs/MANUAL.md` — Command mechanics and cheat sheet.
-- `docs/MAP.md` — Context wayfinding map.
-- `docs/GOVERNANCE.md` — Project governance and non-negotiables.
-- `docs/ops/registry/PROJECTS.md` — Project registry (SSOT).
+## Runtime Surfaces
+- `ops/lib/scripts/synthesize.sh`
+- `ops/bin/context`
+- `ops/bin/llms`
+
+## Root Artifacts
+- `llms.txt`
+- `llms-core.txt`
+- `llms-full.txt`
 
 ## Verification Tools
-- `tools/lint/context.sh` — Validates presence of manifest artifacts.
-- `tools/lint/truth.sh` — Verifies spelling and canon integrity.
-
-## Verification
-- Operator: Manually verify all "Canonical Context" files are provided in the dump.
-
-## Risk + Rollback
-- Risk: Missing artifacts lead to logic-drift or "hallucinated" repository structures.
-- Rollback: Re-run `ops/bin/open` and verify against this manifest.
-
-## Canon Links
-- docs/MANUAL.md
-- docs/MAP.md
-- PoT.md
+- `tools/lint/context.sh`
+- `tools/lint/truth.sh`

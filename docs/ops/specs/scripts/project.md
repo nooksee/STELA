@@ -1,15 +1,17 @@
 # Technical Specification: ops/lib/scripts/project.sh
 
 ## Purpose
-Provide shared guardrail functions for project tooling, including repo-root enforcement and project-id validation.
+Provide shared guardrail functions for repo-root tooling, including project-id validation and executable/file checks used by wrapper binaries.
 
 ## Invocation
-- This file is a sourced helper library, typically consumed by `ops/bin/project`.
+- This file is a sourced helper library, typically consumed by `ops/bin/project`, `ops/bin/context`, and `ops/bin/llms`.
 - Source form:
   - `source ops/lib/scripts/project.sh`
 - Function forms:
   - `project_require_realpath <path>`
   - `project_require_repo_root`
+  - `project_require_file <absolute_path>`
+  - `project_require_executable <absolute_path>`
   - `project_is_valid_id <project_id>`
   - `project_require_valid_id <project_id>`
 - Expected exit behavior:
@@ -18,6 +20,7 @@ Provide shared guardrail functions for project tooling, including repo-root enfo
 ## Inputs
 - Shell environment and current working directory.
 - `git` and `realpath` binaries.
+- Absolute file paths for presence/executable checks.
 - Project identifier strings for validation.
 
 ## Outputs
@@ -32,5 +35,5 @@ Provide shared guardrail functions for project tooling, including repo-root enfo
 
 ## Related pointers
 - Registry entry: `docs/ops/registry/SCRIPTS.md` (`SCRIPT-03`).
-- Binary consumer: `ops/bin/project`.
-- Binary spec: `docs/ops/specs/binaries/project.md`.
+- Central synthesis engine: `ops/lib/scripts/synthesize.sh` (`SCRIPT-04`).
+- Binary consumers: `ops/bin/project`, `ops/bin/context`, `ops/bin/llms`.

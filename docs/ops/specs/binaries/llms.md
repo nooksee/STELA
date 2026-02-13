@@ -1,24 +1,23 @@
 # Technical Specification: ops/bin/llms
 
 ## Technical Specifications
-- Manifest Parsing: reads `ops/lib/manifests/CONTEXT.md` for small and full bundles, plus `ops/lib/manifests/LLMS.md` for scope bundles.
-- Hazard Exclusion: rejects any bundle path that resolves to `docs/library/agents`, `docs/library/tasks`, or `docs/library/skills`.
-- Redaction: strips common secret patterns before writing output.
-- Output Bundles: generates `llms-small.txt`, `llms-full.txt`, `llms-ops.txt`, and `llms-governance.txt`, plus optional profile bundles.
-- Flat Truth Enforcement: always writes bundles to the repository root. If `--out-dir` is provided, it also writes a copy there.
-- Profile Support: supports `--profile=architect|security` with optional `--project=<id>` override.
-- Freshness Metadata: `llms.txt` includes HEAD short hash, HEAD commit timestamp, and the refresh command.
+- Wrapper over `ops/lib/scripts/synthesize.sh`.
+- Generates `llms-core.txt` from `ops/lib/manifests/CORE.md`.
+- Generates `llms-full.txt` from `ops/lib/manifests/DISCOVERY.md`.
+- Regenerates `llms.txt` as the root pointer index.
+- Supports `--out-dir=<path>` for mirrored output copies while always refreshing root files.
+- Supports manifest overrides via `--core-manifest` and `--full-manifest`.
 
 ## Requirements
 - Must run from the repository root.
-- Requires `ops/lib/manifests/CONTEXT.md` to exist and list valid files.
-- Requires `ops/lib/manifests/LLMS.md` to exist and list valid files.
-- Requires write access to the repository root and to any `--out-dir` target.
+- Requires `ops/lib/scripts/synthesize.sh` to be executable.
+- Requires `ops/lib/manifests/CORE.md` and `ops/lib/manifests/DISCOVERY.md` to exist.
+- Requires write access to repository root and to any `--out-dir` target.
 
 ## Usage
 - `./ops/bin/llms`
-- `./ops/bin/llms --profile=architect`
-- `./ops/bin/llms --project=example-project --profile=security`
+- `./ops/bin/llms --out-dir="$(pwd)"`
+- `./ops/bin/llms --core-manifest=ops/lib/manifests/CORE.md --full-manifest=ops/lib/manifests/DISCOVERY.md`
 
 ## Forensic Insight
-`ops/bin/llms` is the Context Bundler. Flat Truth requires the bundle to remain visible at the repository root to prevent a hidden, stale, or competing truth surface.
+`ops/bin/llms` is the static discovery wrapper. It enforces One Truth by delegating all parsing, hazard policy, and emission format logic to `ops/lib/scripts/synthesize.sh`.
