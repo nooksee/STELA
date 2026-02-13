@@ -1,5 +1,10 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-13 01:11:36 UTC — DP-OPS-0057 Ops Surface Operational Certification (Registries + Specs)
+- Objective: Certified ops registry and specification discoverability by replacing the prompt registry placeholder, adding authoritative registries for binaries/lint/test/tools/scripts, creating pointer-first specs for lint tools, verify/test surfaces, and ops helper scripts, updating the llms ops bundle manifest pointers, and refreshing MAP plus llms outputs.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0057"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s <dump_payload_path>`; `./ops/bin/map`; `./ops/bin/llms --out-dir="$(pwd)"`; `./ops/bin/prune --dp=DP-OPS-0057 --scrub`.
+
 ## 2026-02-12 19:54:20 UTC — DP-OPS-0056 Task Subsystem Hardening and Prune Safety Invariants
 - Objective: Hardened Task subsystem governance by making `tools/lint/task.sh` the sole TASK container enforcer, refactoring `tools/lint/dp.sh` to DP Section 3 transaction enforcement only, removing legacy versioning language from task-surface governance text, and adding prune scrub lint guardrails with narrower DP-target pruning scope.
 - Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.

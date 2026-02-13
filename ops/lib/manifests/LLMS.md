@@ -4,8 +4,15 @@
 Define scope-based context bundles for llms consumers.
 
 ## Ops Bundle
+- `docs/ops/README.md` - Ops surface overview and wayfinding.
 - `docs/MANUAL.md` - Command mechanics and top commands.
 - `docs/MAP.md` - Wayfinding map.
+- `docs/ops/registry/PROMPTS.md` - Operator prompt stance registry.
+- `docs/ops/registry/BINARIES.md` - Ops binary registry.
+- `docs/ops/registry/LINT.md` - Lint tool registry.
+- `docs/ops/registry/TEST.md` - Test tool registry.
+- `docs/ops/registry/TOOLS.md` - Shared tool registry.
+- `docs/ops/registry/SCRIPTS.md` - Ops helper script registry.
 - `ops/bin/open` - Session prompt generator.
 - `ops/bin/dump` - State capture tool.
 - `ops/bin/llms` - Context bundler.

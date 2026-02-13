@@ -1,3 +1,42 @@
+## docs/ops/README.md
+# Ops Kernel (Run)
+
+## 0. Philosophy
+**Ops is the runtime kernel.**
+Under the Filing Doctrine, `ops/` is Run: executable logic, manifests, and automation that enforce the Policy of Truth and the platform boundary.
+
+## 1. Architecture
+The Ops Kernel is the executable layer that turns governance into action. It owns binaries, shared scripts, and manifests that drive platform behavior. Runtime logic belongs in `ops/` and `tools/` with pointer-first documentation in `docs/ops/`.
+
+## 2. Core Subsystems
+Context Bundler (`ops/bin/llms`) compiles canonical and supporting surfaces into session bundles while enforcing context hazard exclusion rules.
+
+Project Factory (`ops/bin/project`) orchestrates project intake and lifecycle alignment through registry-driven templates and validation helpers.
+
+## 3. Registries
+The authoritative operational registries live in `docs/ops/registry/`.
+
+- `docs/ops/registry/PROMPTS.md`
+- `docs/ops/registry/BINARIES.md`
+- `docs/ops/registry/LINT.md`
+- `docs/ops/registry/TEST.md`
+- `docs/ops/registry/TOOLS.md`
+- `docs/ops/registry/SCRIPTS.md`
+
+## 4. Specifications
+Technical specifications are pointer-first and grouped by executable surface.
+
+- Binary specs: `docs/ops/specs/binaries/`
+- Tool specs: `docs/ops/specs/tools/`
+- Script specs: `docs/ops/specs/scripts/`
+
+## 5. Interface Contract
+The Ops Kernel is the executable companion to docs. Documentation explains and justifies; ops runs. New operational capability must ship as executable logic with a registry entry and spec pointer.
+
+## 6. Help and Discovery
+Use `./ops/bin/help <term>` to locate operational guidance. `./ops/bin/help` prioritizes specs and registry surfaces under `docs/ops/`.
+
+
 ## docs/MANUAL.md
 # System Manual (Command Console)
 
@@ -222,6 +261,88 @@ This document defines the specific surfaces that must be loaded to preserve gove
 ### Projects
 No projects discovered.
 <!-- MAP-GENERATED:END -->
+
+
+## docs/ops/registry/PROMPTS.md
+# Prompt Registry
+
+Authoritative registry for operator prompt stances under `docs/ops/prompts/`.
+
+| ID | Name | File Path | Notes |
+| --- | --- | --- | --- |
+| E-PROMPT-01 | Gatekeeper (Refresh + Audit) | docs/ops/prompts/E-PROMPT-01.md | Audit stance. Requires receipt and allowlist verification and returns only PASS or FAIL with deviations. |
+| E-PROMPT-02 | Hygiene (Refresh + Conform DP) | docs/ops/prompts/E-PROMPT-02.md | Conformance stance. Rewrites legacy or broken DPs to current TASK schema while preserving original intent and output format constraints. |
+| E-PROMPT-03 | Architect (Refresh + Draft DP) | docs/ops/prompts/E-PROMPT-03.md | Drafting stance. Produces new DPs from plan inputs, forbids invented paths, and enforces llms allowlist rule when llms refresh is requested. |
+| E-PROMPT-04 | Analyst (Refresh + Discuss) | docs/ops/prompts/E-PROMPT-04.md | Read-only analysis stance. Discussion output only, with explicit no-edit and no-command constraints. |
+
+
+## docs/ops/registry/BINARIES.md
+# Binary Registry
+
+Authoritative registry for `ops/bin/*` entrypoints.
+
+| ID | Name | File Path | Notes |
+| --- | --- | --- | --- |
+| OPS-BIN-01 | Context Snapshot | ops/bin/context | Spec: `docs/ops/specs/binaries/context.md`. Captures OPEN and DUMP artifacts into one context archive. |
+| OPS-BIN-02 | Dump | ops/bin/dump | Spec: `docs/ops/specs/binaries/dump.md`. Serializes repository state into receipt payloads and manifests. |
+| OPS-BIN-03 | Help | ops/bin/help | Spec: `docs/ops/specs/binaries/help.md`. Surfaces operational docs and wayfinding pointers. |
+| OPS-BIN-04 | LLMS Bundler | ops/bin/llms | Spec: `docs/ops/specs/binaries/llms.md`. Generates scope bundles and root llms outputs. |
+| OPS-BIN-05 | MAP Generator | ops/bin/map | Spec: `docs/ops/specs/binaries/map.md`. Refreshes the auto-generated MAP index block. |
+| OPS-BIN-06 | Open | ops/bin/open | Spec: `docs/ops/specs/binaries/open.md`. Produces session-state OPEN artifacts with freshness details. |
+| OPS-BIN-07 | Project | ops/bin/project | Spec: `docs/ops/specs/binaries/project.md`. Project lifecycle entrypoint driven by project registry and templates. |
+| OPS-BIN-08 | Prune | ops/bin/prune | Spec: `docs/ops/specs/binaries/prune.md`. Cleans local artifacts and performs DP-targeted scrub workflows. |
+
+
+## docs/ops/registry/LINT.md
+# Lint Registry
+
+Authoritative registry for `tools/lint/*` executables.
+
+| ID | Name | File Path | Notes |
+| --- | --- | --- | --- |
+| LINT-01 | Agent Lint | tools/lint/agent.sh | Spec: `docs/ops/specs/tools/lint/agent.md`. Enforces agent schema, pointer validity, and disposable-artifact hazard rules. |
+| LINT-02 | Context Lint | tools/lint/context.sh | Spec: `docs/ops/specs/tools/lint/context.md`. Verifies context manifest completeness and context-hazard exclusions. |
+| LINT-03 | DP Lint | tools/lint/dp.sh | Spec: `docs/ops/specs/tools/lint/dp.md`. Validates DP schema and receipt contract with TASK Section 3 extraction support. |
+| LINT-04 | Library Lint | tools/lint/library.sh | Spec: `docs/ops/specs/tools/lint/library.md`. Verifies agent/skill/task registry synchronization and pointer integrity. |
+| LINT-05 | LLMS Lint | tools/lint/llms.sh | Spec: `docs/ops/specs/tools/lint/llms.md`. Re-generates llms bundles in temp space and diffs against repo outputs. |
+| LINT-06 | Project Lint | tools/lint/project.sh | Spec: `docs/ops/specs/tools/lint/project.md`. Validates project STELA references against registered agents, tasks, and skills. |
+| LINT-07 | Style Lint | tools/lint/style.sh | Spec: `docs/ops/specs/tools/lint/style.md`. Rejects markdown contractions across tracked documentation surfaces. |
+| LINT-08 | TASK Lint | tools/lint/task.sh | Spec: `docs/ops/specs/tools/lint/task.md`. Sole TASK dashboard and task-library schema enforcer. |
+| LINT-09 | Truth Lint | tools/lint/truth.sh | Spec: `docs/ops/specs/tools/lint/truth.md`. Scans authored surfaces for forbidden canon spellings. |
+
+
+## docs/ops/registry/TEST.md
+# Test Registry
+
+Authoritative registry for `tools/test/*` executables.
+
+| ID | Name | File Path | Notes |
+| --- | --- | --- | --- |
+| TEST-01 | Agent Pointer Test | tools/test/agent.sh | Spec: `docs/ops/specs/tools/test/agent.md`. Verifies agent pointer and toolchain path integrity with drift-injection guard. |
+
+
+## docs/ops/registry/TOOLS.md
+# Tools Registry
+
+Authoritative registry for shared verification entrypoints under `tools/`.
+
+| ID | Name | File Path | Notes |
+| --- | --- | --- | --- |
+| TOOL-01 | Repository Verify | tools/verify.sh | Spec: `docs/ops/specs/tools/verify.md`. Enforces filing doctrine and platform-structure hygiene checks. |
+
+
+## docs/ops/registry/SCRIPTS.md
+# Script Registry
+
+Authoritative registry for `ops/lib/scripts/*` helper scripts.
+
+| ID | Name | File Path | Notes |
+| --- | --- | --- | --- |
+| SCRIPT-01 | Agent Lifecycle Script | ops/lib/scripts/agent.sh | Spec: `docs/ops/specs/scripts/agent.md`. Harvest, promote, check, and pattern-density reporting for agent candidates. |
+| SCRIPT-02 | Heuristics Library | ops/lib/scripts/heuristics.sh | Spec: `docs/ops/specs/scripts/heuristics.md`. Sourced function library for provenance, churn, and semantic-collision heuristics. |
+| SCRIPT-03 | Project Helper Library | ops/lib/scripts/project.sh | Spec: `docs/ops/specs/scripts/project.md`. Shared repo-root and project-id validation helpers for project tooling. |
+| SCRIPT-04 | Skill Lifecycle Script | ops/lib/scripts/skill.sh | Spec: `docs/ops/specs/scripts/skill.md`. Harvest, promote, and context-hazard checks for skill drafts and promotions. |
+| SCRIPT-05 | Task Lifecycle Script | ops/lib/scripts/task.sh | Spec: `docs/ops/specs/scripts/task.md`. Harvest, promote, and schema/context checks for task drafts and promotions. |
 
 
 ## ops/bin/open
