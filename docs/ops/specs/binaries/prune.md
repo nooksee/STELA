@@ -6,13 +6,15 @@
 - Handoff Cleanup: removes files in `storage/handoff/` older than 7 days unless they match the current DP ID.
 - DP Detection: derives the active DP ID from `TASK.md` when `DP_ID` is not set.
 - DP Target Prune: when `--dp=DP-ID` is set, removes matching artifacts from `storage/handoff/` and `storage/dumps/` only.
-- Scrub Mode (`--scrub`): resets `TASK.md` to the template baseline by:
-  - Resetting the DP header, session anchors, and Freshness Gate anchors.
-  - Clearing Scope and Safety and Execution Plan payloads back to template prompts.
-  - Preserving Closeout scaffolding and instruction placeholders.
-  - Truncating the Work Log to `(No active thread)`.
-- Scrub Guardrail: scrub writes staged TASK output to a temp file, runs `bash tools/lint/task.sh <tmp_task_path>`, and only atomically replaces `TASK.md` when lint passes.
-- Scrub Idempotency: repeated `--scrub` runs produce byte-identical `TASK.md` output.
+- Uncommitted Results Guard (fatal abort, runs before destructive prune operations):
+  - With `--dp=DP-ID`: checks `storage/handoff/DP-ID-RESULTS.md` when it exists.
+  - Without `--dp`: checks every `storage/handoff/*-RESULTS.md` that exists.
+  - For each candidate, prune aborts if the file is untracked, has unstaged changes, or has staged changes.
+  - Fatal message is exact: `SAFETY VIOLATION: Uncommitted Results artifact detected. Commit or stash before pruning.`
+- Scrub Mode (`--scrub`): hygiene-only mode that does not rewrite `TASK.md`.
+- Reset Task Mode (`--reset-task`): resets `TASK.md` to template baseline.
+  - Requires `TASK.md` Work Log to be clear via `ensure_task_work_log_clear`.
+  - Stages output in temp, runs `bash tools/lint/task.sh <tmp_task_path>`, and atomically replaces `TASK.md` only if lint passes.
 - storage/tmp Hygiene: when `--scrub` is set, removes all files under `storage/tmp` except `.gitignore`.
 - Temp Files: uses `storage/tmp` for scrub staging files.
 
@@ -25,7 +27,9 @@
 - `./ops/bin/prune`
 - `./ops/bin/prune --dp=DP-OPS-XXXX`
 - `./ops/bin/prune --scrub`
+- `./ops/bin/prune --reset-task`
 - `./ops/bin/prune --dp=DP-OPS-XXXX --scrub`
+- `./ops/bin/prune --dp=DP-OPS-XXXX --scrub --reset-task`
 
 ## Forensic Insight
-`ops/bin/prune` is the Hygiene Engine. It prevents context window saturation and preserves auditability by managing the SoP archive, handoff retention, and the TASK.md template baseline.
+`ops/bin/prune` is the Hygiene Engine. It prevents context saturation and preserves auditability by managing SoP archive rotation, handoff retention, safety gating for RESULTS artifacts, and explicit TASK baseline reset.
