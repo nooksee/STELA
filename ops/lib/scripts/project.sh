@@ -38,6 +38,20 @@ project_require_repo_root() {
   PROJECT_REPO_ROOT="$repo_root"
 }
 
+project_require_file() {
+  local abs_path="$1"
+  if [[ ! -f "$abs_path" ]]; then
+    project_die "Missing required file: ${abs_path}"
+  fi
+}
+
+project_require_executable() {
+  local abs_path="$1"
+  if [[ ! -x "$abs_path" ]]; then
+    project_die "Missing executable: ${abs_path}"
+  fi
+}
+
 project_is_valid_id() {
   [[ "$1" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]]
 }

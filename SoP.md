@@ -1,5 +1,10 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-13 15:46:47 UTC — DP-OPS-0059 One Truth Context Engine (Unified Manifests, Unified Synthesizer, Bundle Deprecation)
+- Objective: Replaced split execution/discovery context pipelines with One Truth layering (`CORE.md`, `OPS.md`, `DISCOVERY.md`), introduced `ops/lib/scripts/synthesize.sh` as the single manifest parser/hazard enforcer/emitter, wrapped `ops/bin/context` and `ops/bin/llms` around the unified synthesizer, deprecated/removing redundant llms slice bundles, and hardened prompt + lint policy for llms refresh and DP context-load constraints.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
+- Functional receipts: `./ops/bin/open --out=auto`; `./ops/bin/context --out=auto`; `./ops/bin/llms --out-dir="$(pwd)"`; `./ops/lib/scripts/agent.sh harvest-check`; `./ops/bin/map`; `./ops/bin/prune --dp=DP-OPS-0059 --scrub`.
+
 ## 2026-02-13 03:17:37 UTC — DP-OPS-0058 Tooling Safety and Protocol Hardening
 - Objective: Hardened `ops/bin/prune` with an uncommitted RESULTS guard and explicit `--reset-task`, decoupled `--scrub` from TASK reset behavior, and aligned TASK/spec protocol surfaces with CI receipt and closeout requirements.
 - Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.

@@ -1,36 +1,27 @@
 # Stela llms.txt
-# HEAD: d760e443
-# HEAD commit time: 2026-02-12T16:42:43-05:00
+# HEAD: 2dafc32f
+# HEAD commit time: 2026-02-12T22:39:27-05:00
 # Refresh: ./ops/bin/llms
-# Pointer map to canonical docs and tools (no duplication).
+# One Truth bundle index.
 
-## 0. Context Bundles
-- llms-small.txt - Small canonical bundle (PoT, SoP head 10, TASK, llms.txt).
-- llms-full.txt - Full canonical bundle (small + docs/MANUAL.md, docs/MAP.md, docs/GOVERNANCE.md, docs/ops/registry/PROJECTS.md, docs/library/INDEX.md).
-- llms-ops.txt - Ops bundle (manuals, ops binaries, lints, and specs).
-- llms-governance.txt - Governance bundle (PoT, SoP, TASK, governance docs, and manifests).
+## 0. Root Bundles
+- llms-core.txt - Layer 0 (CORE) synthesis output.
+- llms-full.txt - Layer 2 (DISCOVERY) synthesis output.
+- llms.txt - This pointer index.
 
-## 1. Governance & Jurisdictions
-- PoT.md - Policy of Truth: constitution, staffing, jurisdiction, and enforcement.
-- docs/GOVERNANCE.md - Non-negotiables and project coherence rules.
+## 1. Manifest Hierarchy
+- ops/lib/manifests/CORE.md - Immutable Physical Laws manifest.
+- ops/lib/manifests/OPS.md - Session operations manifest (inherits CORE).
+- ops/lib/manifests/DISCOVERY.md - Discovery manifest (inherits CORE).
+- ops/lib/manifests/CONTEXT.md - Canonical layer pointer surface.
 
-## 2. State & Continuity
-- SoP.md - Historical ledger (State of Play).
-- TASK.md - Active work surface, DP contract, and thread log.
-- docs/MAP.md - Wayfinding for cross-session state.
-- ops/lib/manifests/CONTEXT.md - Required context artifact checklist.
-- ops/lib/manifests/LLMS.md - Scope bundle manifest for llms outputs.
+## 2. Synthesis Engine
+- ops/lib/scripts/synthesize.sh - Unified parser, hazard enforcement, and emitter.
+- ops/bin/context - Session wrapper over synthesize.sh (OPS default + OPEN state).
+- ops/bin/llms - Static bundle wrapper over synthesize.sh (CORE and DISCOVERY).
 
-## 3. Operations & Manuals
-- docs/MANUAL.md - Command mechanics and cheat sheet.
-- docs/library/INDEX.md - Curated index of approved operator surfaces.
-- docs/library/SKILLS.md - Skills promotion template and packet ledger.
-- docs/INDEX.md - Documentation front door.
-
-## 4. Operational Binaries
-- ops/bin/open - Prompt generation and freshness gate.
-- ops/bin/dump - State capture for agent ingestion.
-- ops/bin/llms - Context bundle generation and llms.txt refresh.
-- ops/bin/map - Auto-generated MAP block maintenance.
-- ops/bin/context - Context archive assembly (OPEN + DUMP).
-- ops/bin/help - Context-aware documentation search.
+## 3. Core Pointers
+- PoT.md
+- SoP.md
+- TASK.md
+- docs/MAP.md

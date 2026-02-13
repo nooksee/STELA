@@ -27,7 +27,7 @@ Validate Dispatch Packet schema contracts, receipt requirements, and DP-specific
   - `OK: --test passed` for successful self-test fixtures.
 - Stderr:
   - `FAIL:` details for schema, receipt contract, allowlist, and hazard violations.
-  - Non-fatal `WARN:` for missing llms allowlist outputs when llms invocation is present.
+  - `WARN:` when llms invocation is present but `ops/bin/llms` is missing from allowlist.
 
 ## Invariants and failure modes
 - Heading order and required DP blocks are mandatory.
@@ -37,6 +37,9 @@ Validate Dispatch Packet schema contracts, receipt requirements, and DP-specific
   - `bash tools/lint/dp.sh TASK.md`
   - `bash tools/lint/task.sh`
 - Canon load order must contain exactly six required entries.
+- Context-load hardening:
+  - `llms-full.txt` is prohibited in DP context load surfaces and fails lint.
+  - `llms-core.txt` is allowed only when explicitly marked as lightweight alignment usage.
 - Receipt block must include OPEN, DUMP, gate commands, diff proofs, and mandatory closing block requirement.
 - Disposable artifact input references and pasted OPEN/DUMP payload markers are rejected.
 
