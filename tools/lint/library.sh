@@ -16,7 +16,7 @@ fi
 
 cd "$REPO_ROOT" || exit 1
 
-LIBRARY_DIR="docs/library"
+LIBRARY_DIR="opt/_library"
 AGENTS_REGISTRY="docs/ops/registry/AGENTS.md"
 SKILLS_REGISTRY="docs/ops/registry/SKILLS.md"
 TASKS_REGISTRY="docs/ops/registry/TASKS.md"

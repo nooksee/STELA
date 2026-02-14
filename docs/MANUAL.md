@@ -131,7 +131,7 @@ ops/lib/scripts/skill.sh check
 # Draft a skill candidate
 ops/lib/scripts/skill.sh harvest --name "skill-title" --context "when to use it" --solution "what to do"
 
-# Promote the draft into docs/library/skills and register it
+# Promote the draft into opt/_library/skills and register it
 ops/lib/scripts/skill.sh promote storage/archives/skills/skill-YYYYMMDD-HHMMSS-skill-title.md
 ~~~
 
@@ -145,7 +145,7 @@ ops/lib/scripts/task.sh check
 # Draft a task candidate
 ops/lib/scripts/task.sh harvest --id B-TASK-01 --name "task-title" --objective "one sentence objective"
 
-# Promote the draft into docs/library/tasks and register it
+# Promote the draft into opt/_library/tasks and register it
 ops/lib/scripts/task.sh promote storage/archives/tasks/task-B-TASK-01-YYYYMMDD-task-title.md
 ~~~
 

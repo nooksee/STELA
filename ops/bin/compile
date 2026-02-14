@@ -1,0 +1,249 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=/dev/null
+source "${REPO_ROOT}/ops/lib/scripts/project.sh"
+
+TEMPLATE_DIR="ops/src/manifests"
+OUTPUT_DIR="ops/lib/manifests"
+
+declare -A TRACKED_FILES=()
+declare -A COMPILE_SEEN_FILES=()
+declare -A COMPILE_SEEN_MANIFESTS=()
+declare -a COMPILE_RESOLVED_PATHS=()
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/compile
+
+Compiles manifest templates from ops/src/manifests/*.md.tpl into
+explicit manifests under ops/lib/manifests/*.md.
+USAGE
+}
+
+trim() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
+has_glob() {
+  local value="$1"
+  [[ "$value" == *"*"* || "$value" == *"?"* || "$value" == *"["* ]]
+}
+
+load_tracked_files() {
+  local tracked
+  while IFS= read -r tracked; do
+    [[ -z "$tracked" ]] && continue
+    TRACKED_FILES["$tracked"]=1
+  done < <(git -C "${PROJECT_REPO_ROOT}" ls-files | LC_ALL=C sort)
+}
+
+require_template_file() {
+  local template_rel="$1"
+  local template_clean
+  template_clean="$(trim "$template_rel")"
+  template_clean="${template_clean#./}"
+
+  if [[ -z "$template_clean" ]]; then
+    project_die "template path is required"
+  fi
+
+  if [[ ! -f "${PROJECT_REPO_ROOT}/${template_clean}" ]]; then
+    project_die "template not found: ${template_clean}"
+  fi
+
+  printf '%s' "$template_clean"
+}
+
+require_tracked_file_entry() {
+  local entry="$1"
+  local clean
+  clean="$(trim "$entry")"
+  clean="${clean#./}"
+
+  if [[ -z "$clean" ]]; then
+    project_die "template entry is empty"
+  fi
+
+  if [[ ! -f "${PROJECT_REPO_ROOT}/${clean}" ]]; then
+    if [[ -z "${TRACKED_FILES[$clean]:-}" ]]; then
+      project_die "template entry is not tracked and missing: ${clean}"
+    fi
+    project_die "template entry missing file: ${clean}"
+  fi
+
+  printf '%s\n' "$clean"
+}
+
+expand_glob_entry() {
+  local pattern="$1"
+  local clean
+  clean="$(trim "$pattern")"
+  clean="${clean#./}"
+
+  local -a matches=()
+  mapfile -t matches < <(git -C "${PROJECT_REPO_ROOT}" ls-files "$clean" | LC_ALL=C sort)
+
+  if (( ${#matches[@]} == 0 )); then
+    project_die "template glob matched no tracked files: ${clean}"
+  fi
+
+  local had_file=0
+  local match
+  for match in "${matches[@]}"; do
+    if [[ -f "${PROJECT_REPO_ROOT}/${match}" ]]; then
+      had_file=1
+      printf '%s\n' "$match"
+    fi
+  done
+
+  if (( had_file == 0 )); then
+    project_die "template glob matched no files: ${clean}"
+  fi
+}
+
+add_compiled_path() {
+  local rel="$1"
+  if [[ -z "${COMPILE_SEEN_FILES[$rel]:-}" ]]; then
+    COMPILE_SEEN_FILES["$rel"]=1
+    COMPILE_RESOLVED_PATHS+=("$rel")
+  fi
+}
+
+resolve_template_recursive() {
+  local template_rel="$1"
+  local normalized
+  normalized="$(require_template_file "$template_rel")"
+
+  if [[ -n "${COMPILE_SEEN_MANIFESTS[$normalized]:-}" ]]; then
+    return 0
+  fi
+  COMPILE_SEEN_MANIFESTS["$normalized"]=1
+
+  local -a entries=()
+  mapfile -t entries < <(awk -F'`' 'NF >= 3 { for (i = 2; i <= NF; i += 2) print $i }' "${PROJECT_REPO_ROOT}/${normalized}")
+
+  local entry
+  for entry in "${entries[@]}"; do
+    entry="$(trim "$entry")"
+    [[ -z "$entry" ]] && continue
+
+    if [[ "$entry" == @manifest:* ]]; then
+      local include_rel="${entry#@manifest:}"
+      include_rel="${include_rel#./}"
+      resolve_template_recursive "$include_rel"
+      continue
+    fi
+
+    if has_glob "$entry"; then
+      local expanded
+      while IFS= read -r expanded; do
+        [[ -z "$expanded" ]] && continue
+        add_compiled_path "$expanded"
+      done < <(expand_glob_entry "$entry")
+      continue
+    fi
+
+    local single
+    while IFS= read -r single; do
+      [[ -z "$single" ]] && continue
+      add_compiled_path "$single"
+    done < <(require_tracked_file_entry "$entry")
+  done
+}
+
+resolve_template_members() {
+  local template_rel="$1"
+
+  COMPILE_RESOLVED_PATHS=()
+  unset COMPILE_SEEN_FILES COMPILE_SEEN_MANIFESTS
+  declare -gA COMPILE_SEEN_FILES=()
+  declare -gA COMPILE_SEEN_MANIFESTS=()
+
+  resolve_template_recursive "$template_rel"
+
+  if (( ${#COMPILE_RESOLVED_PATHS[@]} == 0 )); then
+    project_die "template resolved to no files: ${template_rel}"
+  fi
+
+  printf '%s\n' "${COMPILE_RESOLVED_PATHS[@]}" | LC_ALL=C sort -u
+}
+
+render_compiled_manifest() {
+  local template_rel="$1"
+  local output_rel="$2"
+  shift 2
+  local members=("$@")
+
+  local title
+  title="$(basename "$output_rel")"
+  title="${title%.md}"
+
+  local output_abs="${PROJECT_REPO_ROOT}/${output_rel}"
+  local tmp_file
+  tmp_file="$(mktemp)"
+
+  {
+    echo "# ${title} Manifest"
+    echo
+    echo "<!-- GENERATED FILE. DO NOT EDIT. -->"
+    echo "<!-- Source template: ${template_rel} -->"
+    echo "<!-- Generator: ops/bin/compile -->"
+    echo
+    echo "## Members"
+    local member
+    for member in "${members[@]}"; do
+      printf -- '- `%s`\n' "$member"
+    done
+  } > "$tmp_file"
+
+  mkdir -p "$(dirname "$output_abs")"
+  mv "$tmp_file" "$output_abs"
+}
+
+main() {
+  for arg in "$@"; do
+    case "$arg" in
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      *)
+        project_die "Unknown arg: ${arg}"
+        ;;
+    esac
+  done
+
+  project_require_repo_root
+
+  if [[ ! -d "${PROJECT_REPO_ROOT}/${TEMPLATE_DIR}" ]]; then
+    project_die "missing template dir: ${TEMPLATE_DIR}"
+  fi
+
+  load_tracked_files
+
+  local -a templates=()
+  mapfile -t templates < <(find "${PROJECT_REPO_ROOT}/${TEMPLATE_DIR}" -maxdepth 1 -type f -name '*.md.tpl' -printf '%P\n' | LC_ALL=C sort)
+  if (( ${#templates[@]} == 0 )); then
+    project_die "no manifest templates found in ${TEMPLATE_DIR}"
+  fi
+
+  local template_file
+  for template_file in "${templates[@]}"; do
+    local template_rel="${TEMPLATE_DIR}/${template_file}"
+    local output_rel="${OUTPUT_DIR}/${template_file%.tpl}"
+
+    local -a members=()
+    mapfile -t members < <(resolve_template_members "$template_rel")
+    render_compiled_manifest "$template_rel" "$output_rel" "${members[@]}"
+  done
+
+  echo "OK: Manifest compile complete."
+}
+
+main "$@"

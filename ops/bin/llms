@@ -7,6 +7,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 source "${REPO_ROOT}/ops/lib/scripts/project.sh"
 
 SYNTH_BIN="${REPO_ROOT}/ops/lib/scripts/synthesize.sh"
+COMPILE_BIN="${REPO_ROOT}/ops/bin/compile"
 CORE_MANIFEST="ops/lib/manifests/CORE.md"
 FULL_MANIFEST="ops/lib/manifests/DISCOVERY.md"
 OUT_DIR="${REPO_ROOT}"
@@ -44,7 +45,9 @@ for arg in "$@"; do
 done
 
 project_require_repo_root
+project_require_executable "$COMPILE_BIN"
 project_require_executable "$SYNTH_BIN"
+"$COMPILE_BIN" >/dev/null
 project_require_file "${PROJECT_REPO_ROOT}/${CORE_MANIFEST}"
 project_require_file "${PROJECT_REPO_ROOT}/${FULL_MANIFEST}"
 
@@ -91,10 +94,12 @@ head_time="$(git -C "${PROJECT_REPO_ROOT}" show -s --format=%cI HEAD)"
   echo "- llms.txt - This pointer index."
   echo
   echo "## 1. Manifest Hierarchy"
+  echo "- ops/src/manifests/*.md.tpl - Manifest template source of truth."
   echo "- ops/lib/manifests/CORE.md - Immutable Physical Laws manifest."
   echo "- ops/lib/manifests/OPS.md - Session operations manifest (inherits CORE)."
   echo "- ops/lib/manifests/DISCOVERY.md - Discovery manifest (inherits CORE)."
   echo "- ops/lib/manifests/CONTEXT.md - Canonical layer pointer surface."
+  echo "- ops/bin/compile - Deterministic compiler from templates to manifests."
   echo
   echo "## 2. Synthesis Engine"
   echo "- ops/lib/scripts/synthesize.sh - Unified parser, hazard enforcement, and emitter."

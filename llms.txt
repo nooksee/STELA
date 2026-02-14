@@ -1,6 +1,6 @@
 # Stela llms.txt
-# HEAD: 2f1a8f8f
-# HEAD commit time: 2026-02-13T23:12:47-05:00
+# HEAD: 30a77fdf
+# HEAD commit time: 2026-02-14T11:41:16-05:00
 # Refresh: ./ops/bin/llms
 # One Truth bundle index.
 
@@ -10,10 +10,12 @@
 - llms.txt - This pointer index.
 
 ## 1. Manifest Hierarchy
+- ops/src/manifests/*.md.tpl - Manifest template source of truth.
 - ops/lib/manifests/CORE.md - Immutable Physical Laws manifest.
 - ops/lib/manifests/OPS.md - Session operations manifest (inherits CORE).
 - ops/lib/manifests/DISCOVERY.md - Discovery manifest (inherits CORE).
 - ops/lib/manifests/CONTEXT.md - Canonical layer pointer surface.
+- ops/bin/compile - Deterministic compiler from templates to manifests.
 
 ## 2. Synthesis Engine
 - ops/lib/scripts/synthesize.sh - Unified parser, hazard enforcement, and emitter.

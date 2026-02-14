@@ -8,6 +8,7 @@ source "${REPO_ROOT}/ops/lib/scripts/project.sh"
 
 SYNTH_BIN="${REPO_ROOT}/ops/lib/scripts/synthesize.sh"
 OPEN_BIN="${REPO_ROOT}/ops/bin/open"
+COMPILE_BIN="${REPO_ROOT}/ops/bin/compile"
 MANIFEST_PATH="ops/lib/manifests/OPS.md"
 OUT_PATH=""
 DP_ID=""
@@ -49,8 +50,10 @@ for arg in "$@"; do
 done
 
 project_require_repo_root
+project_require_executable "$COMPILE_BIN"
 project_require_executable "$SYNTH_BIN"
 project_require_executable "$OPEN_BIN"
+"$COMPILE_BIN" >/dev/null
 project_require_file "${PROJECT_REPO_ROOT}/${MANIFEST_PATH}"
 
 mkdir -p "${PROJECT_REPO_ROOT}/storage/handoff"

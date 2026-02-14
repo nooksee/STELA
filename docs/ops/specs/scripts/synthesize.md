@@ -3,7 +3,7 @@
 ## Constitutional Anchor
 `ops/lib/scripts/synthesize.sh` is the One Truth context engine defined by PoT filing doctrine and context hazard policy.
 It is the runtime boundary between manifest intent and emitted context bundles.
-It enforces that global context cannot include `docs/library/agents`, `docs/library/tasks`, or `docs/library/skills`.
+It enforces that global context cannot include `opt/_library/agents`, `opt/_library/tasks`, or `opt/_library/skills`.
 
 ## Operator Contract
 - Invocation:
@@ -15,7 +15,7 @@ It enforces that global context cannot include `docs/library/agents`, `docs/libr
 - Inputs:
   - Manifest markdown entries enclosed in backticks.
   - Optional nested includes via `@manifest:<path>` backtick tokens.
-  - Optional globs in manifest entries.
+  - Compiled manifests must contain explicit file paths only; runtime glob entries are rejected.
 - Outputs:
   - `list` mode prints resolved relative file paths, one per line.
   - `stream` mode prints `## <path>` headers followed by file contents.
@@ -33,7 +33,7 @@ It enforces that global context cannot include `docs/library/agents`, `docs/libr
 - Missing or empty manifest path.
 - Manifest file missing.
 - Manifest entry path missing.
-- Manifest glob resolves to zero files.
+- Manifest entry contains a glob pattern at runtime.
 - Recursive manifest resolution yields zero files.
 - Context hazard hit against blacklisted paths.
 - Resolved stream file disappears before emit.
@@ -45,7 +45,7 @@ These are hard failures because they indicate context drift, policy breach, or s
 3. Resolve manifest recursively:
 - Extract every backticked token.
 - Follow `@manifest:` includes depth-first.
-- Expand glob entries with shell globbing.
+- Reject any token containing glob syntax (`*`, `?`, `[`).
 - Keep first-seen insertion order and de-duplicate with associative sets.
 4. Enforce context hazards against the blacklist before any output.
 5. Emit output:
@@ -57,7 +57,7 @@ These are hard failures because they indicate context drift, policy breach, or s
 6. Return non-zero immediately on any failed invariant.
 
 Determinism and receipt surfaces:
-- Output ordering is deterministic relative to manifest token order and include order because insertion order is preserved.
+- Output ordering is deterministic relative to compiled manifest token order and include order because insertion order is preserved.
 - De-duplication is deterministic because only the first sighting of a path is kept.
 - Primary receipt consumers are `ops/bin/context`, `ops/bin/llms`, and dump artifacts that capture synthesized output.
 

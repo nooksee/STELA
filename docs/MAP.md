@@ -29,7 +29,7 @@ This document defines the specific surfaces that must be loaded to preserve gove
 
 ## 5. Unified Jurisdiction
 *Policy of Truth governs all scopes without parallel authority.*
-* **Single Authority:** PoT is the sole authority across `ops/`, `docs/`, and `projects/`.
+* **Single Authority:** PoT is the sole authority across `ops/`, `docs/`, `opt/`, and `projects/`.
 * **Project Position:** Projects are payloads operating under PoT, not a separate provider or consumer tier.
 
 ## 6. Auto-Generated Index
@@ -38,7 +38,8 @@ This document defines the specific surfaces that must be loaded to preserve gove
 - ops/ - Run (binaries, manifests, automation).
 - tools/ - Lints and verification tooling.
 - docs/ - Manuals, specs, and governance surfaces.
-- storage/ - Local artifacts and archives (untracked).
+- opt/ - Isolated library surfaces (JIT-only, excluded from global context).
+- storage/ - Local artifacts and archives.
 
 ### Projects
 No projects discovered.

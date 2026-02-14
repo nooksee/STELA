@@ -1,3 +1,8 @@
 # local/runtime/meta (not deployed)
 *
 !.gitignore
+!dp/
+dp/*
+!dp/active/
+dp/active/*
+!dp/active/allowlist.txt

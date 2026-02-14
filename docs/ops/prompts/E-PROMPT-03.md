@@ -12,4 +12,4 @@
 3. Structure: Strictly follow `TASK.md` template.
 4. Constraints: Do not invent file paths; use the dump.
 5. If context refreshment is required, include `ops/bin/llms` in the allowlist. The system will manage the artifacts.
-**Output only:** The full Dispatch Packet enclosed in a markdown code block (```markdown).
+Output only: The full Dispatch Packet enclosed in a markdown code block (```markdown).

@@ -23,7 +23,8 @@ Enforce context manifest completeness and reject context contamination in canoni
 - Stderr: `FAIL:` and `WARN:` lines for missing artifacts, hazards, or contamination patterns.
 
 ## Invariants and failure modes
-- Global context manifest must not include `docs/library/agents`, `docs/library/tasks`, or `docs/library/skills`.
+- Global context manifest must not include `opt/_library/agents`, `opt/_library/tasks`, or `opt/_library/skills`.
+- Legacy paths (`docs/library/agents`, `docs/library/tasks`, `docs/library/skills`) are also rejected as context hazards.
 - Every backticked path in `CONTEXT.md` must exist.
 - Canon files must not contain dump/paste contamination markers.
 

@@ -122,7 +122,10 @@ Out of scope: Populate during execution; do not pre-fill in TASK.md.
 Safety and invariants: Populate during execution; do not pre-fill in TASK.md.
 
 Target Files allowlist (hard gate):
-- Populate during execution; do not pre-fill in TASK.md.
+- Use a single pointer entry to the canonical allowlist sidecar:
+- storage/dp/active/allowlist.txt
+- Do not inline-expand file paths in TASK.md when pointer mode is active.
+- Pointer file must exist and be non-empty; `bash tools/lint/dp.sh` enforces this.
 
 ## 3.4 Execution Plan (A–E)
 

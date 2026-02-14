@@ -2,6 +2,7 @@
 
 ## Technical Specifications
 - Wrapper over `ops/lib/scripts/synthesize.sh`.
+- Runs `ops/bin/compile` before synthesis so emitted bundles use compiled manifests.
 - Generates `llms-core.txt` from `ops/lib/manifests/CORE.md`.
 - Generates `llms-full.txt` from `ops/lib/manifests/DISCOVERY.md`.
 - Regenerates `llms.txt` as the root pointer index.
@@ -10,7 +11,7 @@
 
 ## Requirements
 - Must run from the repository root.
-- Requires `ops/lib/scripts/synthesize.sh` to be executable.
+- Requires `ops/bin/compile` and `ops/lib/scripts/synthesize.sh` to be executable.
 - Requires `ops/lib/manifests/CORE.md` and `ops/lib/manifests/DISCOVERY.md` to exist.
 - Requires write access to repository root and to any `--out-dir` target.
 
@@ -20,4 +21,4 @@
 - `./ops/bin/llms --core-manifest=ops/lib/manifests/CORE.md --full-manifest=ops/lib/manifests/DISCOVERY.md`
 
 ## Forensic Insight
-`ops/bin/llms` is the static discovery wrapper. It enforces One Truth by delegating all parsing, hazard policy, and emission format logic to `ops/lib/scripts/synthesize.sh`.
+`ops/bin/llms` is the static discovery wrapper. It enforces One Truth by compiling manifests first, then delegating parsing, hazard policy, and emission format logic to `ops/lib/scripts/synthesize.sh`.

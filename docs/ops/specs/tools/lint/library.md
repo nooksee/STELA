@@ -16,9 +16,9 @@ Enforce synchronization and pointer integrity across agent, skill, and task libr
 - `docs/ops/registry/AGENTS.md`
 - `docs/ops/registry/SKILLS.md`
 - `docs/ops/registry/TASKS.md`
-- `docs/library/agents/*.md`
-- `docs/library/skills/*.md`
-- `docs/library/tasks/*.md`
+- `opt/_library/agents/*.md`
+- `opt/_library/skills/*.md`
+- `opt/_library/tasks/*.md`
 - Invokes `bash tools/lint/agent.sh` and `bash tools/lint/task.sh`.
 
 ## Outputs

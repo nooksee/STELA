@@ -3,7 +3,7 @@
 ## Technical Specifications
 - Deterministic update: rewrites only the auto-generated block inside `docs/MAP.md`.
 - Sentinel control: uses HTML comment markers to bound the writable block.
-- Directory index: emits a top-level index for `ops/`, `tools/`, `docs/`, and `storage/`.
+- Directory index: emits a top-level index for `ops/`, `tools/`, `docs/`, `opt/`, and `storage/`.
 - Project discovery: enumerates any `projects/*/STELA.md` files found at runtime.
 - Check mode: `--check` exits non-zero if `docs/MAP.md` would change.
 

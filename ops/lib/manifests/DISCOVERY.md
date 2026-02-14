@@ -1,12 +1,15 @@
 # DISCOVERY Manifest
 
-## Purpose
-Discovery and indexing layer for static llms bundle generation.
-
-## Inheritance
-- `@manifest:ops/lib/manifests/CORE.md`
+<!-- GENERATED FILE. DO NOT EDIT. -->
+<!-- Source template: ops/src/manifests/DISCOVERY.md.tpl -->
+<!-- Generator: ops/bin/compile -->
 
 ## Members
+- `PoT.md`
+- `PoW.md`
 - `README.md`
+- `SoP.md`
+- `TASK.md`
 - `docs/INDEX.md`
-- `docs/library/INDEX.md`
+- `docs/MAP.md`
+- `opt/_library/INDEX.md`

@@ -10,6 +10,7 @@ PoT is the single constitutional document for Stela governance.
 Filing:
 - `ops/` = Run (binaries, manifests, automation).
 - `docs/` = Explain (manuals and rationale).
+- `opt/` = Isolate (JIT-only library content excluded from global context).
 - `projects/` = Work (payload code).
 - `storage/` = Trash (local artifacts, never canon).
 
@@ -17,7 +18,7 @@ Filing:
 - Precedence: PoT is final authority; if conflict exists, stop and ask.
 - SSOT: one canonical file per domain; other mentions are pointers.
 - Reuse-first: search `ops/` for an existing template before creating a new artifact.
-- Context Hazard: any inclusion of `docs/library/agents`, `docs/library/tasks`, or `docs/library/skills` in the global context manifest is a failure.
+- Context Hazard: any inclusion of `opt/_library/agents`, `opt/_library/tasks`, or `opt/_library/skills` in the global context manifest is a failure.
 - Drift: any divergence between canon and repository state, or duplication of canon outside SSOT, is a failure state that requires stop and correction.
 - Routing Closeout; failure is a system failure state.
 - SoP: history ledger only; no permanent rules live there.
@@ -53,12 +54,12 @@ System Failure States (Drift Triggers):
 | Failure Type | Definition | System Response |
 | :---- | :---- | :---- |
 | **Canon Drift** | Divergence between `PoT.md` and repo state. | **STOP WORK.** Reject PR. |
-| **Context Hazard** | Including `library/` docs in `CONTEXT.md`. | **STOP WORK.** Automated lint failure. |
+| **Context Hazard** | Including `opt/_library/` docs in `CONTEXT.md`. | **STOP WORK.** Automated lint failure. |
 | **Dirty State** | Uncommitted changes in `main`. | **STOP WORK.** Worker complaint/halt. |
 | **Ambiguity** | Instructions capable of multiple interpretations. | **STOP WORK.** Request clarification. |
 
 ## 3. Jurisdiction
-Scope: `ops/`, `docs/`, `projects/`, `tools/`, `.github/`, and root governance surfaces.
+Scope: `ops/`, `docs/`, `opt/`, `projects/`, `tools/`, `.github/`, and root governance surfaces.
 Law: PoT is the sole authority across all scopes. No parallel jurisdictions exist.
 
 ## 4. Staffing & Logic
@@ -75,7 +76,7 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Linguistic Precision: Absolute literalism; seek clarification for ambiguity before proceeding.
 - Relatability Mandate: Universal accessibility via vernacular optimization and anecdotal grounding.
 - Operational Directives: Anti-drift governance; logic or files misaligned with PoT.md are a system failure.
-- Operational Directives: Context hygiene; ops/lib/manifests/CONTEXT.md must exclude docs/library/agents, docs/library/tasks, and docs/library/skills.
+- Operational Directives: Context hygiene; ops/lib/manifests/CONTEXT.md must exclude opt/_library/agents, opt/_library/tasks, and opt/_library/skills.
 - Operational Directives: Logic conflict resolution; stop until the Operator redefines parameters if a task violates PoT.md.
 - Operational Directives: Equilibrium maintenance; a task is complete only when SoP.md is updated.
 - Operational Directives: Reuse-first discipline; cross-reference ops/ templates before creating new artifacts.

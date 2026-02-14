@@ -19,6 +19,7 @@ Validate Dispatch Packet schema contracts, receipt requirements, and DP-specific
 - Input payload from file argument or stdin.
 - When given `TASK.md`, extracts Section 3 DP payload (`## 3. Current Dispatch Packet (DP)` to `## 4.`).
 - DP content fields and headings for Sections 3.1 through 3.4.5.
+- Pointer allowlist sidecar when DP allowlist contains exactly `storage/dp/active/allowlist.txt`.
 
 ## Outputs
 - Writes no tracked files.
@@ -37,6 +38,9 @@ Validate Dispatch Packet schema contracts, receipt requirements, and DP-specific
   - `bash tools/lint/dp.sh TASK.md`
   - `bash tools/lint/task.sh`
 - Canon load order must contain exactly six required entries.
+- Target Files allowlist supports a stable pointer mode:
+  - If allowlist has exactly one entry and it is `storage/dp/active/allowlist.txt`, lint loads canonical entries from that file.
+  - Pointer file must exist and contain at least one non-empty path.
 - Context-load hardening:
   - `llms-full.txt` is prohibited in DP context load surfaces and fails lint.
   - `llms-core.txt` is allowed only when explicitly marked as lightweight alignment usage.

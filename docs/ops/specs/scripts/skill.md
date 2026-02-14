@@ -17,18 +17,18 @@ Manage skill draft harvest, promotion, and context-hazard checks for the skill l
 
 ## Inputs
 - Canon and ledger files:
-  - `docs/library/SKILLS.md`
+  - `opt/_library/SKILLS.md`
   - `docs/ops/registry/SKILLS.md`
   - `TASK.md`
   - `ops/lib/manifests/CONTEXT.md`
 - Skill directories:
-  - `docs/library/skills/`
+  - `opt/_library/skills/`
   - `storage/archives/skills/`
 - Optional sourced heuristics from `ops/lib/scripts/heuristics.sh`.
 
 ## Outputs
 - `harvest`: writes redacted draft to `storage/archives/skills/`.
-- `promote`: writes promoted skill file under `docs/library/skills/`, inserts registry row in `docs/ops/registry/SKILLS.md`, and appends candidate/promotion packet logs in `docs/library/SKILLS.md`.
+- `promote`: writes promoted skill file under `opt/_library/skills/`, inserts registry row in `docs/ops/registry/SKILLS.md`, and appends candidate/promotion packet logs in `opt/_library/SKILLS.md`.
 - `check`: prints context-hazard check result.
 
 ## Invariants and failure modes

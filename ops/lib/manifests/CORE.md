@@ -1,11 +1,12 @@
 # CORE Manifest
 
-## Purpose
-Immutable physical-law context shared by all synthesis layers.
+<!-- GENERATED FILE. DO NOT EDIT. -->
+<!-- Source template: ops/src/manifests/CORE.md.tpl -->
+<!-- Generator: ops/bin/compile -->
 
 ## Members
 - `PoT.md`
-- `SoP.md`
 - `PoW.md`
+- `SoP.md`
 - `TASK.md`
 - `docs/MAP.md`

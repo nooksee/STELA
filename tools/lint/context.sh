@@ -43,6 +43,9 @@ hazard_patterns=(
   "docs/library/agents"
   "docs/library/tasks"
   "docs/library/skills"
+  "opt/_library/agents"
+  "opt/_library/tasks"
+  "opt/_library/skills"
 )
 
 hazard_found=0
@@ -89,8 +92,8 @@ contamination_files=(
 )
 
 contamination_patterns=(
-  '^<<< FILE BEGIN: docs/library/(agents|tasks|skills)/'
-  '^## docs/library/(agents|tasks|skills)/'
+  '^<<< FILE BEGIN: (docs/library|opt/_library)/(agents|tasks|skills)/'
+  '^## (docs/library|opt/_library)/(agents|tasks|skills)/'
   '^===== REPO DUMP ====='
   '^===== REPO DUMP MANIFEST ====='
 )
