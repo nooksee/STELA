@@ -15,7 +15,7 @@
 
 **Anchor Hygiene:**
 - Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md pointer references to the newest OPEN artifact and RESULTS receipts before any work continues; do not rewrite inline branch/hash state in TASK.md.
-- Clean after use: append a THREAD END entry at closeout and start the next session from a fresh OPEN artifact with matching dump artifacts.
+- Clean after use: complete closeout receipts and start the next session from a fresh OPEN artifact with matching dump artifacts.
 
 ## Closeout Cycle
 The Closeout Cycle is the canonical closeout workflow. Execute the stages in order.
@@ -51,9 +51,9 @@ Out-dir must be absolute. Use `$(pwd)`.
 Update `SoP.md` with a DP entry that includes verification receipts.
 Update `PoW.md` with a proof entry using the strict schema (Packet ID, Timestamp, Work Branch, Base HEAD, Scope, Target Files allowlist, Receipt pointers, Verification commands, Notes).
 `PoW.md` receipt pointers must include `RESULTS`, `OPEN`, and `DUMP` artifact paths.
-Copy TASK.md Section 5 Work Log into the SoP.md DP entry (or reference it in `DP-OPS-XXXX-RESULTS.md` and link from SoP.md).
+`PoW.md` Notes must record both positive proof and negative proof context (failed checks, ruled-out hypotheses, and abandoned attempts) when they materially affected execution.
 Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, with reason and risk for each NOT RUN item.
-Reset TASK.md Section 5 Work Log to "(No active thread)" before Step 5 (Prune).
+If using `./ops/bin/prune --reset-task`, ensure `PoW.md` already contains `- Packet ID: DP-OPS-XXXX`; prune blocks reset-task until that proof exists.
 
 5. Prune
 Run local hygiene prune for the DP.

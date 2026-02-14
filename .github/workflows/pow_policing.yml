@@ -1,0 +1,55 @@
+name: pow-policing
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  enforce:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enforce PoW update and append-only integrity
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${BASE_SHA}" || -z "${HEAD_SHA}" ]]; then
+            echo "ERROR: Missing pull request base/head SHA values."
+            exit 1
+          fi
+
+          changed_files="$(git diff --name-only "${BASE_SHA}" "${HEAD_SHA}")"
+
+          code_surface_changed=0
+          if [[ -n "${changed_files}" ]] && printf '%s\n' "${changed_files}" | grep -Eq '^(ops/|tools/|projects/|\.github/workflows/)'; then
+            code_surface_changed=1
+          fi
+
+          pow_changed=0
+          if [[ -n "${changed_files}" ]] && printf '%s\n' "${changed_files}" | grep -Fxq 'PoW.md'; then
+            pow_changed=1
+          fi
+
+          if (( code_surface_changed )) && (( !pow_changed )); then
+            echo "ERROR: Code-bearing surfaces changed (ops/, tools/, projects/, or .github/workflows/) but PoW.md was not updated."
+            exit 1
+          fi
+
+          if (( pow_changed )); then
+            pow_deletions="$(git diff --unified=0 "${BASE_SHA}" "${HEAD_SHA}" -- PoW.md | grep -E '^-' | grep -Ev '^--- a/PoW\.md$' || true)"
+            if [[ -n "${pow_deletions}" ]]; then
+              echo "ERROR: PoW.md must be append-only. Deletions are not allowed."
+              echo "Deletion lines:"
+              printf '%s\n' "${pow_deletions}"
+              exit 1
+            fi
+          fi
+
+          echo "OK: PoW policing checks passed."

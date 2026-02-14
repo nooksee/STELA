@@ -121,42 +121,40 @@ check_task_dashboard() {
     "## 1. Session State (The Anchor)"
     "## 2. Logic Pointers (The Law)"
     "## 3. Current Dispatch Packet (DP)"
-    "### 3.1 Freshness Gate (Must Pass Before Work)"
-    "### 3.1.1 DP Preflight Gate (Run Before Any Edits)"
-    "### 3.2 Required Context Load (Read Before Doing Anything)"
-    "#### 3.2.1 Canon load order (always)"
-    "#### 3.2.2 DP-scoped load order (per DP)"
-    "### 3.3 Scope and Safety"
-    "### 3.4 Execution Plan (A-E Canon)"
-    "#### 3.4.1 State (What is true now)"
-    "#### 3.4.2 Request (What we are changing)"
-    "#### 3.4.3 Changelog (Planned edits)"
-    "#### 3.4.4 Patch / Diff (Implementation details)"
-    "#### 3.4.5 Receipt (Proofs to collect)"
+    "## 3.1 Freshness Gate (Must Pass Before Work)"
+    "## 3.1.1 DP Preflight Gate (Run Before Any Edits)"
+    "## 3.2 Required Context Load (Read Before Doing Anything)"
+    "### 3.2.1 Canon load order (always)"
+    "### 3.2.2 DP-scoped load order (per DP)"
+    "## 3.3 Scope and Safety"
+    "## 3.4 Execution Plan (A-E Canon)"
+    "### 3.4.1 State (What is true now)"
+    "### 3.4.2 Request (What we are changing)"
+    "### 3.4.3 Changelog (Planned edits)"
+    "### 3.4.4 Patch / Diff (Implementation details)"
+    "### 3.4.5 Receipt (Proofs to collect) — MUST RUN"
     "## 4. Closeout (Mandatory)"
-    "## 4.1 Thread Transition (Reset / Archive Rule)"
-    "## 5. Work Log (Timestamped Continuity)"
+    "### 4.1 Mandatory Closing Block"
   )
 
   local -a patterns=(
     '^##[[:space:]]*1\\.[[:space:]]*SESSION STATE'
     '^##[[:space:]]*2\\.[[:space:]]*LOGIC POINTERS'
     '^##[[:space:]]*3\\.[[:space:]]*CURRENT DISPATCH PACKET'
-    '^###[[:space:]]*3\\.1[.)]?[[:space:]]*FRESHNESS GATE'
-    '^###[[:space:]]*3\\.1\\.1[.)]?[[:space:]]*DP PREFLIGHT GATE'
-    '^###[[:space:]]*3\\.2[.)]?[[:space:]]*REQUIRED CONTEXT LOAD'
-    '^####[[:space:]]*3\\.2\\.1[.)]?[[:space:]]*CANON LOAD ORDER'
-    '^####[[:space:]]*3\\.2\\.2[.)]?[[:space:]]*DP-SCOPED LOAD ORDER'
-    '^###[[:space:]]*3\\.3[.)]?[[:space:]]*SCOPE AND SAFETY'
-    '^###[[:space:]]*3\\.4[.)]?[[:space:]]*EXECUTION PLAN'
-    '^####[[:space:]]*3\\.4\\.1[.)]?[[:space:]]*STATE'
-    '^####[[:space:]]*3\\.4\\.2[.)]?[[:space:]]*REQUEST'
-    '^####[[:space:]]*3\\.4\\.3[.)]?[[:space:]]*CHANGELOG'
-    '^####[[:space:]]*3\\.4\\.4[.)]?[[:space:]]*PATCH'
-    '^####[[:space:]]*3\\.4\\.5[.)]?[[:space:]]*RECEIPT'
+    '^##[[:space:]]*3\\.1[.)]?[[:space:]]*FRESHNESS GATE'
+    '^##[[:space:]]*3\\.1\\.1[.)]?[[:space:]]*DP PREFLIGHT GATE'
+    '^##[[:space:]]*3\\.2[.)]?[[:space:]]*REQUIRED CONTEXT LOAD'
+    '^###[[:space:]]*3\\.2\\.1[.)]?[[:space:]]*CANON LOAD ORDER'
+    '^###[[:space:]]*3\\.2\\.2[.)]?[[:space:]]*DP-SCOPED LOAD ORDER'
+    '^##[[:space:]]*3\\.3[.)]?[[:space:]]*SCOPE AND SAFETY'
+    '^##[[:space:]]*3\\.4[.)]?[[:space:]]*EXECUTION PLAN'
+    '^###[[:space:]]*3\\.4\\.1[.)]?[[:space:]]*STATE'
+    '^###[[:space:]]*3\\.4\\.2[.)]?[[:space:]]*REQUEST'
+    '^###[[:space:]]*3\\.4\\.3[.)]?[[:space:]]*CHANGELOG'
+    '^###[[:space:]]*3\\.4\\.4[.)]?[[:space:]]*PATCH'
+    '^###[[:space:]]*3\\.4\\.5[.)]?[[:space:]]*RECEIPT'
     '^##[[:space:]]*4\\.[[:space:]]*CLOSEOUT'
-    '^##[[:space:]]*4\\.1[.)]?[[:space:]]*THREAD TRANSITION'
-    '^##[[:space:]]*5\\.[[:space:]]*WORK LOG'
+    '^###[[:space:]]*4\\.1[.)]?[[:space:]]*MANDATORY CLOSING BLOCK'
   )
 
   local -a heading_lines=()
@@ -181,6 +179,13 @@ check_task_dashboard() {
         break
       fi
     done
+  fi
+
+  if grep -nEiq '^##[[:space:]]*4\.1[.)]?[[:space:]]*Thread[[:space:]]+Transition([[:space:]]*[(].*[)])?[[:space:]]*$' "$path"; then
+    fail "TASK contains forbidden legacy heading '## 4.1 Thread Transition'"
+  fi
+  if grep -nEiq '^##[[:space:]]*5\.[[:space:]]*Work[[:space:]]+Log([[:space:]]*[(].*[)])?[[:space:]]*$' "$path"; then
+    fail "TASK contains forbidden legacy heading '## 5. Work Log'"
   fi
 
   if ! grep -Eq '^Pointer:[[:space:]]*storage/handoff/OPEN-<branch>-<short-hash>[.]txt([[:space:]]*[(].*[)])?$' "$path" \
@@ -215,7 +220,7 @@ check_task_dashboard() {
   fi
 
   local canon_block
-  canon_block="$(extract_block "$path" '^#### 3[.]2[.]1' '^#### 3[.]2[.]2')"
+  canon_block="$(extract_block "$path" '^### 3[.]2[.]1' '^### 3[.]2[.]2')"
   local -a canon_expected=(
     "1. PoT.md"
     "2. SoP.md"
@@ -263,7 +268,7 @@ check_task_dashboard() {
   fi
 
   local receipt_block
-  receipt_block="$(extract_block "$path" '^#### 3[.]4[.]5' '^## 4[.]')"
+  receipt_block="$(extract_block "$path" '^### 3[.]4[.]5' '^## 4[.]')"
   if ! grep -Eq '\./ops/bin/open[[:space:]]+--out=auto[[:space:]]+--dp=' <<< "$receipt_block"; then
     fail "TASK receipt contract missing executable OPEN command"
   fi
@@ -285,8 +290,8 @@ check_task_dashboard() {
     fail "TASK receipt contract missing Mandatory Closing Block requirement"
   fi
 
-  if ! grep -nF 'Mandatory Closing Block' "$path" >/dev/null; then
-    fail "TASK closeout block missing Mandatory Closing Block heading"
+  if ! grep -nE '^###[[:space:]]*4\.1[.)]?[[:space:]]*Mandatory[[:space:]]+Closing[[:space:]]+Block[[:space:]]*$' "$path" >/dev/null; then
+    fail "TASK closeout block missing heading '### 4.1 Mandatory Closing Block'"
   fi
 
   local -a closing_labels=(

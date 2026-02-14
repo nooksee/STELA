@@ -32,6 +32,47 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - `  - <command>`
 - `- Notes: <audit note>`
 
+## 2026-02-13 22:53:10 UTC — DP-OPS-0061 TASK Structure Hardening and PoW Integrity
+- Packet ID: DP-OPS-0061
+- Timestamp: 2026-02-13T22:53:10Z
+- Work Branch: work/dp-ops-0061-task-structure-hardening-2026-02-13
+- Base HEAD: 69f7b684
+- Scope: platform
+- Target Files allowlist:
+  - docs/ops/specs/surfaces/task.md
+  - tools/lint/dp.sh
+  - tools/lint/task.sh
+  - ops/bin/prune
+  - docs/MANUAL.md
+  - .github/workflows/pow_policing.yml
+  - TASK.md
+  - SoP.md
+  - PoW.md
+  - storage/dp/intake/DP-OPS-0061.md
+- Receipt pointers:
+  - RESULTS: storage/handoff/DP-OPS-0061-RESULTS.md
+  - OPEN: storage/handoff/OPEN-work-dp-ops-0061-task-structure-hardening-2026-02-13-69f7b684.txt
+  - DUMP: storage/dumps/dump-platform-work-dp-ops-0061-task-structure-hardening-2026-02-13-69f7b684.txt
+- Verification commands:
+  - bash tools/lint/context.sh
+  - bash tools/lint/style.sh
+  - bash tools/lint/truth.sh
+  - bash tools/lint/dp.sh --test
+  - bash tools/lint/dp.sh TASK.md
+  - bash tools/lint/task.sh
+  - bash tools/lint/llms.sh
+  - ./tools/verify.sh
+  - git status --porcelain=v1
+  - ./ops/bin/prune --dry-run --reset-task --dp=DP-OPS-0061
+  - git diff -- tools/lint/dp.sh
+  - git diff --cached -- tools/lint/dp.sh
+  - git diff --name-only --cached
+  - git diff --stat --cached
+  - git ls-files --others --exclude-standard
+  - git diff --name-only
+  - git diff --stat
+- Notes: Positive proof recorded for TASK schema hardening and PoW reset gate enforcement; negative proof was captured before PoW entry creation when reset-task correctly blocked on missing Packet ID, and a follow-up dry-run confirmed reset-task unblocks once `- Packet ID: DP-OPS-0061` exists. Canonical DP heading levels were normalized across TASK/spec surfaces, and RESULTS strict-field lint now allows exact path tokens needed for deterministic manifest enumeration. DP-OPS-0061 allowlist was amended to include `tools/lint/dp.sh`, with explicit file-diff and dump-manifest proof for that path. Dump manifest proof explicitly includes `.github/workflows/pow_policing.yml` after staging, and diff coverage includes working-tree, staged, and untracked views. Abandoned attempts to keep legacy Work Log continuity were intentionally rejected by contract and lint updates.
+
 ## 2026-02-13 19:41:30 UTC — DP-OPS-0060 TASK Template Archival and PoW Ledger
 - Packet ID: DP-OPS-0060
 - Timestamp: 2026-02-13T19:41:30Z

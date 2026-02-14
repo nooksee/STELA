@@ -21,7 +21,7 @@
 - Run prune last:
   - `./ops/bin/prune --dry-run` and `./ops/bin/prune --target=pow --dry-run` before destructive paths.
   - `./ops/bin/prune --dp=<id> --scrub` for hygiene cleanup.
-  - `./ops/bin/prune --reset-task` only for explicit TASK baseline reset after Work Log clear.
+  - `./ops/bin/prune --reset-task` only for explicit TASK baseline reset after PoW entry exists for the active DP id.
 
 ## Template Extraction Contract
 - `ops/bin/prune --reset-task` extracts template content between these exact delimiter lines:
@@ -94,7 +94,7 @@ Input discipline (hard rule):
 
 ### DP-XXXX: (Template)
 
-### 3.1 Freshness Gate (Must Pass Before Work)
+## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
 Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
 Base HEAD: 0000000 (Must match session context output)
@@ -114,7 +114,7 @@ STOP conditions:
 - STOP if working tree is dirty before execution begins.
 - STOP if told to create or switch branches.
 
-### 3.1.1 DP Preflight Gate (Run Before Any Edits)
+## 3.1.1 DP Preflight Gate (Run Before Any Edits)
 Purpose:
 - Catch malformed DP or TASK schema before work begins.
 
@@ -125,9 +125,9 @@ Worker runs (paste outcome in RESULTS):
 
 STOP if any preflight check fails.
 
-### 3.2 Required Context Load (Read Before Doing Anything)
+## 3.2 Required Context Load (Read Before Doing Anything)
 
-#### 3.2.1 Canon load order (always)
+### 3.2.1 Canon load order (always)
 Worker must confirm loaded before edits begin:
 1. PoT.md
 2. SoP.md
@@ -143,7 +143,7 @@ Notes:
 - DP writer must not attach or cite disposable artifacts.
 - DP writer must not embed pasted bundles.
 
-#### 3.2.2 DP-scoped load order (per DP)
+### 3.2.2 DP-scoped load order (per DP)
 - tools/lint/dp.sh
 - tools/lint/task.sh
 - ops/bin/prune
@@ -151,7 +151,7 @@ Notes:
 - docs/ops/specs/binaries/prune.md
 - docs/ops/specs/binaries/open.md (pointer reference only; OPEN behavior is not modified in this DP)
 
-### 3.3 Scope and Safety
+## 3.3 Scope and Safety
 Objective: Populate during execution; do not pre-fill in TASK.md.
 In scope: Populate during execution; do not pre-fill in TASK.md.
 Out of scope: Populate during execution; do not pre-fill in TASK.md.
@@ -160,21 +160,21 @@ Safety and invariants: Populate during execution; do not pre-fill in TASK.md.
 Target Files allowlist (hard gate):
 - Populate during execution; do not pre-fill in TASK.md.
 
-### 3.4 Execution Plan (A–E)
+## 3.4 Execution Plan (A–E)
 
-#### 3.4.1 State
+### 3.4.1 State
 Populate during execution; do not pre-fill in TASK.md.
 
-#### 3.4.2 Request
+### 3.4.2 Request
 Populate during execution; do not pre-fill in TASK.md.
 
-#### 3.4.3 Changelog
+### 3.4.3 Changelog
 Populate during execution; do not pre-fill in TASK.md.
 
-#### 3.4.4 Patch / Diff
+### 3.4.4 Patch / Diff
 Populate during execution; do not pre-fill in TASK.md.
 
-#### 3.4.5 Receipt (Proofs to collect) — MUST RUN
+### 3.4.5 Receipt (Proofs to collect) — MUST RUN
 - ./ops/bin/open --out=auto --dp="DP-OPS-XXXX"
 - ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
 - Zero-byte check: test -s <dump_payload_path>
@@ -199,10 +199,10 @@ Populate during execution; do not pre-fill in TASK.md.
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
 - Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-XXXX --scrub.
-- Use ./ops/bin/prune --reset-task only for explicit TASK baseline reset after Work Log clear.
+- Use ./ops/bin/prune --reset-task only for explicit TASK baseline reset after PoW entry exists for the active DP id.
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
-Mandatory Closing Block
+### 4.1 Mandatory Closing Block
 Primary Commit Header (plaintext)
 
 Pull Request Title (plaintext)
@@ -214,12 +214,4 @@ Final Squash Stub (plaintext) (Must differ from #1)
 Extended Technical Manifest (plaintext)
 
 Review Conversation Starter (markdown)
-
-## 4.1 Thread Transition
-- Append a THREAD END entry to the Work Log at completion.
-- Reset Work Log to "(No active thread)" before running prune scrub.
-- Execute scrub only after receipts and SoP logging are complete.
-
-## 5. Work Log
-(No active thread)
 <!-- TASK-TEMPLATE-END -->
