@@ -210,6 +210,117 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - bash tools/lint/dp.sh storage/handoff/DP-OPS-0060-RESULTS.md
 - Notes: Root PoW surface introduced; prune now supports dual-ledger dry-run simulation and TASK template extraction contract.
 
+## 2026-02-14 19:29:25 UTC — DP-OPS-0064 Phase 2 Structural Restructuring
+- Packet ID: DP-OPS-0064
+- Timestamp: 2026-02-14T19:29:25Z
+- Work Branch: work/dp-ops-0064-2026-02-14
+- Base HEAD: 30a77fdf
+- Scope: full
+- Target Files allowlist:
+  - PoT.md
+  - SoP.md
+  - TASK.md
+  - docs/INDEX.md
+  - docs/MANUAL.md
+  - docs/MAP.md
+  - docs/ops/prompts/E-PROMPT-01.md
+  - docs/ops/prompts/E-PROMPT-02.md
+  - docs/ops/prompts/E-PROMPT-03.md
+  - docs/ops/prompts/E-PROMPT-04.md
+  - docs/ops/prompts/README.md
+  - docs/ops/registry/BINARIES.md
+  - docs/ops/registry/SKILLS.md
+  - docs/ops/registry/TASKS.md
+  - docs/ops/specs/binaries/compile.md
+  - docs/ops/specs/binaries/context.md
+  - docs/ops/specs/binaries/llms.md
+  - docs/ops/specs/binaries/map.md
+  - docs/ops/specs/scripts/agent.md
+  - docs/ops/specs/scripts/skill.md
+  - docs/ops/specs/scripts/synthesize.md
+  - docs/ops/specs/scripts/task.md
+  - docs/ops/specs/tools/lint/agent.md
+  - docs/ops/specs/tools/lint/context.md
+  - docs/ops/specs/tools/lint/dp.md
+  - docs/ops/specs/tools/lint/library.md
+  - docs/ops/specs/tools/lint/task.md
+  - docs/ops/specs/tools/test/agent.md
+  - llms-core.txt
+  - llms-full.txt
+  - llms.txt
+  - ops/bin/compile
+  - ops/bin/context
+  - ops/bin/llms
+  - ops/bin/map
+  - ops/lib/manifests/CONTEXT.md
+  - ops/lib/manifests/CORE.md
+  - ops/lib/manifests/DISCOVERY.md
+  - ops/lib/manifests/OPS.md
+  - ops/lib/scripts/agent.sh
+  - ops/lib/scripts/skill.sh
+  - ops/lib/scripts/synthesize.sh
+  - ops/lib/scripts/task.sh
+  - ops/src/manifests/CONTEXT.md.tpl
+  - ops/src/manifests/CORE.md.tpl
+  - ops/src/manifests/DISCOVERY.md.tpl
+  - ops/src/manifests/OPS.md.tpl
+  - opt/_library/AGENTS.md
+  - opt/_library/INDEX.md
+  - opt/_library/SKILLS.md
+  - opt/_library/TASKS.md
+  - opt/_library/agents/R-AGENT-01.md
+  - opt/_library/agents/R-AGENT-02.md
+  - opt/_library/agents/R-AGENT-03.md
+  - opt/_library/agents/R-AGENT-04.md
+  - opt/_library/agents/R-AGENT-05.md
+  - opt/_library/agents/R-AGENT-06.md
+  - opt/_library/skills/S-LEARN-01.md
+  - opt/_library/skills/S-LEARN-02.md
+  - opt/_library/skills/S-LEARN-03.md
+  - opt/_library/skills/S-LEARN-04.md
+  - opt/_library/skills/S-LEARN-05.md
+  - opt/_library/skills/S-LEARN-06.md
+  - opt/_library/tasks/B-TASK-01.md
+  - opt/_library/tasks/B-TASK-02.md
+  - opt/_library/tasks/B-TASK-03.md
+  - opt/_library/tasks/B-TASK-04.md
+  - opt/_library/tasks/B-TASK-05.md
+  - opt/_library/tasks/B-TASK-06.md
+  - storage/.gitignore
+  - storage/dp/active/allowlist.txt
+  - tools/lint/agent.sh
+  - tools/lint/context.sh
+  - tools/lint/dp.sh
+  - tools/lint/library.sh
+  - tools/lint/task.sh
+  - tools/lint/truth.sh
+  - tools/test/agent.sh
+  - tools/verify.sh
+  - PoW.md
+- Receipt pointers:
+  - RESULTS: storage/handoff/DP-OPS-0064-RESULTS.md
+  - OPEN: storage/handoff/OPEN-work-dp-ops-0064-2026-02-14-30a77fdf.txt
+  - DUMP: storage/dumps/dump-full-work-dp-ops-0064-2026-02-14-30a77fdf.txt
+- Verification commands:
+  - ./ops/bin/open --out=auto --dp=DP-OPS-0064
+  - ./ops/bin/dump --scope=full --format=chatgpt --out=auto --bundle
+  - ./ops/bin/compile
+  - ./ops/bin/map --check
+  - ./ops/bin/llms
+  - ./tools/verify.sh
+  - bash tools/lint/truth.sh
+  - bash tools/lint/style.sh
+  - bash tools/lint/context.sh
+  - bash tools/lint/library.sh
+  - bash tools/lint/task.sh
+  - bash tools/lint/dp.sh TASK.md
+  - bash tools/lint/llms.sh
+  - bash tools/lint/dp.sh storage/handoff/DP-OPS-0064-RESULTS.md
+  - git status --porcelain=v1
+  - git diff --name-only
+  - git diff
+- Notes: Positive proof for DP-OPS-0064 structural hardening across library isolation, deterministic manifest compilation, and pointer-sidecar allowlist governance. This entry is append-only and preserves all prior PoW history unchanged.
+
 ## Template
 Copy this block when appending a new entry.
 
