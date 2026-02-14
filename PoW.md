@@ -32,6 +32,52 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - `  - <command>`
 - `- Notes: <audit note>`
 
+## 2026-02-14 16:35:03 UTC — DP-OPS-0063 SoP and PoW Closeout Ledger Compliance
+- Packet ID: DP-OPS-0063
+- Timestamp: 2026-02-14T16:35:03Z
+- Work Branch: work/dp-ops-0063-stabilization-2026-02-14
+- Base HEAD: 6043fa23
+- Scope: platform
+- Target Files allowlist:
+  - TASK.md
+  - docs/MANUAL.md
+  - docs/library/TASKS.md
+  - docs/library/tasks/B-TASK-01.md
+  - docs/library/tasks/B-TASK-02.md
+  - docs/library/tasks/B-TASK-03.md
+  - docs/library/tasks/B-TASK-04.md
+  - docs/library/tasks/B-TASK-05.md
+  - docs/library/tasks/B-TASK-06.md
+  - docs/ops/specs/scripts/task.md
+  - docs/ops/specs/surfaces/task.md
+  - docs/ops/specs/tools/lint/task.md
+  - ops/bin/prune
+  - tools/lint/dp.sh
+  - tools/lint/task.sh
+  - SoP.md
+  - PoW.md
+- Receipt pointers:
+  - RESULTS: storage/handoff/DP-OPS-0063-RESULTS.md
+  - OPEN: storage/handoff/OPEN-work-dp-ops-0063-stabilization-2026-02-14-6043fa23.txt
+  - DUMP: storage/dumps/dump-platform-work-dp-ops-0063-stabilization-2026-02-14-6043fa23.txt
+- Verification commands:
+  - bash tools/lint/context.sh
+  - bash tools/lint/style.sh
+  - bash tools/lint/truth.sh
+  - bash tools/lint/dp.sh --test
+  - bash tools/lint/dp.sh TASK.md
+  - bash tools/lint/task.sh
+  - bash tools/lint/llms.sh
+  - ./tools/verify.sh
+  - ./ops/bin/prune --dry-run
+  - ./ops/bin/prune --target=pow --dry-run
+  - bash tools/lint/dp.sh storage/handoff/DP-OPS-0063-RESULTS.md
+  - git diff --name-only
+  - git diff --stat
+  - git check-ignore -v storage/handoff/DP-OPS-0063-RESULTS.md
+  - git check-ignore -v storage/dp/intake/DP-OPS-0063.md
+- Notes: Positive proof records closeout ledger compliance for the DP-OPS-0063 code-bearing shipment so PoW and SoP reflect the released canon and tooling surfaces. Negative proof records that policing failed before this entry existed because prior code and canon changes had no appended PoW and SoP note. Storage artifacts remain local and ignored by policy; receipts document them as untracked evidence pointers rather than commit content.
+
 ## 2026-02-14 04:18:34 UTC — DP-OPS-0062 Documentation Fortification and Help Doctrine Routing
 - Packet ID: DP-OPS-0062
 - Timestamp: 2026-02-14T04:18:34Z
