@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/help [term]
+Usage: ops/bin/help [specs|doctrine|curriculum|term]
 USAGE
 }
 
@@ -16,26 +16,20 @@ color_init() {
   if [[ -n "${TERM:-}" ]] && command -v tput >/dev/null 2>&1 && tput sgr0 >/dev/null 2>&1; then
     bold="$(tput bold)"
     dim="$(tput dim)"
-    red="$(tput setaf 1)"
     green="$(tput setaf 2)"
-    yellow="$(tput setaf 3)"
-    blue="$(tput setaf 4)"
     cyan="$(tput setaf 6)"
     reset="$(tput sgr0)"
   else
     bold=""
     dim=""
-    red=""
     green=""
-    yellow=""
-    blue=""
     cyan=""
     reset=""
   fi
 }
 
 say() {
-  printf "Stela System: %s\n" "$*"
+  printf 'Stela System: %s\n' "$*"
 }
 
 require_repo_root() {
@@ -52,83 +46,261 @@ require_repo_root() {
   fi
 }
 
-show_menu() {
-  say "Processing help request."
-  cat <<EOF
-${bold}Stela Help${reset}
-${dim}Explainable command index and quick start.${reset}
-
-${bold}Commands${reset}
-  ${cyan}project${reset}  Manage PoT/TASK, status, and work log.
-  ${cyan}open${reset}     Generate an OPEN prompt with freshness gate.
-  ${cyan}dump${reset}     Capture platform state (excludes projects/).
-  ${cyan}help${reset}     Search docs/: ./ops/bin/help <term>
-
-${bold}Quick Start${reset}
-  1) Review canon: ${green}PoT.md${reset} and ${green}TASK.md${reset}
-  2) Capture context: ${green}./ops/bin/open --intent="..." --dp="DP-XXXX / YYYY-MM-DD"${reset}
-  3) Dump platform: ${green}./ops/bin/dump --scope=platform --format=chatgpt${reset}
-  4) Check status: ${green}./ops/bin/project status${reset}
-
-${bold}Search${reset}
-  ./ops/bin/help <term>  (prioritizes docs/ops/specs, then scans docs/)
-
-${bold}Specs${reset}
-  ${cyan}specs${reset}    List ops specification documents.
-  ${dim}Index:${reset} docs/ops/README.md
-EOF
+require_docs() {
+  if [[ ! -d "docs" ]]; then
+    die "docs/ directory not found."
+  fi
 }
 
-show_specs() {
-  local spec_dir="docs/ops/specs"
-  if [[ ! -d "$spec_dir" ]]; then
-    say "Spec directory not found: ${spec_dir}"
-    return 1
+require_specs() {
+  if [[ ! -d "docs/ops/specs" ]]; then
+    die "Spec directory not found: docs/ops/specs"
   fi
-  say "Ops specification documents:"
-  find "$spec_dir" -maxdepth 1 -type f -name "*.md" -print | sort
+}
+
+search_in_tree() {
+  local term="$1"
+  shift
+
+  if command -v rg >/dev/null 2>&1; then
+    rg -n --no-heading --color=never --fixed-strings -- "$term" "$@" || true
+  else
+    grep -RIn --binary-files=without-match -- "$term" "$@" || true
+  fi
 }
 
 search_specs() {
   local term="$1"
-  local spec_dir="docs/ops/specs"
-  local spec_matches=""
-  if [[ ! -d "$spec_dir" ]]; then
-    return 1
-  fi
-  spec_matches="$(grep -RIn --binary-files=without-match -- "$term" "$spec_dir" || true)"
-  if [[ -n "$spec_matches" ]]; then
-    say "Spec references for \"$term\" (docs/ops/specs prioritized):"
-    printf "%s\n" "$spec_matches"
+  local matches=""
+
+  require_specs
+  matches="$(search_in_tree "$term" docs/ops/specs)"
+  if [[ -n "$matches" ]]; then
+    say "Spec references for \"$term\" (authoritative first):"
+    printf '%s\n' "$matches"
     return 0
   fi
   return 1
 }
 
+search_docs_without_specs() {
+  local term="$1"
+
+  if command -v rg >/dev/null 2>&1; then
+    rg -n --no-heading --color=never --fixed-strings --glob '!docs/ops/specs/**' -- "$term" docs || true
+  else
+    grep -RIn --binary-files=without-match --exclude-dir=specs -- "$term" docs || true
+  fi
+}
+
 search_docs() {
   local term="$1"
-  local search_opts=()
+  local matches=""
+
   if [[ -z "$term" ]]; then
     die "Search term required."
   fi
-  if [[ ! -d "docs" ]]; then
-    die "docs/ directory not found."
-  fi
+
+  require_docs
 
   say "Processing search for \"$term\"."
   if search_specs "$term"; then
     say "Additional references in docs/ (excluding docs/ops/specs):"
-    search_opts+=(--exclude-dir=specs)
   else
     say "No spec references found. Scanning docs/."
   fi
-  matches="$(grep -RIn --binary-files=without-match "${search_opts[@]}" -- "$term" docs/ || true)"
+
+  matches="$(search_docs_without_specs "$term")"
   if [[ -n "$matches" ]]; then
     say "I have located the following references regarding \"$term\":"
-    printf "%s\n" "$matches"
+    printf '%s\n' "$matches"
   else
     say "No references found regarding \"$term\" in docs/."
   fi
+}
+
+show_specs() {
+  local spec_root="docs/ops/specs"
+  local current_group=""
+  local file rel group
+
+  require_specs
+
+  mapfile -t spec_files < <(find "$spec_root" -type f -name '*.md' -print | LC_ALL=C sort)
+  if (( ${#spec_files[@]} == 0 )); then
+    say "No specification documents found under ${spec_root}."
+    return 0
+  fi
+
+  say "Ops specification documents (recursive, grouped):"
+  for file in "${spec_files[@]}"; do
+    rel="${file#${spec_root}/}"
+    if [[ "$rel" == "$file" ]]; then
+      group="root"
+    else
+      group="${rel%%/*}"
+      if [[ "$group" == "$rel" ]]; then
+        group="root"
+      fi
+    fi
+
+    if [[ "$group" != "$current_group" ]]; then
+      if [[ -n "$current_group" ]]; then
+        printf '\n'
+      fi
+      printf '%s[%s]%s\n' "$bold" "$group" "$reset"
+      current_group="$group"
+    fi
+
+    printf '  %s\n' "$file"
+  done
+}
+
+extract_lines_between() {
+  local file="$1"
+  local start_regex="$2"
+  local stop_regex="$3"
+
+  awk -v start="$start_regex" -v stop="$stop_regex" '
+    BEGIN { in_block=0 }
+    $0 ~ start { in_block=1; next }
+    in_block && $0 ~ stop { exit }
+    in_block { print }
+  ' "$file"
+}
+
+extract_read_order() {
+  local file="$1"
+  awk '
+    /^Source of Truth Read-in Order:/ { in_block=1; next }
+    in_block && /^## / { exit }
+    in_block && /^[0-9]+\./ { print }
+  ' "$file"
+}
+
+print_or_fallback() {
+  local content="$1"
+  local fallback="$2"
+
+  if [[ -n "$(printf '%s\n' "$content" | sed '/^[[:space:]]*$/d')" ]]; then
+    printf '%s\n' "$content"
+  else
+    printf '%s\n' "$fallback"
+  fi
+}
+
+show_doctrine() {
+  local pot_file="PoT.md"
+  local filing=""
+  local axioms=""
+  local canon=""
+  local read_order=""
+
+  if [[ ! -f "$pot_file" ]]; then
+    die "PoT.md not found. Doctrine mode requires PoT.md."
+  fi
+
+  filing="$(extract_lines_between "$pot_file" '^### 1\\.1 Filing Doctrine$' '^### 1\\.2 ' )"
+  axioms="$(extract_lines_between "$pot_file" '^### 1\\.2 Axioms$' '^### 1\\.3 ' )"
+  canon="$(extract_lines_between "$pot_file" '^### 1\\.3 Canon Surfaces$' '^Source of Truth Read-in Order:' )"
+  read_order="$(extract_read_order "$pot_file")"
+
+  say "Doctrine mode: constitutional operator guidance from PoT."
+
+  printf '%sFiling Doctrine%s\n' "$bold" "$reset"
+  print_or_fallback "$filing" '- See PoT.md Section 1.1.'
+  printf '\n'
+
+  printf '%sAxioms%s\n' "$bold" "$reset"
+  print_or_fallback "$axioms" '- See PoT.md Section 1.2.'
+  printf '\n'
+
+  printf '%sCanon Surfaces%s\n' "$bold" "$reset"
+  print_or_fallback "$canon" '- See PoT.md Section 1.3.'
+  printf '\n'
+
+  printf '%sRead Sequence%s\n' "$bold" "$reset"
+  print_or_fallback "$read_order" '1. PoT.md\n2. SoP.md\n3. PoW.md\n4. TASK.md\n5. docs/MAP.md'
+  printf '\n'
+
+  printf '%sOperator Reminder%s\n' "$bold" "$reset"
+  printf '%s\n' '- Enforce pointer-first workflow: OPEN and RESULTS are artifacts, TASK is routing, PoW is proof.'
+  printf '%s\n' '- If canon conflicts with execution intent, stop and resolve with PoT authority first.'
+}
+
+show_curriculum() {
+  say "Curriculum mode: guided startup and closeout sequences."
+
+  cat <<EOF_CURRICULUM
+${bold}Startup Sequence${reset}
+1. Open freshness snapshot:
+   ${green}./ops/bin/open --out=auto --dp="DP-OPS-XXXX"${reset}
+2. Capture platform state:
+   ${green}./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle${reset}
+3. Run dispatch preflight gates before edits:
+   ${green}bash tools/lint/dp.sh --test${reset}
+   ${green}bash tools/lint/dp.sh TASK.md${reset}
+   ${green}bash tools/lint/task.sh${reset}
+4. Load canon in order:
+   ${green}PoT.md -> SoP.md -> TASK.md -> docs/MAP.md -> docs/MANUAL.md -> ops/lib/manifests/CONTEXT.md${reset}
+5. Execute DP Section 3 in order and keep freeze discipline.
+
+${bold}Closeout Sequence${reset}
+1. Verify:
+   ${green}./tools/verify.sh${reset}
+   ${green}bash tools/lint/truth.sh${reset}
+   ${green}bash tools/lint/style.sh${reset}
+   ${green}bash tools/lint/dp.sh TASK.md${reset}
+   ${green}bash tools/lint/dp.sh storage/handoff/DP-OPS-XXXX-RESULTS.md${reset}
+   ${green}bash tools/lint/llms.sh${reset}
+2. Record proof and history:
+   - Update RESULTS receipts.
+   - Append SoP history entry.
+   - Append PoW proof entry with RESULTS, OPEN, and DUMP pointers.
+3. Refresh navigation bundles when applicable:
+   ${green}./ops/bin/map${reset}
+   ${green}./ops/bin/llms --out-dir="$(pwd)"${reset}
+4. Prune last:
+   ${green}./ops/bin/prune --dp=DP-OPS-XXXX --scrub${reset}
+
+${bold}Routing References${reset}
+- Dispatch contract: ${cyan}TASK.md${reset}
+- Closeout doctrine: ${cyan}docs/MANUAL.md${reset}
+- Wayfinding map: ${cyan}docs/MAP.md${reset}
+EOF_CURRICULUM
+}
+
+show_menu() {
+  say "Processing help request."
+  cat <<EOF_MENU
+${bold}Stela Help${reset}
+${dim}CLI wayfinding surface aligned with docs/MAP.md.${reset}
+
+${bold}Command Index${reset}
+  ${cyan}open${reset}       Session freshness and prompt artifact.
+  ${cyan}dump${reset}       Platform context capture and bundles.
+  ${cyan}context${reset}    Context archive assembly.
+  ${cyan}map${reset}        Refresh MAP auto-generated index block.
+  ${cyan}llms${reset}       Refresh llms root bundles from One Truth manifests.
+  ${cyan}prune${reset}      Ledger retention and storage hygiene.
+  ${cyan}project${reset}    Project and task status helpers.
+  ${cyan}help${reset}       Wayfinding, doctrine, curriculum, and docs search.
+
+${bold}Help Modes${reset}
+  ${cyan}specs${reset}       Recursive spec index grouped by category.
+  ${cyan}doctrine${reset}    PoT-based constitutional guidance.
+  ${cyan}curriculum${reset}  Guided startup and closeout sequence.
+  ${cyan}<term>${reset}      Specs-first docs search.
+
+${bold}Quick Start${reset}
+  1) Read constitution and active contract: ${green}PoT.md${reset}, ${green}TASK.md${reset}
+  2) Capture OPEN and DUMP: ${green}./ops/bin/open --out=auto${reset}, ${green}./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle${reset}
+  3) Run gates before edits: ${green}bash tools/lint/dp.sh --test${reset}, ${green}bash tools/lint/task.sh${reset}
+
+${bold}Wayfinding${reset}
+  MAP analogue: ${green}./ops/bin/help${reset}
+  Spec index:   ${green}./ops/bin/help specs${reset}
+EOF_MENU
 }
 
 color_init
@@ -139,16 +311,22 @@ if (( $# > 1 )); then
 fi
 
 case "${1:-}" in
-  "" )
+  "")
     show_menu
     ;;
-  -h|--help )
+  -h|--help)
     usage
     ;;
-  specs )
+  specs)
     show_specs
     ;;
-  * )
+  doctrine)
+    show_doctrine
+    ;;
+  curriculum)
+    show_curriculum
+    ;;
+  *)
     search_docs "$1"
     ;;
 esac

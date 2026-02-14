@@ -1,21 +1,55 @@
 # Technical Specification: ops/bin/help
 
-## Technical Specifications
-- Menu Mode: displays the command index and quick start when no term is provided.
-- Search Mode: greps `docs/` with line numbers when a term is provided.
-- Specs Priority: searches `docs/ops/specs/` first and reports matches before scanning the rest of `docs/`.
-- Specs Listing: supports `./ops/bin/help specs` to list specification documents.
-- Output Clarity: uses consistent Stela System prefixes and optional ANSI formatting.
+## Constitutional Anchor
+`ops/bin/help` is the CLI wayfinding surface for the Explain layer.
+It operationalizes the same navigation intent as `docs/MAP.md`: constitution, ledgers, interface, and bridge commands.
 
-## Requirements
-- Must run from the repository root with git available on PATH.
-- Requires `docs/` and `docs/ops/specs/` to exist.
-- Requires `grep` and standard shell utilities on PATH.
+## Operator Contract
+- Invocation:
+  - `./ops/bin/help`
+  - `./ops/bin/help specs`
+  - `./ops/bin/help doctrine`
+  - `./ops/bin/help curriculum`
+  - `./ops/bin/help <term>`
+- Modes:
+  - Menu mode: command index plus quick-start wayfinding.
+  - Specs mode: recursive, grouped listing of `docs/ops/specs/**/*.md`.
+  - Doctrine mode: PoT axioms and canon pointers in operator-ready form.
+  - Curriculum mode: startup and closeout sequences aligned with `docs/MANUAL.md` and TASK routing discipline.
+  - Search mode: term lookup with specs-first priority, then broader docs scan.
+- Determinism:
+  - Specs listings are stable and sorted with `LC_ALL=C` order.
+  - Search output is deterministic for the current repository state.
+- Mutation policy:
+  - Read-only behavior.
+  - No tracked file writes.
 
-## Usage
-- `./ops/bin/help`
-- `./ops/bin/help dump`
-- `./ops/bin/help specs`
+## Failure States and Drift Triggers
+- Not running from repository root.
+- `git` missing on `PATH`.
+- `docs/` or `docs/ops/specs/` missing.
+- Unknown subcommand or too many arguments.
+- No matches for a search term.
+
+These failures are explicit and non-destructive.
+They indicate navigation drift, environment misconfiguration, or missing documentation surfaces.
+
+## Mechanics and Sequencing
+1. Validate runtime context (`git` present, repo root).
+2. Parse zero-or-one argument mode.
+3. Dispatch by mode:
+- `specs`: recursively discover spec markdown, group by category, print sorted list.
+- `doctrine`: surface Filing Doctrine, Axioms, Canon Surfaces, and read sequence pointers from PoT.
+- `curriculum`: print guided startup and closeout command paths tied to MANUAL and TASK contract behavior.
+- `<term>`: search specs first, then search remaining docs.
+- default: show menu and command index.
+4. Return zero on successful mode execution, non-zero on explicit failure paths.
+
+Pointer-first search contract:
+- Specs are queried before narrative docs.
+- When spec matches exist, they are shown first as authoritative behavior references.
+- Secondary docs scan excludes `docs/ops/specs` to reduce duplicate noise.
 
 ## Forensic Insight
-`ops/bin/help` is the Explanation System. Prioritizing spec documents ensures the Operator reaches the authoritative behavior definition before relying on narrative documentation.
+`ops/bin/help` keeps operational navigation inside the CLI boundary where execution happens.
+By combining doctrine, curriculum, and specs-first search, it lowers operator ambiguity and reduces drift between enforcement code and documentation interpretation.

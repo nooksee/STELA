@@ -1,42 +1,76 @@
 # Technical Specification: ops/lib/scripts/task.sh
 
-## Purpose
-Manage task draft harvest, promotion, and guardrail checks for task lifecycle workflows.
+## Constitutional Anchor
+`ops/lib/scripts/task.sh` governs task artifact lifecycle under a pointer-first model.
+It is the automation boundary for drafting, validating, and promoting reusable task instructions while preserving context hazard rules.
 
-## Invocation
-- Command forms:
+## Operator Contract
+- Invocation:
   - `ops/lib/scripts/task.sh harvest --id B-TASK-XX --name "..." --objective "..." [--dp "DP-OPS-XXXX"]`
   - `ops/lib/scripts/task.sh promote <draft_path> [--delete-draft]`
   - `ops/lib/scripts/task.sh check`
-- Required flags:
-  - `harvest` requires `--id`, `--name`, and non-placeholder objective and DP values (direct or inferred).
-- Expected exit behavior:
-  - `0` on successful command completion.
-  - Non-zero on missing inputs, invalid IDs, duplicates, or validation failures.
-
-## Inputs
-- Canon and registry files:
+- Required files:
   - `docs/library/TASKS.md`
   - `docs/ops/registry/TASKS.md`
   - `TASK.md`
   - `ops/lib/manifests/CONTEXT.md`
-- Task directories:
-  - `docs/library/tasks/`
-  - `storage/archives/tasks/`
-- Optional sourced provenance helper from `ops/lib/scripts/heuristics.sh`.
+- Key directories:
+  - Drafts: `storage/archives/tasks/`
+  - Canon tasks: `docs/library/tasks/`
+- Exit behavior:
+  - `0` on success.
+  - `1` on command/validation failure.
 
-## Outputs
-- `harvest`: writes redacted task draft under `storage/archives/tasks/` and appends candidate log in `docs/library/TASKS.md`.
-- `promote`: writes canon task file under `docs/library/tasks/`, upserts registry entry in `docs/ops/registry/TASKS.md`, and appends promotion log in `docs/library/TASKS.md`.
-- `check`: enforces context hazard rule and runs `tools/lint/task.sh`.
+Harvest contract:
+- Requires task ID format `B-TASK-[0-9]{2,}` and unique registry ID.
+- Requires non-placeholder objective and DP values.
+- Writes redacted draft file and appends Candidate Log entry in `docs/library/TASKS.md`.
 
-## Invariants and failure modes
-- Harvest task ID must match `B-TASK-[0-9]{2,}` and must not already exist in the registry.
-- Promotion validation enforces required sections, required fields, and final Closeout pointer in execution logic.
-- Context hazard rule forbids task references in `ops/lib/manifests/CONTEXT.md`.
-- Draft path ambiguity (same timestamp) is a hard failure unless explicit path is supplied.
+Promote contract:
+- Validates draft schema, required pointers, and final closeout step.
+- Rewrites `# Task Draft:` to `# Task:`.
+- Writes canon task file at `docs/library/tasks/<ID>.md`.
+- Upserts registry row in `docs/ops/registry/TASKS.md`.
+- Appends Promotion Log entry in `docs/library/TASKS.md`.
 
-## Related pointers
-- Registry entry: `docs/ops/registry/SCRIPTS.md` (`SCRIPT-05`).
-- Task registry: `docs/ops/registry/TASKS.md`.
-- TASK schema linter: `tools/lint/task.sh`.
+Check contract:
+- Fails if tasks are referenced in `ops/lib/manifests/CONTEXT.md`.
+- Runs `bash tools/lint/task.sh` for full schema validation.
+
+## Failure States and Drift Triggers
+- Missing required ledger/registry/manifest files.
+- Duplicate task ID in registry during harvest.
+- Placeholder or missing draft fields.
+- Invalid or missing required sections in draft.
+- Missing required pointers in draft (`PoT.md`, `docs/GOVERNANCE.md`, `TASK.md`).
+- Missing final Closeout pointer to `TASK.md` Section 4.
+- Ambiguous draft auto-selection when multiple drafts share same timestamp.
+- Registry insertion/update failure.
+- Context hazard detected during `check`.
+
+## Mechanics and Sequencing
+1. Parse command and validate required dependencies.
+2. `harvest` sequence:
+- Validate ID/name/objective/DP inputs.
+- Generate provenance block (from heuristics library when available).
+- Emit draft template with required sections.
+- Redact known secret token classes.
+- Append candidate log record.
+3. `promote` sequence:
+- Resolve draft path (explicit path or latest candidate).
+- Validate draft schema and closeout step.
+- Materialize canon task file and registry row.
+- Append promotion log record.
+- Optionally delete draft.
+4. `check` sequence:
+- Enforce context hazard exclusion.
+- Delegate deep validation to `tools/lint/task.sh`.
+
+Subsystem invariants:
+- Task lifecycle is append-log driven (`Candidate Log`, `Promotion Log`).
+- Registry is the authoritative index for task IDs and canonical paths.
+- Promotion never bypasses validation gates.
+
+## Forensic Insight
+The task lifecycle script is both a generator and a control surface.
+It narrows drift by forcing explicit provenance and closeout routing at draft time, then re-validating before promotion so canonical task instructions remain executable and audit-safe.

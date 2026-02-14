@@ -74,6 +74,7 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Linguistic Precision: Quantitative reporting required for deviations from protocol.
 - Generation Mandate: Verification outputs must be generated, not pre-filled or assumed.
 - Linguistic Precision: Absolute literalism; seek clarification for ambiguity before proceeding.
+- Relatability Mandate: Universal accessibility via vernacular optimization and anecdotal grounding.
 - Operational Directives: Anti-drift governance; logic or files misaligned with PoT.md are a system failure.
 - Operational Directives: Context hygiene; ops/lib/manifests/CONTEXT.md must exclude docs/library/agents, docs/library/tasks, and docs/library/skills.
 - Operational Directives: Logic conflict resolution; stop until the Operator redefines parameters if a task violates PoT.md.
@@ -153,11 +154,14 @@ When reporting, include:
 - Fixes are prioritized by impact, exploitability, and clarity.
 - We aim for coordinated, responsible disclosure.
 
-#### Known Issues and Future Improvements
-
 
 ## SoP.md
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
+
+## 2026-02-13 22:53:10 UTC — DP-OPS-0061 TASK Structure Hardening and PoW Integrity
+- Objective: Hardened the TASK closeout contract by removing legacy Thread Transition and Work Log sections, promoted `### 4.1 Mandatory Closing Block` as a numbered requirement, normalized TASK/spec DP heading levels to canonical schema (`##` for 3.x top-level, `###` for 3.x.y), replaced prune `--reset-task` Work Log gating with PoW Packet ID proof gating, updated closeout manual guidance for PoW-first reset sequencing, and added CI policing for PoW update plus append-only integrity.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`; `git status --porcelain=v1`; `git diff --name-only`; `git diff --stat`; `git diff --name-only --cached`; `git diff --stat --cached`; `git ls-files --others --exclude-standard`; `git diff -- tools/lint/dp.sh`; `git diff --cached -- tools/lint/dp.sh`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0061-RESULTS.md`.
+- Functional receipts: `./ops/bin/open --out=auto --dp=DP-OPS-0061`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0061-task-structure-hardening-2026-02-13-69f7b684.txt`; `rg -n '^- \\.github/workflows/pow_policing\\.yml$' ./storage/dumps/dump-platform-work-dp-ops-0061-task-structure-hardening-2026-02-13-69f7b684.manifest.txt`; `rg -n '^- tools/lint/dp\\.sh$' ./storage/dumps/dump-platform-work-dp-ops-0061-task-structure-hardening-2026-02-13-69f7b684.manifest.txt`; `./ops/bin/prune --dry-run --reset-task --dp=DP-OPS-0061` (reset gate validated after PoW Packet ID entry was written).
 
 ## 2026-02-13 19:41:30 UTC — DP-OPS-0060 TASK Template Archival and PoW Ledger
 - Objective: Added a root `PoW.md` proof ledger with strict entry schema, updated canon/manual/manifest wayfinding to include PoW, refactored `ops/bin/prune` for dual-ledger targeting plus deterministic dry-run and embedded TASK-template extraction, hardened truth lint for legacy terminology, and extended DP lint to validate Mandatory Closing Block fields for RESULTS artifacts.
@@ -205,12 +209,6 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Verification: bash tools/lint/context.sh; bash tools/lint/dp.sh --test; bash tools/lint/dp.sh TASK.md; bash tools/lint/style.sh; bash tools/lint/truth.sh; bash tools/verify.sh; ./ops/bin/map --check.
 - Functional receipts: ./ops/bin/prune --dp=DP-OPS-0050; ./ops/bin/llms; ./ops/bin/map --check; ./ops/bin/prune --dp=DP-OPS-0051 --scrub (captured in DP-OPS-0051-RESULTS.md).
 
-## 2026-02-12 00:02:54 UTC — DP-OPS-0050 Closeout Ledger Repair (Partial Closeout + Scrub Failure)
-- Objective: Repaired ledger continuity for DP-OPS-0050 by explicitly recording that the prior session closed verification gates but did not complete full routing closeout.
-- Verification (partial closeout receipts): bash tools/lint/context.sh; bash tools/lint/style.sh; bash tools/lint/truth.sh; bash tools/lint/dp.sh TASK.md; bash tools/verify.sh.
-- Deviations and anomalies: session began from a dirty tree under operator instruction; `./ops/bin/prune --dp=DP-OPS-0050 --scrub` was intentionally not run; TASK closeout state remained partial and required DP-OPS-0051 remediation.
-- Forensic cleanup command: `./ops/bin/prune --dp=DP-OPS-0050`.
-
 
 
 ## PoW.md
@@ -247,6 +245,47 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - `- Verification commands:`
 - `  - <command>`
 - `- Notes: <audit note>`
+
+## 2026-02-13 22:53:10 UTC — DP-OPS-0061 TASK Structure Hardening and PoW Integrity
+- Packet ID: DP-OPS-0061
+- Timestamp: 2026-02-13T22:53:10Z
+- Work Branch: work/dp-ops-0061-task-structure-hardening-2026-02-13
+- Base HEAD: 69f7b684
+- Scope: platform
+- Target Files allowlist:
+  - docs/ops/specs/surfaces/task.md
+  - tools/lint/dp.sh
+  - tools/lint/task.sh
+  - ops/bin/prune
+  - docs/MANUAL.md
+  - .github/workflows/pow_policing.yml
+  - TASK.md
+  - SoP.md
+  - PoW.md
+  - storage/dp/intake/DP-OPS-0061.md
+- Receipt pointers:
+  - RESULTS: storage/handoff/DP-OPS-0061-RESULTS.md
+  - OPEN: storage/handoff/OPEN-work-dp-ops-0061-task-structure-hardening-2026-02-13-69f7b684.txt
+  - DUMP: storage/dumps/dump-platform-work-dp-ops-0061-task-structure-hardening-2026-02-13-69f7b684.txt
+- Verification commands:
+  - bash tools/lint/context.sh
+  - bash tools/lint/style.sh
+  - bash tools/lint/truth.sh
+  - bash tools/lint/dp.sh --test
+  - bash tools/lint/dp.sh TASK.md
+  - bash tools/lint/task.sh
+  - bash tools/lint/llms.sh
+  - ./tools/verify.sh
+  - git status --porcelain=v1
+  - ./ops/bin/prune --dry-run --reset-task --dp=DP-OPS-0061
+  - git diff -- tools/lint/dp.sh
+  - git diff --cached -- tools/lint/dp.sh
+  - git diff --name-only --cached
+  - git diff --stat --cached
+  - git ls-files --others --exclude-standard
+  - git diff --name-only
+  - git diff --stat
+- Notes: Positive proof recorded for TASK schema hardening and PoW reset gate enforcement; negative proof was captured before PoW entry creation when reset-task correctly blocked on missing Packet ID, and a follow-up dry-run confirmed reset-task unblocks once `- Packet ID: DP-OPS-0061` exists. Canonical DP heading levels were normalized across TASK/spec surfaces, and RESULTS strict-field lint now allows exact path tokens needed for deterministic manifest enumeration. DP-OPS-0061 allowlist was amended to include `tools/lint/dp.sh`, with explicit file-diff and dump-manifest proof for that path. Dump manifest proof explicitly includes `.github/workflows/pow_policing.yml` after staging, and diff coverage includes working-tree, staged, and untracked views. Abandoned attempts to keep legacy Work Log continuity were intentionally rejected by contract and lint updates.
 
 ## 2026-02-13 19:41:30 UTC — DP-OPS-0060 TASK Template Archival and PoW Ledger
 - Packet ID: DP-OPS-0060
@@ -373,7 +412,7 @@ Input discipline (hard rule):
 
 ### DP-XXXX: (Template)
 
-### 3.1 Freshness Gate (Must Pass Before Work)
+## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
 Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
 Base HEAD: 0000000 (Must match session context output)
@@ -393,7 +432,7 @@ STOP conditions:
 - STOP if working tree is dirty before execution begins.
 - STOP if told to create or switch branches.
 
-### 3.1.1 DP Preflight Gate (Run Before Any Edits)
+## 3.1.1 DP Preflight Gate (Run Before Any Edits)
 Purpose:
 - Catch malformed DP or TASK schema before work begins.
 
@@ -404,9 +443,9 @@ Worker runs (paste outcome in RESULTS):
 
 STOP if any preflight check fails.
 
-### 3.2 Required Context Load (Read Before Doing Anything)
+## 3.2 Required Context Load (Read Before Doing Anything)
 
-#### 3.2.1 Canon load order (always)
+### 3.2.1 Canon load order (always)
 Worker must confirm loaded before edits begin:
 1. PoT.md
 2. SoP.md
@@ -422,7 +461,7 @@ Notes:
 - DP writer must not attach or cite disposable artifacts.
 - DP writer must not embed pasted bundles.
 
-#### 3.2.2 DP-scoped load order (per DP)
+### 3.2.2 DP-scoped load order (per DP)
 - tools/lint/dp.sh
 - tools/lint/task.sh
 - ops/bin/prune
@@ -430,7 +469,7 @@ Notes:
 - docs/ops/specs/binaries/prune.md
 - docs/ops/specs/binaries/open.md (pointer reference only; OPEN behavior is not modified in this DP)
 
-### 3.3 Scope and Safety
+## 3.3 Scope and Safety
 Objective: Populate during execution; do not pre-fill in TASK.md.
 In scope: Populate during execution; do not pre-fill in TASK.md.
 Out of scope: Populate during execution; do not pre-fill in TASK.md.
@@ -439,21 +478,21 @@ Safety and invariants: Populate during execution; do not pre-fill in TASK.md.
 Target Files allowlist (hard gate):
 - Populate during execution; do not pre-fill in TASK.md.
 
-### 3.4 Execution Plan (A–E)
+## 3.4 Execution Plan (A–E)
 
-#### 3.4.1 State
+### 3.4.1 State
 Populate during execution; do not pre-fill in TASK.md.
 
-#### 3.4.2 Request
+### 3.4.2 Request
 Populate during execution; do not pre-fill in TASK.md.
 
-#### 3.4.3 Changelog
+### 3.4.3 Changelog
 Populate during execution; do not pre-fill in TASK.md.
 
-#### 3.4.4 Patch / Diff
+### 3.4.4 Patch / Diff
 Populate during execution; do not pre-fill in TASK.md.
 
-#### 3.4.5 Receipt (Proofs to collect) — MUST RUN
+### 3.4.5 Receipt (Proofs to collect) — MUST RUN
 - ./ops/bin/open --out=auto --dp="DP-OPS-XXXX"
 - ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
 - Zero-byte check: test -s <dump_payload_path>
@@ -478,10 +517,10 @@ Populate during execution; do not pre-fill in TASK.md.
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
 - Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-XXXX --scrub.
-- Use ./ops/bin/prune --reset-task only for explicit TASK baseline reset after Work Log clear.
+- Use ./ops/bin/prune --reset-task only for explicit TASK baseline reset after PoW entry exists for the active DP id.
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
-Mandatory Closing Block
+### 4.1 Mandatory Closing Block
 Primary Commit Header (plaintext)
 
 Pull Request Title (plaintext)
@@ -493,14 +532,6 @@ Final Squash Stub (plaintext) (Must differ from #1)
 Extended Technical Manifest (plaintext)
 
 Review Conversation Starter (markdown)
-
-## 4.1 Thread Transition
-- Append a THREAD END entry to the Work Log at completion.
-- Reset Work Log to "(No active thread)" before running prune scrub.
-- Execute scrub only after receipts and SoP logging are complete.
-
-## 5. Work Log
-(No active thread)
 
 
 ## docs/MAP.md
