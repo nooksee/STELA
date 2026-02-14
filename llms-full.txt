@@ -158,6 +158,11 @@ When reporting, include:
 ## SoP.md
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-14 04:18:34 UTC — DP-OPS-0062 Documentation Fortification and Help Doctrine Routing
+- Objective: Completed DP-OPS-0062 closeout logging by recording the canon-impacting documentation and help-system changes that shipped on this branch, including SCRIPT-04 registry drift correction, new synthesize and ledger surface specifications, critical spec deep-explanation expansions, help doctrine and curriculum routing, and llms bundle parity refresh.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`; `./ops/bin/map`; `./ops/bin/llms`; `./ops/bin/help`; `./ops/bin/help specs`; `./ops/bin/help doctrine`; `./ops/bin/help curriculum`; `./ops/bin/prune --dry-run`; `./ops/bin/prune --target=pow --dry-run`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0062-RESULTS.md`; `git diff --name-only`; `git diff --stat`.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0062"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0062-documentation-fortification-2026-02-13-124b6cc8.txt`.
+
 ## 2026-02-13 22:53:10 UTC — DP-OPS-0061 TASK Structure Hardening and PoW Integrity
 - Objective: Hardened the TASK closeout contract by removing legacy Thread Transition and Work Log sections, promoted `### 4.1 Mandatory Closing Block` as a numbered requirement, normalized TASK/spec DP heading levels to canonical schema (`##` for 3.x top-level, `###` for 3.x.y), replaced prune `--reset-task` Work Log gating with PoW Packet ID proof gating, updated closeout manual guidance for PoW-first reset sequencing, and added CI policing for PoW update plus append-only integrity.
 - Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`; `git status --porcelain=v1`; `git diff --name-only`; `git diff --stat`; `git diff --name-only --cached`; `git diff --stat --cached`; `git ls-files --others --exclude-standard`; `git diff -- tools/lint/dp.sh`; `git diff --cached -- tools/lint/dp.sh`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0061-RESULTS.md`.
@@ -204,11 +209,6 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `bash tools/verify.sh`; `./ops/bin/map --check`.
 - Functional receipts: `./ops/bin/open --intent="DP-OPS-0054 read-only verification" --dp="DP-OPS-0054"` (confirmed `OPEN_READ_ONLY_OK` with unchanged `git status --porcelain`); `./ops/bin/map`; `./ops/bin/llms --out-dir="$(pwd)"`.
 
-## 2026-02-12 00:07:59 UTC — DP-OPS-0051 System Remediation and Pointer-First TASK Dashboard
-- Objective: Eliminated TASK.md ghost-canon drift vectors by switching the Freshness Gate to pointer-first governance, aligned TASK lint enforcement in tools/lint/dp.sh, updated ops/bin/prune scrub behavior to strip legacy static blocks, repaired DP-OPS-0050 ledger continuity, and refreshed llms bundles after governance-surface edits.
-- Verification: bash tools/lint/context.sh; bash tools/lint/dp.sh --test; bash tools/lint/dp.sh TASK.md; bash tools/lint/style.sh; bash tools/lint/truth.sh; bash tools/verify.sh; ./ops/bin/map --check.
-- Functional receipts: ./ops/bin/prune --dp=DP-OPS-0050; ./ops/bin/llms; ./ops/bin/map --check; ./ops/bin/prune --dp=DP-OPS-0051 --scrub (captured in DP-OPS-0051-RESULTS.md).
-
 
 
 ## PoW.md
@@ -245,6 +245,55 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - `- Verification commands:`
 - `  - <command>`
 - `- Notes: <audit note>`
+
+## 2026-02-14 04:18:34 UTC — DP-OPS-0062 Documentation Fortification and Help Doctrine Routing
+- Packet ID: DP-OPS-0062
+- Timestamp: 2026-02-14T04:18:34Z
+- Work Branch: work/dp-ops-0062-documentation-fortification-2026-02-13
+- Base HEAD: 124b6cc8
+- Scope: platform
+- Target Files allowlist:
+  - docs/ops/registry/SCRIPTS.md
+  - docs/ops/specs/scripts/synthesize.md
+  - docs/ops/specs/surfaces/pow.md
+  - docs/ops/specs/surfaces/sop.md
+  - docs/ops/specs/binaries/help.md
+  - ops/bin/help
+  - docs/ops/specs/binaries/open.md
+  - docs/ops/specs/binaries/prune.md
+  - docs/ops/specs/tools/verify.md
+  - docs/ops/specs/tools/lint/task.md
+  - docs/ops/specs/scripts/task.md
+  - llms.txt
+  - llms-core.txt
+  - llms-full.txt
+  - SoP.md
+  - PoW.md
+- Receipt pointers:
+  - RESULTS: storage/handoff/DP-OPS-0062-RESULTS.md
+  - OPEN: storage/handoff/OPEN-work-dp-ops-0062-documentation-fortification-2026-02-13-124b6cc8.txt
+  - DUMP: storage/dumps/dump-platform-work-dp-ops-0062-documentation-fortification-2026-02-13-124b6cc8.txt
+- Verification commands:
+  - bash tools/lint/context.sh
+  - bash tools/lint/style.sh
+  - bash tools/lint/truth.sh
+  - bash tools/lint/dp.sh --test
+  - bash tools/lint/dp.sh TASK.md
+  - bash tools/lint/task.sh
+  - bash tools/lint/llms.sh
+  - ./tools/verify.sh
+  - ./ops/bin/map
+  - ./ops/bin/llms
+  - ./ops/bin/help
+  - ./ops/bin/help specs
+  - ./ops/bin/help doctrine
+  - ./ops/bin/help curriculum
+  - ./ops/bin/prune --dry-run
+  - ./ops/bin/prune --target=pow --dry-run
+  - bash tools/lint/dp.sh storage/handoff/DP-OPS-0062-RESULTS.md
+  - git diff --name-only
+  - git diff --stat
+- Notes: Positive proof confirms documentation fortification and help doctrine routing for DP-OPS-0062 with reproducible receipts and parity refresh. Negative proof recorded that CI policing failed before this ledger update because code-bearing and canon surfaces were changed without corresponding PoW and SoP entries; this entry resolves that drift.
 
 ## 2026-02-13 22:53:10 UTC — DP-OPS-0061 TASK Structure Hardening and PoW Integrity
 - Packet ID: DP-OPS-0061
