@@ -26,9 +26,9 @@
 3. Update documentation within the allowlist and align references to `docs/MANUAL.md` and `docs/MAP.md`.
 4. Run `bash tools/lint/style.sh` and stop if it fails.
 5. Record updated documents and verification outcomes in RESULTS.
-6. Complete Closeout per `TASK.md` Section 4.
+6. Complete Closeout per `TASK.md` Section 3.5.
 
 ## Scope Boundary
-- **Allowed:** Update documentation files within the DP allowlist and perform Closeout duties per `TASK.md` Section 4.
+- **Allowed:** Update documentation files within the DP allowlist and perform Closeout duties per `TASK.md` Section 3.5.
 - **Forbidden:** Do not edit files outside the allowlist or skip lint checks.
 - **Stop Conditions:** Stop if any required command fails or if required inputs are missing.

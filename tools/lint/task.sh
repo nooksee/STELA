@@ -133,8 +133,8 @@ check_task_dashboard() {
     "### 3.4.3 Changelog (Planned edits)"
     "### 3.4.4 Patch / Diff (Implementation details)"
     "### 3.4.5 Receipt (Proofs to collect) — MUST RUN"
-    "## 4. Closeout (Mandatory)"
-    "### 4.1 Mandatory Closing Block"
+    "## 3.5 Closeout (Mandatory Routing)"
+    "### 3.5.1 Mandatory Closing Block"
   )
 
   local -a patterns=(
@@ -153,8 +153,8 @@ check_task_dashboard() {
     '^###[[:space:]]*3\\.4\\.3[.)]?[[:space:]]*CHANGELOG'
     '^###[[:space:]]*3\\.4\\.4[.)]?[[:space:]]*PATCH'
     '^###[[:space:]]*3\\.4\\.5[.)]?[[:space:]]*RECEIPT'
-    '^##[[:space:]]*4\\.[[:space:]]*CLOSEOUT'
-    '^###[[:space:]]*4\\.1[.)]?[[:space:]]*MANDATORY CLOSING BLOCK'
+    '^##[[:space:]]*3\\.5[.)]?[[:space:]]*CLOSEOUT'
+    '^###[[:space:]]*3\\.5\\.1[.)]?[[:space:]]*MANDATORY CLOSING BLOCK'
   )
 
   local -a heading_lines=()
@@ -268,7 +268,7 @@ check_task_dashboard() {
   fi
 
   local receipt_block
-  receipt_block="$(extract_block "$path" '^### 3[.]4[.]5' '^## 4[.]')"
+  receipt_block="$(extract_block "$path" '^### 3[.]4[.]5' '^## 3[.]5([.]|[[:space:]])')"
   if ! grep -Eq '\./ops/bin/open[[:space:]]+--out=auto[[:space:]]+--dp=' <<< "$receipt_block"; then
     fail "TASK receipt contract missing executable OPEN command"
   fi
@@ -281,6 +281,9 @@ check_task_dashboard() {
   if ! grep -Fq 'git diff --stat' <<< "$receipt_block"; then
     fail "TASK receipt contract missing git diff --stat proof"
   fi
+  if ! grep -Fq 'Verify Section 3.5 Closing Block is populated in RESULTS' <<< "$receipt_block"; then
+    fail "TASK receipt contract missing Section 3.5 Closing Block verification line"
+  fi
   if ! grep -iq 'required pasted outputs' <<< "$receipt_block" \
     && ! grep -iq 'paste outputs' <<< "$receipt_block"; then
     fail "TASK receipt contract missing required pasted outputs clause"
@@ -290,8 +293,8 @@ check_task_dashboard() {
     fail "TASK receipt contract missing Mandatory Closing Block requirement"
   fi
 
-  if ! grep -nE '^###[[:space:]]*4\.1[.)]?[[:space:]]*Mandatory[[:space:]]+Closing[[:space:]]+Block[[:space:]]*$' "$path" >/dev/null; then
-    fail "TASK closeout block missing heading '### 4.1 Mandatory Closing Block'"
+  if ! grep -nE '^###[[:space:]]*3\.5\.1[.)]?[[:space:]]*Mandatory[[:space:]]+Closing[[:space:]]+Block[[:space:]]*$' "$path" >/dev/null; then
+    fail "TASK closeout block missing heading '### 3.5.1 Mandatory Closing Block'"
   fi
 
   local -a closing_labels=(
@@ -501,8 +504,8 @@ if compgen -G "${TASKS_DIR}/*.md" > /dev/null; then
     if [[ -z "$last_step" ]]; then
       fail "${task_name} has no numbered steps in Execution Logic"
     else
-      if ! grep -q "Closeout" <<< "$last_step" || ! grep -q "TASK.md" <<< "$last_step" || ! grep -qi "Section 4" <<< "$last_step"; then
-        fail "${task_name} missing final Closeout pointer in Execution Logic (TASK.md Section 4)"
+      if ! grep -q "Closeout" <<< "$last_step" || ! grep -q "TASK.md" <<< "$last_step" || ! grep -qi "Section 3.5" <<< "$last_step"; then
+        fail "${task_name} missing final Closeout pointer in Execution Logic (TASK.md Section 3.5)"
       fi
     fi
   done

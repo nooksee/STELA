@@ -155,10 +155,11 @@ Populate during execution; do not pre-fill in TASK.md.
 - bash tools/lint/dp.sh storage/handoff/DP-OPS-XXXX-RESULTS.md
 - git diff --name-only
 - git diff --stat
+- Verify Section 3.5 Closing Block is populated in RESULTS.
 - Required pasted outputs: receipts, verification outcomes, and diff output.
 - Mandatory Closing Block required in RESULTS.
 
-## 4. Closeout
+## 3.5 Closeout (Mandatory Routing)
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
@@ -166,7 +167,7 @@ Populate during execution; do not pre-fill in TASK.md.
 - Use ./ops/bin/prune --reset-task only for explicit TASK baseline reset after PoW entry exists for the active DP id.
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
-### 4.1 Mandatory Closing Block
+### 3.5.1 Mandatory Closing Block
 Primary Commit Header (plaintext)
 
 Pull Request Title (plaintext)

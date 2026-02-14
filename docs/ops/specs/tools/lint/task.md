@@ -45,7 +45,7 @@ Task library failures:
 - Pointer tokens that resolve to missing files or forbidden path classes.
 - Missing referenced agent or skill files.
 - Execution steps with ambiguous narrative verbs and no explicit pointer evidence.
-- Final execution step missing Closeout pointer to `TASK.md` Section 4.
+- Final execution step missing Closeout pointer to `TASK.md` Section 3.5.
 
 ## Mechanics and Sequencing
 1. Resolve repo root and required registry/task directories.
