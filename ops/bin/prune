@@ -89,51 +89,6 @@ ensure_results_artifacts_committed_and_clean() {
   done
 }
 
-ensure_task_work_log_clear() {
-  if [[ ! -f "${TASK_FILE}" ]]; then
-    die "TASK.md not found at ${TASK_FILE}"
-  fi
-
-  local marker="(No active thread)"
-  local issue
-  local rc
-
-  if issue="$(awk -v marker="$marker" '
-    BEGIN { in_log=0; found=0 }
-    /^## 5\. Work Log/ { in_log=1; next }
-    {
-      if (!in_log) { next }
-      if ($0 ~ /^[[:space:]]*$/) { next }
-      if (!found && $0 == marker) { found=1; next }
-      print $0
-      exit 1
-    }
-    END {
-      if (!in_log) { exit 2 }
-      if (!found) { exit 3 }
-    }
-  ' "${TASK_FILE}")"; then
-    return 0
-  else
-    rc=$?
-  fi
-
-  case "$rc" in
-    1)
-      die "TASK.md Work Log is not reset. Closeout Cycle Step 4 (Log) must migrate the Work Log and reset Section 5 before --reset-task. First non-empty entry: ${issue}"
-      ;;
-    2)
-      die "TASK.md Work Log section missing. Closeout Cycle Step 4 (Log) must reset Section 5 before --reset-task."
-      ;;
-    3)
-      die "TASK.md Work Log missing baseline marker: ${marker}. Closeout Cycle Step 4 (Log) must reset Section 5 before --reset-task."
-      ;;
-    *)
-      die "TASK.md Work Log check failed. Closeout Cycle Step 4 (Log) must reset Section 5 before --reset-task."
-      ;;
-  esac
-}
-
 extract_task_template() {
   local out_path="$1"
   awk '
@@ -444,14 +399,41 @@ detect_task_dp_id() {
   awk '
     $0 ~ /^## 3\. Current Dispatch Packet \(DP\)/ { in_dp=1; next }
     in_dp && /^## / { exit }
-    in_dp && /^### DP-/ {
+    in_dp && /^### / {
       line=$0
-      sub(/^### /, "", line)
-      sub(/:.*/, "", line)
-      print line
-      exit
+      sub(/^###[[:space:]]+/, "", line)
+      if (match(line, /DP-[A-Z]+-[0-9]{4,}|DP-XXXX/)) {
+        print substr(line, RSTART, RLENGTH)
+        exit
+      }
     }
   ' "${TASK_FILE}"
+}
+
+ensure_pow_entry_exists() {
+  if [[ ! -f "${POW_FILE}" ]]; then
+    die "PoW.md not found at ${POW_FILE}"
+  fi
+
+  local dp_id
+  dp_id="${DP_TARGET:-}"
+  if [[ -z "$dp_id" ]]; then
+    dp_id="$(detect_task_dp_id)"
+  fi
+
+  if [[ -z "$dp_id" ]]; then
+    die "--reset-task blocked: active DP id not found in TASK.md. Provide --dp=DP-OPS-XXXX or set an active DP heading in TASK Section 3."
+  fi
+  if [[ "$dp_id" == "DP-XXXX" ]]; then
+    die "--reset-task blocked: active DP id is template placeholder '${dp_id}'. Provide --dp=DP-OPS-XXXX and record PoW first."
+  fi
+  if [[ ! "$dp_id" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]]; then
+    die "--reset-task blocked: invalid active DP id '${dp_id}'. Expected DP-<AREA>-<####>."
+  fi
+
+  if ! grep -Fq -- "- Packet ID: ${dp_id}" "${POW_FILE}"; then
+    die "--reset-task blocked: PoW.md missing '- Packet ID: ${dp_id}'. Update PoW for the active DP id before reset-task."
+  fi
 }
 
 cleanup_handoff() {
@@ -631,7 +613,7 @@ else
 fi
 
 if (( RESET_TASK )); then
-  ensure_task_work_log_clear
+  ensure_pow_entry_exists
   reset_task_from_template
 fi
 

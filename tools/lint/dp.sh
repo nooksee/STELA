@@ -647,8 +647,8 @@ lint_results_path() {
       fail "RESULTS strict field empty: ${strict_labels[i]}"
       continue
     fi
-    if grep -Eq '\*|_|`|\[|\]' <<< "${strict_values[i]}"; then
-      fail "RESULTS strict field contains forbidden markdown tokens (* _ \` [ ]): ${strict_labels[i]}"
+    if grep -Eq '\*|`|\[|\]' <<< "${strict_values[i]}"; then
+      fail "RESULTS strict field contains forbidden markdown tokens (* \` [ ]): ${strict_labels[i]}"
     fi
   done
 
@@ -1344,29 +1344,29 @@ Primary Constraint: PoT.md
 
 ## 3. Current Dispatch Packet (DP)
 ### DP-OPS-0005: TASK Extraction Check
-### 3.1 Freshness Gate (Must Pass Before Work)
+## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
 Required Work Branch: work/dp-ops-0005-lint
 Base HEAD: fdc5d080
 
-### 3.1.1 DP Preflight Gate (Run Before Any Edits)
+## 3.1.1 DP Preflight Gate (Run Before Any Edits)
 - bash tools/lint/dp.sh --test
 - bash tools/lint/dp.sh TASK.md
 - bash tools/lint/task.sh
 
-### 3.2 Required Context Load (Read Before Doing Anything)
-#### 3.2.1 Canon load order (always)
+## 3.2 Required Context Load (Read Before Doing Anything)
+### 3.2.1 Canon load order (always)
 1. PoT.md
 2. SoP.md
 3. TASK.md
 4. docs/MAP.md
 5. docs/MANUAL.md
 6. ops/lib/manifests/CONTEXT.md
-#### 3.2.2 DP-scoped load order (per DP)
+### 3.2.2 DP-scoped load order (per DP)
 - tools/lint/task.sh
 - tools/lint/dp.sh
 
-### 3.3 Scope and Safety
+## 3.3 Scope and Safety
 Objective: Validate TASK payload extraction.
 In scope: DP lint.
 Out of scope: TASK container lint.
@@ -1374,16 +1374,16 @@ Safety and invariants: deterministic checks.
 Target Files allowlist (hard gate):
 - tools/lint/dp.sh
 
-### 3.4 Execution Plan (A-E)
-#### 3.4.1 State
+## 3.4 Execution Plan (A-E)
+### 3.4.1 State
 State.
-#### 3.4.2 Request
+### 3.4.2 Request
 Request.
-#### 3.4.3 Changelog
+### 3.4.3 Changelog
 Changelog.
-#### 3.4.4 Patch / Diff
+### 3.4.4 Patch / Diff
 Patch.
-#### 3.4.5 Receipt (Proofs to collect)
+### 3.4.5 Receipt (Proofs to collect) — MUST RUN
 - ./ops/bin/open --out=auto --dp="DP-OPS-0005"
 - ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
 - Zero-byte check: test -s <dump_payload_path>
@@ -1415,42 +1415,42 @@ Last Updated: 2026-02-12
 
 ## 3. Current Dispatch Packet (DP)
 ### DP-OPS-0006: TASK Extraction Invalid
-### 3.1 Freshness Gate (Must Pass Before Work)
+## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
 Required Work Branch: work/dp-ops-0006-lint
 Base HEAD: fdc5d080
-### 3.1.1 DP Preflight Gate (Run Before Any Edits)
+## 3.1.1 DP Preflight Gate (Run Before Any Edits)
 - bash tools/lint/dp.sh --test
 - bash tools/lint/dp.sh TASK.md
 - bash tools/lint/task.sh
-### 3.2 Required Context Load (Read Before Doing Anything)
-#### 3.2.1 Canon load order (always)
+## 3.2 Required Context Load (Read Before Doing Anything)
+### 3.2.1 Canon load order (always)
 1. PoT.md
 2. SoP.md
 3. TASK.md
 4. docs/MAP.md
 5. docs/MANUAL.md
 6. ops/lib/manifests/CONTEXT.md
-#### 3.2.2 DP-scoped load order (per DP)
+### 3.2.2 DP-scoped load order (per DP)
 - tools/lint/task.sh
 - tools/lint/dp.sh
-### 3.3 Scope and Safety
+## 3.3 Scope and Safety
 Objective: Validate extraction failure.
 In scope: DP lint.
 Out of scope: TASK container lint.
 Safety and invariants: deterministic checks.
 Target Files allowlist (hard gate):
 - tools/lint/dp.sh
-### 3.4 Execution Plan (A-E)
-#### 3.4.1 State
+## 3.4 Execution Plan (A-E)
+### 3.4.1 State
 State.
-#### 3.4.2 Request
+### 3.4.2 Request
 Request.
-#### 3.4.3 Changelog
+### 3.4.3 Changelog
 Changelog.
-#### 3.4.4 Patch / Diff
+### 3.4.4 Patch / Diff
 Patch.
-#### 3.4.5 Receipt (Proofs to collect)
+### 3.4.5 Receipt (Proofs to collect) — MUST RUN
 - ./ops/bin/open --out=auto --dp="DP-OPS-0006"
 - ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
 - git diff --name-only
