@@ -9,6 +9,9 @@ SYNTH_HAZARD_BLACKLIST=(
   "docs/library/agents"
   "docs/library/tasks"
   "docs/library/skills"
+  "opt/_library/agents"
+  "opt/_library/tasks"
+  "opt/_library/skills"
 )
 declare -a SYNTH_RESOLVED_PATHS=()
 declare -A SYNTH_SEEN_FILES=()
@@ -70,26 +73,8 @@ resolve_manifest_entry() {
     return 0
   fi
 
-  local -a matches=()
   if synth_has_glob "$entry"; then
-    mapfile -t matches < <(
-      cd "$SYNTH_REPO_ROOT" &&
-        shopt -s globstar nullglob &&
-        compgen -G "$entry" || true
-    )
-
-    if (( ${#matches[@]} == 0 )); then
-      synth_die "manifest glob matched no files: ${entry}"
-    fi
-
-    local rel
-    for rel in "${matches[@]}"; do
-      rel="${rel#./}"
-      if [[ -f "${SYNTH_REPO_ROOT}/${rel}" ]]; then
-        printf '%s\n' "$rel"
-      fi
-    done
-    return 0
+    synth_die "manifest glob not allowed at runtime: ${entry}. Run ops/bin/compile."
   fi
 
   if [[ ! -f "${SYNTH_REPO_ROOT}/${entry}" ]]; then

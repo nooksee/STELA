@@ -27,6 +27,7 @@ forbidden_legacy_phrases=(
 # We now scan ops/ and the root Canon files, which were previously ignored.
 scan_dirs=(
   "docs"
+  "opt"
   "tools"
   ".github"
   "ops"

@@ -34,6 +34,7 @@ warn() {
 required_dirs=(
   "ops"
   "docs"
+  "opt"
   "tools"
   "projects"
   ".github"
@@ -74,17 +75,24 @@ done
 if ! command -v file >/dev/null 2>&1; then
   fail "Missing dependency: file (required for binary checks)"
 else
-  doc_binaries=()
+  docs_opt_binaries=()
   while IFS= read -r -d '' doc_path; do
     encoding="$(file -b --mime-encoding "$doc_path")"
     if [[ "$encoding" == "binary" ]]; then
-      doc_binaries+=("$doc_path")
+      docs_opt_binaries+=("$doc_path")
     fi
-  done < <(find docs -type f -print0)
+  done < <(find docs opt -type f -print0)
 
-  if (( ${#doc_binaries[@]} > 0 )); then
-    for doc_path in "${doc_binaries[@]}"; do
-      fail "Filing Doctrine violation: binary file in docs/: $doc_path"
+  if (( ${#docs_opt_binaries[@]} > 0 )); then
+    for doc_path in "${docs_opt_binaries[@]}"; do
+      case "$doc_path" in
+        docs/*)
+          fail "Filing Doctrine violation: binary file in docs/: $doc_path"
+          ;;
+        opt/*)
+          fail "Filing Doctrine violation: binary file in opt/: $doc_path"
+          ;;
+      esac
     done
   fi
 fi
@@ -97,6 +105,17 @@ done < <(find docs -type f ! -name '*.md' -print0)
 if (( ${#doc_non_markdown[@]} > 0 )); then
   for doc_path in "${doc_non_markdown[@]}"; do
     fail "Filing Doctrine violation: non-markdown file in docs/: $doc_path"
+  done
+fi
+
+opt_non_markdown=()
+while IFS= read -r -d '' opt_path; do
+  opt_non_markdown+=("$opt_path")
+done < <(find opt -type f ! -name '*.md' -print0)
+
+if (( ${#opt_non_markdown[@]} > 0 )); then
+  for opt_path in "${opt_non_markdown[@]}"; do
+    fail "Filing Doctrine violation: non-markdown file in opt/: $opt_path"
   done
 fi
 

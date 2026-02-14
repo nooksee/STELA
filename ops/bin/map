@@ -65,7 +65,8 @@ emit_directory_index() {
 - ops/ - Run (binaries, manifests, automation).
 - tools/ - Lints and verification tooling.
 - docs/ - Manuals, specs, and governance surfaces.
-- storage/ - Local artifacts and archives (untracked).
+- opt/ - Isolated library surfaces (JIT-only, excluded from global context).
+- storage/ - Local artifacts and archives.
 EOF
 }
 

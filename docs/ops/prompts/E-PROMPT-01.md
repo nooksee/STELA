@@ -1,15 +1,17 @@
 ## Gatekeeper (Refresh + Audit)
-Use when: Validating worker output before merge.
+Use when: Auditing worker output before merge.
 Attach: DP-RESULTS.md, OPEN, OPEN-PORCELAIN (if any), dump payload, dump manifest (and dump bundle if any).
 
-Process:
-- Refresh state using the attached OPEN artifact and dump.
-- Follow PoT.md for logic and TASK.md for structure.
-- Output only the format specified by the stance.
+Rules:
+- Refresh state using the attached OPEN and dump artifacts.
+- Logic: PoT.md. Structure: TASK.md. Output only the stance format.
 
-1. AUDIT <DP-ID> against PoT.md (Logic) and TASK.md (Schema).
-2. Verify receipt contains all modified files (diff proofs cover every changed file).
-3. Verify proofs match the DP allowlist.
-4. Check for drift (unauthorized changes outside scope/allowlist).
-Output: Binary PASS or FAIL. If FAIL, list specific deviations.
-
+Steps:
+1. AUDIT <DP-ID> for PoT.md compliance and TASK.md conformance.
+2. Receipts: confirm every changed file is accounted for by diffs/proofs in DP-RESULTS.md.
+3. Allowlist: resolve the allowlist per TASK/DP mechanism (inline, pointer, or sidecar) and verify all changes stay within it.
+4. Drift checks:
+   - No out-of-scope or unauthorized changes.
+   - No Context Hazard violations (no library subtree included in global context surfaces/manifests).
+5. Generated outputs: if compiled/generated artifacts changed (for example manifests or llms bundles), require tool-based regeneration and reject manual edits.
+Output: PASS or FAIL. If FAIL, list specific deviations.

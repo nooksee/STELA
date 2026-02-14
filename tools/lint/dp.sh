@@ -9,6 +9,7 @@ USAGE
 
 failures=0
 declare -a normalized_allowlist=()
+ALLOWLIST_POINTER_PATH="storage/dp/active/allowlist.txt"
 
 fail() {
   echo "FAIL: $*" >&2
@@ -423,6 +424,27 @@ extract_allowlist_entries() {
   ' "$path"
 }
 
+load_allowlist_pointer_file() {
+  local pointer_path="$1"
+  local normalized_pointer="$pointer_path"
+
+  normalized_pointer="${normalized_pointer#./}"
+  if [[ ! -f "$normalized_pointer" ]]; then
+    fail "Target Files allowlist pointer missing file: ${normalized_pointer}"
+    return 1
+  fi
+
+  local -a loaded=()
+  mapfile -t loaded < <(awk 'NF { print }' "$normalized_pointer")
+  if (( ${#loaded[@]} == 0 )); then
+    fail "Target Files allowlist pointer file is empty: ${normalized_pointer}"
+    return 1
+  fi
+
+  normalized_allowlist=("${loaded[@]}")
+  return 0
+}
+
 allowlist_contains() {
   local needle="$1"
   local listed
@@ -439,11 +461,25 @@ allowlist_contains() {
 check_allowlist() {
   local path="$1"
   local template_mode="$2"
-  mapfile -t normalized_allowlist < <(extract_allowlist_entries "$path")
+  local -a inline_allowlist=()
+  mapfile -t inline_allowlist < <(extract_allowlist_entries "$path")
 
-  if (( ${#normalized_allowlist[@]} == 0 )); then
+  if (( ${#inline_allowlist[@]} == 0 )); then
     fail "Target Files allowlist missing or empty"
     return
+  fi
+
+  normalized_allowlist=("${inline_allowlist[@]}")
+
+  if (( ${#inline_allowlist[@]} == 1 )); then
+    local pointer_entry
+    pointer_entry="$(trim "$(strip_backticks "${inline_allowlist[0]}")")"
+    pointer_entry="${pointer_entry#./}"
+    if [[ "$pointer_entry" == "$ALLOWLIST_POINTER_PATH" ]]; then
+      if ! load_allowlist_pointer_file "$pointer_entry"; then
+        return
+      fi
+    fi
   fi
 
   local concrete=0

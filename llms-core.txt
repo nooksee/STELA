@@ -11,6 +11,7 @@ PoT is the single constitutional document for Stela governance.
 Filing:
 - `ops/` = Run (binaries, manifests, automation).
 - `docs/` = Explain (manuals and rationale).
+- `opt/` = Isolate (JIT-only library content excluded from global context).
 - `projects/` = Work (payload code).
 - `storage/` = Trash (local artifacts, never canon).
 
@@ -18,7 +19,7 @@ Filing:
 - Precedence: PoT is final authority; if conflict exists, stop and ask.
 - SSOT: one canonical file per domain; other mentions are pointers.
 - Reuse-first: search `ops/` for an existing template before creating a new artifact.
-- Context Hazard: any inclusion of `docs/library/agents`, `docs/library/tasks`, or `docs/library/skills` in the global context manifest is a failure.
+- Context Hazard: any inclusion of `opt/_library/agents`, `opt/_library/tasks`, or `opt/_library/skills` in the global context manifest is a failure.
 - Drift: any divergence between canon and repository state, or duplication of canon outside SSOT, is a failure state that requires stop and correction.
 - Routing Closeout; failure is a system failure state.
 - SoP: history ledger only; no permanent rules live there.
@@ -54,12 +55,12 @@ System Failure States (Drift Triggers):
 | Failure Type | Definition | System Response |
 | :---- | :---- | :---- |
 | **Canon Drift** | Divergence between `PoT.md` and repo state. | **STOP WORK.** Reject PR. |
-| **Context Hazard** | Including `library/` docs in `CONTEXT.md`. | **STOP WORK.** Automated lint failure. |
+| **Context Hazard** | Including `opt/_library/` docs in `CONTEXT.md`. | **STOP WORK.** Automated lint failure. |
 | **Dirty State** | Uncommitted changes in `main`. | **STOP WORK.** Worker complaint/halt. |
 | **Ambiguity** | Instructions capable of multiple interpretations. | **STOP WORK.** Request clarification. |
 
 ## 3. Jurisdiction
-Scope: `ops/`, `docs/`, `projects/`, `tools/`, `.github/`, and root governance surfaces.
+Scope: `ops/`, `docs/`, `opt/`, `projects/`, `tools/`, `.github/`, and root governance surfaces.
 Law: PoT is the sole authority across all scopes. No parallel jurisdictions exist.
 
 ## 4. Staffing & Logic
@@ -76,7 +77,7 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Linguistic Precision: Absolute literalism; seek clarification for ambiguity before proceeding.
 - Relatability Mandate: Universal accessibility via vernacular optimization and anecdotal grounding.
 - Operational Directives: Anti-drift governance; logic or files misaligned with PoT.md are a system failure.
-- Operational Directives: Context hygiene; ops/lib/manifests/CONTEXT.md must exclude docs/library/agents, docs/library/tasks, and docs/library/skills.
+- Operational Directives: Context hygiene; ops/lib/manifests/CONTEXT.md must exclude opt/_library/agents, opt/_library/tasks, and opt/_library/skills.
 - Operational Directives: Logic conflict resolution; stop until the Operator redefines parameters if a task violates PoT.md.
 - Operational Directives: Equilibrium maintenance; a task is complete only when SoP.md is updated.
 - Operational Directives: Reuse-first discipline; cross-reference ops/ templates before creating new artifacts.
@@ -155,62 +156,6 @@ When reporting, include:
 - We aim for coordinated, responsible disclosure.
 
 
-## SoP.md
-Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
-
-## 2026-02-14 04:18:34 UTC — DP-OPS-0062 Documentation Fortification and Help Doctrine Routing
-- Objective: Completed DP-OPS-0062 closeout logging by recording the canon-impacting documentation and help-system changes that shipped on this branch, including SCRIPT-04 registry drift correction, new synthesize and ledger surface specifications, critical spec deep-explanation expansions, help doctrine and curriculum routing, and llms bundle parity refresh.
-- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`; `./ops/bin/map`; `./ops/bin/llms`; `./ops/bin/help`; `./ops/bin/help specs`; `./ops/bin/help doctrine`; `./ops/bin/help curriculum`; `./ops/bin/prune --dry-run`; `./ops/bin/prune --target=pow --dry-run`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0062-RESULTS.md`; `git diff --name-only`; `git diff --stat`.
-- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0062"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0062-documentation-fortification-2026-02-13-124b6cc8.txt`.
-
-## 2026-02-13 22:53:10 UTC — DP-OPS-0061 TASK Structure Hardening and PoW Integrity
-- Objective: Hardened the TASK closeout contract by removing legacy Thread Transition and Work Log sections, promoted `### 4.1 Mandatory Closing Block` as a numbered requirement, normalized TASK/spec DP heading levels to canonical schema (`##` for 3.x top-level, `###` for 3.x.y), replaced prune `--reset-task` Work Log gating with PoW Packet ID proof gating, updated closeout manual guidance for PoW-first reset sequencing, and added CI policing for PoW update plus append-only integrity.
-- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`; `git status --porcelain=v1`; `git diff --name-only`; `git diff --stat`; `git diff --name-only --cached`; `git diff --stat --cached`; `git ls-files --others --exclude-standard`; `git diff -- tools/lint/dp.sh`; `git diff --cached -- tools/lint/dp.sh`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0061-RESULTS.md`.
-- Functional receipts: `./ops/bin/open --out=auto --dp=DP-OPS-0061`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0061-task-structure-hardening-2026-02-13-69f7b684.txt`; `rg -n '^- \\.github/workflows/pow_policing\\.yml$' ./storage/dumps/dump-platform-work-dp-ops-0061-task-structure-hardening-2026-02-13-69f7b684.manifest.txt`; `rg -n '^- tools/lint/dp\\.sh$' ./storage/dumps/dump-platform-work-dp-ops-0061-task-structure-hardening-2026-02-13-69f7b684.manifest.txt`; `./ops/bin/prune --dry-run --reset-task --dp=DP-OPS-0061` (reset gate validated after PoW Packet ID entry was written).
-
-## 2026-02-13 19:41:30 UTC — DP-OPS-0060 TASK Template Archival and PoW Ledger
-- Objective: Added a root `PoW.md` proof ledger with strict entry schema, updated canon/manual/manifest wayfinding to include PoW, refactored `ops/bin/prune` for dual-ledger targeting plus deterministic dry-run and embedded TASK-template extraction, hardened truth lint for legacy terminology, and extended DP lint to validate Mandatory Closing Block fields for RESULTS artifacts.
-- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0060-RESULTS.md`.
-- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0060"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0060-2026-02-13-ae8cc7b2.txt`; `./ops/bin/prune --dry-run`; `./ops/bin/prune --target=pow --dry-run`; `./ops/bin/llms --out-dir="$(pwd)"`; `./ops/bin/map`.
-
-## 2026-02-13 15:46:47 UTC — DP-OPS-0059 One Truth Context Engine (Unified Manifests, Unified Synthesizer, Bundle Deprecation)
-- Objective: Replaced split execution/discovery context pipelines with One Truth layering (`CORE.md`, `OPS.md`, `DISCOVERY.md`), introduced `ops/lib/scripts/synthesize.sh` as the single manifest parser/hazard enforcer/emitter, wrapped `ops/bin/context` and `ops/bin/llms` around the unified synthesizer, deprecated/removing redundant llms slice bundles, and hardened prompt + lint policy for llms refresh and DP context-load constraints.
-- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
-- Functional receipts: `./ops/bin/open --out=auto`; `./ops/bin/context --out=auto`; `./ops/bin/llms --out-dir="$(pwd)"`; `./ops/lib/scripts/agent.sh harvest-check`; `./ops/bin/map`; `./ops/bin/prune --dp=DP-OPS-0059 --scrub`.
-
-## 2026-02-13 03:17:37 UTC — DP-OPS-0058 Tooling Safety and Protocol Hardening
-- Objective: Hardened `ops/bin/prune` with an uncommitted RESULTS guard and explicit `--reset-task`, decoupled `--scrub` from TASK reset behavior, and aligned TASK/spec protocol surfaces with CI receipt and closeout requirements.
-- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
-- Protocol: Verify → Generate Results → COMMIT (Operator Only) → Prune.
-- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0058"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s <dump_payload_path>`; `./ops/bin/prune --dp=DP-OPS-0058`; `./ops/bin/prune --scrub`.
-
-## 2026-02-13 01:11:36 UTC — DP-OPS-0057 Ops Surface Operational Certification (Registries + Specs)
-- Objective: Certified ops registry and specification discoverability by replacing the prompt registry placeholder, adding authoritative registries for binaries/lint/test/tools/scripts, creating pointer-first specs for lint tools, verify/test surfaces, and ops helper scripts, updating the llms ops bundle manifest pointers, and refreshing MAP plus llms outputs.
-- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
-- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0057"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s <dump_payload_path>`; `./ops/bin/map`; `./ops/bin/llms --out-dir="$(pwd)"`; `./ops/bin/prune --dp=DP-OPS-0057 --scrub`.
-
-## 2026-02-12 19:54:20 UTC — DP-OPS-0056 Task Subsystem Hardening and Prune Safety Invariants
-- Objective: Hardened Task subsystem governance by making `tools/lint/task.sh` the sole TASK container enforcer, refactoring `tools/lint/dp.sh` to DP Section 3 transaction enforcement only, removing legacy versioning language from task-surface governance text, and adding prune scrub lint guardrails with narrower DP-target pruning scope.
-- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
-- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0056"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0056-2026-02-12-fdc5d080.txt`.
-
-## 2026-02-12 17:36:43 UTC — DP-OPS-0055 Receipt Refresh and Verification Capture
-- Objective: Confirmed `docs/MANUAL.md` dispatch contract note coverage (DP Preflight Gate ordering plus worker-input/OPEN reading rule), retained the V2 TASK + lint + TASK surface spec changes for DP-OPS-0055, and refreshed receipt artifacts in `storage/handoff/DP-OPS-0055-RESULTS.md`.
-- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
-- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0055"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0055-task-surface-contract-lock-9baf3978.txt`.
-
-## 2026-02-12 16:32:23 UTC — DP-OPS-0055 TASK Surface Contract Lock (V2 Promotion + Lint Adoption + Surface Spec)
-- Objective: Promoted the V2 TASK contract into `TASK.md`, enforced the contract in `tools/lint/task.sh` and `tools/lint/dp.sh` (including DP Preflight Gate and anti-degradation checks), added the TASK surface spec at `docs/ops/specs/surfaces/task.md`, and aligned `docs/MANUAL.md` with the new dispatch and receipt rules.
-- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
-- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0055"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0055-task-surface-contract-lock-9baf3978.txt`; `./ops/bin/prune --dp=DP-OPS-0055 --scrub`.
-
-## 2026-02-12 05:24:50 UTC — DP-OPS-0054 TASK Surface Stabilization (OPEN Read-Only + Lint Alignment)
-- Objective: Regressed `ops/bin/open` to tracked-file read-only behavior (no TASK.md mutation), stabilized TASK.md Session State to pointer-first shape (no inline Active Branch/Base HEAD), aligned `tools/lint/dp.sh` and `tools/lint/task.sh` with the stabilized contract, removed the PoT dirty-state TASK exception, updated workflow canon docs, and refreshed root llms bundles.
-- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `bash tools/verify.sh`; `./ops/bin/map --check`.
-- Functional receipts: `./ops/bin/open --intent="DP-OPS-0054 read-only verification" --dp="DP-OPS-0054"` (confirmed `OPEN_READ_ONLY_OK` with unchanged `git status --porcelain`); `./ops/bin/map`; `./ops/bin/llms --out-dir="$(pwd)"`.
-
-
-
 ## PoW.md
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/PoW-archive-YYYY-MM.md`.
 
@@ -245,6 +190,52 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - `- Verification commands:`
 - `  - <command>`
 - `- Notes: <audit note>`
+
+## 2026-02-14 16:35:03 UTC — DP-OPS-0063 SoP and PoW Closeout Ledger Compliance
+- Packet ID: DP-OPS-0063
+- Timestamp: 2026-02-14T16:35:03Z
+- Work Branch: work/dp-ops-0063-stabilization-2026-02-14
+- Base HEAD: 6043fa23
+- Scope: platform
+- Target Files allowlist:
+  - TASK.md
+  - docs/MANUAL.md
+  - opt/_library/TASKS.md
+  - opt/_library/tasks/B-TASK-01.md
+  - opt/_library/tasks/B-TASK-02.md
+  - opt/_library/tasks/B-TASK-03.md
+  - opt/_library/tasks/B-TASK-04.md
+  - opt/_library/tasks/B-TASK-05.md
+  - opt/_library/tasks/B-TASK-06.md
+  - docs/ops/specs/scripts/task.md
+  - docs/ops/specs/surfaces/task.md
+  - docs/ops/specs/tools/lint/task.md
+  - ops/bin/prune
+  - tools/lint/dp.sh
+  - tools/lint/task.sh
+  - SoP.md
+  - PoW.md
+- Receipt pointers:
+  - RESULTS: storage/handoff/DP-OPS-0063-RESULTS.md
+  - OPEN: storage/handoff/OPEN-work-dp-ops-0063-stabilization-2026-02-14-6043fa23.txt
+  - DUMP: storage/dumps/dump-platform-work-dp-ops-0063-stabilization-2026-02-14-6043fa23.txt
+- Verification commands:
+  - bash tools/lint/context.sh
+  - bash tools/lint/style.sh
+  - bash tools/lint/truth.sh
+  - bash tools/lint/dp.sh --test
+  - bash tools/lint/dp.sh TASK.md
+  - bash tools/lint/task.sh
+  - bash tools/lint/llms.sh
+  - ./tools/verify.sh
+  - ./ops/bin/prune --dry-run
+  - ./ops/bin/prune --target=pow --dry-run
+  - bash tools/lint/dp.sh storage/handoff/DP-OPS-0063-RESULTS.md
+  - git diff --name-only
+  - git diff --stat
+  - git check-ignore -v storage/handoff/DP-OPS-0063-RESULTS.md
+  - git check-ignore -v storage/dp/intake/DP-OPS-0063.md
+- Notes: Positive proof records closeout ledger compliance for the DP-OPS-0063 code-bearing shipment so PoW and SoP reflect the released canon and tooling surfaces. Negative proof records that policing failed before this entry existed because prior code and canon changes had no appended PoW and SoP note. Storage artifacts remain local and ignored by policy; receipts document them as untracked evidence pointers rather than commit content.
 
 ## 2026-02-14 04:18:34 UTC — DP-OPS-0062 Documentation Fortification and Help Doctrine Routing
 - Packet ID: DP-OPS-0062
@@ -400,6 +391,63 @@ Copy this block when appending a new entry.
 ```
 
 
+## SoP.md
+Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
+
+## 2026-02-14 23:01:42 UTC — DP-OPS-0064 Phase 2 Structural Restructuring
+- Objective: Implemented Phase 2 structural hardening by migrating library canon to `opt/_library`, introducing deterministic manifest compilation (`ops/bin/compile` + `ops/src/manifests/*.md.tpl`) with context/llms compile-first routing, and switching DP allowlist governance to pointer-sidecar mode via `storage/dp/active/allowlist.txt`.
+- Verification: `./tools/verify.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/style.sh`; `bash tools/lint/context.sh`; `bash tools/lint/library.sh`; `bash tools/lint/task.sh`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/llms.sh`; `./ops/bin/compile`; `./ops/bin/map --check`; `./ops/bin/llms`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0064-RESULTS.md`.
+- Functional receipts: `./ops/bin/open --out=auto --dp=DP-OPS-0064`; `./ops/bin/dump --scope=full --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-full-work-dp-ops-0064-2026-02-14-30a77fdf.txt`; `test -s ./storage/dumps/dump-full-work-dp-ops-0064-2026-02-14-30a77fdf.tar.xz`.
+
+## 2026-02-14 16:35:03 UTC — DP-OPS-0063 SoP and PoW Closeout Ledger Compliance
+- Objective: Appended SoP and PoW entries for DP-OPS-0063 to document prior code-bearing updates across `ops/`, `tools/`, and canon `docs/` surfaces, resolving policing drift where ledger updates were missing from the shipped code commit.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0063-RESULTS.md`; `git diff --name-only`; `git diff --stat`.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0063"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0063-stabilization-2026-02-14-6043fa23.txt`; `./ops/bin/prune --dry-run`; `./ops/bin/prune --target=pow --dry-run`; `git check-ignore -v storage/handoff/DP-OPS-0063-RESULTS.md`; `git check-ignore -v storage/dp/intake/DP-OPS-0063.md`.
+- Memory note: A DP logging violation occurred where mandatory SoP and PoW logging was absent, and the local lint sequence still passed before CI policing surfaced the failure. This entry preserves that anomaly and the remediation path.
+
+## 2026-02-14 04:18:34 UTC — DP-OPS-0062 Documentation Fortification and Help Doctrine Routing
+- Objective: Completed DP-OPS-0062 closeout logging by recording the canon-impacting documentation and help-system changes that shipped on this branch, including SCRIPT-04 registry drift correction, new synthesize and ledger surface specifications, critical spec deep-explanation expansions, help doctrine and curriculum routing, and llms bundle parity refresh.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`; `./ops/bin/map`; `./ops/bin/llms`; `./ops/bin/help`; `./ops/bin/help specs`; `./ops/bin/help doctrine`; `./ops/bin/help curriculum`; `./ops/bin/prune --dry-run`; `./ops/bin/prune --target=pow --dry-run`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0062-RESULTS.md`; `git diff --name-only`; `git diff --stat`.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0062"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0062-documentation-fortification-2026-02-13-124b6cc8.txt`.
+
+## 2026-02-13 22:53:10 UTC — DP-OPS-0061 TASK Structure Hardening and PoW Integrity
+- Objective: Hardened the TASK closeout contract by removing legacy Thread Transition and Work Log sections, promoted `### 4.1 Mandatory Closing Block` as a numbered requirement, normalized TASK/spec DP heading levels to canonical schema (`##` for 3.x top-level, `###` for 3.x.y), replaced prune `--reset-task` Work Log gating with PoW Packet ID proof gating, updated closeout manual guidance for PoW-first reset sequencing, and added CI policing for PoW update plus append-only integrity.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`; `git status --porcelain=v1`; `git diff --name-only`; `git diff --stat`; `git diff --name-only --cached`; `git diff --stat --cached`; `git ls-files --others --exclude-standard`; `git diff -- tools/lint/dp.sh`; `git diff --cached -- tools/lint/dp.sh`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0061-RESULTS.md`.
+- Functional receipts: `./ops/bin/open --out=auto --dp=DP-OPS-0061`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0061-task-structure-hardening-2026-02-13-69f7b684.txt`; `rg -n '^- \\.github/workflows/pow_policing\\.yml$' ./storage/dumps/dump-platform-work-dp-ops-0061-task-structure-hardening-2026-02-13-69f7b684.manifest.txt`; `rg -n '^- tools/lint/dp\\.sh$' ./storage/dumps/dump-platform-work-dp-ops-0061-task-structure-hardening-2026-02-13-69f7b684.manifest.txt`; `./ops/bin/prune --dry-run --reset-task --dp=DP-OPS-0061` (reset gate validated after PoW Packet ID entry was written).
+
+## 2026-02-13 19:41:30 UTC — DP-OPS-0060 TASK Template Archival and PoW Ledger
+- Objective: Added a root `PoW.md` proof ledger with strict entry schema, updated canon/manual/manifest wayfinding to include PoW, refactored `ops/bin/prune` for dual-ledger targeting plus deterministic dry-run and embedded TASK-template extraction, hardened truth lint for legacy terminology, and extended DP lint to validate Mandatory Closing Block fields for RESULTS artifacts.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0060-RESULTS.md`.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0060"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0060-2026-02-13-ae8cc7b2.txt`; `./ops/bin/prune --dry-run`; `./ops/bin/prune --target=pow --dry-run`; `./ops/bin/llms --out-dir="$(pwd)"`; `./ops/bin/map`.
+
+## 2026-02-13 15:46:47 UTC — DP-OPS-0059 One Truth Context Engine (Unified Manifests, Unified Synthesizer, Bundle Deprecation)
+- Objective: Replaced split execution/discovery context pipelines with One Truth layering (`CORE.md`, `OPS.md`, `DISCOVERY.md`), introduced `ops/lib/scripts/synthesize.sh` as the single manifest parser/hazard enforcer/emitter, wrapped `ops/bin/context` and `ops/bin/llms` around the unified synthesizer, deprecated/removing redundant llms slice bundles, and hardened prompt + lint policy for llms refresh and DP context-load constraints.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
+- Functional receipts: `./ops/bin/open --out=auto`; `./ops/bin/context --out=auto`; `./ops/bin/llms --out-dir="$(pwd)"`; `./ops/lib/scripts/agent.sh harvest-check`; `./ops/bin/map`; `./ops/bin/prune --dp=DP-OPS-0059 --scrub`.
+
+## 2026-02-13 03:17:37 UTC — DP-OPS-0058 Tooling Safety and Protocol Hardening
+- Objective: Hardened `ops/bin/prune` with an uncommitted RESULTS guard and explicit `--reset-task`, decoupled `--scrub` from TASK reset behavior, and aligned TASK/spec protocol surfaces with CI receipt and closeout requirements.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
+- Protocol: Verify → Generate Results → COMMIT (Operator Only) → Prune.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0058"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s <dump_payload_path>`; `./ops/bin/prune --dp=DP-OPS-0058`; `./ops/bin/prune --scrub`.
+
+## 2026-02-13 01:11:36 UTC — DP-OPS-0057 Ops Surface Operational Certification (Registries + Specs)
+- Objective: Certified ops registry and specification discoverability by replacing the prompt registry placeholder, adding authoritative registries for binaries/lint/test/tools/scripts, creating pointer-first specs for lint tools, verify/test surfaces, and ops helper scripts, updating the llms ops bundle manifest pointers, and refreshing MAP plus llms outputs.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0057"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s <dump_payload_path>`; `./ops/bin/map`; `./ops/bin/llms --out-dir="$(pwd)"`; `./ops/bin/prune --dp=DP-OPS-0057 --scrub`.
+
+## 2026-02-12 19:54:20 UTC — DP-OPS-0056 Task Subsystem Hardening and Prune Safety Invariants
+- Objective: Hardened Task subsystem governance by making `tools/lint/task.sh` the sole TASK container enforcer, refactoring `tools/lint/dp.sh` to DP Section 3 transaction enforcement only, removing legacy versioning language from task-surface governance text, and adding prune scrub lint guardrails with narrower DP-target pruning scope.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0056"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0056-2026-02-12-fdc5d080.txt`.
+
+## 2026-02-12 17:36:43 UTC — DP-OPS-0055 Receipt Refresh and Verification Capture
+- Objective: Confirmed `docs/MANUAL.md` dispatch contract note coverage (DP Preflight Gate ordering plus worker-input/OPEN reading rule), retained the V2 TASK + lint + TASK surface spec changes for DP-OPS-0055, and refreshed receipt artifacts in `storage/handoff/DP-OPS-0055-RESULTS.md`.
+- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
+- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0055"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0055-task-surface-contract-lock-9baf3978.txt`.
+
+
+
 ## TASK.md
 # STELA TASK DASHBOARD
 Status: ACTIVE
@@ -525,7 +573,10 @@ Out of scope: Populate during execution; do not pre-fill in TASK.md.
 Safety and invariants: Populate during execution; do not pre-fill in TASK.md.
 
 Target Files allowlist (hard gate):
-- Populate during execution; do not pre-fill in TASK.md.
+- Use a single pointer entry to the canonical allowlist sidecar:
+- storage/dp/active/allowlist.txt
+- Do not inline-expand file paths in TASK.md when pointer mode is active.
+- Pointer file must exist and be non-empty; `bash tools/lint/dp.sh` enforces this.
 
 ## 3.4 Execution Plan (A–E)
 
@@ -558,10 +609,11 @@ Populate during execution; do not pre-fill in TASK.md.
 - bash tools/lint/dp.sh storage/handoff/DP-OPS-XXXX-RESULTS.md
 - git diff --name-only
 - git diff --stat
+- Verify Section 3.5 Closing Block is populated in RESULTS.
 - Required pasted outputs: receipts, verification outcomes, and diff output.
 - Mandatory Closing Block required in RESULTS.
 
-## 4. Closeout
+## 3.5 Closeout (Mandatory Routing)
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
@@ -569,7 +621,7 @@ Populate during execution; do not pre-fill in TASK.md.
 - Use ./ops/bin/prune --reset-task only for explicit TASK baseline reset after PoW entry exists for the active DP id.
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
-### 4.1 Mandatory Closing Block
+### 3.5.1 Mandatory Closing Block
 Primary Commit Header (plaintext)
 
 Pull Request Title (plaintext)
@@ -615,7 +667,7 @@ This document defines the specific surfaces that must be loaded to preserve gove
 
 ## 5. Unified Jurisdiction
 *Policy of Truth governs all scopes without parallel authority.*
-* **Single Authority:** PoT is the sole authority across `ops/`, `docs/`, and `projects/`.
+* **Single Authority:** PoT is the sole authority across `ops/`, `docs/`, `opt/`, and `projects/`.
 * **Project Position:** Projects are payloads operating under PoT, not a separate provider or consumer tier.
 
 ## 6. Auto-Generated Index
@@ -624,7 +676,8 @@ This document defines the specific surfaces that must be loaded to preserve gove
 - ops/ - Run (binaries, manifests, automation).
 - tools/ - Lints and verification tooling.
 - docs/ - Manuals, specs, and governance surfaces.
-- storage/ - Local artifacts and archives (untracked).
+- opt/ - Isolated library surfaces (JIT-only, excluded from global context).
+- storage/ - Local artifacts and archives.
 
 ### Projects
 No projects discovered.

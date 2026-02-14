@@ -1,5 +1,10 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-14 23:01:42 UTC — DP-OPS-0064 Phase 2 Structural Restructuring
+- Objective: Implemented Phase 2 structural hardening by migrating library canon to `opt/_library`, introducing deterministic manifest compilation (`ops/bin/compile` + `ops/src/manifests/*.md.tpl`) with context/llms compile-first routing, and switching DP allowlist governance to pointer-sidecar mode via `storage/dp/active/allowlist.txt`.
+- Verification: `./tools/verify.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/style.sh`; `bash tools/lint/context.sh`; `bash tools/lint/library.sh`; `bash tools/lint/task.sh`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/llms.sh`; `./ops/bin/compile`; `./ops/bin/map --check`; `./ops/bin/llms`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0064-RESULTS.md`.
+- Functional receipts: `./ops/bin/open --out=auto --dp=DP-OPS-0064`; `./ops/bin/dump --scope=full --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-full-work-dp-ops-0064-2026-02-14-30a77fdf.txt`; `test -s ./storage/dumps/dump-full-work-dp-ops-0064-2026-02-14-30a77fdf.tar.xz`.
+
 ## 2026-02-14 16:35:03 UTC — DP-OPS-0063 SoP and PoW Closeout Ledger Compliance
 - Objective: Appended SoP and PoW entries for DP-OPS-0063 to document prior code-bearing updates across `ops/`, `tools/`, and canon `docs/` surfaces, resolving policing drift where ledger updates were missing from the shipped code commit.
 - Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0063-RESULTS.md`; `git diff --name-only`; `git diff --stat`.
@@ -125,14 +130,14 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - ops/lib/scripts/agent.sh
 - ops/lib/scripts/heuristics.sh
 - tools/lint/agent.sh
-- docs/library/AGENTS.md
+- opt/_library/AGENTS.md
 - docs/ops/registry/AGENTS.md
-- docs/library/agents/R-AGENT-01.md
-- docs/library/agents/R-AGENT-02.md
-- docs/library/agents/R-AGENT-03.md
-- docs/library/agents/R-AGENT-04.md
-- docs/library/agents/R-AGENT-05.md
-- docs/library/agents/R-AGENT-06.md
+- opt/_library/agents/R-AGENT-01.md
+- opt/_library/agents/R-AGENT-02.md
+- opt/_library/agents/R-AGENT-03.md
+- opt/_library/agents/R-AGENT-04.md
+- opt/_library/agents/R-AGENT-05.md
+- opt/_library/agents/R-AGENT-06.md
 - llms.txt
 - llms-small.txt
 - llms-full.txt
@@ -173,11 +178,11 @@ Does the Pattern Density heuristic in the agent harvester correctly balance low 
 - Updated docs/GOVERNANCE.md to point governance back to PoT.md.
 
 ## 2026-02-08 16:30:36 UTC — DP-OPS-0037 Task Import and Porting
-- Classified legacy task imports in `docs/library/tasks/imports/`; no new canon tasks or skills promoted (imports were duplicates or obsolete for current tooling).
-- Removed obsolete and duplicate imports from `docs/library/tasks/imports/` after verification.
+- Classified legacy task imports in `opt/_library/tasks/imports/`; no new canon tasks or skills promoted (imports were duplicates or obsolete for current tooling).
+- Removed obsolete and duplicate imports from `opt/_library/tasks/imports/` after verification.
 
 ## 2026-02-08 02:02:24 UTC — DP-OPS-0036 Task System Upgrade (Pointer-First Constitution + Harvest/Promote + Lint)
-- Added Task Promotion Ledger at `docs/library/TASKS.md` with doctrine, packet schema, and append-only logs.
+- Added Task Promotion Ledger at `opt/_library/TASKS.md` with doctrine, packet schema, and append-only logs.
 - Added `ops/lib/scripts/task.sh` harvest, promote, and check workflows aligned with agent and skill automation.
 - Added `tools/lint/task.sh` and integrated Task linting into `tools/lint/library.sh`.
 - Refactored B-TASK-01 through B-TASK-06 into the pointer-first schema with provenance, pointers, execution logic, and scope boundaries.
@@ -191,16 +196,16 @@ Does the Pattern Density heuristic in the agent harvester correctly balance low 
 - Context Snapshot archive path pattern for this DP: `storage/archives/context/context-DP-OPS-0035-work-context-lifecycle-hardening-4605e6fd3.tar.xz`.
 
 ## 2026-02-07 18:11:29 UTC — DP-OPS-0034 Agent System Hardening (Immune System)
-- Created `docs/library/AGENTS.md` promotion ledger and workflow template.
+- Created `opt/_library/AGENTS.md` promotion ledger and workflow template.
 - Added `tools/lint/agent.sh` immunological linter for agent surfaces.
-- Updated `ops/lib/scripts/agent.sh` to log harvest and promote events in `docs/library/AGENTS.md` and removed SoP promotion side effects.
+- Updated `ops/lib/scripts/agent.sh` to log harvest and promote events in `opt/_library/AGENTS.md` and removed SoP promotion side effects.
 - Updated `tools/lint/library.sh` to run the agent linter.
-- Updated `docs/library/INDEX.md` to link the agent promotion ledger.
+- Updated `opt/_library/INDEX.md` to link the agent promotion ledger.
 - Refreshed `llms-small.txt`, `llms-full.txt`, and `llms.txt`.
 
 ## 2026-02-07 15:41:19 UTC — DP-OPS-0033 Registry Consolidation and Agent Testing Regime
 - Created SSOT registries for skills and tasks in docs/ops/registry.
-- Refactored docs/library/INDEX.md into navigation-only links for registries.
+- Refactored opt/_library/INDEX.md into navigation-only links for registries.
 - Updated agent and skill scripts to write to registry files only.
 - Updated library and project linters to read from registry files.
 - Added tools/test/agent.sh for agent pointer integrity checks.
@@ -225,6 +230,6 @@ Does the Pattern Density heuristic in the agent harvester correctly balance low 
 
 ## 2026-02-06 21:24:55 UTC — DP-OPS-0029 Agent System Upgrade
 - Added `ops/lib/scripts/agent.sh` for agent harvest + promote lifecycle.
-- Created `docs/ops/registry/AGENTS.md` and registered it in `docs/library/INDEX.md`.
-- Refactored `docs/library/agents/R-AGENT-01.md` through `R-AGENT-06.md` to pointer-first schema with provenance.
+- Created `docs/ops/registry/AGENTS.md` and registered it in `opt/_library/INDEX.md`.
+- Refactored `opt/_library/agents/R-AGENT-01.md` through `R-AGENT-06.md` to pointer-first schema with provenance.
 - Moved project registry to `docs/ops/registry/PROJECTS.md` and updated references.

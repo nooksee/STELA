@@ -1,28 +1,19 @@
-# Context Manifest
+# CONTEXT Manifest
 
-## Purpose
-Canonical pointer surface for One Truth context layering.
+<!-- GENERATED FILE. DO NOT EDIT. -->
+<!-- Source template: ops/src/manifests/CONTEXT.md.tpl -->
+<!-- Generator: ops/bin/compile -->
 
-## Layer Hierarchy
-- Layer 0 (Immutable Core): `ops/lib/manifests/CORE.md`
-- Layer 1 (Session Ops): `ops/lib/manifests/OPS.md`
-- Layer 2 (Discovery): `ops/lib/manifests/DISCOVERY.md`
-
-## Canonical Membership Sources
-- `ops/lib/manifests/CORE.md`
-- `ops/lib/manifests/OPS.md`
-- `ops/lib/manifests/DISCOVERY.md`
-
-## Runtime Surfaces
-- `ops/lib/scripts/synthesize.sh`
-- `ops/bin/context`
-- `ops/bin/llms`
-
-## Root Artifacts
-- `llms.txt`
+## Members
 - `llms-core.txt`
 - `llms-full.txt`
-
-## Verification Tools
+- `llms.txt`
+- `ops/bin/compile`
+- `ops/bin/context`
+- `ops/bin/llms`
+- `ops/lib/manifests/CORE.md`
+- `ops/lib/manifests/DISCOVERY.md`
+- `ops/lib/manifests/OPS.md`
+- `ops/lib/scripts/synthesize.sh`
 - `tools/lint/context.sh`
 - `tools/lint/truth.sh`
