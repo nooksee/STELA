@@ -41,13 +41,13 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Target Files allowlist:
   - TASK.md
   - docs/MANUAL.md
-  - opt/_library/TASKS.md
-  - opt/_library/tasks/B-TASK-01.md
-  - opt/_library/tasks/B-TASK-02.md
-  - opt/_library/tasks/B-TASK-03.md
-  - opt/_library/tasks/B-TASK-04.md
-  - opt/_library/tasks/B-TASK-05.md
-  - opt/_library/tasks/B-TASK-06.md
+  - docs/library/TASKS.md
+  - docs/library/tasks/B-TASK-01.md
+  - docs/library/tasks/B-TASK-02.md
+  - docs/library/tasks/B-TASK-03.md
+  - docs/library/tasks/B-TASK-04.md
+  - docs/library/tasks/B-TASK-05.md
+  - docs/library/tasks/B-TASK-06.md
   - docs/ops/specs/scripts/task.md
   - docs/ops/specs/surfaces/task.md
   - docs/ops/specs/tools/lint/task.md
