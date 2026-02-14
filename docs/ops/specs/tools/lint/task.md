@@ -1,38 +1,69 @@
 # Technical Specification: tools/lint/task.sh
 
-## Purpose
-Enforce TASK dashboard container schema and validate task-library registry contracts.
+## Constitutional Anchor
+`tools/lint/task.sh` is the sole TASK surface container enforcer.
+It protects both the root TASK dashboard schema and the task-library registry contract used by the task subsystem.
 
-## Invocation
-- Command forms:
+## Operator Contract
+- Invocation:
   - `bash tools/lint/task.sh`
   - `bash tools/lint/task.sh <TASK_PATH>`
-- Required flags: none.
-- Positional arguments: zero or one.
-- Expected exit behavior:
-  - `0` when task checks pass.
-  - `1` for lint failures or invalid argument count.
-  - `2` when required files (for example `docs/ops/registry/TASKS.md`) are missing.
+- Exit behavior:
+  - `0` when checks pass.
+  - `1` when lint failures are found or arguments are invalid.
+  - `2` when required dependency files are missing.
+- Inputs:
+  - `TASK.md` by default or provided TASK path.
+  - `docs/library/tasks/*.md`.
+  - `docs/ops/registry/TASKS.md`.
 
-## Inputs
-- `docs/ops/registry/TASKS.md`
-- `docs/library/tasks/*.md`
-- Default TASK dashboard target: `TASK.md`.
-- Optional dashboard target path when one argument is passed.
+Coverage domains:
+- TASK dashboard schema and heading order.
+- DP section load-order and receipt contract requirements.
+- Closeout block label requirements.
+- Pointer-first Session State and anti-inline-state rules.
+- Task registry uniqueness and ghost-file detection.
+- Task file section/field schema, pointer validity, and reference integrity.
 
-## Outputs
-- Writes no files.
-- Stdout: final pass line (`OK: Task lint checks passed.`).
-- Stderr: `FAIL:` diagnostics for dashboard schema violations, placeholder fields, registry drift, or pointer failures.
+## Failure States and Drift Triggers
+TASK dashboard failures:
+- Missing required headings or out-of-order heading sequence.
+- Legacy forbidden sections (`Thread Transition`, `Work Log`).
+- Session State embeds branch/hash mirror data.
+- Missing exact Session State pointer-first contract lines.
+- Missing canon load-order six-item contract or bloated canon block.
+- Missing receipt command requirements in DP Section 3.4.5.
+- Missing Mandatory Closing Block labels.
 
-## Invariants and failure modes
-- TASK dashboard heading sequence and canonical load order are strictly enforced.
-- Session state must remain pointer-first and must not embed inline branch/hash mirrors.
-- Receipt contract in TASK Section 3.4.5 must include OPEN, DUMP, diff proofs, pasted output clause, and mandatory closing block labels.
-- Task library files must align with registry IDs/paths and required section structure.
-- Final execution step in task files must include a Closeout pointer to `TASK.md` Section 4.
+Task library failures:
+- Duplicate IDs or duplicate file paths in registry.
+- Registry entry references missing files.
+- Task files that are not registered.
+- Missing required sections or duplicate section headings.
+- Placeholder values in required fields.
+- Missing required pointers (`PoT.md`, `docs/GOVERNANCE.md`, `TASK.md`).
+- Pointer tokens that resolve to missing files or forbidden path classes.
+- Missing referenced agent or skill files.
+- Execution steps with ambiguous narrative verbs and no explicit pointer evidence.
+- Final execution step missing Closeout pointer to `TASK.md` Section 4.
 
-## Related pointers
-- Registry entry: `docs/ops/registry/LINT.md` (`LINT-08`).
-- DP companion linter: `tools/lint/dp.sh`.
-- Registry contract: `docs/ops/registry/TASKS.md`.
+## Mechanics and Sequencing
+1. Resolve repo root and required registry/task directories.
+2. Lint task library and registry contract:
+- Contraction checks.
+- Legacy inline-state language checks.
+- Registry parse and uniqueness checks.
+- File-to-registry parity checks.
+- Per-task schema, field, pointer, and dependency checks.
+3. Lint TASK dashboard contract for container-level invariants.
+4. Report all failures and exit non-zero when any failure exists.
+
+Core invariants:
+- TASK lint owns container schema; DP lint owns Section 3 transaction content.
+- TASK canonical load order is exactly six numbered items.
+- TASK Section 3.4.5 must include executable OPEN and DUMP commands plus diff proofs.
+- Task execution logic must terminate in explicit closeout routing.
+
+## Forensic Insight
+This lint gate prevents silent process drift in the two highest-risk planning surfaces: `TASK.md` and reusable task blueprints.
+Because it validates both structure and pointer integrity, it catches failures before they become workflow folklore or broken automation.
