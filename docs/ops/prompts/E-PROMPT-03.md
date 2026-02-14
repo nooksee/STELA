@@ -1,15 +1,13 @@
 ## Architect (Refresh + Draft DP)
-**Use when:** Creating a new DP from a plan or conversation.
-**Attach:** OPEN, OPEN-PORCELAIN, dump, dump manifest, plan.md.
-**Process:**
+Use when: Drafting a new DP from a plan.
+Attach: OPEN, OPEN-PORCELAIN, dump, dump manifest, plan.md.
 
-- Refresh state using the attached OPEN, OPEN-PORCELAIN, dump, and dump manifest artifacts.
-- Follow PoT.md for logic and TASK.md for structure.
-- Output only the format specified by the stance.
+Rules:
+- Refresh state using the attached OPEN and dump artifacts.
+- Logic: PoT.md. Structure: TASK.md. Output only the stance format.
+- Do not invent file paths; verify with the dump.
 
-1. DRAFT <DP-ID> based on `<summary-file>`.
-2. Logic: Adhere to `PoT.md`.
-3. Structure: Strictly follow `TASK.md` template.
-4. Constraints: Do not invent file paths; use the dump.
-5. If context refreshment is required, include `ops/bin/llms` in the allowlist. The system will manage the artifacts.
+Steps:
+1. DRAFT <DP-ID> from <summary-file>, matching TASK.md exactly.
+2. Constraints: stay strictly within plan scope; follow TASK.md’s allowlist mechanism (inline, pointer, or sidecar) and include every intended touched file plus required workflow binaries (for example ops/bin/llms and ops/bin/compile-manifests when relevant); if compiled/generated outputs are in scope (for example manifests or llms bundles), require tool-based regeneration in receipts and forbid manual edits to generated outputs.
 Output only: The full Dispatch Packet enclosed in a markdown code block (```markdown).
