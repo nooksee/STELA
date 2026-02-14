@@ -28,9 +28,9 @@
 5. If canon or governance surfaces changed, run `bash tools/lint/truth.sh` and stop if it fails.
 6. Run `bash tools/verify.sh`, stop if it fails, and capture the pass or fail summary in RESULTS.
 7. Record findings with severity, file, line, and remediation notes.
-8. Complete Closeout per `TASK.md` Section 4.
+8. Complete Closeout per `TASK.md` Section 3.5.
 
 ## Scope Boundary
-- **Allowed:** Review only the diff for the active DP, run the commands listed in this task, and perform Closeout duties per `TASK.md` Section 4.
+- **Allowed:** Review only the diff for the active DP, run the commands listed in this task, and perform Closeout duties per `TASK.md` Section 3.5.
 - **Forbidden:** Do not edit files or expand scope beyond the active DP.
 - **Stop Conditions:** Stop if any required command fails or if required inputs are missing.

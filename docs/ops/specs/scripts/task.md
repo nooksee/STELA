@@ -43,7 +43,7 @@ Check contract:
 - Placeholder or missing draft fields.
 - Invalid or missing required sections in draft.
 - Missing required pointers in draft (`PoT.md`, `docs/GOVERNANCE.md`, `TASK.md`).
-- Missing final Closeout pointer to `TASK.md` Section 4.
+- Missing final Closeout pointer to `TASK.md` Section 3.5.
 - Ambiguous draft auto-selection when multiple drafts share same timestamp.
 - Registry insertion/update failure.
 - Context hazard detected during `check`.

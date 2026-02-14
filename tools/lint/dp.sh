@@ -162,15 +162,24 @@ extract_dp_payload() {
   local payload_path="$2"
 
   if is_task_surface "$source_path"; then
+    if grep -nE '^##[[:space:]]*4([.]|[[:space:]])' "$source_path" >/dev/null; then
+      fail "TASK.md must not contain legacy Section 4 Closeout heading; use Section 3.5"
+      return 1
+    fi
+    if ! grep -nE '^##[[:space:]]*3[.]5([.]|[[:space:]])' "$source_path" >/dev/null; then
+      fail "TASK.md missing required Section 3.5 Closeout heading"
+      return 1
+    fi
+
     awk '
       BEGIN { in_dp=0 }
       /^## 3[.] Current Dispatch Packet \(DP\)/ { in_dp=1; next }
-      /^## 4[.]/ && in_dp { exit }
+      /^## 3[.]5([.]|[[:space:]])/ && in_dp { exit }
       in_dp { print }
     ' "$source_path" > "$payload_path"
 
     if [[ ! -s "$payload_path" ]]; then
-      fail "TASK.md missing extractable DP payload between Section 3 and Section 4"
+      fail "TASK.md missing extractable DP payload between Section 3 and Section 3.5"
       return 1
     fi
     return 0
@@ -475,7 +484,7 @@ check_receipt_contract() {
   local path="$1"
   local receipt_block
 
-  receipt_block="$(extract_block "$path" '^#{3,6}[[:space:]]*3[.]4[.]5' '^#{1,6}[[:space:]]*4([.]|[[:space:]])')"
+  receipt_block="$(extract_block "$path" '^#{3,6}[[:space:]]*3[.]4[.]5' '^#{1,6}[[:space:]]*3[.]5([.]|[[:space:]])')"
   if [[ -z "$receipt_block" ]]; then
     fail "missing receipt block (3.4.5)"
     return
@@ -514,6 +523,9 @@ check_receipt_contract() {
   fi
   if ! grep -Fq 'git diff --stat' <<< "$receipt_block"; then
     fail "receipt block missing git diff --stat proof"
+  fi
+  if ! grep -Fq 'Verify Section 3.5 Closing Block is populated in RESULTS' <<< "$receipt_block"; then
+    fail "receipt block missing Section 3.5 Closing Block verification line"
   fi
 
   if ! grep -Eiq 'required pasted outputs|paste outputs' <<< "$receipt_block"; then
@@ -821,6 +833,7 @@ Patch text.
 - ./tools/verify.sh
 - git diff --name-only
 - git diff --stat
+- Verify Section 3.5 Closing Block is populated in RESULTS.
 - Required pasted outputs: receipts, verification outcomes, and diff output.
 - Mandatory Closing Block required in RESULTS.
 TESTDP
@@ -886,6 +899,7 @@ Patch.
 - ./tools/verify.sh
 - git diff --name-only
 - git diff --stat
+- Verify Section 3.5 Closing Block is populated in RESULTS.
 - Required pasted outputs: receipts, verification outcomes, and diff output.
 - Mandatory Closing Block required in RESULTS.
 TESTDP
@@ -954,6 +968,7 @@ Patch.
 - ./tools/verify.sh
 - git diff --name-only
 - git diff --stat
+- Verify Section 3.5 Closing Block is populated in RESULTS.
 - Required pasted outputs: receipts, verification outcomes, and diff output.
 - Mandatory Closing Block required in RESULTS.
 TESTDP
@@ -1024,6 +1039,7 @@ Patch.
 - ./tools/verify.sh
 - git diff --name-only
 - git diff --stat
+- Verify Section 3.5 Closing Block is populated in RESULTS.
 - Required pasted outputs: receipts, verification outcomes, and diff output.
 - Mandatory Closing Block required in RESULTS.
 TESTDP
@@ -1094,6 +1110,7 @@ Patch.
 - ./tools/verify.sh
 - git diff --name-only
 - git diff --stat
+- Verify Section 3.5 Closing Block is populated in RESULTS.
 - Required pasted outputs: receipts, verification outcomes, and diff output.
 - Mandatory Closing Block required in RESULTS.
 TESTDP
@@ -1164,6 +1181,7 @@ Patch.
 - ./tools/verify.sh
 - git diff --name-only
 - git diff --stat
+- Verify Section 3.5 Closing Block is populated in RESULTS.
 - Required pasted outputs: receipts, verification outcomes, and diff output.
 - Mandatory Closing Block required in RESULTS.
 TESTDP
@@ -1230,6 +1248,7 @@ Patch.
 - ./tools/verify.sh
 - git diff --name-only
 - git diff --stat
+- Verify Section 3.5 Closing Block is populated in RESULTS.
 - Required pasted outputs: receipts, verification outcomes, and diff output.
 - Mandatory Closing Block required in RESULTS.
 TESTDP
@@ -1397,10 +1416,11 @@ Patch.
 - ./tools/verify.sh
 - git diff --name-only
 - git diff --stat
+- Verify Section 3.5 Closing Block is populated in RESULTS.
 - Required pasted outputs: receipts, verification outcomes, and diff output.
 - Mandatory Closing Block required in RESULTS.
 
-## 4. Closeout
+## 3.5 Closeout (Mandatory Routing)
 - closeout text.
 TESTTASK
 

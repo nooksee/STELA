@@ -27,9 +27,9 @@
 4. Run `bash tools/lint/library.sh` and stop if it fails.
 5. If the DP format is in scope, run `bash tools/lint/dp.sh --test` and stop if it fails.
 6. Record pass or fail outcomes in RESULTS.
-7. Complete Closeout per `TASK.md` Section 4.
+7. Complete Closeout per `TASK.md` Section 3.5.
 
 ## Scope Boundary
-- **Allowed:** Run only the verification commands listed in this task, report results, and perform Closeout duties per `TASK.md` Section 4.
+- **Allowed:** Run only the verification commands listed in this task, report results, and perform Closeout duties per `TASK.md` Section 3.5.
 - **Forbidden:** Do not modify files or bypass failing gates.
 - **Stop Conditions:** Stop if any required command fails or if required inputs are missing.

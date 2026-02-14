@@ -28,9 +28,9 @@
 5. Run `bash tools/verify.sh` and `bash tools/lint/style.sh` before deletions, stop if either fails, and capture the pass or fail summary for each command in RESULTS.
 6. Apply the deletion, then rerun `bash tools/verify.sh` and `bash tools/lint/style.sh`, stop if either fails, and capture the pass or fail summary for each command in RESULTS.
 7. Record the removed items and verification outcomes in RESULTS.
-8. Complete Closeout per `TASK.md` Section 4.
+8. Complete Closeout per `TASK.md` Section 3.5.
 
 ## Scope Boundary
-- **Allowed:** Remove dead code within the DP allowlist after verification gates pass and perform Closeout duties per `TASK.md` Section 4.
+- **Allowed:** Remove dead code within the DP allowlist after verification gates pass and perform Closeout duties per `TASK.md` Section 3.5.
 - **Forbidden:** Do not delete files outside the allowlist or skip verification gates.
 - **Stop Conditions:** Stop if any verification command fails or if required inputs are missing.

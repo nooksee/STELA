@@ -540,6 +540,55 @@ clean_storage_tmp() {
   echo "storage/tmp cleanup: removed ${removed} item(s)."
 }
 
+stage_clean() {
+  if [[ -n "${DP_TARGET}" && -z "${DP_TARGET// }" ]]; then
+    die "--dp requires a non-empty value"
+  fi
+
+  if [[ "$TARGET" != "sop" && "$TARGET" != "pow" && "$TARGET" != "both" ]]; then
+    die "--target must be one of: sop, pow, both"
+  fi
+
+  if [[ "$TARGET" == "sop" || "$TARGET" == "both" ]]; then
+    [[ -f "${SOP_FILE}" ]] || die "SoP.md not found at ${SOP_FILE}"
+  fi
+  if [[ "$TARGET" == "pow" || "$TARGET" == "both" ]]; then
+    [[ -f "${POW_FILE}" ]] || die "PoW.md not found at ${POW_FILE}"
+  fi
+  if (( RESET_TASK )); then
+    [[ -f "${TASK_FILE}" ]] || die "TASK.md not found at ${TASK_FILE}"
+    [[ -f "${TASK_TEMPLATE_SPEC}" ]] || die "TASK template spec not found at ${TASK_TEMPLATE_SPEC}"
+  fi
+
+  mkdir -p "${TMP_DIR}"
+
+  if (( !DRY_RUN )); then
+    ensure_results_artifacts_committed_and_clean
+  fi
+}
+
+stage_archive() {
+  case "$TARGET" in
+    sop)
+      prune_ledger "SoP" "$SOP_FILE" "SoP"
+      ;;
+    pow)
+      prune_ledger "PoW" "$POW_FILE" "PoW"
+      ;;
+    both)
+      prune_ledger "SoP" "$SOP_FILE" "SoP"
+      prune_ledger "PoW" "$POW_FILE" "PoW"
+      ;;
+  esac
+}
+
+stage_reset() {
+  if (( RESET_TASK )); then
+    ensure_pow_entry_exists
+    reset_task_from_template
+  fi
+}
+
 for arg in "$@"; do
   case "$arg" in
     --dp=*)
@@ -567,43 +616,8 @@ for arg in "$@"; do
   esac
 done
 
-if [[ -n "${DP_TARGET}" && -z "${DP_TARGET// }" ]]; then
-  die "--dp requires a non-empty value"
-fi
-
-if [[ "$TARGET" != "sop" && "$TARGET" != "pow" && "$TARGET" != "both" ]]; then
-  die "--target must be one of: sop, pow, both"
-fi
-
-if [[ "$TARGET" == "sop" || "$TARGET" == "both" ]]; then
-  [[ -f "${SOP_FILE}" ]] || die "SoP.md not found at ${SOP_FILE}"
-fi
-if [[ "$TARGET" == "pow" || "$TARGET" == "both" ]]; then
-  [[ -f "${POW_FILE}" ]] || die "PoW.md not found at ${POW_FILE}"
-fi
-if (( RESET_TASK )); then
-  [[ -f "${TASK_FILE}" ]] || die "TASK.md not found at ${TASK_FILE}"
-  [[ -f "${TASK_TEMPLATE_SPEC}" ]] || die "TASK template spec not found at ${TASK_TEMPLATE_SPEC}"
-fi
-
-mkdir -p "${TMP_DIR}"
-
-if (( !DRY_RUN )); then
-  ensure_results_artifacts_committed_and_clean
-fi
-
-case "$TARGET" in
-  sop)
-    prune_ledger "SoP" "$SOP_FILE" "SoP"
-    ;;
-  pow)
-    prune_ledger "PoW" "$POW_FILE" "PoW"
-    ;;
-  both)
-    prune_ledger "SoP" "$SOP_FILE" "SoP"
-    prune_ledger "PoW" "$POW_FILE" "PoW"
-    ;;
-esac
+stage_clean
+stage_archive
 
 if [[ -n "${DP_TARGET}" ]]; then
   echo "Pruning artifacts for Dispatch Packet: ${DP_TARGET}"
@@ -612,10 +626,7 @@ else
   cleanup_handoff
 fi
 
-if (( RESET_TASK )); then
-  ensure_pow_entry_exists
-  reset_task_from_template
-fi
+stage_reset
 
 if (( SCRUB )); then
   clean_storage_tmp

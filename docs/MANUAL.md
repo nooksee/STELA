@@ -19,6 +19,10 @@
 
 ## Closeout Cycle
 The Closeout Cycle is the canonical closeout workflow. Execute the stages in order.
+Closeout work is concurrent with execution: draft and maintain receipts and the Mandatory Closing Block during the DP, not only at the end.
+Finalize closeout only after verification gates pass.
+Finalization protocol order is strict: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
+The canonical Mandatory Closing Block schema is defined in `TASK.md` Section 3.5.1.
 
 1. Verify
 Run:
@@ -31,6 +35,7 @@ Run:
 ./tools/lint/llms.sh
 ~~~
 Confirm that the RESULTS file contains executable receipt outputs (artifact paths, verification outcomes, `git diff --name-only`, `git diff --stat`, and the Mandatory Closing Block).
+Verify that the Section 3.5 Closing Block is populated in RESULTS.
 
 2. Harvest
 Run only if new reusable patterns exist.

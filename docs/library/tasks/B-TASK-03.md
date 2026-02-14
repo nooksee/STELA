@@ -27,9 +27,9 @@
 4. Use `docs/library/agents/R-AGENT-02.md` to perform code review and append a second handoff.
 5. If the scope includes security-sensitive changes, use `docs/library/agents/R-AGENT-06.md` to perform security review and append the final handoff.
 6. Compile a final integration report that references each handoff artifact.
-7. Complete Closeout per `TASK.md` Section 4.
+7. Complete Closeout per `TASK.md` Section 3.5.
 
 ## Scope Boundary
-- **Allowed:** Orchestrate the agent sequence for the active DP, record handoffs, and perform Closeout duties per `TASK.md` Section 4.
+- **Allowed:** Orchestrate the agent sequence for the active DP, record handoffs, and perform Closeout duties per `TASK.md` Section 3.5.
 - **Forbidden:** Do not bypass required reviews or add new agents without DP approval.
 - **Stop Conditions:** Stop if required artifacts are missing or if any mandated agent handoff is incomplete.
