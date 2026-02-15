@@ -12,6 +12,7 @@ CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
 HANDOFF_DIR="${REPO_ROOT}/storage/archives/agents"
 OPEN_DIR="${REPO_ROOT}/storage/handoff"
 DUMPS_DIR="${REPO_ROOT}/storage/dumps"
+AGENT_TEMPLATE_PATH="${REPO_ROOT}/ops/src/definitions/agent.md.tpl"
 HEURISTICS_LIB="${SCRIPT_DIR}/heuristics.sh"
 
 if [[ -f "$HEURISTICS_LIB" ]]; then
@@ -55,6 +56,7 @@ require_repo_root() {
   require_file "$SOP_FILE"
   require_file "$TASK_FILE"
   require_file "$CONTEXT_MANIFEST"
+  require_file "$AGENT_TEMPLATE_PATH"
 }
 
 require_registry() {
@@ -104,8 +106,8 @@ cmd_check_guardrail() {
   fi
 
   # 2. Context Hazard Check
-  # Agents cannot load the agent library. This prevents recursive definition loops.
-  local hazard_pattern="(docs/library|opt/_factory)/agents"
+  # Agents cannot load the agent definitions. This prevents recursive definition loops.
+  local hazard_pattern="(docs/|opt/_factory)/agents"
   local hazards=""
   if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
     hazards="$(grep -El "$hazard_pattern" "${AGENTS_DIR}"/*.md 2>/dev/null || true)"
@@ -184,6 +186,35 @@ redact_stream() {
     -e 's/ghp_[0-9A-Za-z]{36}/[REDACTED]/g' \
     -e 's/ghs_[0-9A-Za-z]{36}/[REDACTED]/g' \
     -e 's/-----BEGIN [A-Z ]+ PRIVATE KEY-----/[REDACTED PRIVATE KEY]/g'
+}
+
+render_definition_template() {
+  local template_path="$1"
+  local output_path="$2"
+  shift 2
+
+  if (( $# % 2 != 0 )); then
+    die "render_definition_template requires TOKEN value pairs."
+  fi
+
+  require_file "$template_path"
+
+  local rendered
+  rendered="$(cat "$template_path")"
+
+  while (( $# > 0 )); do
+    local token="$1"
+    local value="$2"
+    shift 2
+    rendered="${rendered//\{\{${token}\}\}/$value}"
+  done
+
+  printf '%s\n' "$rendered" > "$output_path"
+
+  if grep -q '{{\|}}' "$output_path"; then
+    rm -f "$output_path"
+    die "Draft rendering failed: unresolved template tokens remain in ${template_path}."
+  fi
 }
 
 select_latest_open() {
@@ -581,8 +612,8 @@ normalize_skill() {
     printf '%s' "$skill"
     return 0
   fi
-  if [[ "$skill" =~ ^docs/library/skills/S-LEARN-[0-9]+\.md$ ]]; then
-    printf '%s' "${skill/docs\/library/opt\/_factory}"
+  if [[ "$skill" =~ ^docs//skills/S-LEARN-[0-9]+\.md$ ]]; then
+    printf '%s' "${skill/docs\//opt\/_factory}"
     return 0
   fi
   printf '%s' "$skill"
@@ -1008,40 +1039,20 @@ cmd_harvest() {
   local tmp
   tmp="$(mktemp)"
 
-  {
-    cat <<EOF
-# Agent Draft: ${name}
+  local skill_lines_block
+  skill_lines_block="$(printf '%s\n' "${skill_lines[@]}")"
+  local manifest_paths_block
+  manifest_paths_block="$(collect_manifest_paths | awk '{ print "- `" $0 "`" }')"
 
-${provenance_block}
-
-## Role
-${summary}
-
-## Specialization
-${specialization}
-
-## Pointers
-- Constitution: \`PoT.md\`
-- Governance/Jurisdiction: \`docs/GOVERNANCE.md\`
-- Output contract: \`TASK.md\`
-- Authorized toolchain: \`ops/bin/open\`, \`ops/bin/dump\`, \`ops/bin/llms\`, \`tools/lint/context.sh\`, \`tools/lint/truth.sh\`, \`tools/lint/library.sh\`, \`tools/verify.sh\`
-- JIT skills:
-EOF
-    printf '%s\n' "${skill_lines[@]}"
-    cat <<EOF
-
-## Scope Boundary
-Operate only within the active DP and defer to canon surfaces for governance and behavioral rules.
-
-## Context Sources
-- OPEN prompt: ${open_path}
-- Dump artifact: ${dump_path}
-- Context manifest: \`ops/lib/manifests/CONTEXT.md\`
-- Loaded context (from manifest):
-EOF
-    collect_manifest_paths | awk '{ print "- `" $0 "`" }'
-    echo
-  } > "$tmp"
+  render_definition_template "$AGENT_TEMPLATE_PATH" "$tmp" \
+    "AGENT_NAME" "$name" \
+    "PROVENANCE_BLOCK" "$provenance_block" \
+    "ROLE_SUMMARY" "$summary" \
+    "SPECIALIZATION" "$specialization" \
+    "SKILL_LINES" "$skill_lines_block" \
+    "OPEN_PATH" "$open_path" \
+    "DUMP_PATH" "$dump_path" \
+    "MANIFEST_PATHS" "$manifest_paths_block"
 
   redact_stream < "$tmp" > "$draft_path"
   rm -f "$tmp"

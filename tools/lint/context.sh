@@ -38,11 +38,11 @@ if [[ ! -f "${MANIFEST_PATH}" ]]; then
   exit 2
 fi
 
-# 1.1 Context Hazard Guard (library directories must not be in the manifest)
+# 1.1 Context Hazard Guard (factory directories must not be in the manifest)
 hazard_patterns=(
-  "docs/library/agents"
-  "docs/library/tasks"
-  "docs/library/skills"
+  "docs/factory/agents"
+  "docs/factory/tasks"
+  "docs/factory/skills"
   "opt/_factory/agents"
   "opt/_factory/tasks"
   "opt/_factory/skills"
@@ -92,8 +92,8 @@ contamination_files=(
 )
 
 contamination_patterns=(
-  '^<<< FILE BEGIN: (docs/library|opt/_factory)/(agents|tasks|skills)/'
-  '^## (docs/library|opt/_factory)/(agents|tasks|skills)/'
+  '^<<< FILE BEGIN: (docs/factory|opt/_factory)/(agents|tasks|skills)/'
+  '^## (docs/factory|opt/_factory)/(agents|tasks|skills)/'
   '^===== REPO DUMP ====='
   '^===== REPO DUMP MANIFEST ====='
 )

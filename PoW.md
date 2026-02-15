@@ -40,7 +40,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Scope: platform
 - Target Files allowlist:
   - ops/bin/draft
-  - ops/src/surfaces/DP.md.tpl
+  - ops/src/surfaces/dp.md.tpl
   - tools/lint/dp.sh
   - TASK.md
   - PoT.md
@@ -91,13 +91,13 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Target Files allowlist:
   - TASK.md
   - docs/MANUAL.md
-  - docs/library/TASKS.md
-  - docs/library/tasks/B-TASK-01.md
-  - docs/library/tasks/B-TASK-02.md
-  - docs/library/tasks/B-TASK-03.md
-  - docs/library/tasks/B-TASK-04.md
-  - docs/library/tasks/B-TASK-05.md
-  - docs/library/tasks/B-TASK-06.md
+  - docs//TASKS.md
+  - docs//tasks/B-TASK-01.md
+  - docs//tasks/B-TASK-02.md
+  - docs//tasks/B-TASK-03.md
+  - docs//tasks/B-TASK-04.md
+  - docs//tasks/B-TASK-05.md
+  - docs//tasks/B-TASK-06.md
   - docs/ops/specs/scripts/task.md
   - docs/ops/specs/surfaces/task.md
   - docs/ops/specs/tools/lint/task.md
@@ -292,7 +292,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - docs/ops/specs/tools/lint/agent.md
   - docs/ops/specs/tools/lint/context.md
   - docs/ops/specs/tools/lint/dp.md
-  - docs/ops/specs/tools/lint/library.md
+  - docs/ops/specs/tools/lint/.md
   - docs/ops/specs/tools/lint/task.md
   - docs/ops/specs/tools/test/agent.md
   - llms-core.txt
@@ -310,10 +310,10 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - ops/lib/scripts/skill.sh
   - ops/lib/scripts/synthesize.sh
   - ops/lib/scripts/task.sh
-  - ops/src/manifests/CONTEXT.md.tpl
-  - ops/src/manifests/CORE.md.tpl
-  - ops/src/manifests/DISCOVERY.md.tpl
-  - ops/src/manifests/OPS.md.tpl
+  - ops/src/manifests/context.md.tpl
+  - ops/src/manifests/core.md.tpl
+  - ops/src/manifests/discovery.md.tpl
+  - ops/src/manifests/ops.md.tpl
   - opt/_factory/AGENTS.md
   - opt/_factory/INDEX.md
   - opt/_factory/SKILLS.md
@@ -341,7 +341,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - tools/lint/agent.sh
   - tools/lint/context.sh
   - tools/lint/dp.sh
-  - tools/lint/library.sh
+  - tools/lint/.sh
   - tools/lint/task.sh
   - tools/lint/truth.sh
   - tools/test/agent.sh
@@ -361,7 +361,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - bash tools/lint/truth.sh
   - bash tools/lint/style.sh
   - bash tools/lint/context.sh
-  - bash tools/lint/library.sh
+  - bash tools/lint/.sh
   - bash tools/lint/task.sh
   - bash tools/lint/dp.sh TASK.md
   - bash tools/lint/llms.sh
@@ -369,7 +369,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - git status --porcelain=v1
   - git diff --name-only
   - git diff
-- Notes: Positive proof for DP-OPS-0064 structural hardening across library isolation, deterministic manifest compilation, and pointer-sidecar allowlist governance. This entry is append-only and preserves all prior PoW history unchanged.
+- Notes: Positive proof for DP-OPS-0064 structural hardening across  isolation, deterministic manifest compilation, and pointer-sidecar allowlist governance. This entry is append-only and preserves all prior PoW history unchanged.
 
 ## Template
 Copy this block when appending a new entry.

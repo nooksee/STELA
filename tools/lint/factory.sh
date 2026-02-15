@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Stela Library Guard (Registry Enforcement)
-# Purpose: Ensure registry-managed library surfaces stay synchronized.
+# Stela Factory Guard (Registry Enforcement)
+# Purpose: Ensure registry-managed definition surfaces stay synchronized.
 # Logic:
 # 1. No Dead Ends: All paths or IDs in registries must exist on disk.
-# 2. No Ghosts: All registry-managed library files must be registered.
+# 2. No Ghosts: All registry-managed factory files must be registered.
 
 if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   REPO_ROOT="$(git rev-parse --show-toplevel)"
@@ -67,7 +67,7 @@ if ! bash tools/lint/task.sh; then
   fail "Task linter failed. See output above."
 fi
 
-echo "Stela Library Verification"
+echo "Stela Factory Verification"
 echo "Registry: docs/ops/registry/AGENTS.md"
 echo "Registry: docs/ops/registry/SKILLS.md"
 echo "Registry: docs/ops/registry/TASKS.md"
@@ -133,7 +133,7 @@ for path in "${task_paths[@]}"; do
   fi
 done
 
-# Ghost checks for registry-managed library folders.
+# Ghost checks for registry-managed factory folders.
 
 while IFS= read -r file; do
   rel_path="${file#${REPO_ROOT}/}"
@@ -235,7 +235,7 @@ if compgen -G "${LIBRARY_DIR}/tasks/*.md" > /dev/null; then
   done
 fi
 if [[ $failures -eq 0 ]]; then
-  echo "OK: Library Integrity Verified."
+  echo "OK: Factory Integrity Verified."
   exit 0
 else
   echo "FAILED: $failures error(s) detected." >&2

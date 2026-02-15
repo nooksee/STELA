@@ -1,17 +1,30 @@
-## Gatekeeper (Refresh + Audit)
+## **Gatekeeper (Refresh + Audit)**
+
 Use when: Auditing worker output before merge.
-Attach: DP-RESULTS.md, OPEN, OPEN-PORCELAIN (if any), dump payload, dump manifest (and dump bundle if any).
+Attach: DP-RESULTS.md, `TASK.md`, OPEN, OPEN-PORCELAIN (if any), dump payload, dump manifest (and dump bundle if any).
 
 Rules:
-- Refresh state using the attached OPEN and dump artifacts.
-- Logic: PoT.md. Structure: TASK.md. Output only the stance format.
+* Refresh state using the attached OPEN and dump artifacts.
+* Logic: `PoT.md`. Structure: `TASK.md` + DP template (as validated by `tools/lint/dp.sh`).
+* Output only the stance format.
 
 Steps:
-1. AUDIT <DP-ID> for PoT.md compliance and TASK.md conformance.
-2. Receipts: confirm every changed file is accounted for by diffs/proofs in DP-RESULTS.md.
-3. Allowlist: resolve the allowlist per TASK/DP mechanism (inline, pointer, or sidecar) and verify all changes stay within it.
-4. Drift checks:
-   - No out-of-scope or unauthorized changes.
-   - No Context Hazard violations (no library subtree included in global context surfaces/manifests).
-5. Generated outputs: if compiled/generated artifacts changed (for example manifests or llms bundles), require tool-based regeneration and reject manual edits.
+1. **PoT Compliance**: Identify any canon drift, ambiguity glossing, invented paths, or disposable-artifact dependence.
+2. **DP Integrity**:
+   * Confirm the DP in `TASK.md` uses proper numbered section structure (3.1, 3.2, 3.3, etc.) matching canonical template.
+   * Require passing proofs for: `bash tools/lint/task.sh` and `bash tools/lint/dp.sh TASK.md`.
+3. **RECEIPTS**:
+   * Confirm every claimed change is supported by diffs/proofs in DP-RESULTS.md.
+   * Reject "trust me" receipts or missing outputs.
+4. **ALLOWLIST ENFORCEMENT (hard gate)**:
+   * Verify `storage/dp/active/allowlist.txt` exists and is non-empty.
+   * Confirm every changed file in the PR is present in the allowlist.
+   * Reject any file touches outside allowlist.
+5. **DRIFT + CONTEXT HAZARDS**:
+   * No out-of-scope edits.
+   * No global-context inclusion of library subtree (`opt/_factory/`) unless explicitly authorized in scope.
+6. **GENERATED OUTPUTS**:
+   * If generated artifacts changed (manifests, llms bundles, dumps), require tool-based regeneration proofs.
+   * Reject manual edits to generated outputs.
+
 Output: PASS or FAIL. If FAIL, list specific deviations.

@@ -16,27 +16,13 @@ This file is the operator-facing promotion workflow for canon tasks. Use `ops/li
 - `ops/lib/scripts/task.sh check` audits scope boundaries, context hazards, and pointer integrity.
 
 ## Promotion Packet Template
-### Promotion Packet: Task Promotion
-- Required fields:
-  - Task name: canonical registry name used in `docs/ops/registry/TASKS.md`.
-  - Task ID: `B-TASK-XX`.
-  - DP provenance: DP ID, branch, HEAD, and objective.
-  - Pointer set: authorized toolchain, required agents, JIT skills, and reference docs.
-  - Execution Logic: final step points to the Closeout routine in `TASK.md` Section 3.5.
-  - Drift preventers: scope boundary, stop conditions, and registry alignment.
-  - Definition of Done: promotion artifacts, registry updates, lint passes, and SoP updates when required.
-- Verification (paste command output summaries into RESULTS when available):
-  - `./ops/bin/dump --scope=platform`
-  - `bash tools/lint/context.sh`
-  - `bash tools/lint/truth.sh` (required when canon or governance surfaces change)
-  - `bash tools/lint/library.sh`
-  - `bash tools/lint/task.sh`
-  - `bash ops/lib/scripts/task.sh check`
+- SSOT template: `ops/src/definitions/task.md.tpl`
+- Rendered by: `ops/lib/scripts/task.sh harvest`
+- This ledger is pointer-only; executable template bodies live under `ops/src/definitions/`.
 
 ## Candidate Log (append-only)
 Append entries are added by `ops/lib/scripts/task.sh harvest`. Each entry includes timestamp, task ID, name, DP provenance, and draft path.
 - No entries recorded yet.
-
 ## Promotion Log (append-only)
 Append entries are added by `ops/lib/scripts/task.sh promote`. Each entry includes timestamp, task ID, name, DP provenance, and promoted file path.
 - No entries recorded yet.

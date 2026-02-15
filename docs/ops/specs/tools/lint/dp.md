@@ -19,7 +19,7 @@ Validate Dispatch Packet structure integrity via canonical template hashing, enf
 ## Inputs
 - Input payload from file argument or stdin.
 - For `TASK.md`, extracts the active DP block from `### DP-...` through Section `3.5.1` content.
-- Canonical DP template: `ops/src/surfaces/DP.md.tpl`.
+- Canonical DP template: `ops/src/surfaces/dp.md.tpl`.
 - Canonical template hash constant from `tools/lint/dp.sh`.
 - Allowlist pointer file from DP Section 3.3 (`storage/dp/active/allowlist.txt` by default).
 
@@ -34,7 +34,7 @@ Validate Dispatch Packet structure integrity via canonical template hashing, enf
 
 ## Enforcement Model
 1. Canonical template hash preflight:
-- Computes sha256 for `ops/src/surfaces/DP.md.tpl`.
+- Computes sha256 for `ops/src/surfaces/dp.md.tpl`.
 - Fails if hash does not equal `CANONICAL_DP_TEMPLATE_SHA256` constant.
 
 2. Structure-hash validation:
@@ -70,5 +70,5 @@ Validate Dispatch Packet structure integrity via canonical template hashing, enf
 
 ## Related pointers
 - Canonical DP generator: `ops/bin/draft`.
-- DP template source: `ops/src/surfaces/DP.md.tpl`.
+- DP template source: `ops/src/surfaces/dp.md.tpl`.
 - TASK schema companion: `docs/ops/specs/surfaces/task.md`.

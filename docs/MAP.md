@@ -38,7 +38,7 @@ This document defines the specific surfaces that must be loaded to preserve gove
 - ops/ - Run (binaries, manifests, automation).
 - tools/ - Lints and verification tooling.
 - docs/ - Manuals, specs, and governance surfaces.
-- opt/ - Isolated library surfaces (JIT-only, excluded from global context).
+- opt/ - Isolated definition surfaces (JIT-only, excluded from global context).
 - storage/ - Local artifacts and archives.
 
 ### Projects

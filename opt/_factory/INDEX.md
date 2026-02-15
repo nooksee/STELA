@@ -1,4 +1,4 @@
-# Docs Library Index (Navigation)
+# Factory Index (Navigation)
 
 This index is navigation only. Registries in `docs/ops/registry/` are the single source of truth for agents, skills, tasks, and projects.
 

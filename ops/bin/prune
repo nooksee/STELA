@@ -6,7 +6,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 SOP_FILE="${REPO_ROOT}/SoP.md"
 POW_FILE="${REPO_ROOT}/PoW.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
-TASK_TEMPLATE_SPEC="${REPO_ROOT}/docs/ops/specs/surfaces/task.md"
+TASK_TEMPLATE_PATH="${REPO_ROOT}/ops/src/surfaces/task.md.tpl"
 ARCHIVE_DIR="${REPO_ROOT}/storage/archives/root"
 HANDOFF_DIR="${REPO_ROOT}/storage/handoff"
 DUMPS_DIR="${REPO_ROOT}/storage/dumps"
@@ -89,42 +89,32 @@ ensure_results_artifacts_committed_and_clean() {
   done
 }
 
-extract_task_template() {
-  local out_path="$1"
-  awk '
-    /^<!-- TASK-TEMPLATE-BEGIN -->$/ { in_template=1; next }
-    /^<!-- TASK-TEMPLATE-END -->$/ { in_template=0; exit }
-    in_template { print }
-  ' "${TASK_TEMPLATE_SPEC}" > "$out_path"
-}
-
 reset_task_from_template() {
-  if [[ ! -f "${TASK_TEMPLATE_SPEC}" ]]; then
-    die "TASK template spec not found at ${TASK_TEMPLATE_SPEC}"
+  if [[ ! -f "${TASK_TEMPLATE_PATH}" ]]; then
+    die "TASK template not found at ${TASK_TEMPLATE_PATH}"
   fi
 
   local tmp_task
   tmp_task="$(mktemp "${TMP_DIR}/task-template.XXXXXX")"
 
-  extract_task_template "$tmp_task"
-  if [[ ! -s "$tmp_task" ]]; then
+  if ! cp "${TASK_TEMPLATE_PATH}" "$tmp_task"; then
     rm -f "$tmp_task"
-    die "TASK template extraction failed: missing template block in ${TASK_TEMPLATE_SPEC}"
+    die "Failed to copy TASK template from ${TASK_TEMPLATE_PATH}"
   fi
 
   if ! (cd "${REPO_ROOT}" && bash tools/lint/task.sh "$tmp_task"); then
     rm -f "$tmp_task"
-    die "Extracted TASK template failed TASK lint; refusing to continue."
+    die "TASK template at ${TASK_TEMPLATE_PATH} failed TASK lint; refusing to continue."
   fi
 
   if (( DRY_RUN )); then
-    echo "[DRY-RUN] TASK reset would overwrite TASK.md from template in docs/ops/specs/surfaces/task.md"
+    echo "[DRY-RUN] TASK reset would overwrite TASK.md from SSOT template ops/src/surfaces/task.md.tpl"
     rm -f "$tmp_task"
     return 0
   fi
 
   mv "$tmp_task" "${TASK_FILE}"
-  echo "Reset TASK.md from embedded canonical template."
+  echo "Reset TASK.md from SSOT template ops/src/surfaces/task.md.tpl."
 }
 
 ledger_entry_count() {
@@ -557,7 +547,7 @@ stage_clean() {
   fi
   if (( RESET_TASK )); then
     [[ -f "${TASK_FILE}" ]] || die "TASK.md not found at ${TASK_FILE}"
-    [[ -f "${TASK_TEMPLATE_SPEC}" ]] || die "TASK template spec not found at ${TASK_TEMPLATE_SPEC}"
+    [[ -f "${TASK_TEMPLATE_PATH}" ]] || die "TASK template not found at ${TASK_TEMPLATE_PATH}"
   fi
 
   mkdir -p "${TMP_DIR}"

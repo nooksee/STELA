@@ -6,9 +6,9 @@ SYNTH_REPO_ROOT="${PROJECT_REPO_ROOT:-$(cd "${SYNTH_SCRIPT_DIR}/../../.." && pwd
 
 SYNTH_DEFAULT_MANIFEST="ops/lib/manifests/OPS.md"
 SYNTH_HAZARD_BLACKLIST=(
-  "docs/library/agents"
-  "docs/library/tasks"
-  "docs/library/skills"
+  "docs//agents"
+  "docs//tasks"
+  "docs//skills"
   "opt/_factory/agents"
   "opt/_factory/tasks"
   "opt/_factory/skills"
