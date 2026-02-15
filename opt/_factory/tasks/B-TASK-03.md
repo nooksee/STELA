@@ -23,9 +23,9 @@
 ## Execution Logic
 1. Run `ops/bin/open --intent="Integration run" --out=auto` and capture the generated OPEN artifact.
 2. Run `ops/bin/dump --scope=platform --format=chatgpt --out=auto` and capture the dump artifact.
-3. Use `opt/_library/agents/R-AGENT-04.md` to produce the integration plan and the first handoff.
-4. Use `opt/_library/agents/R-AGENT-02.md` to perform code review and append a second handoff.
-5. If the scope includes security-sensitive changes, use `opt/_library/agents/R-AGENT-06.md` to perform security review and append the final handoff.
+3. Use `opt/_factory/agents/R-AGENT-04.md` to produce the integration plan and the first handoff.
+4. Use `opt/_factory/agents/R-AGENT-02.md` to perform code review and append a second handoff.
+5. If the scope includes security-sensitive changes, use `opt/_factory/agents/R-AGENT-06.md` to perform security review and append the final handoff.
 6. Compile a final integration report that references each handoff artifact.
 7. Complete Closeout per `TASK.md` Section 3.5.
 

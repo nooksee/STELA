@@ -21,17 +21,17 @@ Manage agent candidate harvesting, promotion, and guardrail checks for canon age
   - `TASK.md`
   - `ops/lib/manifests/CONTEXT.md`
   - `docs/ops/registry/AGENTS.md`
-  - `opt/_library/AGENTS.md`
-- Agent files in `opt/_library/agents/`.
+  - `opt/_factory/AGENTS.md`
+- Agent files in `opt/_factory/agents/`.
 - OPEN and DUMP artifact directories for auto-selection:
   - `storage/handoff/`
   - `storage/dumps/`
 - Optional heuristic functions from `ops/lib/scripts/heuristics.sh`.
 
 ## Outputs
-- `harvest`: writes redacted draft under `storage/archives/agents/` and appends candidate log in `opt/_library/AGENTS.md`.
+- `harvest`: writes redacted draft under `storage/archives/agents/` and appends candidate log in `opt/_factory/AGENTS.md`.
 - `harvest-check`: prints Pattern Density report from recent SoP entries.
-- `promote`: writes canon agent file in `opt/_library/agents/`, inserts registry row in `docs/ops/registry/AGENTS.md`, and appends promotion log in `opt/_library/AGENTS.md`.
+- `promote`: writes canon agent file in `opt/_factory/agents/`, inserts registry row in `docs/ops/registry/AGENTS.md`, and appends promotion log in `opt/_factory/AGENTS.md`.
 - `check`: prints guardrail status for scope-boundary and context-hazard checks.
 
 ## Invariants and failure modes

@@ -10,13 +10,13 @@ It is the automation boundary for drafting, validating, and promoting reusable t
   - `ops/lib/scripts/task.sh promote <draft_path> [--delete-draft]`
   - `ops/lib/scripts/task.sh check`
 - Required files:
-  - `opt/_library/TASKS.md`
+  - `opt/_factory/TASKS.md`
   - `docs/ops/registry/TASKS.md`
   - `TASK.md`
   - `ops/lib/manifests/CONTEXT.md`
 - Key directories:
   - Drafts: `storage/archives/tasks/`
-  - Canon tasks: `opt/_library/tasks/`
+  - Canon tasks: `opt/_factory/tasks/`
 - Exit behavior:
   - `0` on success.
   - `1` on command/validation failure.
@@ -24,14 +24,14 @@ It is the automation boundary for drafting, validating, and promoting reusable t
 Harvest contract:
 - Requires task ID format `B-TASK-[0-9]{2,}` and unique registry ID.
 - Requires non-placeholder objective and DP values.
-- Writes redacted draft file and appends Candidate Log entry in `opt/_library/TASKS.md`.
+- Writes redacted draft file and appends Candidate Log entry in `opt/_factory/TASKS.md`.
 
 Promote contract:
 - Validates draft schema, required pointers, and final closeout step.
 - Rewrites `# Task Draft:` to `# Task:`.
-- Writes canon task file at `opt/_library/tasks/<ID>.md`.
+- Writes canon task file at `opt/_factory/tasks/<ID>.md`.
 - Upserts registry row in `docs/ops/registry/TASKS.md`.
-- Appends Promotion Log entry in `opt/_library/TASKS.md`.
+- Appends Promotion Log entry in `opt/_factory/TASKS.md`.
 
 Check contract:
 - Fails if tasks are referenced in `ops/lib/manifests/CONTEXT.md`.

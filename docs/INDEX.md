@@ -13,6 +13,6 @@
 
 ## 3. Operations & Maps (Deep Dives)
 * [ops/README.md](ops/README.md) — Ops Kernel architecture and subsystem overview.
-* [../opt/_library/INDEX.md](../opt/_library/INDEX.md) — Curated library of operator guides.
+* [../opt/_factory/INDEX.md](../opt/_factory/INDEX.md) — Curated library of operator guides.
 * [MAP.md](MAP.md) — Continuity wayfinding for cross-session state.
 * [CONTEXT.md](CONTEXT.md) — Definition of required context artifacts.

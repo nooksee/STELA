@@ -10,7 +10,7 @@ fi
 
 cd "$REPO_ROOT" || exit 1
 
-AGENTS_DIR="opt/_library/agents"
+AGENTS_DIR="opt/_factory/agents"
 OPS_BIN_DIR="ops/bin"
 
 failures=0

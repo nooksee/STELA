@@ -17,14 +17,14 @@
 - **Contract:** `TASK.md`
 - **Registry:** `docs/ops/registry/TASKS.md`
 - **Toolchain:** `ops/bin/map`, `ops/bin/llms`
-- **JIT Skills:** `opt/_library/skills/S-LEARN-02.md`
+- **JIT Skills:** `opt/_factory/skills/S-LEARN-02.md`
 - **Reference Docs:** `docs/MANUAL.md`, `docs/MAP.md`
 
 ## Execution Logic
 1. Run `ops/bin/map --check` and stop if it fails.
 2. If the DP requires refreshed context bundles, run `ops/bin/llms` and stop if it fails.
-3. Use `opt/_library/agents/R-AGENT-04.md` to draft the implementation plan and capture phases, risks, and dependencies.
-4. If architecture changes are required, use `opt/_library/agents/R-AGENT-01.md` to review and adjust the plan.
+3. Use `opt/_factory/agents/R-AGENT-04.md` to draft the implementation plan and capture phases, risks, and dependencies.
+4. If architecture changes are required, use `opt/_factory/agents/R-AGENT-01.md` to review and adjust the plan.
 5. Present the plan and wait for explicit approval before execution.
 6. Complete Closeout per `TASK.md` Section 3.5.
 

@@ -3,15 +3,16 @@
 ## 0. Mechanical Workflow
 **Execution Cycle:**
 1.  **Start:** `./ops/bin/open` (Generates prompt + freshness gate).
-2.  **Capture:** `./ops/bin/dump` (Serializes state).
-3.  **Assign:** Create DP in `TASK.md` + New Branch `work/topic-date`.
+2.  **Draft:** `./ops/bin/draft` (Generates canonical DP block and updates `TASK.md`).
+3.  **Capture:** `./ops/bin/dump` (Serializes state).
 4.  **Dispatch:** Hand DP to Worker (See Section 5).
 5.  **Review:** Verify `RECEIPT` (Proofs) vs `TASK.md` requirements.
-6.  **Close:** Merge PR + Update `SoP.md` (if Canon changed).
+6.  **Close:** Merge PR + Update ledgers as required by closeout policy.
 
 **Dispatch Contract Notes:**
 - The DP Preflight Gate runs after the Freshness Gate and before any edits.
 - Worker input is DP text only; OPEN is for integrator refresh and receipt pointers and is not required reading for workers.
+- DP structure is generated from `ops/src/surfaces/DP.md.tpl` through `ops/bin/draft`; manual structural edits are prohibited.
 
 **Anchor Hygiene:**
 - Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md pointer references to the newest OPEN artifact and RESULTS receipts before any work continues; do not rewrite inline branch/hash state in TASK.md.
@@ -47,6 +48,7 @@ If promotion is needed, use existing ops/lib/scripts/skill.sh and ops/lib/script
 3. Refresh
 Allowlist must include `llms.txt`, `llms-core.txt`, and `llms-full.txt` before running the command.
 Out-dir must be absolute. Use `$(pwd)`.
+Do not hand-edit `llms.txt`, `llms-core.txt`, or `llms-full.txt`; regenerate with tooling only.
 ~~~bash
 ./ops/bin/map
 ./ops/bin/llms --out-dir="$(pwd)"
@@ -77,6 +79,14 @@ Run local hygiene prune for the DP.
 
 # Auto-save convenience (Adds "OPEN saved: <path>" line)
 ./ops/bin/open --intent="..." --out=auto
+~~~
+
+### DP Draft (Canonical Generator)
+~~~bash
+# Generate DP-OPS-0065 from canonical template with slot sidecar input
+./ops/bin/draft --id=DP-OPS-0065 --title="Immutable workflow adoption" \
+  --work-branch=work/dp-ops-0065-2026-02-14 --base-head=d3801c3a \
+  --slots-file=storage/dp/intake/DP-OPS-0065.slots
 ~~~
 
 ### State Capture (Dump)
@@ -131,7 +141,7 @@ ops/lib/scripts/skill.sh check
 # Draft a skill candidate
 ops/lib/scripts/skill.sh harvest --name "skill-title" --context "when to use it" --solution "what to do"
 
-# Promote the draft into opt/_library/skills and register it
+# Promote the draft into opt/_factory/skills and register it
 ops/lib/scripts/skill.sh promote storage/archives/skills/skill-YYYYMMDD-HHMMSS-skill-title.md
 ~~~
 
@@ -145,7 +155,7 @@ ops/lib/scripts/task.sh check
 # Draft a task candidate
 ops/lib/scripts/task.sh harvest --id B-TASK-01 --name "task-title" --objective "one sentence objective"
 
-# Promote the draft into opt/_library/tasks and register it
+# Promote the draft into opt/_factory/tasks and register it
 ops/lib/scripts/task.sh promote storage/archives/tasks/task-B-TASK-01-YYYYMMDD-task-title.md
 ~~~
 

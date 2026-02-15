@@ -15,7 +15,7 @@ Validate canon agent files against the agent registry and enforce pointer-first 
 ## Inputs
 - Git worktree root from `git rev-parse --show-toplevel`.
 - `docs/ops/registry/AGENTS.md`.
-- `opt/_library/agents/*.md`.
+- `opt/_factory/agents/*.md`.
 
 ## Outputs
 - Writes no files.

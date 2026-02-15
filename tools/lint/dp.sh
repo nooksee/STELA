@@ -7,9 +7,20 @@ Usage: tools/lint/dp.sh [--test] [path|-]
 USAGE
 }
 
+if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  REPO_ROOT="$(git rev-parse --show-toplevel)"
+else
+  echo "ERROR: Must be run inside a git repository." >&2
+  exit 1
+fi
+
+cd "$REPO_ROOT" || exit 1
+
+CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/DP.md.tpl"
+CANONICAL_DP_TEMPLATE_SHA256="ed2fa2f8fcacf26a8b2a60e8c0aee0ea5593409ad0513befe83595921072b031"
+ALLOWLIST_POINTER_PATH_DEFAULT="storage/dp/active/allowlist.txt"
+
 failures=0
-declare -a normalized_allowlist=()
-ALLOWLIST_POINTER_PATH="storage/dp/active/allowlist.txt"
 
 fail() {
   echo "FAIL: $*" >&2
@@ -36,30 +47,19 @@ strip_backticks() {
 
 extract_hash() {
   local value="$1"
-  local match
-  match="$(printf '%s' "$value" | grep -oE '[0-9a-f]{7,}' | head -n1 || true)"
-  printf '%s' "$match"
-}
-
-has_standalone_ellipsis() {
-  local path="$1"
-  if grep -nE '(^|[[:space:]])\.\.\.([[:space:]]|$)' "$path" >/dev/null; then
-    return 0
-  fi
-  return 1
+  printf '%s' "$value" | grep -oE '[0-9a-f]{7,}' | head -n1 || true
 }
 
 contains_placeholder() {
-  local value="$1"
   local lowered
+  lowered="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
 
-  lowered="$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')"
   if [[ -z "$lowered" ]]; then
     return 0
   fi
 
   case "$lowered" in
-    *"tbd"*|*"todo"*|*"["*|*"]"*|*"<fill"*|*"enter_"*|*"replace_"*|*"dp-xxxx"*|*"xxxx"*|*"0000000"*|*"populate during execution"*|*"do not pre-fill"*)
+    *"tbd"*|*"todo"*|*"populate during execution"*|*"do not pre-fill"*|*"dp-xxxx"*|*"xxxx"*|*"0000000"*|*"{{"*|*"}}"*|*"<fill"*|*"replace_"*|*"enter_"*)
       return 0
       ;;
   esac
@@ -67,25 +67,73 @@ contains_placeholder() {
   return 1
 }
 
-first_heading_line() {
+sha256_file() {
   local path="$1"
-  local pattern="$2"
-  awk -v r="$pattern" 'BEGIN { IGNORECASE = 1 } $0 ~ r { print NR; exit }' "$path"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$path" | awk '{print $1}'
+    return
+  fi
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$path" | awk '{print $1}'
+    return
+  fi
+  echo ""
 }
 
-extract_block() {
-  local path="$1"
-  local start_pattern="$2"
-  local stop_pattern="$3"
-  awk -v start_regex="$start_pattern" -v stop_regex="$stop_pattern" '
-    BEGIN { in_block=0 }
-    $0 ~ start_regex { in_block=1; next }
-    in_block && $0 ~ stop_regex { exit }
-    in_block { print }
-  ' "$path"
+sha256_stdin() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum | awk '{print $1}'
+    return
+  fi
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 | awk '{print $1}'
+    return
+  fi
+  echo ""
 }
 
-results_label_regex='^(Primary Commit Header [(]plaintext[)]|Pull Request Title [(]plaintext[)]|Pull Request Description [(]markdown[)]|Final Squash Stub [(]plaintext[)]( [(]Must differ from #1[)]| [(]must differ from Primary Commit Header[)])?|Extended Technical Manifest [(]plaintext[)]|Review Conversation Starter [(]markdown[)])$'
+canonical_template_hash() {
+  if [[ -n "${DP_CANONICAL_TEMPLATE_SHA256_OVERRIDE:-}" ]]; then
+    printf '%s' "${DP_CANONICAL_TEMPLATE_SHA256_OVERRIDE}"
+    return
+  fi
+  printf '%s' "$CANONICAL_DP_TEMPLATE_SHA256"
+}
+
+allowlist_pointer_path() {
+  if [[ -n "${DP_ALLOWLIST_POINTER_OVERRIDE:-}" ]]; then
+    printf '%s' "${DP_ALLOWLIST_POINTER_OVERRIDE}"
+    return
+  fi
+  printf '%s' "$ALLOWLIST_POINTER_PATH_DEFAULT"
+}
+
+check_template_hash_preflight() {
+  local expected_hash
+  local actual_hash
+
+  expected_hash="$(canonical_template_hash)"
+  actual_hash="$(sha256_file "$CANONICAL_DP_TEMPLATE_PATH")"
+
+  if [[ ! -f "$CANONICAL_DP_TEMPLATE_PATH" ]]; then
+    fail "canonical DP template missing: ${CANONICAL_DP_TEMPLATE_PATH}"
+    return
+  fi
+
+  if [[ -z "$actual_hash" ]]; then
+    fail "unable to compute sha256 for canonical DP template"
+    return
+  fi
+
+  if [[ ! "$expected_hash" =~ ^[0-9a-f]{64}$ ]]; then
+    fail "canonical template hash constant is invalid in tools/lint/dp.sh"
+    return
+  fi
+
+  if [[ "$actual_hash" != "$expected_hash" ]]; then
+    fail "canonical template hash mismatch for ${CANONICAL_DP_TEMPLATE_PATH} (expected ${expected_hash}, got ${actual_hash})"
+  fi
+}
 
 extract_results_closing_block() {
   local path="$1"
@@ -95,6 +143,8 @@ extract_results_closing_block() {
     in_block { print }
   ' "$path"
 }
+
+results_label_regex='^(Primary Commit Header [(]plaintext[)]|Pull Request Title [(]plaintext[)]|Pull Request Description [(]markdown[)]|Final Squash Stub [(]plaintext[)]( [(]Must differ from #1[)]| [(]must differ from Primary Commit Header[)])?|Extended Technical Manifest [(]plaintext[)]|Review Conversation Starter [(]markdown[)])$'
 
 extract_results_field_block() {
   local path="$1"
@@ -109,527 +159,7 @@ extract_results_field_block() {
 
 field_block_nonempty() {
   local value="$1"
-  if [[ -z "$(printf '%s\n' "$value" | sed '/^[[:space:]]*$/d')" ]]; then
-    return 1
-  fi
-  return 0
-}
-
-field_value() {
-  local label="$1"
-  local path="$2"
-  awk -v label="$label" '
-    {
-      if ($0 ~ "^[[:space:]]*" label ":[[:space:]]*") {
-        text = $0
-        sub("^[[:space:]]*" label ":[[:space:]]*", "", text)
-        print text
-        exit
-      }
-    }
-  ' "$path"
-}
-
-check_required_field() {
-  local label="$1"
-  local path="$2"
-  local value
-
-  value="$(field_value "$label" "$path")"
-  value="$(trim "$value")"
-  value="$(strip_backticks "$value")"
-
-  if [[ -z "$value" ]]; then
-    fail "missing or empty value for '$label'"
-    return 1
-  fi
-
-  return 0
-}
-
-is_task_surface() {
-  local path="$1"
-  if grep -nE '^#[[:space:]]*STELA TASK DASHBOARD' "$path" >/dev/null; then
-    return 0
-  fi
-  if grep -nE '^##[[:space:]]*3[.][[:space:]]*Current Dispatch Packet \(DP\)' "$path" >/dev/null; then
-    return 0
-  fi
-  return 1
-}
-
-extract_dp_payload() {
-  local source_path="$1"
-  local payload_path="$2"
-
-  if is_task_surface "$source_path"; then
-    if grep -nE '^##[[:space:]]*4([.]|[[:space:]])' "$source_path" >/dev/null; then
-      fail "TASK.md must not contain legacy Section 4 Closeout heading; use Section 3.5"
-      return 1
-    fi
-    if ! grep -nE '^##[[:space:]]*3[.]5([.]|[[:space:]])' "$source_path" >/dev/null; then
-      fail "TASK.md missing required Section 3.5 Closeout heading"
-      return 1
-    fi
-
-    awk '
-      BEGIN { in_dp=0 }
-      /^## 3[.] Current Dispatch Packet \(DP\)/ { in_dp=1; next }
-      /^## 3[.]5([.]|[[:space:]])/ && in_dp { exit }
-      in_dp { print }
-    ' "$source_path" > "$payload_path"
-
-    if [[ ! -s "$payload_path" ]]; then
-      fail "TASK.md missing extractable DP payload between Section 3 and Section 3.5"
-      return 1
-    fi
-    return 0
-  fi
-
-  cp "$source_path" "$payload_path"
-}
-
-payload_is_template() {
-  local path="$1"
-  if grep -nE '^#{1,6}[[:space:]]*DP-XXXX\b' "$path" >/dev/null; then
-    return 0
-  fi
-  return 1
-}
-
-has_llms_invocation() {
-  local path="$1"
-  if grep -nE '(^|[[:space:]`])(\./ops/bin/llms|ops/bin/llms)([[:space:]`]|$)' "$path" >/dev/null; then
-    return 0
-  fi
-  return 1
-}
-
-check_heading_order() {
-  local path="$1"
-
-  local -a labels=(
-    "3.1 Freshness Gate"
-    "3.1.1 DP Preflight Gate"
-    "3.2 Required Context Load"
-    "3.2.1 Canon load order"
-    "3.2.2 DP-scoped load order"
-    "3.3 Scope and Safety"
-    "3.4 Execution Plan"
-    "3.4.1 State"
-    "3.4.2 Request"
-    "3.4.3 Changelog"
-    "3.4.4 Patch / Diff"
-    "3.4.5 Receipt"
-  )
-
-  local -a patterns=(
-    '^#{2,6}[[:space:]]*3[.]1[.)]?[[:space:]]*FRESHNESS GATE'
-    '^#{2,6}[[:space:]]*3[.]1[.]1[.)]?[[:space:]]*DP PREFLIGHT GATE'
-    '^#{2,6}[[:space:]]*3[.]2[.)]?[[:space:]]*REQUIRED CONTEXT LOAD'
-    '^#{3,6}[[:space:]]*3[.]2[.]1[.)]?[[:space:]]*CANON LOAD ORDER'
-    '^#{3,6}[[:space:]]*3[.]2[.]2[.)]?[[:space:]]*DP-SCOPED LOAD ORDER'
-    '^#{2,6}[[:space:]]*3[.]3[.)]?[[:space:]]*SCOPE AND SAFETY'
-    '^#{2,6}[[:space:]]*3[.]4[.)]?[[:space:]]*EXECUTION PLAN'
-    '^#{3,6}[[:space:]]*3[.]4[.]1[.)]?[[:space:]]*STATE'
-    '^#{3,6}[[:space:]]*3[.]4[.]2[.)]?[[:space:]]*REQUEST'
-    '^#{3,6}[[:space:]]*3[.]4[.]3[.)]?[[:space:]]*CHANGELOG'
-    '^#{3,6}[[:space:]]*3[.]4[.]4[.)]?[[:space:]]*PATCH'
-    '^#{3,6}[[:space:]]*3[.]4[.]5[.)]?[[:space:]]*RECEIPT'
-  )
-
-  local -a heading_lines=()
-  local missing=0
-  local i
-  local line
-
-  for ((i=0; i<${#labels[@]}; i++)); do
-    line="$(first_heading_line "$path" "${patterns[i]}")"
-    if [[ -z "$line" ]]; then
-      fail "missing heading '${labels[i]}'"
-      heading_lines+=("")
-      missing=1
-    else
-      heading_lines+=("$line")
-    fi
-  done
-
-  if (( !missing )); then
-    for ((i=0; i<${#heading_lines[@]}-1; i++)); do
-      if (( heading_lines[i] >= heading_lines[i+1] )); then
-        fail "headings out of order: '${labels[i]}' should appear before '${labels[i+1]}'"
-        break
-      fi
-    done
-  fi
-}
-
-check_dp_id_heading() {
-  local path="$1"
-  if ! grep -nE '^#{1,6}[[:space:]]*DP-[A-Z]+-[0-9]{4,}([_-]v[0-9]+)?(:[[:space:]].+)?$' "$path" >/dev/null \
-    && ! grep -nE '^#{1,6}[[:space:]]*DP-XXXX\b' "$path" >/dev/null; then
-    fail "missing DP id heading (expected 'DP-<AREA>-<####>' or template marker 'DP-XXXX')"
-  fi
-}
-
-check_required_fields() {
-  local path="$1"
-  local template_mode="$2"
-
-  local base_branch
-  local work_branch
-  local base_head_raw
-  local base_head
-
-  check_required_field "Base Branch" "$path" || true
-  check_required_field "Required Work Branch" "$path" || true
-  check_required_field "Base HEAD" "$path" || true
-
-  base_branch="$(field_value "Base Branch" "$path")"
-  work_branch="$(field_value "Required Work Branch" "$path")"
-  base_head_raw="$(field_value "Base HEAD" "$path")"
-
-  base_branch="$(trim "$(strip_backticks "$base_branch")")"
-  work_branch="$(trim "$(strip_backticks "$work_branch")")"
-  base_head_raw="$(trim "$(strip_backticks "$base_head_raw")")"
-
-  if (( template_mode )); then
-    return
-  fi
-
-  if contains_placeholder "$base_branch"; then
-    fail "placeholder value for 'Base Branch'"
-  fi
-  if contains_placeholder "$work_branch"; then
-    fail "placeholder value for 'Required Work Branch'"
-  fi
-  if contains_placeholder "$base_head_raw"; then
-    fail "placeholder value for 'Base HEAD'"
-  fi
-
-  base_head="$(extract_hash "$base_head_raw")"
-  if [[ -z "$base_head" ]]; then
-    fail "missing or invalid Base HEAD hash"
-  fi
-  if [[ "$base_head" == "0000000" ]]; then
-    fail "placeholder value for 'Base HEAD'"
-  fi
-}
-
-check_preflight_gate() {
-  local path="$1"
-  local preflight_block
-
-  preflight_block="$(extract_block "$path" '^#{2,6}[[:space:]]*3[.]1[.]1' '^#{2,6}[[:space:]]*3[.]2')"
-  if [[ -z "$preflight_block" ]]; then
-    fail "missing DP Preflight Gate block"
-    return
-  fi
-
-  local -a required_lines=(
-    "bash tools/lint/dp.sh --test"
-    "bash tools/lint/dp.sh TASK.md"
-    "bash tools/lint/task.sh"
-  )
-
-  local req
-  for req in "${required_lines[@]}"; do
-    if ! grep -Fq -- "$req" <<< "$preflight_block"; then
-      fail "DP Preflight Gate missing command: ${req}"
-    fi
-  done
-}
-
-check_canon_load_order() {
-  local path="$1"
-  local canon_block
-
-  canon_block="$(extract_block "$path" '^#{3,6}[[:space:]]*3[.]2[.]1' '^#{3,6}[[:space:]]*3[.]2[.]2|^#{2,6}[[:space:]]*3[.]3')"
-  if [[ -z "$canon_block" ]]; then
-    fail "missing Canon load order block (3.2.1)"
-    return
-  fi
-
-  local -a expected=(
-    "1. PoT.md"
-    "2. SoP.md"
-    "3. TASK.md"
-    "4. docs/MAP.md"
-    "5. docs/MANUAL.md"
-    "6. ops/lib/manifests/CONTEXT.md"
-  )
-
-  local item
-  for item in "${expected[@]}"; do
-    if ! grep -Fxq -- "$item" <<< "$canon_block"; then
-      fail "canon load order missing '${item}'"
-    fi
-  done
-
-  local count
-  count="$(grep -cE '^[[:space:]]*[0-9]+\.[[:space:]]' <<< "$canon_block" || true)"
-  if [[ "$count" != "6" ]]; then
-    fail "canon load order must contain exactly six numbered items"
-  fi
-}
-
-check_context_load_llms_rules() {
-  local path="$1"
-  local context_block
-  local core_line
-
-  context_block="$(extract_block "$path" '^#{2,6}[[:space:]]*3[.]2' '^#{2,6}[[:space:]]*3[.]3')"
-  if [[ -z "$context_block" ]]; then
-    fail "missing context load block (3.2)"
-    return
-  fi
-
-  if grep -Eq '(^|[^[:alnum:]_-])llms-full[.]txt([^[:alnum:]_-]|$)' <<< "$context_block"; then
-    fail "context load must not reference llms-full.txt"
-  fi
-
-  while IFS= read -r core_line; do
-    core_line="$(trim "$core_line")"
-    if [[ -z "$core_line" ]]; then
-      continue
-    fi
-    if ! grep -Eiq '(explicit|lightweight|alignment)' <<< "$core_line"; then
-      fail "llms-core.txt is allowed only when explicitly marked as lightweight alignment usage"
-    fi
-  done < <(grep -Ei '(^|[^[:alnum:]_-])llms-core[.]txt([^[:alnum:]_-]|$)' <<< "$context_block" || true)
-}
-
-extract_allowlist_entries() {
-  local path="$1"
-  awk '
-    BEGIN { in_allow=0 }
-    {
-      if (!in_allow && $0 ~ /Target Files allowlist \(hard gate\):/) {
-        in_allow=1
-        next
-      }
-      if (in_allow) {
-        if ($0 ~ /^[[:space:]]*llms allowlist rule:/) { exit }
-        if ($0 ~ /^#{1,6}[[:space:]]/) { exit }
-        if ($0 ~ /^[[:space:]]*$/) { next }
-        if ($0 ~ /^[[:space:]]*[-*][[:space:]]+/) {
-          line=$0
-          sub(/^[[:space:]]*[-*][[:space:]]+/, "", line)
-          sub(/[[:space:]]+#.*/, "", line)
-          sub(/[[:space:]]+[(].*/, "", line)
-          print line
-        }
-      }
-    }
-  ' "$path"
-}
-
-load_allowlist_pointer_file() {
-  local pointer_path="$1"
-  local normalized_pointer="$pointer_path"
-
-  normalized_pointer="${normalized_pointer#./}"
-  if [[ ! -f "$normalized_pointer" ]]; then
-    fail "Target Files allowlist pointer missing file: ${normalized_pointer}"
-    return 1
-  fi
-
-  local -a loaded=()
-  mapfile -t loaded < <(awk 'NF { print }' "$normalized_pointer")
-  if (( ${#loaded[@]} == 0 )); then
-    fail "Target Files allowlist pointer file is empty: ${normalized_pointer}"
-    return 1
-  fi
-
-  normalized_allowlist=("${loaded[@]}")
-  return 0
-}
-
-allowlist_contains() {
-  local needle="$1"
-  local listed
-
-  for listed in "${normalized_allowlist[@]}"; do
-    listed="$(trim "$(strip_backticks "$listed")")"
-    if [[ "$listed" == "$needle" ]]; then
-      return 0
-    fi
-  done
-  return 1
-}
-
-check_allowlist() {
-  local path="$1"
-  local template_mode="$2"
-  local -a inline_allowlist=()
-  mapfile -t inline_allowlist < <(extract_allowlist_entries "$path")
-
-  if (( ${#inline_allowlist[@]} == 0 )); then
-    fail "Target Files allowlist missing or empty"
-    return
-  fi
-
-  normalized_allowlist=("${inline_allowlist[@]}")
-
-  if (( ${#inline_allowlist[@]} == 1 )); then
-    local pointer_entry
-    pointer_entry="$(trim "$(strip_backticks "${inline_allowlist[0]}")")"
-    pointer_entry="${pointer_entry#./}"
-    if [[ "$pointer_entry" == "$ALLOWLIST_POINTER_PATH" ]]; then
-      if ! load_allowlist_pointer_file "$pointer_entry"; then
-        return
-      fi
-    fi
-  fi
-
-  local concrete=0
-  local entry
-  for entry in "${normalized_allowlist[@]}"; do
-    entry="$(trim "$entry")"
-    entry="$(strip_backticks "$entry")"
-    if [[ -z "$entry" ]]; then
-      fail "Target Files allowlist has empty entry"
-      continue
-    fi
-
-    if contains_placeholder "$entry"; then
-      continue
-    fi
-
-    concrete=$((concrete + 1))
-  done
-
-  if (( concrete == 0 )); then
-    if (( !template_mode )); then
-      fail "Target Files allowlist must contain at least one concrete path"
-    fi
-  fi
-
-  if (( template_mode )); then
-    return
-  fi
-
-  if has_llms_invocation "$path"; then
-    if ! allowlist_contains "ops/bin/llms" && ! allowlist_contains "./ops/bin/llms"; then
-      echo "WARN: llms invocation detected but allowlist does not include ops/bin/llms" >&2
-    fi
-  fi
-}
-
-check_receipt_contract() {
-  local path="$1"
-  local receipt_block
-
-  receipt_block="$(extract_block "$path" '^#{3,6}[[:space:]]*3[.]4[.]5' '^#{1,6}[[:space:]]*3[.]5([.]|[[:space:]])')"
-  if [[ -z "$receipt_block" ]]; then
-    fail "missing receipt block (3.4.5)"
-    return
-  fi
-
-  if ! grep -Eq '\./ops/bin/open[[:space:]]+--out=auto[[:space:]]+--dp=' <<< "$receipt_block"; then
-    fail "receipt block missing executable OPEN command"
-  fi
-  if ! grep -Eq '\./ops/bin/dump[[:space:]]+--scope=platform[[:space:]]+--format=chatgpt[[:space:]]+--out=auto[[:space:]]+--bundle' <<< "$receipt_block"; then
-    fail "receipt block missing executable DUMP command"
-  fi
-  if ! grep -Fq 'test -s' <<< "$receipt_block"; then
-    fail "receipt block missing non-empty dump payload check (test -s ...)"
-  fi
-
-  local -a gate_commands=(
-    "bash tools/lint/context.sh"
-    "bash tools/lint/style.sh"
-    "bash tools/lint/truth.sh"
-    "bash tools/lint/dp.sh --test"
-    "bash tools/lint/dp.sh TASK.md"
-    "bash tools/lint/task.sh"
-    "bash tools/lint/llms.sh"
-    "./tools/verify.sh"
-  )
-
-  local cmd
-  for cmd in "${gate_commands[@]}"; do
-    if ! grep -Fq "$cmd" <<< "$receipt_block"; then
-      fail "receipt block missing verification command: ${cmd}"
-    fi
-  done
-
-  if ! grep -Fq 'git diff --name-only' <<< "$receipt_block"; then
-    fail "receipt block missing git diff --name-only proof"
-  fi
-  if ! grep -Fq 'git diff --stat' <<< "$receipt_block"; then
-    fail "receipt block missing git diff --stat proof"
-  fi
-  if ! grep -Fq 'Verify Section 3.5 Closing Block is populated in RESULTS' <<< "$receipt_block"; then
-    fail "receipt block missing Section 3.5 Closing Block verification line"
-  fi
-
-  if ! grep -Eiq 'required pasted outputs|paste outputs' <<< "$receipt_block"; then
-    fail "receipt block missing required pasted outputs clause"
-  fi
-  if ! grep -Fq 'Mandatory Closing Block required in RESULTS' <<< "$receipt_block" \
-    && ! grep -Fq 'Mandatory Closing Block' <<< "$receipt_block"; then
-    fail "receipt block missing Mandatory Closing Block requirement"
-  fi
-}
-
-check_disposable_input_hazards() {
-  local path="$1"
-  local issue
-
-  if issue="$(awk '
-    BEGIN { IGNORECASE=1 }
-    {
-      line=tolower($0)
-      if (line ~ /storage\/_scratch\// || line ~ /storage\/tmp\// || line ~ /chat log/ || line ~ /conversation dump/ || line ~ /throwaway notes/ || line ~ /scratch draft/) {
-        if (line ~ /do not/ || line ~ /must not/ || line ~ /not required/ || line ~ /forbidden/) {
-          next
-        }
-        print $0
-        exit 1
-      }
-    }
-  ' "$path")"; then
-    :
-  else
-    fail "DP references disposable artifact input: ${issue}"
-  fi
-
-  if issue="$(awk '
-    BEGIN { IGNORECASE=1 }
-    {
-      line=tolower($0)
-      if ((line ~ /attach/ || line ~ /attachment/) && (line ~ /open/ || line ~ /dump/)) {
-        if (line ~ /do not/ || line ~ /must not/ || line ~ /does not/ || line ~ /not required/) {
-          next
-        }
-        print $0
-        exit 1
-      }
-    }
-  ' "$path")"; then
-    :
-  else
-    fail "DP requests OPEN/DUMP as attachments instead of receipt pointers: ${issue}"
-  fi
-
-  if issue="$(awk '
-    BEGIN { IGNORECASE=1 }
-    {
-      line=tolower($0)
-      if (line ~ /begin[[:space:]]+open|end[[:space:]]+open|begin[[:space:]]+dump|end[[:space:]]+dump|pasted[[:space:]]+bundle|raw[[:space:]]+open[[:space:]]+payload|raw[[:space:]]+dump[[:space:]]+payload/) {
-        if (line ~ /do not/ || line ~ /must not/ || line ~ /does not/ || line ~ /not required/) {
-          next
-        }
-        print $0
-        exit 1
-      }
-    }
-  ' "$path")"; then
-    :
-  else
-    fail "DP embeds OPEN/DUMP payload markers instead of pointer references: ${issue}"
-  fi
+  [[ -n "$(printf '%s\n' "$value" | sed '/^[[:space:]]*$/d')" ]]
 }
 
 lint_results_path() {
@@ -731,29 +261,478 @@ lint_results_path() {
   echo "OK: DP RESULTS lint passed"
 }
 
+is_task_surface() {
+  local path="$1"
+  grep -Eq '^#[[:space:]]*STELA TASK DASHBOARD' "$path" \
+    && grep -Eq '^##[[:space:]]*3[.][[:space:]]*Current Dispatch Packet \(DP\)' "$path"
+}
+
+extract_dp_payload() {
+  local source_path="$1"
+  local payload_path="$2"
+
+  if ! is_task_surface "$source_path"; then
+    cp "$source_path" "$payload_path"
+    return 0
+  fi
+
+  local section_count
+  section_count="$(grep -cE '^##[[:space:]]*3[.][[:space:]]*Current Dispatch Packet \(DP\)[[:space:]]*$' "$source_path" || true)"
+  if [[ "$section_count" != "1" ]]; then
+    fail "TASK.md must contain exactly one '## 3. Current Dispatch Packet (DP)' section"
+    return 1
+  fi
+
+  local dp_heading_count
+  dp_heading_count="$(awk '
+    BEGIN { in_section=0; count=0 }
+    /^##[[:space:]]*3[.][[:space:]]*Current Dispatch Packet [(]DP[)][[:space:]]*$/ { in_section=1; next }
+    in_section && /^##[[:space:]]*[0-9]+[.]/ && $0 !~ /^##[[:space:]]*3[.]/ { in_section=0 }
+    in_section && /^### DP-/ { count++ }
+    END { print count }
+  ' "$source_path")"
+  if [[ "$dp_heading_count" != "1" ]]; then
+    fail "TASK.md must contain exactly one active '### DP-' block inside Section 3"
+    return 1
+  fi
+
+  awk '
+    BEGIN { in_section=0; in_block=0 }
+    /^##[[:space:]]*3[.][[:space:]]*Current Dispatch Packet [(]DP[)][[:space:]]*$/ { in_section=1; next }
+    in_section && /^##[[:space:]]*[0-9]+[.]/ && $0 !~ /^##[[:space:]]*3[.]/ { exit }
+    in_section && /^### DP-/ { in_block=1 }
+    in_block { print }
+  ' "$source_path" > "$payload_path"
+
+  if [[ ! -s "$payload_path" ]]; then
+    fail "TASK.md missing extractable DP payload"
+    return 1
+  fi
+
+  return 0
+}
+
+extract_field_value() {
+  local label="$1"
+  local path="$2"
+  awk -v label="$label" '
+    {
+      if ($0 ~ "^" label ":[[:space:]]*") {
+        text=$0
+        sub("^" label ":[[:space:]]*", "", text)
+        print text
+        exit
+      }
+    }
+  ' "$path"
+}
+
+extract_block() {
+  local path="$1"
+  local start_pattern="$2"
+  local stop_pattern="$3"
+  awk -v start_regex="$start_pattern" -v stop_regex="$stop_pattern" '
+    BEGIN { in_block=0 }
+    $0 ~ start_regex { in_block=1; next }
+    in_block && $0 ~ stop_regex { exit }
+    in_block { print }
+  ' "$path"
+}
+
+block_has_content() {
+  local value="$1"
+  local compact
+  compact="$(printf '%s\n' "$value" | sed '/^[[:space:]]*$/d')"
+  if [[ -z "$compact" ]]; then
+    return 1
+  fi
+
+  local filtered
+  filtered="$(printf '%s\n' "$compact" | awk '
+    {
+      lower=tolower($0)
+      if ($0 ~ /^[[:space:]]*{{[A-Z0-9_]+}}[[:space:]]*$/) { next }
+      if (lower ~ /populate during execution|do not pre-fill|tbd|todo|dp-xxxx|xxxx/) { next }
+      print
+    }
+  ' | sed '/^[[:space:]]*$/d')"
+
+  [[ -n "$filtered" ]]
+}
+
+normalize_dp_structure() {
+  local path="$1"
+  awk '
+    function emit(name) {
+      print "{{" name "}}"
+    }
+
+    mode == "DP_SCOPED_LOAD_ORDER" {
+      if ($0 ~ /^##[[:space:]]*3[.]3([.]|[[:space:]])/) {
+        mode=""
+        print $0
+      }
+      next
+    }
+
+    mode == "OBJECTIVE" {
+      if ($0 ~ /^In scope:[[:space:]]*$/) {
+        print $0
+        emit("IN_SCOPE")
+        mode="IN_SCOPE"
+      }
+      next
+    }
+
+    mode == "IN_SCOPE" {
+      if ($0 ~ /^Out of scope:[[:space:]]*$/) {
+        print $0
+        emit("OUT_OF_SCOPE")
+        mode="OUT_OF_SCOPE"
+      }
+      next
+    }
+
+    mode == "OUT_OF_SCOPE" {
+      if ($0 ~ /^Safety and invariants:[[:space:]]*$/) {
+        print $0
+        emit("SAFETY_INVARIANTS")
+        mode="SAFETY_INVARIANTS"
+      }
+      next
+    }
+
+    mode == "SAFETY_INVARIANTS" {
+      if ($0 ~ /^Target Files allowlist [(]hard gate[)]:[[:space:]]*$/) {
+        print $0
+        mode="ALLOWLIST_POINTER"
+      }
+      next
+    }
+
+    mode == "ALLOWLIST_POINTER" {
+      if ($0 ~ /^[[:space:]]*-[[:space:]]+/) {
+        print "- {{ALLOWLIST_POINTER}}"
+        mode=""
+      }
+      next
+    }
+
+    mode == "PLAN_STATE" {
+      if ($0 ~ /^### 3[.]4[.]2/) {
+        print $0
+        emit("PLAN_REQUEST")
+        mode="PLAN_REQUEST"
+      }
+      next
+    }
+
+    mode == "PLAN_REQUEST" {
+      if ($0 ~ /^### 3[.]4[.]3/) {
+        print $0
+        emit("PLAN_CHANGELOG")
+        mode="PLAN_CHANGELOG"
+      }
+      next
+    }
+
+    mode == "PLAN_CHANGELOG" {
+      if ($0 ~ /^### 3[.]4[.]4/) {
+        print $0
+        emit("PLAN_PATCH")
+        mode="PLAN_PATCH"
+      }
+      next
+    }
+
+    mode == "PLAN_PATCH" {
+      if ($0 ~ /^### 3[.]4[.]5/) {
+        print $0
+        emit("RECEIPT_COMMANDS")
+        mode="RECEIPT_COMMANDS"
+      }
+      next
+    }
+
+    mode == "RECEIPT_COMMANDS" {
+      if ($0 ~ /^##[[:space:]]*3[.]5([.]|[[:space:]])/) {
+        mode=""
+        print $0
+      }
+      next
+    }
+
+    {
+      if ($0 ~ /^### DP-[^:]+:[[:space:]].*$/) {
+        print "### DP-OPS-0000: {{DP_TITLE}}"
+        next
+      }
+      if ($0 ~ /^Base Branch:[[:space:]]*/) {
+        print "Base Branch: {{BASE_BRANCH}}"
+        next
+      }
+      if ($0 ~ /^Required Work Branch:[[:space:]]*/) {
+        print "Required Work Branch: {{WORK_BRANCH}}"
+        next
+      }
+      if ($0 ~ /^Base HEAD:[[:space:]]*/) {
+        print "Base HEAD: {{BASE_HEAD}}"
+        next
+      }
+      if ($0 ~ /^Freshness Stamp:[[:space:]]*/) {
+        print "Freshness Stamp: {{FRESHNESS_STAMP}}"
+        next
+      }
+
+      if ($0 ~ /^### 3[.]2[.]2([.]|[[:space:]])/) {
+        print $0
+        emit("DP_SCOPED_LOAD_ORDER")
+        mode="DP_SCOPED_LOAD_ORDER"
+        next
+      }
+
+      if ($0 ~ /^Objective:[[:space:]]*$/) {
+        print $0
+        emit("OBJECTIVE")
+        mode="OBJECTIVE"
+        next
+      }
+
+      if ($0 ~ /^### 3[.]4[.]1/) {
+        print $0
+        emit("PLAN_STATE")
+        mode="PLAN_STATE"
+        next
+      }
+
+      if ($0 ~ /--dp=DP-[A-Z]+-[0-9]{4,}/) {
+        gsub(/--dp=DP-[A-Z]+-[0-9]{4,}/, "--dp=DP-OPS-0000")
+        print $0
+        next
+      }
+
+      print $0
+    }
+  ' "$path"
+}
+
+check_structure_hash() {
+  local payload_path="$1"
+  local template_hash
+  local payload_hash
+
+  if [[ ! -f "$CANONICAL_DP_TEMPLATE_PATH" ]]; then
+    return
+  fi
+
+  template_hash="$(normalize_dp_structure "$CANONICAL_DP_TEMPLATE_PATH" | sha256_stdin)"
+  payload_hash="$(normalize_dp_structure "$payload_path" | sha256_stdin)"
+
+  if [[ -z "$template_hash" || -z "$payload_hash" ]]; then
+    fail "unable to compute DP structure hashes"
+    return
+  fi
+
+  if [[ "$payload_hash" != "$template_hash" ]]; then
+    fail "DP structure hash mismatch against canonical template"
+  fi
+}
+
+check_required_fields() {
+  local path="$1"
+
+  local heading
+  local dp_id
+  local dp_title
+  heading="$(grep -m1 -E '^### DP-' "$path" || true)"
+  if [[ -z "$heading" ]]; then
+    fail "missing DP heading (expected '### DP-...: ...')"
+  else
+    dp_id="$(printf '%s' "$heading" | sed -E 's/^###[[:space:]]*(DP-[^:]+):.*$/\1/')"
+    dp_title="$(printf '%s' "$heading" | sed -E 's/^###[[:space:]]*DP-[^:]+:[[:space:]]*(.*)$/\1/')"
+
+    if [[ ! "$dp_id" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]]; then
+      fail "invalid DP id in heading: ${dp_id}"
+    fi
+    if contains_placeholder "$dp_title"; then
+      fail "placeholder value for DP title"
+    fi
+  fi
+
+  local base_branch
+  local work_branch
+  local base_head_raw
+  local freshness_stamp
+  local base_head
+
+  base_branch="$(trim "$(strip_backticks "$(extract_field_value "Base Branch" "$path")")")"
+  work_branch="$(trim "$(strip_backticks "$(extract_field_value "Required Work Branch" "$path")")")"
+  base_head_raw="$(trim "$(strip_backticks "$(extract_field_value "Base HEAD" "$path")")")"
+  freshness_stamp="$(trim "$(strip_backticks "$(extract_field_value "Freshness Stamp" "$path")")")"
+
+  if [[ -z "$base_branch" ]]; then
+    fail "missing value for 'Base Branch'"
+  elif contains_placeholder "$base_branch"; then
+    fail "missing or placeholder value for 'Base Branch'"
+  fi
+  if [[ -z "$work_branch" ]]; then
+    fail "missing value for 'Required Work Branch'"
+  elif contains_placeholder "$work_branch"; then
+    fail "missing or placeholder value for 'Required Work Branch'"
+  fi
+  if [[ -z "$base_head_raw" ]]; then
+    fail "missing value for 'Base HEAD'"
+  elif contains_placeholder "$base_head_raw"; then
+    fail "missing or placeholder value for 'Base HEAD'"
+  fi
+  if [[ -z "$freshness_stamp" ]]; then
+    fail "missing value for 'Freshness Stamp'"
+  elif contains_placeholder "$freshness_stamp"; then
+    fail "missing or placeholder value for 'Freshness Stamp'"
+  fi
+
+  base_head="$(extract_hash "$base_head_raw")"
+  if [[ -z "$base_head" ]]; then
+    fail "invalid Base HEAD hash"
+  fi
+
+  local scoped_load_order
+  local objective_block
+  local in_scope_block
+  local out_scope_block
+  local safety_block
+  local state_block
+  local request_block
+  local changelog_block
+  local patch_block
+  local receipt_block
+
+  scoped_load_order="$(extract_block "$path" '^### 3[.]2[.]2' '^## 3[.]3([.]|[[:space:]])')"
+  objective_block="$(extract_block "$path" '^Objective:[[:space:]]*$' '^In scope:[[:space:]]*$')"
+  in_scope_block="$(extract_block "$path" '^In scope:[[:space:]]*$' '^Out of scope:[[:space:]]*$')"
+  out_scope_block="$(extract_block "$path" '^Out of scope:[[:space:]]*$' '^Safety and invariants:[[:space:]]*$')"
+  safety_block="$(extract_block "$path" '^Safety and invariants:[[:space:]]*$' '^Target Files allowlist [(]hard gate[)]:[[:space:]]*$')"
+  state_block="$(extract_block "$path" '^### 3[.]4[.]1' '^### 3[.]4[.]2')"
+  request_block="$(extract_block "$path" '^### 3[.]4[.]2' '^### 3[.]4[.]3')"
+  changelog_block="$(extract_block "$path" '^### 3[.]4[.]3' '^### 3[.]4[.]4')"
+  patch_block="$(extract_block "$path" '^### 3[.]4[.]4' '^### 3[.]4[.]5')"
+  receipt_block="$(extract_block "$path" '^### 3[.]4[.]5' '^## 3[.]5([.]|[[:space:]])')"
+
+  if ! block_has_content "$scoped_load_order"; then
+    fail "missing or placeholder content for DP-scoped load order"
+  fi
+  if ! block_has_content "$objective_block"; then
+    fail "missing or placeholder content for Objective"
+  fi
+  if ! block_has_content "$in_scope_block"; then
+    fail "missing or placeholder content for In scope"
+  fi
+  if ! block_has_content "$out_scope_block"; then
+    fail "missing or placeholder content for Out of scope"
+  fi
+  if ! block_has_content "$safety_block"; then
+    fail "missing or placeholder content for Safety and invariants"
+  fi
+  if ! block_has_content "$state_block"; then
+    fail "missing or placeholder content for 3.4.1 State"
+  fi
+  if ! block_has_content "$request_block"; then
+    fail "missing or placeholder content for 3.4.2 Request"
+  fi
+  if ! block_has_content "$changelog_block"; then
+    fail "missing or placeholder content for 3.4.3 Changelog"
+  fi
+  if ! block_has_content "$patch_block"; then
+    fail "missing or placeholder content for 3.4.4 Patch / Diff"
+  fi
+  if ! block_has_content "$receipt_block"; then
+    fail "missing or placeholder content for 3.4.5 Receipt"
+  fi
+}
+
+check_allowlist_pointer_integrity() {
+  local path="$1"
+  local allowlist_block
+  local pointer_line
+  local pointer_path
+  local expected_pointer
+
+  allowlist_block="$(extract_block "$path" '^Target Files allowlist [(]hard gate[)]:[[:space:]]*$' '^## 3[.]4([.]|[[:space:]])')"
+  pointer_line="$(printf '%s\n' "$allowlist_block" | grep -E '^[[:space:]]*-[[:space:]]+' | head -n1 || true)"
+
+  if [[ -z "$pointer_line" ]]; then
+    fail "Target Files allowlist pointer entry missing"
+    return
+  fi
+
+  if [[ "$(printf '%s\n' "$allowlist_block" | grep -Ec '^[[:space:]]*-[[:space:]]+' || true)" != "1" ]]; then
+    fail "Target Files allowlist must contain exactly one pointer entry"
+    return
+  fi
+
+  pointer_path="$(printf '%s' "$pointer_line" | sed -E 's/^[[:space:]]*-[[:space:]]+//')"
+  pointer_path="$(trim "$(strip_backticks "$pointer_path")")"
+  expected_pointer="$(allowlist_pointer_path)"
+
+  if [[ "$pointer_path" != "$expected_pointer" ]]; then
+    fail "Target Files allowlist pointer must be '${expected_pointer}'"
+    return
+  fi
+
+  local pointer_fs_path="$pointer_path"
+  if [[ "$pointer_fs_path" != /* ]]; then
+    pointer_fs_path="${REPO_ROOT}/${pointer_fs_path}"
+  fi
+
+  if [[ ! -f "$pointer_fs_path" ]]; then
+    fail "allowlist pointer file missing: ${pointer_path}"
+    return
+  fi
+
+  local -a entries=()
+  mapfile -t entries < <(awk 'NF { print }' "$pointer_fs_path")
+  if (( ${#entries[@]} == 0 )); then
+    fail "allowlist pointer file is empty: ${pointer_path}"
+    return
+  fi
+
+  local entry
+  local normalized
+  for entry in "${entries[@]}"; do
+    normalized="$(trim "$entry")"
+    if [[ -z "$normalized" ]]; then
+      continue
+    fi
+
+    if [[ "$normalized" == -* || "$normalized" == \** ]]; then
+      fail "allowlist entry must be a plain path (no markdown bullets): ${normalized}"
+      continue
+    fi
+
+    normalized="${normalized#./}"
+    if [[ "$normalized" == /* ]]; then
+      if [[ "$normalized" == "${REPO_ROOT}/"* ]]; then
+        normalized="${normalized#${REPO_ROOT}/}"
+      else
+        fail "allowlist entry is outside repository root: ${entry}"
+        continue
+      fi
+    fi
+
+    if [[ ! -e "${REPO_ROOT}/${normalized}" ]]; then
+      fail "allowlist entry does not exist: ${normalized}"
+    fi
+  done
+}
+
 lint_payload() {
   local path="$1"
   failures=0
 
-  if has_standalone_ellipsis "$path"; then
-    fail "placeholder token found: ..."
-  fi
-
-  check_dp_id_heading "$path"
-  check_heading_order "$path"
-
-  local template_mode=0
-  if payload_is_template "$path"; then
-    template_mode=1
-  fi
-
-  check_required_fields "$path" "$template_mode"
-  check_preflight_gate "$path"
-  check_canon_load_order "$path"
-  check_context_load_llms_rules "$path"
-  check_allowlist "$path" "$template_mode"
-  check_receipt_contract "$path"
-  check_disposable_input_hazards "$path"
+  check_template_hash_preflight
+  check_structure_hash "$path"
+  check_required_fields "$path"
+  check_allowlist_pointer_integrity "$path"
 
   if (( failures )); then
     return 1
@@ -791,512 +770,142 @@ lint_path() {
   rm -f "$payload_tmp"
 }
 
+render_fixture_from_template() {
+  local out_path="$1"
+  local allowlist_pointer="$2"
+
+  local dp_scoped_load_order
+  local objective
+  local in_scope
+  local out_scope
+  local safety
+  local plan_state
+  local plan_request
+  local plan_changelog
+  local plan_patch
+  local receipt_commands
+
+  dp_scoped_load_order='- tools/lint/dp.sh
+- docs/ops/specs/tools/lint/dp.md'
+  objective='- Validate template-hash flow for DP lint.'
+  in_scope='- tools/lint/dp.sh'
+  out_scope='- Unrelated repo refactors.'
+  safety='- Keep deterministic outputs and pointer-first allowlist mode.'
+  plan_state='- DP lint now validates structure through canonical template hashing.'
+  plan_request='- Confirm template hash, structure hash, and required-field integrity checks.'
+  plan_changelog='- Updated tools/lint/dp.sh
+- Added ops/src/surfaces/DP.md.tpl'
+  plan_patch='- Implemented structure hashing
+- Added allowlist pointer integrity checks'
+  receipt_commands='- ./ops/bin/open --out=auto --dp="DP-OPS-0000"
+- bash tools/lint/dp.sh TASK.md
+- git diff --name-only
+- git diff --stat'
+
+  : > "$out_path"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line//'{{DP_TITLE}}'/Fixture structure-hash lint coverage}"
+    line="${line//'{{BASE_BRANCH}}'/main}"
+    line="${line//'{{WORK_BRANCH}}'/work/dp-ops-0000-2026-02-14}"
+    line="${line//'{{BASE_HEAD}}'/d3801c3a}"
+    line="${line//'{{FRESHNESS_STAMP}}'/2026-02-14}"
+
+    case "$line" in
+      "{{DP_SCOPED_LOAD_ORDER}}")
+        printf '%s\n' "$dp_scoped_load_order" >> "$out_path"
+        ;;
+      "{{OBJECTIVE}}")
+        printf '%s\n' "$objective" >> "$out_path"
+        ;;
+      "{{IN_SCOPE}}")
+        printf '%s\n' "$in_scope" >> "$out_path"
+        ;;
+      "{{OUT_OF_SCOPE}}")
+        printf '%s\n' "$out_scope" >> "$out_path"
+        ;;
+      "{{SAFETY_INVARIANTS}}")
+        printf '%s\n' "$safety" >> "$out_path"
+        ;;
+      "{{PLAN_STATE}}")
+        printf '%s\n' "$plan_state" >> "$out_path"
+        ;;
+      "{{PLAN_REQUEST}}")
+        printf '%s\n' "$plan_request" >> "$out_path"
+        ;;
+      "{{PLAN_CHANGELOG}}")
+        printf '%s\n' "$plan_changelog" >> "$out_path"
+        ;;
+      "{{PLAN_PATCH}}")
+        printf '%s\n' "$plan_patch" >> "$out_path"
+        ;;
+      "{{RECEIPT_COMMANDS}}")
+        printf '%s\n' "$receipt_commands" >> "$out_path"
+        ;;
+      "- storage/dp/active/allowlist.txt")
+        printf '%s\n' "- ${allowlist_pointer}" >> "$out_path"
+        ;;
+      *)
+        printf '%s\n' "$line" >> "$out_path"
+        ;;
+    esac
+  done < "$CANONICAL_DP_TEMPLATE_PATH"
+}
+
 run_test() {
+  local tmp_allowlist_valid
+  local tmp_allowlist_bad
   local tmp_valid
-  local tmp_invalid_placeholder
-  local tmp_missing_preflight
-  local tmp_disposable
-  local tmp_llms_full_context
-  local tmp_llms_core_lightweight
-  local tmp_llms_core_nonexplicit
-  local tmp_task_wrapper
-  local tmp_task_invalid
+  local tmp_structure_bad
+  local tmp_pointer_bad
+  local tmp_allowlist_file_bad
   local tmp_results_valid
-  local tmp_results_invalid_strict
-  local tmp_results_invalid_permissive
+  local tmp_results_invalid
 
+  tmp_allowlist_valid="$(mktemp)"
+  tmp_allowlist_bad="$(mktemp)"
   tmp_valid="$(mktemp)"
-  cat <<'TESTDP' > "$tmp_valid"
-# DP-OPS-0001: DP Lint Test
-## 3.1 Freshness Gate (Must Pass Before Work)
-Base Branch: main
-Required Work Branch: work/dp-ops-0001-lint
-Base HEAD: fdc5d080
-
-## 3.1.1 DP Preflight Gate (Run Before Any Edits)
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-
-## 3.2 Required Context Load (Read Before Doing Anything)
-
-### 3.2.1 Canon load order (always)
-1. PoT.md
-2. SoP.md
-3. TASK.md
-4. docs/MAP.md
-5. docs/MANUAL.md
-6. ops/lib/manifests/CONTEXT.md
-
-### 3.2.2 DP-scoped load order (per DP)
-- tools/lint/task.sh
-- tools/lint/dp.sh
-
-## 3.3 Scope and Safety
-Objective: Validate DP lint behavior.
-In scope: DP lint only.
-Out of scope: TASK surface container rules.
-Safety and invariants: Keep lint deterministic.
-
-Target Files allowlist (hard gate):
-- tools/lint/dp.sh
-
-## 3.4 Execution Plan (A-E)
-
-### 3.4.1 State
-State text.
-
-### 3.4.2 Request
-Request text.
-
-### 3.4.3 Changelog
-Changelog text.
-
-### 3.4.4 Patch / Diff
-Patch text.
-
-### 3.4.5 Receipt (Proofs to collect) — MUST RUN
-- ./ops/bin/open --out=auto --dp="DP-OPS-0001"
-- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
-- Zero-byte check: test -s <dump_payload_path>
-- bash tools/lint/context.sh
-- bash tools/lint/style.sh
-- bash tools/lint/truth.sh
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-- bash tools/lint/llms.sh
-- ./tools/verify.sh
-- git diff --name-only
-- git diff --stat
-- Verify Section 3.5 Closing Block is populated in RESULTS.
-- Required pasted outputs: receipts, verification outcomes, and diff output.
-- Mandatory Closing Block required in RESULTS.
-TESTDP
-
-  lint_path "$tmp_valid" >/dev/null
-
-  tmp_invalid_placeholder="$(mktemp)"
-  cat <<'TESTDP' > "$tmp_invalid_placeholder"
-# DP-OPS-0002: Placeholder Detection
-## 3.1 Freshness Gate (Must Pass Before Work)
-Base Branch: main
-Required Work Branch: work/dp-ops-0002-lint
-Base HEAD: 0000000
-
-## 3.1.1 DP Preflight Gate (Run Before Any Edits)
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-
-## 3.2 Required Context Load (Read Before Doing Anything)
-
-### 3.2.1 Canon load order (always)
-1. PoT.md
-2. SoP.md
-3. TASK.md
-4. docs/MAP.md
-5. docs/MANUAL.md
-6. ops/lib/manifests/CONTEXT.md
-
-### 3.2.2 DP-scoped load order (per DP)
-- tools/lint/task.sh
-- tools/lint/dp.sh
-
-## 3.3 Scope and Safety
-Objective: Validate placeholder failure.
-In scope: DP lint only.
-Out of scope: none.
-Safety and invariants: none.
-
-Target Files allowlist (hard gate):
-- Populate during execution; do not pre-fill in TASK.md.
-
-## 3.4 Execution Plan (A-E)
-### 3.4.1 State
-State.
-### 3.4.2 Request
-Request.
-### 3.4.3 Changelog
-Changelog.
-### 3.4.4 Patch / Diff
-Patch.
-### 3.4.5 Receipt (Proofs to collect) — MUST RUN
-- ./ops/bin/open --out=auto --dp="DP-OPS-0002"
-- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
-- Zero-byte check: test -s <dump_payload_path>
-- bash tools/lint/context.sh
-- bash tools/lint/style.sh
-- bash tools/lint/truth.sh
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-- bash tools/lint/llms.sh
-- ./tools/verify.sh
-- git diff --name-only
-- git diff --stat
-- Verify Section 3.5 Closing Block is populated in RESULTS.
-- Required pasted outputs: receipts, verification outcomes, and diff output.
-- Mandatory Closing Block required in RESULTS.
-TESTDP
-
-  if lint_path "$tmp_invalid_placeholder" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict" "$tmp_results_invalid_permissive" "$tmp_task_wrapper" "$tmp_task_invalid"
-    echo "FAIL: --test expected placeholder detection to fail" >&2
-    exit 1
-  fi
-
-  tmp_missing_preflight="$(mktemp)"
-  cat <<'TESTDP' > "$tmp_missing_preflight"
-# DP-OPS-0003: Preflight Missing
-## 3.1 Freshness Gate (Must Pass Before Work)
-Base Branch: main
-Required Work Branch: work/dp-ops-0003-lint
-Base HEAD: fdc5d080
-
-## 3.1.1 DP Preflight Gate (Run Before Any Edits)
-- bash tools/lint/dp.sh --test
-- bash tools/lint/task.sh
-
-## 3.2 Required Context Load (Read Before Doing Anything)
-
-### 3.2.1 Canon load order (always)
-1. PoT.md
-2. SoP.md
-3. TASK.md
-4. docs/MAP.md
-5. docs/MANUAL.md
-6. ops/lib/manifests/CONTEXT.md
-
-### 3.2.2 DP-scoped load order (per DP)
-- tools/lint/task.sh
-- tools/lint/dp.sh
-
-## 3.3 Scope and Safety
-Objective: Validate preflight checks.
-In scope: DP lint only.
-Out of scope: none.
-Safety and invariants: none.
-
-Target Files allowlist (hard gate):
-- tools/lint/dp.sh
-
-## 3.4 Execution Plan (A-E)
-### 3.4.1 State
-State.
-### 3.4.2 Request
-Request.
-### 3.4.3 Changelog
-Changelog.
-### 3.4.4 Patch / Diff
-Patch.
-### 3.4.5 Receipt (Proofs to collect) — MUST RUN
-- ./ops/bin/open --out=auto --dp="DP-OPS-0003"
-- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
-- Zero-byte check: test -s <dump_payload_path>
-- bash tools/lint/context.sh
-- bash tools/lint/style.sh
-- bash tools/lint/truth.sh
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-- bash tools/lint/llms.sh
-- ./tools/verify.sh
-- git diff --name-only
-- git diff --stat
-- Verify Section 3.5 Closing Block is populated in RESULTS.
-- Required pasted outputs: receipts, verification outcomes, and diff output.
-- Mandatory Closing Block required in RESULTS.
-TESTDP
-
-  if lint_path "$tmp_missing_preflight" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict" "$tmp_results_invalid_permissive" "$tmp_task_wrapper" "$tmp_task_invalid"
-    echo "FAIL: --test expected preflight command detection to fail" >&2
-    exit 1
-  fi
-
-  tmp_disposable="$(mktemp)"
-  cat <<'TESTDP' > "$tmp_disposable"
-# DP-OPS-0004: Disposable Input
-## 3.1 Freshness Gate (Must Pass Before Work)
-Base Branch: main
-Required Work Branch: work/dp-ops-0004-lint
-Base HEAD: fdc5d080
-
-## 3.1.1 DP Preflight Gate (Run Before Any Edits)
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-
-## 3.2 Required Context Load (Read Before Doing Anything)
-
-### 3.2.1 Canon load order (always)
-1. PoT.md
-2. SoP.md
-3. TASK.md
-4. docs/MAP.md
-5. docs/MANUAL.md
-6. ops/lib/manifests/CONTEXT.md
-
-### 3.2.2 DP-scoped load order (per DP)
-- tools/lint/task.sh
-- tools/lint/dp.sh
-- Required input: storage/_scratch/notes.md
-
-## 3.3 Scope and Safety
-Objective: Validate disposable hazard detection.
-In scope: DP lint only.
-Out of scope: none.
-Safety and invariants: none.
-
-Target Files allowlist (hard gate):
-- tools/lint/dp.sh
-
-## 3.4 Execution Plan (A-E)
-### 3.4.1 State
-State.
-### 3.4.2 Request
-Request.
-### 3.4.3 Changelog
-Changelog.
-### 3.4.4 Patch / Diff
-Patch.
-### 3.4.5 Receipt (Proofs to collect) — MUST RUN
-- ./ops/bin/open --out=auto --dp="DP-OPS-0004"
-- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
-- Zero-byte check: test -s <dump_payload_path>
-- bash tools/lint/context.sh
-- bash tools/lint/style.sh
-- bash tools/lint/truth.sh
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-- bash tools/lint/llms.sh
-- ./tools/verify.sh
-- git diff --name-only
-- git diff --stat
-- Verify Section 3.5 Closing Block is populated in RESULTS.
-- Required pasted outputs: receipts, verification outcomes, and diff output.
-- Mandatory Closing Block required in RESULTS.
-TESTDP
-
-  if lint_path "$tmp_disposable" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict" "$tmp_results_invalid_permissive" "$tmp_task_wrapper" "$tmp_task_invalid"
-    echo "FAIL: --test expected disposable input detection to fail" >&2
-    exit 1
-  fi
-
-  tmp_llms_full_context="$(mktemp)"
-  cat <<'TESTDP' > "$tmp_llms_full_context"
-# DP-OPS-0007: llms-full Context Ban
-## 3.1 Freshness Gate (Must Pass Before Work)
-Base Branch: main
-Required Work Branch: work/dp-ops-0007-lint
-Base HEAD: fdc5d080
-
-## 3.1.1 DP Preflight Gate (Run Before Any Edits)
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-
-## 3.2 Required Context Load (Read Before Doing Anything)
-
-### 3.2.1 Canon load order (always)
-1. PoT.md
-2. SoP.md
-3. TASK.md
-4. docs/MAP.md
-5. docs/MANUAL.md
-6. ops/lib/manifests/CONTEXT.md
-
-### 3.2.2 DP-scoped load order (per DP)
-- tools/lint/task.sh
-- tools/lint/dp.sh
-- llms-full.txt
-
-## 3.3 Scope and Safety
-Objective: Validate llms-full context ban.
-In scope: DP lint only.
-Out of scope: none.
-Safety and invariants: none.
-
-Target Files allowlist (hard gate):
-- tools/lint/dp.sh
-
-## 3.4 Execution Plan (A-E)
-### 3.4.1 State
-State.
-### 3.4.2 Request
-Request.
-### 3.4.3 Changelog
-Changelog.
-### 3.4.4 Patch / Diff
-Patch.
-### 3.4.5 Receipt (Proofs to collect) — MUST RUN
-- ./ops/bin/open --out=auto --dp="DP-OPS-0007"
-- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
-- Zero-byte check: test -s <dump_payload_path>
-- bash tools/lint/context.sh
-- bash tools/lint/style.sh
-- bash tools/lint/truth.sh
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-- bash tools/lint/llms.sh
-- ./tools/verify.sh
-- git diff --name-only
-- git diff --stat
-- Verify Section 3.5 Closing Block is populated in RESULTS.
-- Required pasted outputs: receipts, verification outcomes, and diff output.
-- Mandatory Closing Block required in RESULTS.
-TESTDP
-
-  if lint_path "$tmp_llms_full_context" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict" "$tmp_results_invalid_permissive" "$tmp_task_wrapper" "$tmp_task_invalid"
-    echo "FAIL: --test expected llms-full context detection to fail" >&2
-    exit 1
-  fi
-
-  tmp_llms_core_lightweight="$(mktemp)"
-  cat <<'TESTDP' > "$tmp_llms_core_lightweight"
-# DP-OPS-0008: llms-core Lightweight
-## 3.1 Freshness Gate (Must Pass Before Work)
-Base Branch: main
-Required Work Branch: work/dp-ops-0008-lint
-Base HEAD: fdc5d080
-
-## 3.1.1 DP Preflight Gate (Run Before Any Edits)
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-
-## 3.2 Required Context Load (Read Before Doing Anything)
-
-### 3.2.1 Canon load order (always)
-1. PoT.md
-2. SoP.md
-3. TASK.md
-4. docs/MAP.md
-5. docs/MANUAL.md
-6. ops/lib/manifests/CONTEXT.md
-
-### 3.2.2 DP-scoped load order (per DP)
-- tools/lint/task.sh
-- tools/lint/dp.sh
-- llms-core.txt (explicit lightweight alignment check)
-
-## 3.3 Scope and Safety
-Objective: Validate llms-core lightweight allowance.
-In scope: DP lint only.
-Out of scope: none.
-Safety and invariants: none.
-
-Target Files allowlist (hard gate):
-- tools/lint/dp.sh
-
-## 3.4 Execution Plan (A-E)
-### 3.4.1 State
-State.
-### 3.4.2 Request
-Request.
-### 3.4.3 Changelog
-Changelog.
-### 3.4.4 Patch / Diff
-Patch.
-### 3.4.5 Receipt (Proofs to collect) — MUST RUN
-- ./ops/bin/open --out=auto --dp="DP-OPS-0008"
-- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
-- Zero-byte check: test -s <dump_payload_path>
-- bash tools/lint/context.sh
-- bash tools/lint/style.sh
-- bash tools/lint/truth.sh
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-- bash tools/lint/llms.sh
-- ./tools/verify.sh
-- git diff --name-only
-- git diff --stat
-- Verify Section 3.5 Closing Block is populated in RESULTS.
-- Required pasted outputs: receipts, verification outcomes, and diff output.
-- Mandatory Closing Block required in RESULTS.
-TESTDP
-
-  lint_path "$tmp_llms_core_lightweight" >/dev/null
-
-  tmp_llms_core_nonexplicit="$(mktemp)"
-  cat <<'TESTDP' > "$tmp_llms_core_nonexplicit"
-# DP-OPS-0009: llms-core Non-Explicit
-## 3.1 Freshness Gate (Must Pass Before Work)
-Base Branch: main
-Required Work Branch: work/dp-ops-0009-lint
-Base HEAD: fdc5d080
-
-## 3.1.1 DP Preflight Gate (Run Before Any Edits)
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-
-## 3.2 Required Context Load (Read Before Doing Anything)
-
-### 3.2.1 Canon load order (always)
-1. PoT.md
-2. SoP.md
-3. TASK.md
-4. docs/MAP.md
-5. docs/MANUAL.md
-6. ops/lib/manifests/CONTEXT.md
-
-### 3.2.2 DP-scoped load order (per DP)
-- tools/lint/task.sh
-- tools/lint/dp.sh
-- llms-core.txt
-
-## 3.3 Scope and Safety
-Objective: Validate llms-core non-explicit failure.
-In scope: DP lint only.
-Out of scope: none.
-Safety and invariants: none.
-
-Target Files allowlist (hard gate):
-- tools/lint/dp.sh
-
-## 3.4 Execution Plan (A-E)
-### 3.4.1 State
-State.
-### 3.4.2 Request
-Request.
-### 3.4.3 Changelog
-Changelog.
-### 3.4.4 Patch / Diff
-Patch.
-### 3.4.5 Receipt (Proofs to collect) — MUST RUN
-- ./ops/bin/open --out=auto --dp="DP-OPS-0009"
-- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
-- Zero-byte check: test -s <dump_payload_path>
-- bash tools/lint/context.sh
-- bash tools/lint/style.sh
-- bash tools/lint/truth.sh
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-- bash tools/lint/llms.sh
-- ./tools/verify.sh
-- git diff --name-only
-- git diff --stat
-- Verify Section 3.5 Closing Block is populated in RESULTS.
-- Required pasted outputs: receipts, verification outcomes, and diff output.
-- Mandatory Closing Block required in RESULTS.
-TESTDP
-
-  if lint_path "$tmp_llms_core_nonexplicit" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict" "$tmp_results_invalid_permissive" "$tmp_task_wrapper" "$tmp_task_invalid"
-    echo "FAIL: --test expected llms-core explicitness detection to fail" >&2
-    exit 1
-  fi
-
+  tmp_structure_bad="$(mktemp)"
+  tmp_pointer_bad="$(mktemp)"
+  tmp_allowlist_file_bad="$(mktemp)"
   tmp_results_valid="$(mktemp --suffix=-RESULTS.md)"
-  cat <<'TESTRESULTS' > "$tmp_results_valid"
+  tmp_results_invalid="$(mktemp --suffix=-RESULTS.md)"
+
+  printf '%s\n' "tools/lint/dp.sh" > "$tmp_allowlist_valid"
+  printf '%s\n' "path/that/does/not/exist.txt" > "$tmp_allowlist_bad"
+
+  render_fixture_from_template "$tmp_valid" "$tmp_allowlist_valid"
+  DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_valid" >/dev/null
+
+  if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" DP_CANONICAL_TEMPLATE_SHA256_OVERRIDE="0000000000000000000000000000000000000000000000000000000000000000" lint_path "$tmp_valid" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid"
+    echo "FAIL: --test expected canonical template hash mismatch failure" >&2
+    exit 1
+  fi
+
+  cp "$tmp_valid" "$tmp_structure_bad"
+  sed -i 's/^## 3.4 Execution Plan (A-E)$/## 3.4 Execution Plan (BROKEN)/' "$tmp_structure_bad"
+  if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_structure_bad" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid"
+    echo "FAIL: --test expected DP structure hash mismatch failure" >&2
+    exit 1
+  fi
+
+  cp "$tmp_valid" "$tmp_pointer_bad"
+  sed -i "s#^- ${tmp_allowlist_valid}\$#- storage/dp/active/not-canonical.txt#" "$tmp_pointer_bad"
+  if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_pointer_bad" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid"
+    echo "FAIL: --test expected allowlist pointer mismatch failure" >&2
+    exit 1
+  fi
+
+  render_fixture_from_template "$tmp_allowlist_file_bad" "$tmp_allowlist_bad"
+  if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_bad" lint_path "$tmp_allowlist_file_bad" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid"
+    echo "FAIL: --test expected allowlist file validation failure" >&2
+    exit 1
+  fi
+
+  cat > "$tmp_results_valid" <<'TESTRESULTS'
 # DP-OPS-0099 RESULTS
 
 ## Mandatory Closing Block
@@ -1319,11 +928,9 @@ tools/lint/dp.sh
 Review Conversation Starter (markdown)
 Does this validator enforce strict plaintext versus permissive markdown fields correctly?
 TESTRESULTS
-
   lint_path "$tmp_results_valid" >/dev/null
 
-  tmp_results_invalid_strict="$(mktemp --suffix=-RESULTS.md)"
-  cat <<'TESTRESULTS' > "$tmp_results_invalid_strict"
+  cat > "$tmp_results_invalid" <<'TESTRESULTS'
 # DP-OPS-0099 RESULTS
 
 ## Mandatory Closing Block
@@ -1334,192 +941,24 @@ Pull Request Title (plaintext)
 DP-OPS-0099 Validate RESULTS lint path
 
 Pull Request Description (markdown)
-### Summary
-- Added RESULTS mandatory closing block checks.
-
-Final Squash Stub (plaintext) (Must differ from #1)
-Validate RESULTS mandatory closing block rules
-
-Extended Technical Manifest (plaintext)
-tools/lint/dp.sh
-
-Review Conversation Starter (markdown)
-Does this validator enforce strict plaintext versus permissive markdown fields correctly?
-TESTRESULTS
-
-  if lint_path "$tmp_results_invalid_strict" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict"
-    echo "FAIL: --test expected strict RESULTS field markdown token detection to fail" >&2
-    exit 1
-  fi
-
-  tmp_results_invalid_permissive="$(mktemp --suffix=-RESULTS.md)"
-  cat <<'TESTRESULTS' > "$tmp_results_invalid_permissive"
-# DP-OPS-0099 RESULTS
-
-## Mandatory Closing Block
-Primary Commit Header (plaintext)
-DP-OPS-0099 validate results lint path
-
-Pull Request Title (plaintext)
-DP-OPS-0099 Validate RESULTS lint path
-
-Pull Request Description (markdown)
 ENTER DESCRIPTION HERE
 
 Final Squash Stub (plaintext) (Must differ from #1)
-Validate RESULTS mandatory closing block rules
+DP-OPS-0099 Validate RESULTS lint path
 
 Extended Technical Manifest (plaintext)
 tools/lint/dp.sh
 
 Review Conversation Starter (markdown)
-Does this validator enforce strict plaintext versus permissive markdown fields correctly?
+PLACEHOLDER
 TESTRESULTS
-
-  if lint_path "$tmp_results_invalid_permissive" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict" "$tmp_results_invalid_permissive"
-    echo "FAIL: --test expected permissive RESULTS placeholder detection to fail" >&2
+  if lint_path "$tmp_results_invalid" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid"
+    echo "FAIL: --test expected RESULTS validation failure" >&2
     exit 1
   fi
 
-  tmp_task_wrapper="$(mktemp)"
-  cat <<'TESTTASK' > "$tmp_task_wrapper"
-# STELA TASK DASHBOARD
-Status: ACTIVE
-Owner: Integrator
-Last Updated: 2026-02-12
-
-## 1. Session State
-Pointer: storage/handoff/OPEN-<branch>-<short-hash>.txt
-Context Manifest: ops/lib/manifests/CONTEXT.md
-
-## 2. Logic Pointers
-Primary Constraint: PoT.md
-
-## 3. Current Dispatch Packet (DP)
-### DP-OPS-0005: TASK Extraction Check
-## 3.1 Freshness Gate (Must Pass Before Work)
-Base Branch: main
-Required Work Branch: work/dp-ops-0005-lint
-Base HEAD: fdc5d080
-
-## 3.1.1 DP Preflight Gate (Run Before Any Edits)
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-
-## 3.2 Required Context Load (Read Before Doing Anything)
-### 3.2.1 Canon load order (always)
-1. PoT.md
-2. SoP.md
-3. TASK.md
-4. docs/MAP.md
-5. docs/MANUAL.md
-6. ops/lib/manifests/CONTEXT.md
-### 3.2.2 DP-scoped load order (per DP)
-- tools/lint/task.sh
-- tools/lint/dp.sh
-
-## 3.3 Scope and Safety
-Objective: Validate TASK payload extraction.
-In scope: DP lint.
-Out of scope: TASK container lint.
-Safety and invariants: deterministic checks.
-Target Files allowlist (hard gate):
-- tools/lint/dp.sh
-
-## 3.4 Execution Plan (A-E)
-### 3.4.1 State
-State.
-### 3.4.2 Request
-Request.
-### 3.4.3 Changelog
-Changelog.
-### 3.4.4 Patch / Diff
-Patch.
-### 3.4.5 Receipt (Proofs to collect) — MUST RUN
-- ./ops/bin/open --out=auto --dp="DP-OPS-0005"
-- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
-- Zero-byte check: test -s <dump_payload_path>
-- bash tools/lint/context.sh
-- bash tools/lint/style.sh
-- bash tools/lint/truth.sh
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-- bash tools/lint/llms.sh
-- ./tools/verify.sh
-- git diff --name-only
-- git diff --stat
-- Verify Section 3.5 Closing Block is populated in RESULTS.
-- Required pasted outputs: receipts, verification outcomes, and diff output.
-- Mandatory Closing Block required in RESULTS.
-
-## 3.5 Closeout (Mandatory Routing)
-- closeout text.
-TESTTASK
-
-  lint_path "$tmp_task_wrapper" >/dev/null
-
-  tmp_task_invalid="$(mktemp)"
-  cat <<'TESTTASK' > "$tmp_task_invalid"
-# STELA TASK DASHBOARD
-Status: ACTIVE
-Owner: Integrator
-Last Updated: 2026-02-12
-
-## 3. Current Dispatch Packet (DP)
-### DP-OPS-0006: TASK Extraction Invalid
-## 3.1 Freshness Gate (Must Pass Before Work)
-Base Branch: main
-Required Work Branch: work/dp-ops-0006-lint
-Base HEAD: fdc5d080
-## 3.1.1 DP Preflight Gate (Run Before Any Edits)
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-## 3.2 Required Context Load (Read Before Doing Anything)
-### 3.2.1 Canon load order (always)
-1. PoT.md
-2. SoP.md
-3. TASK.md
-4. docs/MAP.md
-5. docs/MANUAL.md
-6. ops/lib/manifests/CONTEXT.md
-### 3.2.2 DP-scoped load order (per DP)
-- tools/lint/task.sh
-- tools/lint/dp.sh
-## 3.3 Scope and Safety
-Objective: Validate extraction failure.
-In scope: DP lint.
-Out of scope: TASK container lint.
-Safety and invariants: deterministic checks.
-Target Files allowlist (hard gate):
-- tools/lint/dp.sh
-## 3.4 Execution Plan (A-E)
-### 3.4.1 State
-State.
-### 3.4.2 Request
-Request.
-### 3.4.3 Changelog
-Changelog.
-### 3.4.4 Patch / Diff
-Patch.
-### 3.4.5 Receipt (Proofs to collect) — MUST RUN
-- ./ops/bin/open --out=auto --dp="DP-OPS-0006"
-- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
-- git diff --name-only
-- git diff --stat
-TESTTASK
-
-  if lint_path "$tmp_task_invalid" >/dev/null 2>&1; then
-    rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict" "$tmp_results_invalid_permissive" "$tmp_task_wrapper" "$tmp_task_invalid"
-    echo "FAIL: --test expected receipt requirement detection to fail" >&2
-    exit 1
-  fi
-
-  rm -f "$tmp_valid" "$tmp_invalid_placeholder" "$tmp_missing_preflight" "$tmp_disposable" "$tmp_llms_full_context" "$tmp_llms_core_lightweight" "$tmp_llms_core_nonexplicit" "$tmp_results_valid" "$tmp_results_invalid_strict" "$tmp_results_invalid_permissive" "$tmp_task_wrapper" "$tmp_task_invalid"
+  rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid"
   echo "OK: --test passed"
 }
 
@@ -1535,15 +974,21 @@ case "${1:-}" in
     exit 0
     ;;
   "")
-    if [[ -t 0 ]]; then
-      usage >&2
-      fail "No input provided"
-      exit 1
-    fi
     tmp_stdin="$(mktemp)"
     cat > "$tmp_stdin"
-    lint_path "$tmp_stdin"
+    if [[ -s "$tmp_stdin" ]]; then
+      lint_path "$tmp_stdin"
+      rm -f "$tmp_stdin"
+      exit $?
+    fi
     rm -f "$tmp_stdin"
+    if [[ -f "TASK.md" ]]; then
+      lint_path "TASK.md"
+      exit $?
+    fi
+    usage >&2
+    fail "No input provided"
+    exit 1
     ;;
   -)
     tmp_stdin="$(mktemp)"

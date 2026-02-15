@@ -12,4 +12,4 @@
 - `TASK.md`
 - `docs/INDEX.md`
 - `docs/MAP.md`
-- `opt/_library/INDEX.md`
+- `opt/_factory/INDEX.md`

@@ -32,6 +32,56 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - `  - <command>`
 - `- Notes: <audit note>`
 
+## 2026-02-15 01:55:45 UTC — DP-OPS-0065 Immutable Workflow Adoption and Closeout Remediation
+- Packet ID: DP-OPS-0065
+- Timestamp: 2026-02-15T01:55:45Z
+- Work Branch: work/dp-ops-0065-2026-02-14
+- Base HEAD: d3801c3a
+- Scope: platform
+- Target Files allowlist:
+  - ops/bin/draft
+  - ops/src/surfaces/DP.md.tpl
+  - tools/lint/dp.sh
+  - TASK.md
+  - PoT.md
+  - SoP.md
+  - PoW.md
+  - docs/MANUAL.md
+  - docs/ops/specs/tools/lint/dp.md
+  - docs/ops/specs/surfaces/task.md
+  - ops/lib/manifests/OPS.md
+  - llms.txt
+  - llms-core.txt
+  - llms-full.txt
+  - storage/dp/active/allowlist.txt
+- Receipt pointers:
+  - RESULTS: storage/handoff/DP-OPS-0065-RESULTS.md
+  - OPEN: storage/handoff/OPEN-work-dp-ops-0065-2026-02-14-d3801c3a.txt
+  - DUMP: storage/dumps/dump-platform-work-dp-ops-0065-2026-02-14-d3801c3a.txt
+- Verification commands:
+  - ./ops/bin/open --out=auto --dp="DP-OPS-0065"
+  - ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
+  - ./ops/bin/compile
+  - ./ops/bin/llms
+  - bash tools/lint/truth.sh
+  - bash tools/lint/task.sh
+  - bash tools/lint/dp.sh
+  - bash tools/lint/llms.sh
+  - bash tools/lint/context.sh
+  - bash tools/lint/style.sh
+  - ./tools/verify.sh
+  - ./ops/bin/prune --dry-run
+  - ./ops/bin/prune --target=pow --dry-run
+  - ./ops/bin/prune --dp=DP-OPS-0065 --scrub
+  - bash tools/lint/dp.sh storage/handoff/DP-OPS-0065-RESULTS.md
+  - git diff --name-only
+  - git diff --stat
+  - git diff --cached --name-only
+  - git diff --cached --stat
+  - git status --porcelain
+  - git ls-files --others --exclude-standard
+- Notes: Positive proof confirms immutable DP workflow cutover with canonical template generation, template-hash lint enforcement, compile/llms generated-output parity (`ops/lib/manifests/OPS.md`, `llms*.txt`), and explicit pre/post untracked proofs for staged additions. Prune scrub command was executed and correctly blocked by prune safety guard because RESULTS was not yet committed, preserving evidence integrity.
+
 ## 2026-02-14 16:35:03 UTC — DP-OPS-0063 SoP and PoW Closeout Ledger Compliance
 - Packet ID: DP-OPS-0063
 - Timestamp: 2026-02-14T16:35:03Z
@@ -264,28 +314,28 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - ops/src/manifests/CORE.md.tpl
   - ops/src/manifests/DISCOVERY.md.tpl
   - ops/src/manifests/OPS.md.tpl
-  - opt/_library/AGENTS.md
-  - opt/_library/INDEX.md
-  - opt/_library/SKILLS.md
-  - opt/_library/TASKS.md
-  - opt/_library/agents/R-AGENT-01.md
-  - opt/_library/agents/R-AGENT-02.md
-  - opt/_library/agents/R-AGENT-03.md
-  - opt/_library/agents/R-AGENT-04.md
-  - opt/_library/agents/R-AGENT-05.md
-  - opt/_library/agents/R-AGENT-06.md
-  - opt/_library/skills/S-LEARN-01.md
-  - opt/_library/skills/S-LEARN-02.md
-  - opt/_library/skills/S-LEARN-03.md
-  - opt/_library/skills/S-LEARN-04.md
-  - opt/_library/skills/S-LEARN-05.md
-  - opt/_library/skills/S-LEARN-06.md
-  - opt/_library/tasks/B-TASK-01.md
-  - opt/_library/tasks/B-TASK-02.md
-  - opt/_library/tasks/B-TASK-03.md
-  - opt/_library/tasks/B-TASK-04.md
-  - opt/_library/tasks/B-TASK-05.md
-  - opt/_library/tasks/B-TASK-06.md
+  - opt/_factory/AGENTS.md
+  - opt/_factory/INDEX.md
+  - opt/_factory/SKILLS.md
+  - opt/_factory/TASKS.md
+  - opt/_factory/agents/R-AGENT-01.md
+  - opt/_factory/agents/R-AGENT-02.md
+  - opt/_factory/agents/R-AGENT-03.md
+  - opt/_factory/agents/R-AGENT-04.md
+  - opt/_factory/agents/R-AGENT-05.md
+  - opt/_factory/agents/R-AGENT-06.md
+  - opt/_factory/skills/S-LEARN-01.md
+  - opt/_factory/skills/S-LEARN-02.md
+  - opt/_factory/skills/S-LEARN-03.md
+  - opt/_factory/skills/S-LEARN-04.md
+  - opt/_factory/skills/S-LEARN-05.md
+  - opt/_factory/skills/S-LEARN-06.md
+  - opt/_factory/tasks/B-TASK-01.md
+  - opt/_factory/tasks/B-TASK-02.md
+  - opt/_factory/tasks/B-TASK-03.md
+  - opt/_factory/tasks/B-TASK-04.md
+  - opt/_factory/tasks/B-TASK-05.md
+  - opt/_factory/tasks/B-TASK-06.md
   - storage/.gitignore
   - storage/dp/active/allowlist.txt
   - tools/lint/agent.sh

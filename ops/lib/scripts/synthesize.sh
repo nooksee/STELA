@@ -9,9 +9,9 @@ SYNTH_HAZARD_BLACKLIST=(
   "docs/library/agents"
   "docs/library/tasks"
   "docs/library/skills"
-  "opt/_library/agents"
-  "opt/_library/tasks"
-  "opt/_library/skills"
+  "opt/_factory/agents"
+  "opt/_factory/tasks"
+  "opt/_factory/skills"
 )
 declare -a SYNTH_RESOLVED_PATHS=()
 declare -A SYNTH_SEEN_FILES=()

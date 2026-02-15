@@ -1,20 +1,20 @@
 # Skills Promotion Template
 
-> **CONTEXT HAZARD:** Skills are for production payload work only. Skills must never be added to `ops/lib/manifests/CONTEXT.md`. Skills are invoked only when a DP explicitly requests them. Logging to `opt/_library/SKILLS.md` is operator-mediated and performed by worker capture during DP processing.
+> **CONTEXT HAZARD:** Skills are for production payload work only. Skills must never be added to `ops/lib/manifests/CONTEXT.md`. Skills are invoked only when a DP explicitly requests them. Logging to `opt/_factory/SKILLS.md` is operator-mediated and performed by worker capture during DP processing.
 
 This file is the operator-facing promotion template for creating new S-LEARN-XX skills. Use `ops/lib/scripts/skill.sh` to append candidates and generate Promotion Packets.
 
 ## Harvest Engine workflow
 - `ops/lib/scripts/skill.sh harvest` creates a draft in `storage/archives/skills/` with autonomous provenance and semantic collision checks.
 - Review and refine the draft before promotion. Do not edit the Provenance block.
-- `ops/lib/scripts/skill.sh promote` promotes a draft into `opt/_library/skills/S-LEARN-XX.md` and registers it in `opt/_library/INDEX.md`.
+- `ops/lib/scripts/skill.sh promote` promotes a draft into `opt/_factory/skills/S-LEARN-XX.md` and registers it in `opt/_factory/INDEX.md`.
 - `ops/lib/scripts/skill.sh check` enforces the Skills Context Hazard against `ops/lib/manifests/CONTEXT.md`.
 
 ## Promotion Packet Template
 ```md
 ### Promotion Packet: S-LEARN-XX - ENTER_SKILL_TITLE
 - Candidate name: ENTER_CANDIDATE_NAME
-- Proposed Skill ID: S-LEARN-XX (rule: choose the next available numeric ID not already present in opt/_library/skills or registered in opt/_library/INDEX.md)
+- Proposed Skill ID: S-LEARN-XX (rule: choose the next available numeric ID not already present in opt/_factory/skills or registered in opt/_factory/INDEX.md)
 - Scope: production payloads only; not platform maintenance
 - Invocation guidance: ENTER_INVOCATION_GUIDANCE
 - Provenance (from harvest):
@@ -29,8 +29,8 @@ This file is the operator-facing promotion template for creating new S-LEARN-XX 
   - Anti-hallucination: Use repo files as SSOT and stop if required inputs are missing
   - Negative check: Do not add Skills to ops/lib/manifests/CONTEXT.md
 - Definition of Done:
-  - S-LEARN-XX created under opt/_library/skills and matches scope and drift preventers
-  - opt/_library/INDEX.md updated with a stable topic key and correct path
+  - S-LEARN-XX created under opt/_factory/skills and matches scope and drift preventers
+  - opt/_factory/INDEX.md updated with a stable topic key and correct path
   - SoP.md updated if canon or governance surfaces changed
   - Proof bundle updated in storage/handoff with diff outputs
 - Verification (capture command output in RESULTS):

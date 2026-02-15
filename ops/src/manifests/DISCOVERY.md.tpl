@@ -6,4 +6,4 @@
 ## Members
 - `README.md`
 - `docs/INDEX.md`
-- `opt/_library/INDEX.md`
+- `opt/_factory/INDEX.md`

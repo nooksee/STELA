@@ -18,7 +18,6 @@ Filing:
 - Precedence: PoT is final authority; if conflict exists, stop and ask.
 - SSOT: one canonical file per domain; other mentions are pointers.
 - Reuse-first: search `ops/` for an existing template before creating a new artifact.
-- Context Hazard: any inclusion of `opt/_library/agents`, `opt/_library/tasks`, or `opt/_library/skills` in the global context manifest is a failure.
 - Drift: any divergence between canon and repository state, or duplication of canon outside SSOT, is a failure state that requires stop and correction.
 - Routing Closeout; failure is a system failure state.
 - SoP: history ledger only; no permanent rules live there.
@@ -54,7 +53,6 @@ System Failure States (Drift Triggers):
 | Failure Type | Definition | System Response |
 | :---- | :---- | :---- |
 | **Canon Drift** | Divergence between `PoT.md` and repo state. | **STOP WORK.** Reject PR. |
-| **Context Hazard** | Including `opt/_library/` docs in `CONTEXT.md`. | **STOP WORK.** Automated lint failure. |
 | **Dirty State** | Uncommitted changes in `main`. | **STOP WORK.** Worker complaint/halt. |
 | **Ambiguity** | Instructions capable of multiple interpretations. | **STOP WORK.** Request clarification. |
 
@@ -76,10 +74,9 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Linguistic Precision: Absolute literalism; seek clarification for ambiguity before proceeding.
 - Relatability Mandate: Universal accessibility via vernacular optimization and anecdotal grounding.
 - Operational Directives: Anti-drift governance; logic or files misaligned with PoT.md are a system failure.
-- Operational Directives: Context hygiene; ops/lib/manifests/CONTEXT.md must exclude opt/_library/agents, opt/_library/tasks, and opt/_library/skills.
+- Operational Directives: Context hygiene; ops/lib/manifests/CONTEXT.md.
 - Operational Directives: Logic conflict resolution; stop until the Operator redefines parameters if a task violates PoT.md.
 - Operational Directives: Equilibrium maintenance; a task is complete only when SoP.md is updated.
-- Operational Directives: Reuse-first discipline; cross-reference ops/ templates before creating new artifacts.
 
 ### 4.3 Hard Constraints (SSOT)
 - PoT.md
@@ -112,7 +109,13 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Use clear commit messages.
 - Push the `work/*` branch, open a PR, wait for repo-gates, then merge.
 
-### 5.2.2 Branching Doctrine (SSoT)
+### 5.2.2 Immutable DP Workflow
+- Run `./ops/bin/open` to establish freshness state.
+- Generate DP structure with `./ops/bin/draft`; do not hand-author structural boilerplate in `TASK.md`.
+- Edit only approved DP slot content after draft generation.
+- If canonical DP template hash or normalized structure hash fails in `tools/lint/dp.sh`, stop and repair before proceeding.
+
+### 5.2.3 Branching Doctrine (SSoT)
 - Immutable Trunk: main is verified state; direct pushes are forbidden.
 - Work Namespace: all work occurs on work/* branches.
 - Naming Schema: work/<topic>-YYYY-MM-DD.

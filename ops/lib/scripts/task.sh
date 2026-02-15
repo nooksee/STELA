@@ -3,9 +3,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
-TASKS_DIR="${REPO_ROOT}/opt/_library/tasks"
+TASKS_DIR="${REPO_ROOT}/opt/_factory/tasks"
 TASKS_REGISTRY="${REPO_ROOT}/docs/ops/registry/TASKS.md"
-TASKS_LEDGER="${REPO_ROOT}/opt/_library/TASKS.md"
+TASKS_LEDGER="${REPO_ROOT}/opt/_factory/TASKS.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
 HANDOFF_DIR="${REPO_ROOT}/storage/archives/tasks"
@@ -306,7 +306,7 @@ ENTRY_LOG
     if [[ "$status" -eq 2 ]]; then
       die "Task ledger missing Promotion Log section."
     fi
-    die "Failed to update opt/_library/TASKS.md candidate log."
+    die "Failed to update opt/_factory/TASKS.md candidate log."
   fi
 
   mv "$tmp" "$TASKS_LEDGER"
@@ -351,7 +351,7 @@ PROMO_LOG
     if [[ "$status" -eq 2 ]]; then
       die "Task ledger missing Promotion Log section."
     fi
-    die "Failed to update opt/_library/TASKS.md promotion log."
+    die "Failed to update opt/_factory/TASKS.md promotion log."
   fi
 
   cat "$entry_file" >> "$tmp"
@@ -650,7 +650,7 @@ cmd_promote() {
   fi
 
   local task_rel_path
-  task_rel_path="opt/_library/tasks/${task_id}.md"
+  task_rel_path="opt/_factory/tasks/${task_id}.md"
   local task_path
   task_path="${TASKS_DIR}/${task_id}.md"
 
@@ -686,7 +686,7 @@ cmd_promote() {
 cmd_check() {
   require_repo_root
 
-  if grep -nE '(docs/library|opt/_library)/tasks|B-TASK-' "$CONTEXT_MANIFEST" >/dev/null; then
+  if grep -nE '(docs/library|opt/_factory)/tasks|B-TASK-' "$CONTEXT_MANIFEST" >/dev/null; then
     echo "FAIL: Tasks are referenced in ops/lib/manifests/CONTEXT.md. Remove tasks from the context manifest." >&2
     exit 1
   fi

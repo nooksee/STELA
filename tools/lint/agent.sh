@@ -10,7 +10,7 @@ fi
 
 cd "$REPO_ROOT" || exit 1
 
-AGENTS_DIR="opt/_library/agents"
+AGENTS_DIR="opt/_factory/agents"
 AGENTS_REGISTRY="docs/ops/registry/AGENTS.md"
 
 failures=0
@@ -185,7 +185,7 @@ if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
       if [[ ! -e "$REPO_ROOT/$normalized" ]]; then
         fail "Level 3: ${agent_name} pointer token '${token}' does not exist"
       fi
-      if [[ "$normalized" == opt/_library/skills/* && ! -f "$REPO_ROOT/$normalized" ]]; then
+      if [[ "$normalized" == opt/_factory/skills/* && ! -f "$REPO_ROOT/$normalized" ]]; then
         fail "Level 3: ${agent_name} JIT skill path '${token}' does not exist"
       fi
     done
@@ -232,7 +232,7 @@ if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
       fi
     done
 
-    if grep -nEi '(context|CONTEXT\.md).*(docs/library|opt/_library)/(agents|skills|tasks)|(docs/library|opt/_library)/(agents|skills|tasks).*(context|CONTEXT\.md)' "$agent" >/dev/null; then
+    if grep -nEi '(context|CONTEXT\.md).*(docs/library|opt/_factory)/(agents|skills|tasks)|(docs/library|opt/_factory)/(agents|skills|tasks).*(context|CONTEXT\.md)' "$agent" >/dev/null; then
       fail "Level 4: ${agent_name} attempts recursive context expansion"
     fi
   done

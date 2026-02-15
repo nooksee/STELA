@@ -21,9 +21,9 @@ Code review for quality, security, and maintainability.
 - Output contract: `TASK.md`
 - Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/agent.sh`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/library.sh`, `tools/verify.sh`
 - JIT skills:
-  - `opt/_library/skills/S-LEARN-01.md`
-  - `opt/_library/skills/S-LEARN-04.md`
-  - `opt/_library/skills/S-LEARN-05.md`
+  - `opt/_factory/skills/S-LEARN-01.md`
+  - `opt/_factory/skills/S-LEARN-04.md`
+  - `opt/_factory/skills/S-LEARN-05.md`
 
 ## Scope Boundary
 Operate only within the active DP scope and defer to canon surfaces for governance and behavioral rules.
