@@ -2,7 +2,7 @@
 
 ## Constitutional Anchor
 `tools/lint/task.sh` is the sole TASK surface container enforcer.
-It protects both the root TASK dashboard schema and the task-library registry contract used by the task subsystem.
+It protects both the root TASK dashboard schema and the task-definitions registry contract used by the task subsystem.
 
 ## Operator Contract
 - Invocation:
@@ -35,7 +35,7 @@ TASK dashboard failures:
 - Missing receipt command requirements in DP Section 3.4.5.
 - Missing Mandatory Closing Block labels.
 
-Task library failures:
+Task definitions failure:
 - Duplicate IDs or duplicate file paths in registry.
 - Registry entry references missing files.
 - Task files that are not registered.
@@ -49,7 +49,7 @@ Task library failures:
 
 ## Mechanics and Sequencing
 1. Resolve repo root and required registry/task directories.
-2. Lint task library and registry contract:
+2. Lint task definitions and registry contract:
 - Contraction checks.
 - Legacy inline-state language checks.
 - Registry parse and uniqueness checks.

@@ -1,14 +1,14 @@
-# Technical Specification: tools/lint/library.sh
+# Technical Specification: tools/lint/factory.sh
 
 ## Purpose
-Enforce synchronization and pointer integrity across agent, skill, and task library surfaces and registries.
+Enforce synchronization and pointer integrity across agent, skill, and task definitions surfaces and registries.
 
 ## Invocation
-- Command: `bash tools/lint/library.sh`
+- Command: `bash tools/lint/.sh`
 - Required flags: none.
 - Positional arguments: none.
 - Expected exit behavior:
-  - `0` when all library checks pass.
+  - `0` when all definition checks pass.
   - `1` when one or more integrity failures are detected.
   - `2` when required registry files are missing.
 
@@ -23,7 +23,7 @@ Enforce synchronization and pointer integrity across agent, skill, and task libr
 
 ## Outputs
 - Writes no files.
-- Stdout: verification banner and pass message (`OK: Library Integrity Verified.`).
+- Stdout: verification banner and pass message (`OK: Factory Integrity Verified.`).
 - Stderr: `FAIL:` diagnostics for dead ends, ghost artifacts, malformed pointers, and duplicate instruction patterns.
 
 ## Invariants and failure modes

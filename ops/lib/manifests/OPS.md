@@ -1,7 +1,7 @@
 # OPS Manifest
 
 <!-- GENERATED FILE. DO NOT EDIT. -->
-<!-- Source template: ops/src/manifests/OPS.md.tpl -->
+<!-- Source template: ops/src/manifests/ops.md.tpl -->
 <!-- Generator: ops/bin/compile -->
 
 ## Members
@@ -32,7 +32,7 @@
 - `docs/ops/specs/tools/lint/agent.md`
 - `docs/ops/specs/tools/lint/context.md`
 - `docs/ops/specs/tools/lint/dp.md`
-- `docs/ops/specs/tools/lint/library.md`
+- `docs/ops/specs/tools/lint/.md`
 - `docs/ops/specs/tools/lint/llms.md`
 - `docs/ops/specs/tools/lint/project.md`
 - `docs/ops/specs/tools/lint/style.md`

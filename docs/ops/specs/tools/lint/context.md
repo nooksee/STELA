@@ -24,7 +24,7 @@ Enforce context manifest completeness and reject context contamination in canoni
 
 ## Invariants and failure modes
 - Global context manifest must not include `opt/_factory/agents`, `opt/_factory/tasks`, or `opt/_factory/skills`.
-- Legacy paths (`docs/library/agents`, `docs/library/tasks`, `docs/library/skills`) are also rejected as context hazards.
+- Legacy paths (`docs//agents`, `docs//tasks`, `docs//skills`) are also rejected as context hazards.
 - Every backticked path in `CONTEXT.md` must exist.
 - Canon files must not contain dump/paste contamination markers.
 

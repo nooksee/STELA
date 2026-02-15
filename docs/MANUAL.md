@@ -12,7 +12,7 @@
 **Dispatch Contract Notes:**
 - The DP Preflight Gate runs after the Freshness Gate and before any edits.
 - Worker input is DP text only; OPEN is for integrator refresh and receipt pointers and is not required reading for workers.
-- DP structure is generated from `ops/src/surfaces/DP.md.tpl` through `ops/bin/draft`; manual structural edits are prohibited.
+- DP structure is generated from `ops/src/surfaces/dp.md.tpl` through `ops/bin/draft`; manual structural edits are prohibited.
 
 **Anchor Hygiene:**
 - Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md pointer references to the newest OPEN artifact and RESULTS receipts before any work continues; do not rewrite inline branch/hash state in TASK.md.

@@ -9,6 +9,7 @@ TASKS_LEDGER="${REPO_ROOT}/opt/_factory/TASKS.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
 HANDOFF_DIR="${REPO_ROOT}/storage/archives/tasks"
+TASK_TEMPLATE_PATH="${REPO_ROOT}/ops/src/definitions/task.md.tpl"
 HEURISTICS_LIB="${SCRIPT_DIR}/heuristics.sh"
 
 if [[ -f "$HEURISTICS_LIB" ]]; then
@@ -44,6 +45,7 @@ require_repo_root() {
   require_file "$TASKS_REGISTRY"
   require_file "$TASK_FILE"
   require_file "$CONTEXT_MANIFEST"
+  require_file "$TASK_TEMPLATE_PATH"
 }
 
 task_id_exists() {
@@ -155,6 +157,35 @@ redact_stream() {
     -e 's/ghp_[0-9A-Za-z]{36}/[REDACTED]/g' \
     -e 's/ghs_[0-9A-Za-z]{36}/[REDACTED]/g' \
     -e 's/-----BEGIN [A-Z ]+ PRIVATE KEY-----/[REDACTED PRIVATE KEY]/g'
+}
+
+render_definition_template() {
+  local template_path="$1"
+  local output_path="$2"
+  shift 2
+
+  if (( $# % 2 != 0 )); then
+    die "render_definition_template requires TOKEN value pairs."
+  fi
+
+  require_file "$template_path"
+
+  local rendered
+  rendered="$(cat "$template_path")"
+
+  while (( $# > 0 )); do
+    local token="$1"
+    local value="$2"
+    shift 2
+    rendered="${rendered//\{\{${token}\}\}/$value}"
+  done
+
+  printf '%s\n' "$rendered" > "$output_path"
+
+  if grep -q '{{\|}}' "$output_path"; then
+    rm -f "$output_path"
+    die "Draft rendering failed: unresolved template tokens remain in ${template_path}."
+  fi
 }
 
 section_has_content() {
@@ -546,38 +577,9 @@ cmd_harvest() {
   local tmp
   tmp="$(mktemp)"
 
-  {
-    cat <<DRAFT
-# Task Draft: ${name}
-
-${provenance_block}
-
-## Orchestration
-- **Primary Agent:** Not provided
-- **Supporting Agents:** Not provided
-
-## Pointers
-- **Constitution:** \`PoT.md\`
-- **Governance:** \`docs/GOVERNANCE.md\`
-- **Contract:** \`TASK.md\`
-- **Registry:** \`docs/ops/registry/TASKS.md\`
-- **Toolchain:** Not provided
-- **JIT Skills:** (none)
-- **Reference Docs:** Not provided
-
-## Execution Logic
-1. Pre-flight: Not provided.
-2. Execution: Not provided.
-3. Verification: Not provided.
-4. Correction: Not provided.
-5. Closeout: Complete Closeout per \`TASK.md\` Section 4.
-
-## Scope Boundary
-- **Allowed:** Not provided.
-- **Forbidden:** Not provided.
-- **Stop Conditions:** Not provided.
-DRAFT
-  } > "$tmp"
+  render_definition_template "$TASK_TEMPLATE_PATH" "$tmp" \
+    "TASK_NAME" "$name" \
+    "PROVENANCE_BLOCK" "$provenance_block"
 
   redact_stream < "$tmp" > "$draft_path"
   rm -f "$tmp"
@@ -686,7 +688,7 @@ cmd_promote() {
 cmd_check() {
   require_repo_root
 
-  if grep -nE '(docs/library|opt/_factory)/tasks|B-TASK-' "$CONTEXT_MANIFEST" >/dev/null; then
+  if grep -nE '(docs/|opt/_factory)/tasks|B-TASK-' "$CONTEXT_MANIFEST" >/dev/null; then
     echo "FAIL: Tasks are referenced in ops/lib/manifests/CONTEXT.md. Remove tasks from the context manifest." >&2
     exit 1
   fi

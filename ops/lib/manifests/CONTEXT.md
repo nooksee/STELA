@@ -1,7 +1,7 @@
 # CONTEXT Manifest
 
 <!-- GENERATED FILE. DO NOT EDIT. -->
-<!-- Source template: ops/src/manifests/CONTEXT.md.tpl -->
+<!-- Source template: ops/src/manifests/context.md.tpl -->
 <!-- Generator: ops/bin/compile -->
 
 ## Members

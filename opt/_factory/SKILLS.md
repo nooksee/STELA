@@ -9,35 +9,9 @@ This file is the operator-facing promotion template for creating new S-LEARN-XX 
 - `ops/lib/scripts/skill.sh check` enforces the Skills Context Hazard against `ops/lib/manifests/CONTEXT.md`.
 
 ## Promotion Packet Template
-```md
-### Promotion Packet: S-LEARN-XX - ENTER_SKILL_TITLE
-- Candidate name: ENTER_CANDIDATE_NAME
-- Proposed Skill ID: S-LEARN-XX (rule: choose the next available numeric ID not already present in opt/_factory/skills or registered in opt/_factory/INDEX.md)
-- Scope: production payloads only; not platform maintenance
-- Invocation guidance: ENTER_INVOCATION_GUIDANCE
-- Provenance (from harvest):
-  - DP-ID: ENTER_DP_ID
-  - Branch: ENTER_BRANCH
-  - HEAD: ENTER_HEAD
-  - Objective: ENTER_OBJECTIVE
-  - Friction Context: ENTER_FRICTION_CONTEXT
-  - Diff Stat: ENTER_DIFF_STAT
-- Drift preventers:
-  - Stop conditions: ENTER_STOP_CONDITIONS
-  - Anti-hallucination: Use repo files as SSOT and stop if required inputs are missing
-  - Negative check: Do not add Skills to ops/lib/manifests/CONTEXT.md
-- Definition of Done:
-  - S-LEARN-XX created under opt/_factory/skills and matches scope and drift preventers
-  - opt/_factory/INDEX.md updated with a stable topic key and correct path
-  - SoP.md updated if canon or governance surfaces changed
-  - Proof bundle updated in storage/handoff with diff outputs
-- Verification (capture command output in RESULTS):
-  - ./ops/bin/dump --scope=platform
-  - bash tools/lint/context.sh
-  - bash tools/lint/truth.sh (required when canon or governance surfaces change)
-  - bash tools/lint/library.sh
-  - bash tools/verify.sh
-```
+- SSOT template: `ops/src/definitions/skill.md.tpl`
+- Rendered by: `ops/lib/scripts/skill.sh harvest`
+- This ledger is pointer-only; executable template bodies live under `ops/src/definitions/`.
 
 ## Promotion Packets (generated from candidates)
 

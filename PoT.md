@@ -10,7 +10,7 @@ PoT is the single constitutional document for Stela governance.
 Filing:
 - `ops/` = Run (binaries, manifests, automation).
 - `docs/` = Explain (manuals and rationale).
-- `opt/` = Isolate (JIT-only library content excluded from global context).
+- `opt/` = Isolate (JIT-only  content excluded from global context).
 - `projects/` = Work (payload code).
 - `storage/` = Trash (local artifacts, never canon).
 

@@ -232,7 +232,7 @@ if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
       fi
     done
 
-    if grep -nEi '(context|CONTEXT\.md).*(docs/library|opt/_factory)/(agents|skills|tasks)|(docs/library|opt/_factory)/(agents|skills|tasks).*(context|CONTEXT\.md)' "$agent" >/dev/null; then
+    if grep -nEi '(context|CONTEXT\.md).*(docs/factory|opt/_factory)/(agents|skills|tasks)|(docs/factory|opt/_factory)/(agents|skills|tasks).*(context|CONTEXT\.md)' "$agent" >/dev/null; then
       fail "Level 4: ${agent_name} attempts recursive context expansion"
     fi
   done

@@ -1,15 +1,37 @@
-## Hygiene (Refresh + Conform DP)
-Use when: Conforming an old DP to the current TASK.md schema (no scope changes).
-Attach: OPEN, dump, Old-DP.md.
+## **Hygiene (Refresh + Conform to DP Structure)**
+
+Use when: Conforming an old DP or rough notes into the **canonical DP structure**.
+Attach: OPEN, dump, Old-DP.md (or rough draft).
 
 Rules:
-- Refresh state using the attached OPEN and dump artifacts.
-- Logic: PoT.md. Structure: TASK.md. Output only the stance format.
-- Preserve intent; update structure and contract language only.
-- Do not invent file paths; verify with the dump.
+* Refresh state using the attached OPEN and dump artifacts.
+* Logic: `PoT.md`. Structure: **ops/src/surfaces/dp.md.tpl rendered format**.
+* Preserve intent; update contract language/structure only.
+* Do not invent file paths; verify with dump.
+* Output only the stance format.
 
 Steps:
-1. CONFORM <DP-ID> to match TASK.md exactly.
-2. Enforce input discipline: DP text only; no disposable artifact citations; no pasted bundles in the DP body.
-3. Allowlist: follow TASK.md’s mechanism (inline, pointer, or sidecar). Do not inline-expand large allowlists unless TASK.md requires it.
-Output only: The full Dispatch Packet enclosed in a markdown code block (```markdown).
+1. **NORMALIZE** the input into **canonical DP structure** with numbered sections:
+   * `### 3.1 Freshness Gate (Must Pass Before Work)`
+   * `### 3.1.1 DP Preflight Gate (Run Before Any Edits)`
+   * `### 3.2 Required Context Load (Read Before Doing Anything)`
+   * `### 3.3 Scope and Safety`
+   * `### 3.4 Execution Plan (A-E)`
+   * `### 3.5 Closeout (Mandatory Routing)`
+2. **INPUT DISCIPLINE**:
+   * No citations to disposable artifacts.
+   * No pasted OPEN/DUMP/manifests.
+   * No placeholders (no "TBD", "TODO", "populate during execution").
+   * If required details are missing, output **STOP** and name missing inputs.
+3. **ALLOWLIST AWARENESS**:
+   * Ensure every intended touched/created file is listed explicitly in Target Files allowlist section under 3.3 Scope and Safety.
+4. **VERIFY PATHS**:
+   * Every referenced path is either present in dump or clearly marked NEW.
+5. **RECEIPTS**:
+   * Section 3.4.5 Receipt must include:
+     - `bash tools/lint/truth.sh`
+     - `bash tools/lint/dp.sh TASK.md`
+     - `bash tools/lint/task.sh`
+   * Add any additional repo/tool checks required by scope.
+
+Output only: The full DP content with proper numbered section structure enclosed in a markdown code block.

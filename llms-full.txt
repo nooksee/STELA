@@ -11,7 +11,7 @@ PoT is the single constitutional document for Stela governance.
 Filing:
 - `ops/` = Run (binaries, manifests, automation).
 - `docs/` = Explain (manuals and rationale).
-- `opt/` = Isolate (JIT-only library content excluded from global context).
+- `opt/` = Isolate (JIT-only  content excluded from global context).
 - `projects/` = Work (payload code).
 - `storage/` = Trash (local artifacts, never canon).
 
@@ -202,7 +202,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Scope: platform
 - Target Files allowlist:
   - ops/bin/draft
-  - ops/src/surfaces/DP.md.tpl
+  - ops/src/surfaces/dp.md.tpl
   - tools/lint/dp.sh
   - TASK.md
   - PoT.md
@@ -253,13 +253,13 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Target Files allowlist:
   - TASK.md
   - docs/MANUAL.md
-  - docs/library/TASKS.md
-  - docs/library/tasks/B-TASK-01.md
-  - docs/library/tasks/B-TASK-02.md
-  - docs/library/tasks/B-TASK-03.md
-  - docs/library/tasks/B-TASK-04.md
-  - docs/library/tasks/B-TASK-05.md
-  - docs/library/tasks/B-TASK-06.md
+  - docs//TASKS.md
+  - docs//tasks/B-TASK-01.md
+  - docs//tasks/B-TASK-02.md
+  - docs//tasks/B-TASK-03.md
+  - docs//tasks/B-TASK-04.md
+  - docs//tasks/B-TASK-05.md
+  - docs//tasks/B-TASK-06.md
   - docs/ops/specs/scripts/task.md
   - docs/ops/specs/surfaces/task.md
   - docs/ops/specs/tools/lint/task.md
@@ -454,7 +454,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - docs/ops/specs/tools/lint/agent.md
   - docs/ops/specs/tools/lint/context.md
   - docs/ops/specs/tools/lint/dp.md
-  - docs/ops/specs/tools/lint/library.md
+  - docs/ops/specs/tools/lint/.md
   - docs/ops/specs/tools/lint/task.md
   - docs/ops/specs/tools/test/agent.md
   - llms-core.txt
@@ -472,10 +472,10 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - ops/lib/scripts/skill.sh
   - ops/lib/scripts/synthesize.sh
   - ops/lib/scripts/task.sh
-  - ops/src/manifests/CONTEXT.md.tpl
-  - ops/src/manifests/CORE.md.tpl
-  - ops/src/manifests/DISCOVERY.md.tpl
-  - ops/src/manifests/OPS.md.tpl
+  - ops/src/manifests/context.md.tpl
+  - ops/src/manifests/core.md.tpl
+  - ops/src/manifests/discovery.md.tpl
+  - ops/src/manifests/ops.md.tpl
   - opt/_factory/AGENTS.md
   - opt/_factory/INDEX.md
   - opt/_factory/SKILLS.md
@@ -503,7 +503,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - tools/lint/agent.sh
   - tools/lint/context.sh
   - tools/lint/dp.sh
-  - tools/lint/library.sh
+  - tools/lint/.sh
   - tools/lint/task.sh
   - tools/lint/truth.sh
   - tools/test/agent.sh
@@ -523,7 +523,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - bash tools/lint/truth.sh
   - bash tools/lint/style.sh
   - bash tools/lint/context.sh
-  - bash tools/lint/library.sh
+  - bash tools/lint/.sh
   - bash tools/lint/task.sh
   - bash tools/lint/dp.sh TASK.md
   - bash tools/lint/llms.sh
@@ -531,7 +531,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - git status --porcelain=v1
   - git diff --name-only
   - git diff
-- Notes: Positive proof for DP-OPS-0064 structural hardening across library isolation, deterministic manifest compilation, and pointer-sidecar allowlist governance. This entry is append-only and preserves all prior PoW history unchanged.
+- Notes: Positive proof for DP-OPS-0064 structural hardening across  isolation, deterministic manifest compilation, and pointer-sidecar allowlist governance. This entry is append-only and preserves all prior PoW history unchanged.
 
 ## Template
 Copy this block when appending a new entry.
@@ -569,13 +569,13 @@ See PoT.md Section 1 for the developer guide.
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
 ## 2026-02-15 01:55:45 UTC — DP-OPS-0065 Immutable Workflow Adoption and Closeout Remediation
-- Objective: Delivered Phase 3 immutable workflow adoption by adding canonical DP template generation (`ops/src/surfaces/DP.md.tpl` + `ops/bin/draft`), refactoring DP lint to canonical template-hash plus normalized structure-hash enforcement with required-slot checks, codifying immutable generated-output rules, accepting compile-time manifest regeneration side-effects (`ops/lib/manifests/OPS.md`), and remediating closeout gaps by updating SoP/PoW ledgers and expanding receipts to include untracked-file proofs.
+- Objective: Delivered Phase 3 immutable workflow adoption by adding canonical DP template generation (`ops/src/surfaces/dp.md.tpl` + `ops/bin/draft`), refactoring DP lint to canonical template-hash plus normalized structure-hash enforcement with required-slot checks, codifying immutable generated-output rules, accepting compile-time manifest regeneration side-effects (`ops/lib/manifests/OPS.md`), and remediating closeout gaps by updating SoP/PoW ledgers and expanding receipts to include untracked-file proofs.
 - Verification: `./ops/bin/open --out=auto --dp="DP-OPS-0065"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `./ops/bin/compile`; `./ops/bin/llms`; `bash tools/lint/truth.sh`; `bash tools/lint/task.sh`; `bash tools/lint/dp.sh`; `bash tools/lint/llms.sh`; `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `./tools/verify.sh`; `./ops/bin/prune --dry-run`; `./ops/bin/prune --target=pow --dry-run`; `./ops/bin/prune --dp=DP-OPS-0065 --scrub` (guard-blocked on uncommitted RESULTS by design); `bash tools/lint/dp.sh storage/handoff/DP-OPS-0065-RESULTS.md`; `git diff --name-only`; `git diff --stat`; `git diff --cached --name-only`; `git diff --cached --stat`; `git status --porcelain`; `git ls-files --others --exclude-standard`.
 - Functional receipts: `storage/handoff/OPEN-work-dp-ops-0065-2026-02-14-d3801c3a.txt`; `storage/handoff/OPEN-PORCELAIN-work-dp-ops-0065-2026-02-14-d3801c3a.txt`; `storage/dumps/dump-platform-work-dp-ops-0065-2026-02-14-d3801c3a.txt`; `storage/dumps/dump-platform-work-dp-ops-0065-2026-02-14-d3801c3a.tar.xz`; `storage/dumps/dump-platform-work-dp-ops-0065-2026-02-14-d3801c3a.manifest.txt`; `storage/handoff/DP-OPS-0065-RESULTS.md`.
 
 ## 2026-02-14 23:01:42 UTC — DP-OPS-0064 Phase 2 Structural Restructuring
-- Objective: Implemented Phase 2 structural hardening by migrating library canon to `opt/_factory`, introducing deterministic manifest compilation (`ops/bin/compile` + `ops/src/manifests/*.md.tpl`) with context/llms compile-first routing, and switching DP allowlist governance to pointer-sidecar mode via `storage/dp/active/allowlist.txt`.
-- Verification: `./tools/verify.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/style.sh`; `bash tools/lint/context.sh`; `bash tools/lint/library.sh`; `bash tools/lint/task.sh`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/llms.sh`; `./ops/bin/compile`; `./ops/bin/map --check`; `./ops/bin/llms`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0064-RESULTS.md`.
+- Objective: Implemented Phase 2 structural hardening by migrating  canon to `opt/_factory`, introducing deterministic manifest compilation (`ops/bin/compile` + `ops/src/manifests/*.md.tpl`) with context/llms compile-first routing, and switching DP allowlist governance to pointer-sidecar mode via `storage/dp/active/allowlist.txt`.
+- Verification: `./tools/verify.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/style.sh`; `bash tools/lint/context.sh`; `bash tools/lint/.sh`; `bash tools/lint/task.sh`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/llms.sh`; `./ops/bin/compile`; `./ops/bin/map --check`; `./ops/bin/llms`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0064-RESULTS.md`.
 - Functional receipts: `./ops/bin/open --out=auto --dp=DP-OPS-0064`; `./ops/bin/dump --scope=full --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-full-work-dp-ops-0064-2026-02-14-30a77fdf.txt`; `test -s ./storage/dumps/dump-full-work-dp-ops-0064-2026-02-14-30a77fdf.tar.xz`.
 
 ## 2026-02-14 16:35:03 UTC — DP-OPS-0063 SoP and PoW Closeout Ledger Compliance
@@ -660,7 +660,7 @@ llms parity: tools/lint/llms.sh
 ## 3. Current Dispatch Packet (DP)
 
 Section-by-section authoring protocol:
-- Generate DP structure from `ops/src/surfaces/DP.md.tpl` using `ops/bin/draft`.
+- Generate DP structure from `ops/src/surfaces/dp.md.tpl` using `ops/bin/draft`.
 - Do not hand-edit DP structural boilerplate in `TASK.md` after generation.
 - Manual edits are limited to slot content only (objective, scope, safety, plan body, receipt body).
 - Freeze each completed subsection in order (3.1 -> 3.2 -> 3.3 -> 3.4.x).
@@ -788,7 +788,7 @@ Target Files allowlist (hard gate):
 ### 3.4.3 Changelog
 - UPDATE: `storage/dp/active/allowlist.txt`
 - NEW: `ops/bin/draft`
-- NEW: `ops/src/surfaces/DP.md.tpl`
+- NEW: `ops/src/surfaces/dp.md.tpl`
 - UPDATE: `tools/lint/dp.sh`
 - UPDATE: `TASK.md`
 - UPDATE: `PoT.md`
@@ -804,7 +804,7 @@ Target Files allowlist (hard gate):
 
 ### 3.4.4 Patch / Diff
 A. Canonical DP template:
-1. Create `ops/src/surfaces/DP.md.tpl` as the single schema source.
+1. Create `ops/src/surfaces/dp.md.tpl` as the single schema source.
 2. Encode placeholders for variable slots while preserving fixed headings/labels.
 3. Store a canonical template sha256 in `tools/lint/dp.sh` and hard-fail on mismatch.
 
@@ -940,7 +940,7 @@ This document defines the specific surfaces that must be loaded to preserve gove
 - ops/ - Run (binaries, manifests, automation).
 - tools/ - Lints and verification tooling.
 - docs/ - Manuals, specs, and governance surfaces.
-- opt/ - Isolated library surfaces (JIT-only, excluded from global context).
+- opt/ - Isolated  surfaces (JIT-only, excluded from global context).
 - storage/ - Local artifacts and archives.
 
 ### Projects
@@ -949,7 +949,7 @@ No projects discovered.
 
 
 ## opt/_factory/INDEX.md
-# Docs Library Index (Navigation)
+# Factory Index (Navigation)
 
 This index is navigation only. Registries in `docs/ops/registry/` are the single source of truth for agents, skills, tasks, and projects.
 

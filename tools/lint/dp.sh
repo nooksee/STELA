@@ -16,7 +16,7 @@ fi
 
 cd "$REPO_ROOT" || exit 1
 
-CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/DP.md.tpl"
+CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
 CANONICAL_DP_TEMPLATE_SHA256="ed2fa2f8fcacf26a8b2a60e8c0aee0ea5593409ad0513befe83595921072b031"
 ALLOWLIST_POINTER_PATH_DEFAULT="storage/dp/active/allowlist.txt"
 
@@ -794,7 +794,7 @@ render_fixture_from_template() {
   plan_state='- DP lint now validates structure through canonical template hashing.'
   plan_request='- Confirm template hash, structure hash, and required-field integrity checks.'
   plan_changelog='- Updated tools/lint/dp.sh
-- Added ops/src/surfaces/DP.md.tpl'
+- Added ops/src/surfaces/dp.md.tpl'
   plan_patch='- Implemented structure hashing
 - Added allowlist pointer integrity checks'
   receipt_commands='- ./ops/bin/open --out=auto --dp="DP-OPS-0000"

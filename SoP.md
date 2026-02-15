@@ -1,14 +1,14 @@
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
 ## 2026-02-15 01:55:45 UTC — DP-OPS-0065 Immutable Workflow Adoption and Closeout Remediation
-- Objective: Delivered Phase 3 immutable workflow adoption by adding canonical DP template generation (`ops/src/surfaces/DP.md.tpl` + `ops/bin/draft`), refactoring DP lint to canonical template-hash plus normalized structure-hash enforcement with required-slot checks, codifying immutable generated-output rules, accepting compile-time manifest regeneration side-effects (`ops/lib/manifests/OPS.md`), and remediating closeout gaps by updating SoP/PoW ledgers and expanding receipts to include untracked-file proofs.
-- Target Files allowlist: `ops/bin/draft`; `ops/src/surfaces/DP.md.tpl`; `tools/lint/dp.sh`; `TASK.md`; `PoT.md`; `SoP.md`; `PoW.md`; `docs/MANUAL.md`; `docs/ops/specs/tools/lint/dp.md`; `docs/ops/specs/surfaces/task.md`; `ops/lib/manifests/OPS.md`; `llms.txt`; `llms-core.txt`; `llms-full.txt`; `storage/dp/active/allowlist.txt`.
+- Objective: Delivered Phase 3 immutable workflow adoption by adding canonical DP template generation (`ops/src/surfaces/dp.md.tpl` + `ops/bin/draft`), refactoring DP lint to canonical template-hash plus normalized structure-hash enforcement with required-slot checks, codifying immutable generated-output rules, accepting compile-time manifest regeneration side-effects (`ops/lib/manifests/OPS.md`), and remediating closeout gaps by updating SoP/PoW ledgers and expanding receipts to include untracked-file proofs.
+- Target Files allowlist: `ops/bin/draft`; `ops/src/surfaces/dp.md.tpl`; `tools/lint/dp.sh`; `TASK.md`; `PoT.md`; `SoP.md`; `PoW.md`; `docs/MANUAL.md`; `docs/ops/specs/tools/lint/dp.md`; `docs/ops/specs/surfaces/task.md`; `ops/lib/manifests/OPS.md`; `llms.txt`; `llms-core.txt`; `llms-full.txt`; `storage/dp/active/allowlist.txt`.
 - Verification: `./ops/bin/open --out=auto --dp="DP-OPS-0065"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `./ops/bin/compile`; `./ops/bin/llms`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh`; `bash tools/lint/llms.sh`; `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `./tools/verify.sh`; `./ops/bin/prune --dry-run`; `./ops/bin/prune --target=pow --dry-run`; `./ops/bin/prune --dp=DP-OPS-0065 --scrub` (guard-blocked on uncommitted RESULTS by design); `bash tools/lint/dp.sh storage/handoff/DP-OPS-0065-RESULTS.md`; `git diff --name-only`; `git diff --stat`; `git diff --cached --name-only`; `git diff --cached --stat`; `git status --porcelain`; `git ls-files --others --exclude-standard`.
 - Functional receipts: `storage/handoff/OPEN-work-dp-ops-0065-2026-02-14-d3801c3a.txt`; `storage/handoff/OPEN-PORCELAIN-work-dp-ops-0065-2026-02-14-d3801c3a.txt`; `storage/dumps/dump-platform-work-dp-ops-0065-2026-02-14-d3801c3a.txt`; `storage/dumps/dump-platform-work-dp-ops-0065-2026-02-14-d3801c3a.tar.xz`; `storage/dumps/dump-platform-work-dp-ops-0065-2026-02-14-d3801c3a.manifest.txt`; `storage/handoff/DP-OPS-0065-RESULTS.md`.
 
 ## 2026-02-14 23:01:42 UTC — DP-OPS-0064 Phase 2 Structural Restructuring
-- Objective: Implemented Phase 2 structural hardening by migrating library canon to `opt/_factory`, introducing deterministic manifest compilation (`ops/bin/compile` + `ops/src/manifests/*.md.tpl`) with context/llms compile-first routing, and switching DP allowlist governance to pointer-sidecar mode via `storage/dp/active/allowlist.txt`.
-- Verification: `./tools/verify.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/style.sh`; `bash tools/lint/context.sh`; `bash tools/lint/library.sh`; `bash tools/lint/task.sh`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/llms.sh`; `./ops/bin/compile`; `./ops/bin/map --check`; `./ops/bin/llms`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0064-RESULTS.md`.
+- Objective: Implemented Phase 2 structural hardening by migrating  canon to `opt/_factory`, introducing deterministic manifest compilation (`ops/bin/compile` + `ops/src/manifests/*.md.tpl`) with context/llms compile-first routing, and switching DP allowlist governance to pointer-sidecar mode via `storage/dp/active/allowlist.txt`.
+- Verification: `./tools/verify.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/style.sh`; `bash tools/lint/context.sh`; `bash tools/lint/.sh`; `bash tools/lint/task.sh`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/llms.sh`; `./ops/bin/compile`; `./ops/bin/map --check`; `./ops/bin/llms`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0064-RESULTS.md`.
 - Functional receipts: `./ops/bin/open --out=auto --dp=DP-OPS-0064`; `./ops/bin/dump --scope=full --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-full-work-dp-ops-0064-2026-02-14-30a77fdf.txt`; `test -s ./storage/dumps/dump-full-work-dp-ops-0064-2026-02-14-30a77fdf.tar.xz`.
 
 ## 2026-02-14 16:35:03 UTC — DP-OPS-0063 SoP and PoW Closeout Ledger Compliance
@@ -86,12 +86,12 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 
 ## 2026-02-11 03:41:05 UTC — DP-OPS-0046 Pointer-First Constitution Refinement
 - Objective: Refined TASK.md to pointer-first contract by removing duplicated canon text, refreshed llms context bundles, and captured results receipt.
-- Verification: bash tools/lint/context.sh; bash tools/lint/style.sh; bash tools/lint/truth.sh; bash tools/lint/library.sh; bash tools/lint/dp.sh --test; bash tools/lint/dp.sh TASK.md; bash tools/verify.sh.
+- Verification: bash tools/lint/context.sh; bash tools/lint/style.sh; bash tools/lint/truth.sh; bash tools/lint/.sh; bash tools/lint/dp.sh --test; bash tools/lint/dp.sh TASK.md; bash tools/verify.sh.
 - Context refresh: ./ops/bin/llms --out-dir=/home/nos4r2/dev/nukece.
 
 ## 2026-02-11 01:52:19 UTC — DP-OPS-0045 Reconstructing and Perfecting TASK.md
 - Objective: Reconstructed TASK.md template, restoring Session State and Logic Pointers, hardening the Freshness Gate to four HEAD-bound artifacts, and mandating results file protocol.
-- Verification: bash tools/lint/style.sh; bash tools/lint/library.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/verify.sh; bash tools/lint/dp.sh TASK.md.
+- Verification: bash tools/lint/style.sh; bash tools/lint/.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/verify.sh; bash tools/lint/dp.sh TASK.md.
 - Dump: storage/dumps/dump-platform-work-task-perfection-0045-4b581538.txt.
 
 ## 2026-02-10 21:18:35 UTC — DP-OPS-0044 TASK Contract Hardening and Prompt Alignment
@@ -102,12 +102,12 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 
 ## 2026-02-10 18:03:22 UTC — DP-OPS-0043 Task Subsystem Hardening and Harvester Certification
 - Objective: Certify the Task subsystem as pointer-first and serviceable by aligning ops/lib/scripts/task.sh with tools/lint/task.sh requirements, enforcing registry ID collision locks, and hardening promotion and lint gates to prevent placeholder drift and missing Closeout pointers.
-- Verification: bash tools/lint/style.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/lint/task.sh; bash tools/lint/library.sh; bash tools/verify.sh; ops/lib/scripts/task.sh check; ./ops/bin/context --dp=DP-OPS-0043; ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle; ./ops/bin/llms --out-dir=.
+- Verification: bash tools/lint/style.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/lint/task.sh; bash tools/lint/.sh; bash tools/verify.sh; ops/lib/scripts/task.sh check; ./ops/bin/context --dp=DP-OPS-0043; ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle; ./ops/bin/llms --out-dir=.
 - Dump: storage/dumps/dump-platform-work-task-harvester-hardening-0043-1b4325f9.txt.
 
 ## 2026-02-10 16:52:29 UTC — DP-OPS-0042 Agent System Certification and Harvester Hardening
 - Objective: Certify the Agent subsystem as pointer-first and serviceable by aligning R-AGENT-01 through R-AGENT-06, synchronizing the agent registry and promotion ledger, and hardening enforcement tooling and the agent harvester logic so that low-frequency role emergence can be detected via Pattern Density (tool-and-pointer cluster recurrence).
-- Verification: bash tools/lint/style.sh; bash tools/lint/agent.sh; bash tools/lint/library.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/verify.sh; ops/lib/scripts/agent.sh check; ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle; ./ops/bin/llms.
+- Verification: bash tools/lint/style.sh; bash tools/lint/agent.sh; bash tools/lint/.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/verify.sh; ops/lib/scripts/agent.sh check; ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle; ./ops/bin/llms.
 - Dump: storage/dumps/dump-platform-work-agent-system-certification-0042-5b51900d.txt.
 
 1. Primary Commit Header: DP-OPS-0042 agent system certification and harvester hardening
@@ -123,7 +123,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 ### Testing
 - bash tools/lint/style.sh
 - bash tools/lint/agent.sh
-- bash tools/lint/library.sh
+- bash tools/lint/.sh
 - bash tools/lint/context.sh
 - bash tools/lint/truth.sh
 - bash tools/verify.sh
@@ -156,7 +156,7 @@ Does the Pattern Density heuristic in the agent harvester correctly balance low 
 
 ## 2026-02-10 15:03:09 UTC — DP-OPS-0041 Skills System Overhaul
 - Objective: Certify the Skills subsystem as pointer-first and serviceable by aligning S-LEARN-01 through S-LEARN-06, the skills registry, and enforcement tooling with binary gates.
-- Verification: bash tools/lint/style.sh; bash tools/lint/library.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/verify.sh; ops/lib/scripts/skill.sh check.
+- Verification: bash tools/lint/style.sh; bash tools/lint/.sh; bash tools/lint/context.sh; bash tools/lint/truth.sh; bash tools/verify.sh; ops/lib/scripts/skill.sh check.
 - Dump: storage/dumps/dump-platform-work-skills-system-overhaul-0041.txt.
 
 ## 2026-02-10 03:35:02 UTC — DP-OPS-0040 Architectural Certification and Stress Testing
@@ -190,7 +190,7 @@ Does the Pattern Density heuristic in the agent harvester correctly balance low 
 ## 2026-02-08 02:02:24 UTC — DP-OPS-0036 Task System Upgrade (Pointer-First Constitution + Harvest/Promote + Lint)
 - Added Task Promotion Ledger at `opt/_factory/TASKS.md` with doctrine, packet schema, and append-only logs.
 - Added `ops/lib/scripts/task.sh` harvest, promote, and check workflows aligned with agent and skill automation.
-- Added `tools/lint/task.sh` and integrated Task linting into `tools/lint/library.sh`.
+- Added `tools/lint/task.sh` and integrated Task linting into `tools/lint/.sh`.
 - Refactored B-TASK-01 through B-TASK-06 into the pointer-first schema with provenance, pointers, execution logic, and scope boundaries.
 - Updated `docs/MANUAL.md` to document Task workflows and the JIT-only hazard.
 
@@ -205,7 +205,7 @@ Does the Pattern Density heuristic in the agent harvester correctly balance low 
 - Created `opt/_factory/AGENTS.md` promotion ledger and workflow template.
 - Added `tools/lint/agent.sh` immunological linter for agent surfaces.
 - Updated `ops/lib/scripts/agent.sh` to log harvest and promote events in `opt/_factory/AGENTS.md` and removed SoP promotion side effects.
-- Updated `tools/lint/library.sh` to run the agent linter.
+- Updated `tools/lint/.sh` to run the agent linter.
 - Updated `opt/_factory/INDEX.md` to link the agent promotion ledger.
 - Refreshed `llms-small.txt`, `llms-full.txt`, and `llms.txt`.
 
@@ -213,13 +213,13 @@ Does the Pattern Density heuristic in the agent harvester correctly balance low 
 - Created SSOT registries for skills and tasks in docs/ops/registry.
 - Refactored opt/_factory/INDEX.md into navigation-only links for registries.
 - Updated agent and skill scripts to write to registry files only.
-- Updated library and project linters to read from registry files.
+- Updated definitions and project linters to read from registry files.
 - Added tools/test/agent.sh for agent pointer integrity checks.
 
 ## 2026-02-07 13:07:38 UTC — DP-OPS-0032 Harden TASK DP Boilerplate and Align DP Lint
 - Hardened TASK.md DP boilerplate with explicit DP scope markers and sanitized placeholders.
 - Updated tools/lint/dp.sh to accept decimal DP headings alongside the legacy format and expanded tests for both formats.
-- Ran verification: ./ops/bin/dump --scope=platform (non-zero), bash tools/verify.sh, bash tools/lint/context.sh, bash tools/lint/truth.sh, bash tools/lint/library.sh, bash tools/lint/dp.sh --test.
+- Ran verification: ./ops/bin/dump --scope=platform (non-zero), bash tools/verify.sh, bash tools/lint/context.sh, bash tools/lint/truth.sh, bash tools/lint/.sh, bash tools/lint/dp.sh --test.
 
 ## 2026-02-07 02:08:45 UTC — DP-OPS-0031 Pointer-First Agent Constitution & System Hardening
 - Refactored R-AGENT-01 through R-AGENT-06 into pointer-first Markdown, removing legacy YAML metadata and embedding role details in prose.

@@ -1,7 +1,7 @@
 # CORE Manifest
 
 <!-- GENERATED FILE. DO NOT EDIT. -->
-<!-- Source template: ops/src/manifests/CORE.md.tpl -->
+<!-- Source template: ops/src/manifests/core.md.tpl -->
 <!-- Generator: ops/bin/compile -->
 
 ## Members

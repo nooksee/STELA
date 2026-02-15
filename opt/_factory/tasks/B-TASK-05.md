@@ -5,7 +5,7 @@
 - **DP-ID:** DP-OPS-0039
 - **Branch:** work/task-serviceability-0038
 - **HEAD:** 03f47297e
-- **Objective:** Certify the B-TASK library for serviceable execution by enforcing explicit Closeout pointers, strengthening quantitative reporting expectations, and hardening task lint to prevent drift.
+- **Objective:** Certify the B-TASK definitions for serviceable execution by enforcing explicit Closeout pointers, strengthening quantitative reporting expectations, and hardening task lint to prevent drift.
 
 ## Orchestration
 - **Primary Agent:** R-AGENT-05 (refactor-cleaner)

@@ -20,7 +20,7 @@ Use when a DP explicitly requests a verification loop or when payload verificati
 - Contract: `TASK.md`
 - Registry: `docs/ops/registry/SKILLS.md`
 - Verification task: `opt/_factory/tasks/B-TASK-02.md`
-- Toolchain: `tools/verify.sh`, `tools/lint/style.sh`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/library.sh`
+- Toolchain: `tools/verify.sh`, `tools/lint/style.sh`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/.sh`
 - Reference docs: `docs/MANUAL.md`
 
 ## Guardrails

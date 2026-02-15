@@ -52,7 +52,7 @@ Check contract:
 1. Parse command and validate required dependencies.
 2. `harvest` sequence:
 - Validate ID/name/objective/DP inputs.
-- Generate provenance block (from heuristics library when available).
+- Generate provenance block (from heuristics  when available).
 - Emit draft template with required sections.
 - Redact known secret token classes.
 - Append candidate log record.

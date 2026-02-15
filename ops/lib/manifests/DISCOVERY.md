@@ -1,7 +1,7 @@
 # DISCOVERY Manifest
 
 <!-- GENERATED FILE. DO NOT EDIT. -->
-<!-- Source template: ops/src/manifests/DISCOVERY.md.tpl -->
+<!-- Source template: ops/src/manifests/discovery.md.tpl -->
 <!-- Generator: ops/bin/compile -->
 
 ## Members
