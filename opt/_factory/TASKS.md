@@ -1,7 +1,5 @@
 # Task Promotion Ledger
 
-> **CONTEXT HAZARD:** Tasks are JIT-only. Do not add task libraries to `ops/lib/manifests/CONTEXT.md`. Logging to `opt/_factory/TASKS.md` is operator-mediated and performed by worker capture during DP processing.
-
 This file is the operator-facing promotion workflow for canon tasks. Use `ops/lib/scripts/task.sh` to append candidates and promotion entries.
 
 ## Doctrine

@@ -1,7 +1,5 @@
 # Skills Promotion Template
 
-> **CONTEXT HAZARD:** Skills are for production payload work only. Skills must never be added to `ops/lib/manifests/CONTEXT.md`. Skills are invoked only when a DP explicitly requests them. Logging to `opt/_factory/SKILLS.md` is operator-mediated and performed by worker capture during DP processing.
-
 This file is the operator-facing promotion template for creating new S-LEARN-XX skills. Use `ops/lib/scripts/skill.sh` to append candidates and generate Promotion Packets.
 
 ## Harvest Engine workflow

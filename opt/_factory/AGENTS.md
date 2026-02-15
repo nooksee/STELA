@@ -1,7 +1,5 @@
 # Agent Promotion Ledger
 
-> **CONTEXT HAZARD:** Agents are JIT-only. Do not add agent or skill libraries to `ops/lib/manifests/CONTEXT.md`. Logging to `opt/_factory/AGENTS.md` is operator-mediated and performed by worker capture during DP processing.
-
 This file is the operator-facing promotion workflow for canon agents. Use `ops/lib/scripts/agent.sh` to append candidates and promotion entries.
 
 ## Harvest Engine Workflow
@@ -25,7 +23,6 @@ This file is the operator-facing promotion workflow for canon agents. Use `ops/l
 - Drift preventers:
   - Stop conditions: stop if required inputs are missing or if scope exceeds the active DP.
   - Anti-scope-creep: do not expand responsibilities without a new DP.
-  - Context hazard: do not add `opt/_factory/agents` or `opt/_factory/skills` to `ops/lib/manifests/CONTEXT.md`.
   - Registry alignment: refuse promotion if registry and file set diverge.
 - Definition of Done:
   - Draft exists in `storage/archives/agents/` with a complete Provenance block.

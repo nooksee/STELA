@@ -19,7 +19,6 @@ Filing:
 - Precedence: PoT is final authority; if conflict exists, stop and ask.
 - SSOT: one canonical file per domain; other mentions are pointers.
 - Reuse-first: search `ops/` for an existing template before creating a new artifact.
-- Context Hazard: any inclusion of `opt/_factory/agents`, `opt/_factory/tasks`, or `opt/_factory/skills` in the global context manifest is a failure.
 - Drift: any divergence between canon and repository state, or duplication of canon outside SSOT, is a failure state that requires stop and correction.
 - Routing Closeout; failure is a system failure state.
 - SoP: history ledger only; no permanent rules live there.
@@ -55,7 +54,6 @@ System Failure States (Drift Triggers):
 | Failure Type | Definition | System Response |
 | :---- | :---- | :---- |
 | **Canon Drift** | Divergence between `PoT.md` and repo state. | **STOP WORK.** Reject PR. |
-| **Context Hazard** | Including `opt/_factory/` docs in `CONTEXT.md`. | **STOP WORK.** Automated lint failure. |
 | **Dirty State** | Uncommitted changes in `main`. | **STOP WORK.** Worker complaint/halt. |
 | **Ambiguity** | Instructions capable of multiple interpretations. | **STOP WORK.** Request clarification. |
 
