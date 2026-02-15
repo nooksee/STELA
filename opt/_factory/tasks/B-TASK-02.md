@@ -17,7 +17,7 @@
 - **Contract:** `TASK.md`
 - **Registry:** `docs/ops/registry/TASKS.md`
 - **Toolchain:** `tools/verify.sh`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/library.sh`, `tools/lint/dp.sh`
-- **JIT Skills:** `opt/_library/skills/S-LEARN-01.md`
+- **JIT Skills:** `opt/_factory/skills/S-LEARN-01.md`
 - **Reference Docs:** `docs/MANUAL.md`
 
 ## Execution Logic

@@ -1,0 +1,397 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/draft --id=DP-OPS-XXXX --title="..." --work-branch=work/... --base-head=<hash> [options]
+
+Required:
+- --id=DP-OPS-XXXX
+- --title="..."
+- --work-branch=work/...
+- --base-head=<hash>
+
+Optional:
+- --base-branch=main                  (default: main)
+- --freshness-stamp=YYYY-MM-DD        (default: UTC today)
+- --slots-file=PATH                   sidecar with tagged sections
+- --dp-load-order="..."
+- --objective="..."
+- --in-scope="..."
+- --out-of-scope="..."
+- --safety="..."
+- --plan-state="..."
+- --plan-request="..."
+- --plan-changelog="..."
+- --plan-patch="..."
+- --receipt-commands="..."
+
+slots-file format:
+[DP_SCOPED_LOAD_ORDER]
+- tools/lint/dp.sh
+
+[OBJECTIVE]
+- One or more lines
+
+[IN_SCOPE]
+- One or more lines
+
+[OUT_OF_SCOPE]
+- One or more lines
+
+[SAFETY_INVARIANTS]
+- One or more lines
+
+[PLAN_STATE]
+- One or more lines
+
+[PLAN_REQUEST]
+- One or more lines
+
+[PLAN_CHANGELOG]
+- One or more lines
+
+[PLAN_PATCH]
+- One or more lines
+
+[RECEIPT_COMMANDS]
+- One or more lines
+USAGE
+}
+
+die() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+trim() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
+sha256_file() {
+  local path="$1"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$path" | awk '{print $1}'
+    return
+  fi
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$path" | awk '{print $1}'
+    return
+  fi
+  die "sha256 tool not found (need sha256sum or shasum)"
+}
+
+read_slot() {
+  local key="$1"
+  local file="$2"
+  awk -v key="$key" '
+    $0 == "[" key "]" { in_block=1; next }
+    in_block && $0 ~ /^\[[A-Z0-9_]+\]$/ { exit }
+    in_block { print }
+  ' "$file"
+}
+
+block_has_content() {
+  local value="$1"
+  [[ -n "$(printf '%s\n' "$value" | sed '/^[[:space:]]*$/d')" ]]
+}
+
+require_clean_tree() {
+  local porcelain
+  porcelain="$(git -C "$REPO_ROOT" status --porcelain)"
+  if [[ -n "$porcelain" ]]; then
+    die "refusing to run on dirty tree"
+  fi
+}
+
+read_lint_constants() {
+  local lint_path="$REPO_ROOT/tools/lint/dp.sh"
+  local template_hash
+
+  [[ -f "$lint_path" ]] || die "missing tools/lint/dp.sh"
+
+  DP_TEMPLATE_PATH="$(awk -F'"' '/^CANONICAL_DP_TEMPLATE_PATH="/{print $2; exit}' "$lint_path")"
+  template_hash="$(awk -F'"' '/^CANONICAL_DP_TEMPLATE_SHA256="/{print $2; exit}' "$lint_path")"
+
+  [[ -n "$DP_TEMPLATE_PATH" ]] || die "failed to read CANONICAL_DP_TEMPLATE_PATH from tools/lint/dp.sh"
+  [[ -n "$template_hash" ]] || die "failed to read CANONICAL_DP_TEMPLATE_SHA256 from tools/lint/dp.sh"
+  [[ "$template_hash" =~ ^[0-9a-f]{64}$ ]] || die "invalid CANONICAL_DP_TEMPLATE_SHA256 in tools/lint/dp.sh"
+
+  DP_TEMPLATE_PATH="$REPO_ROOT/$DP_TEMPLATE_PATH"
+  [[ -f "$DP_TEMPLATE_PATH" ]] || die "canonical DP template missing: ${DP_TEMPLATE_PATH}"
+
+  local actual_hash
+  actual_hash="$(sha256_file "$DP_TEMPLATE_PATH")"
+  if [[ "$actual_hash" != "$template_hash" ]]; then
+    die "template preflight failed: canonical template hash mismatch (expected ${template_hash}, got ${actual_hash})"
+  fi
+}
+
+require_task_markers() {
+  local task_path="$REPO_ROOT/TASK.md"
+  [[ -f "$task_path" ]] || die "missing TASK.md"
+
+  local section_count
+  local dp_count
+  section_count="$(grep -cE '^##[[:space:]]*3[.][[:space:]]*Current Dispatch Packet \(DP\)[[:space:]]*$' "$task_path" || true)"
+  if [[ "$section_count" != "1" ]]; then
+    die "TASK.md must contain exactly one '## 3. Current Dispatch Packet (DP)' heading"
+  fi
+
+  dp_count="$(awk '
+    BEGIN { in_section=0; count=0 }
+    /^##[[:space:]]*3[.][[:space:]]*Current Dispatch Packet \(DP\)[[:space:]]*$/ { in_section=1; next }
+    in_section && /^##[[:space:]]*[0-9]+[.]/ && $0 !~ /^##[[:space:]]*3[.]/ { in_section=0 }
+    in_section && /^### DP-/ { count++ }
+    END { print count }
+  ' "$task_path")"
+
+  if [[ "$dp_count" != "1" ]]; then
+    die "TASK.md must contain exactly one active '### DP-' block under Section 3"
+  fi
+}
+
+render_dp() {
+  local out_path="$1"
+  : > "$out_path"
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line//DP-OPS-0000/$DP_ID}"
+    line="${line//'{{DP_TITLE}}'/$DP_TITLE}"
+    line="${line//'{{BASE_BRANCH}}'/$BASE_BRANCH}"
+    line="${line//'{{WORK_BRANCH}}'/$WORK_BRANCH}"
+    line="${line//'{{BASE_HEAD}}'/$BASE_HEAD}"
+    line="${line//'{{FRESHNESS_STAMP}}'/$FRESHNESS_STAMP}"
+
+    case "$line" in
+      "{{DP_SCOPED_LOAD_ORDER}}")
+        printf '%s\n' "$DP_SCOPED_LOAD_ORDER" >> "$out_path"
+        ;;
+      "{{OBJECTIVE}}")
+        printf '%s\n' "$OBJECTIVE" >> "$out_path"
+        ;;
+      "{{IN_SCOPE}}")
+        printf '%s\n' "$IN_SCOPE" >> "$out_path"
+        ;;
+      "{{OUT_OF_SCOPE}}")
+        printf '%s\n' "$OUT_OF_SCOPE" >> "$out_path"
+        ;;
+      "{{SAFETY_INVARIANTS}}")
+        printf '%s\n' "$SAFETY_INVARIANTS" >> "$out_path"
+        ;;
+      "{{PLAN_STATE}}")
+        printf '%s\n' "$PLAN_STATE" >> "$out_path"
+        ;;
+      "{{PLAN_REQUEST}}")
+        printf '%s\n' "$PLAN_REQUEST" >> "$out_path"
+        ;;
+      "{{PLAN_CHANGELOG}}")
+        printf '%s\n' "$PLAN_CHANGELOG" >> "$out_path"
+        ;;
+      "{{PLAN_PATCH}}")
+        printf '%s\n' "$PLAN_PATCH" >> "$out_path"
+        ;;
+      "{{RECEIPT_COMMANDS}}")
+        printf '%s\n' "$RECEIPT_COMMANDS" >> "$out_path"
+        ;;
+      *)
+        printf '%s\n' "$line" >> "$out_path"
+        ;;
+    esac
+  done < "$DP_TEMPLATE_PATH"
+}
+
+update_task() {
+  local rendered_path="$1"
+  local task_path="$REPO_ROOT/TASK.md"
+  local tmp_path
+
+  tmp_path="$(mktemp)"
+
+  awk -v replacement="$rendered_path" '
+    BEGIN {
+      in_section=0
+      wrote=0
+      skip_rest=0
+    }
+    /^##[[:space:]]*3[.][[:space:]]*Current Dispatch Packet \(DP\)[[:space:]]*$/ {
+      in_section=1
+      print
+      next
+    }
+    in_section && /^### DP-/ && wrote==0 {
+      while ((getline line < replacement) > 0) {
+        print line
+      }
+      close(replacement)
+      wrote=1
+      skip_rest=1
+      next
+    }
+    skip_rest {
+      next
+    }
+    {
+      print
+    }
+  ' "$task_path" > "$tmp_path"
+
+  mv "$tmp_path" "$task_path"
+}
+
+DP_ID=""
+DP_TITLE=""
+BASE_BRANCH="main"
+WORK_BRANCH=""
+BASE_HEAD=""
+FRESHNESS_STAMP="$(date -u +%F)"
+SLOTS_FILE=""
+
+DP_SCOPED_LOAD_ORDER=""
+OBJECTIVE=""
+IN_SCOPE=""
+OUT_OF_SCOPE=""
+SAFETY_INVARIANTS=""
+PLAN_STATE=""
+PLAN_REQUEST=""
+PLAN_CHANGELOG=""
+PLAN_PATCH=""
+RECEIPT_COMMANDS=""
+
+for arg in "$@"; do
+  case "$arg" in
+    --id=*)
+      DP_ID="${arg#--id=}"
+      ;;
+    --title=*)
+      DP_TITLE="${arg#--title=}"
+      ;;
+    --base-branch=*)
+      BASE_BRANCH="${arg#--base-branch=}"
+      ;;
+    --work-branch=*)
+      WORK_BRANCH="${arg#--work-branch=}"
+      ;;
+    --base-head=*)
+      BASE_HEAD="${arg#--base-head=}"
+      ;;
+    --freshness-stamp=*)
+      FRESHNESS_STAMP="${arg#--freshness-stamp=}"
+      ;;
+    --slots-file=*)
+      SLOTS_FILE="${arg#--slots-file=}"
+      ;;
+    --dp-load-order=*)
+      DP_SCOPED_LOAD_ORDER="${arg#--dp-load-order=}"
+      ;;
+    --objective=*)
+      OBJECTIVE="${arg#--objective=}"
+      ;;
+    --in-scope=*)
+      IN_SCOPE="${arg#--in-scope=}"
+      ;;
+    --out-of-scope=*)
+      OUT_OF_SCOPE="${arg#--out-of-scope=}"
+      ;;
+    --safety=*)
+      SAFETY_INVARIANTS="${arg#--safety=}"
+      ;;
+    --plan-state=*)
+      PLAN_STATE="${arg#--plan-state=}"
+      ;;
+    --plan-request=*)
+      PLAN_REQUEST="${arg#--plan-request=}"
+      ;;
+    --plan-changelog=*)
+      PLAN_CHANGELOG="${arg#--plan-changelog=}"
+      ;;
+    --plan-patch=*)
+      PLAN_PATCH="${arg#--plan-patch=}"
+      ;;
+    --receipt-commands=*)
+      RECEIPT_COMMANDS="${arg#--receipt-commands=}"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      die "unknown arg: ${arg}"
+      ;;
+  esac
+done
+
+[[ -n "$DP_ID" ]] || die "missing required --id"
+[[ -n "$DP_TITLE" ]] || die "missing required --title"
+[[ -n "$WORK_BRANCH" ]] || die "missing required --work-branch"
+[[ -n "$BASE_HEAD" ]] || die "missing required --base-head"
+[[ "$DP_ID" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]] || die "invalid --id format: ${DP_ID}"
+
+if [[ -n "$SLOTS_FILE" ]]; then
+  [[ -f "$SLOTS_FILE" ]] || die "slots file not found: ${SLOTS_FILE}"
+
+  [[ -n "$DP_SCOPED_LOAD_ORDER" ]] || DP_SCOPED_LOAD_ORDER="$(read_slot "DP_SCOPED_LOAD_ORDER" "$SLOTS_FILE")"
+  [[ -n "$OBJECTIVE" ]] || OBJECTIVE="$(read_slot "OBJECTIVE" "$SLOTS_FILE")"
+  [[ -n "$IN_SCOPE" ]] || IN_SCOPE="$(read_slot "IN_SCOPE" "$SLOTS_FILE")"
+  [[ -n "$OUT_OF_SCOPE" ]] || OUT_OF_SCOPE="$(read_slot "OUT_OF_SCOPE" "$SLOTS_FILE")"
+  [[ -n "$SAFETY_INVARIANTS" ]] || SAFETY_INVARIANTS="$(read_slot "SAFETY_INVARIANTS" "$SLOTS_FILE")"
+  [[ -n "$PLAN_STATE" ]] || PLAN_STATE="$(read_slot "PLAN_STATE" "$SLOTS_FILE")"
+  [[ -n "$PLAN_REQUEST" ]] || PLAN_REQUEST="$(read_slot "PLAN_REQUEST" "$SLOTS_FILE")"
+  [[ -n "$PLAN_CHANGELOG" ]] || PLAN_CHANGELOG="$(read_slot "PLAN_CHANGELOG" "$SLOTS_FILE")"
+  [[ -n "$PLAN_PATCH" ]] || PLAN_PATCH="$(read_slot "PLAN_PATCH" "$SLOTS_FILE")"
+  [[ -n "$RECEIPT_COMMANDS" ]] || RECEIPT_COMMANDS="$(read_slot "RECEIPT_COMMANDS" "$SLOTS_FILE")"
+fi
+
+if ! block_has_content "$DP_SCOPED_LOAD_ORDER"; then
+  die "missing required slot: DP_SCOPED_LOAD_ORDER"
+fi
+if ! block_has_content "$OBJECTIVE"; then
+  die "missing required slot: OBJECTIVE"
+fi
+if ! block_has_content "$IN_SCOPE"; then
+  die "missing required slot: IN_SCOPE"
+fi
+if ! block_has_content "$OUT_OF_SCOPE"; then
+  die "missing required slot: OUT_OF_SCOPE"
+fi
+if ! block_has_content "$SAFETY_INVARIANTS"; then
+  die "missing required slot: SAFETY_INVARIANTS"
+fi
+if ! block_has_content "$PLAN_STATE"; then
+  die "missing required slot: PLAN_STATE"
+fi
+if ! block_has_content "$PLAN_REQUEST"; then
+  die "missing required slot: PLAN_REQUEST"
+fi
+if ! block_has_content "$PLAN_CHANGELOG"; then
+  die "missing required slot: PLAN_CHANGELOG"
+fi
+if ! block_has_content "$PLAN_PATCH"; then
+  die "missing required slot: PLAN_PATCH"
+fi
+if ! block_has_content "$RECEIPT_COMMANDS"; then
+  die "missing required slot: RECEIPT_COMMANDS"
+fi
+
+require_clean_tree
+read_lint_constants
+require_task_markers
+
+mkdir -p "$REPO_ROOT/storage/dp/intake"
+
+intake_path="$REPO_ROOT/storage/dp/intake/${DP_ID}.md"
+rendered_path="$(mktemp)"
+
+render_dp "$rendered_path"
+cp "$rendered_path" "$intake_path"
+update_task "$rendered_path"
+rm -f "$rendered_path"
+
+echo "Wrote: ${intake_path#${REPO_ROOT}/}"
+echo "Updated: TASK.md"

@@ -1,53 +1,74 @@
 # Technical Specification: tools/lint/dp.sh
 
 ## Purpose
-Validate Dispatch Packet schema contracts, receipt requirements, and DP-specific safety rules.
+Validate Dispatch Packet structure integrity via canonical template hashing, enforce required slot content, validate allowlist pointer integrity, and lint RESULTS closing blocks.
 
 ## Invocation
 - Command forms:
   - `bash tools/lint/dp.sh --test`
+  - `bash tools/lint/dp.sh` (defaults to `TASK.md` when stdin is empty)
   - `bash tools/lint/dp.sh TASK.md`
   - `bash tools/lint/dp.sh <path>`
   - `cat <dp.md> | bash tools/lint/dp.sh -`
 - Required flags: none.
 - Positional arguments: at most one (`path` or `-`).
-- Expected exit behavior:
-  - `0` when lint passes or self-tests pass.
-  - `1` for lint failures, invalid argument count, or missing input.
+- Exit behavior:
+  - `0` for pass.
+  - `1` for validation failures or invalid usage.
 
 ## Inputs
 - Input payload from file argument or stdin.
-- When given `TASK.md`, extracts Section 3 DP payload (`## 3. Current Dispatch Packet (DP)` to `## 4.`).
-- DP content fields and headings for Sections 3.1 through 3.4.5.
-- Pointer allowlist sidecar when DP allowlist contains exactly `storage/dp/active/allowlist.txt`.
+- For `TASK.md`, extracts the active DP block from `### DP-...` through Section `3.5.1` content.
+- Canonical DP template: `ops/src/surfaces/DP.md.tpl`.
+- Canonical template hash constant from `tools/lint/dp.sh`.
+- Allowlist pointer file from DP Section 3.3 (`storage/dp/active/allowlist.txt` by default).
 
 ## Outputs
-- Writes no tracked files.
+- No tracked files are written.
 - Stdout:
-  - `OK: DP lint passed` for successful payload lint.
-  - `OK: --test passed` for successful self-test fixtures.
+  - `OK: DP lint passed`
+  - `OK: DP RESULTS lint passed`
+  - `OK: --test passed`
 - Stderr:
-  - `FAIL:` details for schema, receipt contract, allowlist, and hazard violations.
-  - `WARN:` when llms invocation is present but `ops/bin/llms` is missing from allowlist.
+  - `FAIL:` diagnostics for hash mismatches, schema extraction errors, missing required slot content, allowlist integrity failures, and RESULTS block violations.
 
-## Invariants and failure modes
-- Heading order and required DP blocks are mandatory.
-- Freshness fields (`Base Branch`, `Required Work Branch`, `Base HEAD`) must be concrete in non-template payloads.
-- Preflight gate must include:
-  - `bash tools/lint/dp.sh --test`
-  - `bash tools/lint/dp.sh TASK.md`
-  - `bash tools/lint/task.sh`
-- Canon load order must contain exactly six required entries.
-- Target Files allowlist supports a stable pointer mode:
-  - If allowlist has exactly one entry and it is `storage/dp/active/allowlist.txt`, lint loads canonical entries from that file.
-  - Pointer file must exist and contain at least one non-empty path.
-- Context-load hardening:
-  - `llms-full.txt` is prohibited in DP context load surfaces and fails lint.
-  - `llms-core.txt` is allowed only when explicitly marked as lightweight alignment usage.
-- Receipt block must include OPEN, DUMP, gate commands, diff proofs, and mandatory closing block requirement.
-- Disposable artifact input references and pasted OPEN/DUMP payload markers are rejected.
+## Enforcement Model
+1. Canonical template hash preflight:
+- Computes sha256 for `ops/src/surfaces/DP.md.tpl`.
+- Fails if hash does not equal `CANONICAL_DP_TEMPLATE_SHA256` constant.
+
+2. Structure-hash validation:
+- Normalizes both canonical template and DP payload by replacing variable slots with fixed placeholders.
+- Computes sha256 for normalized template and normalized payload.
+- Fails on mismatch.
+
+3. Required-field validation:
+- Enforces non-empty and non-placeholder values for:
+  - DP heading id/title.
+  - `Base Branch`, `Required Work Branch`, `Base HEAD`, `Freshness Stamp`.
+  - DP-scoped load order.
+  - Objective/In scope/Out of scope/Safety sections.
+  - Plan body sections (3.4.1 through 3.4.4).
+  - Receipt section body (3.4.5).
+
+4. Allowlist pointer integrity:
+- DP allowlist block must contain exactly one pointer entry.
+- Pointer must match canonical pointer path.
+- Pointer file must exist and be non-empty.
+- Each allowlist line must be a plain path that exists in repository scope.
+
+5. RESULTS lint path:
+- Validates Mandatory Closing Block labels.
+- Enforces strict plaintext fields and placeholder rejection.
+- Ensures Final Squash Stub differs from Primary Commit Header.
+
+## Self-test coverage (`--test`)
+- Canonical template hash mismatch failure.
+- DP structure hash mismatch failure.
+- Allowlist pointer mismatch and allowlist file path validation failures.
+- RESULTS closing block pass/fail fixtures.
 
 ## Related pointers
-- Registry entry: `docs/ops/registry/LINT.md` (`LINT-03`).
-- TASK schema companion: `tools/lint/task.sh` (`docs/ops/specs/tools/lint/task.md`).
-- DP contract surface: `TASK.md` Section 3.
+- Canonical DP generator: `ops/bin/draft`.
+- DP template source: `ops/src/surfaces/DP.md.tpl`.
+- TASK schema companion: `docs/ops/specs/surfaces/task.md`.

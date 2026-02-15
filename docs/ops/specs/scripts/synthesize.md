@@ -3,7 +3,7 @@
 ## Constitutional Anchor
 `ops/lib/scripts/synthesize.sh` is the One Truth context engine defined by PoT filing doctrine and context hazard policy.
 It is the runtime boundary between manifest intent and emitted context bundles.
-It enforces that global context cannot include `opt/_library/agents`, `opt/_library/tasks`, or `opt/_library/skills`.
+It enforces that global context cannot include `opt/_factory/agents`, `opt/_factory/tasks`, or `opt/_factory/skills`.
 
 ## Operator Contract
 - Invocation:

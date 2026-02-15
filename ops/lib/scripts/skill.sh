@@ -3,11 +3,11 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
-SKILL_FILE="${REPO_ROOT}/opt/_library/SKILLS.md"
+SKILL_FILE="${REPO_ROOT}/opt/_factory/SKILLS.md"
 SKILLS_REGISTRY="${REPO_ROOT}/docs/ops/registry/SKILLS.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
-SKILLS_DIR="${REPO_ROOT}/opt/_library/skills"
+SKILLS_DIR="${REPO_ROOT}/opt/_factory/skills"
 HANDOFF_DIR="${REPO_ROOT}/storage/archives/skills"
 HEURISTICS_LIB="${SCRIPT_DIR}/heuristics.sh"
 
@@ -247,7 +247,7 @@ collect_harvest_inputs() {
 }
 
 context_hazard_check() {
-  if grep -nE '(docs/library|opt/_library)/skills/|S-LEARN-' "$CONTEXT_MANIFEST" >/dev/null; then
+  if grep -nE '(docs/library|opt/_factory)/skills/|S-LEARN-' "$CONTEXT_MANIFEST" >/dev/null; then
     echo "FAIL: Skills are referenced in ops/lib/manifests/CONTEXT.md. Remove skills from the context manifest." >&2
     return 1
   fi
@@ -619,7 +619,7 @@ cmd_promote() {
   fi
 
   local registry_row
-  registry_row="| ${skill_id} | Skill: ${title} | opt/_library/skills/${skill_id}.md | |"
+  registry_row="| ${skill_id} | Skill: ${title} | opt/_factory/skills/${skill_id}.md | |"
   insert_skill_registry_entry "$registry_row"
 
   local timestamp
@@ -629,8 +629,8 @@ cmd_promote() {
 
   local invocation_line
   invocation_line="$(awk 'found {print; exit} $0=="## Invocation guidance" {found=1}' "$draft_path")"
-  local candidate_context="See opt/_library/skills/${skill_id}.md"
-  local candidate_solution="See opt/_library/skills/${skill_id}.md"
+  local candidate_context="See opt/_factory/skills/${skill_id}.md"
+  local candidate_solution="See opt/_factory/skills/${skill_id}.md"
   if [[ "$invocation_line" =~ ^Use[[:space:]]this[[:space:]]skill[[:space:]]when[[:space:]](.+)\.[[:space:]]Apply[[:space:]]the[[:space:]]solution:[[:space:]](.+)\.$ ]]; then
     candidate_context="${BASH_REMATCH[1]}"
     candidate_solution="${BASH_REMATCH[2]}"
@@ -651,15 +651,15 @@ EOF
 <a id="${anchor_id}"></a>
 ### Promotion Packet: ${skill_id} - ${title}
 - Candidate name: ${title}
-  - Proposed Skill ID: ${skill_id} (rule: choose the next available numeric ID not already present in opt/_library/skills or registered in docs/ops/registry/SKILLS.md)
+  - Proposed Skill ID: ${skill_id} (rule: choose the next available numeric ID not already present in opt/_factory/skills or registered in docs/ops/registry/SKILLS.md)
 - Scope: production payloads only; not platform maintenance
-- Invocation guidance: Use this skill when a DP explicitly requests ${title}. Apply the solution as documented in opt/_library/skills/${skill_id}.md.
+- Invocation guidance: Use this skill when a DP explicitly requests ${title}. Apply the solution as documented in opt/_factory/skills/${skill_id}.md.
 - Drift preventers:
   - Stop conditions: Stop if the DP scope is platform maintenance or if the DP does not explicitly request this skill
   - Anti-hallucination: Use repo files as SSOT and stop if required inputs are missing
   - Negative check: Do not add Skills to ops/lib/manifests/CONTEXT.md
 - Definition of Done:
-  - ${skill_id} created under opt/_library/skills and matches scope and drift preventers
+  - ${skill_id} created under opt/_factory/skills and matches scope and drift preventers
   - docs/ops/registry/SKILLS.md updated with the new skill entry
   - SoP.md updated if canon or governance surfaces changed
   - Proof bundle updated in storage/handoff with diff outputs
@@ -679,7 +679,7 @@ EOF
   local log_tmp
   log_tmp="$(mktemp)"
   cat <<EOF > "$log_tmp"
-- ${timestamp} - Promoted ${skill_id} - ${title} -> opt/_library/skills/${skill_id}.md
+- ${timestamp} - Promoted ${skill_id} - ${title} -> opt/_factory/skills/${skill_id}.md
 EOF
   insert_into_section "## Promotion Log (append-only)" "$log_tmp" "$SKILL_FILE"
   rm -f "$log_tmp"
@@ -729,7 +729,7 @@ EOF
 <a id="${anchor_id}"></a>
 ### Promotion Packet: ${skill_id} - ${name}
 - Candidate name: ${name}
-  - Proposed Skill ID: ${skill_id} (rule: choose the next available numeric ID not already present in opt/_library/skills or registered in docs/ops/registry/SKILLS.md)
+  - Proposed Skill ID: ${skill_id} (rule: choose the next available numeric ID not already present in opt/_factory/skills or registered in docs/ops/registry/SKILLS.md)
 - Scope: production payloads only; not platform maintenance
 - Invocation guidance: Use this skill when ${context}. Apply the solution: ${solution}.
 - Drift preventers:
@@ -737,7 +737,7 @@ EOF
   - Anti-hallucination: Use repo files as SSOT and stop if required inputs are missing
   - Negative check: Do not add Skills to ops/lib/manifests/CONTEXT.md
 - Definition of Done:
-  - ${skill_id} created under opt/_library/skills and matches scope and drift preventers
+  - ${skill_id} created under opt/_factory/skills and matches scope and drift preventers
   - docs/ops/registry/SKILLS.md updated with the new skill entry
   - SoP.md updated if canon or governance surfaces changed
   - Proof bundle updated in storage/handoff with diff outputs

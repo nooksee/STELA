@@ -42,6 +42,7 @@
 - `docs/ops/specs/tools/verify.md`
 - `ops/bin/compile`
 - `ops/bin/context`
+- `ops/bin/draft`
 - `ops/bin/dump`
 - `ops/bin/help`
 - `ops/bin/llms`

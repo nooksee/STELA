@@ -14,7 +14,7 @@ It protects both the root TASK dashboard schema and the task-library registry co
   - `2` when required dependency files are missing.
 - Inputs:
   - `TASK.md` by default or provided TASK path.
-  - `opt/_library/tasks/*.md`.
+  - `opt/_factory/tasks/*.md`.
   - `docs/ops/registry/TASKS.md`.
 
 Coverage domains:

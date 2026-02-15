@@ -3,9 +3,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
-AGENTS_DIR="${REPO_ROOT}/opt/_library/agents"
+AGENTS_DIR="${REPO_ROOT}/opt/_factory/agents"
 AGENTS_REGISTRY="${REPO_ROOT}/docs/ops/registry/AGENTS.md"
-AGENTS_LEDGER="${REPO_ROOT}/opt/_library/AGENTS.md"
+AGENTS_LEDGER="${REPO_ROOT}/opt/_factory/AGENTS.md"
 SOP_FILE="${REPO_ROOT}/SoP.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
@@ -105,7 +105,7 @@ cmd_check_guardrail() {
 
   # 2. Context Hazard Check
   # Agents cannot load the agent library. This prevents recursive definition loops.
-  local hazard_pattern="(docs/library|opt/_library)/agents"
+  local hazard_pattern="(docs/library|opt/_factory)/agents"
   local hazards=""
   if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
     hazards="$(grep -El "$hazard_pattern" "${AGENTS_DIR}"/*.md 2>/dev/null || true)"
@@ -574,15 +574,15 @@ normalize_skill() {
     return 0
   fi
   if [[ "$skill" =~ ^S-LEARN-[0-9]+$ ]]; then
-    printf 'opt/_library/skills/%s.md' "$skill"
+    printf 'opt/_factory/skills/%s.md' "$skill"
     return 0
   fi
-  if [[ "$skill" =~ ^opt/_library/skills/S-LEARN-[0-9]+\.md$ ]]; then
+  if [[ "$skill" =~ ^opt/_factory/skills/S-LEARN-[0-9]+\.md$ ]]; then
     printf '%s' "$skill"
     return 0
   fi
   if [[ "$skill" =~ ^docs/library/skills/S-LEARN-[0-9]+\.md$ ]]; then
-    printf '%s' "${skill/docs\/library/opt\/_library}"
+    printf '%s' "${skill/docs\/library/opt\/_factory}"
     return 0
   fi
   printf '%s' "$skill"
@@ -704,8 +704,8 @@ validate_candidate() {
   if ! grep -q 'TASK.md' "$path"; then
     die "Draft missing TASK.md pointer in Pointers section."
   fi
-  if ! grep -q 'opt/_library/skills/S-LEARN-' "$path"; then
-    die "Draft missing JIT skill pointers (opt/_library/skills/S-LEARN-XX.md)."
+  if ! grep -q 'opt/_factory/skills/S-LEARN-' "$path"; then
+    die "Draft missing JIT skill pointers (opt/_factory/skills/S-LEARN-XX.md)."
   fi
 
   local specialization
@@ -821,7 +821,7 @@ EOF
     if [[ "$status" -eq 2 ]]; then
       die "Agent ledger missing Promotion Log section."
     fi
-    die "Failed to update opt/_library/AGENTS.md candidate log."
+    die "Failed to update opt/_factory/AGENTS.md candidate log."
   fi
 
   mv "$tmp" "$AGENTS_LEDGER"
@@ -869,7 +869,7 @@ EOF
     if [[ "$status" -eq 2 ]]; then
       die "Agent ledger missing Promotion Log section."
     fi
-    die "Failed to update opt/_library/AGENTS.md promotion log."
+    die "Failed to update opt/_factory/AGENTS.md promotion log."
   fi
 
   cat "$entry_file" >> "$tmp"

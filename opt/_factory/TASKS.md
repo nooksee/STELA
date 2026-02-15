@@ -1,7 +1,5 @@
 # Task Promotion Ledger
 
-> **CONTEXT HAZARD:** Tasks are JIT-only. Do not add task libraries to `ops/lib/manifests/CONTEXT.md`. Logging to `opt/_library/TASKS.md` is operator-mediated and performed by worker capture during DP processing.
-
 This file is the operator-facing promotion workflow for canon tasks. Use `ops/lib/scripts/task.sh` to append candidates and promotion entries.
 
 ## Doctrine
@@ -14,7 +12,7 @@ This file is the operator-facing promotion workflow for canon tasks. Use `ops/li
 ## Harvest Engine Workflow
 - `ops/lib/scripts/task.sh harvest` creates a draft in `storage/archives/tasks/` with provenance and a pointer-first skeleton.
 - Review and refine the draft before promotion. Do not edit the Provenance block.
-- `ops/lib/scripts/task.sh promote` promotes a draft into `opt/_library/tasks/`, updates `docs/ops/registry/TASKS.md`, and appends to this ledger.
+- `ops/lib/scripts/task.sh promote` promotes a draft into `opt/_factory/tasks/`, updates `docs/ops/registry/TASKS.md`, and appends to this ledger.
 - `ops/lib/scripts/task.sh check` audits scope boundaries, context hazards, and pointer integrity.
 
 ## Promotion Packet Template

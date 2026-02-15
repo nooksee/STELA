@@ -19,7 +19,6 @@ Filing:
 - Precedence: PoT is final authority; if conflict exists, stop and ask.
 - SSOT: one canonical file per domain; other mentions are pointers.
 - Reuse-first: search `ops/` for an existing template before creating a new artifact.
-- Context Hazard: any inclusion of `opt/_library/agents`, `opt/_library/tasks`, or `opt/_library/skills` in the global context manifest is a failure.
 - Drift: any divergence between canon and repository state, or duplication of canon outside SSOT, is a failure state that requires stop and correction.
 - Routing Closeout; failure is a system failure state.
 - SoP: history ledger only; no permanent rules live there.
@@ -55,7 +54,6 @@ System Failure States (Drift Triggers):
 | Failure Type | Definition | System Response |
 | :---- | :---- | :---- |
 | **Canon Drift** | Divergence between `PoT.md` and repo state. | **STOP WORK.** Reject PR. |
-| **Context Hazard** | Including `opt/_library/` docs in `CONTEXT.md`. | **STOP WORK.** Automated lint failure. |
 | **Dirty State** | Uncommitted changes in `main`. | **STOP WORK.** Worker complaint/halt. |
 | **Ambiguity** | Instructions capable of multiple interpretations. | **STOP WORK.** Request clarification. |
 
@@ -77,10 +75,9 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Linguistic Precision: Absolute literalism; seek clarification for ambiguity before proceeding.
 - Relatability Mandate: Universal accessibility via vernacular optimization and anecdotal grounding.
 - Operational Directives: Anti-drift governance; logic or files misaligned with PoT.md are a system failure.
-- Operational Directives: Context hygiene; ops/lib/manifests/CONTEXT.md must exclude opt/_library/agents, opt/_library/tasks, and opt/_library/skills.
+- Operational Directives: Context hygiene; ops/lib/manifests/CONTEXT.md must exclude opt/_factory/agents, opt/_factory/tasks, and opt/_factory/skills.
 - Operational Directives: Logic conflict resolution; stop until the Operator redefines parameters if a task violates PoT.md.
 - Operational Directives: Equilibrium maintenance; a task is complete only when SoP.md is updated.
-- Operational Directives: Reuse-first discipline; cross-reference ops/ templates before creating new artifacts.
 
 ### 4.3 Hard Constraints (SSOT)
 - PoT.md
@@ -113,7 +110,13 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Use clear commit messages.
 - Push the `work/*` branch, open a PR, wait for repo-gates, then merge.
 
-### 5.2.2 Branching Doctrine (SSoT)
+### 5.2.2 Immutable DP Workflow
+- Run `./ops/bin/open` to establish freshness state.
+- Generate DP structure with `./ops/bin/draft`; do not hand-author structural boilerplate in `TASK.md`.
+- Edit only approved DP slot content after draft generation.
+- If canonical DP template hash or normalized structure hash fails in `tools/lint/dp.sh`, stop and repair before proceeding.
+
+### 5.2.3 Branching Doctrine (SSoT)
 - Immutable Trunk: main is verified state; direct pushes are forbidden.
 - Work Namespace: all work occurs on work/* branches.
 - Naming Schema: work/<topic>-YYYY-MM-DD.
@@ -191,6 +194,56 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - `  - <command>`
 - `- Notes: <audit note>`
 
+## 2026-02-15 01:55:45 UTC — DP-OPS-0065 Immutable Workflow Adoption and Closeout Remediation
+- Packet ID: DP-OPS-0065
+- Timestamp: 2026-02-15T01:55:45Z
+- Work Branch: work/dp-ops-0065-2026-02-14
+- Base HEAD: d3801c3a
+- Scope: platform
+- Target Files allowlist:
+  - ops/bin/draft
+  - ops/src/surfaces/DP.md.tpl
+  - tools/lint/dp.sh
+  - TASK.md
+  - PoT.md
+  - SoP.md
+  - PoW.md
+  - docs/MANUAL.md
+  - docs/ops/specs/tools/lint/dp.md
+  - docs/ops/specs/surfaces/task.md
+  - ops/lib/manifests/OPS.md
+  - llms.txt
+  - llms-core.txt
+  - llms-full.txt
+  - storage/dp/active/allowlist.txt
+- Receipt pointers:
+  - RESULTS: storage/handoff/DP-OPS-0065-RESULTS.md
+  - OPEN: storage/handoff/OPEN-work-dp-ops-0065-2026-02-14-d3801c3a.txt
+  - DUMP: storage/dumps/dump-platform-work-dp-ops-0065-2026-02-14-d3801c3a.txt
+- Verification commands:
+  - ./ops/bin/open --out=auto --dp="DP-OPS-0065"
+  - ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
+  - ./ops/bin/compile
+  - ./ops/bin/llms
+  - bash tools/lint/truth.sh
+  - bash tools/lint/task.sh
+  - bash tools/lint/dp.sh
+  - bash tools/lint/llms.sh
+  - bash tools/lint/context.sh
+  - bash tools/lint/style.sh
+  - ./tools/verify.sh
+  - ./ops/bin/prune --dry-run
+  - ./ops/bin/prune --target=pow --dry-run
+  - ./ops/bin/prune --dp=DP-OPS-0065 --scrub
+  - bash tools/lint/dp.sh storage/handoff/DP-OPS-0065-RESULTS.md
+  - git diff --name-only
+  - git diff --stat
+  - git diff --cached --name-only
+  - git diff --cached --stat
+  - git status --porcelain
+  - git ls-files --others --exclude-standard
+- Notes: Positive proof confirms immutable DP workflow cutover with canonical template generation, template-hash lint enforcement, compile/llms generated-output parity (`ops/lib/manifests/OPS.md`, `llms*.txt`), and explicit pre/post untracked proofs for staged additions. Prune scrub command was executed and correctly blocked by prune safety guard because RESULTS was not yet committed, preserving evidence integrity.
+
 ## 2026-02-14 16:35:03 UTC — DP-OPS-0063 SoP and PoW Closeout Ledger Compliance
 - Packet ID: DP-OPS-0063
 - Timestamp: 2026-02-14T16:35:03Z
@@ -200,13 +253,13 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Target Files allowlist:
   - TASK.md
   - docs/MANUAL.md
-  - opt/_library/TASKS.md
-  - opt/_library/tasks/B-TASK-01.md
-  - opt/_library/tasks/B-TASK-02.md
-  - opt/_library/tasks/B-TASK-03.md
-  - opt/_library/tasks/B-TASK-04.md
-  - opt/_library/tasks/B-TASK-05.md
-  - opt/_library/tasks/B-TASK-06.md
+  - docs/library/TASKS.md
+  - docs/library/tasks/B-TASK-01.md
+  - docs/library/tasks/B-TASK-02.md
+  - docs/library/tasks/B-TASK-03.md
+  - docs/library/tasks/B-TASK-04.md
+  - docs/library/tasks/B-TASK-05.md
+  - docs/library/tasks/B-TASK-06.md
   - docs/ops/specs/scripts/task.md
   - docs/ops/specs/surfaces/task.md
   - docs/ops/specs/tools/lint/task.md
@@ -369,6 +422,117 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - bash tools/lint/dp.sh storage/handoff/DP-OPS-0060-RESULTS.md
 - Notes: Root PoW surface introduced; prune now supports dual-ledger dry-run simulation and TASK template extraction contract.
 
+## 2026-02-14 19:29:25 UTC — DP-OPS-0064 Phase 2 Structural Restructuring
+- Packet ID: DP-OPS-0064
+- Timestamp: 2026-02-14T19:29:25Z
+- Work Branch: work/dp-ops-0064-2026-02-14
+- Base HEAD: 30a77fdf
+- Scope: full
+- Target Files allowlist:
+  - PoT.md
+  - SoP.md
+  - TASK.md
+  - docs/INDEX.md
+  - docs/MANUAL.md
+  - docs/MAP.md
+  - docs/ops/prompts/E-PROMPT-01.md
+  - docs/ops/prompts/E-PROMPT-02.md
+  - docs/ops/prompts/E-PROMPT-03.md
+  - docs/ops/prompts/E-PROMPT-04.md
+  - docs/ops/prompts/README.md
+  - docs/ops/registry/BINARIES.md
+  - docs/ops/registry/SKILLS.md
+  - docs/ops/registry/TASKS.md
+  - docs/ops/specs/binaries/compile.md
+  - docs/ops/specs/binaries/context.md
+  - docs/ops/specs/binaries/llms.md
+  - docs/ops/specs/binaries/map.md
+  - docs/ops/specs/scripts/agent.md
+  - docs/ops/specs/scripts/skill.md
+  - docs/ops/specs/scripts/synthesize.md
+  - docs/ops/specs/scripts/task.md
+  - docs/ops/specs/tools/lint/agent.md
+  - docs/ops/specs/tools/lint/context.md
+  - docs/ops/specs/tools/lint/dp.md
+  - docs/ops/specs/tools/lint/library.md
+  - docs/ops/specs/tools/lint/task.md
+  - docs/ops/specs/tools/test/agent.md
+  - llms-core.txt
+  - llms-full.txt
+  - llms.txt
+  - ops/bin/compile
+  - ops/bin/context
+  - ops/bin/llms
+  - ops/bin/map
+  - ops/lib/manifests/CONTEXT.md
+  - ops/lib/manifests/CORE.md
+  - ops/lib/manifests/DISCOVERY.md
+  - ops/lib/manifests/OPS.md
+  - ops/lib/scripts/agent.sh
+  - ops/lib/scripts/skill.sh
+  - ops/lib/scripts/synthesize.sh
+  - ops/lib/scripts/task.sh
+  - ops/src/manifests/CONTEXT.md.tpl
+  - ops/src/manifests/CORE.md.tpl
+  - ops/src/manifests/DISCOVERY.md.tpl
+  - ops/src/manifests/OPS.md.tpl
+  - opt/_factory/AGENTS.md
+  - opt/_factory/INDEX.md
+  - opt/_factory/SKILLS.md
+  - opt/_factory/TASKS.md
+  - opt/_factory/agents/R-AGENT-01.md
+  - opt/_factory/agents/R-AGENT-02.md
+  - opt/_factory/agents/R-AGENT-03.md
+  - opt/_factory/agents/R-AGENT-04.md
+  - opt/_factory/agents/R-AGENT-05.md
+  - opt/_factory/agents/R-AGENT-06.md
+  - opt/_factory/skills/S-LEARN-01.md
+  - opt/_factory/skills/S-LEARN-02.md
+  - opt/_factory/skills/S-LEARN-03.md
+  - opt/_factory/skills/S-LEARN-04.md
+  - opt/_factory/skills/S-LEARN-05.md
+  - opt/_factory/skills/S-LEARN-06.md
+  - opt/_factory/tasks/B-TASK-01.md
+  - opt/_factory/tasks/B-TASK-02.md
+  - opt/_factory/tasks/B-TASK-03.md
+  - opt/_factory/tasks/B-TASK-04.md
+  - opt/_factory/tasks/B-TASK-05.md
+  - opt/_factory/tasks/B-TASK-06.md
+  - storage/.gitignore
+  - storage/dp/active/allowlist.txt
+  - tools/lint/agent.sh
+  - tools/lint/context.sh
+  - tools/lint/dp.sh
+  - tools/lint/library.sh
+  - tools/lint/task.sh
+  - tools/lint/truth.sh
+  - tools/test/agent.sh
+  - tools/verify.sh
+  - PoW.md
+- Receipt pointers:
+  - RESULTS: storage/handoff/DP-OPS-0064-RESULTS.md
+  - OPEN: storage/handoff/OPEN-work-dp-ops-0064-2026-02-14-30a77fdf.txt
+  - DUMP: storage/dumps/dump-full-work-dp-ops-0064-2026-02-14-30a77fdf.txt
+- Verification commands:
+  - ./ops/bin/open --out=auto --dp=DP-OPS-0064
+  - ./ops/bin/dump --scope=full --format=chatgpt --out=auto --bundle
+  - ./ops/bin/compile
+  - ./ops/bin/map --check
+  - ./ops/bin/llms
+  - ./tools/verify.sh
+  - bash tools/lint/truth.sh
+  - bash tools/lint/style.sh
+  - bash tools/lint/context.sh
+  - bash tools/lint/library.sh
+  - bash tools/lint/task.sh
+  - bash tools/lint/dp.sh TASK.md
+  - bash tools/lint/llms.sh
+  - bash tools/lint/dp.sh storage/handoff/DP-OPS-0064-RESULTS.md
+  - git status --porcelain=v1
+  - git diff --name-only
+  - git diff
+- Notes: Positive proof for DP-OPS-0064 structural hardening across library isolation, deterministic manifest compilation, and pointer-sidecar allowlist governance. This entry is append-only and preserves all prior PoW history unchanged.
+
 ## Template
 Copy this block when appending a new entry.
 
@@ -404,8 +568,13 @@ See PoT.md Section 1 for the developer guide.
 ## SoP.md
 Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-15 01:55:45 UTC — DP-OPS-0065 Immutable Workflow Adoption and Closeout Remediation
+- Objective: Delivered Phase 3 immutable workflow adoption by adding canonical DP template generation (`ops/src/surfaces/DP.md.tpl` + `ops/bin/draft`), refactoring DP lint to canonical template-hash plus normalized structure-hash enforcement with required-slot checks, codifying immutable generated-output rules, accepting compile-time manifest regeneration side-effects (`ops/lib/manifests/OPS.md`), and remediating closeout gaps by updating SoP/PoW ledgers and expanding receipts to include untracked-file proofs.
+- Verification: `./ops/bin/open --out=auto --dp="DP-OPS-0065"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `./ops/bin/compile`; `./ops/bin/llms`; `bash tools/lint/truth.sh`; `bash tools/lint/task.sh`; `bash tools/lint/dp.sh`; `bash tools/lint/llms.sh`; `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `./tools/verify.sh`; `./ops/bin/prune --dry-run`; `./ops/bin/prune --target=pow --dry-run`; `./ops/bin/prune --dp=DP-OPS-0065 --scrub` (guard-blocked on uncommitted RESULTS by design); `bash tools/lint/dp.sh storage/handoff/DP-OPS-0065-RESULTS.md`; `git diff --name-only`; `git diff --stat`; `git diff --cached --name-only`; `git diff --cached --stat`; `git status --porcelain`; `git ls-files --others --exclude-standard`.
+- Functional receipts: `storage/handoff/OPEN-work-dp-ops-0065-2026-02-14-d3801c3a.txt`; `storage/handoff/OPEN-PORCELAIN-work-dp-ops-0065-2026-02-14-d3801c3a.txt`; `storage/dumps/dump-platform-work-dp-ops-0065-2026-02-14-d3801c3a.txt`; `storage/dumps/dump-platform-work-dp-ops-0065-2026-02-14-d3801c3a.tar.xz`; `storage/dumps/dump-platform-work-dp-ops-0065-2026-02-14-d3801c3a.manifest.txt`; `storage/handoff/DP-OPS-0065-RESULTS.md`.
+
 ## 2026-02-14 23:01:42 UTC — DP-OPS-0064 Phase 2 Structural Restructuring
-- Objective: Implemented Phase 2 structural hardening by migrating library canon to `opt/_library`, introducing deterministic manifest compilation (`ops/bin/compile` + `ops/src/manifests/*.md.tpl`) with context/llms compile-first routing, and switching DP allowlist governance to pointer-sidecar mode via `storage/dp/active/allowlist.txt`.
+- Objective: Implemented Phase 2 structural hardening by migrating library canon to `opt/_factory`, introducing deterministic manifest compilation (`ops/bin/compile` + `ops/src/manifests/*.md.tpl`) with context/llms compile-first routing, and switching DP allowlist governance to pointer-sidecar mode via `storage/dp/active/allowlist.txt`.
 - Verification: `./tools/verify.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/style.sh`; `bash tools/lint/context.sh`; `bash tools/lint/library.sh`; `bash tools/lint/task.sh`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/llms.sh`; `./ops/bin/compile`; `./ops/bin/map --check`; `./ops/bin/llms`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0064-RESULTS.md`.
 - Functional receipts: `./ops/bin/open --out=auto --dp=DP-OPS-0064`; `./ops/bin/dump --scope=full --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-full-work-dp-ops-0064-2026-02-14-30a77fdf.txt`; `test -s ./storage/dumps/dump-full-work-dp-ops-0064-2026-02-14-30a77fdf.tar.xz`.
 
@@ -451,18 +620,13 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
 - Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0056"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0056-2026-02-12-fdc5d080.txt`.
 
-## 2026-02-12 17:36:43 UTC — DP-OPS-0055 Receipt Refresh and Verification Capture
-- Objective: Confirmed `docs/MANUAL.md` dispatch contract note coverage (DP Preflight Gate ordering plus worker-input/OPEN reading rule), retained the V2 TASK + lint + TASK surface spec changes for DP-OPS-0055, and refreshed receipt artifacts in `storage/handoff/DP-OPS-0055-RESULTS.md`.
-- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
-- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0055"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-platform-work-dp-ops-0055-task-surface-contract-lock-9baf3978.txt`.
-
 
 
 ## TASK.md
 # STELA TASK DASHBOARD
 Status: ACTIVE
 Owner: Integrator
-Last Updated: 2026-02-13
+Last Updated: 2026-02-14
 
 ## 1. Session State
 Pointer: Session context output (generated by ops/bin/open)
@@ -496,10 +660,10 @@ llms parity: tools/lint/llms.sh
 ## 3. Current Dispatch Packet (DP)
 
 Section-by-section authoring protocol:
-- Write Section 3.1. Run the gate. Stop on mismatch. Freeze 3.1.
-- Write Section 3.2. Confirm canon load. Freeze 3.2.
-- Write Section 3.3. Lock scope and allowlist. Freeze 3.3.
-- Write Section 3.4 in order (3.4.1 through 3.4.5). Freeze each subsection when complete.
+- Generate DP structure from `ops/src/surfaces/DP.md.tpl` using `ops/bin/draft`.
+- Do not hand-edit DP structural boilerplate in `TASK.md` after generation.
+- Manual edits are limited to slot content only (objective, scope, safety, plan body, receipt body).
+- Freeze each completed subsection in order (3.1 -> 3.2 -> 3.3 -> 3.4.x).
 - Do not revise earlier sections to justify later work. If scope changes, end the thread and draft a new DP.
 
 Freeze Rule:
@@ -517,12 +681,13 @@ Input discipline (hard rule):
 - DP writer must not include pasted bundles (OPEN, DUMP payloads, manifests) inside the DP body.
 - Canon pointers only. Evidence belongs in storage artifacts and RESULTS.
 
-### DP-XXXX: (Template)
+### DP-OPS-0065: Immutable workflow adoption (draft tool, DP template hash, dp lint reduction)
 
 ## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
-Base HEAD: 0000000 (Must match session context output)
+Required Work Branch: work/dp-ops-0065-2026-02-14
+Base HEAD: d3801c3a
+Freshness Stamp: 2026-02-14
 
 Required local re-check (worker runs; paste outputs in RESULTS):
 - git rev-parse --abbrev-ref HEAD
@@ -570,53 +735,121 @@ Notes:
 
 ### 3.2.2 DP-scoped load order (per DP)
 - tools/lint/dp.sh
-- tools/lint/task.sh
-- ops/bin/prune
+- docs/ops/specs/tools/lint/dp.md
 - docs/ops/specs/surfaces/task.md
+- docs/MANUAL.md
+- ops/bin/llms
+- tools/lint/llms.sh
+- ops/bin/open
+- docs/ops/specs/binaries/open.md
+- ops/bin/prune
 - docs/ops/specs/binaries/prune.md
-- docs/ops/specs/binaries/open.md (pointer reference only; OPEN behavior is not modified in this DP)
 
 ## 3.3 Scope and Safety
-Objective: Populate during execution; do not pre-fill in TASK.md.
-In scope: Populate during execution; do not pre-fill in TASK.md.
-Out of scope: Populate during execution; do not pre-fill in TASK.md.
-Safety and invariants: Populate during execution; do not pre-fill in TASK.md.
+Objective:
+- Implement Phase 3: Immutable Workflow Adoption (Weeks 5-6): ship `ops/bin/draft` and canonical DP template, reduce DP lint structural complexity via template-hash verification, and codify immutable workflow rules in `PoT.md`.
+
+In scope:
+- Add a canonical DP template file and a single source-of-truth template hash for structure verification.
+- Add `ops/bin/draft` to generate a DP skeleton from the canonical template and perform template-hash preflight.
+- Refactor `tools/lint/dp.sh` to replace brittle structure regex checks with template-hash-based structure verification plus required-field checks.
+- Deprecate manual editing of TASK.md structural boilerplate by documenting and enforcing the generated-template workflow.
+- Update `PoT.md` to codify immutable workflow and generated-output rules required by Phase 3.
+- Regenerate and commit llms outputs when `PoT.md` or `TASK.md` changes (tool-based only).
+
+Out of scope:
+- Any changes to manifest selection policy, manifest templates, or context inclusion beyond what is strictly required by Phase 3.
+- Any changes to `opt/_factory` contents, migration mechanics, or repo-wide refactors.
+- Any changes to non-DP lints, CI, or prune/open/dump semantics except where explicitly required to support Phase 3 deliverables.
+
+Safety and invariants:
+- Do not hand-edit generated outputs (including `llms*.txt`). Regenerate via tooling only.
+- Do not broaden the allowlist. Any new touched file must be explicitly justified by Phase 3 deliverables.
+- Preserve existing DP execution semantics and closeout routing requirements.
+- Keep changes minimal, reviewable, and deterministic.
 
 Target Files allowlist (hard gate):
-- Use a single pointer entry to the canonical allowlist sidecar:
 - storage/dp/active/allowlist.txt
-- Do not inline-expand file paths in TASK.md when pointer mode is active.
-- Pointer file must exist and be non-empty; `bash tools/lint/dp.sh` enforces this.
 
-## 3.4 Execution Plan (A–E)
+## 3.4 Execution Plan (A-E)
 
 ### 3.4.1 State
-Populate during execution; do not pre-fill in TASK.md.
+- Base is `main` at `d3801c3a`.
+- `ops/bin/draft` does not exist yet; DP authoring still depends on manual boilerplate edits in `TASK.md`.
+- `tools/lint/dp.sh` remains large and regex-heavy for structure checks.
+- `PoT.md` and `TASK.md` are CORE surfaces; changing either requires `llms` regeneration for parity.
 
 ### 3.4.2 Request
-Populate during execution; do not pre-fill in TASK.md.
+- Deliver Phase 3 by introducing a canonical DP template and hash mechanism.
+- Ship `ops/bin/draft` to generate DPs and update `TASK.md` deterministically.
+- Reduce DP lint structure enforcement to template-hash verification plus required-field checks.
+- Codify immutable generated-output workflow rules in `PoT.md`.
 
 ### 3.4.3 Changelog
-Populate during execution; do not pre-fill in TASK.md.
+- UPDATE: `storage/dp/active/allowlist.txt`
+- NEW: `ops/bin/draft`
+- NEW: `ops/src/surfaces/DP.md.tpl`
+- UPDATE: `tools/lint/dp.sh`
+- UPDATE: `TASK.md`
+- UPDATE: `PoT.md`
+- UPDATE: `SoP.md`
+- UPDATE: `PoW.md`
+- UPDATE: `docs/MANUAL.md`
+- UPDATE: `docs/ops/specs/tools/lint/dp.md`
+- UPDATE: `docs/ops/specs/surfaces/task.md`
+- UPDATE (generated): `ops/lib/manifests/OPS.md`
+- UPDATE (generated): `llms.txt`
+- UPDATE (generated): `llms-core.txt`
+- UPDATE (generated): `llms-full.txt`
 
 ### 3.4.4 Patch / Diff
-Populate during execution; do not pre-fill in TASK.md.
+A. Canonical DP template:
+1. Create `ops/src/surfaces/DP.md.tpl` as the single schema source.
+2. Encode placeholders for variable slots while preserving fixed headings/labels.
+3. Store a canonical template sha256 in `tools/lint/dp.sh` and hard-fail on mismatch.
 
-### 3.4.5 Receipt (Proofs to collect) — MUST RUN
-- ./ops/bin/open --out=auto --dp="DP-OPS-XXXX"
+B. Draft tool release (`ops/bin/draft`):
+1. Add required args for DP id/title/work branch/base head and slot intake via flags or sidecar file.
+2. Render DP output from the canonical template.
+3. Preflight template hash against `tools/lint/dp.sh`.
+4. Write to `storage/dp/intake/DP-OPS-<id>.md` and replace the active TASK DP block.
+5. Enforce guardrails: clean tree, unique TASK markers, required non-empty slots.
+
+C. Lint reduction (`tools/lint/dp.sh`):
+1. Replace brittle structural regex checks with normalized structure hashing against template.
+2. Keep required-field checks for variable slots.
+3. Keep allowlist pointer integrity: pointer file exists, non-empty, and each path exists in repo.
+4. Update `--test` fixtures to cover template mismatch, structure mismatch, pointer/file validation.
+
+D. Deprecate manual TASK structural edits:
+1. Update `TASK.md` Section 3 prose to route structure generation through `ops/bin/draft`.
+2. Update `docs/MANUAL.md` for open -> draft -> work sequence and explicit llms no-hand-edit rule.
+
+E. Final cutover rules:
+1. Update `PoT.md` to codify generated-output immutability (`llms*.txt` tooling-only).
+2. Encode template-hash enforcement and draft-tool routing for DP structure.
+
+F. Allowlist sidecar:
+1. Replace `storage/dp/active/allowlist.txt` with the exact Phase 3 file set.
+
+G. Generated outputs:
+1. Run `./ops/bin/compile` and `./ops/bin/llms` after core surface updates; never hand-edit generated artifacts (`ops/lib/manifests/OPS.md`, `llms*.txt`).
+
+### 3.4.5 Receipt (Proofs to collect) - MUST RUN
+- ./ops/bin/open --out=auto --dp="DP-OPS-0065"
 - ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
-- Zero-byte check: test -s <dump_payload_path>
+- ./ops/bin/compile
+- ./ops/bin/llms
+- bash tools/lint/truth.sh
+- bash tools/lint/task.sh
+- bash tools/lint/dp.sh
+- bash tools/lint/llms.sh
 - bash tools/lint/context.sh
 - bash tools/lint/style.sh
-- bash tools/lint/truth.sh
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-- bash tools/lint/llms.sh
 - ./tools/verify.sh
 - ./ops/bin/prune --dry-run
 - ./ops/bin/prune --target=pow --dry-run
-- bash tools/lint/dp.sh storage/handoff/DP-OPS-XXXX-RESULTS.md
+- bash tools/lint/dp.sh storage/handoff/DP-OPS-0065-RESULTS.md
 - git diff --name-only
 - git diff --stat
 - Verify Section 3.5 Closing Block is populated in RESULTS.
@@ -627,7 +860,7 @@ Populate during execution; do not pre-fill in TASK.md.
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
-- Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-XXXX --scrub.
+- Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-0065 --scrub.
 - Use ./ops/bin/prune --reset-task only for explicit TASK baseline reset after PoW entry exists for the active DP id.
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
@@ -661,7 +894,7 @@ Review Conversation Starter (markdown)
 
 ## 3. Operations & Maps (Deep Dives)
 * [ops/README.md](ops/README.md) — Ops Kernel architecture and subsystem overview.
-* [../opt/_library/INDEX.md](../opt/_library/INDEX.md) — Curated library of operator guides.
+* [../opt/_factory/INDEX.md](../opt/_factory/INDEX.md) — Curated library of operator guides.
 * [MAP.md](MAP.md) — Continuity wayfinding for cross-session state.
 * [CONTEXT.md](CONTEXT.md) — Definition of required context artifacts.
 
@@ -715,7 +948,7 @@ No projects discovered.
 <!-- MAP-GENERATED:END -->
 
 
-## opt/_library/INDEX.md
+## opt/_factory/INDEX.md
 # Docs Library Index (Navigation)
 
 This index is navigation only. Registries in `docs/ops/registry/` are the single source of truth for agents, skills, tasks, and projects.

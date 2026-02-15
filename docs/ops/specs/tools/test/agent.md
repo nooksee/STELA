@@ -12,7 +12,7 @@ Run pointer-integrity tests for canon agent files, including authorized toolchai
   - `1` when pointer or toolchain validation fails.
 
 ## Inputs
-- `opt/_library/agents/*.md`
+- `opt/_factory/agents/*.md`
 - `ops/bin/*` paths referenced by agent authorized toolchain entries.
 - Pointer tokens extracted from each agent `## Pointers` section.
 
