@@ -682,7 +682,7 @@ EOF
   - ./ops/bin/dump --scope=platform
   - bash tools/lint/context.sh
   - bash tools/lint/truth.sh (required when canon or governance surfaces change)
-  - bash tools/lint/.sh
+  - bash tools/lint/factory.sh
   - bash tools/verify.sh
 EOF
 
@@ -760,7 +760,7 @@ EOF
   - ./ops/bin/dump --scope=platform
   - bash tools/lint/context.sh
   - bash tools/lint/truth.sh (required when canon or governance surfaces change)
-  - bash tools/lint/.sh
+  - bash tools/lint/factory.sh
   - bash tools/verify.sh
 EOF
 

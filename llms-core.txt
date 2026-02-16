@@ -503,7 +503,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - tools/lint/agent.sh
   - tools/lint/context.sh
   - tools/lint/dp.sh
-  - tools/lint/.sh
+  - tools/lint/factory.sh
   - tools/lint/task.sh
   - tools/lint/truth.sh
   - tools/test/agent.sh
@@ -523,7 +523,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - bash tools/lint/truth.sh
   - bash tools/lint/style.sh
   - bash tools/lint/context.sh
-  - bash tools/lint/.sh
+  - bash tools/lint/factory.sh
   - bash tools/lint/task.sh
   - bash tools/lint/dp.sh TASK.md
   - bash tools/lint/llms.sh
@@ -565,7 +565,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 
 ## 2026-02-14 23:01:42 UTC — DP-OPS-0064 Phase 2 Structural Restructuring
 - Objective: Implemented Phase 2 structural hardening by migrating  canon to `opt/_factory`, introducing deterministic manifest compilation (`ops/bin/compile` + `ops/src/manifests/*.md.tpl`) with context/llms compile-first routing, and switching DP allowlist governance to pointer-sidecar mode via `storage/dp/active/allowlist.txt`.
-- Verification: `./tools/verify.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/style.sh`; `bash tools/lint/context.sh`; `bash tools/lint/.sh`; `bash tools/lint/task.sh`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/llms.sh`; `./ops/bin/compile`; `./ops/bin/map --check`; `./ops/bin/llms`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0064-RESULTS.md`.
+- Verification: `./tools/verify.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/style.sh`; `bash tools/lint/context.sh`; `bash tools/lint/factory.sh`; `bash tools/lint/task.sh`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/llms.sh`; `./ops/bin/compile`; `./ops/bin/map --check`; `./ops/bin/llms`; `bash tools/lint/dp.sh storage/handoff/DP-OPS-0064-RESULTS.md`.
 - Functional receipts: `./ops/bin/open --out=auto --dp=DP-OPS-0064`; `./ops/bin/dump --scope=full --format=chatgpt --out=auto --bundle`; `test -s ./storage/dumps/dump-full-work-dp-ops-0064-2026-02-14-30a77fdf.txt`; `test -s ./storage/dumps/dump-full-work-dp-ops-0064-2026-02-14-30a77fdf.tar.xz`.
 
 ## 2026-02-14 16:35:03 UTC — DP-OPS-0063 SoP and PoW Closeout Ledger Compliance

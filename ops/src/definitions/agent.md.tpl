@@ -12,7 +12,7 @@
 - Constitution: `PoT.md`
 - Governance/Jurisdiction: `docs/GOVERNANCE.md`
 - Output contract: `TASK.md`
-- Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/.sh`, `tools/verify.sh`
+- Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/factory.sh`, `tools/verify.sh`
 - JIT skills:
 {{SKILL_LINES}}
 

@@ -341,7 +341,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - tools/lint/agent.sh
   - tools/lint/context.sh
   - tools/lint/dp.sh
-  - tools/lint/.sh
+  - tools/lint/factory.sh
   - tools/lint/task.sh
   - tools/lint/truth.sh
   - tools/test/agent.sh
@@ -361,7 +361,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - bash tools/lint/truth.sh
   - bash tools/lint/style.sh
   - bash tools/lint/context.sh
-  - bash tools/lint/.sh
+  - bash tools/lint/factory.sh
   - bash tools/lint/task.sh
   - bash tools/lint/dp.sh TASK.md
   - bash tools/lint/llms.sh

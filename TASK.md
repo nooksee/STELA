@@ -122,7 +122,7 @@ Notes:
 - tools/lint/dp.sh
 - tools/lint/task.sh
 - tools/lint/agent.sh
-- tools/lint/.sh
+- tools/lint/factory.sh
 - tools/lint/style.sh
 - tools/lint/truth.sh
 - tools/verify.sh
@@ -197,7 +197,7 @@ E. Replace embedded template sections in docs and factory ledgers with pointers 
 - bash tools/lint/dp.sh TASK.md
 - bash tools/lint/task.sh
 - bash tools/lint/style.sh
-- bash tools/lint/.sh
+- bash tools/lint/factory.sh
 - bash tools/lint/context.sh
 - bash tools/lint/agent.sh
 - bash tools/lint/task.sh ops/src/surfaces/task.md.tpl

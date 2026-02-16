@@ -19,7 +19,7 @@ Documentation and codemap maintenance.
 - Operator mechanics: `docs/MANUAL.md`
 - Continuity map: `docs/MAP.md`
 - Output contract: `TASK.md`
-- Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/agent.sh`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/.sh`, `tools/verify.sh`
+- Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/agent.sh`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/factory.sh`, `tools/verify.sh`
 - JIT skills:
   - `opt/_factory/skills/S-LEARN-01.md`
 
