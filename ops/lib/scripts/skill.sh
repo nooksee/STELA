@@ -10,6 +10,7 @@ CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
 SKILLS_DIR="${REPO_ROOT}/opt/_factory/skills"
 HANDOFF_DIR="${REPO_ROOT}/storage/archives/skills"
 SKILL_TEMPLATE_PATH="${REPO_ROOT}/ops/src/definitions/skill.md.tpl"
+TEMPLATE_BIN="${REPO_ROOT}/ops/bin/template"
 HEURISTICS_LIB="${SCRIPT_DIR}/heuristics.sh"
 
 if [[ -f "$HEURISTICS_LIB" ]]; then
@@ -84,23 +85,34 @@ render_definition_template() {
   fi
 
   require_file "$template_path"
+  [[ -x "$TEMPLATE_BIN" ]] || die "template binary missing or not executable: ${TEMPLATE_BIN}"
 
-  local rendered
-  rendered="$(cat "$template_path")"
+  local render_key=""
+  case "$template_path" in
+    "$SKILL_TEMPLATE_PATH")
+      render_key="skill"
+      ;;
+    *)
+      die "unsupported definition template path: ${template_path}"
+      ;;
+  esac
+
+  local slots_tmp
+  slots_tmp="$(mktemp)"
 
   while (( $# > 0 )); do
     local token="$1"
     local value="$2"
     shift 2
-    rendered="${rendered//\{\{${token}\}\}/$value}"
+    printf '[%s]\n%s\n\n' "$token" "$value" >> "$slots_tmp"
   done
 
-  printf '%s\n' "$rendered" > "$output_path"
-
-  if grep -q '{{\|}}' "$output_path"; then
-    rm -f "$output_path"
-    die "Draft rendering failed: unresolved template tokens remain in ${template_path}."
+  if ! "$TEMPLATE_BIN" render "$render_key" --slots-file="$slots_tmp" --out="$output_path"; then
+    rm -f "$slots_tmp" "$output_path"
+    die "Draft rendering failed for ${template_path}."
   fi
+
+  rm -f "$slots_tmp"
 }
 
 trim() {

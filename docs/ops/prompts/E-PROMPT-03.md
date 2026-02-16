@@ -5,7 +5,10 @@ Attach: OPEN, OPEN-PORCELAIN, dump, dump manifest, plan.md (or equivalent canon 
 
 Rules:
 * Refresh state using the attached OPEN and dump artifacts.
-* Logic: `PoT.md`. Structure: **ops/src/surfaces/dp.md.tpl rendered format** (numbered sections).
+* Shared constraints are SSOT in `ops/lib/manifests/CONSTRAINTS.md`:
+  * Section 1 (Universal Template Rules)
+  * Section 2 (Stance and Operator Prompt Rules)
+* Structure authority remains **`ops/src/surfaces/dp.md.tpl` rendered format** (numbered sections).
 * Do not invent file paths; verify with dump.
 * Output must be a valid DP with proper numbered section structure matching the canonical template.
 * Output only the stance format.

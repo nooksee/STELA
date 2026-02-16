@@ -1,4 +1,28 @@
-### DP-OPS-0000: {{DP_TITLE}}
+---
+template_type: surface
+template_id: dp
+template_version: 1
+requires_slots:
+  - DP_ID
+  - DP_TITLE
+  - BASE_BRANCH
+  - WORK_BRANCH
+  - BASE_HEAD
+  - FRESHNESS_STAMP
+  - DP_SCOPED_LOAD_ORDER
+  - OBJECTIVE
+  - IN_SCOPE
+  - OUT_OF_SCOPE
+  - SAFETY_INVARIANTS
+  - PLAN_STATE
+  - PLAN_REQUEST
+  - PLAN_CHANGELOG
+  - PLAN_PATCH
+  - RECEIPT_COMMANDS
+includes:
+  - ops/lib/manifests/CONSTRAINTS.md#section-1
+---
+### {{DP_ID}}: {{DP_TITLE}}
 
 ## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: {{BASE_BRANCH}}
@@ -66,6 +90,9 @@ Out of scope:
 Safety and invariants:
 {{SAFETY_INVARIANTS}}
 
+Worker Constraints (SSOT injected):
+{{@include:ops/lib/manifests/CONSTRAINTS.md#section-1}}
+
 Target Files allowlist (hard gate):
 - storage/dp/active/allowlist.txt
 
@@ -90,7 +117,7 @@ Target Files allowlist (hard gate):
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
-- Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-0000 --scrub.
+- Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp={{DP_ID}} --scrub.
 - Use ./ops/bin/prune --reset-task only for explicit TASK baseline reset after PoW entry exists for the active DP id.
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
