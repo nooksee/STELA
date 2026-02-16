@@ -23,4 +23,3 @@ docs/ops/registry/BINARIES.md
 tools/lint/dp.sh
 SoP.md
 PoW.md
-storage/handoff/DP-OPS-0067-RESULTS.md
