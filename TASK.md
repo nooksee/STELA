@@ -56,13 +56,13 @@ Input discipline (hard rule):
 - DP writer must not include pasted bundles (OPEN, DUMP payloads, manifests) inside the DP body.
 - Canon pointers only. Evidence belongs in storage artifacts and RESULTS.
 
-### DP-OPS-0067: Universal template renderer and constraints manifest SSOT
+### DP-OPS-0067: Universal Template Engine and Constraints SSOT
 
 ## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
 Required Work Branch: work/dp-ops-0067-2026-02-15
 Base HEAD: 00bccf1e
-Freshness Stamp: 2026-02-15 (America/New_York)
+Freshness Stamp: 2026-02-15
 
 Required local re-check (worker runs; paste outputs in RESULTS):
 - git rev-parse --abbrev-ref HEAD
