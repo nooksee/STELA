@@ -25,7 +25,7 @@ Steps:
    * Reject any file touches outside allowlist.
 5. **DRIFT + CONTEXT HAZARDS**:
    * No out-of-scope edits.
-   * No global-context inclusion of library subtree (`opt/_factory/`) unless explicitly authorized in scope.
+   * No global-context inclusion of factory subtree (`opt/_factory/`) unless explicitly authorized in scope.
 6. **GENERATED OUTPUTS**:
    * If generated artifacts changed (manifests, llms bundles, dumps), require tool-based regeneration proofs.
    * Reject manual edits to generated outputs.
