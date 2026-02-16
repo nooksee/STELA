@@ -5,7 +5,10 @@ Attach: OPEN, dump, Old-DP.md (or rough draft).
 
 Rules:
 * Refresh state using the attached OPEN and dump artifacts.
-* Logic: `PoT.md`. Structure: **ops/src/surfaces/dp.md.tpl rendered format**.
+* Shared constraints are SSOT in `ops/lib/manifests/CONSTRAINTS.md`:
+  * Section 1 (Universal Template Rules)
+  * Section 2 (Stance and Operator Prompt Rules)
+* Structure authority remains **`ops/src/surfaces/dp.md.tpl` rendered format**.
 * Preserve intent; update contract language/structure only.
 * Do not invent file paths; verify with dump.
 * Output only the stance format.

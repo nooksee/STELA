@@ -17,7 +17,8 @@ fi
 cd "$REPO_ROOT" || exit 1
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="ed2fa2f8fcacf26a8b2a60e8c0aee0ea5593409ad0513befe83595921072b031"
+CANONICAL_DP_TEMPLATE_SHA256="0598755e2f4e8b0ade5234f4655fae62c2792541cecc2b46089d083915c97bd2"
+TEMPLATE_RENDER_BIN="ops/bin/template"
 ALLOWLIST_POINTER_PATH_DEFAULT="storage/dp/active/allowlist.txt"
 
 failures=0
@@ -132,6 +133,20 @@ check_template_hash_preflight() {
 
   if [[ "$actual_hash" != "$expected_hash" ]]; then
     fail "canonical template hash mismatch for ${CANONICAL_DP_TEMPLATE_PATH} (expected ${expected_hash}, got ${actual_hash})"
+  fi
+}
+
+render_canonical_template_non_strict() {
+  local out_path="$1"
+
+  if [[ ! -x "$TEMPLATE_RENDER_BIN" ]]; then
+    fail "template renderer missing or not executable: ${TEMPLATE_RENDER_BIN}"
+    return 1
+  fi
+
+  if ! "$TEMPLATE_RENDER_BIN" render dp --non-strict --out="$out_path"; then
+    fail "failed to render canonical DP template in non-strict mode via ${TEMPLATE_RENDER_BIN}"
+    return 1
   fi
 }
 
@@ -463,6 +478,10 @@ normalize_dp_structure() {
     }
 
     {
+      if ($0 ~ /^### \{\{DP_ID\}\}:[[:space:]].*$/) {
+        print "### DP-OPS-0000: {{DP_TITLE}}"
+        next
+      }
       if ($0 ~ /^### DP-[^:]+:[[:space:]].*$/) {
         print "### DP-OPS-0000: {{DP_TITLE}}"
         next
@@ -505,6 +524,12 @@ normalize_dp_structure() {
         next
       }
 
+      if ($0 ~ /--dp=\{\{DP_ID\}\}/) {
+        gsub(/--dp=\{\{DP_ID\}\}/, "--dp=DP-OPS-0000")
+        print $0
+        next
+      }
+
       if ($0 ~ /--dp=DP-[A-Z]+-[0-9]{4,}/) {
         gsub(/--dp=DP-[A-Z]+-[0-9]{4,}/, "--dp=DP-OPS-0000")
         print $0
@@ -520,13 +545,21 @@ check_structure_hash() {
   local payload_path="$1"
   local template_hash
   local payload_hash
+  local rendered_template
 
   if [[ ! -f "$CANONICAL_DP_TEMPLATE_PATH" ]]; then
     return
   fi
 
-  template_hash="$(normalize_dp_structure "$CANONICAL_DP_TEMPLATE_PATH" | sha256_stdin)"
+  rendered_template="$(mktemp)"
+  if ! render_canonical_template_non_strict "$rendered_template"; then
+    rm -f "$rendered_template"
+    return
+  fi
+
+  template_hash="$(normalize_dp_structure "$rendered_template" | sha256_stdin)"
   payload_hash="$(normalize_dp_structure "$payload_path" | sha256_stdin)"
+  rm -f "$rendered_template"
 
   if [[ -z "$template_hash" || -z "$payload_hash" ]]; then
     fail "unable to compute DP structure hashes"
@@ -773,6 +806,7 @@ lint_path() {
 render_fixture_from_template() {
   local out_path="$1"
   local allowlist_pointer="$2"
+  local template_source
 
   local dp_scoped_load_order
   local objective
@@ -802,8 +836,12 @@ render_fixture_from_template() {
 - git diff --name-only
 - git diff --stat'
 
+  template_source="$(mktemp)"
+  render_canonical_template_non_strict "$template_source"
+
   : > "$out_path"
   while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line//'{{DP_ID}}'/DP-OPS-0000}"
     line="${line//'{{DP_TITLE}}'/Fixture structure-hash lint coverage}"
     line="${line//'{{BASE_BRANCH}}'/main}"
     line="${line//'{{WORK_BRANCH}}'/work/dp-ops-0000-2026-02-14}"
@@ -848,7 +886,9 @@ render_fixture_from_template() {
         printf '%s\n' "$line" >> "$out_path"
         ;;
     esac
-  done < "$CANONICAL_DP_TEMPLATE_PATH"
+  done < "$template_source"
+
+  rm -f "$template_source"
 }
 
 run_test() {

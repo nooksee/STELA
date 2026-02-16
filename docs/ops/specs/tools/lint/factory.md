@@ -4,7 +4,7 @@
 Enforce synchronization and pointer integrity across agent, skill, and task definitions surfaces and registries.
 
 ## Invocation
-- Command: `bash tools/lint/.sh`
+- Command: `bash tools/lint/factory.sh`
 - Required flags: none.
 - Positional arguments: none.
 - Expected exit behavior:

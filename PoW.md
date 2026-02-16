@@ -32,6 +32,67 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - `  - <command>`
 - `- Notes: <audit note>`
 
+## 2026-02-15 22:40:00 UTC — DP-OPS-0067 Universal Template Engine and Constraints SSOT
+- Packet ID: DP-OPS-0067
+- Timestamp: 2026-02-15T22:40:00Z
+- Work Branch: work/dp-ops-0067-2026-02-15
+- Base HEAD: 00bccf1e
+- Scope: platform
+- Target Files allowlist:
+  - storage/dp/active/allowlist.txt
+  - TASK.md
+  - ops/bin/template
+  - ops/lib/manifests/CONSTRAINTS.md
+  - docs/ops/specs/binaries/template.md
+  - ops/src/surfaces/dp.md.tpl
+  - ops/src/surfaces/task.md.tpl
+  - ops/src/definitions/agent.md.tpl
+  - ops/src/definitions/task.md.tpl
+  - ops/src/definitions/skill.md.tpl
+  - ops/bin/draft
+  - ops/lib/scripts/agent.sh
+  - ops/lib/scripts/task.sh
+  - ops/lib/scripts/skill.sh
+  - ops/bin/prune
+  - docs/ops/prompts/E-PROMPT-01.md
+  - docs/ops/prompts/E-PROMPT-02.md
+  - docs/ops/prompts/E-PROMPT-03.md
+  - docs/ops/prompts/E-PROMPT-04.md
+  - docs/ops/prompts/README.md
+  - docs/MANUAL.md
+  - docs/ops/registry/BINARIES.md
+  - tools/lint/dp.sh
+  - SoP.md
+  - PoW.md
+  - storage/handoff/DP-OPS-0067-RESULTS.md
+- Receipt pointers:
+  - RESULTS: storage/handoff/DP-OPS-0067-RESULTS.md
+  - OPEN: storage/handoff/OPEN-work-dp-ops-0067-2026-02-15-1ee7796b.txt
+  - DUMP: storage/dumps/dump-platform-work-dp-ops-0067-2026-02-15-1ee7796b.txt
+- Verification commands:
+  - ./ops/bin/open --out=auto --dp="DP-OPS-0067"
+  - git rev-parse --abbrev-ref HEAD
+  - git rev-parse --short HEAD
+  - git status --porcelain
+  - git diff --name-only
+  - git diff --stat
+  - git diff
+  - sed -n '1,200p' storage/dp/active/allowlist.txt
+  - bash tools/lint/truth.sh
+  - bash tools/lint/dp.sh --test
+  - bash tools/lint/dp.sh TASK.md
+  - bash tools/lint/task.sh
+  - bash tools/lint/agent.sh
+  - bash tools/lint/factory.sh
+  - bash tools/lint/context.sh
+  - bash tools/lint/style.sh
+  - bash tools/lint/factory.sh
+  - bash tools/test/agent.sh
+  - bash tools/verify.sh
+  - ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
+  - git status --porcelain
+- Notes: Positive proof confirms template-system cutover with canonical metadata/frontmatter stripping, include injection, strict slot enforcement, generation-route refactors for draft/prune/harvester flows, and clean-baseline receipts aligned to the `1ee7796b` OPEN/DUMP artifact set.
+
 ## 2026-02-15 01:55:45 UTC — DP-OPS-0065 Immutable Workflow Adoption and Closeout Remediation
 - Packet ID: DP-OPS-0065
 - Timestamp: 2026-02-15T01:55:45Z
@@ -341,7 +402,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - tools/lint/agent.sh
   - tools/lint/context.sh
   - tools/lint/dp.sh
-  - tools/lint/.sh
+  - tools/lint/factory.sh
   - tools/lint/task.sh
   - tools/lint/truth.sh
   - tools/test/agent.sh
@@ -361,7 +422,7 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - bash tools/lint/truth.sh
   - bash tools/lint/style.sh
   - bash tools/lint/context.sh
-  - bash tools/lint/.sh
+  - bash tools/lint/factory.sh
   - bash tools/lint/task.sh
   - bash tools/lint/dp.sh TASK.md
   - bash tools/lint/llms.sh

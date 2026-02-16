@@ -56,13 +56,13 @@ Input discipline (hard rule):
 - DP writer must not include pasted bundles (OPEN, DUMP payloads, manifests) inside the DP body.
 - Canon pointers only. Evidence belongs in storage artifacts and RESULTS.
 
-### DP-OPS-0066: Definition layer consolidation (task and draft templates)
+### DP-OPS-0067: Universal Template Engine and Constraints SSOT
 
 ## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Required Work Branch: work/dp-ops-0066-2026-02-15
-Base HEAD: b7a7a2eb
-Freshness Stamp: 2026-02-15 (America/New_York)
+Required Work Branch: work/dp-ops-0067-2026-02-15
+Base HEAD: 00bccf1e
+Freshness Stamp: 2026-02-15
 
 Required local re-check (worker runs; paste outputs in RESULTS):
 - git rev-parse --abbrev-ref HEAD
@@ -109,47 +109,75 @@ Notes:
 - DP writer must not embed pasted bundles.
 
 ### 3.2.2 DP-scoped load order (per DP)
-- ./ops/bin/open
-- ./ops/bin/dump --scope=platform --format=chatgpt
-- docs/ops/specs/surfaces/task.md
+- ops/bin/draft
 - ops/bin/prune
+- tools/lint/dp.sh
+- ops/src/surfaces/dp.md.tpl
+- ops/src/surfaces/task.md.tpl
+- ops/src/definitions/agent.md.tpl
+- ops/src/definitions/task.md.tpl
+- ops/src/definitions/skill.md.tpl
 - ops/lib/scripts/agent.sh
 - ops/lib/scripts/task.sh
 - ops/lib/scripts/skill.sh
-- opt/_factory/AGENTS.md
-- opt/_factory/TASKS.md
-- opt/_factory/SKILLS.md
-- tools/lint/dp.sh
-- tools/lint/task.sh
-- tools/lint/agent.sh
-- tools/lint/.sh
-- tools/lint/style.sh
-- tools/lint/truth.sh
-- tools/verify.sh
+- docs/ops/prompts/E-PROMPT-01.md
+- docs/ops/prompts/E-PROMPT-02.md
+- docs/ops/prompts/E-PROMPT-03.md
+- docs/ops/prompts/E-PROMPT-04.md
+- docs/ops/prompts/README.md
+- docs/ops/specs/binaries/prune.md
+- docs/ops/registry/BINARIES.md
 
 ## 3.3 Scope and Safety
 Objective:
-- Complete the Phase 4 Definition Layer consolidation by moving creation templates into `ops/src/` and removing brittle markdown text-mining from critical path tooling, while preserving PoT Filing Doctrine separation between Run and Explain.
+- Implement a universal template rendering engine (`ops/bin/template`) with YAML metadata and include injection, then route DP/definition generation and operator stances through a shared constraints SSOT.
 
 In scope:
-- Create `ops/src/definitions/` templates for entity draft generation (`agent.md.tpl`, `task.md.tpl`, `skill.md.tpl`).
-- Create `ops/src/surfaces/task.md.tpl` from the canonical embedded TASK template source.
-- Refactor `ops/bin/prune --reset-task` to read `ops/src/surfaces/task.md.tpl` directly.
-- Refactor `ops/lib/scripts/agent.sh`, `ops/lib/scripts/task.sh`, and `ops/lib/scripts/skill.sh` to render drafts from `ops/src/definitions/*.md.tpl` with explicit token replacement and unresolved-token hard failure.
-- Remove embedded template content from `docs/ops/specs/surfaces/task.md` and factory ledgers, replacing with SSOT pointers.
+- Add `ops/bin/template` with frontmatter parsing, strict slot validation, include injection, and circular-include detection.
+- Add `ops/lib/manifests/CONSTRAINTS.md` with Sections 1-3 and wire it into templates/prompts.
+- Update `ops/src/surfaces/*.tpl` and `ops/src/definitions/*.tpl` with metadata and include directives.
+- Refactor `ops/bin/draft`, `ops/bin/prune`, and `ops/lib/scripts/{agent,task,skill}.sh` to render through `ops/bin/template`.
+- Update docs and registry for the new renderer and reference-first stance pattern.
+- Keep repo gates green and maintain DP lint authority with metadata/include preprocessing.
 
 Out of scope:
-- Any structural changes to `ops/src/surfaces/dp.md.tpl` or `tools/lint/dp.sh`.
-- Any non-essential refactors of unrelated binaries or scripts.
-- Any changes to `ops/lib/scripts/synthesize.sh`, `ops/bin/compile`, context manifests, or repo-gates workflows.
-- Any payload changes under `projects/`.
-- Any reformat-only changes.
+- Edits outside the allowlist.
+- Manual edits to generated artifacts (OPEN/DUMP bundles or compiled manifests).
+- Manual structural edits to DP/TASK boilerplate outside tool-driven regeneration.
+- Broad unrelated refactors.
+- Unrequested changes to unrelated binaries, registries, or factory payload content.
 
 Safety and invariants:
-- No manual edits to generated outputs for DP boilerplate; structural DP generation remains via `ops/bin/draft`.
-- Preserve Filing Doctrine boundaries: `ops/` is Run and `docs/` is Explain.
-- No globs, brace expansions, or pattern-paths in automation updates; use literal paths.
-- Stop and escalate if PoT conflicts with DP scope.
+- Allowlist hard gate: only listed files may be touched.
+- No invented paths; missing required paths must be explicitly created.
+- No manual edits to generated outputs.
+- Preserve strict bash hygiene (`set -euo pipefail`) and keep `bash tools/lint/factory.sh` green.
+- Include expansion must be deterministic, cycle-safe, and fail on missing targets or sections.
+- Strict render mode must fail unresolved worker-facing tokens.
+
+Worker Constraints (SSOT injected):
+## Section 1: Universal Template Rules
+- Templates are authored as `.tpl` files and may begin with YAML frontmatter.
+- Frontmatter keys are canonical and machine-read:
+  - `template_type`
+  - `template_id`
+  - `template_version`
+  - `requires_slots`
+  - `includes`
+- Rendered output must strip YAML frontmatter before writing output.
+- Slot tokens are `\{\{TOKEN\}\}` where `TOKEN` is uppercase alphanumeric with underscores.
+- Include directives are supported in template body content:
+  - `\{\{@include:path\}\}`
+  - `\{\{@include:path#section\}\}`
+- Include resolution is deterministic and strict:
+  - Missing files fail render.
+  - Missing section anchors fail render.
+  - Circular include graphs fail render.
+- Strict mode is default for worker-facing output:
+  - Every `requires_slots` token must be provided.
+  - Unresolved `\{\{TOKEN\}\}` placeholders fail render.
+- Non-strict mode is allowed only for linting and normalization workflows.
+- Generated worker-facing surfaces must remain pointer-first and must not embed disposable artifacts.
 
 Target Files allowlist (hard gate):
 - storage/dp/active/allowlist.txt
@@ -157,62 +185,69 @@ Target Files allowlist (hard gate):
 ## 3.4 Execution Plan (A-E)
 
 ### 3.4.1 State
-- `ops/bin/prune --reset-task` currently depended on extracting embedded template text from `docs/ops/specs/surfaces/task.md`.
-- Harvester scripts generated drafts with inline heredocs.
-- Factory ledgers and task surface spec carried embedded template payloads.
+- Repo work is on `work/dp-ops-0067-2026-02-15`; base branch `main` remains at `00bccf1e`.
+- Existing generation flow used bespoke per-script rendering and lacked a universal metadata/include-aware renderer.
+- Prompt stances carried duplicated constraints text instead of referencing a shared constraints manifest.
 
 ### 3.4.2 Request
-- Establish `ops/src/definitions/` and `ops/src/surfaces/task.md.tpl` as template SSOTs.
-- Remove docs-mining and inline heredoc dependency from prune and harvesters.
-- Keep lint and closeout behavior intact while restoring Explain-only docs posture.
+- Deliver the universal template renderer and shared constraints manifest.
+- Route draft/definition/task-surface rendering through the new renderer while preserving current workflows.
+- Update templates/prompts/docs to the constraints reference-first model.
+- Keep lint/test/verify gates passing with full receipt coverage.
 
 ### 3.4.3 Changelog
-- NEW: `ops/src/surfaces/task.md.tpl`
-- NEW: `ops/src/definitions/agent.md.tpl`
-- NEW: `ops/src/definitions/task.md.tpl`
-- NEW: `ops/src/definitions/skill.md.tpl`
-- UPDATE: `ops/bin/prune`
-- UPDATE: `ops/lib/scripts/agent.sh`
-- UPDATE: `ops/lib/scripts/task.sh`
-- UPDATE: `ops/lib/scripts/skill.sh`
-- UPDATE: `docs/ops/specs/surfaces/task.md`
-- UPDATE: `opt/_factory/AGENTS.md`
-- UPDATE: `opt/_factory/TASKS.md`
-- UPDATE: `opt/_factory/SKILLS.md`
+- NEW: `ops/bin/template`.
+- NEW: `ops/lib/manifests/CONSTRAINTS.md`.
+- NEW: `docs/ops/specs/binaries/template.md`.
+- UPDATE: `ops/src/surfaces/dp.md.tpl`.
+- UPDATE: `ops/src/surfaces/task.md.tpl`.
+- UPDATE: `ops/src/definitions/agent.md.tpl`.
+- UPDATE: `ops/src/definitions/task.md.tpl`.
+- UPDATE: `ops/src/definitions/skill.md.tpl`.
+- UPDATE: `ops/bin/draft`.
+- UPDATE: `ops/bin/prune`.
+- UPDATE: `ops/lib/scripts/agent.sh`.
+- UPDATE: `ops/lib/scripts/task.sh`.
+- UPDATE: `ops/lib/scripts/skill.sh`.
+- UPDATE: `docs/ops/prompts/E-PROMPT-01.md`.
+- UPDATE: `docs/ops/prompts/E-PROMPT-02.md`.
+- UPDATE: `docs/ops/prompts/E-PROMPT-03.md`.
+- UPDATE: `docs/ops/prompts/E-PROMPT-04.md`.
+- UPDATE: `docs/ops/prompts/README.md`.
+- UPDATE: `docs/MANUAL.md`.
+- UPDATE: `docs/ops/registry/BINARIES.md`.
+- UPDATE: `tools/lint/dp.sh`.
 
 ### 3.4.4 Patch / Diff
-A. Create run-layer surface template at `ops/src/surfaces/task.md.tpl` from existing canonical TASK template content.
-B. Create definition-layer draft templates under `ops/src/definitions/` for agent/task/skill draft rendering with explicit `{{TOKEN}}` markers.
-C. Refactor `ops/bin/prune` reset flow to copy and lint `ops/src/surfaces/task.md.tpl`, removing extraction logic.
-D. Refactor harvester scripts to render drafts from template files and fail if unresolved template tokens remain.
-E. Replace embedded template sections in docs and factory ledgers with pointers to `ops/src/` template SSOTs.
+A) Create new renderer/manifests/spec files and update allowlist.
+B) Implement `ops/bin/template` mapping/rendering/validation and strict vs non-strict modes.
+C) Add metadata and include directives to surfaces/definitions; inject `CONSTRAINTS.md` sections.
+D) Refactor draft/prune/harvester scripts to render via `ops/bin/template`.
+E) Refactor prompt stances to reference constraints sections rather than embedding shared payloads.
+F) Update manual/registry docs for the template system.
+G) Update DP lint preprocessing to render canonical template in non-strict mode for structure hashing and fixture generation.
 
 ### 3.4.5 Receipt (Proofs to collect) - MUST RUN
-- ./ops/bin/open --out=auto --dp="DP-OPS-0066"
-- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
+- ./ops/bin/open --out=auto --dp="DP-OPS-0067"
 - git rev-parse --abbrev-ref HEAD
 - git rev-parse --short HEAD
 - git status --porcelain
-- bash tools/lint/truth.sh
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-- bash tools/lint/style.sh
-- bash tools/lint/.sh
-- bash tools/lint/context.sh
-- bash tools/lint/agent.sh
-- bash tools/lint/task.sh ops/src/surfaces/task.md.tpl
-- ./ops/bin/prune --reset-task --dry-run
-- ./ops/bin/prune --reset-task
-- bash tools/lint/task.sh TASK.md
-- git grep -n "docs/ops/specs/surfaces/task.md" ops/bin/prune
-- git grep -n "ops/src/surfaces/task.md.tpl" ops/bin/prune
-- git grep -n "ops/src/definitions/" ops/lib/scripts/agent.sh ops/lib/scripts/task.sh ops/lib/scripts/skill.sh
-- ops/lib/scripts/agent.sh harvest --name "Receipt Test" --dp "DP-OPS-0066" --specialization "Receipt only" --summary "Receipt only"
-- ops/lib/scripts/task.sh harvest --id "B-TASK-99" --name "Receipt Test" --dp "DP-OPS-0066" --objective "Receipt only"
-- ops/lib/scripts/skill.sh harvest --name "Receipt Test" --context "Receipt only" --solution "Receipt only"
 - git diff --name-only
 - git diff --stat
 - git diff
+- sed -n '1,200p' storage/dp/active/allowlist.txt
+- bash tools/lint/truth.sh
+- bash tools/lint/dp.sh --test
+- bash tools/lint/dp.sh TASK.md
+- bash tools/lint/task.sh
+- bash tools/lint/agent.sh
+- bash tools/lint/factory.sh
+- bash tools/lint/context.sh
+- bash tools/lint/style.sh
+- bash tools/lint/factory.sh
+- bash tools/test/agent.sh
+- bash tools/verify.sh
+- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
 - Verify Section 3.5 Closing Block is populated in RESULTS.
 - Required pasted outputs: receipts, verification outcomes, and diff output.
 - Mandatory Closing Block required in RESULTS.
@@ -221,7 +256,7 @@ E. Replace embedded template sections in docs and factory ledgers with pointers 
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
-- Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-0066 --scrub.
+- Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-0067 --scrub.
 - Use ./ops/bin/prune --reset-task only for explicit TASK baseline reset after PoW entry exists for the active DP id.
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 

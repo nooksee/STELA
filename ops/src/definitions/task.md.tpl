@@ -1,3 +1,14 @@
+---
+template_type: definition
+template_id: task
+template_version: 1
+requires_slots:
+  - TASK_NAME
+  - PROVENANCE_BLOCK
+includes:
+  - ops/lib/manifests/CONSTRAINTS.md#section-1
+  - ops/lib/manifests/CONSTRAINTS.md#section-3
+---
 # Task Draft: {{TASK_NAME}}
 
 {{PROVENANCE_BLOCK}}
@@ -14,6 +25,11 @@
 - **Toolchain:** Not provided
 - **JIT Skills:** (none)
 - **Reference Docs:** Not provided
+
+## Constraints
+{{@include:ops/lib/manifests/CONSTRAINTS.md#section-1}}
+
+{{@include:ops/lib/manifests/CONSTRAINTS.md#section-3}}
 
 ## Execution Logic
 1. Pre-flight: Not provided.

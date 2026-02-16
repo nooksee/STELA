@@ -5,7 +5,10 @@ Attach: DP-RESULTS.md, `TASK.md`, OPEN, OPEN-PORCELAIN (if any), dump payload, d
 
 Rules:
 * Refresh state using the attached OPEN and dump artifacts.
-* Logic: `PoT.md`. Structure: `TASK.md` + DP template (as validated by `tools/lint/dp.sh`).
+* Shared constraints are SSOT in `ops/lib/manifests/CONSTRAINTS.md`:
+  * Section 1 (Universal Template Rules)
+  * Section 2 (Stance and Operator Prompt Rules)
+* Structure authority remains `TASK.md` + canonical DP template enforcement via `tools/lint/dp.sh`.
 * Output only the stance format.
 
 Steps:
@@ -22,7 +25,7 @@ Steps:
    * Reject any file touches outside allowlist.
 5. **DRIFT + CONTEXT HAZARDS**:
    * No out-of-scope edits.
-   * No global-context inclusion of library subtree (`opt/_factory/`) unless explicitly authorized in scope.
+   * No global-context inclusion of factory subtree (`opt/_factory/`) unless explicitly authorized in scope.
 6. **GENERATED OUTPUTS**:
    * If generated artifacts changed (manifests, llms bundles, dumps), require tool-based regeneration proofs.
    * Reject manual edits to generated outputs.

@@ -7,6 +7,7 @@ SOP_FILE="${REPO_ROOT}/SoP.md"
 POW_FILE="${REPO_ROOT}/PoW.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 TASK_TEMPLATE_PATH="${REPO_ROOT}/ops/src/surfaces/task.md.tpl"
+TEMPLATE_BIN="${REPO_ROOT}/ops/bin/template"
 ARCHIVE_DIR="${REPO_ROOT}/storage/archives/root"
 HANDOFF_DIR="${REPO_ROOT}/storage/handoff"
 DUMPS_DIR="${REPO_ROOT}/storage/dumps"
@@ -93,13 +94,16 @@ reset_task_from_template() {
   if [[ ! -f "${TASK_TEMPLATE_PATH}" ]]; then
     die "TASK template not found at ${TASK_TEMPLATE_PATH}"
   fi
+  if [[ ! -x "${TEMPLATE_BIN}" ]]; then
+    die "Template binary not found or not executable at ${TEMPLATE_BIN}"
+  fi
 
   local tmp_task
   tmp_task="$(mktemp "${TMP_DIR}/task-template.XXXXXX")"
 
-  if ! cp "${TASK_TEMPLATE_PATH}" "$tmp_task"; then
+  if ! "${TEMPLATE_BIN}" render task-surface --out="${tmp_task}"; then
     rm -f "$tmp_task"
-    die "Failed to copy TASK template from ${TASK_TEMPLATE_PATH}"
+    die "Failed to render TASK surface template from ${TASK_TEMPLATE_PATH}"
   fi
 
   if ! (cd "${REPO_ROOT}" && bash tools/lint/task.sh "$tmp_task"); then

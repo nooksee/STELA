@@ -20,7 +20,7 @@ jobs:
 
       # NEW: Enforce Factory Registry
       - name: Factory Guard
-        run: bash tools/lint/.sh
+        run: bash tools/lint/factory.sh
 
       - name: DP lint (TASK baseline)
         run: bash tools/lint/dp.sh TASK.md

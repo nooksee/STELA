@@ -1,9 +1,27 @@
+---
+template_type: definition
+template_id: skill
+template_version: 1
+requires_slots:
+  - SKILL_NAME
+  - PROVENANCE_BLOCK
+  - CONTEXT
+  - SOLUTION
+includes:
+  - ops/lib/manifests/CONSTRAINTS.md#section-1
+  - ops/lib/manifests/CONSTRAINTS.md#section-3
+---
 # Skill Draft: {{SKILL_NAME}}
 
 {{PROVENANCE_BLOCK}}
 
 ## Scope
 Production payload work only. Not platform maintenance.
+
+## Constraints
+{{@include:ops/lib/manifests/CONSTRAINTS.md#section-1}}
+
+{{@include:ops/lib/manifests/CONSTRAINTS.md#section-3}}
 
 ## Invocation guidance
 Use this skill when {{CONTEXT}}. Apply the solution: {{SOLUTION}}.

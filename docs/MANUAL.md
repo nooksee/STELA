@@ -13,6 +13,8 @@
 - The DP Preflight Gate runs after the Freshness Gate and before any edits.
 - Worker input is DP text only; OPEN is for integrator refresh and receipt pointers and is not required reading for workers.
 - DP structure is generated from `ops/src/surfaces/dp.md.tpl` through `ops/bin/draft`; manual structural edits are prohibited.
+- Surface and definition rendering is centralized in `ops/bin/template` with YAML metadata parsing, include injection, and strict slot enforcement by default.
+- `ops/bin/draft`, `ops/lib/scripts/{agent,task,skill}.sh`, and `ops/bin/prune --reset-task` route through `ops/bin/template`.
 
 **Anchor Hygiene:**
 - Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md pointer references to the newest OPEN artifact and RESULTS receipts before any work continues; do not rewrite inline branch/hash state in TASK.md.
@@ -87,6 +89,15 @@ Run local hygiene prune for the DP.
 ./ops/bin/draft --id=DP-OPS-0065 --title="Immutable workflow adoption" \
   --work-branch=work/dp-ops-0065-2026-02-14 --base-head=d3801c3a \
   --slots-file=storage/dp/intake/DP-OPS-0065.slots
+~~~
+
+### Template Renderer
+~~~bash
+# Render a DP template in strict mode (default)
+./ops/bin/template render dp --slots-file=storage/dp/intake/DP-OPS-0065.slots --out=storage/dp/intake/DP-OPS-0065.md
+
+# Render canonical DP body for lint normalization (non-strict mode)
+./ops/bin/template render dp --non-strict --out=-
 ~~~
 
 ### State Capture (Dump)

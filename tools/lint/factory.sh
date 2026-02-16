@@ -16,7 +16,7 @@ fi
 
 cd "$REPO_ROOT" || exit 1
 
-LIBRARY_DIR="opt/_factory"
+FACTORY_DIR="opt/_factory"
 AGENTS_REGISTRY="docs/ops/registry/AGENTS.md"
 SKILLS_REGISTRY="docs/ops/registry/SKILLS.md"
 TASKS_REGISTRY="docs/ops/registry/TASKS.md"
@@ -85,7 +85,7 @@ mapfile -t agent_ids < <(awk -F'|' '
 declare -A agent_id_map
 for id in "${agent_ids[@]}"; do
   agent_id_map["$id"]=1
-  agent_path="${LIBRARY_DIR}/agents/${id}.md"
+  agent_path="${FACTORY_DIR}/agents/${id}.md"
   if [[ ! -f "$agent_path" ]]; then
     fail "Dead End: Registry references missing agent file '${agent_path}'"
   fi
@@ -141,16 +141,16 @@ while IFS= read -r file; do
   if [[ -z "${agent_id_map[$base_name]+set}" ]]; then
     fail "Ghost Artifact: '${rel_path}' exists but is not registered in AGENTS.md"
   fi
-done < <(find "${LIBRARY_DIR}/agents" -type f -name "*.md")
+done < <(find "${FACTORY_DIR}/agents" -type f -name "*.md")
 
 while IFS= read -r file; do
   rel_path="${file#${REPO_ROOT}/}"
   if [[ -z "${skill_path_map[$rel_path]+set}" ]]; then
     fail "Ghost Artifact: '${rel_path}' exists but is not registered in SKILLS.md"
   fi
-done < <(find "${LIBRARY_DIR}/skills" -type f -name "*.md")
+done < <(find "${FACTORY_DIR}/skills" -type f -name "*.md")
 
-skills_meta="${LIBRARY_DIR}/SKILLS.md"
+skills_meta="${FACTORY_DIR}/SKILLS.md"
 if [[ -f "$skills_meta" ]]; then
   if [[ -z "${skill_path_map[$skills_meta]+set}" ]]; then
     fail "Ghost Artifact: '${skills_meta}' exists but is not registered in SKILLS.md"
@@ -162,9 +162,9 @@ while IFS= read -r file; do
   if [[ -z "${task_path_map[$rel_path]+set}" ]]; then
     fail "Ghost Artifact: '${rel_path}' exists but is not registered in TASKS.md"
   fi
-done < <(find "${LIBRARY_DIR}/tasks" -type f -name "*.md")
+done < <(find "${FACTORY_DIR}/tasks" -type f -name "*.md")
 
-skills_dir="${LIBRARY_DIR}/skills"
+skills_dir="${FACTORY_DIR}/skills"
 if compgen -G "${skills_dir}/*.md" > /dev/null; then
   for skill in "${skills_dir}"/*.md; do
     skill_name="$(basename "$skill")"
@@ -222,8 +222,8 @@ duplicate_patterns=(
   "git diff --stat"
 )
 
-if compgen -G "${LIBRARY_DIR}/tasks/*.md" > /dev/null; then
-  for task in "${LIBRARY_DIR}/tasks"/*.md; do
+if compgen -G "${FACTORY_DIR}/tasks/*.md" > /dev/null; then
+  for task in "${FACTORY_DIR}/tasks"/*.md; do
     if grep -q "S-LEARN-01" "$task"; then
       task_name="$(basename "$task")"
       for pattern in "${duplicate_patterns[@]}"; do

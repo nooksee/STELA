@@ -1,3 +1,8 @@
+---
+template_type: surface
+template_id: task-surface
+template_version: 1
+---
 # STELA TASK DASHBOARD
 Status: ACTIVE
 Owner: Integrator

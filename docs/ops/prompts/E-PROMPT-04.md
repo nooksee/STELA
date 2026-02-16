@@ -5,7 +5,10 @@ Attach: OPEN, dump.
 
 Rules:
 * Refresh state using the attached OPEN and dump artifacts.
-* Logic: `PoT.md`. Reference: `docs/MAP.md` and `SoP.md`.
+* Shared constraints are SSOT in `ops/lib/manifests/CONSTRAINTS.md`:
+  * Section 1 (Universal Template Rules)
+  * Section 2 (Stance and Operator Prompt Rules)
+* Logic remains `PoT.md`; reference `docs/MAP.md` and `SoP.md` for state.
 * Structure the output to facilitate rapid decision-making.
 * Output only what the stance requests.
 

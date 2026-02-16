@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+TEMPLATE_BIN="${REPO_ROOT}/ops/bin/template"
 
 usage() {
   cat <<'USAGE'
@@ -159,52 +160,34 @@ require_task_markers() {
 
 render_dp() {
   local out_path="$1"
-  : > "$out_path"
+  [[ -x "$TEMPLATE_BIN" ]] || die "template binary missing or not executable: ${TEMPLATE_BIN}"
 
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    line="${line//DP-OPS-0000/$DP_ID}"
-    line="${line//'{{DP_TITLE}}'/$DP_TITLE}"
-    line="${line//'{{BASE_BRANCH}}'/$BASE_BRANCH}"
-    line="${line//'{{WORK_BRANCH}}'/$WORK_BRANCH}"
-    line="${line//'{{BASE_HEAD}}'/$BASE_HEAD}"
-    line="${line//'{{FRESHNESS_STAMP}}'/$FRESHNESS_STAMP}"
+  local -a cmd=(
+    "$TEMPLATE_BIN" render dp
+    "--out=${out_path}"
+    "--slot=DP_ID=${DP_ID}"
+    "--slot=DP_TITLE=${DP_TITLE}"
+    "--slot=BASE_BRANCH=${BASE_BRANCH}"
+    "--slot=WORK_BRANCH=${WORK_BRANCH}"
+    "--slot=BASE_HEAD=${BASE_HEAD}"
+    "--slot=FRESHNESS_STAMP=${FRESHNESS_STAMP}"
+    "--slot=DP_SCOPED_LOAD_ORDER=${DP_SCOPED_LOAD_ORDER}"
+    "--slot=OBJECTIVE=${OBJECTIVE}"
+    "--slot=IN_SCOPE=${IN_SCOPE}"
+    "--slot=OUT_OF_SCOPE=${OUT_OF_SCOPE}"
+    "--slot=SAFETY_INVARIANTS=${SAFETY_INVARIANTS}"
+    "--slot=PLAN_STATE=${PLAN_STATE}"
+    "--slot=PLAN_REQUEST=${PLAN_REQUEST}"
+    "--slot=PLAN_CHANGELOG=${PLAN_CHANGELOG}"
+    "--slot=PLAN_PATCH=${PLAN_PATCH}"
+    "--slot=RECEIPT_COMMANDS=${RECEIPT_COMMANDS}"
+  )
 
-    case "$line" in
-      "{{DP_SCOPED_LOAD_ORDER}}")
-        printf '%s\n' "$DP_SCOPED_LOAD_ORDER" >> "$out_path"
-        ;;
-      "{{OBJECTIVE}}")
-        printf '%s\n' "$OBJECTIVE" >> "$out_path"
-        ;;
-      "{{IN_SCOPE}}")
-        printf '%s\n' "$IN_SCOPE" >> "$out_path"
-        ;;
-      "{{OUT_OF_SCOPE}}")
-        printf '%s\n' "$OUT_OF_SCOPE" >> "$out_path"
-        ;;
-      "{{SAFETY_INVARIANTS}}")
-        printf '%s\n' "$SAFETY_INVARIANTS" >> "$out_path"
-        ;;
-      "{{PLAN_STATE}}")
-        printf '%s\n' "$PLAN_STATE" >> "$out_path"
-        ;;
-      "{{PLAN_REQUEST}}")
-        printf '%s\n' "$PLAN_REQUEST" >> "$out_path"
-        ;;
-      "{{PLAN_CHANGELOG}}")
-        printf '%s\n' "$PLAN_CHANGELOG" >> "$out_path"
-        ;;
-      "{{PLAN_PATCH}}")
-        printf '%s\n' "$PLAN_PATCH" >> "$out_path"
-        ;;
-      "{{RECEIPT_COMMANDS}}")
-        printf '%s\n' "$RECEIPT_COMMANDS" >> "$out_path"
-        ;;
-      *)
-        printf '%s\n' "$line" >> "$out_path"
-        ;;
-    esac
-  done < "$DP_TEMPLATE_PATH"
+  if [[ -n "$SLOTS_FILE" ]]; then
+    cmd+=("--slots-file=${SLOTS_FILE}")
+  fi
+
+  "${cmd[@]}"
 }
 
 update_task() {
