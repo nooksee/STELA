@@ -67,8 +67,8 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - storage/handoff/DP-OPS-0067-RESULTS.md
 - Receipt pointers:
   - RESULTS: storage/handoff/DP-OPS-0067-RESULTS.md
-  - OPEN: storage/handoff/OPEN-work-dp-ops-0067-2026-02-15-2f2bd9be.txt
-  - DUMP: storage/dumps/dump-platform-work-dp-ops-0067-2026-02-15-2f2bd9be.txt
+  - OPEN: storage/handoff/OPEN-work-dp-ops-0067-2026-02-15-1ee7796b.txt
+  - DUMP: storage/dumps/dump-platform-work-dp-ops-0067-2026-02-15-1ee7796b.txt
 - Verification commands:
   - ./ops/bin/open --out=auto --dp="DP-OPS-0067"
   - git rev-parse --abbrev-ref HEAD
@@ -90,8 +90,8 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
   - bash tools/test/agent.sh
   - bash tools/verify.sh
   - ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
-  - ./ops/bin/prune --dp=DP-OPS-0067 --scrub
-- Notes: Positive proof confirms template-system cutover with canonical metadata/frontmatter stripping, include injection, strict slot enforcement, and generation-route refactors for draft/prune/harvester flows. Negative proof: one `tools/lint/style.sh` run initially failed due a contraction in `docs/ops/prompts/README.md`; it was remediated and rerun clean. Negative proof: `./ops/bin/prune --dp=DP-OPS-0067 --scrub` was intentionally blocked by prune safety guard (`SAFETY VIOLATION: Uncommitted Results artifact detected`) in this uncommitted state.
+  - git status --porcelain
+- Notes: Positive proof confirms template-system cutover with canonical metadata/frontmatter stripping, include injection, strict slot enforcement, generation-route refactors for draft/prune/harvester flows, and clean-baseline receipts aligned to the `1ee7796b` OPEN/DUMP artifact set.
 
 ## 2026-02-15 01:55:45 UTC — DP-OPS-0065 Immutable Workflow Adoption and Closeout Remediation
 - Packet ID: DP-OPS-0065
