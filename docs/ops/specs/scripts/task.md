@@ -25,6 +25,9 @@ Harvest contract:
 - Requires task ID format `B-TASK-[0-9]{2,}` and unique registry ID.
 - Requires non-placeholder objective and DP values.
 - Writes redacted draft file and appends Candidate Log entry in `opt/_factory/TASKS.md`.
+- Injects unified schema front-matter keys in each draft: `trace_id`, `packet_id`, `created_at`, `previous`.
+- Resolves TraceID by priority: `STELA_TRACE_ID` environment value, then latest OPEN artifact parse, then local fallback generation.
+- Sets `previous` to the latest prior task draft leaf for the same task slug, or `(none)` when no prior leaf exists.
 
 Promote contract:
 - Validates draft schema, required pointers, and final closeout step.

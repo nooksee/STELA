@@ -28,6 +28,7 @@ Manage skill draft harvest, promotion, and context-hazard checks for the skill l
 
 ## Outputs
 - `harvest`: writes redacted draft to `archives/definitions/`.
+- Harvested drafts include unified schema front-matter keys: `trace_id`, `packet_id`, `created_at`, `previous`.
 - `promote`: writes promoted skill file under `opt/_factory/skills/`, inserts registry row in `docs/ops/registry/SKILLS.md`, and appends candidate/promotion packet logs in `opt/_factory/SKILLS.md`.
 - `check`: prints context-hazard check result.
 
@@ -36,6 +37,8 @@ Manage skill draft harvest, promotion, and context-hazard checks for the skill l
 - Promotion validates required draft sections and rejects placeholder markers.
 - Skill IDs are allocated as next available `S-LEARN-XX` across skill files and registry.
 - Semantic-collision detection can block harvest unless overridden with `--force`.
+- TraceID resolution order for harvest is strict: `STELA_TRACE_ID` environment value first, then latest OPEN artifact parse, then local fallback generation.
+- `previous` points to the latest prior `archives/definitions/skill-*.md` leaf for the same slug, or `(none)` when the draft is the origin leaf.
 
 ## Related pointers
 - Registry entry: `docs/ops/registry/SCRIPTS.md` (`SCRIPT-04`).

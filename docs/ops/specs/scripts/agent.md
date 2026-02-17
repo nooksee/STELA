@@ -30,6 +30,7 @@ Manage agent candidate harvesting, promotion, and guardrail checks for canon age
 
 ## Outputs
 - `harvest`: writes redacted draft under `archives/definitions/` and appends candidate log in `opt/_factory/AGENTS.md`.
+- Harvested drafts include unified schema front-matter keys: `trace_id`, `packet_id`, `created_at`, `previous`.
 - `harvest-check`: prints Pattern Density report from recent SoP entries.
 - `promote`: writes canon agent file in `opt/_factory/agents/`, inserts registry row in `docs/ops/registry/AGENTS.md`, and appends promotion log in `opt/_factory/AGENTS.md`.
 - `check`: prints guardrail status for scope-boundary and context-hazard checks.
@@ -39,6 +40,8 @@ Manage agent candidate harvesting, promotion, and guardrail checks for canon age
 - Promotion enforces context-hazard and PoT-duplication lint checks before writing canon files.
 - Agent IDs are allocated as next available `R-AGENT-XX` value across files and registry.
 - Auto-selected OPEN/DUMP artifacts must be unambiguous by timestamp; ties are hard failures.
+- TraceID resolution order for harvest is strict: `STELA_TRACE_ID` environment value first, then `STELA_TRACE_ID` parsed from the selected OPEN artifact, then local fallback generation.
+- `previous` points to the latest prior `archives/definitions/agent-*.md` leaf for the same slug, or `(none)` when the draft is the origin leaf.
 
 ## Related pointers
 - Registry entry: `docs/ops/registry/SCRIPTS.md` (`SCRIPT-01`).

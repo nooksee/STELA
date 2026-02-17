@@ -40,6 +40,7 @@
 - `docs/ops/specs/tools/lint/llms.md`
 - `docs/ops/specs/tools/lint/project.md`
 - `docs/ops/specs/tools/lint/results.md`
+- `docs/ops/specs/tools/lint/schema.md`
 - `docs/ops/specs/tools/lint/style.md`
 - `docs/ops/specs/tools/lint/task.md`
 - `docs/ops/specs/tools/lint/truth.md`

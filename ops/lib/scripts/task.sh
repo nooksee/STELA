@@ -9,6 +9,7 @@ TASKS_LEDGER="${REPO_ROOT}/opt/_factory/TASKS.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
 HANDOFF_DIR="${REPO_ROOT}/archives/definitions"
+OPEN_DIR="${REPO_ROOT}/storage/handoff"
 TASK_TEMPLATE_PATH="${REPO_ROOT}/ops/src/definitions/task.md.tpl"
 TEMPLATE_BIN="${REPO_ROOT}/ops/bin/template"
 HEURISTICS_LIB="${SCRIPT_DIR}/heuristics.sh"
@@ -90,6 +91,125 @@ trim() {
   value="${value#"${value%%[![:space:]]*}"}"
   value="${value%"${value##*[![:space:]]}"}"
   printf '%s' "$value"
+}
+
+iso_utc_now() {
+  date -u +"%Y-%m-%dT%H:%M:%SZ"
+}
+
+generate_trace_id() {
+  local stamp
+  local suffix
+  stamp="$(date -u '+%Y%m%dT%H%M%SZ')"
+  suffix="$(printf '%04x%04x' "$RANDOM" "$RANDOM")"
+  printf 'stela-%s-%s' "$stamp" "$suffix"
+}
+
+extract_trace_id_from_open() {
+  local open_path="$1"
+  [[ -f "$open_path" ]] || return 1
+  local trace_id
+  trace_id="$(
+    awk '
+      /STELA_TRACE_ID:[[:space:]]*/ {
+        line=$0
+        sub(/.*STELA_TRACE_ID:[[:space:]]*/, "", line)
+        print line
+        exit
+      }
+    ' "$open_path"
+  )"
+  trace_id="$(trim "$trace_id")"
+  [[ -n "$trace_id" ]] || return 1
+  printf '%s' "$trace_id"
+}
+
+select_latest_path_by_mtime() {
+  local latest_path=""
+  local latest_mtime=-1
+  local path=""
+  local mtime=0
+
+  for path in "$@"; do
+    [[ -f "$path" ]] || continue
+    mtime="$(stat -c %Y "$path")"
+    if (( mtime > latest_mtime )); then
+      latest_mtime="$mtime"
+      latest_path="$path"
+      continue
+    fi
+    if (( mtime == latest_mtime )) && [[ "$path" > "$latest_path" ]]; then
+      latest_path="$path"
+    fi
+  done
+
+  [[ -n "$latest_path" ]] || return 1
+  printf '%s' "$latest_path"
+}
+
+select_latest_open_artifact() {
+  mapfile -t opens < <(
+    find "$OPEN_DIR" -maxdepth 1 -type f | awk '
+      {
+        filename=$0
+        sub(/^.*\//, "", filename)
+        if (filename ~ /^OPEN-.*\.txt$/ && filename !~ /^OPEN-PORCELAIN-/) {
+          print $0
+        }
+      }
+    '
+  )
+  if (( ${#opens[@]} == 0 )); then
+    return 1
+  fi
+  select_latest_path_by_mtime "${opens[@]}"
+}
+
+resolve_trace_id() {
+  local trace_id="${STELA_TRACE_ID:-}"
+  if [[ -n "$trace_id" ]]; then
+    printf '%s' "$trace_id"
+    return 0
+  fi
+
+  local open_path
+  open_path="$(select_latest_open_artifact || true)"
+  if [[ -n "$open_path" ]]; then
+    trace_id="$(extract_trace_id_from_open "$open_path" || true)"
+  fi
+  if [[ -z "$trace_id" ]]; then
+    trace_id="$(generate_trace_id)"
+  fi
+  printf '%s' "$trace_id"
+}
+
+resolve_previous_task_definition() {
+  local task_id="$1"
+  local slug="$2"
+  mapfile -t candidates < <(
+    find "$HANDOFF_DIR" -maxdepth 1 -type f | awk -v task_id="$task_id" -v slug="$slug" '
+      {
+        filename=$0
+        sub(/^.*\//, "", filename)
+        if (filename ~ ("^task-" task_id "-[0-9]{8}-" slug "(-[0-9]+)?\\.md$")) {
+          print $0
+        }
+      }
+    '
+  )
+
+  if (( ${#candidates[@]} == 0 )); then
+    printf '(none)'
+    return 0
+  fi
+
+  local latest_path
+  latest_path="$(select_latest_path_by_mtime "${candidates[@]}")"
+  if [[ "$latest_path" == "${REPO_ROOT}/"* ]]; then
+    printf '%s' "${latest_path#${REPO_ROOT}/}"
+  else
+    printf '%s' "$latest_path"
+  fi
 }
 
 slugify() {
@@ -571,6 +691,12 @@ cmd_harvest() {
 
   local slug
   slug="$(slugify "$name")"
+  local trace_id
+  trace_id="$(resolve_trace_id)"
+  local created_at
+  created_at="$(iso_utc_now)"
+  local previous
+  previous="$(resolve_previous_task_definition "$task_id" "$slug")"
   local draft_path
   local counter=0
 
@@ -590,6 +716,10 @@ cmd_harvest() {
   tmp="$(mktemp)"
 
   render_definition_template "$TASK_TEMPLATE_PATH" "$tmp" \
+    "TRACE_ID" "$trace_id" \
+    "PACKET_ID" "$dp_id" \
+    "CREATED_AT" "$created_at" \
+    "PREVIOUS" "$previous" \
     "TASK_NAME" "$name" \
     "PROVENANCE_BLOCK" "$provenance_block"
 
