@@ -15,7 +15,7 @@ It is the automation boundary for drafting, validating, and promoting reusable t
   - `TASK.md`
   - `ops/lib/manifests/CONTEXT.md`
 - Key directories:
-  - Drafts: `storage/archives/tasks/`
+  - Drafts: `archives/definitions/`
   - Canon tasks: `opt/_factory/tasks/`
 - Exit behavior:
   - `0` on success.

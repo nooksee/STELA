@@ -9,7 +9,7 @@ AGENTS_LEDGER="${REPO_ROOT}/opt/_factory/AGENTS.md"
 SOP_FILE="${REPO_ROOT}/SoP.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
-HANDOFF_DIR="${REPO_ROOT}/storage/archives/agents"
+HANDOFF_DIR="${REPO_ROOT}/archives/definitions"
 OPEN_DIR="${REPO_ROOT}/storage/handoff"
 DUMPS_DIR="${REPO_ROOT}/storage/dumps"
 AGENT_TEMPLATE_PATH="${REPO_ROOT}/ops/src/definitions/agent.md.tpl"
@@ -1083,7 +1083,7 @@ select_latest_draft() {
   local draft_path=""
   mapfile -t drafts < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name 'agent-*.md' | sort)
   if (( ${#drafts[@]} == 0 )); then
-    die "No draft found in storage/archives/agents"
+    die "No draft found in archives/definitions"
   fi
   if (( ${#drafts[@]} == 1 )); then
     echo "${drafts[0]}"

@@ -236,7 +236,14 @@ main() {
   local template_file
   for template_file in "${templates[@]}"; do
     local template_rel="${TEMPLATE_DIR}/${template_file}"
-    local output_rel="${OUTPUT_DIR}/${template_file%.tpl}"
+    local output_name="${template_file%.tpl}"
+    if [[ "$output_name" == *.md ]]; then
+      local output_stem="${output_name%.md}"
+      output_name="$(printf '%s.md' "$(printf '%s' "$output_stem" | tr '[:lower:]' '[:upper:]')")"
+    else
+      output_name="$(printf '%s' "$output_name" | tr '[:lower:]' '[:upper:]')"
+    fi
+    local output_rel="${OUTPUT_DIR}/${output_name}"
 
     local -a members=()
     mapfile -t members < <(resolve_template_members "$template_rel")

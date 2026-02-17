@@ -45,7 +45,7 @@ Enforcement linkage:
 
 Retention mechanics:
 - Keep the most recent `30` PoW entries in `PoW.md`.
-- Archive overflow entries to `storage/archives/root/PoW-archive-YYYY-MM.md` via `ops/bin/prune`.
+- Archive overflow entries to `archives/surfaces/PoW-archive-YYYY-MM.md` via `ops/bin/prune`.
 
 ## Forensic Insight
 PoW converts process claims into auditable evidence chains.

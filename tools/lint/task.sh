@@ -224,10 +224,11 @@ check_task_dashboard() {
   local -a canon_expected=(
     "1. PoT.md"
     "2. SoP.md"
-    "3. TASK.md"
-    "4. docs/MAP.md"
-    "5. docs/MANUAL.md"
-    "6. ops/lib/manifests/CONTEXT.md"
+    "3. PoW.md"
+    "4. TASK.md"
+    "5. docs/MAP.md"
+    "6. docs/MANUAL.md"
+    "7. ops/lib/manifests/CONTEXT.md"
   )
   local expected
   for expected in "${canon_expected[@]}"; do
@@ -238,8 +239,8 @@ check_task_dashboard() {
 
   local canon_count
   canon_count="$(grep -cE '^[[:space:]]*[0-9]+\.[[:space:]]' <<< "$canon_block" || true)"
-  if [[ "$canon_count" != "6" ]]; then
-    fail "TASK canon load order must contain exactly six numbered items"
+  if [[ "$canon_count" != "7" ]]; then
+    fail "TASK canon load order must contain exactly seven numbered items"
   fi
   if grep -nE '(tools/|ops/bin/|docs/ops/specs/)' <<< "$canon_block" >/dev/null; then
     fail "TASK canon load order is bloated; tools/binaries belong in DP-scoped load order"

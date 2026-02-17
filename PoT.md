@@ -12,7 +12,10 @@ Filing:
 - `docs/` = Explain (manuals and rationale).
 - `opt/` = Isolate (JIT-only  content excluded from global context).
 - `projects/` = Work (payload code).
-- `storage/` = Trash (local artifacts, never canon).
+- `storage/` = Payload (handoff, dumps, dp).
+- `var/tmp/` = Resume (ephemeral worker scratch and task-local workspace).
+- `logs/` = Telemetry (runtime logs and diagnostics).
+- `archives/` = Cold (long-lived draft and ledger archives).
 
 ### 1.2 Axioms
 - Precedence: PoT is final authority; if conflict exists, stop and ask.

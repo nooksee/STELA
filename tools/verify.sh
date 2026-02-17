@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Stela Repo Hygiene Verification
-# Purpose: Ensure repo root contains only Platform artifacts and CMS payloads are contained in projects/.
+# Purpose: Ensure repo topology matches filing doctrine and payload surfaces remain bounded.
 
 if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   REPO_ROOT="$(git rev-parse --show-toplevel)"
@@ -38,6 +38,10 @@ required_dirs=(
   "tools"
   "projects"
   ".github"
+  "storage"
+  "var"
+  "logs"
+  "archives"
 )
 
 for d in "${required_dirs[@]}"; do
@@ -46,24 +50,62 @@ for d in "${required_dirs[@]}"; do
   fi
 done
 
-# 2. Storage Hygiene Check
-# Required storage subdirs
+# 2. Payload and Runtime Hygiene Check
+# Required storage payload subdirs
 if [[ ! -d "storage/handoff" ]]; then
   fail "Missing required storage: 'storage/handoff/'"
 fi
 if [[ ! -d "storage/dumps" ]]; then
   fail "Missing required storage: 'storage/dumps/'"
 fi
-if [[ ! -d "storage/tmp" ]]; then
-  fail "Missing required storage: 'storage/tmp/'"
+if [[ ! -d "storage/dp" ]]; then
+  fail "Missing required storage: 'storage/dp/'"
 fi
 
+# Required resume and telemetry roots
+if [[ ! -d "var/tmp" ]]; then
+  fail "Missing required resume directory: 'var/tmp/'"
+fi
+if [[ ! -d "logs" ]]; then
+  fail "Missing required telemetry directory: 'logs/'"
+fi
+
+# Required cold archive subdirs
+archive_required=(
+  "archives/surfaces"
+  "archives/definitions"
+  "archives/definitions"
+  "archives/definitions"
+  "archives/manifests"
+)
+for d in "${archive_required[@]}"; do
+  if [[ ! -d "$d" ]]; then
+    fail "Missing required archive directory: '${d}/'"
+  fi
+done
+
+# Required skeleton placeholders for ignored runtime roots
+placeholder_required=(
+  "var/tmp/.gitkeep"
+  "logs/.gitkeep"
+  "archives/surfaces/.gitkeep"
+  "archives/definitions/.gitkeep"
+  "archives/definitions/.gitkeep"
+  "archives/definitions/.gitkeep"
+  "archives/manifests/.gitkeep"
+)
+for f in "${placeholder_required[@]}"; do
+  if [[ ! -f "$f" ]]; then
+    fail "Missing required placeholder file: '${f}'"
+  fi
+done
+
 # Drift check: warn on unexpected clutter in storage/
-# Allowed: README.md, .gitignore, handoff, dumps, dp, _scratch, archives, tmp
+# Allowed payload items: README.md, .gitignore, handoff, dumps, dp
 for item in storage/*; do
   name="$(basename "$item")"
   case "$name" in
-    README.md|.gitignore|handoff|dumps|dp|_scratch|archives|tmp)
+    README.md|.gitignore|handoff|dumps|dp)
       ;;
     *)
       warn "Storage drift: unexpected item 'storage/$name'. Keep storage/ clean."

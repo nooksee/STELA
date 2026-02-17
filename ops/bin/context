@@ -57,7 +57,7 @@ project_require_executable "$OPEN_BIN"
 project_require_file "${PROJECT_REPO_ROOT}/${MANIFEST_PATH}"
 
 mkdir -p "${PROJECT_REPO_ROOT}/storage/handoff"
-mkdir -p "${PROJECT_REPO_ROOT}/storage/tmp"
+mkdir -p "${PROJECT_REPO_ROOT}/var/tmp"
 
 open_args=(--out=auto)
 if [[ -n "$DP_ID" ]]; then
@@ -76,7 +76,7 @@ branch_name="$(git -C "${PROJECT_REPO_ROOT}" rev-parse --abbrev-ref HEAD)"
 head_short="$(git -C "${PROJECT_REPO_ROOT}" rev-parse --short HEAD)"
 branch_safe="${branch_name//\//-}"
 
-tmp_file="$(mktemp "${PROJECT_REPO_ROOT}/storage/tmp/context-stream.XXXXXX")"
+tmp_file="$(mktemp "${PROJECT_REPO_ROOT}/var/tmp/context-stream.XXXXXX")"
 cleanup() {
   rm -f "$tmp_file"
 }

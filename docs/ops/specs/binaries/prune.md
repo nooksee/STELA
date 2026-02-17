@@ -10,12 +10,12 @@ It enforces proof safety before destructive actions and keeps cleanup behavior c
 - Default target: `sop`.
 - Retention: keep newest `30` entries per ledger.
 - Archive destinations:
-  - SoP overflow: `storage/archives/root/SoP-archive-YYYY-MM.md`
-  - PoW overflow: `storage/archives/root/PoW-archive-YYYY-MM.md`
+  - SoP overflow: `archives/surfaces/SoP-archive-YYYY-MM.md`
+  - PoW overflow: `archives/surfaces/PoW-archive-YYYY-MM.md`
 - Cleanup surfaces:
   - Handoff aging cleanup (older than seven days, DP-aware keep rules).
   - DP-target artifact cleanup in `storage/handoff/` and `storage/dumps/`.
-  - Optional `storage/tmp/` scrub.
+  - Optional `var/tmp/` scrub.
 - TASK reset:
   - Extracts embedded template from `docs/ops/specs/surfaces/task.md`.
   - Lints extracted template with `bash tools/lint/task.sh` before overwrite.
@@ -56,7 +56,7 @@ PoW guard (hard stop):
 - `--dp`: delete artifacts matching DP token from handoff and dumps.
 - no `--dp`: age-based handoff cleanup with active DP protection.
 7. If requested, run `--reset-task` PoW proof gate then template reset.
-8. If requested, run `--scrub` on `storage/tmp/` except `.gitignore`.
+8. If requested, run `--scrub` on `var/tmp/` except `.gitkeep`.
 9. In `--dry-run`, print intent only and perform zero writes.
 
 Target ledger logic:

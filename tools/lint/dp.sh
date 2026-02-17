@@ -17,7 +17,7 @@ fi
 cd "$REPO_ROOT" || exit 1
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="0598755e2f4e8b0ade5234f4655fae62c2792541cecc2b46089d083915c97bd2"
+CANONICAL_DP_TEMPLATE_SHA256="62c3128377459513649d5c452aedabe693a514acca31d9f83d0e2667b4e54caf"
 TEMPLATE_RENDER_BIN="ops/bin/template"
 ALLOWLIST_POINTER_PATH_DEFAULT="storage/dp/active/allowlist.txt"
 
@@ -753,6 +753,12 @@ check_allowlist_pointer_integrity() {
     fi
 
     if [[ ! -e "${REPO_ROOT}/${normalized}" ]]; then
+      # Allow deleted tracked files to stay in the allowlist while a DP is in-flight.
+      # This keeps the hard gate satisfiable for deletion patches without masking typos.
+      if git diff --name-only --diff-filter=D -- "${normalized}" | grep -Fxq "${normalized}" \
+        || git diff --cached --name-only --diff-filter=D -- "${normalized}" | grep -Fxq "${normalized}"; then
+        continue
+      fi
       fail "allowlist entry does not exist: ${normalized}"
     fi
   done

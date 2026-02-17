@@ -35,7 +35,7 @@ Enforcement linkage:
 
 Archive and retention behavior:
 - Keep the most recent `30` SoP entries in `SoP.md`.
-- Archive overflow to `storage/archives/root/SoP-archive-YYYY-MM.md` via `ops/bin/prune`.
+- Archive overflow to `archives/surfaces/SoP-archive-YYYY-MM.md` via `ops/bin/prune`.
 - Archive files are continuation ledgers, not replacements for active SoP.
 
 ## Forensic Insight

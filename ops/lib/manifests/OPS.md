@@ -20,6 +20,7 @@
 - `docs/ops/specs/binaries/open.md`
 - `docs/ops/specs/binaries/project.md`
 - `docs/ops/specs/binaries/prune.md`
+- `docs/ops/specs/binaries/template.md`
 - `docs/ops/specs/scripts/agent.md`
 - `docs/ops/specs/scripts/heuristics.md`
 - `docs/ops/specs/scripts/project.md`
@@ -32,7 +33,7 @@
 - `docs/ops/specs/tools/lint/agent.md`
 - `docs/ops/specs/tools/lint/context.md`
 - `docs/ops/specs/tools/lint/dp.md`
-- `docs/ops/specs/tools/lint/.md`
+- `docs/ops/specs/tools/lint/factory.md`
 - `docs/ops/specs/tools/lint/llms.md`
 - `docs/ops/specs/tools/lint/project.md`
 - `docs/ops/specs/tools/lint/style.md`
@@ -50,3 +51,4 @@
 - `ops/bin/open`
 - `ops/bin/project`
 - `ops/bin/prune`
+- `ops/bin/template`

@@ -212,9 +212,12 @@ if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
     done
 
     hazard_patterns=(
-      'storage/archives/agents'
-      'storage/archives/'
-      'storage/archives'
+      'archives/definitions'
+      'archives/definitions'
+      'archives/definitions'
+      'archives/manifests'
+      'archives/surfaces'
+      'archives/'
       'storage/handoff'
       'storage/dumps'
       'OPEN-[A-Za-z0-9._-]+\\.txt'
