@@ -852,6 +852,7 @@ Session State contract:
 - OPEN (and OPEN-PORCELAIN when dirty) is the session state snapshot.
 - RESULTS is the audit record for the DP.
 - TASK is the stable routing surface.
+- Operator note (2026-02-17): Do not run `./ops/bin/prune --reset-task` again and do not edit `SoP.md` or `PoW.md` unless explicitly instructed.
 
 ## 2. Logic Pointers
 Primary Constraint: PoT.md (Policy of Truth).
@@ -896,13 +897,13 @@ Input discipline (hard rule):
 - DP writer must not include pasted bundles (OPEN, DUMP payloads, manifests) inside the DP body.
 - Canon pointers only. Evidence belongs in storage artifacts and RESULTS.
 
-### DP-OPS-0068: Quartet Filing Doctrine and Topology Alignment
+### DP-OPS-0069: System Locked Protocol Template-Based Certification Cutover
 
 ## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Required Work Branch: work/dp-ops-0068-2026-02-16
-Base HEAD: 80bb3afd
-Freshness Stamp: 2026-02-16
+Required Work Branch: work/dp-ops-0069-2026-02-17
+Base HEAD: f3d6b2e4
+Freshness Stamp: 2026-02-17
 
 Required local re-check (worker runs; paste outputs in RESULTS):
 - git rev-parse --abbrev-ref HEAD
@@ -950,49 +951,40 @@ Notes:
 - DP writer must not embed pasted bundles.
 
 ### 3.2.2 DP-scoped load order (per DP)
-1. .gitignore
-2. ops/bin/prune
-3. docs/ops/specs/binaries/prune.md
-4. tools/verify.sh
-5. docs/ops/specs/tools/verify.md
-6. ops/bin/context
-7. docs/ops/specs/binaries/context.md
-8. ops/bin/map
-9. ops/lib/scripts/agent.sh
-10. ops/lib/scripts/task.sh
-11. ops/lib/scripts/skill.sh
-12. docs/ops/specs/scripts/agent.md
-13. docs/ops/specs/scripts/task.md
-14. docs/ops/specs/scripts/skill.md
-15. docs/ops/specs/surfaces/sop.md
-16. docs/ops/specs/surfaces/pow.md
-17. opt/_factory/AGENTS.md
-18. opt/_factory/TASKS.md
-19. opt/_factory/SKILLS.md
-20. tools/lint/agent.sh
-21. ops/bin/llms
-22. tools/lint/llms.sh
+1. docs/ops/registry/BINARIES.md
+2. docs/ops/registry/LINT.md
+3. .github/workflows/repo_gates.yml
+4. ops/bin/template
+5. docs/ops/specs/binaries/template.md
+6. tools/verify.sh
+7. tools/lint/dp.sh
+8. docs/ops/specs/tools/lint/dp.md
+9. tools/lint/style.sh
+10. docs/ops/specs/tools/lint/style.md
+11. docs/ops/specs/binaries/open.md
+12. docs/ops/specs/binaries/dump.md
 
 ## 3.3 Scope and Safety
 Objective:
-Adopt Quartet Filing Doctrine by introducing var/tmp (Resume), logs (Telemetry), and archives (Cold), redefining storage as payload-only, and aligning tooling/docs/specs to the new topology.
+Implement System Locked Protocol template-based certification by adding a strict RESULTS surface, a certifier entrypoint, and integrity/results linters, then wiring the process into governance docs and CI gates.
 
 In scope:
-Update PoT filing doctrine, root ignore policy, runtime/cold skeleton roots, and legacy placeholder retirement.
-Refactor verify/prune/context/map and lifecycle scripts/specs from storage/tmp and storage/archives to var/tmp and archives.
-Regenerate docs/MAP.md via ops/bin/map and llms bundles via ops/bin/llms.
-Update allowlist and receipts for strict audit packet requirements.
+- Create `ops/src/surfaces/results.md.tpl` and register it in `ops/bin/template`.
+- Implement `ops/bin/certify`, `tools/lint/integrity.sh`, and `tools/lint/results.sh` with specs and registry wiring.
+- Update governance/workflow surfaces (`PoT.md`, `docs/MANUAL.md`, `.github/workflows/repo_gates.yml`) for certification-driven closeout.
+- Regenerate `docs/MAP.md` and `llms` bundles after canonical updates.
 
 Out of scope:
-No edits to projects payload code.
-No branch creation or branch switching.
-No historical rewrite of prior ledger entries outside current DP closeout additions.
+- Structural changes to `TASK.md` container schema or `ops/src/surfaces/dp.md.tpl`.
+- Edits to unrelated binaries/lints/registries not required for certification cutover.
+- Manual fabrication of generated receipts.
+- Changes under `projects/` or `archives/`.
 
 Safety and invariants:
-Allowlist hard gate: every changed/untracked path must be covered.
-No manual edits to generated outputs (MAP and llms bundles).
-No repo-root DP artifacts.
-No lowercase manifest duplicates.
+- No manual edits to generated outputs.
+- No structural edits to TASK/DP container contracts.
+- Allowlist hard gate: every tracked mutation must be in `storage/dp/active/allowlist.txt` before execution.
+- Contractor does not commit, merge, rebase, cherry-pick, push, or switch branches.
 
 Worker Constraints (SSOT injected):
 ## Section 1: Universal Template Rules
@@ -1024,67 +1016,48 @@ Target Files allowlist (hard gate):
 ## 3.4 Execution Plan (A-E)
 
 ### 3.4.1 State
-Current work branch is work/dp-ops-0068-2026-02-16 at base HEAD 80bb3afd.
-Working tree is intentionally dirty for in-flight DP packet repair and must be fully evidenced in RESULTS.
-Legacy storage/tmp and storage/archives references were in-scope migration targets for this DP.
+- Active branch: `work/dp-ops-0069-2026-02-17`.
+- Base head remains `f3d6b2e4`.
+- Working tree is intentionally dirty for in-flight DP-OPS-0069 delivery and remediation.
 
 ### 3.4.2 Request
-Produce a single-timestamp, offline-auditable packet where OPEN, OPEN-PORCELAIN, DUMP, AUTH proof, map/llms/verify receipts, and allowlist math all derive from one working-tree state.
+- Deliver strict certification flow with deterministic RESULTS generation and hard-gated integrity/results lint checks.
+- Ensure canonical DP source and receipt generation are consistent with closeout protocol and CI enforcement.
 
 ### 3.4.3 Changelog
-UPDATE: storage/dp/active/allowlist.txt
-UPDATE: PoT.md
-UPDATE: .gitignore
-UPDATE: tools/verify.sh
-UPDATE: docs/ops/specs/tools/verify.md
-UPDATE: ops/bin/prune
-UPDATE: ops/bin/compile
-UPDATE: docs/ops/specs/binaries/prune.md
-UPDATE: ops/bin/context
-UPDATE: docs/ops/specs/binaries/context.md
-UPDATE: ops/bin/map
-UPDATE: docs/MAP.md
-UPDATE: docs/MANUAL.md
-UPDATE: TASK.md
-UPDATE: ops/src/surfaces/dp.md.tpl
-UPDATE: ops/lib/scripts/agent.sh
-UPDATE: ops/lib/scripts/task.sh
-UPDATE: ops/lib/scripts/skill.sh
-UPDATE: docs/ops/specs/scripts/agent.md
-UPDATE: docs/ops/specs/scripts/task.md
-UPDATE: docs/ops/specs/scripts/skill.md
-UPDATE: docs/ops/specs/surfaces/sop.md
-UPDATE: docs/ops/specs/surfaces/pow.md
-UPDATE: opt/_factory/AGENTS.md
-UPDATE: opt/_factory/TASKS.md
-UPDATE: opt/_factory/SKILLS.md
-UPDATE: tools/lint/agent.sh
-UPDATE: tools/lint/dp.sh
-UPDATE: tools/lint/task.sh
-UPDATE: llms.txt
-UPDATE: llms-core.txt
-UPDATE: llms-full.txt
-UPDATE: ops/lib/manifests/OPS.md
-UPDATE: SoP.md
-UPDATE: PoW.md
-UPDATE: storage/handoff/DP-OPS-0068-AMENDED.md
-UPDATE: storage/handoff/DP-OPS-0068-RESULTS.md
-UPDATE: storage/handoff/AUTH-DP-OPS-0068-opt_factory.txt
-DELETE: storage/tmp/.gitignore
-NEW: var/tmp/.gitkeep
-NEW: logs/.gitkeep
-NEW: archives/surfaces/.gitkeep
-NEW: archives/definitions/.gitkeep
-NEW: archives/definitions/.gitkeep
-NEW: archives/definitions/.gitkeep
-NEW: archives/manifests/.gitkeep
+UPDATE:
+- storage/dp/active/allowlist.txt
+- PoT.md
+- SoP.md
+- PoW.md
+- TASK.md
+- docs/MANUAL.md
+- .github/workflows/repo_gates.yml
+- ops/bin/template
+- docs/ops/specs/binaries/template.md
+- docs/ops/registry/BINARIES.md
+- docs/ops/registry/LINT.md
+- docs/MAP.md
+- llms.txt
+- llms-core.txt
+- llms-full.txt
+
+NEW:
+- ops/src/surfaces/results.md.tpl
+- docs/ops/specs/surfaces/results.md
+- ops/bin/certify
+- docs/ops/specs/binaries/certify.md
+- tools/lint/integrity.sh
+- docs/ops/specs/tools/lint/integrity.md
+- tools/lint/results.sh
+- docs/ops/specs/tools/lint/results.md
 
 ### 3.4.4 Patch / Diff
-A) Refresh allowlist and preflight lint.
-B) Apply filing-doctrine and ignore-policy updates.
-C) Refactor binaries/scripts/specs to new runtime/archive roots.
-D) Regenerate MAP/llms and collect strict receipts.
-E) Build single-timestamp packet with OPEN/DUMP/AUTH/allowlist proofs.
+A) Maintain allowlist gate and run preflight/task lint checks.
+B) Implement/verify RESULTS template and template binary registration.
+C) Implement integrity/results lints and register specs.
+D) Implement certifier with deterministic command logging and hard-fail gates.
+E) Regenerate open/dump/map/llms artifacts, rerun verification stack, and certify RESULTS.
 
 ### 3.4.5 Receipt (Proofs to collect) - MUST RUN
 git rev-parse --abbrev-ref HEAD
@@ -1093,7 +1066,7 @@ git status --porcelain
 bash tools/lint/dp.sh --test
 bash tools/lint/dp.sh TASK.md
 bash tools/lint/task.sh
-./ops/bin/open --out=auto --dp="DP-OPS-0068"
+./ops/bin/open --out=auto --dp="DP-OPS-0069"
 ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
 ./ops/bin/map
 ./ops/bin/map --check
@@ -1117,7 +1090,7 @@ Mandatory Closing Block required in RESULTS.
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
-- Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-0068 --scrub.
+- Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-0069 --scrub.
 - Use ./ops/bin/prune --reset-task only for explicit TASK baseline reset after PoW entry exists for the active DP id.
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
