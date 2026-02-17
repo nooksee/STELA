@@ -1,5 +1,4 @@
 storage/dp/active/allowlist.txt
-storage/dp/intake/DP-OPS-0069.md
 PoT.md
 SoP.md
 PoW.md
@@ -23,5 +22,3 @@ tools/lint/integrity.sh
 docs/ops/specs/tools/lint/integrity.md
 tools/lint/results.sh
 docs/ops/specs/tools/lint/results.md
-storage/handoff/DP-OPS-0069-RESULTS.md
-storage/handoff/CLOSING-DP-OPS-0069.md

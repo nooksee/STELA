@@ -57,12 +57,13 @@ Input discipline (hard rule):
 - DP writer must not include pasted bundles (OPEN, DUMP payloads, manifests) inside the DP body.
 - Canon pointers only. Evidence belongs in storage artifacts and RESULTS.
 
-### DP-XXXX: (Template)
+### DP-OPS-0069: System Locked Protocol Template-Based Certification Cutover
 
 ## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
-Base HEAD: 0000000 (Must match session context output)
+Required Work Branch: work/dp-ops-0069-2026-02-17
+Base HEAD: f3d6b2e4
+Freshness Stamp: 2026-02-17
 
 Required local re-check (worker runs; paste outputs in RESULTS):
 - git rev-parse --abbrev-ref HEAD
@@ -110,62 +111,146 @@ Notes:
 - DP writer must not embed pasted bundles.
 
 ### 3.2.2 DP-scoped load order (per DP)
-- tools/lint/dp.sh
-- tools/lint/task.sh
-- ops/bin/prune
-- docs/ops/specs/surfaces/task.md
-- docs/ops/specs/binaries/prune.md
-- docs/ops/specs/binaries/open.md (pointer reference only; OPEN behavior is not modified in this DP)
+1. docs/ops/registry/BINARIES.md
+2. docs/ops/registry/LINT.md
+3. .github/workflows/repo_gates.yml
+4. ops/bin/template
+5. docs/ops/specs/binaries/template.md
+6. tools/verify.sh
+7. tools/lint/dp.sh
+8. docs/ops/specs/tools/lint/dp.md
+9. tools/lint/style.sh
+10. docs/ops/specs/tools/lint/style.md
+11. docs/ops/specs/binaries/open.md
+12. docs/ops/specs/binaries/dump.md
 
 ## 3.3 Scope and Safety
-Objective: Populate during execution; do not pre-fill in TASK.md.
-In scope: Populate during execution; do not pre-fill in TASK.md.
-Out of scope: Populate during execution; do not pre-fill in TASK.md.
-Safety and invariants: Populate during execution; do not pre-fill in TASK.md.
+Objective:
+Implement System Locked Protocol template-based certification by adding a strict RESULTS surface, a certifier entrypoint, and integrity/results linters, then wiring the process into governance docs and CI gates.
+
+In scope:
+- Create `ops/src/surfaces/results.md.tpl` and register it in `ops/bin/template`.
+- Implement `ops/bin/certify`, `tools/lint/integrity.sh`, and `tools/lint/results.sh` with specs and registry wiring.
+- Update governance/workflow surfaces (`PoT.md`, `docs/MANUAL.md`, `.github/workflows/repo_gates.yml`) for certification-driven closeout.
+- Regenerate `docs/MAP.md` and `llms` bundles after canonical updates.
+
+Out of scope:
+- Structural changes to `TASK.md` container schema or `ops/src/surfaces/dp.md.tpl`.
+- Edits to unrelated binaries/lints/registries not required for certification cutover.
+- Manual fabrication of generated receipts.
+- Changes under `projects/` or `archives/`.
+
+Safety and invariants:
+- No manual edits to generated outputs.
+- No structural edits to TASK/DP container contracts.
+- Allowlist hard gate: every tracked mutation must be in `storage/dp/active/allowlist.txt` before execution.
+- Contractor does not commit, merge, rebase, cherry-pick, push, or switch branches.
+
+Worker Constraints (SSOT injected):
+## Section 1: Universal Template Rules
+- Templates are authored as `.tpl` files and may begin with YAML frontmatter.
+- Frontmatter keys are canonical and machine-read:
+  - `template_type`
+  - `template_id`
+  - `template_version`
+  - `requires_slots`
+  - `includes`
+- Rendered output must strip YAML frontmatter before writing output.
+- Slot tokens are `\{\{TOKEN\}\}` where `TOKEN` is uppercase alphanumeric with underscores.
+- Include directives are supported in template body content:
+  - `\{\{@include:path\}\}`
+  - `\{\{@include:path#section\}\}`
+- Include resolution is deterministic and strict:
+  - Missing files fail render.
+  - Missing section anchors fail render.
+  - Circular include graphs fail render.
+- Strict mode is default for worker-facing output:
+  - Every `requires_slots` token must be provided.
+  - Unresolved `\{\{TOKEN\}\}` placeholders fail render.
+- Non-strict mode is allowed only for linting and normalization workflows.
+- Generated worker-facing surfaces must remain pointer-first and must not embed disposable artifacts.
 
 Target Files allowlist (hard gate):
 - storage/dp/active/allowlist.txt
 
-## 3.4 Execution Plan (A–E)
+## 3.4 Execution Plan (A-E)
 
 ### 3.4.1 State
-Populate during execution; do not pre-fill in TASK.md.
+- Active branch: `work/dp-ops-0069-2026-02-17`.
+- Base head remains `f3d6b2e4`.
+- Working tree is intentionally dirty for in-flight DP-OPS-0069 delivery and remediation.
 
 ### 3.4.2 Request
-Populate during execution; do not pre-fill in TASK.md.
+- Deliver strict certification flow with deterministic RESULTS generation and hard-gated integrity/results lint checks.
+- Ensure canonical DP source and receipt generation are consistent with closeout protocol and CI enforcement.
 
 ### 3.4.3 Changelog
-Populate during execution; do not pre-fill in TASK.md.
+UPDATE:
+- storage/dp/active/allowlist.txt
+- PoT.md
+- SoP.md
+- PoW.md
+- TASK.md
+- docs/MANUAL.md
+- .github/workflows/repo_gates.yml
+- ops/bin/template
+- docs/ops/specs/binaries/template.md
+- docs/ops/registry/BINARIES.md
+- docs/ops/registry/LINT.md
+- docs/MAP.md
+- llms.txt
+- llms-core.txt
+- llms-full.txt
+
+NEW:
+- ops/src/surfaces/results.md.tpl
+- docs/ops/specs/surfaces/results.md
+- ops/bin/certify
+- docs/ops/specs/binaries/certify.md
+- tools/lint/integrity.sh
+- docs/ops/specs/tools/lint/integrity.md
+- tools/lint/results.sh
+- docs/ops/specs/tools/lint/results.md
 
 ### 3.4.4 Patch / Diff
-Populate during execution; do not pre-fill in TASK.md.
+A) Maintain allowlist gate and run preflight/task lint checks.
+B) Implement/verify RESULTS template and template binary registration.
+C) Implement integrity/results lints and register specs.
+D) Implement certifier with deterministic command logging and hard-fail gates.
+E) Regenerate open/dump/map/llms artifacts, rerun verification stack, and certify RESULTS.
 
 ### 3.4.5 Receipt (Proofs to collect) - MUST RUN
-- ./ops/bin/open --out=auto --dp="DP-OPS-XXXX"
-- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
-- Zero-byte check: test -s <dump_payload_path>
-- bash tools/lint/context.sh
-- bash tools/lint/style.sh
-- bash tools/lint/truth.sh
-- bash tools/lint/dp.sh --test
-- bash tools/lint/dp.sh TASK.md
-- bash tools/lint/task.sh
-- bash tools/lint/llms.sh
-- ./tools/verify.sh
-- ./ops/bin/prune --dry-run
-- ./ops/bin/prune --target=pow --dry-run
-- bash tools/lint/dp.sh storage/handoff/DP-OPS-XXXX-RESULTS.md
-- git diff --name-only
-- git diff --stat
-- Verify Section 3.5 Closing Block is populated in RESULTS.
-- Required pasted outputs: receipts, verification outcomes, and diff output.
-- Mandatory Closing Block required in RESULTS.
+git rev-parse --abbrev-ref HEAD
+git rev-parse --short HEAD
+git status --porcelain
+bash tools/lint/dp.sh --test
+bash tools/lint/dp.sh TASK.md
+bash tools/lint/task.sh
+./ops/bin/open --out=auto --dp="DP-OPS-0069"
+./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
+./ops/bin/map
+./ops/bin/map --check
+./ops/bin/llms
+./tools/verify.sh
+./tools/lint/truth.sh
+./tools/lint/style.sh
+./tools/lint/context.sh
+./tools/lint/agent.sh
+./tools/lint/llms.sh
+bash tools/lint/factory.sh
+git diff --name-only
+git diff --stat
+comm -23 <(git diff --name-only | sort) <(sort storage/dp/active/allowlist.txt) || true
+comm -23 <(git ls-files --others --exclude-standard | sort) <(sort storage/dp/active/allowlist.txt) || true
+Verify Section 3.5 Closing Block is populated in RESULTS.
+Required pasted outputs: receipts, verification outcomes, and diff output.
+Mandatory Closing Block required in RESULTS.
 
 ## 3.5 Closeout (Mandatory Routing)
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
-- Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-XXXX --scrub.
+- Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-0069 --scrub.
 - Use ./ops/bin/prune --reset-task only for explicit TASK baseline reset after PoW entry exists for the active DP id.
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
