@@ -14,3 +14,4 @@ Authoritative registry for `ops/bin/*` entrypoints.
 | OPS-BIN-08 | Prune | ops/bin/prune | Spec: `docs/ops/specs/binaries/prune.md`. Cleans local artifacts and performs DP-targeted scrub workflows. |
 | OPS-BIN-09 | Manifest Compiler | ops/bin/compile | Spec: `docs/ops/specs/binaries/compile.md`. Compiles manifest templates from `ops/src/manifests/` into deterministic explicit outputs in `ops/lib/manifests/`. |
 | OPS-BIN-10 | Template Renderer | ops/bin/template | Spec: `docs/ops/specs/binaries/template.md`. Renders `.tpl` surfaces/definitions with frontmatter parsing, include injection, and strict slot validation. |
+| OPS-BIN-11 | Certifier | ops/bin/certify | Spec: `docs/ops/specs/binaries/certify.md`. Runs integrity and receipt verification gates, then renders and validates DP RESULTS artifacts. |

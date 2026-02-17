@@ -74,6 +74,7 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Linguistic Precision: No contractions across any scope, including projects.
 - Linguistic Precision: Quantitative reporting required for deviations from protocol.
 - Generation Mandate: Verification outputs must be generated, not pre-filled or assumed.
+- Generation Mandate: DP RESULTS receipts are generated artifacts produced by `ops/bin/certify`; manual fabrication is prohibited.
 - Linguistic Precision: Absolute literalism; seek clarification for ambiguity before proceeding.
 - Relatability Mandate: Universal accessibility via vernacular optimization and anecdotal grounding.
 - Operational Directives: Anti-drift governance; logic or files misaligned with PoT.md are a system failure.
@@ -117,6 +118,8 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Generate DP structure with `./ops/bin/draft`; do not hand-author structural boilerplate in `TASK.md`.
 - Edit only approved DP slot content after draft generation.
 - If canonical DP template hash or normalized structure hash fails in `tools/lint/dp.sh`, stop and repair before proceeding.
+- Maintain closing-sidecar input at `storage/handoff/CLOSING-DP-OPS-XXXX.md` during execution.
+- Run `./ops/bin/certify --dp=DP-OPS-XXXX --out=auto` to execute receipt commands and generate RESULTS.
 
 ### 5.2.3 Branching Doctrine (SSoT)
 - Immutable Trunk: main is verified state; direct pushes are forbidden.

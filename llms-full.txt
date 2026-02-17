@@ -75,6 +75,7 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Linguistic Precision: No contractions across any scope, including projects.
 - Linguistic Precision: Quantitative reporting required for deviations from protocol.
 - Generation Mandate: Verification outputs must be generated, not pre-filled or assumed.
+- Generation Mandate: DP RESULTS receipts are generated artifacts produced by `ops/bin/certify`; manual fabrication is prohibited.
 - Linguistic Precision: Absolute literalism; seek clarification for ambiguity before proceeding.
 - Relatability Mandate: Universal accessibility via vernacular optimization and anecdotal grounding.
 - Operational Directives: Anti-drift governance; logic or files misaligned with PoT.md are a system failure.
@@ -118,6 +119,8 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Generate DP structure with `./ops/bin/draft`; do not hand-author structural boilerplate in `TASK.md`.
 - Edit only approved DP slot content after draft generation.
 - If canonical DP template hash or normalized structure hash fails in `tools/lint/dp.sh`, stop and repair before proceeding.
+- Maintain closing-sidecar input at `storage/handoff/CLOSING-DP-OPS-XXXX.md` during execution.
+- Run `./ops/bin/certify --dp=DP-OPS-XXXX --out=auto` to execute receipt commands and generate RESULTS.
 
 ### 5.2.3 Branching Doctrine (SSoT)
 - Immutable Trunk: main is verified state; direct pushes are forbidden.
@@ -196,6 +199,70 @@ Archive policy: keep most recent 30 entries; older entries moved to `archives/su
 - `- Verification commands:`
 - `  - <command>`
 - `- Notes: <audit note>`
+
+## 2026-02-17 18:17:24 UTC — DP-OPS-0069 System Locked Protocol Certification Cutover
+- Packet ID: DP-OPS-0069
+- Timestamp: 2026-02-17T18:17:24Z
+- Work Branch: work/dp-ops-0069-2026-02-17
+- Base HEAD: f3d6b2e4
+- Scope: platform
+- Target Files allowlist:
+  - storage/dp/active/allowlist.txt
+  - storage/dp/intake/DP-OPS-0069.md
+  - PoT.md
+  - SoP.md
+  - PoW.md
+  - docs/MANUAL.md
+  - .github/workflows/repo_gates.yml
+  - ops/bin/template
+  - docs/ops/specs/binaries/template.md
+  - docs/ops/registry/BINARIES.md
+  - docs/ops/registry/LINT.md
+  - docs/MAP.md
+  - llms.txt
+  - llms-core.txt
+  - llms-full.txt
+  - ops/src/surfaces/results.md.tpl
+  - docs/ops/specs/surfaces/results.md
+  - ops/bin/certify
+  - docs/ops/specs/binaries/certify.md
+  - tools/lint/integrity.sh
+  - docs/ops/specs/tools/lint/integrity.md
+  - tools/lint/results.sh
+  - docs/ops/specs/tools/lint/results.md
+  - storage/handoff/DP-OPS-0069-RESULTS.md
+  - storage/handoff/CLOSING-DP-OPS-0069.md
+- Receipt pointers:
+  - RESULTS: storage/handoff/DP-OPS-0069-RESULTS.md
+  - OPEN: storage/handoff/OPEN-work-dp-ops-0069-2026-02-17-f3d6b2e4.txt
+  - DUMP: storage/dumps/dump-platform-work-dp-ops-0069-2026-02-17-f3d6b2e4.txt
+- Verification commands:
+  - git rev-parse --abbrev-ref HEAD
+  - git rev-parse --short HEAD
+  - git status --porcelain
+  - bash tools/lint/dp.sh --test
+  - bash tools/lint/dp.sh TASK.md
+  - bash tools/lint/task.sh
+  - ./ops/bin/open --out=auto --dp="DP-OPS-0069"
+  - ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
+  - ./ops/bin/map
+  - ./ops/bin/map --check
+  - ./ops/bin/llms
+  - ./tools/verify.sh
+  - ./tools/lint/truth.sh
+  - ./tools/lint/style.sh
+  - ./tools/lint/context.sh
+  - ./tools/lint/agent.sh
+  - ./tools/lint/llms.sh
+  - bash tools/lint/factory.sh
+  - git diff --name-only
+  - git diff --stat
+  - comm -23 <(git diff --name-only | sort) <(sort storage/dp/active/allowlist.txt) || true
+  - comm -23 <(git ls-files --others --exclude-standard | sort) <(sort storage/dp/active/allowlist.txt) || true
+  - bash tools/lint/integrity.sh
+  - ./ops/bin/certify --dp="DP-OPS-0069" --out=auto
+  - bash tools/lint/results.sh storage/handoff/DP-OPS-0069-RESULTS.md
+- Notes: 2 closeout deviations were remediated before final certification: DP freshness-state mismatch versus OPEN, and DP/receipt disposable-artifact dependence. Canonical DP source was normalized, certify/results guards were hardened to reject disposable references, and RESULTS was regenerated via `ops/bin/certify`.
 
 ## 2026-02-16 20:10:44 UTC — DP-OPS-0068 Quartet Filing Doctrine and Topology Alignment
 - Packet ID: DP-OPS-0068
@@ -723,6 +790,12 @@ See PoT.md Section 1 for the developer guide.
 ## SoP.md
 Archive policy: keep most recent 30 entries; older entries moved to `archives/surfaces/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-17 18:17:24 UTC — DP-OPS-0069 System Locked Protocol Certification Cutover
+- Objective: Implemented template-based certification closeout by adding strict RESULTS surface support, certifier execution (`ops/bin/certify`), integrity/results lint gates, and governance/CI wiring for certification-driven closeout.
+- Target Files allowlist: `storage/dp/active/allowlist.txt` (pointer sidecar, exact path list).
+- Verification: `git rev-parse --abbrev-ref HEAD`; `git rev-parse --short HEAD`; `git status --porcelain`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `./ops/bin/open --out=auto --dp="DP-OPS-0069"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `./ops/bin/map`; `./ops/bin/map --check`; `./ops/bin/llms`; `./tools/verify.sh`; `./tools/lint/truth.sh`; `./tools/lint/style.sh`; `./tools/lint/context.sh`; `./tools/lint/agent.sh`; `./tools/lint/llms.sh`; `bash tools/lint/factory.sh`; `bash tools/lint/integrity.sh`; `./ops/bin/certify --dp="DP-OPS-0069" --out=auto`; `bash tools/lint/results.sh storage/handoff/DP-OPS-0069-RESULTS.md`.
+- Closeout hardening: Remediated two validation failures before final certification by removing disposable-artifact coupling from DP/RESULTS surfaces and re-aligning closeout state to OPEN-driven canonical certification outputs.
+
 ## 2026-02-16 20:10:44 UTC — DP-OPS-0068 Quartet Filing Doctrine and Topology Alignment
 - Objective: Adopted Quartet Filing Doctrine by redefining `storage/` as payload-only, introducing `var/tmp` (Resume), `logs` (Telemetry), and `archives` (Cold), and aligning platform tooling/specs/factory docs plus generated `MAP` and `llms` outputs to the new topology.
 - Target Files allowlist: `storage/dp/active/allowlist.txt` (pointer sidecar, exact path list).
@@ -771,12 +844,6 @@ Archive policy: keep most recent 30 entries; older entries moved to `archives/su
 - Objective: Replaced split execution/discovery context pipelines with One Truth layering (`CORE.md`, `OPS.md`, `DISCOVERY.md`), introduced `ops/lib/scripts/synthesize.sh` as the single manifest parser/hazard enforcer/emitter, wrapped `ops/bin/context` and `ops/bin/llms` around the unified synthesizer, deprecated/removing redundant llms slice bundles, and hardened prompt + lint policy for llms refresh and DP context-load constraints.
 - Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
 - Functional receipts: `./ops/bin/open --out=auto`; `./ops/bin/context --out=auto`; `./ops/bin/llms --out-dir="$(pwd)"`; `./ops/lib/scripts/agent.sh harvest-check`; `./ops/bin/map`; `./ops/bin/prune --dp=DP-OPS-0059 --scrub`.
-
-## 2026-02-13 03:17:37 UTC — DP-OPS-0058 Tooling Safety and Protocol Hardening
-- Objective: Hardened `ops/bin/prune` with an uncommitted RESULTS guard and explicit `--reset-task`, decoupled `--scrub` from TASK reset behavior, and aligned TASK/spec protocol surfaces with CI receipt and closeout requirements.
-- Verification: `bash tools/lint/context.sh`; `bash tools/lint/style.sh`; `bash tools/lint/truth.sh`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `bash tools/lint/llms.sh`; `./tools/verify.sh`.
-- Protocol: Verify → Generate Results → COMMIT (Operator Only) → Prune.
-- Functional receipts: `./ops/bin/open --out=auto --dp="DP-OPS-0058"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `test -s <dump_payload_path>`; `./ops/bin/prune --dp=DP-OPS-0058`; `./ops/bin/prune --scrub`.
 
 
 

@@ -32,6 +32,70 @@ Archive policy: keep most recent 30 entries; older entries moved to `archives/su
 - `  - <command>`
 - `- Notes: <audit note>`
 
+## 2026-02-17 18:17:24 UTC — DP-OPS-0069 System Locked Protocol Certification Cutover
+- Packet ID: DP-OPS-0069
+- Timestamp: 2026-02-17T18:17:24Z
+- Work Branch: work/dp-ops-0069-2026-02-17
+- Base HEAD: f3d6b2e4
+- Scope: platform
+- Target Files allowlist:
+  - storage/dp/active/allowlist.txt
+  - storage/dp/intake/DP-OPS-0069.md
+  - PoT.md
+  - SoP.md
+  - PoW.md
+  - docs/MANUAL.md
+  - .github/workflows/repo_gates.yml
+  - ops/bin/template
+  - docs/ops/specs/binaries/template.md
+  - docs/ops/registry/BINARIES.md
+  - docs/ops/registry/LINT.md
+  - docs/MAP.md
+  - llms.txt
+  - llms-core.txt
+  - llms-full.txt
+  - ops/src/surfaces/results.md.tpl
+  - docs/ops/specs/surfaces/results.md
+  - ops/bin/certify
+  - docs/ops/specs/binaries/certify.md
+  - tools/lint/integrity.sh
+  - docs/ops/specs/tools/lint/integrity.md
+  - tools/lint/results.sh
+  - docs/ops/specs/tools/lint/results.md
+  - storage/handoff/DP-OPS-0069-RESULTS.md
+  - storage/handoff/CLOSING-DP-OPS-0069.md
+- Receipt pointers:
+  - RESULTS: storage/handoff/DP-OPS-0069-RESULTS.md
+  - OPEN: storage/handoff/OPEN-work-dp-ops-0069-2026-02-17-f3d6b2e4.txt
+  - DUMP: storage/dumps/dump-platform-work-dp-ops-0069-2026-02-17-f3d6b2e4.txt
+- Verification commands:
+  - git rev-parse --abbrev-ref HEAD
+  - git rev-parse --short HEAD
+  - git status --porcelain
+  - bash tools/lint/dp.sh --test
+  - bash tools/lint/dp.sh TASK.md
+  - bash tools/lint/task.sh
+  - ./ops/bin/open --out=auto --dp="DP-OPS-0069"
+  - ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
+  - ./ops/bin/map
+  - ./ops/bin/map --check
+  - ./ops/bin/llms
+  - ./tools/verify.sh
+  - ./tools/lint/truth.sh
+  - ./tools/lint/style.sh
+  - ./tools/lint/context.sh
+  - ./tools/lint/agent.sh
+  - ./tools/lint/llms.sh
+  - bash tools/lint/factory.sh
+  - git diff --name-only
+  - git diff --stat
+  - comm -23 <(git diff --name-only | sort) <(sort storage/dp/active/allowlist.txt) || true
+  - comm -23 <(git ls-files --others --exclude-standard | sort) <(sort storage/dp/active/allowlist.txt) || true
+  - bash tools/lint/integrity.sh
+  - ./ops/bin/certify --dp="DP-OPS-0069" --out=auto
+  - bash tools/lint/results.sh storage/handoff/DP-OPS-0069-RESULTS.md
+- Notes: 2 closeout deviations were remediated before final certification: DP freshness-state mismatch versus OPEN, and DP/receipt disposable-artifact dependence. Canonical DP source was normalized, certify/results guards were hardened to reject disposable references, and RESULTS was regenerated via `ops/bin/certify`.
+
 ## 2026-02-16 20:10:44 UTC — DP-OPS-0068 Quartet Filing Doctrine and Topology Alignment
 - Packet ID: DP-OPS-0068
 - Timestamp: 2026-02-16T20:10:44Z

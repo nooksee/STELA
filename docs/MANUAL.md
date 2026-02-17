@@ -22,7 +22,7 @@
 
 ## Closeout Cycle
 The Closeout Cycle is the canonical closeout workflow. Execute the stages in order.
-Closeout work is concurrent with execution: draft and maintain receipts and the Mandatory Closing Block during the DP, not only at the end.
+Closeout work is concurrent with execution: maintain the human-authored Closing Block sidecar during the DP, not only at the end.
 Finalize closeout only after verification gates pass.
 Finalization protocol order is strict: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
 The canonical Mandatory Closing Block schema is defined in `TASK.md` Section 3.5.1.
@@ -33,21 +33,30 @@ Run:
 ./tools/verify.sh
 ./tools/lint/truth.sh
 ./tools/lint/style.sh
+./tools/lint/context.sh
+./tools/lint/agent.sh
 ./tools/lint/dp.sh TASK.md
-./tools/lint/dp.sh storage/handoff/DP-OPS-XXXX-RESULTS.md
 ./tools/lint/llms.sh
+bash tools/lint/factory.sh
 ~~~
-Confirm that the RESULTS file contains executable receipt outputs (artifact paths, verification outcomes, `git diff --name-only`, `git diff --stat`, and the Mandatory Closing Block).
-Verify that the Section 3.5 Closing Block is populated in RESULTS.
+Keep `storage/handoff/CLOSING-DP-OPS-XXXX.md` populated throughout execution.
 
-2. Harvest
+2. Generate Results
+Run:
+~~~bash
+./ops/bin/certify --dp=DP-OPS-XXXX --out=auto
+~~~
+`ops/bin/certify` runs integrity checks, executes the Section 3.4.5 verification command list, renders the RESULTS receipt from template, and runs `tools/lint/results.sh` as a hard gate.
+Manual RESULTS fabrication is prohibited.
+
+3. Harvest
 Run only if new reusable patterns exist.
 ~~~bash
 ./ops/lib/scripts/agent.sh harvest-check
 ~~~
 If promotion is needed, use existing ops/lib/scripts/skill.sh and ops/lib/scripts/task.sh workflows.
 
-3. Refresh
+4. Refresh
 Allowlist must include `llms.txt`, `llms-core.txt`, and `llms-full.txt` before running the command.
 Out-dir must be absolute. Use `$(pwd)`.
 Do not hand-edit `llms.txt`, `llms-core.txt`, or `llms-full.txt`; regenerate with tooling only.
@@ -56,7 +65,7 @@ Do not hand-edit `llms.txt`, `llms-core.txt`, or `llms-full.txt`; regenerate wit
 ./ops/bin/llms --out-dir="$(pwd)"
 ~~~
 
-4. Log
+5. Log
 Update `SoP.md` with a DP entry that includes verification receipts.
 Update `PoW.md` with a proof entry using the strict schema (Packet ID, Timestamp, Work Branch, Base HEAD, Scope, Target Files allowlist, Receipt pointers, Verification commands, Notes).
 `PoW.md` receipt pointers must include `RESULTS`, `OPEN`, and `DUMP` artifact paths.
@@ -64,7 +73,7 @@ Update `PoW.md` with a proof entry using the strict schema (Packet ID, Timestamp
 Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, with reason and risk for each NOT RUN item.
 If using `./ops/bin/prune --reset-task`, ensure `PoW.md` already contains `- Packet ID: DP-OPS-XXXX`; prune blocks reset-task until that proof exists.
 
-5. Prune
+6. Prune
 Run local hygiene prune for the DP.
 ~~~bash
 ./ops/bin/prune --dp=DP-OPS-0048 --scrub

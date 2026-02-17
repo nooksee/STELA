@@ -12,6 +12,7 @@ Session State contract:
 - OPEN (and OPEN-PORCELAIN when dirty) is the session state snapshot.
 - RESULTS is the audit record for the DP.
 - TASK is the stable routing surface.
+- Operator note (2026-02-17): Do not run `./ops/bin/prune --reset-task` again and do not edit `SoP.md` or `PoW.md` unless explicitly instructed.
 
 ## 2. Logic Pointers
 Primary Constraint: PoT.md (Policy of Truth).
@@ -56,13 +57,12 @@ Input discipline (hard rule):
 - DP writer must not include pasted bundles (OPEN, DUMP payloads, manifests) inside the DP body.
 - Canon pointers only. Evidence belongs in storage artifacts and RESULTS.
 
-### DP-OPS-0068: Quartet Filing Doctrine and Topology Alignment
+### DP-XXXX: (Template)
 
 ## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Required Work Branch: work/dp-ops-0068-2026-02-16
-Base HEAD: 80bb3afd
-Freshness Stamp: 2026-02-16
+Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
+Base HEAD: 0000000 (Must match session context output)
 
 Required local re-check (worker runs; paste outputs in RESULTS):
 - git rev-parse --abbrev-ref HEAD
@@ -110,174 +110,62 @@ Notes:
 - DP writer must not embed pasted bundles.
 
 ### 3.2.2 DP-scoped load order (per DP)
-1. .gitignore
-2. ops/bin/prune
-3. docs/ops/specs/binaries/prune.md
-4. tools/verify.sh
-5. docs/ops/specs/tools/verify.md
-6. ops/bin/context
-7. docs/ops/specs/binaries/context.md
-8. ops/bin/map
-9. ops/lib/scripts/agent.sh
-10. ops/lib/scripts/task.sh
-11. ops/lib/scripts/skill.sh
-12. docs/ops/specs/scripts/agent.md
-13. docs/ops/specs/scripts/task.md
-14. docs/ops/specs/scripts/skill.md
-15. docs/ops/specs/surfaces/sop.md
-16. docs/ops/specs/surfaces/pow.md
-17. opt/_factory/AGENTS.md
-18. opt/_factory/TASKS.md
-19. opt/_factory/SKILLS.md
-20. tools/lint/agent.sh
-21. ops/bin/llms
-22. tools/lint/llms.sh
+- tools/lint/dp.sh
+- tools/lint/task.sh
+- ops/bin/prune
+- docs/ops/specs/surfaces/task.md
+- docs/ops/specs/binaries/prune.md
+- docs/ops/specs/binaries/open.md (pointer reference only; OPEN behavior is not modified in this DP)
 
 ## 3.3 Scope and Safety
-Objective:
-Adopt Quartet Filing Doctrine by introducing var/tmp (Resume), logs (Telemetry), and archives (Cold), redefining storage as payload-only, and aligning tooling/docs/specs to the new topology.
-
-In scope:
-Update PoT filing doctrine, root ignore policy, runtime/cold skeleton roots, and legacy placeholder retirement.
-Refactor verify/prune/context/map and lifecycle scripts/specs from storage/tmp and storage/archives to var/tmp and archives.
-Regenerate docs/MAP.md via ops/bin/map and llms bundles via ops/bin/llms.
-Update allowlist and receipts for strict audit packet requirements.
-
-Out of scope:
-No edits to projects payload code.
-No branch creation or branch switching.
-No historical rewrite of prior ledger entries outside current DP closeout additions.
-
-Safety and invariants:
-Allowlist hard gate: every changed/untracked path must be covered.
-No manual edits to generated outputs (MAP and llms bundles).
-No repo-root DP artifacts.
-No lowercase manifest duplicates.
-
-Worker Constraints (SSOT injected):
-## Section 1: Universal Template Rules
-- Templates are authored as `.tpl` files and may begin with YAML frontmatter.
-- Frontmatter keys are canonical and machine-read:
-  - `template_type`
-  - `template_id`
-  - `template_version`
-  - `requires_slots`
-  - `includes`
-- Rendered output must strip YAML frontmatter before writing output.
-- Slot tokens are `\{\{TOKEN\}\}` where `TOKEN` is uppercase alphanumeric with underscores.
-- Include directives are supported in template body content:
-  - `\{\{@include:path\}\}`
-  - `\{\{@include:path#section\}\}`
-- Include resolution is deterministic and strict:
-  - Missing files fail render.
-  - Missing section anchors fail render.
-  - Circular include graphs fail render.
-- Strict mode is default for worker-facing output:
-  - Every `requires_slots` token must be provided.
-  - Unresolved `\{\{TOKEN\}\}` placeholders fail render.
-- Non-strict mode is allowed only for linting and normalization workflows.
-- Generated worker-facing surfaces must remain pointer-first and must not embed disposable artifacts.
+Objective: Populate during execution; do not pre-fill in TASK.md.
+In scope: Populate during execution; do not pre-fill in TASK.md.
+Out of scope: Populate during execution; do not pre-fill in TASK.md.
+Safety and invariants: Populate during execution; do not pre-fill in TASK.md.
 
 Target Files allowlist (hard gate):
 - storage/dp/active/allowlist.txt
 
-## 3.4 Execution Plan (A-E)
+## 3.4 Execution Plan (A–E)
 
 ### 3.4.1 State
-Current work branch is work/dp-ops-0068-2026-02-16 at base HEAD 80bb3afd.
-Working tree is intentionally dirty for in-flight DP packet repair and must be fully evidenced in RESULTS.
-Legacy storage/tmp and storage/archives references were in-scope migration targets for this DP.
+Populate during execution; do not pre-fill in TASK.md.
 
 ### 3.4.2 Request
-Produce a single-timestamp, offline-auditable packet where OPEN, OPEN-PORCELAIN, DUMP, AUTH proof, map/llms/verify receipts, and allowlist math all derive from one working-tree state.
+Populate during execution; do not pre-fill in TASK.md.
 
 ### 3.4.3 Changelog
-UPDATE: storage/dp/active/allowlist.txt
-UPDATE: PoT.md
-UPDATE: .gitignore
-UPDATE: tools/verify.sh
-UPDATE: docs/ops/specs/tools/verify.md
-UPDATE: ops/bin/prune
-UPDATE: ops/bin/compile
-UPDATE: docs/ops/specs/binaries/prune.md
-UPDATE: ops/bin/context
-UPDATE: docs/ops/specs/binaries/context.md
-UPDATE: ops/bin/map
-UPDATE: docs/MAP.md
-UPDATE: docs/MANUAL.md
-UPDATE: TASK.md
-UPDATE: ops/src/surfaces/dp.md.tpl
-UPDATE: ops/lib/scripts/agent.sh
-UPDATE: ops/lib/scripts/task.sh
-UPDATE: ops/lib/scripts/skill.sh
-UPDATE: docs/ops/specs/scripts/agent.md
-UPDATE: docs/ops/specs/scripts/task.md
-UPDATE: docs/ops/specs/scripts/skill.md
-UPDATE: docs/ops/specs/surfaces/sop.md
-UPDATE: docs/ops/specs/surfaces/pow.md
-UPDATE: opt/_factory/AGENTS.md
-UPDATE: opt/_factory/TASKS.md
-UPDATE: opt/_factory/SKILLS.md
-UPDATE: tools/lint/agent.sh
-UPDATE: tools/lint/dp.sh
-UPDATE: tools/lint/task.sh
-UPDATE: llms.txt
-UPDATE: llms-core.txt
-UPDATE: llms-full.txt
-UPDATE: ops/lib/manifests/OPS.md
-UPDATE: SoP.md
-UPDATE: PoW.md
-UPDATE: storage/handoff/DP-OPS-0068-AMENDED.md
-UPDATE: storage/handoff/DP-OPS-0068-RESULTS.md
-UPDATE: storage/handoff/AUTH-DP-OPS-0068-opt_factory.txt
-DELETE: storage/tmp/.gitignore
-NEW: var/tmp/.gitkeep
-NEW: logs/.gitkeep
-NEW: archives/surfaces/.gitkeep
-NEW: archives/definitions/.gitkeep
-NEW: archives/definitions/.gitkeep
-NEW: archives/definitions/.gitkeep
-NEW: archives/manifests/.gitkeep
+Populate during execution; do not pre-fill in TASK.md.
 
 ### 3.4.4 Patch / Diff
-A) Refresh allowlist and preflight lint.
-B) Apply filing-doctrine and ignore-policy updates.
-C) Refactor binaries/scripts/specs to new runtime/archive roots.
-D) Regenerate MAP/llms and collect strict receipts.
-E) Build single-timestamp packet with OPEN/DUMP/AUTH/allowlist proofs.
+Populate during execution; do not pre-fill in TASK.md.
 
 ### 3.4.5 Receipt (Proofs to collect) - MUST RUN
-git rev-parse --abbrev-ref HEAD
-git rev-parse --short HEAD
-git status --porcelain
-bash tools/lint/dp.sh --test
-bash tools/lint/dp.sh TASK.md
-bash tools/lint/task.sh
-./ops/bin/open --out=auto --dp="DP-OPS-0068"
-./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
-./ops/bin/map
-./ops/bin/map --check
-./ops/bin/llms
-./tools/verify.sh
-./tools/lint/truth.sh
-./tools/lint/style.sh
-./tools/lint/context.sh
-./tools/lint/agent.sh
-./tools/lint/llms.sh
-bash tools/lint/factory.sh
-git diff --name-only
-git diff --stat
-comm -23 <(git diff --name-only | sort) <(sort storage/dp/active/allowlist.txt) || true
-comm -23 <(git ls-files --others --exclude-standard | sort) <(sort storage/dp/active/allowlist.txt) || true
-Verify Section 3.5 Closing Block is populated in RESULTS.
-Required pasted outputs: receipts, verification outcomes, and diff output.
-Mandatory Closing Block required in RESULTS.
+- ./ops/bin/open --out=auto --dp="DP-OPS-XXXX"
+- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
+- Zero-byte check: test -s <dump_payload_path>
+- bash tools/lint/context.sh
+- bash tools/lint/style.sh
+- bash tools/lint/truth.sh
+- bash tools/lint/dp.sh --test
+- bash tools/lint/dp.sh TASK.md
+- bash tools/lint/task.sh
+- bash tools/lint/llms.sh
+- ./tools/verify.sh
+- ./ops/bin/prune --dry-run
+- ./ops/bin/prune --target=pow --dry-run
+- bash tools/lint/dp.sh storage/handoff/DP-OPS-XXXX-RESULTS.md
+- git diff --name-only
+- git diff --stat
+- Verify Section 3.5 Closing Block is populated in RESULTS.
+- Required pasted outputs: receipts, verification outcomes, and diff output.
+- Mandatory Closing Block required in RESULTS.
 
 ## 3.5 Closeout (Mandatory Routing)
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
-- Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-0068 --scrub.
+- Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-XXXX --scrub.
 - Use ./ops/bin/prune --reset-task only for explicit TASK baseline reset after PoW entry exists for the active DP id.
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 

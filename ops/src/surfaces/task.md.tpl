@@ -100,10 +100,11 @@ STOP if any preflight check fails.
 Worker must confirm loaded before edits begin:
 1. PoT.md
 2. SoP.md
-3. TASK.md
-4. docs/MAP.md
-5. docs/MANUAL.md
-6. ops/lib/manifests/CONTEXT.md
+3. PoW.md
+4. TASK.md
+5. docs/MAP.md
+6. docs/MANUAL.md
+7. ops/lib/manifests/CONTEXT.md
 
 Notes:
 - Worker does not read OPEN. OPEN is for Integrator state refresh and for receipts.
@@ -127,7 +128,7 @@ Out of scope: Populate during execution; do not pre-fill in TASK.md.
 Safety and invariants: Populate during execution; do not pre-fill in TASK.md.
 
 Target Files allowlist (hard gate):
-- Populate during execution; do not pre-fill in TASK.md.
+- storage/dp/active/allowlist.txt
 
 ## 3.4 Execution Plan (A–E)
 

@@ -24,3 +24,6 @@ jobs:
 
       - name: DP lint (TASK baseline)
         run: bash tools/lint/dp.sh TASK.md
+
+      - name: RESULTS lint
+        run: bash tools/lint/results.sh
