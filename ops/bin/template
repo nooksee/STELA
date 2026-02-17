@@ -7,7 +7,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 usage() {
   cat <<'USAGE'
 Usage:
-  ops/bin/template render <dp|task-surface|agent|task|skill> --out=PATH [options]
+  ops/bin/template render <dp|results|task-surface|agent|task|skill> --out=PATH [options]
 
 Options:
   --slots-file=PATH          Load [TOKEN] blocks from a slots file.
@@ -50,6 +50,7 @@ is_nonempty_block() {
 
 declare -A TEMPLATE_PATHS=(
   [dp]="ops/src/surfaces/dp.md.tpl"
+  [results]="ops/src/surfaces/results.md.tpl"
   [task-surface]="ops/src/surfaces/task.md.tpl"
   [agent]="ops/src/definitions/agent.md.tpl"
   [task]="ops/src/definitions/task.md.tpl"

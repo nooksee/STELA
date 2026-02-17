@@ -1,5 +1,11 @@
 Archive policy: keep most recent 30 entries; older entries moved to `archives/surfaces/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-17 18:17:24 UTC — DP-OPS-0069 System Locked Protocol Certification Cutover
+- Objective: Implemented template-based certification closeout by adding strict RESULTS surface support, certifier execution (`ops/bin/certify`), integrity/results lint gates, and governance/CI wiring for certification-driven closeout.
+- Target Files allowlist: `storage/dp/active/allowlist.txt` (pointer sidecar, exact path list).
+- Verification: `git rev-parse --abbrev-ref HEAD`; `git rev-parse --short HEAD`; `git status --porcelain`; `bash tools/lint/dp.sh --test`; `bash tools/lint/dp.sh TASK.md`; `bash tools/lint/task.sh`; `./ops/bin/open --out=auto --dp="DP-OPS-0069"`; `./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle`; `./ops/bin/map`; `./ops/bin/map --check`; `./ops/bin/llms`; `./tools/verify.sh`; `./tools/lint/truth.sh`; `./tools/lint/style.sh`; `./tools/lint/context.sh`; `./tools/lint/agent.sh`; `./tools/lint/llms.sh`; `bash tools/lint/factory.sh`; `bash tools/lint/integrity.sh`; `./ops/bin/certify --dp="DP-OPS-0069" --out=auto`; `bash tools/lint/results.sh storage/handoff/DP-OPS-0069-RESULTS.md`.
+- Closeout hardening: Remediated two validation failures before final certification by removing disposable-artifact coupling from DP/RESULTS surfaces and re-aligning closeout state to OPEN-driven canonical certification outputs.
+
 ## 2026-02-16 20:10:44 UTC — DP-OPS-0068 Quartet Filing Doctrine and Topology Alignment
 - Objective: Adopted Quartet Filing Doctrine by redefining `storage/` as payload-only, introducing `var/tmp` (Resume), `logs` (Telemetry), and `archives` (Cold), and aligning platform tooling/specs/factory docs plus generated `MAP` and `llms` outputs to the new topology.
 - Target Files allowlist: `storage/dp/active/allowlist.txt` (pointer sidecar, exact path list).

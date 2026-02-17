@@ -6,9 +6,10 @@ It enforces metadata-aware rendering, include safety, and strict slot validation
 
 ## Operator Contract
 - Invocation:
-  - `./ops/bin/template render <dp|task-surface|agent|task|skill> --out=PATH [options]`
+  - `./ops/bin/template render <dp|results|task-surface|agent|task|skill> --out=PATH [options]`
 - Template lookup map:
   - `dp` -> `ops/src/surfaces/dp.md.tpl`
+  - `results` -> `ops/src/surfaces/results.md.tpl`
   - `task-surface` -> `ops/src/surfaces/task.md.tpl`
   - `agent` -> `ops/src/definitions/agent.md.tpl`
   - `task` -> `ops/src/definitions/task.md.tpl`

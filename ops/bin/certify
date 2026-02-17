@@ -1,0 +1,362 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+TASK_PATH="${REPO_ROOT}/TASK.md"
+TEMPLATE_BIN="${REPO_ROOT}/ops/bin/template"
+INTEGRITY_LINT="${REPO_ROOT}/tools/lint/integrity.sh"
+RESULTS_LINT="${REPO_ROOT}/tools/lint/results.sh"
+HANDOFF_DIR="${REPO_ROOT}/storage/handoff"
+DP_INTAKE_DIR="${REPO_ROOT}/storage/dp/intake"
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/certify --dp=DP-OPS-XXXX [--out=auto|PATH]
+USAGE
+}
+
+die() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+trim() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
+normalize_path() {
+  local value
+  value="$(trim "$1")"
+  value="${value#\`}"
+  value="${value%\`}"
+  value="${value#./}"
+  if [[ "$value" == "${REPO_ROOT}/"* ]]; then
+    value="${value#${REPO_ROOT}/}"
+  fi
+  printf '%s' "$value"
+}
+
+utc_now() {
+  date -u +"%Y-%m-%dT%H:%M:%SZ"
+}
+
+sanitize_disposable_refs() {
+  sed -E \
+    -e 's#\./storage/handoff/\*+#redacted-open-artifact-glob#g' \
+    -e 's#storage/handoff/\*+#redacted-open-artifact-glob#g' \
+    -e 's#\./storage/handoff/OPEN-PORCELAIN-[^[:space:]]+#redacted-porcelain-artifact-path#g' \
+    -e 's#storage/handoff/OPEN-PORCELAIN-[^[:space:]]+#redacted-porcelain-artifact-path#g' \
+    -e 's#\./storage/handoff/OPEN-[^[:space:]]+#redacted-open-artifact-path#g' \
+    -e 's#storage/handoff/OPEN-[^[:space:]]+#redacted-open-artifact-path#g' \
+    -e 's#\./storage/dumps/\*+#redacted-dump-artifact-glob#g' \
+    -e 's#storage/dumps/\*+#redacted-dump-artifact-glob#g' \
+    -e 's#\./storage/dumps/dump-[^[:space:]]+#redacted-dump-artifact-path#g' \
+    -e 's#storage/dumps/dump-[^[:space:]]+#redacted-dump-artifact-path#g'
+}
+
+forbidden_disposable_pattern() {
+  cat <<'EOF'
+Local artifacts|Disposable artifact policy|storage/handoff/OPEN-|storage/handoff/OPEN-PORCELAIN-|storage/handoff/\*|storage/dumps/dump-|storage/dumps/\*|OPEN-work-dp-ops-[0-9]+|OPEN-PORCELAIN-work-dp-ops-[0-9]+|dump-platform-work-dp-ops-[0-9]+
+EOF
+}
+
+assert_no_disposable_refs() {
+  local path="$1"
+  local label="$2"
+  local pattern
+  pattern="$(forbidden_disposable_pattern)"
+  if grep -Einq "$pattern" "$path"; then
+    echo "Forbidden disposable-artifact references found in ${label}:" >&2
+    grep -Ein "$pattern" "$path" >&2 || true
+    die "${label} contains forbidden disposable-artifact references"
+  fi
+}
+
+extract_dp_block_from_task() {
+  local dp_id="$1"
+  local out_path="$2"
+  awk -v dp_id="$dp_id" '
+    BEGIN {
+      in_section=0
+      in_dp=0
+    }
+    /^##[[:space:]]*3[.][[:space:]]*Current Dispatch Packet [(]DP[)][[:space:]]*$/ {
+      in_section=1
+      next
+    }
+    in_section && /^##[[:space:]]*[0-9]+[.]/ && $0 !~ /^##[[:space:]]*3[.]/ {
+      in_section=0
+      in_dp=0
+    }
+    in_section && $0 ~ ("^### " dp_id ":[[:space:]].*$") {
+      in_dp=1
+    }
+    in_dp && /^### DP-[A-Z]+-[0-9]{4,}:[[:space:]]+/ && $0 !~ ("^### " dp_id ":[[:space:]].*$") {
+      exit
+    }
+    in_dp {
+      print
+    }
+  ' "$TASK_PATH" > "$out_path"
+}
+
+extract_allowlist_pointer() {
+  local dp_path="$1"
+  local pointer_line
+  pointer_line="$(
+    awk '
+      BEGIN { in_block=0 }
+      /^Target Files allowlist [(]hard gate[)]:[[:space:]]*$/ {
+        in_block=1
+        next
+      }
+      in_block && /^[[:space:]]*-[[:space:]]+/ {
+        print
+        exit
+      }
+      in_block && /^##[[:space:]]*3[.]4([.]|[[:space:]])/ {
+        exit
+      }
+    ' "$dp_path"
+  )"
+
+  [[ -n "$pointer_line" ]] || return 1
+
+  local pointer_path
+  pointer_path="$(printf '%s' "$pointer_line" | sed -E 's/^[[:space:]]*-[[:space:]]+//')"
+  pointer_path="$(normalize_path "$pointer_path")"
+  [[ -n "$pointer_path" ]] || return 1
+  printf '%s' "$pointer_path"
+}
+
+extract_receipt_block() {
+  local dp_path="$1"
+  local out_path="$2"
+  awk '
+    BEGIN { in_block=0 }
+    /^### 3[.]4[.]5([.]|[[:space:]])/ || /^#### 3[.]4[.]5([.]|[[:space:]])/ {
+      in_block=1
+      next
+    }
+    in_block && /^##[[:space:]]*3[.]5([.]|[[:space:]])/ { exit }
+    in_block && /^### 3[.]5([.]|[[:space:]])/ { exit }
+    in_block && /^#### 3[.]5([.]|[[:space:]])/ { exit }
+    in_block { print }
+  ' "$dp_path" > "$out_path"
+}
+
+extract_commands() {
+  local receipt_block_path="$1"
+  local out_path="$2"
+
+  : > "$out_path"
+  local line=""
+  local in_fence=0
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    local candidate=""
+    local trimmed
+    trimmed="$(trim "$line")"
+
+    if [[ "$trimmed" =~ ^\`\`\` || "$trimmed" =~ ^~~~ ]]; then
+      if (( in_fence )); then
+        in_fence=0
+      else
+        in_fence=1
+      fi
+      continue
+    fi
+
+    if (( in_fence )); then
+      candidate="$trimmed"
+    else
+      if [[ "$trimmed" =~ ^-[[:space:]]+ ]]; then
+        candidate="${trimmed#- }"
+      elif [[ "$trimmed" =~ ^[0-9]+[.][[:space:]]+ ]]; then
+        candidate="${trimmed#*. }"
+      else
+        candidate="$trimmed"
+      fi
+    fi
+
+    candidate="$(trim "$candidate")"
+    [[ -n "$candidate" ]] || continue
+
+    if [[ "$candidate" == \`* && "$candidate" == *\` ]]; then
+      candidate="${candidate#\`}"
+      candidate="${candidate%\`}"
+      candidate="$(trim "$candidate")"
+    fi
+
+    case "$candidate" in
+      "Required pasted outputs:"*|"Mandatory Closing Block"*|"Verify Section "*|"Worker runs"*|"Purpose:"*)
+        continue
+        ;;
+    esac
+
+    first_token="${candidate%%[[:space:]]*}"
+    case "$first_token" in
+      git|bash|./*|comm|cat|ls|cp|mv|rm|find|sed|awk|grep|rg|echo|printf|sh)
+        printf '%s\n' "$candidate" >> "$out_path"
+        ;;
+      *)
+        continue
+        ;;
+    esac
+  done < "$receipt_block_path"
+}
+
+DP_ID=""
+OUT_ARG="auto"
+
+for arg in "$@"; do
+  case "$arg" in
+    --dp=*)
+      DP_ID="${arg#--dp=}"
+      ;;
+    --out=*)
+      OUT_ARG="${arg#--out=}"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      die "unknown arg: ${arg}"
+      ;;
+  esac
+done
+
+[[ -n "$DP_ID" ]] || die "missing required --dp"
+[[ "$DP_ID" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]] || die "invalid --dp value: ${DP_ID}"
+
+if [[ "$OUT_ARG" == "auto" || -z "$OUT_ARG" ]]; then
+  OUT_PATH="${HANDOFF_DIR}/${DP_ID}-RESULTS.md"
+else
+  OUT_PATH="$OUT_ARG"
+  if [[ "$OUT_PATH" != /* ]]; then
+    OUT_PATH="${REPO_ROOT}/${OUT_PATH}"
+  fi
+fi
+
+[[ -x "$TEMPLATE_BIN" ]] || die "template binary missing or not executable: ${TEMPLATE_BIN}"
+[[ -x "$INTEGRITY_LINT" ]] || die "integrity lint missing or not executable: ${INTEGRITY_LINT}"
+[[ -x "$RESULTS_LINT" ]] || die "results lint missing or not executable: ${RESULTS_LINT}"
+[[ -f "$TASK_PATH" ]] || die "missing TASK surface: ${TASK_PATH}"
+
+mkdir -p "${HANDOFF_DIR}"
+
+CLOSING_PATH="${HANDOFF_DIR}/CLOSING-${DP_ID}.md"
+[[ -f "$CLOSING_PATH" ]] || die "missing closing block sidecar: ${CLOSING_PATH#${REPO_ROOT}/}"
+if [[ -z "$(sed '/^[[:space:]]*$/d' "$CLOSING_PATH")" ]]; then
+  die "closing block sidecar is empty: ${CLOSING_PATH#${REPO_ROOT}/}"
+fi
+CLOSING_BLOCK="$(cat "$CLOSING_PATH")"
+
+TMP_DIR="$(mktemp -d "${REPO_ROOT}/var/tmp/certify.${DP_ID}.XXXXXX")"
+trap 'rm -rf "$TMP_DIR"' EXIT
+
+DP_BLOCK_PATH="${TMP_DIR}/dp-block.md"
+extract_dp_block_from_task "$DP_ID" "$DP_BLOCK_PATH"
+
+DP_SOURCE="TASK.md"
+if [[ ! -s "$DP_BLOCK_PATH" ]]; then
+  FALLBACK_DP_PATH="${DP_INTAKE_DIR}/${DP_ID}.md"
+  [[ -f "$FALLBACK_DP_PATH" ]] || die "DP section '${DP_ID}' not found in TASK.md and fallback intake is missing: ${FALLBACK_DP_PATH#${REPO_ROOT}/}"
+  cp "$FALLBACK_DP_PATH" "$DP_BLOCK_PATH"
+  DP_SOURCE="${FALLBACK_DP_PATH#${REPO_ROOT}/}"
+fi
+
+assert_no_disposable_refs "$DP_BLOCK_PATH" "$DP_SOURCE"
+
+ALLOWLIST_POINTER="$(extract_allowlist_pointer "$DP_BLOCK_PATH" || true)"
+[[ -n "$ALLOWLIST_POINTER" ]] || die "failed to extract Target Files allowlist pointer from ${DP_SOURCE}"
+
+RECEIPT_BLOCK_PATH="${TMP_DIR}/receipt-block.txt"
+COMMANDS_PATH="${TMP_DIR}/commands.txt"
+extract_receipt_block "$DP_BLOCK_PATH" "$RECEIPT_BLOCK_PATH"
+extract_commands "$RECEIPT_BLOCK_PATH" "$COMMANDS_PATH"
+if [[ ! -s "$COMMANDS_PATH" ]]; then
+  die "failed to extract verification commands from ${DP_SOURCE} section 3.4.5"
+fi
+
+if ! INTEGRITY_OUTPUT="$(bash "$INTEGRITY_LINT" 2>&1)"; then
+  printf '%s\n' "$INTEGRITY_OUTPUT" >&2
+  die "integrity gate failed"
+fi
+INTEGRITY_OUTPUT="$(printf '%s' "$INTEGRITY_OUTPUT" | sanitize_disposable_refs)"
+
+COMMAND_LOG=""
+CMD_INDEX=0
+
+while IFS= read -r command || [[ -n "$command" ]]; do
+  CMD_INDEX=$((CMD_INDEX + 1))
+  CMD_ID="$(printf '%02d' "$CMD_INDEX")"
+
+  STARTED_AT="$(utc_now)"
+  START_EPOCH="$(date +%s)"
+
+  STDOUT_PATH="${TMP_DIR}/cmd-${CMD_ID}.stdout"
+  STDERR_PATH="${TMP_DIR}/cmd-${CMD_ID}.stderr"
+
+  set +e
+  bash -lc "cd \"$REPO_ROOT\" && ${command}" >"$STDOUT_PATH" 2>"$STDERR_PATH"
+  EXIT_CODE=$?
+  set -e
+
+  FINISHED_AT="$(utc_now)"
+  FINISH_EPOCH="$(date +%s)"
+  DURATION_SECONDS=$((FINISH_EPOCH - START_EPOCH))
+
+  STDOUT_BODY="$(cat "$STDOUT_PATH" | sanitize_disposable_refs)"
+  STDERR_BODY="$(cat "$STDERR_PATH" | sanitize_disposable_refs)"
+  SANITIZED_COMMAND="$(printf '%s' "$command" | sanitize_disposable_refs)"
+  [[ -n "$STDOUT_BODY" ]] || STDOUT_BODY="(empty)"
+  [[ -n "$STDERR_BODY" ]] || STDERR_BODY="(empty)"
+
+  COMMAND_LOG+=$'### Command '"$CMD_ID"$'\n'
+  COMMAND_LOG+="- Command: \`${SANITIZED_COMMAND}\`"$'\n'
+  COMMAND_LOG+="- Started (UTC): ${STARTED_AT}"$'\n'
+  COMMAND_LOG+="- Finished (UTC): ${FINISHED_AT}"$'\n'
+  COMMAND_LOG+="- Duration Seconds: ${DURATION_SECONDS}"$'\n'
+  COMMAND_LOG+="- Exit Code: ${EXIT_CODE}"$'\n'
+  COMMAND_LOG+=$'\n#### STDOUT\n~~~text\n'"${STDOUT_BODY}"$'\n~~~\n'
+  COMMAND_LOG+=$'\n#### STDERR\n~~~text\n'"${STDERR_BODY}"$'\n~~~\n\n'
+
+  if [[ "$EXIT_CODE" -ne 0 ]]; then
+    printf '%s' "$COMMAND_LOG" >&2
+    die "verification command failed (command ${CMD_ID}): ${command}"
+  fi
+done < "$COMMANDS_PATH"
+
+DIFF_NAME_ONLY="$(git -C "$REPO_ROOT" diff --name-only)"
+DIFF_STAT="$(git -C "$REPO_ROOT" diff --stat)"
+DIFF_NAME_ONLY="$(printf '%s' "$DIFF_NAME_ONLY" | sanitize_disposable_refs)"
+DIFF_STAT="$(printf '%s' "$DIFF_STAT" | sanitize_disposable_refs)"
+[[ -n "$DIFF_NAME_ONLY" ]] || DIFF_NAME_ONLY="(none)"
+[[ -n "$DIFF_STAT" ]] || DIFF_STAT="(none)"
+
+CERTIFIED_AT="$(utc_now)"
+BRANCH="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
+GIT_HASH="$(git -C "$REPO_ROOT" rev-parse HEAD)"
+
+"$TEMPLATE_BIN" render results --out="$OUT_PATH" \
+  "--slot=DP_ID=${DP_ID}" \
+  "--slot=CERTIFIED_AT=${CERTIFIED_AT}" \
+  "--slot=BRANCH=${BRANCH}" \
+  "--slot=GIT_HASH=${GIT_HASH}" \
+  "--slot=ALLOWLIST_POINTER=${ALLOWLIST_POINTER}" \
+  "--slot=INTEGRITY_OUTPUT=${INTEGRITY_OUTPUT}" \
+  "--slot=COMMAND_LOG=${COMMAND_LOG}" \
+  "--slot=DIFF_NAME_ONLY=${DIFF_NAME_ONLY}" \
+  "--slot=DIFF_STAT=${DIFF_STAT}" \
+  "--slot=CLOSING_BLOCK=${CLOSING_BLOCK}"
+assert_no_disposable_refs "$OUT_PATH" "${OUT_PATH#${REPO_ROOT}/}"
+bash "$RESULTS_LINT" "$OUT_PATH"
+
+echo "DP source: ${DP_SOURCE}"
+echo "RESULTS saved: ${OUT_PATH#${REPO_ROOT}/}"
