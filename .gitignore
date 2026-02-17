@@ -1,8 +1,27 @@
 # OS / IDE
 nbproject/private/
 
-# local scratch
-storage/tmp/
+# local runtime roots
+var/tmp/*
+!var/tmp/.gitkeep
+logs/*
+!logs/.gitkeep
+archives/*
+!archives/surfaces/
+archives/surfaces/*
+!archives/surfaces/.gitkeep
+!archives/definitions/
+archives/definitions/*
+!archives/definitions/.gitkeep
+!archives/definitions/
+archives/definitions/*
+!archives/definitions/.gitkeep
+!archives/definitions/
+archives/definitions/*
+!archives/definitions/.gitkeep
+!archives/manifests/
+archives/manifests/*
+!archives/manifests/.gitkeep
 
 # IDE/editor noise
 nbproject/

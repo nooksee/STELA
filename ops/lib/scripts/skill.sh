@@ -8,7 +8,7 @@ SKILLS_REGISTRY="${REPO_ROOT}/docs/ops/registry/SKILLS.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
 SKILLS_DIR="${REPO_ROOT}/opt/_factory/skills"
-HANDOFF_DIR="${REPO_ROOT}/storage/archives/skills"
+HANDOFF_DIR="${REPO_ROOT}/archives/definitions"
 SKILL_TEMPLATE_PATH="${REPO_ROOT}/ops/src/definitions/skill.md.tpl"
 TEMPLATE_BIN="${REPO_ROOT}/ops/bin/template"
 HEURISTICS_LIB="${SCRIPT_DIR}/heuristics.sh"
@@ -551,7 +551,7 @@ select_latest_draft() {
   local draft_path=""
   mapfile -t drafts < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name 'skill-*.md' | sort)
   if (( ${#drafts[@]} == 0 )); then
-    die "No draft found in storage/handoff"
+    die "No draft found in archives/definitions"
   fi
   if (( ${#drafts[@]} == 1 )); then
     echo "${drafts[0]}"

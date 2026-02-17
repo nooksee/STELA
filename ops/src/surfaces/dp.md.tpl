@@ -62,10 +62,11 @@ STOP if any preflight check fails.
 Worker must confirm loaded before edits begin:
 1. PoT.md
 2. SoP.md
-3. TASK.md
-4. docs/MAP.md
-5. docs/MANUAL.md
-6. ops/lib/manifests/CONTEXT.md
+3. PoW.md
+4. TASK.md
+5. docs/MAP.md
+6. docs/MANUAL.md
+7. ops/lib/manifests/CONTEXT.md
 
 Notes:
 - Worker does not read OPEN. OPEN is for Integrator state refresh and for receipts.

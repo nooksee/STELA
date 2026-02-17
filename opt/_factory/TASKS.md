@@ -10,7 +10,7 @@ This file is the operator-facing promotion workflow for canon tasks. Use `ops/li
 - Quantitative reporting: when tools return counts or pass or fail summaries, paste the outputs into RESULTS.
 
 ## Harvest Engine Workflow
-- `ops/lib/scripts/task.sh harvest` creates a draft in `storage/archives/tasks/` with provenance and a pointer-first skeleton.
+- `ops/lib/scripts/task.sh harvest` creates a draft in `archives/definitions/` with provenance and a pointer-first skeleton.
 - Review and refine the draft before promotion. Do not edit the Provenance block.
 - `ops/lib/scripts/task.sh promote` promotes a draft into `opt/_factory/tasks/`, updates `docs/ops/registry/TASKS.md`, and appends to this ledger.
 - `ops/lib/scripts/task.sh check` audits scope boundaries, context hazards, and pointer integrity.

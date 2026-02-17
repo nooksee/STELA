@@ -1,4 +1,4 @@
-Archive policy: keep most recent 30 entries; older entries moved to `storage/archives/root/PoW-archive-YYYY-MM.md`.
+Archive policy: keep most recent 30 entries; older entries moved to `archives/surfaces/PoW-archive-YYYY-MM.md`.
 
 # Proof of Work Ledger (PoW)
 
@@ -31,6 +31,97 @@ Archive policy: keep most recent 30 entries; older entries moved to `storage/arc
 - `- Verification commands:`
 - `  - <command>`
 - `- Notes: <audit note>`
+
+## 2026-02-16 20:10:44 UTC — DP-OPS-0068 Quartet Filing Doctrine and Topology Alignment
+- Packet ID: DP-OPS-0068
+- Timestamp: 2026-02-16T20:10:44Z
+- Work Branch: work/dp-ops-0068-2026-02-16
+- Base HEAD: 80bb3afd
+- Scope: platform
+- Target Files allowlist:
+  - storage/dp/active/allowlist.txt
+  - storage/tmp/.gitignore
+  - PoT.md
+  - .gitignore
+  - tools/verify.sh
+  - tools/lint/dp.sh
+  - tools/lint/task.sh
+  - docs/ops/specs/tools/verify.md
+  - ops/bin/prune
+  - ops/bin/compile
+  - docs/ops/specs/binaries/prune.md
+  - ops/bin/context
+  - docs/ops/specs/binaries/context.md
+  - ops/bin/map
+  - docs/MAP.md
+  - docs/MANUAL.md
+  - TASK.md
+  - ops/src/surfaces/dp.md.tpl
+  - ops/lib/scripts/agent.sh
+  - ops/lib/scripts/task.sh
+  - ops/lib/scripts/skill.sh
+  - docs/ops/specs/scripts/agent.md
+  - docs/ops/specs/scripts/task.md
+  - docs/ops/specs/scripts/skill.md
+  - docs/ops/specs/surfaces/sop.md
+  - docs/ops/specs/surfaces/pow.md
+  - opt/_factory/AGENTS.md
+  - opt/_factory/TASKS.md
+  - opt/_factory/SKILLS.md
+  - tools/lint/agent.sh
+  - llms.txt
+  - llms-core.txt
+  - llms-full.txt
+  - ops/lib/manifests/CONTEXT.md
+  - ops/lib/manifests/CORE.md
+  - ops/lib/manifests/DISCOVERY.md
+  - ops/lib/manifests/OPS.md
+  - var/tmp/.gitkeep
+  - logs/.gitkeep
+  - archives/surfaces/.gitkeep
+  - archives/definitions/.gitkeep
+  - archives/definitions/.gitkeep
+  - archives/definitions/.gitkeep
+  - archives/manifests/.gitkeep
+  - SoP.md
+  - PoW.md
+  - storage/handoff/DP-OPS-0068-AMENDED.md
+  - storage/handoff/DP-OPS-0068-RESULTS.md
+  - storage/handoff/AUTH-DP-OPS-0068-opt_factory.txt
+- Receipt pointers:
+  - RESULTS: storage/handoff/DP-OPS-0068-RESULTS.md
+  - OPEN: storage/handoff/OPEN-work-dp-ops-0068-2026-02-16-80bb3afd.txt
+  - DUMP: storage/dumps/dump-platform-work-dp-ops-0068-2026-02-16-80bb3afd.txt
+- Verification commands:
+  - git rev-parse --abbrev-ref HEAD
+  - git rev-parse --short HEAD
+  - git status --porcelain
+  - bash tools/lint/dp.sh --test
+  - bash tools/lint/dp.sh TASK.md
+  - bash tools/lint/task.sh
+  - ./ops/bin/map
+  - ./ops/bin/map --check
+  - ./ops/bin/llms
+  - ./tools/verify.sh
+  - ./tools/lint/truth.sh
+  - ./tools/lint/style.sh
+  - ./tools/lint/context.sh
+  - ./tools/lint/agent.sh
+  - ./tools/lint/llms.sh
+  - bash tools/lint/factory.sh
+  - test -f var/tmp/.gitkeep && echo "OK: var/tmp/.gitkeep"
+  - test -f logs/.gitkeep && echo "OK: logs/.gitkeep"
+  - test -f archives/surfaces/.gitkeep && echo "OK: archives/surfaces/.gitkeep"
+  - test -f archives/definitions/.gitkeep && echo "OK: archives/definitions/.gitkeep"
+  - test -f archives/definitions/.gitkeep && echo "OK: archives/definitions/.gitkeep"
+  - test -f archives/definitions/.gitkeep && echo "OK: archives/definitions/.gitkeep"
+  - test -f archives/manifests/.gitkeep && echo "OK: archives/manifests/.gitkeep"
+  - grep -R "storage/tmp" -n PoT.md docs ops opt || true
+  - grep -R "storage/archives" -n PoT.md docs ops opt || true
+  - git diff --name-only
+  - git diff
+  - ./ops/bin/prune --dp=DP-OPS-0068 --scrub
+- Notes: Positive proof confirms doctrine cutover to Quartet topology (`storage` payload, `var/tmp` resume, `logs` telemetry, `archives` cold) across tooling, lifecycle scripts, and specs with generated `MAP`/`llms` refresh.
 
 ## 2026-02-15 22:40:00 UTC — DP-OPS-0067 Universal Template Engine and Constraints SSOT
 - Packet ID: DP-OPS-0067

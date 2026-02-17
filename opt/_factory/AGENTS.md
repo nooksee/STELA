@@ -4,7 +4,7 @@ This file is the operator-facing promotion workflow for canon agents. Use `ops/l
 
 ## Harvest Engine Workflow
 - `ops/lib/scripts/agent.sh harvest-check` prints Pattern Density candidate clusters without creating drafts.
-- `ops/lib/scripts/agent.sh harvest` creates a draft in `storage/archives/agents/` with provenance and a pointer-first skeleton.
+- `ops/lib/scripts/agent.sh harvest` creates a draft in `archives/definitions/` with provenance and a pointer-first skeleton.
 - Review and refine the draft before promotion. Do not edit the Provenance block.
 - `ops/lib/scripts/agent.sh promote` promotes a draft into `opt/_factory/agents/`, updates `docs/ops/registry/AGENTS.md`, and appends to this ledger.
 - `ops/lib/scripts/agent.sh check` audits scope boundaries and context hazards.

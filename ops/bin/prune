@@ -8,10 +8,10 @@ POW_FILE="${REPO_ROOT}/PoW.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 TASK_TEMPLATE_PATH="${REPO_ROOT}/ops/src/surfaces/task.md.tpl"
 TEMPLATE_BIN="${REPO_ROOT}/ops/bin/template"
-ARCHIVE_DIR="${REPO_ROOT}/storage/archives/root"
+ARCHIVE_DIR="${REPO_ROOT}/archives/surfaces"
 HANDOFF_DIR="${REPO_ROOT}/storage/handoff"
 DUMPS_DIR="${REPO_ROOT}/storage/dumps"
-TMP_DIR="${REPO_ROOT}/storage/tmp"
+RESUME_DIR="${REPO_ROOT}/var/tmp"
 THRESHOLD=30
 DP_TARGET=""
 TARGET="sop"
@@ -99,7 +99,7 @@ reset_task_from_template() {
   fi
 
   local tmp_task
-  tmp_task="$(mktemp "${TMP_DIR}/task-template.XXXXXX")"
+  tmp_task="$(mktemp "${RESUME_DIR}/task-template.XXXXXX")"
 
   if ! "${TEMPLATE_BIN}" render task-surface --out="${tmp_task}"; then
     rm -f "$tmp_task"
@@ -151,7 +151,7 @@ ledger_archive_plan() {
 validate_pow_prune_candidates() {
   local pow_file="$1"
   local pointers_tmp
-  pointers_tmp="$(mktemp "${TMP_DIR}/pow-prune-pointers.XXXXXX")"
+  pointers_tmp="$(mktemp "${RESUME_DIR}/pow-prune-pointers.XXXXXX")"
 
   if ! awk -v threshold="$THRESHOLD" '
     function trim(s) {
@@ -357,7 +357,7 @@ prune_ledger() {
 
   mkdir -p "${ARCHIVE_DIR}"
   local tmp_keep
-  tmp_keep="$(mktemp "${TMP_DIR}/${archive_prefix,,}-keep.XXXXXX")"
+  tmp_keep="$(mktemp "${RESUME_DIR}/${archive_prefix,,}-keep.XXXXXX")"
 
   awk -v threshold="$THRESHOLD" -v keep_file="$tmp_keep" -v archive_dir="$ARCHIVE_DIR" -v prefix="$archive_prefix" '
     BEGIN { entry=0; archive_file="" }
@@ -505,8 +505,8 @@ cleanup_dp_target_artifacts() {
   fi
 }
 
-clean_storage_tmp() {
-  if [[ ! -d "${TMP_DIR}" ]]; then
+clean_resume_cache() {
+  if [[ ! -d "${RESUME_DIR}" ]]; then
     return 0
   fi
 
@@ -515,12 +515,12 @@ clean_storage_tmp() {
 
   while IFS= read -r -d '' item; do
     items+=("$item")
-  done < <(find "${TMP_DIR}" -mindepth 1 -maxdepth 1 ! -name '.gitignore' -print0 | sort -z)
+  done < <(find "${RESUME_DIR}" -mindepth 1 -maxdepth 1 ! -name '.gitkeep' -print0 | sort -z)
 
   if (( DRY_RUN )); then
-    echo "[DRY-RUN] storage/tmp cleanup: would remove ${#items[@]} item(s)."
+    echo "[DRY-RUN] var/tmp cleanup: would remove ${#items[@]} item(s)."
     for item in "${items[@]}"; do
-      echo "[DRY-RUN] storage/tmp cleanup candidate: ${item#${REPO_ROOT}/}"
+      echo "[DRY-RUN] var/tmp cleanup candidate: ${item#${REPO_ROOT}/}"
     done
     return 0
   fi
@@ -531,7 +531,7 @@ clean_storage_tmp() {
     removed=$((removed + 1))
   done
 
-  echo "storage/tmp cleanup: removed ${removed} item(s)."
+  echo "var/tmp cleanup: removed ${removed} item(s)."
 }
 
 stage_clean() {
@@ -554,7 +554,7 @@ stage_clean() {
     [[ -f "${TASK_TEMPLATE_PATH}" ]] || die "TASK template not found at ${TASK_TEMPLATE_PATH}"
   fi
 
-  mkdir -p "${TMP_DIR}"
+  mkdir -p "${ARCHIVE_DIR}" "${RESUME_DIR}"
 
   if (( !DRY_RUN )); then
     ensure_results_artifacts_committed_and_clean
@@ -623,7 +623,7 @@ fi
 stage_reset
 
 if (( SCRUB )); then
-  clean_storage_tmp
+  clean_resume_cache
 fi
 
 if (( DRY_RUN )); then

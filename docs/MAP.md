@@ -39,7 +39,11 @@ This document defines the specific surfaces that must be loaded to preserve gove
 - tools/ - Lints and verification tooling.
 - docs/ - Manuals, specs, and governance surfaces.
 - opt/ - Isolated definition surfaces (JIT-only, excluded from global context).
-- storage/ - Local artifacts and archives.
+- projects/ - Work payload code.
+- storage/ - Payload surfaces (handoff, dumps, dp).
+- var/tmp/ - Resume workspace (ephemeral task scratch).
+- logs/ - Telemetry streams and diagnostics.
+- archives/ - Cold storage (root, tasks, skills, agents, context).
 
 ### Projects
 No projects discovered.

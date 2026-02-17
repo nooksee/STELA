@@ -11,7 +11,7 @@
 ## Requirements
 - Must run from the repository root.
 - Requires `ops/bin/compile`, `ops/bin/open`, and `ops/lib/scripts/synthesize.sh` to be executable.
-- Requires write access to `storage/handoff/` and `storage/tmp/` when `--out` is used.
+- Requires write access to `storage/handoff/` and `var/tmp/` when `--out` is used.
 
 ## Usage
 - `./ops/bin/context`

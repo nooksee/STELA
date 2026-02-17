@@ -6,7 +6,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 MAP_FILE="${REPO_ROOT}/docs/MAP.md"
 BEGIN_MARKER="<!-- MAP-GENERATED:BEGIN -->"
 END_MARKER="<!-- MAP-GENERATED:END -->"
-TMP_DIR="${REPO_ROOT}/storage/tmp"
+TMP_DIR="${REPO_ROOT}/var/tmp"
 CHECK_MODE=0
 
 usage() {
@@ -66,7 +66,11 @@ emit_directory_index() {
 - tools/ - Lints and verification tooling.
 - docs/ - Manuals, specs, and governance surfaces.
 - opt/ - Isolated definition surfaces (JIT-only, excluded from global context).
-- storage/ - Local artifacts and archives.
+- projects/ - Work payload code.
+- storage/ - Payload surfaces (handoff, dumps, dp).
+- var/tmp/ - Resume workspace (ephemeral task scratch).
+- logs/ - Telemetry streams and diagnostics.
+- archives/ - Cold storage (root, tasks, skills, agents, context).
 EOF
 }
 

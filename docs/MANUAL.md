@@ -153,7 +153,7 @@ ops/lib/scripts/skill.sh check
 ops/lib/scripts/skill.sh harvest --name "skill-title" --context "when to use it" --solution "what to do"
 
 # Promote the draft into opt/_factory/skills and register it
-ops/lib/scripts/skill.sh promote storage/archives/skills/skill-YYYYMMDD-HHMMSS-skill-title.md
+ops/lib/scripts/skill.sh promote archives/definitions/skill-YYYYMMDD-HHMMSS-skill-title.md
 ~~~
 
 ### Tasks (Harvest + Promote)
@@ -167,7 +167,7 @@ ops/lib/scripts/task.sh check
 ops/lib/scripts/task.sh harvest --id B-TASK-01 --name "task-title" --objective "one sentence objective"
 
 # Promote the draft into opt/_factory/tasks and register it
-ops/lib/scripts/task.sh promote storage/archives/tasks/task-B-TASK-01-YYYYMMDD-task-title.md
+ops/lib/scripts/task.sh promote archives/definitions/task-B-TASK-01-YYYYMMDD-task-title.md
 ~~~
 
 ---
@@ -203,4 +203,6 @@ ops/lib/scripts/task.sh promote storage/archives/tasks/task-B-TASK-01-YYYYMMDD-t
 * **Active Contract:** [`../../TASK.md`](../../TASK.md)
 * **History:** [`../../SoP.md`](../../SoP.md)
 * **Artifacts:** `storage/handoff/` (Results), `storage/dumps/` (State).
-* **Archives:** `storage/archives/` (Museum).
+* **Resume cache:** `var/tmp/` (ephemeral worker scratch).
+* **Telemetry:** `logs/` (runtime diagnostics).
+* **Archives:** `archives/` (Museum).
