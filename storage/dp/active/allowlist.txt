@@ -18,13 +18,9 @@ archives/surfaces/SoP-2026-02-18-a748e585.md
 archives/surfaces/TASK-DP-OPS-0072-a748e585.md
 archives/surfaces/PoW-2026-02-18-05a1910f.md
 archives/surfaces/SoP-2026-02-18-05a1910f.md
-archives/surfaces/SoP-archive-2026-02.md
-storage/dp/intake/DP-OPS-0070.md
 ops/lib/scripts/retroleaf.sh
 storage/dp/processed/DP-OPS-0070.md
 logs/trace-stela-20260218T043441Z-11d57a2b-retroleaf.md
-archives/surfaces/PoW-2026-02-18-05a1910f-phase2dump.md
-archives/surfaces/SoP-2026-02-18-05a1910f-phase2dump.md
 archives/surfaces/PoW-2026-02-13-05cdbf5a.md
 archives/surfaces/PoW-2026-02-13-f3d6b2e4.md
 archives/surfaces/PoW-2026-02-14-7c3f5a8f.md
