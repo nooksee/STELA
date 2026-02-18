@@ -49,17 +49,44 @@ normalize_path() {
   printf '%s' "$value"
 }
 
+resolve_task_surface_path() {
+  local task_path="$1"
+  [[ -f "$task_path" ]] || die "TASK surface missing: ${task_path#${REPO_ROOT}/}"
+
+  local line_count
+  line_count="$(awk 'END { print NR }' "$task_path")"
+  if [[ "$line_count" != "1" ]]; then
+    printf '%s' "$task_path"
+    return 0
+  fi
+
+  local pointer_path
+  pointer_path="$(trim "$(cat "$task_path")")"
+  pointer_path="$(normalize_path "$pointer_path")"
+  if [[ "$pointer_path" =~ ^archives/surfaces/[A-Za-z0-9._/-]+\.md$ ]]; then
+    local target_path="${REPO_ROOT}/${pointer_path}"
+    [[ -f "$target_path" ]] || die "TASK pointer target missing: ${pointer_path}"
+    printf '%s' "$target_path"
+    return 0
+  fi
+
+  die "TASK is single-line but not a valid archives/surfaces pointer: ${pointer_path}"
+}
+
 extract_allowlist_pointer() {
+  local source_path="$1"
   awk '
     BEGIN { in_block=0 }
     /^Target Files allowlist [(]hard gate[)]:[[:space:]]*$/ { in_block=1; next }
     in_block && /^[[:space:]]*-[[:space:]]+/ { print; exit }
     in_block && /^##[[:space:]]*3[.]4([.]|[[:space:]])/ { exit }
-  ' TASK.md
+  ' "$source_path"
 }
 
-pointer_line="$(extract_allowlist_pointer)"
-[[ -n "$pointer_line" ]] || die "failed to find Target Files allowlist pointer in TASK.md"
+TASK_SOURCE_PATH="$(resolve_task_surface_path "${REPO_ROOT}/TASK.md")"
+
+pointer_line="$(extract_allowlist_pointer "$TASK_SOURCE_PATH")"
+[[ -n "$pointer_line" ]] || die "failed to find Target Files allowlist pointer in ${TASK_SOURCE_PATH#${REPO_ROOT}/}"
 
 pointer_path="$(printf '%s' "$pointer_line" | sed -E 's/^[[:space:]]*-[[:space:]]+//')"
 pointer_path="$(normalize_path "$pointer_path")"

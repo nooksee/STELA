@@ -36,6 +36,48 @@ normalize_token() {
   printf '%s' "$value"
 }
 
+trim() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
+resolve_task_surface_path() {
+  local source_path="$1"
+  if [[ "$(basename "$source_path")" != "TASK.md" ]]; then
+    printf '%s' "$source_path"
+    return 0
+  fi
+
+  local line_count
+  line_count="$(awk 'END { print NR }' "$source_path")"
+  if [[ "$line_count" != "1" ]]; then
+    printf '%s' "$source_path"
+    return 0
+  fi
+
+  local pointer_path
+  pointer_path="$(trim "$(cat "$source_path")")"
+  pointer_path="${pointer_path#./}"
+  if [[ "$pointer_path" == "${REPO_ROOT}/"* ]]; then
+    pointer_path="${pointer_path#${REPO_ROOT}/}"
+  fi
+
+  if [[ ! "$pointer_path" =~ ^archives/surfaces/[A-Za-z0-9._/-]+\.md$ ]]; then
+    fail "TASK is single-line but not a valid archives/surfaces pointer"
+    return 1
+  fi
+
+  local target_path="${REPO_ROOT}/${pointer_path}"
+  if [[ ! -f "$target_path" ]]; then
+    fail "TASK pointer target missing: ${pointer_path}"
+    return 1
+  fi
+
+  printf '%s' "$target_path"
+}
+
 is_placeholder_value() {
   local value="$1"
   if [[ -z "$value" ]]; then
@@ -521,7 +563,9 @@ if (( $# == 1 )); then
   task_dashboard_path="$1"
 fi
 
-check_task_dashboard "$task_dashboard_path"
+if resolved_task_dashboard_path="$(resolve_task_surface_path "$task_dashboard_path")"; then
+  check_task_dashboard "$resolved_task_dashboard_path"
+fi
 
 if (( failures > 0 )); then
   echo "FAILED: ${failures} error(s) detected." >&2

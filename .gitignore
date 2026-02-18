@@ -10,6 +10,9 @@ archives/*
 !archives/surfaces/
 archives/surfaces/*
 !archives/surfaces/.gitkeep
+!archives/surfaces/PoW-????-??-??-*.md
+!archives/surfaces/SoP-????-??-??-*.md
+!archives/surfaces/TASK-DP-OPS-*.md
 !archives/definitions/
 archives/definitions/*
 !archives/definitions/.gitkeep
