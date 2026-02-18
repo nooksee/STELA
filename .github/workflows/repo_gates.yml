@@ -12,6 +12,35 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Surface HEAD pointer reachability
+        run: |
+          set -euo pipefail
+          for surface in PoW.md SoP.md TASK.md; do
+            if [[ ! -f "${surface}" ]]; then
+              echo "ERROR: missing surface ${surface}"
+              exit 1
+            fi
+
+            line_count="$(awk 'END { print NR }' "${surface}")"
+            if [[ "${line_count}" != "1" ]]; then
+              echo "ERROR: ${surface} must be a single-line HEAD pointer"
+              exit 1
+            fi
+
+            pointer="$(tr -d '\r' < "${surface}")"
+            pointer="${pointer#./}"
+            if [[ ! "${pointer}" =~ ^archives/surfaces/[A-Za-z0-9._/-]+\.md$ ]]; then
+              echo "ERROR: ${surface} does not contain a valid archives/surfaces pointer"
+              exit 1
+            fi
+
+            if [[ ! -f "${pointer}" ]]; then
+              echo "ERROR: ${surface} pointer target missing: ${pointer}"
+              exit 1
+            fi
+          done
+          echo "OK: surface pointer reachability checks passed."
+
       - name: Verify tree
         run: bash tools/verify.sh
 

@@ -85,22 +85,12 @@ cd "$REPO_ROOT" || exit 1
 
 DEFINITIONS_DIR="${REPO_ROOT}/archives/definitions"
 [[ -d "$DEFINITIONS_DIR" ]] || die "missing definitions directory: archives/definitions"
+SURFACES_DIR="${REPO_ROOT}/archives/surfaces"
+[[ -d "$SURFACES_DIR" ]] || die "missing surfaces directory: archives/surfaces"
 
-checked=0
-
-mapfile -t candidates < <(find "$DEFINITIONS_DIR" -maxdepth 1 -type f | sort)
-
-path=""
-for path in "${candidates[@]}"; do
-  rel_path="${path#${REPO_ROOT}/}"
-
-  if [[ "$rel_path" == "archives/definitions/.gitkeep" ]]; then
-    continue
-  fi
-  if [[ "$rel_path" != *.md ]]; then
-    continue
-  fi
-
+lint_schema_leaf() {
+  local path="$1"
+  local rel_path="$2"
   frontmatter=""
   if ! frontmatter="$(extract_frontmatter "$path")"; then
     status=$?
@@ -138,8 +128,54 @@ for path in "${candidates[@]}"; do
       fail "${rel_path}: previous must end with .md and contain only repository-relative path characters"
     fi
   fi
+}
 
-  checked=$((checked + 1))
+is_surface_schema_candidate() {
+  local rel_path="$1"
+  local filename="${rel_path#archives/surfaces/}"
+  if [[ "$filename" =~ ^PoW-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{7,}\.md$ ]]; then
+    return 0
+  fi
+  if [[ "$filename" =~ ^SoP-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{7,}\.md$ ]]; then
+    return 0
+  fi
+  if [[ "$filename" =~ ^TASK-DP-[A-Z]+-[0-9]{4,}-[0-9a-f]{7,}\.md$ ]]; then
+    return 0
+  fi
+  return 1
+}
+
+definitions_checked=0
+surfaces_checked=0
+
+mapfile -t definition_candidates < <(find "$DEFINITIONS_DIR" -maxdepth 1 -type f | sort)
+for path in "${definition_candidates[@]}"; do
+  rel_path="${path#${REPO_ROOT}/}"
+  if [[ "$rel_path" == "archives/definitions/.gitkeep" ]]; then
+    continue
+  fi
+  if [[ "$rel_path" != *.md ]]; then
+    continue
+  fi
+  lint_schema_leaf "$path" "$rel_path"
+  definitions_checked=$((definitions_checked + 1))
 done
 
-echo "OK: schema lint passed (${checked} file(s) checked)."
+mapfile -t surface_candidates < <(find "$SURFACES_DIR" -maxdepth 1 -type f | sort)
+for path in "${surface_candidates[@]}"; do
+  rel_path="${path#${REPO_ROOT}/}"
+  if [[ "$rel_path" == "archives/surfaces/.gitkeep" ]]; then
+    continue
+  fi
+  if [[ "$rel_path" != *.md ]]; then
+    continue
+  fi
+  if ! is_surface_schema_candidate "$rel_path"; then
+    continue
+  fi
+  lint_schema_leaf "$path" "$rel_path"
+  surfaces_checked=$((surfaces_checked + 1))
+done
+
+checked=$((definitions_checked + surfaces_checked))
+echo "OK: schema lint passed (${checked} file(s) checked: definitions=${definitions_checked}, surfaces=${surfaces_checked})."
