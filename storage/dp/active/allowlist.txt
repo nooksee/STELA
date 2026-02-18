@@ -1,6 +1,4 @@
 storage/dp/active/allowlist.txt
-storage/dp/intake/DP-OPS-0071.md
-storage/handoff/CLOSING-DP-OPS-0071.md
 .gitignore
 ops/bin/certify
 docs/ops/specs/binaries/certify.md
@@ -15,9 +13,6 @@ docs/ops/registry/TOOLS.md
 PoW.md
 SoP.md
 TASK.md
-.github/workflows/pow_policing.yml
-.github/workflows/sop_policing.yml
-.github/workflows/task_policing.yml
 archives/surfaces/PoW-2026-02-18-05a1910f.md
 archives/surfaces/SoP-2026-02-18-05a1910f.md
 archives/surfaces/TASK-DP-OPS-0071-05a1910f.md
