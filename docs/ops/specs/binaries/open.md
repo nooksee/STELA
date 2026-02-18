@@ -16,8 +16,7 @@ It binds operator intent to exact git state before work begins and preserves poi
   - The OPEN prompt includes `- STELA_TRACE_ID: <value>` so the value is persisted in `storage/handoff/OPEN-*.txt`.
 - Artifact outputs:
   - `storage/handoff/OPEN-<tag>-<branch>-<short-hash>.txt`
-  - Dirty state only: `storage/handoff/OPEN-PORCELAIN-<tag>-<branch>-<short-hash>.txt`
-  - Clean state: stale `OPEN-PORCELAIN-*` for the same branch/hash/tag is removed.
+  - `storage/handoff/OPEN-PORCELAIN-<tag>-<branch>-<short-hash>.txt` (always emitted; clean state yields zero lines).
 - Required pointer checks:
   - `PoT.md`, `SoP.md`, `PoW.md`, `TASK.md`, `docs/INDEX.md`, `docs/MANUAL.md`, `docs/MAP.md`, `ops/lib/manifests/CONTEXT.md`.
 - Mutation boundary:
@@ -38,12 +37,12 @@ Freshness Gate rationale:
 1. Parse args and validate mode.
 2. Resolve branch and short HEAD.
 3. Generate `STELA_TRACE_ID` for this OPEN session.
-4. Always run porcelain capture.
+4. Always run porcelain capture and persist `OPEN-PORCELAIN-*` output.
 5. If porcelain is non-empty:
 - Mark session as dirty.
 - Save normalized porcelain lines to `OPEN-PORCELAIN-*` artifact.
 - Print full list when line count is within threshold; otherwise print preview.
-6. If porcelain is empty, remove any stale `OPEN-PORCELAIN-*` artifact for the same branch/hash/tag.
+6. If porcelain is empty, emit an empty `OPEN-PORCELAIN-*` artifact and report zero entries.
 7. Verify required canon files exist.
 8. Build and emit OPEN prompt content to stdout and OPEN artifact.
 9. If `--out=auto` is set, print artifact path as a terminal receipt line.
