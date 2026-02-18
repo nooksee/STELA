@@ -1,34 +1,42 @@
-# **Stela Operator Prompts (Phase 3: DP Generation)**
+# **Stela Operator Prompts**
 
-Context:
-* These prompts are for the Operator/Integrator running a session.
-* Attach OPEN + dump to refresh repo state and confirm file paths.
+**Purpose:**
+Operator-facing prompt stances for DP generation and audit workflows.
 
-**Artifact Glossary:**
-* **DP (Dispatch Packet)**: Canonical execution document with numbered sections (3.1, 3.2, 3.3, etc.) following `ops/src/surfaces/dp.md.tpl` structure. This is what workers execute.
-* **RESULTS**: Execution receipts artifact (pointer-first, with pasted proofs/outputs).
+**Reference-First Design:**
+These prompts reference canonical locations rather than duplicating content:
+* **Common constraints:** `ops/lib/manifests/CONSTRAINTS.md` (Sections 1 & 2)
+* **DP structure:** `ops/src/surfaces/dp.md.tpl`
+* **RESULTS surface:** `ops/src/surfaces/results.md.tpl`
+* **Receipt baseline:** `ops/src/surfaces/dp.md.tpl` Section 3.4.5
+* **Path rules:** `PoT.md` Section 1.2
+* **Certify spec:** `docs/ops/specs/binaries/certify.md`
+* **Results surface spec:** `docs/ops/specs/surfaces/results.md`
 
-**Reference-First Constraints Pattern (SSOT):**
-* Shared prompt/template constraints live in `ops/lib/manifests/CONSTRAINTS.md`.
-* Stances reference constraints sections instead of duplicating large rule payloads.
-  * Section 1: Universal Template Rules
-  * Section 2: Stance and Operator Prompt Rules
-* Definition templates inject Section 1 + Section 3 during render.
+**Artifact Attachment Policy:**
+* **For DP authoring (Integrator):** Attach OPEN, DUMP, plan.md as authoring context.
+* **In DP content (Worker):** DP must be self-contained; no disposable artifact citations.
+* **For closeout (Worker):** Maintain `storage/handoff/CLOSING-<DP_ID>.md` as a human-authored
+  sidecar during execution. This file is a required input to `ops/bin/certify` and is not
+  disposable — certify will hard-stop if it is missing or empty.
 
-**Immutable Workflow Mandate:**
-* **Do not hand-edit TASK.md structural boilerplate or DP structure.**
-* Use the **Architect** stance to generate a **DP** with proper numbered section structure.
-* `storage/dp/active/allowlist.txt` is the **hard gate** for permitted file touches (DP points to it).
+**Stance Index:**
+* **E-PROMPT-01:** Gatekeeper (audit before merge)
+* **E-PROMPT-02:** Hygiene (conform rough draft to canonical structure)
+* **E-PROMPT-03:** Architect (generate DP from plan)
+* **E-PROMPT-04:** Analyst (read-only analysis)
 
-Governance:
-* Logic: `PoT.md`.
-* Structure: `TASK.md` + canonical DP template (`ops/src/surfaces/dp.md.tpl` - enforced by `tools/lint/dp.sh` + `tools/lint/task.sh`).
+**Immutable Workflow:**
+* Use `ops/bin/draft` or Architect stance to generate DPs.
+* Use `ops/bin/certify` to generate RESULTS receipts at closeout. RESULTS receipts are
+  generated artifacts — manual authoring is prohibited.
+* Never hand-edit TASK.md structural boilerplate or DP structure.
+* `storage/dp/active/allowlist.txt` is the hard gate for permitted file touches.
 
-Global Rules (apply to all stances):
-* Output **only** what the stance requests (no preamble, no commentary, no extra sections).
-* Treat **repo canon** + attached OPEN/dump as authoritative; **disposable artifacts are non-authoritative**.
-* **Do not paste** OPEN/DUMP payloads, manifests, or bundles into DP bodies.
-* **Do not invent file paths**: every referenced path must exist in dump OR be explicitly marked as a planned NEW file.
-* **Ambiguity = STOP** (per PoT): if instructions or required inputs are missing/unclear, output STOP + what is missing.
-* All file paths must be enclosed in backticks.
-* Avoid non-literal paths (no brace-expansions like `{a,b}`, no globs like `*.md` unless explicitly allowed by plan).
+**Governance:**
+* Constitution: `PoT.md`
+* Active Contract: `TASK.md`
+* DP Template: `ops/src/surfaces/dp.md.tpl`
+* RESULTS Template: `ops/src/surfaces/results.md.tpl`
+* Validation: `tools/lint/dp.sh`, `tools/lint/task.sh`, `tools/lint/integrity.sh`,
+  `tools/lint/results.sh`

@@ -25,6 +25,7 @@ archives/definitions/*
 !archives/manifests/
 archives/manifests/*
 !archives/manifests/.gitkeep
+!archives/manifests/compile-????-??-??T??????-*.md
 
 # IDE/editor noise
 nbproject/

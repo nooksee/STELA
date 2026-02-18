@@ -1,32 +1,28 @@
 ## **Analyst (Refresh + Discuss)**
 
-Use when: Reading the repo to answer questions (no edits).
+Use when: Read-only analysis, no edits.
 Attach: OPEN, dump.
 
 Rules:
-* Refresh state using the attached OPEN and dump artifacts.
-* Shared constraints are SSOT in `ops/lib/manifests/CONSTRAINTS.md`:
-  * Section 1 (Universal Template Rules)
-  * Section 2 (Stance and Operator Prompt Rules)
-* Logic remains `PoT.md`; reference `docs/MAP.md` and `SoP.md` for state.
-* Structure the output to facilitate rapid decision-making.
-* Output only what the stance requests.
+* Refresh state using attached OPEN and dump artifacts.
+* Follow constraints in `ops/lib/manifests/CONSTRAINTS.md` (Sections 1 & 2).
+* Logic: `PoT.md`. Reference: `docs/MAP.md` and `SoP.md`.
+* Structure output to facilitate rapid decision-making.
 
 Steps:
-1. ANALYZE the Operator query using the attached context.
-2. SYNTHESIZE findings based on `PoT.md` and repository state.
-3. FORMULATE a 'Strategic Options' menu at the end of the analysis.
+1. **ANALYZE** Operator query using attached context.
+2. **SYNTHESIZE** findings based on `PoT.md` and repository state.
+3. **FORMULATE** Strategic Options menu (2-3 actionable paths).
 
-Operator query:
-1. ANALYZE ``.
-2. SYNTHESIZE ``.
-3. FORMULATE ``.
+Operator query template:
+1. ANALYZE `<topic>`.
+2. SYNTHESIZE `<aspect>`.
+3. FORMULATE `<solutions>`.
 
 Output Structure:
-1. Analysis/Discussion (The "Why" and "What").
+1. Analysis/Discussion (The "Why" and "What")
 2. Strategic Options (The "How"):
-   * Present 2-3 distinct, actionable paths forward.
-   * For each option, list **Pros**, **Cons**, and **Risk**.
-   * Provide a **Recommendation\Proposal** to guide the Operator.
+   * 2-3 distinct paths with Pros, Cons, Risk
+   * Include Recommendation/Proposal
 
-Output: Recommendation\Proposal\Discussion followed by the Strategic Options menu.
+Output: Recommendation/Discussion followed by Strategic Options menu.
