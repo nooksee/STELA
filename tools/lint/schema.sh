@@ -87,6 +87,8 @@ DEFINITIONS_DIR="${REPO_ROOT}/archives/definitions"
 [[ -d "$DEFINITIONS_DIR" ]] || die "missing definitions directory: archives/definitions"
 SURFACES_DIR="${REPO_ROOT}/archives/surfaces"
 [[ -d "$SURFACES_DIR" ]] || die "missing surfaces directory: archives/surfaces"
+MANIFESTS_DIR="${REPO_ROOT}/archives/manifests"
+[[ -d "$MANIFESTS_DIR" ]] || die "missing manifests directory: archives/manifests"
 
 lint_schema_leaf() {
   local path="$1"
@@ -145,8 +147,18 @@ is_surface_schema_candidate() {
   return 1
 }
 
+is_manifest_schema_candidate() {
+  local rel_path="$1"
+  local filename="${rel_path#archives/manifests/}"
+  if [[ "$filename" =~ ^compile-[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}-[0-9a-f]{7,}\.md$ ]]; then
+    return 0
+  fi
+  return 1
+}
+
 definitions_checked=0
 surfaces_checked=0
+manifests_checked=0
 
 mapfile -t definition_candidates < <(find "$DEFINITIONS_DIR" -maxdepth 1 -type f | sort)
 for path in "${definition_candidates[@]}"; do
@@ -177,5 +189,21 @@ for path in "${surface_candidates[@]}"; do
   surfaces_checked=$((surfaces_checked + 1))
 done
 
-checked=$((definitions_checked + surfaces_checked))
-echo "OK: schema lint passed (${checked} file(s) checked: definitions=${definitions_checked}, surfaces=${surfaces_checked})."
+mapfile -t manifest_candidates < <(find "$MANIFESTS_DIR" -maxdepth 1 -type f | sort)
+for path in "${manifest_candidates[@]}"; do
+  rel_path="${path#${REPO_ROOT}/}"
+  if [[ "$rel_path" == "archives/manifests/.gitkeep" ]]; then
+    continue
+  fi
+  if [[ "$rel_path" != *.md ]]; then
+    continue
+  fi
+  if ! is_manifest_schema_candidate "$rel_path"; then
+    continue
+  fi
+  lint_schema_leaf "$path" "$rel_path"
+  manifests_checked=$((manifests_checked + 1))
+done
+
+checked=$((definitions_checked + surfaces_checked + manifests_checked))
+echo "OK: schema lint passed (${checked} file(s) checked: definitions=${definitions_checked}, surfaces=${surfaces_checked}, manifests=${manifests_checked})."
