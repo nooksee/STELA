@@ -1,15 +1,23 @@
 # Surface Specification: PoW.md
 
 ## Constitutional Anchor
-`PoW.md` is the root proof ledger defined by PoT and the closeout doctrine in `docs/MANUAL.md`.
-It is not narrative history. It is structured evidence that links work claims to executable receipts.
+`PoW.md` is the canonical root pointer for the Proof of Work surface.
+`PoW.md` does not store ledger body text directly in Phase 2+ operation; it stores exactly one pointer to the current PoW leaf.
 
-## Operator Contract
-- Surface: `PoW.md`.
-- Entry model: append-only, newest entry first.
+## Phase 2 Surface Model
+- `PoW.md` must contain a single repository-relative pointer:
+  - `archives/surfaces/PoW-YYYY-MM-DD-<hash>.md`
+- Each PoW leaf must carry unified schema front matter:
+  - `trace_id`
+  - `packet_id`
+  - `created_at`
+  - `previous`
+- Each PoW leaf body must contain one PoW entry block only (header + fields), with no global guidance preamble.
+
+## PoW Entry Contract (Canonical)
 - Header pattern:
   - `## YYYY-MM-DD HH:MM:SS UTC — DP-OPS-XXXX <summary>`
-- Required schema and order:
+- Required field order inside the entry:
   - `Packet ID`
   - `Timestamp`
   - `Work Branch`
@@ -20,33 +28,12 @@ It is not narrative history. It is structured evidence that links work claims to
   - `Verification commands`
   - `Notes`
 - Receipt pointer expectations:
-  - `RESULTS` points to `storage/handoff/DP-OPS-XXXX-RESULTS.md`.
-  - `OPEN` points to `storage/handoff/OPEN-*.txt`.
-  - `DUMP` points to `storage/dumps/dump-*.txt`.
+  - `RESULTS`: `storage/handoff/DP-OPS-XXXX-RESULTS.md`
+  - `OPEN`: `storage/handoff/OPEN-*.txt`
+  - `DUMP`: `storage/dumps/dump-*.txt`
 
-## Failure States and Drift Triggers
-- Missing required fields or field order drift in new entries.
-- Missing or malformed receipt pointers.
-- Pointer paths that do not resolve to committed, clean artifacts.
-- Deletions or rewrites of prior PoW entries.
-- Code-bearing changes without a PoW update.
-
-Enforcement linkage:
-- `.github/workflows/pow_policing.yml` fails pull requests when code-bearing surfaces change without a PoW update.
-- The same workflow enforces append-only integrity by rejecting deletion lines in `PoW.md`.
-- `ops/bin/prune --target=pow` blocks pruning if prune-candidate entries are incomplete or if receipt pointers are not committed and clean.
-
-## Mechanics and Sequencing
-1. Run verification gates first.
-2. Generate `OPEN`, `DUMP`, and `RESULTS` artifacts.
-3. Append PoW entry with exact schema and concrete artifact pointers.
-4. Commit canon and artifacts.
-5. Run prune only after proof exists and pointers are clean.
-
-Retention mechanics:
-- Keep the most recent `30` PoW entries in `PoW.md`.
-- Archive overflow entries to `archives/surfaces/PoW-archive-YYYY-MM.md` via `ops/bin/prune`.
-
-## Forensic Insight
-PoW converts process claims into auditable evidence chains.
-The ledger, policing workflow, and prune guards form a three-layer proof system: CI requires the ledger update, the ledger names the receipts, and prune refuses to destroy old entries unless those receipts are structurally valid and committed.
+## Operator Guidance
+- Author PoW entry content before running `ops/bin/certify`.
+- Treat `PoW.md` and `archives/surfaces/PoW-*.md` as generated surfaces once certify snapshots are emitted.
+- Do not embed raw OPEN or DUMP payloads inside PoW entries.
+- `Notes` must include material negative proof context when it affected execution.

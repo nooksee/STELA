@@ -70,9 +70,9 @@ Do not hand-edit `llms.txt`, `llms-core.txt`, or `llms-full.txt`; regenerate wit
 5. Log
 Prepare SoP/PoW ledger updates before running certify so the emitted leaf snapshots capture the intended entry content.
 After certify, treat `PoW.md`, `SoP.md`, and `TASK.md` as pointer heads; do not manually edit pointer lines or emitted `archives/surfaces/*` leaves.
-Update PoW proof content using the strict schema (Packet ID, Timestamp, Work Branch, Base HEAD, Scope, Target Files allowlist, Receipt pointers, Verification commands, Notes) before certification snapshotting.
-`PoW.md` receipt pointers must include `RESULTS`, `OPEN`, and `DUMP` artifact paths.
-`PoW.md` Notes must record both positive proof and negative proof context (failed checks, ruled-out hypotheses, and abandoned attempts) when they materially affected execution.
+PoW contract and schema guidance are canonical in `docs/ops/specs/surfaces/pow.md`; author PoW entry content to that spec before certification snapshotting.
+PoW entry receipt pointers must include `RESULTS`, `OPEN`, and `DUMP` artifact paths.
+PoW entry `Notes` must record both positive proof and negative proof context (failed checks, ruled-out hypotheses, and abandoned attempts) when they materially affected execution.
 Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, with reason and risk for each NOT RUN item.
 If using `./ops/bin/prune --reset-task`, ensure `PoW.md` already contains `- Packet ID: DP-OPS-XXXX`; prune blocks reset-task until that proof exists.
 

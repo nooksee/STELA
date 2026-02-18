@@ -71,7 +71,8 @@ porcelain_count=0
 porcelain_output=""
 porcelain_preview=""
 porcelain_path="storage/handoff/OPEN-PORCELAIN-${tag_prefix}${branch_safe}-${head_short}.txt"
-porcelain_saved="$porcelain_path"
+porcelain_saved="(suppressed: clean working tree)"
+porcelain_artifact_note="suppressed (clean working tree)"
 
 porcelain_raw="$(git status --porcelain || true)"
 porcelain_normalized=""
@@ -80,6 +81,8 @@ if [[ -n "$porcelain_raw" ]]; then
   porcelain_normalized="$(printf "%s\n" "$porcelain_raw" | sed -E 's/^[[:space:]]+//')"
   porcelain_count="$(printf "%s\n" "$porcelain_normalized" | wc -l | tr -d '[:space:]')"
   status_summary="dirty"
+  porcelain_saved="$porcelain_path"
+  porcelain_artifact_note="emitted"
   printf "%s\n" "$porcelain_normalized" > "$porcelain_saved"
 
   if (( porcelain_count <= 200 )); then
@@ -87,8 +90,6 @@ if [[ -n "$porcelain_raw" ]]; then
   else
     porcelain_preview="$(printf "%s\n" "$porcelain_normalized" | head -n 50)"
   fi
-else
-  : > "$porcelain_saved"
 fi
 
 last_commit="$(git log -1 --oneline)"
@@ -190,6 +191,7 @@ Do not:
 [GIT STATE]
 - Working tree: $status_summary
 - Porcelain entries: $porcelain_count
+- Porcelain artifact: $porcelain_artifact_note
 - Porcelain saved: $porcelain_saved
 - Last commit: $last_commit
 EOF
