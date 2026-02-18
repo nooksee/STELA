@@ -3,6 +3,10 @@ template_type: definition
 template_id: agent
 template_version: 1
 requires_slots:
+  - TRACE_ID
+  - PACKET_ID
+  - CREATED_AT
+  - PREVIOUS
   - AGENT_NAME
   - PROVENANCE_BLOCK
   - ROLE_SUMMARY
@@ -14,6 +18,12 @@ requires_slots:
 includes:
   - ops/lib/manifests/CONSTRAINTS.md#section-1
   - ops/lib/manifests/CONSTRAINTS.md#section-3
+---
+---
+trace_id: {{TRACE_ID}}
+packet_id: {{PACKET_ID}}
+created_at: {{CREATED_AT}}
+previous: {{PREVIOUS}}
 ---
 # Agent Draft: {{AGENT_NAME}}
 

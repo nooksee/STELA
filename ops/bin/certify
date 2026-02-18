@@ -9,6 +9,8 @@ INTEGRITY_LINT="${REPO_ROOT}/tools/lint/integrity.sh"
 RESULTS_LINT="${REPO_ROOT}/tools/lint/results.sh"
 HANDOFF_DIR="${REPO_ROOT}/storage/handoff"
 DP_INTAKE_DIR="${REPO_ROOT}/storage/dp/intake"
+LOGS_DIR="${REPO_ROOT}/logs"
+TELEMETRY_HEAD_PATH="${LOGS_DIR}/certify.telemetry.head"
 
 usage() {
   cat <<'USAGE'
@@ -40,8 +42,311 @@ normalize_path() {
   printf '%s' "$value"
 }
 
+declare -A ALLOWLIST_ENTRIES=()
+
+load_allowlist_entries() {
+  local pointer="$1"
+  local allowlist_path="$pointer"
+  if [[ "$allowlist_path" != /* ]]; then
+    allowlist_path="${REPO_ROOT}/${allowlist_path}"
+  fi
+  [[ -f "$allowlist_path" ]] || die "allowlist pointer file missing: ${pointer}"
+
+  local raw_line=""
+  while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
+    local entry
+    entry="$(normalize_path "$raw_line")"
+    [[ -n "$entry" ]] || continue
+    ALLOWLIST_ENTRIES["$entry"]=1
+  done < "$allowlist_path"
+}
+
+allowlist_contains_path() {
+  local path="$1"
+  [[ -n "${ALLOWLIST_ENTRIES[$path]+set}" ]]
+}
+
+normalize_unallowlisted_llms_drift() {
+  local -a llms_paths=(
+    "llms.txt"
+    "llms-core.txt"
+    "llms-full.txt"
+  )
+
+  local -a normalized_paths=()
+  local -a skipped_allowlisted_paths=()
+  local -a no_drift_paths=()
+  local -a missing_head_paths=()
+  local path=""
+
+  echo "Candidate selection pattern:"
+  echo "- llms.txt"
+  echo "- llms-core.txt"
+  echo "- llms-full.txt"
+  echo "Candidate evaluation:"
+
+  for path in "${llms_paths[@]}"; do
+    local allowlisted_status="no"
+    local drift_status="no"
+    local action_line=""
+
+    if allowlist_contains_path "$path"; then
+      allowlisted_status="yes"
+      skipped_allowlisted_paths+=("$path")
+      action_line="skipped because allowlisted"
+      printf -- "- file=%s allowlisted=%s drift=%s action=%s\n" "$path" "$allowlisted_status" "$drift_status" "$action_line"
+      continue
+    fi
+
+    if git -C "$REPO_ROOT" cat-file -e "HEAD:${path}" >/dev/null 2>&1; then
+      if git -C "$REPO_ROOT" diff --quiet HEAD -- "$path"; then
+        no_drift_paths+=("$path")
+        action_line="no normalization required"
+        printf -- "- file=%s allowlisted=%s drift=%s action=%s\n" "$path" "$allowlisted_status" "$drift_status" "$action_line"
+        continue
+      fi
+      drift_status="yes"
+      if git -C "$REPO_ROOT" restore --source=HEAD --staged --worktree -- "$path" >/dev/null 2>&1; then
+        action_line="git restore --source=HEAD --staged --worktree -- ${path}"
+      else
+        git -C "$REPO_ROOT" reset -q HEAD -- "$path"
+        git -C "$REPO_ROOT" checkout -- "$path"
+        action_line="git reset -q HEAD -- ${path} && git checkout -- ${path}"
+      fi
+      normalized_paths+=("$path")
+      printf -- "- file=%s allowlisted=%s drift=%s action=%s\n" "$path" "$allowlisted_status" "$drift_status" "$action_line"
+      continue
+    fi
+    missing_head_paths+=("$path")
+    action_line="skipped because file is absent in HEAD"
+    printf -- "- file=%s allowlisted=%s drift=%s action=%s\n" "$path" "$allowlisted_status" "$drift_status" "$action_line"
+  done
+
+  if (( ${#normalized_paths[@]} > 0 )); then
+    echo "Normalized files:"
+    for path in "${normalized_paths[@]}"; do
+      printf -- "- %s\n" "$path"
+    done
+  else
+    echo "Normalized files: (none)"
+  fi
+
+  if (( ${#skipped_allowlisted_paths[@]} > 0 )); then
+    echo "Skipped allowlisted files:"
+    for path in "${skipped_allowlisted_paths[@]}"; do
+      printf -- "- %s\n" "$path"
+    done
+  else
+    echo "Skipped allowlisted files: (none)"
+  fi
+
+  if (( ${#no_drift_paths[@]} > 0 )); then
+    echo "No-drift files:"
+    for path in "${no_drift_paths[@]}"; do
+      printf -- "- %s\n" "$path"
+    done
+  else
+    echo "No-drift files: (none)"
+  fi
+
+  if (( ${#missing_head_paths[@]} > 0 )); then
+    echo "Missing-from-HEAD files:"
+    for path in "${missing_head_paths[@]}"; do
+      printf -- "- %s\n" "$path"
+    done
+  else
+    echo "Missing-from-HEAD files: (none)"
+  fi
+}
+
+verify_changed_files_subset_allowlist() {
+  mapfile -t changed_paths < <(git -C "$REPO_ROOT" diff --name-only HEAD | sort)
+  local -a unauthorized=()
+  local path=""
+
+  for path in "${changed_paths[@]}"; do
+    local normalized
+    normalized="$(normalize_path "$path")"
+    if ! allowlist_contains_path "$normalized"; then
+      unauthorized+=("$normalized")
+    fi
+  done
+
+  if (( ${#unauthorized[@]} > 0 )); then
+    echo "Changed files not present in allowlist:"
+    for path in "${unauthorized[@]}"; do
+      printf -- "- %s\n" "$path"
+    done
+    return 1
+  fi
+
+  echo "Changed-file subset check: PASS"
+  echo "Changed files:"
+  if (( ${#changed_paths[@]} == 0 )); then
+    echo "- (none)"
+  else
+    for path in "${changed_paths[@]}"; do
+      printf -- "- %s\n" "$path"
+    done
+  fi
+}
+
 utc_now() {
   date -u +"%Y-%m-%dT%H:%M:%SZ"
+}
+
+timestamp_token_utc() {
+  date -u +"%Y%m%dT%H%M%SZ"
+}
+
+select_latest_path_by_mtime() {
+  local latest_path=""
+  local latest_mtime=-1
+  local path=""
+  local mtime=0
+
+  for path in "$@"; do
+    [[ -f "$path" ]] || continue
+    mtime="$(stat -c %Y "$path")"
+    if (( mtime > latest_mtime )); then
+      latest_mtime="$mtime"
+      latest_path="$path"
+      continue
+    fi
+    if (( mtime == latest_mtime )) && [[ "$path" > "$latest_path" ]]; then
+      latest_path="$path"
+    fi
+  done
+
+  [[ -n "$latest_path" ]] || return 1
+  printf '%s' "$latest_path"
+}
+
+select_latest_open_artifact() {
+  mapfile -t opens < <(
+    find "$HANDOFF_DIR" -maxdepth 1 -type f | awk '
+      {
+        filename=$0
+        sub(/^.*\//, "", filename)
+        if (filename ~ /^OPEN-.*\.txt$/ && filename !~ /^OPEN-PORCELAIN-/) {
+          print $0
+        }
+      }
+    '
+  )
+  if (( ${#opens[@]} == 0 )); then
+    return 1
+  fi
+  select_latest_path_by_mtime "${opens[@]}"
+}
+
+extract_trace_id_from_open() {
+  local open_path="$1"
+  [[ -f "$open_path" ]] || return 1
+  local trace_id
+  trace_id="$(
+    awk '
+      /STELA_TRACE_ID:[[:space:]]*/ {
+        line=$0
+        sub(/.*STELA_TRACE_ID:[[:space:]]*/, "", line)
+        print line
+        exit
+      }
+    ' "$open_path"
+  )"
+  trace_id="$(trim "$trace_id")"
+  [[ -n "$trace_id" ]] || return 1
+  printf '%s' "$trace_id"
+}
+
+resolve_trace_id() {
+  local trace_id="${STELA_TRACE_ID:-}"
+  if [[ -n "$trace_id" ]]; then
+    printf '%s' "$trace_id"
+    return 0
+  fi
+
+  local open_path=""
+  open_path="$(select_latest_open_artifact || true)"
+  if [[ -n "$open_path" ]]; then
+    trace_id="$(extract_trace_id_from_open "$open_path" || true)"
+  fi
+  [[ -n "$trace_id" ]] || die "failed to resolve STELA_TRACE_ID from environment or latest OPEN artifact"
+  printf '%s' "$trace_id"
+}
+
+slugify_token() {
+  local value="$1"
+  value="$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')"
+  value="$(printf '%s' "$value" | tr -cs 'a-z0-9' '-')"
+  value="${value#-}"
+  value="${value%-}"
+  if [[ -z "$value" ]]; then
+    value="token"
+  fi
+  printf '%s' "$value"
+}
+
+short_hash() {
+  local value="$1"
+  if command -v sha256sum >/dev/null 2>&1; then
+    printf '%s' "$value" | sha256sum | awk '{print substr($1, 1, 12)}'
+    return 0
+  fi
+  if command -v shasum >/dev/null 2>&1; then
+    printf '%s' "$value" | shasum -a 256 | awk '{print substr($1, 1, 12)}'
+    return 0
+  fi
+  printf '%s' "$value" | od -An -tx1 | tr -d ' \n' | cut -c1-12
+}
+
+emit_telemetry_leaf() {
+  local trace_id="$1"
+  local packet_id="$2"
+  local created_at="$3"
+  local results_path="$4"
+  local branch="$5"
+  local git_hash="$6"
+  local dp_source="$7"
+
+  mkdir -p "$LOGS_DIR"
+
+  local previous="(none)"
+  if [[ -f "$TELEMETRY_HEAD_PATH" ]]; then
+    local previous_raw
+    previous_raw="$(trim "$(cat "$TELEMETRY_HEAD_PATH")")"
+    if [[ -n "$previous_raw" ]]; then
+      previous="$previous_raw"
+    fi
+  fi
+
+  local packet_token
+  packet_token="$(slugify_token "$packet_id")"
+  local stamp
+  stamp="$(timestamp_token_utc)"
+  local trace_digest
+  trace_digest="$(short_hash "$trace_id")"
+
+  local leaf_rel_path="logs/certify-${packet_token}-${stamp}-${trace_digest}.md"
+  local leaf_abs_path="${REPO_ROOT}/${leaf_rel_path}"
+
+  cat <<EOF > "$leaf_abs_path"
+---
+trace_id: ${trace_id}
+packet_id: ${packet_id}
+created_at: ${created_at}
+previous: ${previous}
+---
+# Certify Telemetry Leaf
+- results_path: ${results_path}
+- branch: ${branch}
+- git_hash: ${git_hash}
+- dp_source: ${dp_source}
+- head_pointer: logs/certify.telemetry.head
+EOF
+
+  printf '%s\n' "$leaf_rel_path" > "$TELEMETRY_HEAD_PATH"
+  printf '%s' "$leaf_rel_path"
 }
 
 sanitize_disposable_refs() {
@@ -60,7 +365,7 @@ sanitize_disposable_refs() {
 
 forbidden_disposable_pattern() {
   cat <<'EOF'
-Local artifacts|Disposable artifact policy|storage/handoff/OPEN-|storage/handoff/OPEN-PORCELAIN-|storage/handoff/\*|storage/dumps/dump-|storage/dumps/\*|OPEN-work-dp-ops-[0-9]+|OPEN-PORCELAIN-work-dp-ops-[0-9]+|dump-platform-work-dp-ops-[0-9]+
+Local artifacts|Disposable artifact policy|storage/handoff/\*|storage/dumps/dump-|storage/dumps/\*|dump-platform-work-dp-ops-[0-9]+
 EOF
 }
 
@@ -74,6 +379,33 @@ assert_no_disposable_refs() {
     grep -Ein "$pattern" "$path" >&2 || true
     die "${label} contains forbidden disposable-artifact references"
   fi
+}
+
+append_command_log_entry() {
+  local cmd_id="$1"
+  local command="$2"
+  local started_at="$3"
+  local finished_at="$4"
+  local duration_seconds="$5"
+  local exit_code="$6"
+  local stdout_body="$7"
+  local stderr_body="$8"
+
+  local sanitized_command
+  sanitized_command="$(printf '%s' "$command" | sanitize_disposable_refs)"
+  stdout_body="$(printf '%s' "$stdout_body" | sanitize_disposable_refs)"
+  stderr_body="$(printf '%s' "$stderr_body" | sanitize_disposable_refs)"
+  [[ -n "$stdout_body" ]] || stdout_body="(empty)"
+  [[ -n "$stderr_body" ]] || stderr_body="(empty)"
+
+  COMMAND_LOG+=$'### Command '"$cmd_id"$'\n'
+  COMMAND_LOG+="- Command: \`${sanitized_command}\`"$'\n'
+  COMMAND_LOG+="- Started (UTC): ${started_at}"$'\n'
+  COMMAND_LOG+="- Finished (UTC): ${finished_at}"$'\n'
+  COMMAND_LOG+="- Duration Seconds: ${duration_seconds}"$'\n'
+  COMMAND_LOG+="- Exit Code: ${exit_code}"$'\n'
+  COMMAND_LOG+=$'\n#### STDOUT\n~~~text\n'"${stdout_body}"$'\n~~~\n'
+  COMMAND_LOG+=$'\n#### STDERR\n~~~text\n'"${stderr_body}"$'\n~~~\n\n'
 }
 
 extract_dp_block_from_task() {
@@ -198,6 +530,22 @@ extract_commands() {
         ;;
     esac
 
+    if [[ "$candidate" =~ (^|[[:space:]])(\./)?ops/bin/certify([[:space:]]|$) ]]; then
+      continue
+    fi
+    if [[ "$candidate" =~ (^|[[:space:]])(\./)?ops/bin/open([[:space:]]|$) ]]; then
+      continue
+    fi
+    if [[ "$candidate" =~ (^|[[:space:]])(\./)?ops/bin/dump([[:space:]]|$) ]]; then
+      continue
+    fi
+    if [[ "$candidate" =~ (^|[[:space:]])bash[[:space:]]+tools/lint/results[.]sh([[:space:]]|$) ]]; then
+      continue
+    fi
+    if [[ "$candidate" =~ storage/handoff/DP-[A-Z]+-[0-9]{4,}-RESULTS[.]md ]]; then
+      continue
+    fi
+
     first_token="${candidate%%[[:space:]]*}"
     case "$first_token" in
       git|bash|./*|comm|cat|ls|cp|mv|rm|find|sed|awk|grep|rg|echo|printf|sh)
@@ -208,6 +556,35 @@ extract_commands() {
         ;;
     esac
   done < "$receipt_block_path"
+}
+
+build_command_plan() {
+  local commands_path="$1"
+  local final_path="$2"
+
+  : > "$final_path"
+
+  declare -A seen=()
+
+  enqueue_command() {
+    local command="$1"
+    command="$(trim "$command")"
+    [[ -n "$command" ]] || return 0
+    if [[ -n "${seen[$command]+set}" ]]; then
+      return 0
+    fi
+    printf '%s\n' "$command" >> "$final_path"
+    seen["$command"]=1
+  }
+
+  enqueue_command "bash tools/lint/dp.sh --test"
+  enqueue_command "bash tools/lint/dp.sh TASK.md"
+  enqueue_command "bash tools/lint/task.sh"
+
+  local line=""
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    enqueue_command "$line"
+  done < "$commands_path"
 }
 
 DP_ID=""
@@ -275,14 +652,22 @@ assert_no_disposable_refs "$DP_BLOCK_PATH" "$DP_SOURCE"
 
 ALLOWLIST_POINTER="$(extract_allowlist_pointer "$DP_BLOCK_PATH" || true)"
 [[ -n "$ALLOWLIST_POINTER" ]] || die "failed to extract Target Files allowlist pointer from ${DP_SOURCE}"
+load_allowlist_entries "$ALLOWLIST_POINTER"
 
 RECEIPT_BLOCK_PATH="${TMP_DIR}/receipt-block.txt"
 COMMANDS_PATH="${TMP_DIR}/commands.txt"
+FINAL_COMMANDS_PATH="${TMP_DIR}/commands.final.txt"
 extract_receipt_block "$DP_BLOCK_PATH" "$RECEIPT_BLOCK_PATH"
 extract_commands "$RECEIPT_BLOCK_PATH" "$COMMANDS_PATH"
 if [[ ! -s "$COMMANDS_PATH" ]]; then
   die "failed to extract verification commands from ${DP_SOURCE} section 3.4.5"
 fi
+build_command_plan "$COMMANDS_PATH" "$FINAL_COMMANDS_PATH"
+if [[ ! -s "$FINAL_COMMANDS_PATH" ]]; then
+  die "no executable verification commands were assembled for ${DP_SOURCE}"
+fi
+
+TRACE_ID="$(resolve_trace_id)"
 
 if ! INTEGRITY_OUTPUT="$(bash "$INTEGRITY_LINT" 2>&1)"; then
   printf '%s\n' "$INTEGRITY_OUTPUT" >&2
@@ -304,7 +689,7 @@ while IFS= read -r command || [[ -n "$command" ]]; do
   STDERR_PATH="${TMP_DIR}/cmd-${CMD_ID}.stderr"
 
   set +e
-  bash -lc "cd \"$REPO_ROOT\" && ${command}" >"$STDOUT_PATH" 2>"$STDERR_PATH"
+  bash -lc "cd \"$REPO_ROOT\" && ${command}" </dev/null >"$STDOUT_PATH" 2>"$STDERR_PATH"
   EXIT_CODE=$?
   set -e
 
@@ -312,29 +697,105 @@ while IFS= read -r command || [[ -n "$command" ]]; do
   FINISH_EPOCH="$(date +%s)"
   DURATION_SECONDS=$((FINISH_EPOCH - START_EPOCH))
 
-  STDOUT_BODY="$(cat "$STDOUT_PATH" | sanitize_disposable_refs)"
-  STDERR_BODY="$(cat "$STDERR_PATH" | sanitize_disposable_refs)"
-  SANITIZED_COMMAND="$(printf '%s' "$command" | sanitize_disposable_refs)"
-  [[ -n "$STDOUT_BODY" ]] || STDOUT_BODY="(empty)"
-  [[ -n "$STDERR_BODY" ]] || STDERR_BODY="(empty)"
-
-  COMMAND_LOG+=$'### Command '"$CMD_ID"$'\n'
-  COMMAND_LOG+="- Command: \`${SANITIZED_COMMAND}\`"$'\n'
-  COMMAND_LOG+="- Started (UTC): ${STARTED_AT}"$'\n'
-  COMMAND_LOG+="- Finished (UTC): ${FINISHED_AT}"$'\n'
-  COMMAND_LOG+="- Duration Seconds: ${DURATION_SECONDS}"$'\n'
-  COMMAND_LOG+="- Exit Code: ${EXIT_CODE}"$'\n'
-  COMMAND_LOG+=$'\n#### STDOUT\n~~~text\n'"${STDOUT_BODY}"$'\n~~~\n'
-  COMMAND_LOG+=$'\n#### STDERR\n~~~text\n'"${STDERR_BODY}"$'\n~~~\n\n'
+  STDOUT_BODY="$(cat "$STDOUT_PATH")"
+  STDERR_BODY="$(cat "$STDERR_PATH")"
+  append_command_log_entry "$CMD_ID" "$command" "$STARTED_AT" "$FINISHED_AT" "$DURATION_SECONDS" "$EXIT_CODE" "$STDOUT_BODY" "$STDERR_BODY"
 
   if [[ "$EXIT_CODE" -ne 0 ]]; then
     printf '%s' "$COMMAND_LOG" >&2
     die "verification command failed (command ${CMD_ID}): ${command}"
   fi
-done < "$COMMANDS_PATH"
 
-DIFF_NAME_ONLY="$(git -C "$REPO_ROOT" diff --name-only)"
-DIFF_STAT="$(git -C "$REPO_ROOT" diff --stat)"
+  if [[ "$command" =~ (^|[[:space:]])bash[[:space:]]+tools/lint/llms[.]sh([[:space:]]|$) ]]; then
+    CMD_INDEX=$((CMD_INDEX + 1))
+    CMD_ID="$(printf '%02d' "$CMD_INDEX")"
+    NORMALIZE_STARTED_AT="$(utc_now)"
+    NORMALIZE_START_EPOCH="$(date +%s)"
+    NORMALIZE_STDOUT="$(normalize_unallowlisted_llms_drift)"
+    NORMALIZE_FINISHED_AT="$(utc_now)"
+    NORMALIZE_FINISH_EPOCH="$(date +%s)"
+    NORMALIZE_DURATION_SECONDS=$((NORMALIZE_FINISH_EPOCH - NORMALIZE_START_EPOCH))
+    append_command_log_entry \
+      "$CMD_ID" \
+      "internal: normalize unallowlisted llms outputs to HEAD (allowlist guard)" \
+      "$NORMALIZE_STARTED_AT" \
+      "$NORMALIZE_FINISHED_AT" \
+      "$NORMALIZE_DURATION_SECONDS" \
+      "0" \
+      "$NORMALIZE_STDOUT" \
+      "(empty)"
+  fi
+done < "$FINAL_COMMANDS_PATH"
+
+CMD_INDEX=$((CMD_INDEX + 1))
+CMD_ID="$(printf '%02d' "$CMD_INDEX")"
+POST_INTEGRITY_STARTED_AT="$(utc_now)"
+POST_INTEGRITY_START_EPOCH="$(date +%s)"
+POST_INTEGRITY_STDOUT_PATH="${TMP_DIR}/post-integrity.stdout"
+POST_INTEGRITY_STDERR_PATH="${TMP_DIR}/post-integrity.stderr"
+set +e
+bash -lc "cd \"$REPO_ROOT\" && bash tools/lint/integrity.sh" </dev/null >"$POST_INTEGRITY_STDOUT_PATH" 2>"$POST_INTEGRITY_STDERR_PATH"
+POST_INTEGRITY_EXIT_CODE=$?
+set -e
+POST_INTEGRITY_FINISHED_AT="$(utc_now)"
+POST_INTEGRITY_FINISH_EPOCH="$(date +%s)"
+POST_INTEGRITY_DURATION_SECONDS=$((POST_INTEGRITY_FINISH_EPOCH - POST_INTEGRITY_START_EPOCH))
+POST_INTEGRITY_STDOUT="$(cat "$POST_INTEGRITY_STDOUT_PATH")"
+POST_INTEGRITY_STDERR="$(cat "$POST_INTEGRITY_STDERR_PATH")"
+append_command_log_entry \
+  "$CMD_ID" \
+  "bash tools/lint/integrity.sh" \
+  "$POST_INTEGRITY_STARTED_AT" \
+  "$POST_INTEGRITY_FINISHED_AT" \
+  "$POST_INTEGRITY_DURATION_SECONDS" \
+  "$POST_INTEGRITY_EXIT_CODE" \
+  "$POST_INTEGRITY_STDOUT" \
+  "$POST_INTEGRITY_STDERR"
+if [[ "$POST_INTEGRITY_EXIT_CODE" -ne 0 ]]; then
+  printf '%s' "$COMMAND_LOG" >&2
+  die "post-command integrity gate failed"
+fi
+
+CMD_INDEX=$((CMD_INDEX + 1))
+CMD_ID="$(printf '%02d' "$CMD_INDEX")"
+ALLOWLIST_CHECK_STARTED_AT="$(utc_now)"
+ALLOWLIST_CHECK_START_EPOCH="$(date +%s)"
+set +e
+ALLOWLIST_CHECK_STDOUT="$(verify_changed_files_subset_allowlist)"
+ALLOWLIST_CHECK_EXIT_CODE=$?
+set -e
+ALLOWLIST_CHECK_FINISHED_AT="$(utc_now)"
+ALLOWLIST_CHECK_FINISH_EPOCH="$(date +%s)"
+ALLOWLIST_CHECK_DURATION_SECONDS=$((ALLOWLIST_CHECK_FINISH_EPOCH - ALLOWLIST_CHECK_START_EPOCH))
+append_command_log_entry \
+  "$CMD_ID" \
+  "internal: verify changed files subset of allowlist pointer (${ALLOWLIST_POINTER})" \
+  "$ALLOWLIST_CHECK_STARTED_AT" \
+  "$ALLOWLIST_CHECK_FINISHED_AT" \
+  "$ALLOWLIST_CHECK_DURATION_SECONDS" \
+  "$ALLOWLIST_CHECK_EXIT_CODE" \
+  "$ALLOWLIST_CHECK_STDOUT" \
+  "(empty)"
+if [[ "$ALLOWLIST_CHECK_EXIT_CODE" -ne 0 ]]; then
+  printf '%s' "$COMMAND_LOG" >&2
+  die "changed-file subset check failed"
+fi
+
+POST_INTEGRITY_STDOUT_SANITIZED="$(printf '%s' "$POST_INTEGRITY_STDOUT" | sanitize_disposable_refs)"
+POST_INTEGRITY_STDERR_SANITIZED="$(printf '%s' "$POST_INTEGRITY_STDERR" | sanitize_disposable_refs)"
+INTEGRITY_OUTPUT+=$'\n\nPost-command integrity recheck:\n'
+if [[ -n "$(trim "$POST_INTEGRITY_STDOUT_SANITIZED")" ]]; then
+  INTEGRITY_OUTPUT+="${POST_INTEGRITY_STDOUT_SANITIZED}"
+else
+  INTEGRITY_OUTPUT+="(empty)"
+fi
+if [[ -n "$(trim "$POST_INTEGRITY_STDERR_SANITIZED")" ]]; then
+  INTEGRITY_OUTPUT+=$'\nPost-command integrity stderr:\n'
+  INTEGRITY_OUTPUT+="${POST_INTEGRITY_STDERR_SANITIZED}"
+fi
+
+DIFF_NAME_ONLY="$(git -C "$REPO_ROOT" diff --name-only HEAD)"
+DIFF_STAT="$(git -C "$REPO_ROOT" diff --stat HEAD)"
 DIFF_NAME_ONLY="$(printf '%s' "$DIFF_NAME_ONLY" | sanitize_disposable_refs)"
 DIFF_STAT="$(printf '%s' "$DIFF_STAT" | sanitize_disposable_refs)"
 [[ -n "$DIFF_NAME_ONLY" ]] || DIFF_NAME_ONLY="(none)"
@@ -356,7 +817,123 @@ GIT_HASH="$(git -C "$REPO_ROOT" rev-parse HEAD)"
   "--slot=DIFF_STAT=${DIFF_STAT}" \
   "--slot=CLOSING_BLOCK=${CLOSING_BLOCK}"
 assert_no_disposable_refs "$OUT_PATH" "${OUT_PATH#${REPO_ROOT}/}"
+RESULTS_LINT_STARTED_AT="$(utc_now)"
+RESULTS_LINT_START_EPOCH="$(date +%s)"
+RESULTS_LINT_STDOUT_PATH="${TMP_DIR}/results-lint.stdout"
+RESULTS_LINT_STDERR_PATH="${TMP_DIR}/results-lint.stderr"
+set +e
+bash "$RESULTS_LINT" "$OUT_PATH" >"$RESULTS_LINT_STDOUT_PATH" 2>"$RESULTS_LINT_STDERR_PATH"
+RESULTS_LINT_EXIT_CODE=$?
+set -e
+RESULTS_LINT_FINISHED_AT="$(utc_now)"
+RESULTS_LINT_FINISH_EPOCH="$(date +%s)"
+RESULTS_LINT_DURATION_SECONDS=$((RESULTS_LINT_FINISH_EPOCH - RESULTS_LINT_START_EPOCH))
+RESULTS_LINT_STDOUT="$(cat "$RESULTS_LINT_STDOUT_PATH")"
+RESULTS_LINT_STDERR="$(cat "$RESULTS_LINT_STDERR_PATH")"
+if [[ "$RESULTS_LINT_EXIT_CODE" -ne 0 ]]; then
+  printf '%s\n' "$RESULTS_LINT_STDOUT" >&2
+  printf '%s\n' "$RESULTS_LINT_STDERR" >&2
+  die "results lint failed"
+fi
+
+CMD_INDEX=$((CMD_INDEX + 1))
+CMD_ID="$(printf '%02d' "$CMD_INDEX")"
+append_command_log_entry \
+  "$CMD_ID" \
+  "bash tools/lint/results.sh ${OUT_PATH#${REPO_ROOT}/}" \
+  "$RESULTS_LINT_STARTED_AT" \
+  "$RESULTS_LINT_FINISHED_AT" \
+  "$RESULTS_LINT_DURATION_SECONDS" \
+  "$RESULTS_LINT_EXIT_CODE" \
+  "$RESULTS_LINT_STDOUT" \
+  "$RESULTS_LINT_STDERR"
+
+SLOT_TOKEN_CHECK_OUTPUT="PASS: unresolved slot token scan clear"
+if grep -E -q '\{\{|}}' "$OUT_PATH"; then
+  SLOT_TOKEN_CHECK_OUTPUT="FAIL: unresolved slot token scan detected placeholder tokens"
+  die "$SLOT_TOKEN_CHECK_OUTPUT"
+fi
+
+RECORDED_HASH="$(awk '
+  /^-[[:space:]]*Git Hash:[[:space:]]*/ {
+    value=$0
+    sub(/^[^:]*:[[:space:]]*/, "", value)
+    print value
+    exit
+  }
+' "$OUT_PATH")"
+RECORDED_HASH="$(trim "$RECORDED_HASH")"
+HASH_PARITY_OUTPUT="FAIL: recorded Git Hash does not match HEAD"
+if [[ "$RECORDED_HASH" == "$GIT_HASH" ]]; then
+  HASH_PARITY_OUTPUT="PASS: recorded Git Hash equals HEAD (${GIT_HASH})"
+else
+  die "$HASH_PARITY_OUTPUT (recorded=${RECORDED_HASH} head=${GIT_HASH})"
+fi
+
+CLOSING_BLOCK_CHECK_OUTPUT="FAIL: mandatory closing block is empty"
+if [[ -n "$(awk '
+  BEGIN { in_block=0 }
+  /^## Mandatory Closing Block$/ { in_block=1; next }
+  in_block && /[^[:space:]]/ { print; exit }
+' "$OUT_PATH")" ]]; then
+  CLOSING_BLOCK_CHECK_OUTPUT="PASS: mandatory closing block is populated"
+else
+  die "$CLOSING_BLOCK_CHECK_OUTPUT"
+fi
+
+TEMPLATE_STRUCTURE_OUTPUT="PASS: results template structure headings are present"
+for required_heading in \
+  "## Certification Metadata" \
+  "## Scope Verification" \
+  "### Integrity Lint Output" \
+  "## Verification Command Log" \
+  "## Git State Impact" \
+  "### git diff --name-only" \
+  "### git diff --stat" \
+  "## Mandatory Closing Block"; do
+  if ! grep -Fxq "$required_heading" "$OUT_PATH"; then
+    TEMPLATE_STRUCTURE_OUTPUT="FAIL: missing required heading '${required_heading}'"
+    die "$TEMPLATE_STRUCTURE_OUTPUT"
+  fi
+done
+
+INTEGRITY_OUTPUT+=$'\n\nResults lint verification:\n'
+INTEGRITY_OUTPUT+="${RESULTS_LINT_STDOUT}"
+if [[ -n "$(trim "$RESULTS_LINT_STDERR")" ]]; then
+  INTEGRITY_OUTPUT+=$'\nResults lint stderr:\n'
+  INTEGRITY_OUTPUT+="${RESULTS_LINT_STDERR}"
+fi
+INTEGRITY_OUTPUT+=$'\n'
+INTEGRITY_OUTPUT+="${TEMPLATE_STRUCTURE_OUTPUT}"$'\n'
+INTEGRITY_OUTPUT+="${HASH_PARITY_OUTPUT}"$'\n'
+INTEGRITY_OUTPUT+="${CLOSING_BLOCK_CHECK_OUTPUT}"$'\n'
+INTEGRITY_OUTPUT+="${SLOT_TOKEN_CHECK_OUTPUT}"
+
+"$TEMPLATE_BIN" render results --out="$OUT_PATH" \
+  "--slot=DP_ID=${DP_ID}" \
+  "--slot=CERTIFIED_AT=${CERTIFIED_AT}" \
+  "--slot=BRANCH=${BRANCH}" \
+  "--slot=GIT_HASH=${GIT_HASH}" \
+  "--slot=ALLOWLIST_POINTER=${ALLOWLIST_POINTER}" \
+  "--slot=INTEGRITY_OUTPUT=${INTEGRITY_OUTPUT}" \
+  "--slot=COMMAND_LOG=${COMMAND_LOG}" \
+  "--slot=DIFF_NAME_ONLY=${DIFF_NAME_ONLY}" \
+  "--slot=DIFF_STAT=${DIFF_STAT}" \
+  "--slot=CLOSING_BLOCK=${CLOSING_BLOCK}"
+assert_no_disposable_refs "$OUT_PATH" "${OUT_PATH#${REPO_ROOT}/}"
 bash "$RESULTS_LINT" "$OUT_PATH"
+
+TELEMETRY_LEAF="$(
+  emit_telemetry_leaf \
+    "$TRACE_ID" \
+    "$DP_ID" \
+    "$CERTIFIED_AT" \
+    "${OUT_PATH#${REPO_ROOT}/}" \
+    "$BRANCH" \
+    "$GIT_HASH" \
+    "$DP_SOURCE"
+)"
 
 echo "DP source: ${DP_SOURCE}"
 echo "RESULTS saved: ${OUT_PATH#${REPO_ROOT}/}"
+echo "Telemetry leaf: ${TELEMETRY_LEAF}"

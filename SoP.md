@@ -1,5 +1,15 @@
 Archive policy: keep most recent 30 entries; older entries moved to `archives/surfaces/SoP-archive-YYYY-MM.md`.
 
+## 2026-02-18 00:50:09 UTC — DP-OPS-0070 Atomic Capture Coherence and Auditability Enforcement
+- Objective: Enforced atomic capture coherence for OPEN, OPEN-PORCELAIN, dump manifest/payload/tarball, and RESULTS at a single immutable HEAD, and closed prior auditability gaps by ensuring intake DP visibility in dump artifacts.
+- Why: CI policing and re-audit failures were driven by mixed-generation artifact sets and non-auditable path claims.
+- Canon updates: `TASK.md` session-state contract now states OPEN-PORCELAIN emission on every OPEN run (clean sessions produce zero-line artifact). `SoP.md` and `PoW.md` were updated to satisfy canon and code-surface policing gates.
+- Evidence pointers: `storage/handoff/OPEN-work-dp-ops-0070-2026-02-17-c585b601.txt`; `storage/handoff/OPEN-PORCELAIN-work-dp-ops-0070-2026-02-17-c585b601.txt`; `storage/handoff/DP-OPS-0070-RESULTS-c585b601.md`; `storage/dumps/dump-platform-work-dp-ops-0070-2026-02-17-c585b601.manifest.txt`; `storage/dumps/dump-platform-work-dp-ops-0070-2026-02-17-c585b601.txt`; `storage/dumps/dump-platform-work-dp-ops-0070-2026-02-17-c585b601.tar.xz`.
+- Governance incident record: Contractor execution and decision log is recorded at `storage/handoff/CONTRACTOR-EXECUTION-DECISION-LOG-DP-OPS-0070.md`.
+- Contractor commit sequence (operator-governance breach record): `4e50f38b`; `26cf1a4b`; `c585b601`.
+- Integrator audit record: `storage/handoff/INTEGRATOR-EXECUTION-DECISION-LOG-DP-OPS-0070.md`.
+- Integrator outcome summary: final verdict PASS with 0 deviations after atomic coherent capture at `c585b601`.
+
 ## 2026-02-17 18:17:24 UTC — DP-OPS-0069 System Locked Protocol Certification Cutover
 - Objective: Implemented template-based certification closeout by adding strict RESULTS surface support, certifier execution (`ops/bin/certify`), integrity/results lint gates, and governance/CI wiring for certification-driven closeout.
 - Target Files allowlist: `storage/dp/active/allowlist.txt` (pointer sidecar, exact path list).

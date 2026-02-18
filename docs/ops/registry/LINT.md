@@ -15,3 +15,4 @@ Authoritative registry for `tools/lint/*` executables.
 | LINT-09 | Truth Lint | tools/lint/truth.sh | Spec: `docs/ops/specs/tools/lint/truth.md`. Scans authored surfaces for forbidden canon spellings. |
 | LINT-10 | Integrity Lint | tools/lint/integrity.sh | Spec: `docs/ops/specs/tools/lint/integrity.md`. Fails when changed or untracked paths are outside the active Target Files allowlist. |
 | LINT-11 | RESULTS Lint | tools/lint/results.sh | Spec: `docs/ops/specs/tools/lint/results.md`. Verifies certification RESULTS schema, template hash parity, git hash parity, and Closing Block completeness. |
+| LINT-12 | Schema Lint | tools/lint/schema.sh | Spec: `docs/ops/specs/tools/lint/schema.md`. Validates unified schema front-matter keys for `archives/definitions` leaves and enforces `created_at` and `previous` format rules. |

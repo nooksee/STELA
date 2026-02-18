@@ -3,11 +3,21 @@ template_type: definition
 template_id: task
 template_version: 1
 requires_slots:
+  - TRACE_ID
+  - PACKET_ID
+  - CREATED_AT
+  - PREVIOUS
   - TASK_NAME
   - PROVENANCE_BLOCK
 includes:
   - ops/lib/manifests/CONSTRAINTS.md#section-1
   - ops/lib/manifests/CONSTRAINTS.md#section-3
+---
+---
+trace_id: {{TRACE_ID}}
+packet_id: {{PACKET_ID}}
+created_at: {{CREATED_AT}}
+previous: {{PREVIOUS}}
 ---
 # Task Draft: {{TASK_NAME}}
 

@@ -21,6 +21,14 @@ die() {
   exit 1
 }
 
+generate_trace_id() {
+  local stamp
+  local suffix
+  stamp="$(date -u '+%Y%m%dT%H%M%SZ')"
+  suffix="$(printf '%04x%04x' "$RANDOM" "$RANDOM")"
+  printf 'stela-%s-%s' "$stamp" "$suffix"
+}
+
 for arg in "$@"; do
   case "$arg" in
     --format=chatgpt|--format=gemini)
@@ -51,6 +59,7 @@ done
 branch="$(git rev-parse --abbrev-ref HEAD)"
 head_short="$(git rev-parse --short HEAD)"
 branch_safe="${branch//\//-}"
+STELA_TRACE_ID="$(generate_trace_id)"
 
 tag_prefix=""
 if [[ -n "$tag" ]]; then
@@ -59,9 +68,10 @@ fi
 
 status_summary="clean"
 porcelain_count=0
-porcelain_saved="(none)"
 porcelain_output=""
 porcelain_preview=""
+porcelain_path="storage/handoff/OPEN-PORCELAIN-${tag_prefix}${branch_safe}-${head_short}.txt"
+porcelain_saved="$porcelain_path"
 
 porcelain_raw="$(git status --porcelain || true)"
 porcelain_normalized=""
@@ -70,7 +80,6 @@ if [[ -n "$porcelain_raw" ]]; then
   porcelain_normalized="$(printf "%s\n" "$porcelain_raw" | sed -E 's/^[[:space:]]+//')"
   porcelain_count="$(printf "%s\n" "$porcelain_normalized" | wc -l | tr -d '[:space:]')"
   status_summary="dirty"
-  porcelain_saved="storage/handoff/OPEN-PORCELAIN-${tag_prefix}${branch_safe}-${head_short}.txt"
   printf "%s\n" "$porcelain_normalized" > "$porcelain_saved"
 
   if (( porcelain_count <= 200 )); then
@@ -78,6 +87,8 @@ if [[ -n "$porcelain_raw" ]]; then
   else
     porcelain_preview="$(printf "%s\n" "$porcelain_normalized" | head -n 50)"
   fi
+else
+  : > "$porcelain_saved"
 fi
 
 last_commit="$(git log -1 --oneline)"
@@ -139,6 +150,7 @@ $mode_line
 - HEAD short hash: $head_short
 - DP id/date (if applicable): $dp
 - Intent for today: $intent
+- STELA_TRACE_ID: $STELA_TRACE_ID
 
 [ROLE CONTRACT]
 Integrator (operator): Owns scope, priorities, and approvals.

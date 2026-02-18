@@ -135,6 +135,103 @@ trim() {
   printf '%s' "$value"
 }
 
+iso_utc_now() {
+  date -u +"%Y-%m-%dT%H:%M:%SZ"
+}
+
+generate_trace_id() {
+  local stamp
+  local suffix
+  stamp="$(date -u '+%Y%m%dT%H%M%SZ')"
+  suffix="$(printf '%04x%04x' "$RANDOM" "$RANDOM")"
+  printf 'stela-%s-%s' "$stamp" "$suffix"
+}
+
+extract_trace_id_from_open() {
+  local open_path="$1"
+  [[ -f "$open_path" ]] || return 1
+  local trace_id
+  trace_id="$(
+    awk '
+      /STELA_TRACE_ID:[[:space:]]*/ {
+        line=$0
+        sub(/.*STELA_TRACE_ID:[[:space:]]*/, "", line)
+        print line
+        exit
+      }
+    ' "$open_path"
+  )"
+  trace_id="$(trim "$trace_id")"
+  [[ -n "$trace_id" ]] || return 1
+  printf '%s' "$trace_id"
+}
+
+resolve_trace_id() {
+  local open_path="$1"
+  local trace_id="${STELA_TRACE_ID:-}"
+  if [[ -n "$trace_id" ]]; then
+    printf '%s' "$trace_id"
+    return 0
+  fi
+
+  trace_id="$(extract_trace_id_from_open "$open_path" || true)"
+  if [[ -z "$trace_id" ]]; then
+    trace_id="$(generate_trace_id)"
+  fi
+  printf '%s' "$trace_id"
+}
+
+select_latest_path_by_mtime() {
+  local latest_path=""
+  local latest_mtime=-1
+  local path=""
+  local mtime=0
+
+  for path in "$@"; do
+    [[ -f "$path" ]] || continue
+    mtime="$(stat -c %Y "$path")"
+    if (( mtime > latest_mtime )); then
+      latest_mtime="$mtime"
+      latest_path="$path"
+      continue
+    fi
+    if (( mtime == latest_mtime )) && [[ "$path" > "$latest_path" ]]; then
+      latest_path="$path"
+    fi
+  done
+
+  [[ -n "$latest_path" ]] || return 1
+  printf '%s' "$latest_path"
+}
+
+resolve_previous_agent_definition() {
+  local slug="$1"
+  mapfile -t candidates < <(
+    find "$HANDOFF_DIR" -maxdepth 1 -type f | awk -v slug="$slug" '
+      {
+        filename=$0
+        sub(/^.*\//, "", filename)
+        if (filename ~ ("^agent-[0-9]{8}-" slug "(-[0-9]+)?\\.md$")) {
+          print $0
+        }
+      }
+    '
+  )
+
+  if (( ${#candidates[@]} == 0 )); then
+    printf '(none)'
+    return 0
+  fi
+
+  local latest_path
+  latest_path="$(select_latest_path_by_mtime "${candidates[@]}")"
+  if [[ "$latest_path" == "${REPO_ROOT}/"* ]]; then
+    printf '%s' "${latest_path#${REPO_ROOT}/}"
+  else
+    printf '%s' "$latest_path"
+  fi
+}
+
 slugify() {
   local value="$1"
   value="$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')"
@@ -1013,6 +1110,12 @@ cmd_harvest() {
 
   local slug
   slug="$(slugify "$name")"
+  local trace_id
+  trace_id="$(resolve_trace_id "$open_path")"
+  local created_at
+  created_at="$(iso_utc_now)"
+  local previous
+  previous="$(resolve_previous_agent_definition "$slug")"
   local draft_path
   local counter=0
 
@@ -1057,6 +1160,10 @@ cmd_harvest() {
   manifest_paths_block="$(collect_manifest_paths | awk '{ print "- `" $0 "`" }')"
 
   render_definition_template "$AGENT_TEMPLATE_PATH" "$tmp" \
+    "TRACE_ID" "$trace_id" \
+    "PACKET_ID" "$dp_id" \
+    "CREATED_AT" "$created_at" \
+    "PREVIOUS" "$previous" \
     "AGENT_NAME" "$name" \
     "PROVENANCE_BLOCK" "$provenance_block" \
     "ROLE_SUMMARY" "$summary" \
