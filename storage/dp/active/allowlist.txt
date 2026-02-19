@@ -76,6 +76,9 @@ archives/surfaces/TASK-DP-OPS-0074-1f08cbba.md
 archives/surfaces/PoW-2026-02-18-89353866.md
 archives/surfaces/SoP-2026-02-18-89353866.md
 archives/surfaces/TASK-DP-OPS-0074-89353866.md
+archives/surfaces/PoW-2026-02-18-e4911e2a.md
+archives/surfaces/SoP-2026-02-18-e4911e2a.md
+archives/surfaces/TASK-DP-OPS-0074-e4911e2a.md
 storage/dp/processed/DP-OPS-0074.md
 storage/handoff/DP-OPS-0074-RESULTS.md
 storage/handoff/CLOSING-DP-OPS-0074.md
