@@ -45,6 +45,12 @@ archives/surfaces/TASK-DP-OPS-0074-45af651e.md
 archives/surfaces/PoW-2026-02-18-c3f30b29.md
 archives/surfaces/SoP-2026-02-18-c3f30b29.md
 archives/surfaces/TASK-DP-OPS-0074-c3f30b29.md
+archives/surfaces/PoW-2026-02-18-4b05fcac.md
+archives/surfaces/SoP-2026-02-18-4b05fcac.md
+archives/surfaces/TASK-DP-OPS-0074-4b05fcac.md
+archives/surfaces/PoW-2026-02-18-6d352820.md
+archives/surfaces/SoP-2026-02-18-6d352820.md
+archives/surfaces/TASK-DP-OPS-0074-6d352820.md
 storage/dp/processed/DP-OPS-0074.md
 storage/handoff/DP-OPS-0074-RESULTS.md
 storage/handoff/CLOSING-DP-OPS-0074.md
