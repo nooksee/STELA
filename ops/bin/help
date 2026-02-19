@@ -261,7 +261,7 @@ ${bold}Closeout Sequence${reset}
    ${green}./ops/bin/map${reset}
    ${green}./ops/bin/llms --out-dir="$(pwd)"${reset}
 4. Prune last:
-   ${green}./ops/bin/prune --dp=DP-OPS-XXXX --scrub${reset}
+   ${green}./ops/bin/prune --scrub${reset}
 
 ${bold}Routing References${reset}
 - Dispatch contract: ${cyan}TASK.md${reset}

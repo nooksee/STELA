@@ -15,7 +15,7 @@
 - DP structure is generated from `ops/src/surfaces/dp.md.tpl` through `ops/bin/draft`; manual structural edits are prohibited.
 - Surface and definition rendering is centralized in `ops/bin/template` with YAML metadata parsing, include injection, and strict slot enforcement by default.
 - Definition registry guidance is canonical in `docs/ops/specs/definitions/agents.md`, `docs/ops/specs/definitions/tasks.md`, and `docs/ops/specs/definitions/skills.md`. `opt/_factory/AGENTS.md`, `opt/_factory/TASKS.md`, and `opt/_factory/SKILLS.md` are pointer heads.
-- `ops/bin/draft`, `ops/lib/scripts/{agent,task,skill}.sh`, and `ops/bin/prune --reset-task` route through `ops/bin/template`.
+- `ops/bin/draft`, `ops/lib/scripts/{agent,task,skill}.sh`, route through `ops/bin/template`.
 
 **Anchor Hygiene:**
 - Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md pointer references to the newest OPEN artifact and RESULTS receipts before any work continues; do not rewrite inline branch/hash state in TASK.md.
@@ -78,12 +78,7 @@ PoW contract and schema guidance are canonical in `docs/ops/specs/surfaces/pow.m
 PoW entry receipt pointers must include `RESULTS`, `OPEN`, and `DUMP` artifact paths.
 PoW entry `Notes` must record both positive proof and negative proof context (failed checks, ruled-out hypotheses, and abandoned attempts) when they materially affected execution.
 Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, with reason and risk for each NOT RUN item.
-If using `./ops/bin/prune --reset-task`, ensure `PoW.md` already contains `- Packet ID: DP-OPS-XXXX`; prune blocks reset-task until that proof exists.
 
-6. Prune
-Run local hygiene prune for the DP.
-~~~bash
-./ops/bin/prune --dp=DP-OPS-0048 --scrub
 ~~~
 
 ---

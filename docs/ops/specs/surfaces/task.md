@@ -21,12 +21,10 @@
 - Operator commits before any prune step.
 - Run prune last:
   - `./ops/bin/prune --dry-run` and `./ops/bin/prune --target=pow --dry-run` before destructive paths.
-  - `./ops/bin/prune --dp=<id> --scrub` for hygiene cleanup.
-  - `./ops/bin/prune --reset-task` only for explicit TASK baseline reset after PoW entry exists for the active DP id.
+  - `./ops/bin/prune --scrub` for hygiene cleanup.
 
 ## TASK Template Source of Truth
 - SSOT: `ops/src/surfaces/task.md.tpl`
-- `ops/bin/prune --reset-task` reads this run-layer template directly.
 - Template content must remain valid `TASK.md` and must pass `bash tools/lint/task.sh`.
 - This spec is Explain-only and must not embed executable template bodies.
 
