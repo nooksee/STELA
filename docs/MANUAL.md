@@ -47,9 +47,12 @@ Keep `storage/handoff/CLOSING-DP-OPS-XXXX.md` populated throughout execution.
 Run:
 ~~~bash
 ./ops/bin/certify --dp=DP-OPS-XXXX --out=auto
+bash tools/lint/results.sh storage/handoff/DP-OPS-XXXX-RESULTS.md
 ~~~
 `ops/bin/certify` runs integrity checks, executes the Section 3.4.5 verification command list, renders the RESULTS receipt from template, and runs `tools/lint/results.sh` as a hard gate.
 `ops/bin/certify` also emits schema-stamped surface leaves for PoW/SoP/TASK under `archives/surfaces/` and rewrites `PoW.md`, `SoP.md`, and `TASK.md` to single-line HEAD pointers to those leaves.
+If `TASK.md` does not contain the target DP block, certify now fails unless `--allow-intake-fallback` is explicitly provided.
+`bash tools/lint/results.sh` without arguments targets the active branch packet receipt when resolvable; use `--all` only for full historical receipt scans.
 Manual RESULTS fabrication is prohibited.
 
 3. Harvest
@@ -189,6 +192,7 @@ ops/lib/scripts/task.sh promote archives/definitions/task-candidate-YYYY-MM-DD-<
 **Placement:**
 * Drafts: `storage/dp/intake/`
 * Processed: `storage/dp/processed/`
+* `storage/dp/intake/` is staging-only and must not contain tracked `DP-*.md` packets in commits.
 
 **Operator Prompts:**
 * `docs/ops/prompts` — Operator prompt stances and usage.

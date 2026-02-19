@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: tools/lint/results.sh [path]
+Usage: tools/lint/results.sh [--all|path]
 USAGE
 }
 
@@ -89,17 +89,50 @@ fi
 
 declare -a targets=()
 explicit_target=0
+scan_all=0
+inferred_target=0
+
+branch_name="$(git rev-parse --abbrev-ref HEAD)"
+active_dp_id=""
+if [[ "$branch_name" =~ ^work/(dp-[a-z0-9]+-[0-9]{4,})-[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+  active_dp_id="$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:lower:]' '[:upper:]')"
+fi
+
 if [[ "$#" -eq 1 ]]; then
-  target="$1"
-  if [[ "$target" != /* ]]; then
-    target="${REPO_ROOT}/${target}"
+  if [[ "$1" == "--all" ]]; then
+    scan_all=1
+  else
+    target="$1"
+    if [[ "$target" != /* ]]; then
+      target="${REPO_ROOT}/${target}"
+    fi
+    targets+=("$target")
+    explicit_target=1
   fi
-  targets+=("$target")
-  explicit_target=1
-else
+fi
+
+if (( scan_all )); then
   while IFS= read -r path; do
     targets+=("$path")
   done < <(find "${REPO_ROOT}/storage/handoff" -maxdepth 1 -type f -name 'DP-OPS-*-RESULTS.md' | sort)
+elif (( explicit_target == 0 )); then
+  if [[ -n "$active_dp_id" ]]; then
+    active_target="${REPO_ROOT}/storage/handoff/${active_dp_id}-RESULTS.md"
+    if [[ -f "$active_target" ]]; then
+      targets+=("$active_target")
+      inferred_target=1
+    fi
+  fi
+
+  if (( inferred_target == 0 )); then
+    mapfile -t discovered_targets < <(find "${REPO_ROOT}/storage/handoff" -maxdepth 1 -type f -name 'DP-OPS-*-RESULTS.md' | sort)
+    if [[ "${#discovered_targets[@]}" -eq 1 ]]; then
+      targets+=("${discovered_targets[0]}")
+      inferred_target=1
+    elif [[ "${#discovered_targets[@]}" -gt 1 ]]; then
+      die "multiple RESULTS receipts detected; pass an explicit path or --all"
+    fi
+  fi
 fi
 
 if [[ "${#targets[@]}" -eq 0 ]]; then
@@ -143,7 +176,7 @@ for target in "${targets[@]}"; do
   rel_target="${target#${REPO_ROOT}/}"
 
   if ! grep -Eq '^## Certification Metadata$' "$target"; then
-    if (( explicit_target )); then
+    if (( explicit_target || inferred_target )); then
       fail "${rel_target}: not a certification RESULTS receipt (missing '## Certification Metadata')"
     else
       echo "SKIP: legacy RESULTS format: ${rel_target}"

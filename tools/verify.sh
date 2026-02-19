@@ -139,6 +139,14 @@ if [[ ! -d "storage/dp" ]]; then
   fail "Missing required storage: 'storage/dp/'"
 fi
 
+mapfile -t tracked_intake_packets < <(
+  git ls-files storage/dp/intake \
+    | awk '/^storage\/dp\/intake\/DP-[A-Z]+-[0-9]{4,}\.md$/ { print }'
+)
+if (( ${#tracked_intake_packets[@]} > 0 )); then
+  fail "Tracked intake DP packets are forbidden; move packets to storage/dp/processed/: ${tracked_intake_packets[*]}"
+fi
+
 # Required resume and telemetry roots
 if [[ ! -d "var/tmp" ]]; then
   fail "Missing required resume directory: 'var/tmp/'"

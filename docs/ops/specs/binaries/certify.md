@@ -6,7 +6,7 @@ It enforces scope integrity, executes receipt verification commands, and generat
 
 ## Operator Contract
 - Invocation:
-  - `./ops/bin/certify --dp=DP-OPS-XXXX [--out=auto|path]`
+  - `./ops/bin/certify --dp=DP-OPS-XXXX [--out=auto|path] [--allow-intake-fallback]`
 - Required inputs:
   - `--dp=DP-OPS-XXXX`
   - `storage/handoff/CLOSING-DP-OPS-XXXX.md` (non-empty human-authored sidecar)
@@ -15,7 +15,8 @@ It enforces scope integrity, executes receipt verification commands, and generat
 - Extraction scope:
   - Reads Target Files allowlist pointer and Section 3.4.5 verification commands from the active DP.
   - Primary source is `TASK.md`; when `TASK.md` is pointer-first, certify resolves its single-line `archives/surfaces/*` pointer to the leaf file before DP extraction.
-  - Fallback source is `storage/dp/intake/DP-OPS-XXXX.md` when TASK does not contain the target DP.
+  - Intake fallback source (`storage/dp/intake/DP-OPS-XXXX.md`) is disabled by default and only enabled when `--allow-intake-fallback` is provided.
+  - On `work/dp-...` branches, `--dp` must match the packet encoded in branch naming.
   - Command extraction executes DP-provided receipt commands literally, except it skips recursive certify invocations (`ops/bin/certify`) and post-render RESULTS checks (`tools/lint/results.sh` and direct `*-RESULTS.md` path checks), because certify executes those gates in dedicated post-render stages.
   - Certify prepends the mandatory DP preflight proof commands to the execution plan (`bash tools/lint/dp.sh --test`, `bash tools/lint/dp.sh TASK.md`, `bash tools/lint/task.sh`) and de-duplicates identical entries.
 - Phase 2 surface emission:
@@ -36,9 +37,12 @@ It enforces scope integrity, executes receipt verification commands, and generat
 
 ## Hard Gates and Failure States
 - Missing or malformed CLI args.
+- `--dp` value mismatch against `work/dp-...` branch packet naming.
 - Missing/empty Closing Block sidecar.
 - Missing allowlist pointer in DP payload.
 - Missing verification command list in DP Section 3.4.5.
+- DP section missing from `TASK.md` while intake fallback override is not enabled.
+- Intake fallback override requested while non-target DP packets are present in `storage/dp/intake/`.
 - Integrity gate failure (`bash tools/lint/integrity.sh`).
 - Any verification command non-zero exit (hard stop at first failure).
 - Invalid or missing DP `Freshness Stamp` required for deterministic surface leaf naming.
@@ -49,7 +53,7 @@ It enforces scope integrity, executes receipt verification commands, and generat
 
 ## Mechanics and Sequencing
 1. Resolve repository root and validate executable dependencies.
-2. Load DP payload (TASK first with pointer resolution, intake fallback).
+2. Load DP payload (TASK first with pointer resolution; intake fallback only when explicitly enabled).
 3. Extract allowlist pointer, verification commands, and DP `Freshness Stamp`.
 4. Execute integrity lint as pre-command hard gate.
 5. Execute the first three mandatory preflight commands and capture logs.

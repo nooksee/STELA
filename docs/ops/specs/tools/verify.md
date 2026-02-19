@@ -12,6 +12,7 @@ Enforce repository hygiene under filing doctrine boundaries and validate factory
 ## Core hygiene checks
 - Required platform directories exist (`ops`, `docs`, `opt`, `tools`, `projects`, `.github`, `storage`, `var`, `logs`, `archives`).
 - Required payload/runtime subdirectories and `.gitkeep` placeholders exist.
+- No `storage/dp/intake/DP-*.md` packets are tracked by git (intake is staging-only; committed packets belong in `storage/dp/processed/`).
 - `docs/` contains markdown-only, non-binary surfaces.
 - `ops/` markdown placement obeys filing doctrine constraints.
 - `storage/` drift is reported as warnings.
