@@ -5,6 +5,7 @@ opt/_factory/SKILLS.md
 ops/lib/scripts/agent.sh
 ops/lib/scripts/task.sh
 ops/lib/scripts/skill.sh
+ops/lib/manifests/OPS.md
 tools/lint/factory.sh
 tools/lint/skill.sh
 tools/lint/integrity.sh
@@ -41,6 +42,9 @@ archives/definitions/skill-promotion-2026-02-19-a74a0006.md
 archives/surfaces/PoW-2026-02-18-45af651e.md
 archives/surfaces/SoP-2026-02-18-45af651e.md
 archives/surfaces/TASK-DP-OPS-0074-45af651e.md
+archives/surfaces/PoW-2026-02-18-c3f30b29.md
+archives/surfaces/SoP-2026-02-18-c3f30b29.md
+archives/surfaces/TASK-DP-OPS-0074-c3f30b29.md
 storage/dp/processed/DP-OPS-0074.md
 storage/handoff/DP-OPS-0074-RESULTS.md
 storage/handoff/CLOSING-DP-OPS-0074.md
