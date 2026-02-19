@@ -166,6 +166,7 @@ forbidden_disposable_regex='Local artifacts|Disposable artifact policy|storage/h
 
 failures=0
 checked=0
+hash_parity_skips=0
 
 for target in "${targets[@]}"; do
   if [[ ! -f "$target" ]]; then
@@ -215,7 +216,11 @@ for target in "${targets[@]}"; do
   else
     current_hash="$(git rev-parse HEAD)"
     if [[ "$recorded_hash" != "$current_hash" ]]; then
-      fail "${rel_target}: Git Hash mismatch (receipt ${recorded_hash}, repo ${current_hash})"
+      if (( explicit_target )); then
+        fail "${rel_target}: Git Hash mismatch (receipt ${recorded_hash}, repo ${current_hash})"
+      else
+        hash_parity_skips=$((hash_parity_skips + 1))
+      fi
     fi
   fi
 
@@ -272,6 +277,10 @@ fi
 if [[ "$checked" -eq 0 ]]; then
   echo "OK: no certifiable RESULTS receipts found."
   exit 0
+fi
+
+if (( hash_parity_skips > 0 )); then
+  echo "NOTE: skipped Git Hash parity for ${hash_parity_skips} clean historical receipt(s); pass an explicit path to enforce."
 fi
 
 echo "OK: RESULTS lint passed (${checked} file(s) checked)."
