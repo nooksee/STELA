@@ -6,7 +6,7 @@ It enforces proof safety before destructive actions and keeps cleanup behavior c
 
 ## Operator Contract
 - Invocation:
-  - `./ops/bin/prune [--dp=DP-ID] [--target=sop|pow|both] [--dry-run] [--scrub] [--reset-task]`
+  - `./ops/bin/prune [--target=sop|pow|both] [--scrub]`
 - Default target: `sop`.
 - Retention: keep newest `30` entries per ledger.
 - Archive destinations:
@@ -29,11 +29,6 @@ It enforces proof safety before destructive actions and keeps cleanup behavior c
 - TASK reset attempted without valid active DP ID or missing PoW packet proof.
 - Template extraction failure or TASK lint failure during reset.
 
-Results guard (hard stop):
-- Before non-dry-run destructive paths, prune inspects candidate `*-RESULTS.md` artifacts.
-- Fails when artifact is untracked, unstaged-dirty, or staged-dirty.
-- Fatal message: `SAFETY VIOLATION: Uncommitted Results artifact detected. Commit or stash before pruning.`
-
 PoW guard (hard stop):
 - For PoW entries beyond retention threshold, every candidate entry must contain required fields and receipt pointers.
 - Pointer kinds are validated by path class:
@@ -46,23 +41,16 @@ PoW guard (hard stop):
 ## Mechanics and Sequencing
 1. Parse args and validate target surfaces.
 2. Resolve safety preconditions (`SoP.md`, `PoW.md`, TASK template path as needed).
-3. For non-dry-run execution, run RESULTS guard before mutation.
-4. Prune selected ledgers in deterministic order:
+3. Prune selected ledgers in deterministic order:
 - `sop`: SoP only.
 - `pow`: PoW only.
 - `both`: SoP first, then PoW.
 5. Compute cut line after retained threshold and archive overflow entries by month bucket.
-6. Run artifact cleanup:
-- `--dp`: delete artifacts matching DP token from handoff and dumps.
-- no `--dp`: age-based handoff cleanup with active DP protection.
-7. If requested, run `--reset-task` PoW proof gate then template reset.
-8. If requested, run `--scrub` on `var/tmp/` except `.gitkeep`.
-9. In `--dry-run`, print intent only and perform zero writes.
+6. If requested, run `--scrub` on `var/tmp/` except `.gitkeep`.
 
 Target ledger logic:
 - Ledger operations are isolated by `--target` to prevent accidental dual-prune.
 - `both` is explicit and ordered, improving audit readability and rollback reasoning.
-- Archive planning is deterministic and emitted in dry-run receipts.
 
 ## Forensic Insight
 Prune is a deletion command guarded like a proof command.

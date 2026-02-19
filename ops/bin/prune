@@ -23,7 +23,7 @@ POW_GUARD_FATAL="SAFETY VIOLATION: PoW prune requires committed RESULTS/OPEN/DUM
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/prune [--dp=DP-ID] [--target=sop|pow|both] [--dry-run] [--scrub] [--reset-task]
+Usage: ops/bin/prune [--target=sop|pow|both] [--scrub]
 USAGE
 }
 
@@ -63,6 +63,7 @@ ensure_results_artifacts_committed_and_clean() {
 
   if [[ -n "${DP_TARGET}" ]]; then
     candidates+=("${HANDOFF_DIR}/${DP_TARGET}-RESULTS.md")
+    candidates+=("${HANDOFF_DIR}/CLOSING-${DP_TARGET}.md")
   else
     if [[ ! -d "${HANDOFF_DIR}" ]]; then
       return 0
@@ -70,6 +71,9 @@ ensure_results_artifacts_committed_and_clean() {
     while IFS= read -r -d '' result_file; do
       candidates+=("${result_file}")
     done < <(find "${HANDOFF_DIR}" -maxdepth 1 -type f -name '*-RESULTS.md' -print0)
+    while IFS= read -r -d '' result_file; do
+      candidates+=("${result_file}")
+    done < <(find "${HANDOFF_DIR}" -maxdepth 1 -type f -name 'CLOSING-DP-OPS-*.md' -print0)
   fi
 
   for result_file in "${candidates[@]}"; do
@@ -109,12 +113,6 @@ reset_task_from_template() {
   if ! (cd "${REPO_ROOT}" && bash tools/lint/task.sh "$tmp_task"); then
     rm -f "$tmp_task"
     die "TASK template at ${TASK_TEMPLATE_PATH} failed TASK lint; refusing to continue."
-  fi
-
-  if (( DRY_RUN )); then
-    echo "[DRY-RUN] TASK reset would overwrite TASK.md from SSOT template ops/src/surfaces/task.md.tpl"
-    rm -f "$tmp_task"
-    return 0
   fi
 
   mv "$tmp_task" "${TASK_FILE}"
@@ -346,15 +344,6 @@ prune_ledger() {
   local archive_plan
   archive_plan="$(ledger_archive_plan "$ledger_file" "$archive_prefix")"
 
-  if (( DRY_RUN )); then
-    echo "[DRY-RUN] ${ledger_name}: would prune ${prune_count} entries (cut line: ${cut_line})."
-    while IFS=$'\t' read -r archive_path count; do
-      [[ -z "$archive_path" ]] && continue
-      echo "[DRY-RUN] ${ledger_name}: archive ${archive_path#${REPO_ROOT}/} (${count} entries)."
-    done <<< "$archive_plan"
-    return 0
-  fi
-
   mkdir -p "${ARCHIVE_DIR}"
   local tmp_keep
   tmp_keep="$(mktemp "${RESUME_DIR}/${archive_prefix,,}-keep.XXXXXX")"
@@ -415,96 +404,6 @@ ensure_pow_entry_exists() {
     dp_id="$(detect_task_dp_id)"
   fi
 
-  if [[ -z "$dp_id" ]]; then
-    die "--reset-task blocked: active DP id not found in TASK.md. Provide --dp=DP-OPS-XXXX or set an active DP heading in TASK Section 3."
-  fi
-  if [[ "$dp_id" == "DP-XXXX" ]]; then
-    die "--reset-task blocked: active DP id is template placeholder '${dp_id}'. Provide --dp=DP-OPS-XXXX and record PoW first."
-  fi
-  if [[ ! "$dp_id" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]]; then
-    die "--reset-task blocked: invalid active DP id '${dp_id}'. Expected DP-<AREA>-<####>."
-  fi
-
-  if ! grep -Fq -- "- Packet ID: ${dp_id}" "${POW_FILE}"; then
-    die "--reset-task blocked: PoW.md missing '- Packet ID: ${dp_id}'. Update PoW for the active DP id before reset-task."
-  fi
-}
-
-cleanup_handoff() {
-  if [[ ! -d "${HANDOFF_DIR}" ]]; then
-    return 0
-  fi
-
-  local dp_id
-  dp_id="${DP_ID:-}"
-  if [[ -z "$dp_id" ]]; then
-    dp_id="$(detect_task_dp_id)"
-  fi
-
-  local deleted=0
-  local kept=0
-  local file
-  local base
-
-  while IFS= read -r -d '' file; do
-    base="$(basename "$file")"
-    if [[ "$base" == ".gitkeep" ]]; then
-      continue
-    fi
-
-    if [[ -n "$dp_id" && "$base" == *"$dp_id"* ]]; then
-      kept=$((kept + 1))
-      continue
-    fi
-
-    if (( DRY_RUN )); then
-      echo "[DRY-RUN] handoff cleanup would delete: ${file#${REPO_ROOT}/}"
-      deleted=$((deleted + 1))
-    else
-      rm -f "$file"
-      deleted=$((deleted + 1))
-    fi
-  done < <(find "${HANDOFF_DIR}" -type f -mtime +7 ! -name '.gitkeep' -print0 | sort -z)
-
-  if (( DRY_RUN )); then
-    echo "[DRY-RUN] handoff cleanup summary: delete ${deleted}, keep ${kept}."
-  else
-    echo "Handoff cleanup: deleted ${deleted}, kept ${kept}."
-  fi
-}
-
-cleanup_dp_target_artifacts() {
-  local deleted=0
-  local file
-
-  for dir in "${HANDOFF_DIR}" "${DUMPS_DIR}"; do
-    if [[ ! -d "$dir" ]]; then
-      continue
-    fi
-
-    while IFS= read -r -d '' file; do
-      if (( DRY_RUN )); then
-        echo "[DRY-RUN] DP prune would delete: ${file#${REPO_ROOT}/}"
-      else
-        rm -f "$file"
-        echo "Deleted: ${file}"
-      fi
-      deleted=$((deleted + 1))
-    done < <(find "$dir" -type f -name "*${DP_TARGET}*" ! -name '.gitkeep' -print0 | sort -z)
-  done
-
-  if (( deleted == 0 )); then
-    echo "No artifacts found for ${DP_TARGET}."
-    return 0
-  fi
-
-  if (( DRY_RUN )); then
-    echo "[DRY-RUN] DP prune summary: would remove ${deleted} artifacts."
-  else
-    echo "Removed ${deleted} artifacts."
-  fi
-}
-
 clean_resume_cache() {
   if [[ ! -d "${RESUME_DIR}" ]]; then
     return 0
@@ -517,14 +416,6 @@ clean_resume_cache() {
     items+=("$item")
   done < <(find "${RESUME_DIR}" -mindepth 1 -maxdepth 1 ! -name '.gitkeep' -print0 | sort -z)
 
-  if (( DRY_RUN )); then
-    echo "[DRY-RUN] var/tmp cleanup: would remove ${#items[@]} item(s)."
-    for item in "${items[@]}"; do
-      echo "[DRY-RUN] var/tmp cleanup candidate: ${item#${REPO_ROOT}/}"
-    done
-    return 0
-  fi
-
   local removed=0
   for item in "${items[@]}"; do
     rm -rf "$item"
@@ -535,10 +426,6 @@ clean_resume_cache() {
 }
 
 stage_clean() {
-  if [[ -n "${DP_TARGET}" && -z "${DP_TARGET// }" ]]; then
-    die "--dp requires a non-empty value"
-  fi
-
   if [[ "$TARGET" != "sop" && "$TARGET" != "pow" && "$TARGET" != "both" ]]; then
     die "--target must be one of: sop, pow, both"
   fi
@@ -549,17 +436,6 @@ stage_clean() {
   if [[ "$TARGET" == "pow" || "$TARGET" == "both" ]]; then
     [[ -f "${POW_FILE}" ]] || die "PoW.md not found at ${POW_FILE}"
   fi
-  if (( RESET_TASK )); then
-    [[ -f "${TASK_FILE}" ]] || die "TASK.md not found at ${TASK_FILE}"
-    [[ -f "${TASK_TEMPLATE_PATH}" ]] || die "TASK template not found at ${TASK_TEMPLATE_PATH}"
-  fi
-
-  mkdir -p "${ARCHIVE_DIR}" "${RESUME_DIR}"
-
-  if (( !DRY_RUN )); then
-    ensure_results_artifacts_committed_and_clean
-  fi
-}
 
 stage_archive() {
   case "$TARGET" in
@@ -576,29 +452,13 @@ stage_archive() {
   esac
 }
 
-stage_reset() {
-  if (( RESET_TASK )); then
-    ensure_pow_entry_exists
-    reset_task_from_template
-  fi
-}
-
 for arg in "$@"; do
   case "$arg" in
-    --dp=*)
-      DP_TARGET="${arg#--dp=}"
-      ;;
     --target=sop|--target=pow|--target=both)
       TARGET="${arg#--target=}"
       ;;
-    --dry-run)
-      DRY_RUN=1
-      ;;
     --scrub)
       SCRUB=1
-      ;;
-    --reset-task)
-      RESET_TASK=1
       ;;
     -h|--help)
       usage
@@ -612,24 +472,8 @@ done
 
 stage_clean
 stage_archive
-
-if [[ -n "${DP_TARGET}" ]]; then
-  echo "Pruning artifacts for Dispatch Packet: ${DP_TARGET}"
-  cleanup_dp_target_artifacts
-else
-  cleanup_handoff
-fi
-
 stage_reset
 
 if (( SCRUB )); then
   clean_resume_cache
-fi
-
-if (( DRY_RUN )); then
-  echo "Dry-run complete. No files were modified."
-fi
-
-if (( SCRUB || RESET_TASK )); then
-  echo "Routing scrub complete."
 fi

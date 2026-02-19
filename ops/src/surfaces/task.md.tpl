@@ -169,8 +169,7 @@ Populate during execution; do not pre-fill in TASK.md.
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
-- Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-XXXX --scrub.
-- Use ./ops/bin/prune --reset-task only for explicit TASK baseline reset after PoW entry exists for the active DP id.
+- Run prune hygiene: ./ops/bin/prune --scrub.
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
 ### 3.5.1 Mandatory Closing Block

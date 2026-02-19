@@ -27,10 +27,6 @@ docs/ops/registry/TASKS.md
 docs/ops/registry/SKILLS.md
 docs/INDEX.md
 docs/MANUAL.md
-storage/.gitignore
-storage/README.md
-storage/dp/intake/.gitkeep
-storage/dp/processed/.gitkeep
 storage/dp/active/allowlist.txt
 opt/_factory/agents/R-AGENT-07.md
 opt/_factory/tasks/B-TASK-07.md
@@ -85,27 +81,11 @@ archives/surfaces/TASK-DP-OPS-0074-e566b55f.md
 archives/surfaces/PoW-2026-02-18-35e055f3.md
 archives/surfaces/SoP-2026-02-18-35e055f3.md
 archives/surfaces/TASK-DP-OPS-0074-35e055f3.md
-storage/dp/processed/DP-OPS-0074.md
-storage/handoff/DP-OPS-0074-RESULTS.md
-storage/handoff/CLOSING-DP-OPS-0074.md
-storage/handoff/Analysis of Distributed Index-Leaf Filing Paradigm - Phase 2 Deployment.md
-storage/handoff/Distributed_Index-Leaf_Filing_Paradigm.md
-storage/handoff/Factory Chain Remediation.md
-storage/handoff/Phase 3 Deployment Plan Formulation.md
-storage/handoff/Phase_2_Remediation_and_Phase_3_Deployment_Plan.md
-storage/handoff/CONTRACTOR-EXECUTION-DECISION-LOG-DP-OPS-0069.md
-storage/handoff/CONTRACTOR-EXECUTION-DECISION-LOG-DP-OPS-0070.md
-storage/handoff/CONTRACTOR-EXECUTION-DECISION-LOG-DP-OPS-0071.md
-storage/handoff/CONTRACTOR-EXECUTION-DECISION-LOG-DP-OPS-0072.md
-storage/handoff/CONTRACTOR-EXECUTION-DECISION-LOG-DP-OPS-0073.md
-storage/handoff/CONTRACTOR-EXECUTION-DECISION-LOG-DP-OPS-0074.md
-storage/handoff/INTEGRATOR-EXECUTION-DECISION-LOG-DP-OPS-0069.md
-storage/handoff/INTEGRATOR-EXECUTION-DECISION-LOG-DP-OPS-0070.md
-storage/handoff/INTEGRATOR-EXECUTION-DECISION-LOG-DP-OPS-0071.md
-storage/handoff/INTEGRATOR-EXECUTION-DECISION-LOG-DP-OPS-0072.md
-storage/handoff/INTEGRATOR-EXECUTION-DECISION-LOG-DP-OPS-0073.md
-storage/handoff/INTEGRATOR-EXECUTION-DECISION-LOG-DP-OPS-0074.md
 archives/manifests/compile-2026-02-19T003554-45af651e.md
 archives/manifests/compile-2026-02-19T003555-45af651e.md
 archives/manifests/compile-2026-02-19T013933-45af651e.md
 archives/manifests/compile-2026-02-19T013934-45af651e.md
+ops/bin/prune
+archives/surfaces/SoP-2026-02-19-e4acd466.md
+archives/surfaces/PoW-2026-02-19-e4acd466.md
+archives/surfaces/TASK-DP-OPS-0075-e4acd466.md
