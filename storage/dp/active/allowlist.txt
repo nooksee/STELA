@@ -60,6 +60,9 @@ archives/surfaces/TASK-DP-OPS-0074-10bd2433.md
 archives/surfaces/PoW-2026-02-18-1412ee94.md
 archives/surfaces/SoP-2026-02-18-1412ee94.md
 archives/surfaces/TASK-DP-OPS-0074-1412ee94.md
+archives/surfaces/PoW-2026-02-18-1f08cbba.md
+archives/surfaces/SoP-2026-02-18-1f08cbba.md
+archives/surfaces/TASK-DP-OPS-0074-1f08cbba.md
 storage/dp/processed/DP-OPS-0074.md
 storage/handoff/DP-OPS-0074-RESULTS.md
 storage/handoff/CLOSING-DP-OPS-0074.md
