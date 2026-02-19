@@ -44,7 +44,6 @@ archives/surfaces/TASK-DP-OPS-0074-45af651e.md
 storage/dp/processed/DP-OPS-0074.md
 storage/handoff/DP-OPS-0074-RESULTS.md
 storage/handoff/CLOSING-DP-OPS-0074.md
-storage/handoff/CONTRACTOR-EXECUTION-DECISION-LOG-DP-OPS-0074.md
 storage/handoff/OPEN-work-dp-ops-0074-2026-02-18-45af651e.txt
 storage/handoff/OPEN-PORCELAIN-work-dp-ops-0074-2026-02-18-45af651e.txt
 archives/manifests/compile-2026-02-19T003554-45af651e.md
