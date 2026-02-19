@@ -1,46 +1,38 @@
 # Technical Specification: ops/lib/scripts/skill.sh
 
 ## Purpose
-Manage skill draft harvest, promotion, and context-hazard checks for the skill lifecycle.
+Manage skill candidate harvesting, promotion, and context hazard checks while advancing factory pointer heads.
 
 ## Invocation
 - Command forms:
   - `ops/lib/scripts/skill.sh harvest [--name "..."] [--context "..."] [--solution "..."] [--context-stdin | --solution-stdin] [--force]`
   - `ops/lib/scripts/skill.sh promote <draft_path> [--delete-draft]`
   - `ops/lib/scripts/skill.sh check`
-  - Legacy: `ops/lib/scripts/skill.sh "name" "context" "solution"`
-- Required flags:
-  - None for harvest, but missing fields trigger prompts (TTY) or hard failures (non-TTY) unless auto-filled.
-- Expected exit behavior:
-  - `0` on successful command completion.
-  - Non-zero for missing files, invalid options, collision checks, or validation failures.
+  - Legacy positional alias: `ops/lib/scripts/skill.sh "name" "context" "solution"`.
+- Exit behavior:
+  - `0` on success.
+  - Non-zero on collisions, validation failures, pointer rewrite failures, or registry update failures.
 
 ## Inputs
-- Canon and ledger files:
-  - `opt/_factory/SKILLS.md`
-  - `docs/ops/registry/SKILLS.md`
-  - `TASK.md`
-  - `ops/lib/manifests/CONTEXT.md`
-- Skill directories:
-  - `opt/_factory/skills/`
-  - `archives/definitions/`
-- Optional sourced heuristics from `ops/lib/scripts/heuristics.sh`.
+- `opt/_factory/SKILLS.md` pointer head.
+- `docs/ops/registry/SKILLS.md` registry table.
+- `ops/src/definitions/skill.md.tpl` definition template.
+- `TASK.md` and `ops/lib/manifests/CONTEXT.md`.
 
 ## Outputs
-- `harvest`: writes redacted draft to `archives/definitions/`.
-- Harvested drafts include unified schema front-matter keys: `trace_id`, `packet_id`, `created_at`, `previous`.
-- `promote`: writes promoted skill file under `opt/_factory/skills/`, inserts registry row in `docs/ops/registry/SKILLS.md`, and appends candidate/promotion packet logs in `opt/_factory/SKILLS.md`.
-- `check`: prints context-hazard check result.
+- `harvest` emits candidate leaf at `archives/definitions/skill-candidate-YYYY-MM-DD-<suffix>.md` and rewrites `candidate:` in `opt/_factory/SKILLS.md`.
+- `promote` writes canonical skill file in `opt/_factory/skills/`, updates `docs/ops/registry/SKILLS.md`, emits promotion leaf at `archives/definitions/skill-promotion-YYYY-MM-DD-<suffix>.md`, and rewrites `promotion:` in `opt/_factory/SKILLS.md`.
+- `check` enforces the Skills Context Hazard rule.
 
 ## Invariants and failure modes
-- Context hazard rule forbids skill references in `ops/lib/manifests/CONTEXT.md`.
-- Promotion validates required draft sections and rejects placeholder markers.
-- Skill IDs are allocated as next available `S-LEARN-XX` across skill files and registry.
-- Semantic-collision detection can block harvest unless overridden with `--force`.
-- TraceID resolution order for harvest is strict: `STELA_TRACE_ID` environment value first, then latest OPEN artifact parse, then local fallback generation.
-- `previous` points to the latest prior `archives/definitions/skill-*.md` leaf for the same slug, or `(none)` when the draft is the origin leaf.
+- Candidate and promotion leaves always include unified schema front-matter keys: `trace_id`, `packet_id`, `created_at`, `previous`.
+- `previous` is `(none)` when prior head value ends with `-(origin)`; otherwise it is the prior head pointer path.
+- `trace_id` uses `STELA_TRACE_ID` when provided and falls back to local generation.
+- `packet_id` uses `STELA_PACKET_ID` when provided and falls back to current DP detection from `TASK.md`.
+- Promotion validates required draft sections and placeholder guards before writes.
+- Legacy positional invocation routes through harvest behavior and does not append packet logs into `opt/_factory/SKILLS.md`.
 
 ## Related pointers
-- Registry entry: `docs/ops/registry/SCRIPTS.md` (`SCRIPT-04`).
+- Factory head spec: `docs/ops/specs/definitions/skills.md`.
+- Registry entry: `docs/ops/registry/SCRIPTS.md` (`SCRIPT-05`).
 - Skill registry: `docs/ops/registry/SKILLS.md`.
-- Heuristics dependency: `ops/lib/scripts/heuristics.sh`.

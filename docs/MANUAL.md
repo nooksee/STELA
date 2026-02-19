@@ -14,6 +14,7 @@
 - Worker input is DP text only; OPEN is for integrator refresh and receipt pointers and is not required reading for workers.
 - DP structure is generated from `ops/src/surfaces/dp.md.tpl` through `ops/bin/draft`; manual structural edits are prohibited.
 - Surface and definition rendering is centralized in `ops/bin/template` with YAML metadata parsing, include injection, and strict slot enforcement by default.
+- Definition registry guidance is canonical in `docs/ops/specs/definitions/agents.md`, `docs/ops/specs/definitions/tasks.md`, and `docs/ops/specs/definitions/skills.md`. `opt/_factory/AGENTS.md`, `opt/_factory/TASKS.md`, and `opt/_factory/SKILLS.md` are pointer heads.
 - `ops/bin/draft`, `ops/lib/scripts/{agent,task,skill}.sh`, and `ops/bin/prune --reset-task` route through `ops/bin/template`.
 
 **Anchor Hygiene:**
@@ -46,9 +47,12 @@ Keep `storage/handoff/CLOSING-DP-OPS-XXXX.md` populated throughout execution.
 Run:
 ~~~bash
 ./ops/bin/certify --dp=DP-OPS-XXXX --out=auto
+bash tools/lint/results.sh storage/handoff/DP-OPS-XXXX-RESULTS.md
 ~~~
 `ops/bin/certify` runs integrity checks, executes the Section 3.4.5 verification command list, renders the RESULTS receipt from template, and runs `tools/lint/results.sh` as a hard gate.
 `ops/bin/certify` also emits schema-stamped surface leaves for PoW/SoP/TASK under `archives/surfaces/` and rewrites `PoW.md`, `SoP.md`, and `TASK.md` to single-line HEAD pointers to those leaves.
+If `TASK.md` does not contain the target DP block, certify now fails unless `--allow-intake-fallback` is explicitly provided.
+`bash tools/lint/results.sh` without arguments targets the active branch packet receipt when resolvable; use `--all` only for full historical receipt scans.
 Manual RESULTS fabrication is prohibited.
 
 3. Harvest
@@ -165,7 +169,7 @@ ops/lib/scripts/skill.sh check
 ops/lib/scripts/skill.sh harvest --name "skill-title" --context "when to use it" --solution "what to do"
 
 # Promote the draft into opt/_factory/skills and register it
-ops/lib/scripts/skill.sh promote archives/definitions/skill-YYYYMMDD-HHMMSS-skill-title.md
+ops/lib/scripts/skill.sh promote archives/definitions/skill-candidate-YYYY-MM-DD-<suffix>.md
 ~~~
 
 ### Tasks (Harvest + Promote)
@@ -179,7 +183,7 @@ ops/lib/scripts/task.sh check
 ops/lib/scripts/task.sh harvest --id B-TASK-01 --name "task-title" --objective "one sentence objective"
 
 # Promote the draft into opt/_factory/tasks and register it
-ops/lib/scripts/task.sh promote archives/definitions/task-B-TASK-01-YYYYMMDD-task-title.md
+ops/lib/scripts/task.sh promote archives/definitions/task-candidate-YYYY-MM-DD-<suffix>-B-TASK-01.md
 ~~~
 
 ---
@@ -188,6 +192,7 @@ ops/lib/scripts/task.sh promote archives/definitions/task-B-TASK-01-YYYYMMDD-tas
 **Placement:**
 * Drafts: `storage/dp/intake/`
 * Processed: `storage/dp/processed/`
+* `storage/dp/intake/` is staging-only and must not contain tracked `DP-*.md` packets in commits.
 
 **Operator Prompts:**
 * `docs/ops/prompts` — Operator prompt stances and usage.

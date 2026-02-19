@@ -1,7 +1,7 @@
 # Technical Specification: ops/lib/scripts/agent.sh
 
 ## Purpose
-Manage agent candidate harvesting, promotion, and guardrail checks for canon agent lifecycle workflows.
+Manage agent candidate harvesting, promotion, and guardrail checks while advancing factory pointer heads.
 
 ## Invocation
 - Command forms:
@@ -10,40 +10,33 @@ Manage agent candidate harvesting, promotion, and guardrail checks for canon age
   - `ops/lib/scripts/agent.sh promote <draft_path> [--delete-draft]`
   - `ops/lib/scripts/agent.sh check`
 - Required flags:
-  - `harvest` requires `--name` and `--dp`.
-- Expected exit behavior:
-  - `0` on successful command completion.
-  - Non-zero on missing required inputs, validation failures, or unknown options.
+  - `harvest` requires `--name`.
+  - `harvest` requires DP provenance via `--dp` or `STELA_PACKET_ID`.
+- Exit behavior:
+  - `0` on success.
+  - Non-zero on missing inputs, validation failures, or pointer-head rewrite errors.
 
 ## Inputs
-- Canon and registry files:
-  - `SoP.md`
-  - `TASK.md`
-  - `ops/lib/manifests/CONTEXT.md`
-  - `docs/ops/registry/AGENTS.md`
-  - `opt/_factory/AGENTS.md`
-- Agent files in `opt/_factory/agents/`.
-- OPEN and DUMP artifact directories for auto-selection:
-  - `storage/handoff/`
-  - `storage/dumps/`
-- Optional heuristic functions from `ops/lib/scripts/heuristics.sh`.
+- `opt/_factory/AGENTS.md` pointer head.
+- `docs/ops/registry/AGENTS.md` registry table.
+- `ops/src/definitions/agent.md.tpl` definition template.
+- `TASK.md`, `SoP.md`, and `ops/lib/manifests/CONTEXT.md`.
 
 ## Outputs
-- `harvest`: writes redacted draft under `archives/definitions/` and appends candidate log in `opt/_factory/AGENTS.md`.
-- Harvested drafts include unified schema front-matter keys: `trace_id`, `packet_id`, `created_at`, `previous`.
-- `harvest-check`: prints Pattern Density report from recent SoP entries.
-- `promote`: writes canon agent file in `opt/_factory/agents/`, inserts registry row in `docs/ops/registry/AGENTS.md`, and appends promotion log in `opt/_factory/AGENTS.md`.
-- `check`: prints guardrail status for scope-boundary and context-hazard checks.
+- `harvest` emits candidate leaf at `archives/definitions/agent-candidate-YYYY-MM-DD-<suffix>.md` and rewrites `candidate:` in `opt/_factory/AGENTS.md`.
+- `promote` writes canonical agent file in `opt/_factory/agents/`, updates `docs/ops/registry/AGENTS.md`, emits promotion leaf at `archives/definitions/agent-promotion-YYYY-MM-DD-<suffix>.md`, and rewrites `promotion:` in `opt/_factory/AGENTS.md`.
+- `harvest-check` prints Pattern Density clusters.
+- `check` prints scope-boundary and context-hazard results.
 
 ## Invariants and failure modes
-- Draft validation requires specific sections and required pointers (`PoT.md`, `docs/GOVERNANCE.md`, `TASK.md`, JIT skills).
-- Promotion enforces context-hazard and PoT-duplication lint checks before writing canon files.
-- Agent IDs are allocated as next available `R-AGENT-XX` value across files and registry.
-- Auto-selected OPEN/DUMP artifacts must be unambiguous by timestamp; ties are hard failures.
-- TraceID resolution order for harvest is strict: `STELA_TRACE_ID` environment value first, then `STELA_TRACE_ID` parsed from the selected OPEN artifact, then local fallback generation.
-- `previous` points to the latest prior `archives/definitions/agent-*.md` leaf for the same slug, or `(none)` when the draft is the origin leaf.
+- Candidate and promotion leaves always include unified schema front-matter keys: `trace_id`, `packet_id`, `created_at`, `previous`.
+- `previous` is `(none)` when prior head value ends with `-(origin)`; otherwise it is the prior head pointer path.
+- `trace_id` uses `STELA_TRACE_ID` when provided and falls back to local generation.
+- `packet_id` uses `STELA_PACKET_ID` when provided and falls back to DP input.
+- Promotion enforces draft validation, context hazard checks, and PoT duplication linting before writes.
+- Pointer-head rewrite is a hard gate; missing `candidate:` or `promotion:` lines fail the command.
 
 ## Related pointers
+- Factory head spec: `docs/ops/specs/definitions/agents.md`.
 - Registry entry: `docs/ops/registry/SCRIPTS.md` (`SCRIPT-01`).
 - Agent registry: `docs/ops/registry/AGENTS.md`.
-- Heuristics dependency: `ops/lib/scripts/heuristics.sh`.

@@ -22,6 +22,9 @@
 - `docs/ops/specs/binaries/project.md`
 - `docs/ops/specs/binaries/prune.md`
 - `docs/ops/specs/binaries/template.md`
+- `docs/ops/specs/definitions/agents.md`
+- `docs/ops/specs/definitions/skills.md`
+- `docs/ops/specs/definitions/tasks.md`
 - `docs/ops/specs/scripts/agent.md`
 - `docs/ops/specs/scripts/heuristics.md`
 - `docs/ops/specs/scripts/project.md`

@@ -6,10 +6,16 @@ Validate generated RESULTS receipts against the certification template contract.
 ## Invocation
 - Command forms:
   - `bash tools/lint/results.sh`
+  - `bash tools/lint/results.sh --all`
   - `bash tools/lint/results.sh storage/handoff/DP-OPS-XXXX-RESULTS.md`
 - Required flags: none.
 - Positional arguments:
-  - Optional receipt path. When omitted, scans `storage/handoff/DP-OPS-*-RESULTS.md`.
+  - Optional explicit receipt path.
+  - `--all` forces a full scan of `storage/handoff/DP-OPS-*-RESULTS.md`.
+  - When omitted, lint auto-targets the active branch packet receipt (`storage/handoff/<DP_ID>-RESULTS.md`) when the branch matches `work/dp-...`; if no active match exists and multiple receipts are present, lint fails and requires explicit disambiguation.
+  - Git hash parity enforcement is mode-specific:
+    - explicit path mode enforces receipt `Git Hash` equals `git rev-parse HEAD`.
+    - no-argument and `--all` modes enforce structural and closing-block checks, and report historical hash parity skips without failing.
 - Exit behavior:
   - `0` when all checked receipts pass.
   - `1` for usage errors, template drift, or receipt validation failures.
@@ -17,7 +23,7 @@ Validate generated RESULTS receipts against the certification template contract.
 ## Inputs
 - Canonical template: `ops/src/surfaces/results.md.tpl`.
 - Template hash constant in lint script.
-- RESULTS receipt(s) from explicit path or naming scan.
+- RESULTS receipt(s) from explicit path, active-branch inference, or `--all` naming scan.
 - Current repository hash from `git rev-parse HEAD`.
 
 ## Outputs
@@ -28,16 +34,17 @@ Validate generated RESULTS receipts against the certification template contract.
 - Stderr:
   - template drift diagnostics.
   - missing heading/field failures.
-  - git hash mismatch diagnostics.
+  - explicit-mode git hash mismatch diagnostics.
   - missing/placeholder Closing Block failures.
 
 ## Enforcement Model
 1. Verify `ops/src/surfaces/results.md.tpl` matches expected sha256 constant.
-2. Resolve target receipt set (explicit path or naming scan).
+2. Resolve target receipt set (explicit path, active-branch inferred path, or `--all` scan).
 3. Skip legacy receipts not matching certification heading schema.
 4. For certification receipts, enforce:
   - required headings/sections.
-  - recorded `Git Hash` equals `git rev-parse HEAD`.
+  - explicit-path mode: recorded `Git Hash` equals `git rev-parse HEAD`.
+  - no-argument and `--all` modes: hash parity mismatch is counted and reported as a non-fatal historical skip.
   - Mandatory Closing Block labels present.
   - Closing Block values are non-empty and placeholder-free.
 

@@ -132,11 +132,23 @@ for path in "${untracked_paths[@]}"; do
   observed["$normalized"]=1
 done
 
+is_generated_allowed_path() {
+  local path="$1"
+  if [[ "$path" =~ ^archives/manifests/compile-[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}-[0-9a-f]{7,}\.md$ ]]; then
+    return 0
+  fi
+  return 1
+}
+
 unauthorized=()
 for path in "${!observed[@]}"; do
-  if [[ -z "${allowlisted[$path]+set}" ]]; then
-    unauthorized+=("$path")
+  if [[ -n "${allowlisted[$path]+set}" ]]; then
+    continue
   fi
+  if is_generated_allowed_path "$path"; then
+    continue
+  fi
+  unauthorized+=("$path")
 done
 
 if [[ "${#unauthorized[@]}" -gt 0 ]]; then

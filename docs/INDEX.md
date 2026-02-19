@@ -16,3 +16,6 @@
 * [../opt/_factory/INDEX.md](../opt/_factory/INDEX.md) — Curated library of operator guides.
 * [MAP.md](MAP.md) — Continuity wayfinding for cross-session state.
 * [CONTEXT.md](CONTEXT.md) — Definition of required context artifacts.
+* [ops/specs/definitions/agents.md](ops/specs/definitions/agents.md) — Agent candidate and promotion head-chain specification.
+* [ops/specs/definitions/tasks.md](ops/specs/definitions/tasks.md) — Task candidate and promotion head-chain specification.
+* [ops/specs/definitions/skills.md](ops/specs/definitions/skills.md) — Skill candidate and promotion head-chain specification.

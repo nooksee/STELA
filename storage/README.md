@@ -1,16 +1,17 @@
 # storage
 
-Local runtime/meta storage for development.
+Runtime/meta storage for development and DP closeout artifacts.
 
 - Not deployed
-- Usually ignored by git
+- Directory skeleton is tracked (`.gitkeep`) for deterministic topology.
+- Payload files are ignored by default unless explicitly tracked by DP scope and allowlist.
 
-Keep this empty in the repo; use it locally.
+Keep non-DP local scratch artifacts out of commits.
 
-Local artifact retention (untracked, local-only):
+Canonical storage lanes:
 - `storage/handoff/` for OPEN, OPEN-PORCELAIN, and DP results.
 - `storage/dumps/` for dump bundles and manifests.
 - `storage/dp/intake/` for pre-closeout DP packet staging.
 - `storage/dp/processed/` for post-closeout DP packets.
 - `ops/bin/certify` enforces intake -> processed routing after the final `tools/lint/results.sh` pass.
-- These paths are not worker prerequisites unless a DP explicitly requires them.
+- Intake is staging-only and should not carry tracked `DP-*.md` packets in committed state.

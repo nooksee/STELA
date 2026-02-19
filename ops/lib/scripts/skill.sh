@@ -9,7 +9,6 @@ TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
 SKILLS_DIR="${REPO_ROOT}/opt/_factory/skills"
 HANDOFF_DIR="${REPO_ROOT}/archives/definitions"
-OPEN_DIR="${REPO_ROOT}/storage/handoff"
 SKILL_TEMPLATE_PATH="${REPO_ROOT}/ops/src/definitions/skill.md.tpl"
 TEMPLATE_BIN="${REPO_ROOT}/ops/bin/template"
 HEURISTICS_LIB="${SCRIPT_DIR}/heuristics.sh"
@@ -31,7 +30,7 @@ Usage:
   ops/lib/scripts/skill.sh promote|--promote <draft_path> [--delete-draft]
   ops/lib/scripts/skill.sh check|--check
 
-Legacy (append-only candidate + promotion packet):
+Legacy positional alias:
   ops/lib/scripts/skill.sh "name" "context" "solution"
 
 Notes:
@@ -135,25 +134,6 @@ generate_trace_id() {
   printf 'stela-%s-%s' "$stamp" "$suffix"
 }
 
-extract_trace_id_from_open() {
-  local open_path="$1"
-  [[ -f "$open_path" ]] || return 1
-  local trace_id
-  trace_id="$(
-    awk '
-      /STELA_TRACE_ID:[[:space:]]*/ {
-        line=$0
-        sub(/.*STELA_TRACE_ID:[[:space:]]*/, "", line)
-        print line
-        exit
-      }
-    ' "$open_path"
-  )"
-  trace_id="$(trim "$trace_id")"
-  [[ -n "$trace_id" ]] || return 1
-  printf '%s' "$trace_id"
-}
-
 select_latest_path_by_mtime() {
   local latest_path=""
   local latest_mtime=-1
@@ -177,68 +157,161 @@ select_latest_path_by_mtime() {
   printf '%s' "$latest_path"
 }
 
-select_latest_open_artifact() {
-  mapfile -t opens < <(
-    find "$OPEN_DIR" -maxdepth 1 -type f | awk '
-      {
-        filename=$0
-        sub(/^.*\//, "", filename)
-        if (filename ~ /^OPEN-.*\.txt$/ && filename !~ /^OPEN-PORCELAIN-/) {
-          print $0
-        }
-      }
-    '
-  )
-  if (( ${#opens[@]} == 0 )); then
-    return 1
-  fi
-  select_latest_path_by_mtime "${opens[@]}"
-}
-
 resolve_trace_id() {
   local trace_id="${STELA_TRACE_ID:-}"
-  if [[ -n "$trace_id" ]]; then
-    printf '%s' "$trace_id"
-    return 0
-  fi
-
-  local open_path
-  open_path="$(select_latest_open_artifact || true)"
-  if [[ -n "$open_path" ]]; then
-    trace_id="$(extract_trace_id_from_open "$open_path" || true)"
-  fi
   if [[ -z "$trace_id" ]]; then
     trace_id="$(generate_trace_id)"
   fi
   printf '%s' "$trace_id"
 }
 
-resolve_previous_skill_definition() {
-  local slug="$1"
-  mapfile -t candidates < <(
-    find "$HANDOFF_DIR" -maxdepth 1 -type f | awk -v slug="$slug" '
-      {
-        filename=$0
-        sub(/^.*\//, "", filename)
-        if (filename ~ ("^skill-[0-9]{8}-[0-9]{6}-" slug "(-[0-9]+)?\\.md$")) {
-          print $0
-        }
-      }
-    '
-  )
+trace_suffix_from_id() {
+  local trace_id="$1"
+  if [[ "$trace_id" =~ -([0-9a-fA-F]{8})$ ]]; then
+    printf '%s' "$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:upper:]' '[:lower:]')"
+    return 0
+  fi
+  local fallback
+  fallback="$(git -C "$REPO_ROOT" rev-parse --short=8 HEAD 2>/dev/null || true)"
+  fallback="$(printf '%s' "$fallback" | tr '[:upper:]' '[:lower:]')"
+  if [[ "$fallback" =~ ^[0-9a-f]{8}$ ]]; then
+    printf '%s' "$fallback"
+    return 0
+  fi
+  printf '%08x' "$RANDOM"
+}
 
-  if (( ${#candidates[@]} == 0 )); then
+resolve_packet_id() {
+  local fallback="${1:-}"
+  local packet_id="${STELA_PACKET_ID:-}"
+  if [[ -n "$packet_id" ]]; then
+    printf '%s' "$packet_id"
+    return 0
+  fi
+  if [[ -n "$fallback" ]]; then
+    printf '%s' "$fallback"
+    return 0
+  fi
+  die "Missing packet ID. Set STELA_PACKET_ID or update TASK.md Current DP."
+}
+
+build_definition_leaf_path() {
+  local stem="$1"
+  local trace_suffix="$2"
+  printf 'archives/definitions/%s-%s-%s.md' "$stem" "$(date -u +%Y-%m-%d)" "$trace_suffix"
+}
+
+read_factory_head_value() {
+  local key="$1"
+  local value
+  value="$(awk -F':' -v key="$key" '
+    $1 == key {
+      entry=$0
+      sub(/^[^:]+:[[:space:]]*/, "", entry)
+      print entry
+      exit
+    }
+  ' "$SKILL_FILE")"
+  value="$(trim "$value")"
+  if [[ -z "$value" ]]; then
+    die "Missing ${key}: pointer in ${SKILL_FILE}"
+  fi
+  printf '%s' "$value"
+}
+
+normalize_previous_head_value() {
+  local value="$1"
+  if [[ "$value" == *"-(origin)" ]]; then
     printf '(none)'
     return 0
   fi
+  printf '%s' "$value"
+}
 
-  local latest_path
-  latest_path="$(select_latest_path_by_mtime "${candidates[@]}")"
-  if [[ "$latest_path" == "${REPO_ROOT}/"* ]]; then
-    printf '%s' "${latest_path#${REPO_ROOT}/}"
-  else
-    printf '%s' "$latest_path"
+update_factory_head_value() {
+  local key="$1"
+  local value="$2"
+  local tmp
+  tmp="$(mktemp)"
+
+  if ! awk -v key="$key" -v value="$value" '
+    BEGIN { updated=0 }
+    $0 ~ ("^" key ":[[:space:]]*") {
+      print key ": " value
+      updated=1
+      next
+    }
+    { print }
+    END { if (updated == 0) exit 2 }
+  ' "$SKILL_FILE" > "$tmp"; then
+    status=$?
+    rm -f "$tmp"
+    if [[ "$status" -eq 2 ]]; then
+      die "Failed to locate ${key}: pointer in ${SKILL_FILE}"
+    fi
+    die "Failed to rewrite ${key}: pointer in ${SKILL_FILE}"
   fi
+
+  mv "$tmp" "$SKILL_FILE"
+}
+
+strip_leading_frontmatter() {
+  local path="$1"
+  awk '
+    NR == 1 && $0 == "---" { in_fm=1; next }
+    in_fm == 1 {
+      if ($0 == "---") {
+        in_fm=0
+        next
+      }
+      next
+    }
+    { print }
+  ' "$path"
+}
+
+emit_head_leaf_from_source() {
+  local key="$1"
+  local stem="$2"
+  local source_path="$3"
+  local packet_id="$4"
+
+  local current_head
+  current_head="$(read_factory_head_value "$key")"
+  local previous
+  previous="$(normalize_previous_head_value "$current_head")"
+
+  local trace_id
+  trace_id="$(resolve_trace_id)"
+  local trace_suffix
+  trace_suffix="$(trace_suffix_from_id "$trace_id")"
+  local leaf_rel
+  leaf_rel="$(build_definition_leaf_path "$stem" "$trace_suffix")"
+  local leaf_abs="${REPO_ROOT}/${leaf_rel}"
+  if [[ -e "$leaf_abs" ]]; then
+    die "Leaf already exists: ${leaf_rel}"
+  fi
+
+  local created_at
+  created_at="$(iso_utc_now)"
+
+  local tmp
+  tmp="$(mktemp)"
+  {
+    printf '%s\n' '---'
+    printf 'trace_id: %s\n' "$trace_id"
+    printf 'packet_id: %s\n' "$packet_id"
+    printf 'created_at: %s\n' "$created_at"
+    printf 'previous: %s\n' "$previous"
+    printf '%s\n' '---'
+    strip_leading_frontmatter "$source_path"
+  } > "$tmp"
+
+  redact_stream < "$tmp" > "$leaf_abs"
+  rm -f "$tmp"
+
+  update_factory_head_value "$key" "$leaf_rel"
+  printf '%s' "$leaf_abs"
 }
 
 is_placeholder_value() {
@@ -447,46 +520,6 @@ next_skill_id() {
   printf 'S-LEARN-%s' "$next_id_fmt"
 }
 
-insert_into_section() {
-  local section="$1"
-  local insert_file="$2"
-  local target="$3"
-  local tmp
-  tmp="$(mktemp)"
-
-  if ! awk -v section="$section" -v insert_file="$insert_file" '
-    BEGIN {
-      found=0; inserted=0; in_section=0; insert="";
-      while ((getline line < insert_file) > 0) {
-        insert = insert line "\n";
-      }
-      close(insert_file);
-      if (insert != "") { sub(/\n$/, "", insert) }
-    }
-    {
-      if ($0 == section) { found=1; in_section=1; print; next }
-      if (in_section && $0 ~ /^## /) {
-        if (!inserted) { print insert; inserted=1 }
-        in_section=0
-      }
-      print
-    }
-    END {
-      if (!found) { exit 2 }
-      if (in_section && !inserted) { print insert; inserted=1 }
-    }
-  ' "$target" > "$tmp"; then
-    status=$?
-    rm -f "$tmp"
-    if [[ "$status" -eq 2 ]]; then
-      die "Section not found: $section"
-    fi
-    die "Failed to update $target"
-  fi
-
-  mv "$tmp" "$target"
-}
-
 insert_skill_registry_entry() {
   local row="$1"
   local tmp
@@ -546,7 +579,7 @@ validate_candidate() {
     fi
   done
 
-  if ! head -n 1 "$path" | grep -qE '^# Skill Draft: .+'; then
+  if ! grep -nE '^# Skill Draft: .+' "$path" >/dev/null; then
     die "Draft header missing or invalid. Expected '# Skill Draft: <title>'."
   fi
 }
@@ -626,39 +659,36 @@ cmd_harvest() {
   local objective
   dp_id="$(read_task_field "Current DP")"
   objective="$(read_task_field "Goal")"
+  local packet_id
+  packet_id="$(resolve_packet_id "$dp_id")"
 
-  local slug
-  slug="$(slugify "$name")"
   local trace_id
   trace_id="$(resolve_trace_id)"
+  local trace_suffix
+  trace_suffix="$(trace_suffix_from_id "$trace_id")"
   local created_at
   created_at="$(iso_utc_now)"
+  local current_candidate
+  current_candidate="$(read_factory_head_value "candidate")"
   local previous
-  previous="$(resolve_previous_skill_definition "$slug")"
+  previous="$(normalize_previous_head_value "$current_candidate")"
+  local draft_rel_path
+  draft_rel_path="$(build_definition_leaf_path "skill-candidate" "$trace_suffix")"
   local draft_path
-  local counter=0
-
-  while :; do
-    if [[ $counter -eq 0 ]]; then
-      draft_path="${HANDOFF_DIR}/skill-$(date -u '+%Y%m%d-%H%M%S')-${slug}.md"
-    else
-      draft_path="${HANDOFF_DIR}/skill-$(date -u '+%Y%m%d-%H%M%S')-${slug}-${counter}.md"
-    fi
-    if [[ ! -e "$draft_path" ]]; then
-      break
-    fi
-    counter=$((counter + 1))
-  done
+  draft_path="${REPO_ROOT}/${draft_rel_path}"
+  if [[ -e "$draft_path" ]]; then
+    die "Leaf already exists: ${draft_rel_path}"
+  fi
 
   local tmp
   tmp="$(mktemp)"
 
   local provenance_block
-  provenance_block="$(generate_provenance_block "$dp_id" "$objective" "$base_ref" "$head_ref" "$REPO_ROOT")"
+  provenance_block="$(generate_provenance_block "$packet_id" "$objective" "$base_ref" "$head_ref" "$REPO_ROOT")"
 
   render_definition_template "$SKILL_TEMPLATE_PATH" "$tmp" \
     "TRACE_ID" "$trace_id" \
-    "PACKET_ID" "$dp_id" \
+    "PACKET_ID" "$packet_id" \
     "CREATED_AT" "$created_at" \
     "PREVIOUS" "$previous" \
     "SKILL_NAME" "$name" \
@@ -668,6 +698,7 @@ cmd_harvest() {
 
   redact_stream < "$tmp" > "$draft_path"
   rm -f "$tmp"
+  update_factory_head_value "candidate" "$draft_rel_path"
 
   if [[ $solution_placeholder -eq 1 ]]; then
     echo "WARN: Solution placeholder present. Refine the draft before promotion." >&2
@@ -678,7 +709,7 @@ cmd_harvest() {
 
 select_latest_draft() {
   local draft_path=""
-  mapfile -t drafts < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name 'skill-*.md' | sort)
+  mapfile -t drafts < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name 'skill-candidate-*.md' | sort)
   if (( ${#drafts[@]} == 0 )); then
     die "No draft found in archives/definitions"
   fi
@@ -704,6 +735,54 @@ select_latest_draft() {
   fi
 
   echo "$draft_path"
+}
+
+materialize_promoted_skill() {
+  local draft_path="$1"
+  local skill_id="$2"
+  local title="$3"
+  local output_path="$4"
+
+  awk -v header="# ${skill_id}: ${title}" '
+    BEGIN { has_pointers=0; inserted=0 }
+    /^## Pointers$/ {
+      has_pointers=1
+    }
+    NR == 1 {
+      print header
+      next
+    }
+    $0 == "## Invocation guidance" {
+      print "## Invocation Guidance"
+      next
+    }
+    $0 == "## Drift preventers" {
+      if (!has_pointers && !inserted) {
+        print "## Pointers"
+        print "- Constitution: `PoT.md`"
+        print "- Governance: `docs/GOVERNANCE.md`"
+        print "- Contract: `TASK.md`"
+        print "- Registry: `docs/ops/registry/SKILLS.md`"
+        print ""
+        inserted=1
+      }
+      print
+      next
+    }
+    {
+      print
+    }
+    END {
+      if (!has_pointers && !inserted) {
+        print ""
+        print "## Pointers"
+        print "- Constitution: `PoT.md`"
+        print "- Governance: `docs/GOVERNANCE.md`"
+        print "- Contract: `TASK.md`"
+        print "- Registry: `docs/ops/registry/SKILLS.md`"
+      }
+    }
+  ' "$draft_path" > "$output_path"
 }
 
 cmd_promote() {
@@ -748,7 +827,7 @@ cmd_promote() {
   fi
 
   local title
-  title="$(head -n 1 "$draft_path" | sed -E 's/^# Skill Draft: //')"
+  title="$(grep -m1 -E '^# Skill Draft: ' "$draft_path" | sed -E 's/^# Skill Draft: //')"
   title="$(trim "$title")"
   if [[ -z "$title" ]]; then
     die "Draft title is empty"
@@ -767,7 +846,7 @@ cmd_promote() {
 
   local tmp_skill
   tmp_skill="$(mktemp)"
-  awk -v header="# ${skill_id}: ${title}" 'NR==1 { print header; next } { print }' "$draft_path" > "$tmp_skill"
+  materialize_promoted_skill "$draft_path" "$skill_id" "$title" "$tmp_skill"
   mv "$tmp_skill" "$skill_path"
 
   if grep -Fq "| ${skill_id} |" "$SKILLS_REGISTRY"; then
@@ -778,67 +857,23 @@ cmd_promote() {
   registry_row="| ${skill_id} | Skill: ${title} | opt/_factory/skills/${skill_id}.md | |"
   insert_skill_registry_entry "$registry_row"
 
-  local timestamp
-  timestamp="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-  local anchor_id
-  anchor_id="promotion-packet-${skill_id,,}"
-
-  local invocation_line
-  invocation_line="$(awk 'found {print; exit} $0=="## Invocation guidance" {found=1}' "$draft_path")"
-  local candidate_context="See opt/_factory/skills/${skill_id}.md"
-  local candidate_solution="See opt/_factory/skills/${skill_id}.md"
-  if [[ "$invocation_line" =~ ^Use[[:space:]]this[[:space:]]skill[[:space:]]when[[:space:]](.+)\.[[:space:]]Apply[[:space:]]the[[:space:]]solution:[[:space:]](.+)\.$ ]]; then
-    candidate_context="${BASH_REMATCH[1]}"
-    candidate_solution="${BASH_REMATCH[2]}"
+  local packet_seed
+  packet_seed="$(awk '
+    /^packet_id:[[:space:]]*/ {
+      line=$0
+      sub(/^packet_id:[[:space:]]*/, "", line)
+      print line
+      exit
+    }
+  ' "$draft_path")"
+  packet_seed="$(trim "$packet_seed")"
+  if [[ -z "$packet_seed" ]]; then
+    packet_seed="$(read_task_field "Current DP")"
   fi
 
-  local candidate_tmp
-  candidate_tmp="$(mktemp)"
-  cat <<EOF > "$candidate_tmp"
-- ${timestamp} - [Promotion Packet](#${anchor_id})
-  - Name: ${title}
-  - Context: ${candidate_context}
-  - Solution: ${candidate_solution}
-EOF
-
-  local packet_tmp
-  packet_tmp="$(mktemp)"
-  cat <<EOF > "$packet_tmp"
-<a id="${anchor_id}"></a>
-### Promotion Packet: ${skill_id} - ${title}
-- Candidate name: ${title}
-  - Proposed Skill ID: ${skill_id} (rule: choose the next available numeric ID not already present in opt/_factory/skills or registered in docs/ops/registry/SKILLS.md)
-- Scope: production payloads only; not platform maintenance
-- Invocation guidance: Use this skill when a DP explicitly requests ${title}. Apply the solution as documented in opt/_factory/skills/${skill_id}.md.
-- Drift preventers:
-  - Stop conditions: Stop if the DP scope is platform maintenance or if the DP does not explicitly request this skill
-  - Anti-hallucination: Use repo files as SSOT and stop if required inputs are missing
-  - Negative check: Do not add Skills to ops/lib/manifests/CONTEXT.md
-- Definition of Done:
-  - ${skill_id} created under opt/_factory/skills and matches scope and drift preventers
-  - docs/ops/registry/SKILLS.md updated with the new skill entry
-  - SoP.md updated if canon or governance surfaces changed
-  - Proof bundle updated in storage/handoff with diff outputs
-- Verification (capture command output in RESULTS):
-  - ./ops/bin/dump --scope=platform
-  - bash tools/lint/context.sh
-  - bash tools/lint/truth.sh (required when canon or governance surfaces change)
-  - bash tools/lint/factory.sh
-  - bash tools/verify.sh
-EOF
-
-  insert_into_section "## Candidate Log (append-only)" "$candidate_tmp" "$SKILL_FILE"
-  insert_into_section "## Promotion Packets (generated from candidates)" "$packet_tmp" "$SKILL_FILE"
-
-  rm -f "$candidate_tmp" "$packet_tmp"
-
-  local log_tmp
-  log_tmp="$(mktemp)"
-  cat <<EOF > "$log_tmp"
-- ${timestamp} - Promoted ${skill_id} - ${title} -> opt/_factory/skills/${skill_id}.md
-EOF
-  insert_into_section "## Promotion Log (append-only)" "$log_tmp" "$SKILL_FILE"
-  rm -f "$log_tmp"
+  local packet_id
+  packet_id="$(resolve_packet_id "$packet_seed")"
+  emit_head_leaf_from_source "promotion" "skill-promotion" "$skill_path" "$packet_id" >/dev/null
 
   if (( delete_draft == 1 )); then
     rm -f "$draft_path"
@@ -848,67 +883,11 @@ EOF
 }
 
 cmd_legacy() {
-  require_repo_root
-
   if [[ "$#" -ne 3 ]]; then
     usage >&2
     exit 1
   fi
-
-  local name="$1"
-  local context="$2"
-  local solution="$3"
-
-  if [[ "$name" == *$'\n'* || "$context" == *$'\n'* || "$solution" == *$'\n'* ]]; then
-    die "Legacy inputs must be single-line values"
-  fi
-
-  local skill_id
-  skill_id="$(next_skill_id)"
-  local anchor_id
-  anchor_id="promotion-packet-${skill_id,,}"
-  local timestamp
-  timestamp="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-
-  local candidate_tmp
-  candidate_tmp="$(mktemp)"
-  cat <<EOF > "$candidate_tmp"
-- ${timestamp} - [Promotion Packet](#${anchor_id})
-  - Name: ${name}
-  - Context: ${context}
-  - Solution: ${solution}
-EOF
-
-  local packet_tmp
-  packet_tmp="$(mktemp)"
-  cat <<EOF > "$packet_tmp"
-<a id="${anchor_id}"></a>
-### Promotion Packet: ${skill_id} - ${name}
-- Candidate name: ${name}
-  - Proposed Skill ID: ${skill_id} (rule: choose the next available numeric ID not already present in opt/_factory/skills or registered in docs/ops/registry/SKILLS.md)
-- Scope: production payloads only; not platform maintenance
-- Invocation guidance: Use this skill when ${context}. Apply the solution: ${solution}.
-- Drift preventers:
-  - Stop conditions: Stop if the DP scope is platform maintenance or if the DP does not explicitly request this skill
-  - Anti-hallucination: Use repo files as SSOT and stop if required inputs are missing
-  - Negative check: Do not add Skills to ops/lib/manifests/CONTEXT.md
-- Definition of Done:
-  - ${skill_id} created under opt/_factory/skills and matches scope and drift preventers
-  - docs/ops/registry/SKILLS.md updated with the new skill entry
-  - SoP.md updated if canon or governance surfaces changed
-  - Proof bundle updated in storage/handoff with diff outputs
-- Verification (capture command output in RESULTS):
-  - ./ops/bin/dump --scope=platform
-  - bash tools/lint/context.sh
-  - bash tools/lint/truth.sh (required when canon or governance surfaces change)
-  - bash tools/lint/factory.sh
-  - bash tools/verify.sh
-EOF
-
-  insert_into_section "## Candidate Log (append-only)" "$candidate_tmp" "$SKILL_FILE"
-  insert_into_section "## Promotion Packets (generated from candidates)" "$packet_tmp" "$SKILL_FILE"
-
-  rm -f "$candidate_tmp" "$packet_tmp"
+  cmd_harvest --name "$1" --context "$2" --solution "$3"
 }
 
 main() {

@@ -22,6 +22,12 @@ archives/definitions/*
 !archives/definitions/
 archives/definitions/*
 !archives/definitions/.gitkeep
+!archives/definitions/agent-candidate-????-??-??-*.md
+!archives/definitions/agent-promotion-????-??-??-*.md
+!archives/definitions/task-candidate-????-??-??-*.md
+!archives/definitions/task-promotion-????-??-??-*.md
+!archives/definitions/skill-candidate-????-??-??-*.md
+!archives/definitions/skill-promotion-????-??-??-*.md
 !archives/manifests/
 archives/manifests/*
 !archives/manifests/.gitkeep

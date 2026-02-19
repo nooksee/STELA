@@ -19,7 +19,7 @@ TASK_SURFACE_PATH="${REPO_ROOT}/TASK.md"
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/certify --dp=DP-OPS-XXXX [--out=auto|PATH]
+Usage: ops/bin/certify --dp=DP-OPS-XXXX [--out=auto|PATH] [--allow-intake-fallback]
 USAGE
 }
 
@@ -452,6 +452,19 @@ move_dp_packet_to_processed() {
   mkdir -p "$DP_PROCESSED_DIR"
   mv "$intake_abs" "$processed_abs"
   printf 'DP packet moved: %s -> %s\n' "$intake_rel" "$processed_rel"
+}
+
+assert_dp_matches_work_branch() {
+  local dp_id="$1"
+  local branch_name
+  branch_name="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
+  if [[ "$branch_name" =~ ^work/(dp-[a-z0-9]+-[0-9]{4,})-[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+    local branch_dp_id
+    branch_dp_id="$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:lower:]' '[:upper:]')"
+    if [[ "$dp_id" != "$branch_dp_id" ]]; then
+      die "--dp '${dp_id}' does not match work-branch packet '${branch_dp_id}' (${branch_name})"
+    fi
+  fi
 }
 
 run_closing_validator_negative_self_check() {
@@ -1133,6 +1146,7 @@ build_command_plan() {
 
 DP_ID=""
 OUT_ARG="auto"
+ALLOW_INTAKE_FALLBACK=0
 
 for arg in "$@"; do
   case "$arg" in
@@ -1141,6 +1155,9 @@ for arg in "$@"; do
       ;;
     --out=*)
       OUT_ARG="${arg#--out=}"
+      ;;
+    --allow-intake-fallback)
+      ALLOW_INTAKE_FALLBACK=1
       ;;
     -h|--help)
       usage
@@ -1154,6 +1171,7 @@ done
 
 [[ -n "$DP_ID" ]] || die "missing required --dp"
 [[ "$DP_ID" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]] || die "invalid --dp value: ${DP_ID}"
+assert_dp_matches_work_branch "$DP_ID"
 
 if [[ "$OUT_ARG" == "auto" || -z "$OUT_ARG" ]]; then
   OUT_PATH="${HANDOFF_DIR}/${DP_ID}-RESULTS.md"
@@ -1188,6 +1206,16 @@ extract_dp_block_from_task "$DP_ID" "$TASK_SOURCE_PATH" "$DP_BLOCK_PATH"
 
 DP_SOURCE="TASK.md"
 if [[ ! -s "$DP_BLOCK_PATH" ]]; then
+  if [[ "$ALLOW_INTAKE_FALLBACK" != "1" ]]; then
+    die "DP section '${DP_ID}' not found in TASK.md; intake fallback is disabled (pass --allow-intake-fallback to override)"
+  fi
+  mapfile -t intake_packets < <(find "$DP_INTAKE_DIR" -maxdepth 1 -type f -name 'DP-*.md' -printf '%f\n' | sort)
+  intake_packet=""
+  for intake_packet in "${intake_packets[@]}"; do
+    if [[ "$intake_packet" != "${DP_ID}.md" ]]; then
+      die "intake fallback blocked: non-target packet present in intake (${intake_packet})"
+    fi
+  done
   FALLBACK_DP_PATH="${DP_INTAKE_DIR}/${DP_ID}.md"
   [[ -f "$FALLBACK_DP_PATH" ]] || die "DP section '${DP_ID}' not found in TASK.md and fallback intake is missing: ${FALLBACK_DP_PATH#${REPO_ROOT}/}"
   cp "$FALLBACK_DP_PATH" "$DP_BLOCK_PATH"
