@@ -14,6 +14,7 @@
 - Worker input is DP text only; OPEN is for integrator refresh and receipt pointers and is not required reading for workers.
 - DP structure is generated from `ops/src/surfaces/dp.md.tpl` through `ops/bin/draft`; manual structural edits are prohibited.
 - Surface and definition rendering is centralized in `ops/bin/template` with YAML metadata parsing, include injection, and strict slot enforcement by default.
+- Definition registry guidance is canonical in `docs/ops/specs/definitions/agents.md`, `docs/ops/specs/definitions/tasks.md`, and `docs/ops/specs/definitions/skills.md`. `opt/_factory/AGENTS.md`, `opt/_factory/TASKS.md`, and `opt/_factory/SKILLS.md` are pointer heads.
 - `ops/bin/draft`, `ops/lib/scripts/{agent,task,skill}.sh`, and `ops/bin/prune --reset-task` route through `ops/bin/template`.
 
 **Anchor Hygiene:**
@@ -165,7 +166,7 @@ ops/lib/scripts/skill.sh check
 ops/lib/scripts/skill.sh harvest --name "skill-title" --context "when to use it" --solution "what to do"
 
 # Promote the draft into opt/_factory/skills and register it
-ops/lib/scripts/skill.sh promote archives/definitions/skill-YYYYMMDD-HHMMSS-skill-title.md
+ops/lib/scripts/skill.sh promote archives/definitions/skill-candidate-YYYY-MM-DD-<suffix>.md
 ~~~
 
 ### Tasks (Harvest + Promote)
@@ -179,7 +180,7 @@ ops/lib/scripts/task.sh check
 ops/lib/scripts/task.sh harvest --id B-TASK-01 --name "task-title" --objective "one sentence objective"
 
 # Promote the draft into opt/_factory/tasks and register it
-ops/lib/scripts/task.sh promote archives/definitions/task-B-TASK-01-YYYYMMDD-task-title.md
+ops/lib/scripts/task.sh promote archives/definitions/task-candidate-YYYY-MM-DD-<suffix>-B-TASK-01.md
 ~~~
 
 ---

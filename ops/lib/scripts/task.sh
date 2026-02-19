@@ -9,7 +9,6 @@ TASKS_LEDGER="${REPO_ROOT}/opt/_factory/TASKS.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
 HANDOFF_DIR="${REPO_ROOT}/archives/definitions"
-OPEN_DIR="${REPO_ROOT}/storage/handoff"
 TASK_TEMPLATE_PATH="${REPO_ROOT}/ops/src/definitions/task.md.tpl"
 TEMPLATE_BIN="${REPO_ROOT}/ops/bin/template"
 HEURISTICS_LIB="${SCRIPT_DIR}/heuristics.sh"
@@ -69,15 +68,6 @@ task_id_exists() {
   return 1
 }
 
-require_tasks_ledger_sections() {
-  if ! grep -q "^## Candidate Log" "$TASKS_LEDGER"; then
-    die "Task ledger missing Candidate Log section."
-  fi
-  if ! grep -q "^## Promotion Log" "$TASKS_LEDGER"; then
-    die "Task ledger missing Promotion Log section."
-  fi
-}
-
 ensure_handoff_dir() {
   mkdir -p "$HANDOFF_DIR"
 }
@@ -105,25 +95,6 @@ generate_trace_id() {
   printf 'stela-%s-%s' "$stamp" "$suffix"
 }
 
-extract_trace_id_from_open() {
-  local open_path="$1"
-  [[ -f "$open_path" ]] || return 1
-  local trace_id
-  trace_id="$(
-    awk '
-      /STELA_TRACE_ID:[[:space:]]*/ {
-        line=$0
-        sub(/.*STELA_TRACE_ID:[[:space:]]*/, "", line)
-        print line
-        exit
-      }
-    ' "$open_path"
-  )"
-  trace_id="$(trim "$trace_id")"
-  [[ -n "$trace_id" ]] || return 1
-  printf '%s' "$trace_id"
-}
-
 select_latest_path_by_mtime() {
   local latest_path=""
   local latest_mtime=-1
@@ -147,69 +118,206 @@ select_latest_path_by_mtime() {
   printf '%s' "$latest_path"
 }
 
-select_latest_open_artifact() {
-  mapfile -t opens < <(
-    find "$OPEN_DIR" -maxdepth 1 -type f | awk '
-      {
-        filename=$0
-        sub(/^.*\//, "", filename)
-        if (filename ~ /^OPEN-.*\.txt$/ && filename !~ /^OPEN-PORCELAIN-/) {
-          print $0
-        }
-      }
-    '
-  )
-  if (( ${#opens[@]} == 0 )); then
-    return 1
-  fi
-  select_latest_path_by_mtime "${opens[@]}"
-}
-
 resolve_trace_id() {
   local trace_id="${STELA_TRACE_ID:-}"
-  if [[ -n "$trace_id" ]]; then
-    printf '%s' "$trace_id"
-    return 0
-  fi
-
-  local open_path
-  open_path="$(select_latest_open_artifact || true)"
-  if [[ -n "$open_path" ]]; then
-    trace_id="$(extract_trace_id_from_open "$open_path" || true)"
-  fi
   if [[ -z "$trace_id" ]]; then
     trace_id="$(generate_trace_id)"
   fi
   printf '%s' "$trace_id"
 }
 
-resolve_previous_task_definition() {
-  local task_id="$1"
-  local slug="$2"
-  mapfile -t candidates < <(
-    find "$HANDOFF_DIR" -maxdepth 1 -type f | awk -v task_id="$task_id" -v slug="$slug" '
-      {
-        filename=$0
-        sub(/^.*\//, "", filename)
-        if (filename ~ ("^task-" task_id "-[0-9]{8}-" slug "(-[0-9]+)?\\.md$")) {
-          print $0
-        }
-      }
-    '
-  )
+trace_suffix_from_id() {
+  local trace_id="$1"
+  if [[ "$trace_id" =~ -([0-9a-fA-F]{8})$ ]]; then
+    printf '%s' "$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:upper:]' '[:lower:]')"
+    return 0
+  fi
+  local fallback
+  fallback="$(git -C "$REPO_ROOT" rev-parse --short=8 HEAD 2>/dev/null || true)"
+  fallback="$(printf '%s' "$fallback" | tr '[:upper:]' '[:lower:]')"
+  if [[ "$fallback" =~ ^[0-9a-f]{8}$ ]]; then
+    printf '%s' "$fallback"
+    return 0
+  fi
+  printf '%08x' "$RANDOM"
+}
 
-  if (( ${#candidates[@]} == 0 )); then
+resolve_packet_id() {
+  local fallback="${1:-}"
+  local packet_id="${STELA_PACKET_ID:-}"
+  if [[ -n "$packet_id" ]]; then
+    printf '%s' "$packet_id"
+    return 0
+  fi
+  if [[ -n "$fallback" ]]; then
+    printf '%s' "$fallback"
+    return 0
+  fi
+  die "Missing packet ID. Provide STELA_PACKET_ID or --dp."
+}
+
+build_definition_leaf_path() {
+  local stem="$1"
+  local trace_suffix="$2"
+  local suffix="${3:-}"
+  local path
+  path="$(printf 'archives/definitions/%s-%s-%s' "$stem" "$(date -u +%Y-%m-%d)" "$trace_suffix")"
+  if [[ -n "$suffix" ]]; then
+    path="${path}-${suffix}"
+  fi
+  printf '%s.md' "$path"
+}
+
+read_factory_head_value() {
+  local key="$1"
+  local value
+  value="$(awk -F':' -v key="$key" '
+    $1 == key {
+      entry=$0
+      sub(/^[^:]+:[[:space:]]*/, "", entry)
+      print entry
+      exit
+    }
+  ' "$TASKS_LEDGER")"
+  value="$(trim "$value")"
+  if [[ -z "$value" ]]; then
+    die "Missing ${key}: pointer in ${TASKS_LEDGER}"
+  fi
+  printf '%s' "$value"
+}
+
+normalize_previous_head_value() {
+  local value="$1"
+  if [[ "$value" == *"-(origin)" ]]; then
     printf '(none)'
     return 0
   fi
+  printf '%s' "$value"
+}
 
-  local latest_path
-  latest_path="$(select_latest_path_by_mtime "${candidates[@]}")"
-  if [[ "$latest_path" == "${REPO_ROOT}/"* ]]; then
-    printf '%s' "${latest_path#${REPO_ROOT}/}"
-  else
-    printf '%s' "$latest_path"
+hydrate_task_draft_defaults() {
+  local path="$1"
+  local tmp
+  tmp="$(mktemp)"
+
+  awk '
+    {
+      if ($0 == "- **Primary Agent:** Not provided") {
+        print "- **Primary Agent:** R-AGENT-01"
+        next
+      }
+      if ($0 == "- **Supporting Agents:** Not provided") {
+        print "- **Supporting Agents:** (none)"
+        next
+      }
+      if ($0 == "5. Closeout: Complete Closeout per `TASK.md` Section 4.") {
+        print "5. Closeout: Complete Closeout per `TASK.md` Section 3.5."
+        next
+      }
+      if ($0 ~ /^- \*\*Allowed:\*\* Not provided\.?$/) {
+        print "- **Allowed:** Execute only allowlisted DP changes and complete Closeout per `TASK.md` Section 3.5."
+        next
+      }
+      if ($0 ~ /^- \*\*Forbidden:\*\* Not provided\.?$/) {
+        print "- **Forbidden:** Do not modify out-of-scope files or skip required verification."
+        next
+      }
+      if ($0 ~ /^- \*\*Stop Conditions:\*\* Not provided\.?$/) {
+        print "- **Stop Conditions:** Stop on missing required inputs, lint failures, or scope expansion."
+        next
+      }
+      print
+    }
+  ' "$path" > "$tmp"
+
+  mv "$tmp" "$path"
+}
+
+update_factory_head_value() {
+  local key="$1"
+  local value="$2"
+  local tmp
+  tmp="$(mktemp)"
+
+  if ! awk -v key="$key" -v value="$value" '
+    BEGIN { updated=0 }
+    $0 ~ ("^" key ":[[:space:]]*") {
+      print key ": " value
+      updated=1
+      next
+    }
+    { print }
+    END { if (updated == 0) exit 2 }
+  ' "$TASKS_LEDGER" > "$tmp"; then
+    status=$?
+    rm -f "$tmp"
+    if [[ "$status" -eq 2 ]]; then
+      die "Failed to locate ${key}: pointer in ${TASKS_LEDGER}"
+    fi
+    die "Failed to rewrite ${key}: pointer in ${TASKS_LEDGER}"
   fi
+
+  mv "$tmp" "$TASKS_LEDGER"
+}
+
+strip_leading_frontmatter() {
+  local path="$1"
+  awk '
+    NR == 1 && $0 == "---" { in_fm=1; next }
+    in_fm == 1 {
+      if ($0 == "---") {
+        in_fm=0
+        next
+      }
+      next
+    }
+    { print }
+  ' "$path"
+}
+
+emit_head_leaf_from_source() {
+  local key="$1"
+  local stem="$2"
+  local source_path="$3"
+  local packet_id="$4"
+  local suffix="${5:-}"
+
+  local current_head
+  current_head="$(read_factory_head_value "$key")"
+  local previous
+  previous="$(normalize_previous_head_value "$current_head")"
+
+  local trace_id
+  trace_id="$(resolve_trace_id)"
+  local trace_suffix
+  trace_suffix="$(trace_suffix_from_id "$trace_id")"
+  local leaf_rel
+  leaf_rel="$(build_definition_leaf_path "$stem" "$trace_suffix" "$suffix")"
+  local leaf_abs="${REPO_ROOT}/${leaf_rel}"
+  if [[ -e "$leaf_abs" ]]; then
+    die "Leaf already exists: ${leaf_rel}"
+  fi
+
+  local created_at
+  created_at="$(iso_utc_now)"
+
+  local tmp
+  tmp="$(mktemp)"
+  {
+    printf '%s\n' '---'
+    printf 'trace_id: %s\n' "$trace_id"
+    printf 'packet_id: %s\n' "$packet_id"
+    printf 'created_at: %s\n' "$created_at"
+    printf 'previous: %s\n' "$previous"
+    printf '%s\n' '---'
+    strip_leading_frontmatter "$source_path"
+  } > "$tmp"
+
+  redact_stream < "$tmp" > "$leaf_abs"
+  rm -f "$tmp"
+
+  update_factory_head_value "$key" "$leaf_rel"
+  printf '%s' "$leaf_abs"
 }
 
 slugify() {
@@ -414,117 +522,18 @@ validate_candidate() {
   ' "$path")"
 
   local last_step
-  last_step="$(printf '%s\n' "$execution_section" | awk '/^[[:space:]]*[0-9]+\\.[[:space:]]/ {line=$0} END {print line}')"
+  last_step="$(printf '%s\n' "$execution_section" | awk '/^[[:space:]]*[0-9]+\.[[:space:]]/ {line=$0} END {print line}')"
   if [[ -z "$last_step" ]]; then
     die "Draft Execution Logic missing numbered steps."
   fi
-  if ! grep -q "Closeout" <<< "$last_step" || ! grep -q "TASK.md" <<< "$last_step" || ! grep -qi "Section 4" <<< "$last_step"; then
-    die "Draft Execution Logic missing final Closeout pointer to TASK.md Section 4."
+  if ! grep -q "Closeout" <<< "$last_step" || ! grep -q "TASK.md" <<< "$last_step" || ! grep -qi "Section 3.5" <<< "$last_step"; then
+    die "Draft Execution Logic missing final Closeout pointer to TASK.md Section 3.5."
   fi
-}
-
-append_candidate_log() {
-  local task_id="$1"
-  local name="$2"
-  local dp_id="$3"
-  local draft_path="$4"
-  local timestamp
-  timestamp="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-
-  require_tasks_ledger_sections
-
-  local entry_file
-  entry_file="$(mktemp)"
-  cat <<ENTRY_LOG > "$entry_file"
-
-- ${timestamp}
-  - Task ID: ${task_id}
-  - Name: ${name}
-  - DP provenance: ${dp_id}
-  - Draft path: ${draft_path}
-ENTRY_LOG
-
-  local tmp
-  tmp="$(mktemp)"
-
-  if ! awk -v entry_file="$entry_file" '
-    BEGIN { in_section=0; inserted=0 }
-    function emit_entry() {
-      while ((getline line < entry_file) > 0) { print line }
-      close(entry_file)
-    }
-    /^## Candidate Log/ { in_section=1 }
-    /^## Promotion Log/ {
-      if (in_section && inserted == 0) { emit_entry(); inserted=1 }
-      in_section=0
-    }
-    {
-      if (in_section && $0 ~ /^- No entries recorded yet\./) next
-      print
-    }
-    END { if (inserted == 0) exit 2 }
-  ' "$TASKS_LEDGER" > "$tmp"; then
-    status=$?
-    rm -f "$tmp" "$entry_file"
-    if [[ "$status" -eq 2 ]]; then
-      die "Task ledger missing Promotion Log section."
-    fi
-    die "Failed to update opt/_factory/TASKS.md candidate log."
-  fi
-
-  mv "$tmp" "$TASKS_LEDGER"
-  rm -f "$entry_file"
-}
-
-append_promotion_log() {
-  local task_id="$1"
-  local name="$2"
-  local dp_id="$3"
-  local task_path="$4"
-  local timestamp
-  timestamp="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-
-  require_tasks_ledger_sections
-
-  local entry_file
-  entry_file="$(mktemp)"
-  cat <<PROMO_LOG > "$entry_file"
-
-- ${timestamp}
-  - Task ID: ${task_id}
-  - Name: ${name}
-  - DP provenance: ${dp_id}
-  - Promoted file: ${task_path}
-PROMO_LOG
-
-  local tmp
-  tmp="$(mktemp)"
-
-  if ! awk '
-    BEGIN { in_section=0; seen=0 }
-    /^## Promotion Log/ { in_section=1; seen=1 }
-    {
-      if (in_section && $0 ~ /^- No entries recorded yet\./) next
-      print
-    }
-    END { if (seen == 0) exit 2 }
-  ' "$TASKS_LEDGER" > "$tmp"; then
-    status=$?
-    rm -f "$tmp" "$entry_file"
-    if [[ "$status" -eq 2 ]]; then
-      die "Task ledger missing Promotion Log section."
-    fi
-    die "Failed to update opt/_factory/TASKS.md promotion log."
-  fi
-
-  cat "$entry_file" >> "$tmp"
-  mv "$tmp" "$TASKS_LEDGER"
-  rm -f "$entry_file"
 }
 
 select_latest_draft() {
   local draft_path=""
-  mapfile -t drafts < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name 'task-*.md' | sort)
+  mapfile -t drafts < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name 'task-candidate-*.md' | sort)
   if (( ${#drafts[@]} == 0 )); then
     die "No draft found in ${HANDOFF_DIR}"
   fi
@@ -586,7 +595,8 @@ update_registry_entry() {
   local tmp
   tmp="$(mktemp)"
 
-  if ! awk -v task_id="$task_id" -v name="$name" -v path="$path" '
+  local status=0
+  if awk -v task_id="$task_id" -v name="$name" -v path="$path" '
     BEGIN { updated=0 }
     {
       if ($0 ~ /^\|/ && $0 !~ /^\|[[:space:]]*---/) {
@@ -603,16 +613,17 @@ update_registry_entry() {
     }
     END { if (updated == 0) exit 2 }
   ' "$TASKS_REGISTRY" > "$tmp"; then
+    mv "$tmp" "$TASKS_REGISTRY"
+    return 0
+  else
     status=$?
-    rm -f "$tmp"
-    if [[ "$status" -eq 2 ]]; then
-      return 1
-    fi
-    die "Failed to update docs/ops/registry/TASKS.md"
   fi
 
-  mv "$tmp" "$TASKS_REGISTRY"
-  return 0
+  rm -f "$tmp"
+  if [[ "$status" -eq 2 ]]; then
+    return 1
+  fi
+  die "Failed to update docs/ops/registry/TASKS.md"
 }
 
 cmd_harvest() {
@@ -683,50 +694,49 @@ cmd_harvest() {
     die "Task ID ${task_id} already exists in docs/ops/registry/TASKS.md. Review the registry or run ops/lib/scripts/task.sh check before harvesting."
   fi
 
+  local packet_id
+  packet_id="$(resolve_packet_id "$dp_id")"
   local base_ref="main"
   local head_ref="HEAD"
 
   local provenance_block
-  provenance_block="$(generate_provenance_block "$dp_id" "$objective" "$base_ref" "$head_ref" "$REPO_ROOT")"
+  provenance_block="$(generate_provenance_block "$packet_id" "$objective" "$base_ref" "$head_ref" "$REPO_ROOT")"
 
-  local slug
-  slug="$(slugify "$name")"
   local trace_id
   trace_id="$(resolve_trace_id)"
+  local trace_suffix
+  trace_suffix="$(trace_suffix_from_id "$trace_id")"
   local created_at
   created_at="$(iso_utc_now)"
+  local current_candidate
+  current_candidate="$(read_factory_head_value "candidate")"
   local previous
-  previous="$(resolve_previous_task_definition "$task_id" "$slug")"
+  previous="$(normalize_previous_head_value "$current_candidate")"
+  local draft_rel_path
+  draft_rel_path="$(build_definition_leaf_path "task-candidate" "$trace_suffix" "$task_id")"
   local draft_path
-  local counter=0
-
-  while :; do
-    if [[ $counter -eq 0 ]]; then
-      draft_path="${HANDOFF_DIR}/task-${task_id}-$(date -u '+%Y%m%d')-${slug}.md"
-    else
-      draft_path="${HANDOFF_DIR}/task-${task_id}-$(date -u '+%Y%m%d')-${slug}-${counter}.md"
-    fi
-    if [[ ! -e "$draft_path" ]]; then
-      break
-    fi
-    counter=$((counter + 1))
-  done
+  draft_path="${REPO_ROOT}/${draft_rel_path}"
+  if [[ -e "$draft_path" ]]; then
+    die "Leaf already exists: ${draft_rel_path}"
+  fi
 
   local tmp
   tmp="$(mktemp)"
 
   render_definition_template "$TASK_TEMPLATE_PATH" "$tmp" \
     "TRACE_ID" "$trace_id" \
-    "PACKET_ID" "$dp_id" \
+    "PACKET_ID" "$packet_id" \
     "CREATED_AT" "$created_at" \
     "PREVIOUS" "$previous" \
     "TASK_NAME" "$name" \
     "PROVENANCE_BLOCK" "$provenance_block"
 
+  hydrate_task_draft_defaults "$tmp"
+
   redact_stream < "$tmp" > "$draft_path"
   rm -f "$tmp"
 
-  append_candidate_log "$task_id" "$name" "$dp_id" "$draft_path"
+  update_factory_head_value "candidate" "$draft_rel_path"
 
   echo "$draft_path"
 }
@@ -735,7 +745,6 @@ cmd_promote() {
   require_repo_root
   ensure_handoff_dir
   ensure_tasks_dir
-  require_tasks_ledger_sections
 
   local delete_draft=0
   local draft_path=""
@@ -776,6 +785,10 @@ cmd_promote() {
   if [[ -z "$name" ]]; then
     die "Draft name is empty"
   fi
+  local header_name="$name"
+  if [[ "$header_name" != Task:\ * ]]; then
+    header_name="Task: ${header_name}"
+  fi
 
   local dp_id
   dp_id="$(field_value "DP-ID" "$draft_path")"
@@ -800,14 +813,15 @@ cmd_promote() {
 
   local tmp_task
   tmp_task="$(mktemp)"
-  awk -v header="# Task: ${name}" '
-    BEGIN { replaced=0 }
-    /^# Task Draft: / {
-      if (!replaced) { print header; replaced=1; next }
-    }
-    { print }
-    END { if (!replaced) exit 1 }
-  ' "$draft_path" > "$tmp_task" || die "Failed to rewrite draft header"
+  strip_leading_frontmatter "$draft_path" | \
+    awk -v header="# ${header_name}" '
+      BEGIN { replaced=0 }
+      /^# Task Draft: / {
+        if (!replaced) { print header; replaced=1; next }
+      }
+      { print }
+      END { if (!replaced) exit 1 }
+    ' > "$tmp_task" || die "Failed to rewrite draft header"
 
   mv "$tmp_task" "$task_path"
 
@@ -818,7 +832,9 @@ cmd_promote() {
     insert_registry_entry "$registry_row"
   fi
 
-  append_promotion_log "$task_id" "$name" "$dp_id" "$task_rel_path"
+  local packet_id
+  packet_id="$(resolve_packet_id "$dp_id")"
+  emit_head_leaf_from_source "promotion" "task-promotion" "$task_path" "$packet_id" "$task_id" >/dev/null
 
   if (( delete_draft == 1 )); then
     rm -f "$draft_path"

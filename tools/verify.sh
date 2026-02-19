@@ -30,6 +30,55 @@ warn() {
   warnings=$((warnings+1))
 }
 
+trim() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
+read_factory_head_value() {
+  local head_path="$1"
+  local key="$2"
+  local value
+  value="$(awk -F':' -v key="$key" '
+    $1 == key {
+      entry=$0
+      sub(/^[^:]+:[[:space:]]*/, "", entry)
+      print entry
+      exit
+    }
+  ' "$head_path")"
+  value="$(trim "$value")"
+  if [[ -z "$value" ]]; then
+    fail "Factory head missing '${key}:' pointer: ${head_path}"
+    return 1
+  fi
+  printf '%s' "$value"
+}
+
+verify_factory_head_pointer() {
+  local head_path="$1"
+  local key="$2"
+  local value
+  value="$(read_factory_head_value "$head_path" "$key")" || return 1
+
+  if [[ "$value" == *"-(origin)" ]]; then
+    return 0
+  fi
+
+  if [[ "$value" != archives/definitions/* ]]; then
+    fail "Factory head '${head_path}' ${key}: must point under archives/definitions or use origin sentinel"
+    return 1
+  fi
+
+  if [[ ! -f "$value" ]]; then
+    fail "Factory head '${head_path}' ${key}: unresolved pointer '${value}'"
+    return 1
+  fi
+  return 0
+}
+
 # 1. Platform Skeleton Check (Must exist)
 required_dirs=(
   "ops"
@@ -49,6 +98,34 @@ for d in "${required_dirs[@]}"; do
     fail "Missing platform directory: '$d/'"
   fi
 done
+
+# Factory head reachability checks (candidate and promotion entry points)
+factory_heads=(
+  "opt/_factory/AGENTS.md"
+  "opt/_factory/TASKS.md"
+  "opt/_factory/SKILLS.md"
+)
+
+for head_path in "${factory_heads[@]}"; do
+  if [[ ! -f "$head_path" ]]; then
+    fail "Missing required factory head file: '${head_path}'"
+  fi
+done
+
+if [[ -f "opt/_factory/AGENTS.md" ]]; then
+  verify_factory_head_pointer "opt/_factory/AGENTS.md" "candidate" || true
+  verify_factory_head_pointer "opt/_factory/AGENTS.md" "promotion" || true
+fi
+
+if [[ -f "opt/_factory/TASKS.md" ]]; then
+  verify_factory_head_pointer "opt/_factory/TASKS.md" "candidate" || true
+  verify_factory_head_pointer "opt/_factory/TASKS.md" "promotion" || true
+fi
+
+if [[ -f "opt/_factory/SKILLS.md" ]]; then
+  verify_factory_head_pointer "opt/_factory/SKILLS.md" "candidate" || true
+  verify_factory_head_pointer "opt/_factory/SKILLS.md" "promotion" || true
+fi
 
 # 2. Payload and Runtime Hygiene Check
 # Required storage payload subdirs

@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Stela Factory Guard (Registry Enforcement)
-# Purpose: Ensure registry-managed definition surfaces stay synchronized.
-# Logic:
-# 1. No Dead Ends: All paths or IDs in registries must exist on disk.
-# 2. No Ghosts: All registry-managed factory files must be registered.
+# Stela Factory Guard (Registry and Head Enforcement)
+# Purpose: Ensure definition registries and factory pointer heads remain synchronized.
 
 if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   REPO_ROOT="$(git rev-parse --show-toplevel)"
@@ -17,6 +14,9 @@ fi
 cd "$REPO_ROOT" || exit 1
 
 FACTORY_DIR="opt/_factory"
+AGENTS_HEAD="opt/_factory/AGENTS.md"
+TASKS_HEAD="opt/_factory/TASKS.md"
+SKILLS_HEAD="opt/_factory/SKILLS.md"
 AGENTS_REGISTRY="docs/ops/registry/AGENTS.md"
 SKILLS_REGISTRY="docs/ops/registry/SKILLS.md"
 TASKS_REGISTRY="docs/ops/registry/TASKS.md"
@@ -31,9 +31,16 @@ fail() {
 require_file() {
   local path="$1"
   if [[ ! -f "$path" ]]; then
-    echo "CRITICAL: Registry file missing at ${REPO_ROOT}/${path}" >&2
+    echo "CRITICAL: Required file missing at ${REPO_ROOT}/${path}" >&2
     exit 2
   fi
+}
+
+trim() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
 }
 
 normalize_token() {
@@ -55,9 +62,150 @@ extract_section() {
   ' "$path"
 }
 
+validate_chain_head() {
+  local head_path="$1"
+  local chain_name="$2"
+  local expected_spec="$3"
+  local expected_registry="$4"
+  local expected_candidate_origin="$5"
+  local expected_promotion_origin="$6"
+
+  local candidate=""
+  local promotion=""
+  local spec=""
+  local registry=""
+
+  local line_no=0
+  local expected_key=""
+  local key=""
+  local value=""
+  local line=""
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line_no=$((line_no + 1))
+
+    if [[ -z "$line" ]]; then
+      fail "${chain_name}: ${head_path} contains blank line ${line_no}; head must be exactly four key lines"
+      continue
+    fi
+
+    if [[ "$line" != *:* ]]; then
+      fail "${chain_name}: ${head_path} line ${line_no} missing key separator ':'"
+      continue
+    fi
+
+    key="${line%%:*}"
+    key="$(trim "$key")"
+    value="${line#*:}"
+    value="$(trim "$value")"
+
+    case "$line_no" in
+      1) expected_key="candidate" ;;
+      2) expected_key="promotion" ;;
+      3) expected_key="spec" ;;
+      4) expected_key="registry" ;;
+      *)
+        fail "${chain_name}: ${head_path} has more than four lines"
+        expected_key=""
+        ;;
+    esac
+
+    if [[ -n "$expected_key" && "$key" != "$expected_key" ]]; then
+      fail "${chain_name}: ${head_path} line ${line_no} must start with '${expected_key}:'"
+    fi
+
+    if [[ -z "$value" ]]; then
+      fail "${chain_name}: ${head_path} line ${line_no} value is empty"
+      continue
+    fi
+
+    case "$key" in
+      candidate) candidate="$value" ;;
+      promotion) promotion="$value" ;;
+      spec) spec="$value" ;;
+      registry) registry="$value" ;;
+      *)
+        fail "${chain_name}: ${head_path} line ${line_no} has unexpected key '${key}'"
+        ;;
+    esac
+  done < "$head_path"
+
+  if [[ "$line_no" -ne 4 ]]; then
+    fail "${chain_name}: ${head_path} must contain exactly four lines"
+  fi
+
+  if [[ "$spec" != "$expected_spec" ]]; then
+    fail "${chain_name}: spec pointer mismatch. Expected '${expected_spec}', found '${spec}'"
+  fi
+  if [[ "$registry" != "$expected_registry" ]]; then
+    fail "${chain_name}: registry pointer mismatch. Expected '${expected_registry}', found '${registry}'"
+  fi
+
+  if [[ -n "$spec" && ! -f "$spec" ]]; then
+    fail "${chain_name}: spec pointer target missing '${spec}'"
+  fi
+  if [[ -n "$registry" && ! -f "$registry" ]]; then
+    fail "${chain_name}: registry pointer target missing '${registry}'"
+  fi
+
+  validate_head_value "$chain_name" "$head_path" "candidate" "$candidate" "$expected_candidate_origin"
+  validate_head_value "$chain_name" "$head_path" "promotion" "$promotion" "$expected_promotion_origin"
+}
+
+validate_head_value() {
+  local chain_name="$1"
+  local head_path="$2"
+  local key="$3"
+  local value="$4"
+  local origin_sentinel="$5"
+
+  if [[ "$value" == *"-(origin)" ]]; then
+    if [[ "$value" != "$origin_sentinel" ]]; then
+      fail "${chain_name}: ${head_path} ${key}: uses unexpected origin sentinel '${value}'"
+    fi
+    return 0
+  fi
+
+  if [[ "$value" != archives/definitions/* ]]; then
+    fail "${chain_name}: ${head_path} ${key}: must point under archives/definitions or use origin sentinel"
+    return 0
+  fi
+
+  if [[ ! -f "$value" ]]; then
+    fail "${chain_name}: ${head_path} ${key}: unresolved pointer '${value}'"
+  fi
+}
+
+require_file "$AGENTS_HEAD"
+require_file "$TASKS_HEAD"
+require_file "$SKILLS_HEAD"
 require_file "$AGENTS_REGISTRY"
 require_file "$SKILLS_REGISTRY"
 require_file "$TASKS_REGISTRY"
+
+validate_chain_head \
+  "$AGENTS_HEAD" \
+  "agents" \
+  "docs/ops/specs/definitions/agents.md" \
+  "docs/ops/registry/AGENTS.md" \
+  "archives/definitions/agent-candidate-(origin)" \
+  "archives/definitions/agent-promotion-(origin)"
+
+validate_chain_head \
+  "$TASKS_HEAD" \
+  "tasks" \
+  "docs/ops/specs/definitions/tasks.md" \
+  "docs/ops/registry/TASKS.md" \
+  "archives/definitions/task-candidate-(origin)" \
+  "archives/definitions/task-promotion-(origin)"
+
+validate_chain_head \
+  "$SKILLS_HEAD" \
+  "skills" \
+  "docs/ops/specs/definitions/skills.md" \
+  "docs/ops/registry/SKILLS.md" \
+  "archives/definitions/skill-candidate-(origin)" \
+  "archives/definitions/skill-promotion-(origin)"
 
 if ! bash tools/lint/agent.sh; then
   fail "Agent linter failed. See output above."
@@ -132,8 +280,6 @@ for path in "${task_paths[@]}"; do
     fail "Dead End: Registry points to missing file '${path}'"
   fi
 done
-
-# Ghost checks for registry-managed factory folders.
 
 while IFS= read -r file; do
   rel_path="${file#${REPO_ROOT}/}"
@@ -234,6 +380,7 @@ if compgen -G "${FACTORY_DIR}/tasks/*.md" > /dev/null; then
     fi
   done
 fi
+
 if [[ $failures -eq 0 ]]; then
   echo "OK: Factory Integrity Verified."
   exit 0

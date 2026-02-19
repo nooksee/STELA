@@ -68,15 +68,6 @@ require_agents_ledger() {
   require_file "$AGENTS_LEDGER"
 }
 
-require_agents_ledger_sections() {
-  if ! grep -q "^## Candidate Log" "$AGENTS_LEDGER"; then
-    die "Agent ledger missing Candidate Log section."
-  fi
-  if ! grep -q "^## Promotion Log" "$AGENTS_LEDGER"; then
-    die "Agent ledger missing Promotion Log section."
-  fi
-}
-
 ensure_handoff_dir() {
   mkdir -p "$HANDOFF_DIR"
 }
@@ -147,38 +138,42 @@ generate_trace_id() {
   printf 'stela-%s-%s' "$stamp" "$suffix"
 }
 
-extract_trace_id_from_open() {
-  local open_path="$1"
-  [[ -f "$open_path" ]] || return 1
-  local trace_id
-  trace_id="$(
-    awk '
-      /STELA_TRACE_ID:[[:space:]]*/ {
-        line=$0
-        sub(/.*STELA_TRACE_ID:[[:space:]]*/, "", line)
-        print line
-        exit
-      }
-    ' "$open_path"
-  )"
-  trace_id="$(trim "$trace_id")"
-  [[ -n "$trace_id" ]] || return 1
-  printf '%s' "$trace_id"
-}
-
 resolve_trace_id() {
-  local open_path="$1"
   local trace_id="${STELA_TRACE_ID:-}"
-  if [[ -n "$trace_id" ]]; then
-    printf '%s' "$trace_id"
-    return 0
-  fi
-
-  trace_id="$(extract_trace_id_from_open "$open_path" || true)"
   if [[ -z "$trace_id" ]]; then
     trace_id="$(generate_trace_id)"
   fi
   printf '%s' "$trace_id"
+}
+
+trace_suffix_from_id() {
+  local trace_id="$1"
+  if [[ "$trace_id" =~ -([0-9a-fA-F]{8})$ ]]; then
+    printf '%s' "$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:upper:]' '[:lower:]')"
+    return 0
+  fi
+  local fallback
+  fallback="$(git -C "$REPO_ROOT" rev-parse --short=8 HEAD 2>/dev/null || true)"
+  fallback="$(printf '%s' "$fallback" | tr '[:upper:]' '[:lower:]')"
+  if [[ "$fallback" =~ ^[0-9a-f]{8}$ ]]; then
+    printf '%s' "$fallback"
+    return 0
+  fi
+  printf '%08x' "$RANDOM"
+}
+
+resolve_packet_id() {
+  local fallback="${1:-}"
+  local packet_id="${STELA_PACKET_ID:-}"
+  if [[ -n "$packet_id" ]]; then
+    printf '%s' "$packet_id"
+    return 0
+  fi
+  if [[ -n "$fallback" ]]; then
+    printf '%s' "$fallback"
+    return 0
+  fi
+  die "Missing packet ID. Provide STELA_PACKET_ID or --dp."
 }
 
 select_latest_path_by_mtime() {
@@ -204,32 +199,123 @@ select_latest_path_by_mtime() {
   printf '%s' "$latest_path"
 }
 
-resolve_previous_agent_definition() {
-  local slug="$1"
-  mapfile -t candidates < <(
-    find "$HANDOFF_DIR" -maxdepth 1 -type f | awk -v slug="$slug" '
-      {
-        filename=$0
-        sub(/^.*\//, "", filename)
-        if (filename ~ ("^agent-[0-9]{8}-" slug "(-[0-9]+)?\\.md$")) {
-          print $0
-        }
-      }
-    '
-  )
+build_definition_leaf_path() {
+  local stem="$1"
+  local trace_suffix="$2"
+  printf 'archives/definitions/%s-%s-%s.md' "$stem" "$(date -u +%Y-%m-%d)" "$trace_suffix"
+}
 
-  if (( ${#candidates[@]} == 0 )); then
+read_factory_head_value() {
+  local key="$1"
+  local value
+  value="$(awk -F':' -v key="$key" '
+    $1 == key {
+      entry=$0
+      sub(/^[^:]+:[[:space:]]*/, "", entry)
+      print entry
+      exit
+    }
+  ' "$AGENTS_LEDGER")"
+  value="$(trim "$value")"
+  if [[ -z "$value" ]]; then
+    die "Missing ${key}: pointer in ${AGENTS_LEDGER}"
+  fi
+  printf '%s' "$value"
+}
+
+normalize_previous_head_value() {
+  local value="$1"
+  if [[ "$value" == *"-(origin)" ]]; then
     printf '(none)'
     return 0
   fi
+  printf '%s' "$value"
+}
 
-  local latest_path
-  latest_path="$(select_latest_path_by_mtime "${candidates[@]}")"
-  if [[ "$latest_path" == "${REPO_ROOT}/"* ]]; then
-    printf '%s' "${latest_path#${REPO_ROOT}/}"
-  else
-    printf '%s' "$latest_path"
+update_factory_head_value() {
+  local key="$1"
+  local value="$2"
+  local tmp
+  tmp="$(mktemp)"
+
+  if ! awk -v key="$key" -v value="$value" '
+    BEGIN { updated=0 }
+    $0 ~ ("^" key ":[[:space:]]*") {
+      print key ": " value
+      updated=1
+      next
+    }
+    { print }
+    END { if (updated == 0) exit 2 }
+  ' "$AGENTS_LEDGER" > "$tmp"; then
+    status=$?
+    rm -f "$tmp"
+    if [[ "$status" -eq 2 ]]; then
+      die "Failed to locate ${key}: pointer in ${AGENTS_LEDGER}"
+    fi
+    die "Failed to rewrite ${key}: pointer in ${AGENTS_LEDGER}"
   fi
+
+  mv "$tmp" "$AGENTS_LEDGER"
+}
+
+strip_leading_frontmatter() {
+  local path="$1"
+  awk '
+    NR == 1 && $0 == "---" { in_fm=1; next }
+    in_fm == 1 {
+      if ($0 == "---") {
+        in_fm=0
+        next
+      }
+      next
+    }
+    { print }
+  ' "$path"
+}
+
+emit_head_leaf_from_source() {
+  local key="$1"
+  local stem="$2"
+  local source_path="$3"
+  local packet_id="$4"
+  local current_head
+  current_head="$(read_factory_head_value "$key")"
+
+  local previous
+  previous="$(normalize_previous_head_value "$current_head")"
+
+  local trace_id
+  trace_id="$(resolve_trace_id)"
+  local trace_suffix
+  trace_suffix="$(trace_suffix_from_id "$trace_id")"
+  local leaf_rel
+  leaf_rel="$(build_definition_leaf_path "$stem" "$trace_suffix")"
+  local leaf_abs="${REPO_ROOT}/${leaf_rel}"
+  if [[ -e "$leaf_abs" ]]; then
+    die "Leaf already exists: ${leaf_rel}"
+  fi
+
+  local created_at
+  created_at="$(iso_utc_now)"
+
+  local tmp
+  tmp="$(mktemp)"
+  {
+    printf '%s\n' '---'
+    printf 'trace_id: %s\n' "$trace_id"
+    printf 'packet_id: %s\n' "$packet_id"
+    printf 'created_at: %s\n' "$created_at"
+    printf 'previous: %s\n' "$previous"
+    printf '%s\n' '---'
+    strip_leading_frontmatter "$source_path"
+  } > "$tmp"
+
+  redact_stream < "$tmp" > "$leaf_abs"
+  rm -f "$tmp"
+
+  update_factory_head_value "$key" "$leaf_rel"
+  printf '%s' "$leaf_abs"
 }
 
 slugify() {
@@ -742,7 +828,7 @@ context_hazard_check() {
     fi
 
     case "$section" in
-      "Provenance"|"Pointers"|"Context Sources")
+      "Provenance"|"Pointers"|"Context Sources"|"Constraints"|Section\ *)
         run=0
         continue
         ;;
@@ -916,107 +1002,6 @@ insert_registry_entry() {
   mv "$tmp" "$AGENTS_REGISTRY"
 }
 
-append_candidate_log() {
-  local name="$1"
-  local dp_id="$2"
-  local draft_path="$3"
-  local timestamp
-  timestamp="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-
-  require_agents_ledger
-  require_agents_ledger_sections
-
-  local entry_file
-  entry_file="$(mktemp)"
-  cat <<EOF > "$entry_file"
-
-- ${timestamp}
-  - Candidate name: ${name}
-  - DP provenance: ${dp_id}
-  - Draft path: ${draft_path}
-EOF
-
-  local tmp
-  tmp="$(mktemp)"
-
-  if ! awk -v entry_file="$entry_file" '
-    BEGIN { in_section=0; inserted=0 }
-    function emit_entry() {
-      while ((getline line < entry_file) > 0) { print line }
-      close(entry_file)
-    }
-    /^## Candidate Log/ { in_section=1 }
-    /^## Promotion Log/ {
-      if (in_section && inserted == 0) { emit_entry(); inserted=1 }
-      in_section=0
-    }
-    {
-      if (in_section && $0 ~ /^- No entries recorded yet\./) next
-      print
-    }
-    END { if (inserted == 0) exit 2 }
-  ' "$AGENTS_LEDGER" > "$tmp"; then
-    status=$?
-    rm -f "$tmp" "$entry_file"
-    if [[ "$status" -eq 2 ]]; then
-      die "Agent ledger missing Promotion Log section."
-    fi
-    die "Failed to update opt/_factory/AGENTS.md candidate log."
-  fi
-
-  mv "$tmp" "$AGENTS_LEDGER"
-  rm -f "$entry_file"
-}
-
-append_promotion_log() {
-  local agent_id="$1"
-  local name="$2"
-  local specialization="$3"
-  local dp_id="$4"
-  local agent_path="$5"
-  local timestamp
-  timestamp="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-
-  require_agents_ledger
-  require_agents_ledger_sections
-
-  local entry_file
-  entry_file="$(mktemp)"
-  cat <<EOF > "$entry_file"
-
-- ${timestamp}
-  - Agent ID: ${agent_id}
-  - Name: ${name}
-  - Specialization: ${specialization}
-  - DP provenance: ${dp_id}
-  - Promoted file: ${agent_path}
-EOF
-
-  local tmp
-  tmp="$(mktemp)"
-
-  if ! awk '
-    BEGIN { in_section=0; seen=0 }
-    /^## Promotion Log/ { in_section=1; seen=1 }
-    {
-      if (in_section && $0 ~ /^- No entries recorded yet\./) next
-      print
-    }
-    END { if (seen == 0) exit 2 }
-  ' "$AGENTS_LEDGER" > "$tmp"; then
-    status=$?
-    rm -f "$tmp" "$entry_file"
-    if [[ "$status" -eq 2 ]]; then
-      die "Agent ledger missing Promotion Log section."
-    fi
-    die "Failed to update opt/_factory/AGENTS.md promotion log."
-  fi
-
-  cat "$entry_file" >> "$tmp"
-  mv "$tmp" "$AGENTS_LEDGER"
-  rm -f "$entry_file"
-}
-
 cmd_harvest() {
   require_repo_root
   require_agents_ledger
@@ -1102,34 +1087,32 @@ cmd_harvest() {
     objective="$(read_task_field "Goal")"
   fi
 
+  local packet_id
+  packet_id="$(resolve_packet_id "$dp_id")"
+
   local base_ref="main"
   local head_ref="HEAD"
 
   local provenance_block
-  provenance_block="$(generate_provenance_block "$dp_id" "$objective" "$base_ref" "$head_ref" "$REPO_ROOT")"
+  provenance_block="$(generate_provenance_block "$packet_id" "$objective" "$base_ref" "$head_ref" "$REPO_ROOT")"
 
-  local slug
-  slug="$(slugify "$name")"
   local trace_id
-  trace_id="$(resolve_trace_id "$open_path")"
+  trace_id="$(resolve_trace_id)"
+  local trace_suffix
+  trace_suffix="$(trace_suffix_from_id "$trace_id")"
   local created_at
   created_at="$(iso_utc_now)"
+  local current_candidate
+  current_candidate="$(read_factory_head_value "candidate")"
   local previous
-  previous="$(resolve_previous_agent_definition "$slug")"
+  previous="$(normalize_previous_head_value "$current_candidate")"
+  local draft_rel_path
+  draft_rel_path="$(build_definition_leaf_path "agent-candidate" "$trace_suffix")"
   local draft_path
-  local counter=0
-
-  while :; do
-    if [[ $counter -eq 0 ]]; then
-      draft_path="${HANDOFF_DIR}/agent-$(date -u '+%Y%m%d')-${slug}.md"
-    else
-      draft_path="${HANDOFF_DIR}/agent-$(date -u '+%Y%m%d')-${slug}-${counter}.md"
-    fi
-    if [[ ! -e "$draft_path" ]]; then
-      break
-    fi
-    counter=$((counter + 1))
-  done
+  draft_path="${REPO_ROOT}/${draft_rel_path}"
+  if [[ -e "$draft_path" ]]; then
+    die "Leaf already exists: ${draft_rel_path}"
+  fi
 
   if [[ -z "$specialization" ]]; then
     specialization="Not provided"
@@ -1161,7 +1144,7 @@ cmd_harvest() {
 
   render_definition_template "$AGENT_TEMPLATE_PATH" "$tmp" \
     "TRACE_ID" "$trace_id" \
-    "PACKET_ID" "$dp_id" \
+    "PACKET_ID" "$packet_id" \
     "CREATED_AT" "$created_at" \
     "PREVIOUS" "$previous" \
     "AGENT_NAME" "$name" \
@@ -1176,7 +1159,7 @@ cmd_harvest() {
   redact_stream < "$tmp" > "$draft_path"
   rm -f "$tmp"
 
-  append_candidate_log "$name" "$dp_id" "$draft_path"
+  update_factory_head_value "candidate" "$draft_rel_path"
 
   echo "$draft_path"
 }
@@ -1188,7 +1171,7 @@ cmd_harvest_check() {
 
 select_latest_draft() {
   local draft_path=""
-  mapfile -t drafts < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name 'agent-*.md' | sort)
+  mapfile -t drafts < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name 'agent-candidate-*.md' | sort)
   if (( ${#drafts[@]} == 0 )); then
     die "No draft found in archives/definitions"
   fi
@@ -1214,6 +1197,36 @@ select_latest_draft() {
   fi
 
   echo "$draft_path"
+}
+
+materialize_promoted_agent() {
+  local draft_path="$1"
+  local name="$2"
+  local output_path="$3"
+
+  awk -v header="# Agent: ${name}" '
+    BEGIN { replaced=0; skip_context=0 }
+    /^## Context Sources$/ {
+      skip_context=1
+      next
+    }
+    skip_context == 1 {
+      if ($0 ~ /^## /) {
+        skip_context=0
+      } else {
+        next
+      }
+    }
+    /^# Agent Draft: / {
+      if (!replaced) {
+        print header
+        replaced=1
+        next
+      }
+    }
+    { print }
+    END { if (!replaced) exit 1 }
+  ' "$draft_path" > "$output_path"
 }
 
 cmd_promote() {
@@ -1279,7 +1292,21 @@ cmd_promote() {
   fi
 
   local dp_id
-  dp_id="$(awk '/\*\*DP-ID\*\*/ { sub(/.*\*\*DP-ID\*\*:[[:space:]]*/, "", $0); print $0; exit }' "$draft_path")"
+  dp_id="$(awk '
+    {
+      line=$0
+      if (line ~ /\*\*DP-ID\*\*:[[:space:]]*/) {
+        sub(/.*\*\*DP-ID\*\*:[[:space:]]*/, "", line)
+        print line
+        exit
+      }
+      if (line ~ /\*\*DP-ID:\*\*[[:space:]]*/) {
+        sub(/.*\*\*DP-ID:\*\*[[:space:]]*/, "", line)
+        print line
+        exit
+      }
+    }
+  ' "$draft_path")"
   dp_id="$(trim "$dp_id")"
   if is_placeholder_value "$dp_id"; then
     die "Draft DP-ID is missing or placeholder"
@@ -1296,14 +1323,7 @@ cmd_promote() {
 
   local tmp_agent
   tmp_agent="$(mktemp)"
-  awk -v header="# Agent: ${name}" '
-    BEGIN { replaced=0 }
-    /^# Agent Draft: / {
-      if (!replaced) { print header; replaced=1; next }
-    }
-    { print }
-    END { if (!replaced) exit 1 }
-  ' "$draft_path" > "$tmp_agent" || die "Failed to rewrite draft header"
+  materialize_promoted_agent "$draft_path" "$name" "$tmp_agent" || die "Failed to rewrite promoted agent body"
 
   mv "$tmp_agent" "$agent_path"
 
@@ -1314,7 +1334,10 @@ cmd_promote() {
   local registry_row
   registry_row="| ${agent_id} | ${name} | ${dp_id} | ${specialization} |"
   insert_registry_entry "$registry_row"
-  append_promotion_log "$agent_id" "$name" "$specialization" "$dp_id" "$agent_path"
+
+  local packet_id
+  packet_id="$(resolve_packet_id "$dp_id")"
+  emit_head_leaf_from_source "promotion" "agent-promotion" "$agent_path" "$packet_id" >/dev/null
 
   if (( delete_draft == 1 )); then
     rm -f "$draft_path"

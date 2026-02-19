@@ -1,79 +1,38 @@
 # Technical Specification: ops/lib/scripts/task.sh
 
-## Constitutional Anchor
-`ops/lib/scripts/task.sh` governs task artifact lifecycle under a pointer-first model.
-It is the automation boundary for drafting, validating, and promoting reusable task instructions while preserving context hazard rules.
+## Purpose
+Manage task candidate harvesting, promotion, and context hazard checks while advancing factory pointer heads.
 
-## Operator Contract
-- Invocation:
+## Invocation
+- Command forms:
   - `ops/lib/scripts/task.sh harvest --id B-TASK-XX --name "..." --objective "..." [--dp "DP-OPS-XXXX"]`
   - `ops/lib/scripts/task.sh promote <draft_path> [--delete-draft]`
   - `ops/lib/scripts/task.sh check`
-- Required files:
-  - `opt/_factory/TASKS.md`
-  - `docs/ops/registry/TASKS.md`
-  - `TASK.md`
-  - `ops/lib/manifests/CONTEXT.md`
-- Key directories:
-  - Drafts: `archives/definitions/`
-  - Canon tasks: `opt/_factory/tasks/`
 - Exit behavior:
   - `0` on success.
-  - `1` on command/validation failure.
+  - Non-zero on validation failures, pointer rewrite failures, or registry update failures.
 
-Harvest contract:
-- Requires task ID format `B-TASK-[0-9]{2,}` and unique registry ID.
-- Requires non-placeholder objective and DP values.
-- Writes redacted draft file and appends Candidate Log entry in `opt/_factory/TASKS.md`.
-- Injects unified schema front-matter keys in each draft: `trace_id`, `packet_id`, `created_at`, `previous`.
-- Resolves TraceID by priority: `STELA_TRACE_ID` environment value, then latest OPEN artifact parse, then local fallback generation.
-- Sets `previous` to the latest prior task draft leaf for the same task slug, or `(none)` when no prior leaf exists.
+## Inputs
+- `opt/_factory/TASKS.md` pointer head.
+- `docs/ops/registry/TASKS.md` registry table.
+- `ops/src/definitions/task.md.tpl` definition template.
+- `TASK.md` and `ops/lib/manifests/CONTEXT.md`.
 
-Promote contract:
-- Validates draft schema, required pointers, and final closeout step.
-- Rewrites `# Task Draft:` to `# Task:`.
-- Writes canon task file at `opt/_factory/tasks/<ID>.md`.
-- Upserts registry row in `docs/ops/registry/TASKS.md`.
-- Appends Promotion Log entry in `opt/_factory/TASKS.md`.
+## Outputs
+- `harvest` emits candidate leaf at `archives/definitions/task-candidate-YYYY-MM-DD-<suffix>.md` and rewrites `candidate:` in `opt/_factory/TASKS.md`.
+- `promote` writes canonical task file in `opt/_factory/tasks/`, upserts `docs/ops/registry/TASKS.md`, emits promotion leaf at `archives/definitions/task-promotion-YYYY-MM-DD-<suffix>.md`, and rewrites `promotion:` in `opt/_factory/TASKS.md`.
+- `check` enforces task context hazard rule and delegates deep validation to `tools/lint/task.sh`.
 
-Check contract:
-- Fails if tasks are referenced in `ops/lib/manifests/CONTEXT.md`.
-- Runs `bash tools/lint/task.sh` for full schema validation.
+## Invariants and failure modes
+- Candidate and promotion leaves always include unified schema front-matter keys: `trace_id`, `packet_id`, `created_at`, `previous`.
+- `previous` is `(none)` when prior head value ends with `-(origin)`; otherwise it is the prior head pointer path.
+- `trace_id` uses `STELA_TRACE_ID` when provided and falls back to local generation.
+- `packet_id` uses `STELA_PACKET_ID` when provided and falls back to DP input.
+- Harvest requires unique task IDs matching `B-TASK-[0-9]{2,}`.
+- Promote requires a candidate whose path contains the task ID token.
+- Pointer-head rewrite is a hard gate; missing `candidate:` or `promotion:` lines fail the command.
 
-## Failure States and Drift Triggers
-- Missing required ledger/registry/manifest files.
-- Duplicate task ID in registry during harvest.
-- Placeholder or missing draft fields.
-- Invalid or missing required sections in draft.
-- Missing required pointers in draft (`PoT.md`, `docs/GOVERNANCE.md`, `TASK.md`).
-- Missing final Closeout pointer to `TASK.md` Section 3.5.
-- Ambiguous draft auto-selection when multiple drafts share same timestamp.
-- Registry insertion/update failure.
-- Context hazard detected during `check`.
-
-## Mechanics and Sequencing
-1. Parse command and validate required dependencies.
-2. `harvest` sequence:
-- Validate ID/name/objective/DP inputs.
-- Generate provenance block (from heuristics  when available).
-- Emit draft template with required sections.
-- Redact known secret token classes.
-- Append candidate log record.
-3. `promote` sequence:
-- Resolve draft path (explicit path or latest candidate).
-- Validate draft schema and closeout step.
-- Materialize canon task file and registry row.
-- Append promotion log record.
-- Optionally delete draft.
-4. `check` sequence:
-- Enforce context hazard exclusion.
-- Delegate deep validation to `tools/lint/task.sh`.
-
-Subsystem invariants:
-- Task lifecycle is append-log driven (`Candidate Log`, `Promotion Log`).
-- Registry is the authoritative index for task IDs and canonical paths.
-- Promotion never bypasses validation gates.
-
-## Forensic Insight
-The task lifecycle script is both a generator and a control surface.
-It narrows drift by forcing explicit provenance and closeout routing at draft time, then re-validating before promotion so canonical task instructions remain executable and audit-safe.
+## Related pointers
+- Factory head spec: `docs/ops/specs/definitions/tasks.md`.
+- Registry entry: `docs/ops/registry/SCRIPTS.md` (`SCRIPT-06`).
+- Task registry: `docs/ops/registry/TASKS.md`.

@@ -4,6 +4,7 @@ Authoritative registry for canon tasks.
 
 | ID | Name | File Path | Notes |
 | --- | --- | --- | --- |
+| B-TASK-07 | Task: Factory Chain Validation | opt/_factory/tasks/B-TASK-07.md | |
 | B-TASK-01 | Task: Code Review | opt/_factory/tasks/B-TASK-01.md | |
 | B-TASK-02 | Task: Verification Command | opt/_factory/tasks/B-TASK-02.md | |
 | B-TASK-03 | Task: Integrate Command | opt/_factory/tasks/B-TASK-03.md | |
