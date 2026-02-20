@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 AGENTS_DIR="${REPO_ROOT}/opt/_factory/agents"
-AGENTS_REGISTRY="${REPO_ROOT}/docs/ops/registry/AGENTS.md"
+AGENTS_REGISTRY="${REPO_ROOT}/docs/ops/registry/agents.md"
 AGENTS_LEDGER="${REPO_ROOT}/opt/_factory/AGENTS.md"
 SOP_FILE="${REPO_ROOT}/SoP.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
@@ -736,9 +736,9 @@ insert_registry_entry() {
     status=$?
     rm -f "$tmp"
     if [[ "$status" -eq 2 ]]; then
-      die "Agents registry table not found in docs/ops/registry/AGENTS.md"
+      die "Agents registry table not found in docs/ops/registry/agents.md"
     fi
-    die "Failed to update docs/ops/registry/AGENTS.md"
+    die "Failed to update docs/ops/registry/agents.md"
   fi
 
   mv "$tmp" "$AGENTS_REGISTRY"
@@ -1070,7 +1070,7 @@ cmd_promote() {
   mv "$tmp_agent" "$agent_path"
 
   if grep -Fq "| ${agent_id} |" "$AGENTS_REGISTRY"; then
-    die "docs/ops/registry/AGENTS.md already contains ${agent_id}"
+    die "docs/ops/registry/agents.md already contains ${agent_id}"
   fi
 
   local registry_row

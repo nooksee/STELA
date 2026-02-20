@@ -18,7 +18,7 @@ Use when configuring database access, API surfaces, or auth flows.
 - Constitution: `PoT.md`
 - Governance: `docs/GOVERNANCE.md`
 - Contract: `TASK.md`
-- Registry: `docs/ops/registry/SKILLS.md`
+- Registry: `docs/ops/registry/skills.md`
 - Reference docs: `docs/MANUAL.md`
 
 ## Requirements

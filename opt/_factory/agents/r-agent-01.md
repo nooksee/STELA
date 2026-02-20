@@ -21,8 +21,8 @@ Architecture planning and system design.
 - Output contract: `TASK.md`
 - Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/agent.sh`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/factory.sh`, `tools/verify.sh`
 - JIT skills:
-  - `opt/_factory/skills/S-LEARN-02.md`
-  - `opt/_factory/skills/S-LEARN-03.md`
+  - `opt/_factory/skills/s-learn-02.md`
+  - `opt/_factory/skills/s-learn-03.md`
 
 ## Scope Boundary
 Operate only within the active DP scope and defer to canon surfaces for governance and behavioral rules.

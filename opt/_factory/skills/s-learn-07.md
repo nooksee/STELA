@@ -61,7 +61,7 @@ Use this skill when validating pointer-head candidate and promotion workflows in
 - Constitution: `PoT.md`
 - Governance: `docs/GOVERNANCE.md`
 - Contract: `TASK.md`
-- Registry: `docs/ops/registry/SKILLS.md`
+- Registry: `docs/ops/registry/skills.md`
 
 ## Drift preventers
 - Stop if the DP scope is platform maintenance or if the DP does not explicitly request this skill.

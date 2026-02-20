@@ -18,8 +18,8 @@ Use when a DP explicitly requests a verification loop or when payload verificati
 - Constitution: `PoT.md`
 - Governance: `docs/GOVERNANCE.md`
 - Contract: `TASK.md`
-- Registry: `docs/ops/registry/SKILLS.md`
-- Verification task: `opt/_factory/tasks/B-TASK-02.md`
+- Registry: `docs/ops/registry/skills.md`
+- Verification task: `opt/_factory/tasks/b-task-02.md`
 - Toolchain: `tools/verify.sh`, `tools/lint/style.sh`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/factory.sh`
 - Reference docs: `docs/MANUAL.md`
 

@@ -20,9 +20,9 @@ FACTORY_DIR="opt/_factory"
 AGENTS_HEAD="opt/_factory/AGENTS.md"
 TASKS_HEAD="opt/_factory/TASKS.md"
 SKILLS_HEAD="opt/_factory/SKILLS.md"
-AGENTS_REGISTRY="docs/ops/registry/AGENTS.md"
-SKILLS_REGISTRY="docs/ops/registry/SKILLS.md"
-TASKS_REGISTRY="docs/ops/registry/TASKS.md"
+AGENTS_REGISTRY="docs/ops/registry/agents.md"
+SKILLS_REGISTRY="docs/ops/registry/skills.md"
+TASKS_REGISTRY="docs/ops/registry/tasks.md"
 
 failures=0
 
@@ -190,7 +190,7 @@ validate_chain_head \
   "$AGENTS_HEAD" \
   "agents" \
   "docs/ops/specs/definitions/agents.md" \
-  "docs/ops/registry/AGENTS.md" \
+  "docs/ops/registry/agents.md" \
   "archives/definitions/agent-candidate-(origin)" \
   "archives/definitions/agent-promotion-(origin)"
 
@@ -198,7 +198,7 @@ validate_chain_head \
   "$TASKS_HEAD" \
   "tasks" \
   "docs/ops/specs/definitions/tasks.md" \
-  "docs/ops/registry/TASKS.md" \
+  "docs/ops/registry/tasks.md" \
   "archives/definitions/task-candidate-(origin)" \
   "archives/definitions/task-promotion-(origin)"
 
@@ -206,7 +206,7 @@ validate_chain_head \
   "$SKILLS_HEAD" \
   "skills" \
   "docs/ops/specs/definitions/skills.md" \
-  "docs/ops/registry/SKILLS.md" \
+  "docs/ops/registry/skills.md" \
   "archives/definitions/skill-candidate-(origin)" \
   "archives/definitions/skill-promotion-(origin)"
 
@@ -219,9 +219,9 @@ if ! bash tools/lint/task.sh; then
 fi
 
 echo "Stela Factory Verification"
-echo "Registry: docs/ops/registry/AGENTS.md"
-echo "Registry: docs/ops/registry/SKILLS.md"
-echo "Registry: docs/ops/registry/TASKS.md"
+echo "Registry: docs/ops/registry/agents.md"
+echo "Registry: docs/ops/registry/skills.md"
+echo "Registry: docs/ops/registry/tasks.md"
 echo "------------------------"
 
 mapfile -t agent_ids < <(awk -F'|' '
@@ -235,8 +235,9 @@ mapfile -t agent_ids < <(awk -F'|' '
 
 declare -A agent_id_map
 for id in "${agent_ids[@]}"; do
-  agent_id_map["$id"]=1
-  agent_path="${FACTORY_DIR}/agents/${id}.md"
+  id_slug="${id,,}"
+  agent_id_map["$id_slug"]=1
+  agent_path="${FACTORY_DIR}/agents/${id_slug}.md"
   if [[ ! -f "$agent_path" ]]; then
     fail "Dead End: Registry references missing agent file '${agent_path}'"
   fi

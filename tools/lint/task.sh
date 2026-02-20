@@ -14,7 +14,7 @@ trap 'emit_binary_leaf "lint-task" "finish"' EXIT
 emit_binary_leaf "lint-task" "start"
 
 TASKS_DIR="opt/_factory/tasks"
-TASKS_REGISTRY="docs/ops/registry/TASKS.md"
+TASKS_REGISTRY="docs/ops/registry/tasks.md"
 
 failures=0
 
@@ -530,14 +530,16 @@ if compgen -G "${TASKS_DIR}/*.md" > /dev/null; then
 
     mapfile -t agent_refs < <(rg -o "R-AGENT-[0-9]{2,}" "$task" | sort -u)
     for ref in "${agent_refs[@]}"; do
-      if [[ ! -f "$REPO_ROOT/opt/_factory/agents/${ref}.md" ]]; then
+      ref_slug="${ref,,}"
+      if [[ ! -f "$REPO_ROOT/opt/_factory/agents/${ref_slug}.md" ]]; then
         fail "${task_name} references missing agent ${ref}"
       fi
     done
 
     mapfile -t skill_refs < <(rg -o "S-LEARN-[0-9]{2,}" "$task" | sort -u)
     for ref in "${skill_refs[@]}"; do
-      if [[ ! -f "$REPO_ROOT/opt/_factory/skills/${ref}.md" ]]; then
+      ref_slug="${ref,,}"
+      if [[ ! -f "$REPO_ROOT/opt/_factory/skills/${ref_slug}.md" ]]; then
         fail "${task_name} references missing skill ${ref}"
       fi
     done

@@ -15,9 +15,9 @@
 - **Constitution:** `PoT.md`
 - **Governance:** `docs/GOVERNANCE.md`
 - **Contract:** `TASK.md`
-- **Registry:** `docs/ops/registry/TASKS.md`
+- **Registry:** `docs/ops/registry/tasks.md`
 - **Toolchain:** `tools/verify.sh`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/factory.sh`, `tools/lint/dp.sh`
-- **JIT Skills:** `opt/_factory/skills/S-LEARN-01.md`
+- **JIT Skills:** `opt/_factory/skills/s-learn-01.md`
 - **Reference Docs:** `docs/MANUAL.md`
 
 ## Execution Logic

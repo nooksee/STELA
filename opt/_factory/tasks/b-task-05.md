@@ -15,7 +15,7 @@
 - **Constitution:** `PoT.md`
 - **Governance:** `docs/GOVERNANCE.md`
 - **Contract:** `TASK.md`
-- **Registry:** `docs/ops/registry/TASKS.md`
+- **Registry:** `docs/ops/registry/tasks.md`
 - **Toolchain:** `ops/bin/open`, `tools/verify.sh`, `tools/lint/style.sh`
 - **JIT Skills:** ``
 - **Reference Docs:** `docs/MANUAL.md`

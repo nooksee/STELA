@@ -19,7 +19,7 @@ Use when a diff includes hot zones or high churn files.
 - Constitution: `PoT.md`
 - Governance: `docs/GOVERNANCE.md`
 - Contract: `TASK.md`
-- Registry: `docs/ops/registry/SKILLS.md`
+- Registry: `docs/ops/registry/skills.md`
 - Reference docs: `docs/MANUAL.md`
 
 ## Forensics Requirements

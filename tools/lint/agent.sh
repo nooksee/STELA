@@ -14,7 +14,7 @@ trap 'emit_binary_leaf "lint-agent" "finish"' EXIT
 emit_binary_leaf "lint-agent" "start"
 
 AGENTS_DIR="opt/_factory/agents"
-AGENTS_REGISTRY="docs/ops/registry/AGENTS.md"
+AGENTS_REGISTRY="docs/ops/registry/agents.md"
 
 failures=0
 
@@ -96,6 +96,7 @@ mapfile -t registry_rows < <(awk -F'|' '
 ' "$AGENTS_REGISTRY")
 
 declare -A registry_ids
+declare -A registry_id_slugs
 
 declare -A registry_names
 for row in "${registry_rows[@]}"; do
@@ -106,6 +107,7 @@ for row in "${registry_rows[@]}"; do
     fail "Level 2: ${AGENTS_REGISTRY} duplicate agent ID '${id}'"
   else
     registry_ids["$id"]=1
+    registry_id_slugs["${id,,}"]=1
   fi
 
   if [[ -n "${registry_names[$name]+set}" && "${registry_names[$name]}" != "$id" ]]; then
@@ -117,7 +119,8 @@ for row in "${registry_rows[@]}"; do
 done
 
 for id in "${!registry_ids[@]}"; do
-  agent_path="${AGENTS_DIR}/${id}.md"
+  id_slug="${id,,}"
+  agent_path="${AGENTS_DIR}/${id_slug}.md"
   if [[ ! -f "$agent_path" ]]; then
     fail "Level 2: ${AGENTS_REGISTRY} references missing agent file '${agent_path}'"
   fi
@@ -127,7 +130,7 @@ done
 if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
   while IFS= read -r file; do
     base_name="$(basename "$file" .md)"
-    if [[ -z "${registry_ids[$base_name]+set}" ]]; then
+    if [[ -z "${registry_id_slugs[$base_name]+set}" ]]; then
       fail "Level 2: Ghost agent file '${AGENTS_DIR}/${base_name}.md' is not registered"
     fi
   done < <(find "${AGENTS_DIR}" -maxdepth 1 -type f -name '*.md')
