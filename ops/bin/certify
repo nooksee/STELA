@@ -306,6 +306,9 @@ validate_closing_block_sidecar() {
   )
   local allowlisted_entry_count=0
   local diff_entry_count=0
+  local allowlisted_diff_entry_count=0
+  local allowlisted_not_in_diff_entry_count=0
+  local diff_only_entry_count=0
   local prefix_match_count=0
   local validated_entries=0
   local has_allowlist_pointer_entry=0
@@ -369,13 +372,32 @@ validate_closing_block_sidecar() {
       local path_abs="${REPO_ROOT}/${line}"
       [[ -e "$path_abs" ]] || die "closing manifest entry path does not exist: ${line}"
 
-      prefix_match_count=$((prefix_match_count + 1))
+      local is_allowlisted=0
+      local is_in_diff=0
       if allowlist_contains_path "$line"; then
+        is_allowlisted=1
+      fi
+      if [[ -n "${diff_paths[$line]+set}" ]]; then
+        is_in_diff=1
+      fi
+
+      prefix_match_count=$((prefix_match_count + 1))
+      if (( is_allowlisted )); then
         allowlisted_entry_count=$((allowlisted_entry_count + 1))
-      elif [[ -n "${diff_paths[$line]+set}" ]]; then
+      fi
+      if (( is_in_diff )); then
         diff_entry_count=$((diff_entry_count + 1))
-      else
+      fi
+
+      if (( is_allowlisted == 0 && is_in_diff == 0 )); then
         die "closing manifest entry must be allowlisted or present in git diff --name-only HEAD: ${line}"
+      fi
+      if (( is_allowlisted && is_in_diff )); then
+        allowlisted_diff_entry_count=$((allowlisted_diff_entry_count + 1))
+      elif (( is_allowlisted )); then
+        allowlisted_not_in_diff_entry_count=$((allowlisted_not_in_diff_entry_count + 1))
+      elif (( is_in_diff )); then
+        diff_only_entry_count=$((diff_only_entry_count + 1))
       fi
 
       manifest_count=$((manifest_count + 1))
@@ -394,6 +416,9 @@ CLOSING Manifest Validation: PASS
 - Manifest entries validated: ${validated_entries}
 - Manifest entries matched allowlist: ${allowlisted_entry_count}
 - Manifest entries matched git diff: ${diff_entry_count}
+- Manifest entries matched allowlist and git diff: ${allowlisted_diff_entry_count}
+- Manifest entries allowlisted but not in git diff: ${allowlisted_not_in_diff_entry_count}
+- Manifest entries matched git diff without allowlist coverage: ${diff_only_entry_count}
 - Approved-prefix entries: ${prefix_match_count}
 EOF
 }
