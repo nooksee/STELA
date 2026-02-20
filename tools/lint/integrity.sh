@@ -98,13 +98,26 @@ fi
 [[ -f "$pointer_path" ]] || die "allowlist pointer file missing: ${pointer_path#${REPO_ROOT}/}"
 
 declare -A allowlisted=()
+declare -a allowlist_patterns=()
 while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
   entry="$(normalize_path "$raw_line")"
   [[ -n "$entry" ]] || continue
+  if [[ "$entry" == \#* ]]; then
+    continue
+  fi
+  case "$entry" in
+    storage/handoff/*|storage/dumps/*|storage/dp/intake/*|storage/dp/processed/*)
+      die "allowlist entry must be persistent repo state (runtime artifact prefix forbidden): ${entry}"
+      ;;
+  esac
+  if [[ "$entry" == *"*"* || "$entry" == *"?"* || "$entry" == *"["* ]]; then
+    allowlist_patterns+=("$entry")
+    continue
+  fi
   allowlisted["$entry"]=1
 done < "$pointer_path"
 
-if [[ "${#allowlisted[@]}" -eq 0 ]]; then
+if [[ "${#allowlisted[@]}" -eq 0 && "${#allowlist_patterns[@]}" -eq 0 ]]; then
   die "allowlist pointer file is empty: ${pointer_path#${REPO_ROOT}/}"
 fi
 
@@ -132,20 +145,25 @@ for path in "${untracked_paths[@]}"; do
   observed["$normalized"]=1
 done
 
-is_generated_allowed_path() {
+path_is_allowlisted() {
   local path="$1"
-  if [[ "$path" =~ ^archives/manifests/compile-[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}-[0-9a-f]{7,}\.md$ ]]; then
+  if [[ -n "${allowlisted[$path]+set}" ]]; then
     return 0
   fi
+
+  local pattern=""
+  for pattern in "${allowlist_patterns[@]}"; do
+    if [[ "$path" == $pattern ]]; then
+      return 0
+    fi
+  done
+
   return 1
 }
 
 unauthorized=()
 for path in "${!observed[@]}"; do
-  if [[ -n "${allowlisted[$path]+set}" ]]; then
-    continue
-  fi
-  if is_generated_allowed_path "$path"; then
+  if path_is_allowlisted "$path"; then
     continue
   fi
   unauthorized+=("$path")

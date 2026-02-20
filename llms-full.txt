@@ -166,7 +166,7 @@ When reporting, include:
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-02-18-a748e585.md
+archives/surfaces/PoW-2026-02-19-9f7b70f9.md
 
 
 ## README.md
@@ -174,17 +174,17 @@ archives/surfaces/PoW-2026-02-18-a748e585.md
 
 Stela is an explainability-first, provenance-forward repo-resident AI with PR-only governance and strong provenance discipline.
 
-[![repo-gates](https://github.com/[User]/stela-platform/actions/workflows/repo_gates.yml/badge.svg)](https://github.com/[User]/stela-platform/actions/workflows/repo_gates.yml)
+[![repo-gates](https://github.com/[User]/stela-platform/actions/workflows/gates.yml/badge.svg)](https://github.com/[User]/stela-platform/actions/workflows/gates.yml)
 
 See PoT.md Section 1 for the developer guide.
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-02-18-a748e585.md
+archives/surfaces/SoP-2026-02-19-9f7b70f9.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0072-a748e585.md
+archives/surfaces/TASK-DP-OPS-0076-9f7b70f9.md
 
 
 ## docs/INDEX.md
@@ -206,6 +206,9 @@ archives/surfaces/TASK-DP-OPS-0072-a748e585.md
 * [../opt/_factory/INDEX.md](../opt/_factory/INDEX.md) — Curated library of operator guides.
 * [MAP.md](MAP.md) — Continuity wayfinding for cross-session state.
 * [CONTEXT.md](CONTEXT.md) — Definition of required context artifacts.
+* [ops/specs/definitions/agents.md](ops/specs/definitions/agents.md) — Agent candidate and promotion head-chain specification.
+* [ops/specs/definitions/tasks.md](ops/specs/definitions/tasks.md) — Task candidate and promotion head-chain specification.
+* [ops/specs/definitions/skills.md](ops/specs/definitions/skills.md) — Skill candidate and promotion head-chain specification.
 
 
 ## docs/MAP.md

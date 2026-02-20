@@ -48,6 +48,7 @@ normalize_path() {
 }
 
 declare -A ALLOWLIST_ENTRIES=()
+declare -a ALLOWLIST_PATTERNS=()
 
 load_allowlist_entries() {
   local pointer="$1"
@@ -57,18 +58,44 @@ load_allowlist_entries() {
   fi
   [[ -f "$allowlist_path" ]] || die "allowlist pointer file missing: ${pointer}"
 
+  ALLOWLIST_ENTRIES=()
+  ALLOWLIST_PATTERNS=()
+
   local raw_line=""
   while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
     local entry
     entry="$(normalize_path "$raw_line")"
     [[ -n "$entry" ]] || continue
+    if [[ "$entry" == \#* ]]; then
+      continue
+    fi
+    case "$entry" in
+      storage/handoff/*|storage/dumps/*|storage/dp/intake/*|storage/dp/processed/*)
+        die "allowlist entry must be persistent repo state (runtime artifact prefix forbidden): ${entry}"
+        ;;
+    esac
+    if [[ "$entry" == *"*"* || "$entry" == *"?"* || "$entry" == *"["* ]]; then
+      ALLOWLIST_PATTERNS+=("$entry")
+      continue
+    fi
     ALLOWLIST_ENTRIES["$entry"]=1
   done < "$allowlist_path"
 }
 
 allowlist_contains_path() {
   local path="$1"
-  [[ -n "${ALLOWLIST_ENTRIES[$path]+set}" ]]
+  if [[ -n "${ALLOWLIST_ENTRIES[$path]+set}" ]]; then
+    return 0
+  fi
+
+  local pattern=""
+  for pattern in "${ALLOWLIST_PATTERNS[@]}"; do
+    if [[ "$path" == $pattern ]]; then
+      return 0
+    fi
+  done
+
+  return 1
 }
 
 assert_allowlist_contains_path() {

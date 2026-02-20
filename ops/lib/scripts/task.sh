@@ -20,6 +20,11 @@ else
   generate_provenance_block() { echo "## Provenance"; }
 fi
 
+FACTORY_HEAD_FILE="${TASKS_LEDGER}"
+FACTORY_SLUG_FALLBACK="task"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/factory.sh"
+
 usage() {
   cat <<'USAGE'
 Usage:
@@ -375,17 +380,6 @@ read_current_dp() {
   else
     echo "$raw"
   fi
-}
-
-redact_stream() {
-  sed -E \
-    -e 's/AKIA[0-9A-Z]{16}/[REDACTED]/g' \
-    -e 's/ASIA[0-9A-Z]{16}/[REDACTED]/g' \
-    -e 's/AIza[0-9A-Za-z_-]{35}/[REDACTED]/g' \
-    -e 's/xox[baprs]-[0-9A-Za-z-]{10,48}/[REDACTED]/g' \
-    -e 's/ghp_[0-9A-Za-z]{36}/[REDACTED]/g' \
-    -e 's/ghs_[0-9A-Za-z]{36}/[REDACTED]/g' \
-    -e 's/-----BEGIN [A-Z ]+ PRIVATE KEY-----/[REDACTED PRIVATE KEY]/g'
 }
 
 render_definition_template() {

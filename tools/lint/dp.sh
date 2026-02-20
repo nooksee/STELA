@@ -17,7 +17,7 @@ fi
 cd "$REPO_ROOT" || exit 1
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="62c3128377459513649d5c452aedabe693a514acca31d9f83d0e2667b4e54caf"
+CANONICAL_DP_TEMPLATE_SHA256="1273d667c56296af116d257aee5cc02b1c4a8302395d615ca7cf0b4d72de7912"
 TEMPLATE_RENDER_BIN="ops/bin/template"
 ALLOWLIST_POINTER_PATH_DEFAULT="storage/dp/active/allowlist.txt"
 
@@ -785,6 +785,26 @@ check_allowlist_pointer_integrity() {
         fail "allowlist entry is outside repository root: ${entry}"
         continue
       fi
+    fi
+
+    case "$normalized" in
+      storage/handoff/*|storage/dumps/*|storage/dp/intake/*|storage/dp/processed/*)
+        fail "allowlist entry must be persistent repo state (runtime artifact prefix forbidden): ${normalized}"
+        continue
+        ;;
+    esac
+
+    if [[ "$normalized" == *"*"* || "$normalized" == *"?"* || "$normalized" == *"["* ]]; then
+      case "$normalized" in
+        .github/*|tools/*|ops/*|docs/*|storage/*|archives/*|logs/*)
+          # Wildcard policy entries are allowed for generated artifact families.
+          continue
+          ;;
+        *)
+          fail "allowlist wildcard entry must use an approved repo-relative prefix: ${normalized}"
+          continue
+          ;;
+      esac
     fi
 
     if [[ ! -e "${REPO_ROOT}/${normalized}" ]]; then

@@ -19,7 +19,7 @@ Session State contract:
 - OPEN-PORCELAIN is emitted on every OPEN run. Clean sessions produce a zero-line artifact.
 - RESULTS is the audit record for the DP.
 - TASK is the stable routing surface.
-- Operator note (2026-02-17): Do not run `./ops/bin/prune --reset-task` again and do not edit `SoP.md` or `PoW.md` unless explicitly instructed.
+- Operator note (2026-02-17): Do not edit `SoP.md` or `PoW.md` unless explicitly instructed.
 
 ## 2. Logic Pointers
 Primary Constraint: PoT.md (Policy of Truth).
@@ -128,7 +128,7 @@ Notes:
 
 ## 3.3 Scope and Safety
 Objective:
-Administrative context: DP-OPS-0074 executed a premature `ops/bin/prune --dp=DP-OPS-0074 --scrub` invocation before `ops/bin/certify` generated the RESULTS receipt. This deleted `storage/handoff/DP-OPS-0074-RESULTS.md` and `storage/handoff/CLOSING-DP-OPS-0074.md` from the working tree before they were ever committed. Both paths remain declared in `storage/dp/active/allowlist.txt`. The working tree is currently clean at `e4acd466`. The integrity gate is not failing because `tools/lint/integrity.sh` only evaluates observed mutations against the allowlist, and the working tree has none. The dead allowlist entries are harmless at rest but must be formally retired before any future mutation surfaces them as a gate violation.
+Administrative context: DP-OPS-0074 executed a premature prune invocation before `ops/bin/certify` generated the RESULTS receipt. This deleted `storage/handoff/DP-OPS-0074-RESULTS.md` and `storage/handoff/CLOSING-DP-OPS-0074.md` from the working tree before they were ever committed. Both paths remain declared in `storage/dp/active/allowlist.txt`. The working tree is currently clean at `e4acd466`. The integrity gate is not failing because `tools/lint/integrity.sh` only evaluates observed mutations against the allowlist, and the working tree has none. The dead allowlist entries are harmless at rest but must be formally retired before any future mutation surfaces them as a gate violation.
 
 Formally administer the close of DP-OPS-0074, retire two dead allowlist entries, patch `ops/bin/prune` to prevent premature deletion of uncommitted handoff artifacts, and restore ledger equilibrium by updating `SoP.md` and `PoW.md`.
 
@@ -231,7 +231,7 @@ C) SoP.md update.
    - Work Branch: work/dp-ops-0074-2026-02-18 (merged at e4acd466)
    - Base HEAD: (see PoW entry)
    - Scope: Certification infrastructure deployment (ops/bin/certify, tools/lint/integrity.sh, tools/lint/results.sh).
-   - Outcome: ADMINISTRATIVE CLOSE. RESULTS artifact was deleted by premature `ops/bin/prune --dp=DP-OPS-0074` before `ops/bin/certify` completed. Artifact was never committed. No rework is required; the deployed toolchain is confirmed functional at e4acd466. Loss documented in SoP. Prune hardening executed in DP-OPS-0075.
+   - Outcome: ADMINISTRATIVE CLOSE. RESULTS artifact was deleted by a premature prune invocation before `ops/bin/certify` completed. Artifact was never committed. No rework is required; the deployed toolchain is confirmed functional at e4acd466. Loss documented in SoP. Prune hardening executed in DP-OPS-0075.
    - Notes: Equilibrium restored by DP-OPS-0075.
 
    Entry 2 — DP-OPS-0075:
@@ -272,8 +272,7 @@ Mandatory Closing Block required in RESULTS.
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
-- Run prune hygiene at the end of the closeout sequence: ./ops/bin/prune --dp=DP-OPS-0075 --scrub.
-- Use ./ops/bin/prune --reset-task only for explicit TASK baseline reset after PoW entry exists for the active DP id.
+- Run prune hygiene: ./ops/bin/prune --scrub.
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
 ### 3.5.1 Mandatory Closing Block
