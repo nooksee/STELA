@@ -813,6 +813,11 @@ check_allowlist_pointer_integrity() {
     fi
 
     if [[ ! -e "${REPO_ROOT}/${normalized}" ]]; then
+      # Allow closing-sidecar allowlist entries even when the runtime file is absent
+      # (for example in clean CI clones where storage/handoff is gitignored).
+      if [[ "$normalized" =~ ^storage/handoff/CLOSING-DP-[A-Z]+-[0-9]{4,}\.md$ ]]; then
+        continue
+      fi
       # Allow deleted tracked files to stay in the allowlist while a DP is in-flight.
       # This keeps the hard gate satisfiable for deletion patches without masking typos.
       if git diff --name-only --diff-filter=D -- "${normalized}" | grep -Fxq "${normalized}" \
