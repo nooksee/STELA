@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(git rev-parse --show-toplevel)/ops/lib/scripts/common.sh"
 
 # Stela Factory Guard (Registry and Head Enforcement)
 # Purpose: Ensure definition registries and factory pointer heads remain synchronized.
@@ -12,6 +13,8 @@ else
 fi
 
 cd "$REPO_ROOT" || exit 1
+trap 'emit_binary_leaf "lint-factory" "finish"' EXIT
+emit_binary_leaf "lint-factory" "start"
 
 FACTORY_DIR="opt/_factory"
 AGENTS_HEAD="opt/_factory/AGENTS.md"

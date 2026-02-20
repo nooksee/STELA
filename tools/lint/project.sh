@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(git rev-parse --show-toplevel)/ops/lib/scripts/common.sh"
 
 if ! command -v git >/dev/null 2>&1; then
   echo "ERROR: git is required but was not found on PATH" >&2
@@ -18,6 +19,8 @@ if [[ -z "$REPO_ROOT" ]]; then
 fi
 
 cd "$REPO_ROOT" || exit 1
+trap 'emit_binary_leaf "lint-project" "finish"' EXIT
+emit_binary_leaf "lint-project" "start"
 
 AGENTS_REGISTRY="docs/ops/registry/AGENTS.md"
 SKILLS_REGISTRY="docs/ops/registry/SKILLS.md"

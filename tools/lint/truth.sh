@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(git rev-parse --show-toplevel)/ops/lib/scripts/common.sh"
 
 # Stela Truth Linter (PoT Guard)
 # Purpose: Enforce canon spelling, catch legacy drift, and police governance terminology.
@@ -52,6 +53,8 @@ else
 fi
 
 cd "$REPO_ROOT" || exit 1
+trap 'emit_binary_leaf "lint-truth" "finish"' EXIT
+emit_binary_leaf "lint-truth" "start"
 
 echo "Stela Truth Verification"
 echo "------------------------"

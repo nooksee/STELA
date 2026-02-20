@@ -3,6 +3,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=/dev/null
+source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 
 format="chatgpt"
 intent=""
@@ -14,11 +16,6 @@ usage() {
   cat <<'USAGE'
 Usage: ops/bin/open [--format=chatgpt|gemini] [--intent="..."] [--dp="DP-XXXX / YYYY-MM-DD"] [--out=auto] [--tag=token]
 USAGE
-}
-
-die() {
-  echo "ERROR: $*" >&2
-  exit 1
 }
 
 generate_trace_id() {
@@ -55,6 +52,9 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+trap 'emit_binary_leaf "open" "finish"' EXIT
+emit_binary_leaf "open" "start"
 
 branch="$(git rev-parse --abbrev-ref HEAD)"
 head_short="$(git rev-parse --short HEAD)"

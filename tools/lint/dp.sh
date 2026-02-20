@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(git rev-parse --show-toplevel)/ops/lib/scripts/common.sh"
 
 usage() {
   cat <<'USAGE'
@@ -15,6 +16,8 @@ else
 fi
 
 cd "$REPO_ROOT" || exit 1
+trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
+emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
 CANONICAL_DP_TEMPLATE_SHA256="1273d667c56296af116d257aee5cc02b1c4a8302395d615ca7cf0b4d72de7912"

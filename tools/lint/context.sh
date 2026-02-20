@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(git rev-parse --show-toplevel)/ops/lib/scripts/common.sh"
 
 # Stela Context Linter (Manifest Supremacy)
 # Purpose: Verify that EVERY artifact listed in the Context Manifest exists.
@@ -13,6 +14,8 @@ else
 fi
 
 cd "$REPO_ROOT" || exit 1
+trap 'emit_binary_leaf "lint-context" "finish"' EXIT
+emit_binary_leaf "lint-context" "start"
 MANIFEST_PATH="ops/lib/manifests/CONTEXT.md"
 
 echo "Stela Context Verification"

@@ -557,6 +557,8 @@ write_output() {
 
 main() {
   parse_args "$@"
+  trap 'emit_binary_leaf "factory" "finish"' EXIT
+  emit_binary_leaf "factory" "start"
   if (( dry_run )); then
     printf 'factory: ready to render %s\n' "$render_key"
     return 0

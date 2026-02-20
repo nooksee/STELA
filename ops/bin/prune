@@ -60,6 +60,10 @@ done
 [[ "$TARGET" == "sop" || "$TARGET" == "pow" || "$TARGET" == "both" ]] || die "--target must be one of: sop, pow, both"
 SOP_PATH="$(resolve_surface_leaf "${SOP_PATH}")"
 POW_PATH="$(resolve_surface_leaf "${POW_PATH}")"
+
+trap 'emit_binary_leaf "prune" "finish"' EXIT
+emit_binary_leaf "prune" "start"
+
 results_guard
 
 if [[ "$TARGET" == "pow" || "$TARGET" == "both" ]]; then

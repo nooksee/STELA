@@ -3,6 +3,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=/dev/null
+source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 TASK_PATH="${REPO_ROOT}/TASK.md"
 TEMPLATE_BIN="${REPO_ROOT}/ops/bin/template"
 INTEGRITY_LINT="${REPO_ROOT}/tools/lint/integrity.sh"
@@ -713,14 +715,6 @@ verify_changed_files_subset_allowlist() {
   fi
 }
 
-utc_now() {
-  date -u +"%Y-%m-%dT%H:%M:%SZ"
-}
-
-timestamp_token_utc() {
-  date -u +"%Y%m%dT%H%M%SZ"
-}
-
 select_latest_path_by_mtime() {
   local latest_path=""
   local latest_mtime=-1
@@ -795,31 +789,6 @@ resolve_trace_id() {
   fi
   [[ -n "$trace_id" ]] || die "failed to resolve STELA_TRACE_ID from environment or latest OPEN artifact"
   printf '%s' "$trace_id"
-}
-
-slugify_token() {
-  local value="$1"
-  value="$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')"
-  value="$(printf '%s' "$value" | tr -cs 'a-z0-9' '-')"
-  value="${value#-}"
-  value="${value%-}"
-  if [[ -z "$value" ]]; then
-    value="token"
-  fi
-  printf '%s' "$value"
-}
-
-short_hash() {
-  local value="$1"
-  if command -v sha256sum >/dev/null 2>&1; then
-    printf '%s' "$value" | sha256sum | awk '{print substr($1, 1, 12)}'
-    return 0
-  fi
-  if command -v shasum >/dev/null 2>&1; then
-    printf '%s' "$value" | shasum -a 256 | awk '{print substr($1, 1, 12)}'
-    return 0
-  fi
-  printf '%s' "$value" | od -An -tx1 | tr -d ' \n' | cut -c1-12
 }
 
 emit_telemetry_leaf() {
@@ -1196,6 +1165,8 @@ for arg in "$@"; do
   esac
 done
 
+emit_binary_leaf "certify" "start"
+
 [[ -n "$DP_ID" ]] || die "missing required --dp"
 [[ "$DP_ID" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]] || die "invalid --dp value: ${DP_ID}"
 assert_dp_matches_work_branch "$DP_ID"
@@ -1225,7 +1196,7 @@ fi
 CLOSING_BLOCK="$(cat "$CLOSING_PATH")"
 
 TMP_DIR="$(mktemp -d "${REPO_ROOT}/var/tmp/certify.${DP_ID}.XXXXXX")"
-trap 'rm -rf "$TMP_DIR"' EXIT
+trap 'emit_binary_leaf "certify" "finish"; rm -rf "$TMP_DIR"' EXIT
 
 TASK_SOURCE_PATH="$(resolve_task_source_path)"
 DP_BLOCK_PATH="${TMP_DIR}/dp-block.md"

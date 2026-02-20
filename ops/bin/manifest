@@ -608,6 +608,8 @@ write_output() {
 
 main() {
   parse_args "$@"
+  trap 'emit_binary_leaf "manifest" "finish"' EXIT
+  emit_binary_leaf "manifest" "start"
   if (( dry_run )); then
     printf 'manifest: ready to render %s\n' "$render_key"
     return 0

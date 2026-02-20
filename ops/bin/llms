@@ -4,6 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # shellcheck source=/dev/null
+source "${REPO_ROOT}/ops/lib/scripts/common.sh"
+# shellcheck source=/dev/null
 source "${REPO_ROOT}/ops/lib/scripts/project.sh"
 
 SYNTH_BIN="${REPO_ROOT}/ops/lib/scripts/synthesize.sh"
@@ -12,6 +14,7 @@ CORE_MANIFEST="ops/lib/manifests/CORE.md"
 FULL_MANIFEST="ops/lib/manifests/DISCOVERY.md"
 OUT_DIR="${REPO_ROOT}"
 ROOT_OUT_DIR="${REPO_ROOT}"
+work_dir=""
 
 usage() {
   cat <<'USAGE'
@@ -47,9 +50,17 @@ done
 project_require_repo_root
 project_require_executable "$COMPILE_BIN"
 project_require_executable "$SYNTH_BIN"
-"$COMPILE_BIN" >/dev/null
 project_require_file "${PROJECT_REPO_ROOT}/${CORE_MANIFEST}"
 project_require_file "${PROJECT_REPO_ROOT}/${FULL_MANIFEST}"
+
+cleanup() {
+  emit_binary_leaf "llms" "finish"
+  [[ -n "$work_dir" ]] && rm -rf "$work_dir"
+}
+trap cleanup EXIT
+emit_binary_leaf "llms" "start"
+
+"$COMPILE_BIN" >/dev/null
 
 if [[ "$OUT_DIR" != /* ]]; then
   OUT_DIR="${PROJECT_REPO_ROOT}/${OUT_DIR}"
@@ -59,10 +70,6 @@ mkdir -p "$OUT_DIR"
 mkdir -p "$ROOT_OUT_DIR"
 
 work_dir="$(mktemp -d)"
-cleanup() {
-  rm -rf "$work_dir"
-}
-trap cleanup EXIT
 
 core_tmp="${work_dir}/llms-core.txt"
 full_tmp="${work_dir}/llms-full.txt"

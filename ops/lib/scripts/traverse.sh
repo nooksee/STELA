@@ -184,6 +184,8 @@ for path in "${all_files[@]}"; do
   selected=$((selected + 1))
 done
 
+emit_binary_leaf "traverse" "selection-complete"
+
 if (( selected == 0 )); then
   die "No files selected for scope: $scope"
 fi
