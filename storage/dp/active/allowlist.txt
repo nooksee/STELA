@@ -119,12 +119,6 @@ docs/ops/registry/SCRIPTS.md
 SoP.md
 PoW.md
 TASK.md
-var/tmp/baseline-platform-chatgpt.txt
-var/tmp/baseline-platform-gemini.txt
-var/tmp/baseline-platform-claude.txt
-var/tmp/baseline-full-chatgpt.txt
-var/tmp/baseline-full-gemini.txt
-var/tmp/baseline-full-claude.txt
 archives/manifests/compile-2026-02-20T031634-4a9c88bb.md
 archives/manifests/compile-2026-02-20T031639-4a9c88bb.md
 archives/surfaces/PoW-2026-02-20-4a9c88bb.md
