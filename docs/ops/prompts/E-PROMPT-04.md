@@ -6,12 +6,14 @@ Attach: OPEN, dump.
 Rules:
 * Refresh state using attached OPEN and dump artifacts.
 * Follow constraints in `ops/lib/manifests/CONSTRAINTS.md` (Sections 1 & 2).
+* Contractor constraints: ops/lib/manifests/CONTRACTOR.md
 * Logic: `PoT.md`. Reference: `docs/MAP.md` and `SoP.md`.
 * Structure output to facilitate rapid decision-making.
 
 Steps:
 1. **ANALYZE** Operator query using attached context.
-2. **SYNTHESIZE** findings based on `PoT.md` and repository state.
+2. **SYNTHESIZE** findings based on `PoT.md` and repository state, treating OPEN and dump
+   bundles as session artifacts rather than canonical sources.
 3. **FORMULATE** Strategic Options menu (2-3 actionable paths).
 
 Operator query template:

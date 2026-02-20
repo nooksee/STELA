@@ -154,3 +154,12 @@ archives/manifests/compile-2026-02-20T045835-ad79e103.md
 archives/surfaces/PoW-2026-02-20-ad79e103.md
 archives/surfaces/SoP-2026-02-20-ad79e103.md
 archives/surfaces/TASK-DP-OPS-0079-ad79e103.md
+ops/lib/manifests/CONTRACTOR.md
+ops/src/surfaces/dp.md.tpl
+docs/ops/prompts/E-PROMPT-01.md
+docs/ops/prompts/E-PROMPT-02.md
+docs/ops/prompts/E-PROMPT-03.md
+docs/ops/prompts/E-PROMPT-04.md
+archives/surfaces/PoW-2026-02-20-4418b264.md
+archives/surfaces/SoP-2026-02-20-4418b264.md
+archives/surfaces/TASK-DP-OPS-0080-4418b264.md

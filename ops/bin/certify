@@ -1052,7 +1052,7 @@ extract_commands() {
     fi
 
     case "$candidate" in
-      "Required pasted outputs:"*|"Mandatory Closing Block"*|"Verify Section "*|"Worker runs"*|"Purpose:"*)
+      "**Mandatory receipt commands"*|"**DP-specific receipt commands"*|"Mandatory receipt commands"*|"DP-specific receipt commands"*|"Required pasted outputs:"*|"Mandatory Closing Block"*|"Verify Section "*|"Worker runs"*|"Purpose:"*)
         continue
         ;;
     esac

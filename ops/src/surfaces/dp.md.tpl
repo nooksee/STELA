@@ -1,7 +1,7 @@
 ---
 template_type: surface
 template_id: dp
-template_version: 1
+template_version: 2
 requires_slots:
   - DP_ID
   - DP_TITLE
@@ -18,9 +18,10 @@ requires_slots:
   - PLAN_REQUEST
   - PLAN_CHANGELOG
   - PLAN_PATCH
-  - RECEIPT_COMMANDS
+  - RECEIPT_EXTRA
 includes:
   - ops/lib/manifests/CONSTRAINTS.md#section-1
+  - ops/lib/manifests/CONTRACTOR.md
 ---
 ### {{DP_ID}}: {{DP_TITLE}}
 
@@ -75,6 +76,8 @@ Notes:
 - DP writer must not attach or cite disposable artifacts.
 - DP writer must not embed pasted bundles.
 
+{{@include:ops/lib/manifests/CONTRACTOR.md}}
+
 ### 3.2.2 DP-scoped load order (per DP)
 {{DP_SCOPED_LOAD_ORDER}}
 
@@ -112,7 +115,20 @@ Target Files allowlist (hard gate):
 {{PLAN_PATCH}}
 
 ### 3.4.5 Receipt (Proofs to collect) - MUST RUN
-{{RECEIPT_COMMANDS}}
+
+**Mandatory receipt commands (always run; do not omit):**
+- bash tools/lint/dp.sh TASK.md
+- bash tools/lint/task.sh
+- bash tools/lint/integrity.sh
+- bash tools/lint/style.sh
+- git diff --name-only
+- git diff --stat
+- comm -23 <(git diff --name-only | sort) <(sort storage/dp/active/allowlist.txt) || true
+- comm -23 <(git ls-files --others --exclude-standard | sort) <(sort storage/dp/active/allowlist.txt) || true
+- ./ops/bin/open
+
+**DP-specific receipt commands (scope-specific; author below):**
+{{RECEIPT_EXTRA}}
 
 ## 3.5 Closeout (Mandatory Routing)
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).

@@ -42,3 +42,83 @@ if [[ -n "$contraction_hits" ]]; then
   echo "$contraction_hits" >&2
   exit 1
 fi
+
+check_closing_block_lead_words() {
+  local handoff_dir="${REPO_ROOT}/storage/handoff"
+  [[ -d "$handoff_dir" ]] || return 0
+
+  local -a closing_files=()
+  shopt -s nullglob
+  closing_files=("$handoff_dir"/CLOSING-*.md)
+  shopt -u nullglob
+  (( ${#closing_files[@]} > 0 )) || return 0
+
+  local file
+  local base_name
+  local dp_number
+  local duplicate_report
+  for file in "${closing_files[@]}"; do
+    base_name="$(basename "$file")"
+    if [[ "$base_name" =~ ^CLOSING-DP-OPS-([0-9]+)\.md$ ]]; then
+      dp_number=$((10#${BASH_REMATCH[1]}))
+      if (( dp_number < 80 )); then
+        continue
+      fi
+    fi
+
+    if ! duplicate_report="$(awk '
+      function is_header(line) {
+        return line ~ /^Primary Commit Header \(plaintext\)[[:space:]]*$/ \
+          || line ~ /^Pull Request Title \(plaintext\)[[:space:]]*$/ \
+          || line ~ /^Pull Request Description \(markdown\)[[:space:]]*$/ \
+          || line ~ /^Final Squash Stub \(plaintext\)( \(Must differ from #1\)| \(Must differ from Primary Commit Header in verb and subject\))?[[:space:]]*$/ \
+          || line ~ /^Extended Technical Manifest \(plaintext\)[[:space:]]*$/ \
+          || line ~ /^Review Conversation Starter \(markdown\)[[:space:]]*$/
+      }
+
+      {
+        if (is_header($0)) {
+          awaiting_entry=1
+          next
+        }
+
+        if (awaiting_entry && $0 ~ /[^[:space:]]/) {
+          line=$0
+          sub(/^[[:space:]]+/, "", line)
+          split(line, fields, /[[:space:]]+/)
+          lead=fields[1]
+          gsub(/^[^[:alnum:]]+/, "", lead)
+          gsub(/[^[:alnum:]-]+$/, "", lead)
+          lead_key=tolower(lead)
+          if (lead_key == "") {
+            lead_key="(empty)"
+          }
+          lead_count[lead_key]++
+          lead_lines[lead_key]=lead_lines[lead_key] sprintf("%d:%s\n", NR, $0)
+          awaiting_entry=0
+        }
+      }
+
+      END {
+        duplicate_total=0
+        for (k in lead_count) {
+          if (lead_count[k] > 1) {
+            duplicate_total++
+            printf "Duplicate opening word [%s]:\n%s", k, lead_lines[k]
+          }
+        }
+        if (duplicate_total > 0) {
+          exit 2
+        }
+      }
+    ' "$file")"; then
+      echo "ERROR: Closing block lead-word repetition found in ${file#"${REPO_ROOT}/"}:" >&2
+      if [[ -n "$duplicate_report" ]]; then
+        echo "$duplicate_report" >&2
+      fi
+      exit 1
+    fi
+  done
+}
+
+check_closing_block_lead_words
