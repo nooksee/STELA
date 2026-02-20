@@ -205,6 +205,7 @@ ops/lib/scripts/task.sh promote archives/definitions/task-candidate-YYYY-MM-DD-<
 
 **Allowlist Rule:**
 * **Rule:** If a DP includes the llms command, the allowlist must include `llms.txt`, `llms-core.txt`, and `llms-full.txt`.
+* **Rule:** `storage/dp/active/allowlist.txt` is persistent-path policy only. Do not include runtime artifact prefixes (`storage/handoff/`, `storage/dumps/`, `storage/dp/intake/`, `storage/dp/processed/`).
 
 ---
 

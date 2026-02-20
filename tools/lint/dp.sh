@@ -787,6 +787,13 @@ check_allowlist_pointer_integrity() {
       fi
     fi
 
+    case "$normalized" in
+      storage/handoff/*|storage/dumps/*|storage/dp/intake/*|storage/dp/processed/*)
+        fail "allowlist entry must be persistent repo state (runtime artifact prefix forbidden): ${normalized}"
+        continue
+        ;;
+    esac
+
     if [[ "$normalized" == *"*"* || "$normalized" == *"?"* || "$normalized" == *"["* ]]; then
       case "$normalized" in
         .github/*|tools/*|ops/*|docs/*|storage/*|archives/*|logs/*)

@@ -105,6 +105,11 @@ while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
   if [[ "$entry" == \#* ]]; then
     continue
   fi
+  case "$entry" in
+    storage/handoff/*|storage/dumps/*|storage/dp/intake/*|storage/dp/processed/*)
+      die "allowlist entry must be persistent repo state (runtime artifact prefix forbidden): ${entry}"
+      ;;
+  esac
   if [[ "$entry" == *"*"* || "$entry" == *"?"* || "$entry" == *"["* ]]; then
     allowlist_patterns+=("$entry")
     continue
