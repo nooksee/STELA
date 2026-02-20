@@ -7,7 +7,7 @@ Authoritative registry for `tools/lint/*` executables.
 | LINT-01 | Agent Lint | tools/lint/agent.sh | Spec: `docs/ops/specs/tools/lint/agent.md`. Enforces agent schema, pointer validity, and disposable-artifact hazard rules. |
 | LINT-02 | Context Lint | tools/lint/context.sh | Spec: `docs/ops/specs/tools/lint/context.md`. Verifies context manifest completeness and context-hazard exclusions. |
 | LINT-03 | DP Lint | tools/lint/dp.sh | Spec: `docs/ops/specs/tools/lint/dp.md`. Validates DP schema and One Truth context-load rules (`llms-full.txt` prohibited, `llms-core.txt` lightweight-only), and resolves pointer-first `TASK.md` to its surface leaf before DP payload parsing. |
-| LINT-04 | Factory Lint | tools/lint/factory.sh | Spec: `docs/ops/specs/tools/lint/.md`. Verifies agent/skill/task registry synchronization and pointer integrity. |
+| LINT-04 | Factory Lint | tools/lint/factory.sh | Spec: `docs/ops/specs/tools/lint/factory.md`. Verifies agent/skill/task registry synchronization and pointer integrity. |
 | LINT-05 | LLMS Lint | tools/lint/llms.sh | Spec: `docs/ops/specs/tools/lint/llms.md`. Re-generates llms bundles in temp space; enforces only `llms.txt`, `llms-core.txt`, and `llms-full.txt`; fails on deprecated slices. |
 | LINT-06 | Project Lint | tools/lint/project.sh | Spec: `docs/ops/specs/tools/lint/project.md`. Deprecated: project registry is unpopulated, so this linter has no live targets. Reactivate when the project registry is populated and project scaffolding implementation is complete. |
 | LINT-07 | Style Lint | tools/lint/style.sh | Spec: `docs/ops/specs/tools/lint/style.md`. Rejects markdown contractions across tracked documentation surfaces. |
@@ -16,6 +16,8 @@ Authoritative registry for `tools/lint/*` executables.
 | LINT-10 | Integrity Lint | tools/lint/integrity.sh | Spec: `docs/ops/specs/tools/lint/integrity.md`. Fails when changed or untracked paths are outside the active Target Files allowlist; resolves pointer-first `TASK.md` to extract allowlist pointers from the leaf payload. |
 | LINT-11 | RESULTS Lint | tools/lint/results.sh | Spec: `docs/ops/specs/tools/lint/results.md`. Verifies certification RESULTS schema, template hash parity, and Closing Block completeness; git hash parity is strict in explicit-path mode, while no-arg and `--all` modes perform historical structural scans. |
 | LINT-12 | Schema Lint | tools/lint/schema.sh | Spec: `docs/ops/specs/tools/lint/schema.md`. Validates unified schema front-matter keys for `archives/definitions` leaves and Phase 2 surface leaves in `archives/surfaces` (PoW/SoP/TASK snapshots), enforcing `created_at` and `previous` format rules. |
+| LINT-13 | Leaf Lint | tools/lint/leaf.sh | Spec: `docs/ops/specs/tools/lint/leaf.md`. Validates archive surface leaf schema and pointer integrity for `archives/surfaces/` entries. |
+| LINT-14 | Skill Lint | tools/lint/skill.sh | Spec: `docs/ops/specs/tools/lint/skill.md`. Enforces skill registry synchronization and pointer integrity for skill definition leaves. |
 
 ## Gate Status Decisions (2026-02-19)
 - `tools/lint/project.sh` is formally deprecated.
