@@ -3,6 +3,7 @@ tools/lint/integrity.sh
 tools/lint/dp.sh
 tools/lint/truth.sh
 ops/bin/certify
+ops/bin/prune
 TASK.md
 SoP.md
 PoW.md
@@ -46,6 +47,7 @@ docs/ops/specs/tools/lint/task.md
 docs/ops/specs/tools/lint/truth.md
 docs/ops/specs/tools/test/agent.md
 docs/ops/specs/tools/verify.md
+docs/ops/specs/binaries/prune.md
 ops/lib/project/README.md
 ops/src/definitions/task.md.tpl
 opt/_factory/INDEX.md
