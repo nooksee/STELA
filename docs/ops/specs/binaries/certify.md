@@ -79,6 +79,13 @@ Allowlist-sensitive lint handling:
 - Certify executes and logs a changed-files subset check against the active allowlist pointer after normalization and before final diff capture.
 - Scope Verification includes both the initial integrity gate output and the post-command integrity recheck output.
 - Scope Verification also includes RESULTS lint output and explicit pass checks for template headings, hash parity, closing block population, and unresolved slot-token scan.
+- CLOSING Manifest Validation metrics are reported with independent counters (not mutually exclusive):
+  - `Manifest entries matched allowlist`
+  - `Manifest entries matched git diff`
+  - `Manifest entries matched allowlist and git diff`
+  - `Manifest entries allowlisted but not in git diff`
+  - `Manifest entries matched git diff without allowlist coverage`
+  This prevents false interpretation when an entry is both allowlisted and currently changed.
 
 ## Output Contract
 - Writes one RESULTS artifact:

@@ -12,36 +12,134 @@ cd "$REPO_ROOT" || exit 1
 trap 'emit_binary_leaf "lint-style" "finish"' EXIT
 emit_binary_leaf "lint-style" "start"
 
-search_markdown_contractions() {
+declare -a JARGON_BLACKLIST=(
+  "synergy"
+  "leverage"
+  "best-in-class"
+  "world-class"
+  "cutting-edge"
+  "thought leader"
+  "north star"
+  "game changer"
+  "single pane of glass"
+)
+
+SPEC_SURFACE_MARKER="<!-- SPEC-SURFACE:REQUIRED -->"
+declare -a SPEC_REQUIRED_SECTIONS=(
+  "First Principles Rationale"
+  "Mechanics and Sequencing"
+  "Anecdotal Anchor"
+  "Integrity Filter Warnings"
+)
+
+declare -a MARKDOWN_FILES=()
+STYLE_FAILURES=0
+
+mark_failure() {
+  echo "ERROR: $1" >&2
+  STYLE_FAILURES=$((STYLE_FAILURES + 1))
+}
+
+collect_markdown_files() {
+  mapfile -t MARKDOWN_FILES < <(
+    git ls-files '*.md' | awk '$0 !~ /^storage\//'
+  )
+  if (( ${#MARKDOWN_FILES[@]} == 0 )); then
+    echo "ERROR: no markdown files discovered for style lint." >&2
+    exit 1
+  fi
+}
+
+search_markdown_matches() {
   local pattern="$1"
+  local mode="${2:-regex}"
 
   if command -v rg >/dev/null 2>&1; then
-    rg -n -i --glob '*.md' --glob '!**/storage/**' --glob '!**/.git/**' "$pattern" "${REPO_ROOT}" || true
+    if [[ "$mode" == "fixed" ]]; then
+      rg -n -i -F -- "$pattern" "${MARKDOWN_FILES[@]}" || true
+    else
+      rg -n -i -e "$pattern" "${MARKDOWN_FILES[@]}" || true
+    fi
     return 0
   fi
 
-  if command -v grep >/dev/null 2>&1 && grep -P 'a' <<< 'a' >/dev/null 2>&1; then
-    grep -R -n -i -P \
-      --include='*.md' \
-      --exclude-dir='storage' \
-      --exclude-dir='.git' \
-      "$pattern" "${REPO_ROOT}" || true
-    return 0
+  if command -v grep >/dev/null 2>&1; then
+    if [[ "$mode" == "fixed" ]]; then
+      grep -n -i -F -- "$pattern" "${MARKDOWN_FILES[@]}" 2>/dev/null || true
+      return 0
+    fi
+    if grep -E 'a' <<< 'a' >/dev/null 2>&1; then
+      grep -n -i -E -- "$pattern" "${MARKDOWN_FILES[@]}" 2>/dev/null || true
+      return 0
+    fi
   fi
 
-  echo "ERROR: neither rg nor grep -P is available on PATH" >&2
+  echo "ERROR: neither rg nor grep -E is available on PATH" >&2
   exit 1
 }
 
-# Contraction prohibition uses ASCII and unicode apostrophe variants.
-apostrophe="['\\x{2019}]"
-contraction_pattern="\\b(ain${apostrophe}t|aren${apostrophe}t|can${apostrophe}t|couldn${apostrophe}t|didn${apostrophe}t|doesn${apostrophe}t|don${apostrophe}t|hadn${apostrophe}t|hasn${apostrophe}t|haven${apostrophe}t|isn${apostrophe}t|mightn${apostrophe}t|mustn${apostrophe}t|needn${apostrophe}t|shan${apostrophe}t|shouldn${apostrophe}t|wasn${apostrophe}t|weren${apostrophe}t|won${apostrophe}t|wouldn${apostrophe}t|it${apostrophe}s|that${apostrophe}s|there${apostrophe}s|here${apostrophe}s|who${apostrophe}s|what${apostrophe}s|where${apostrophe}s|when${apostrophe}s|why${apostrophe}s|how${apostrophe}s|let${apostrophe}s|i${apostrophe}m|you${apostrophe}re|we${apostrophe}re|they${apostrophe}re|i${apostrophe}ve|you${apostrophe}ve|we${apostrophe}ve|they${apostrophe}ve|i${apostrophe}ll|you${apostrophe}ll|we${apostrophe}ll|they${apostrophe}ll|i${apostrophe}d|you${apostrophe}d|we${apostrophe}d|they${apostrophe}d)\\b"
-contraction_hits="$(search_markdown_contractions "$contraction_pattern")"
-if [[ -n "$contraction_hits" ]]; then
-  echo "ERROR: Contractions found in markdown files:" >&2
-  echo "$contraction_hits" >&2
-  exit 1
-fi
+file_has_h2_heading() {
+  local file="$1"
+  local heading="$2"
+  awk -v heading="$heading" '
+    /^##[[:space:]]+/ {
+      line=$0
+      sub(/^##[[:space:]]+/, "", line)
+      sub(/[[:space:]]+$/, "", line)
+      if (line == heading) {
+        found=1
+        exit
+      }
+    }
+    END { exit(found ? 0 : 1) }
+  ' "$file"
+}
+
+check_markdown_contractions() {
+  # Contraction prohibition uses ASCII and unicode apostrophe variants.
+  local apostrophe="['\\x{2019}]"
+  local contraction_pattern="\\b(ain${apostrophe}t|aren${apostrophe}t|can${apostrophe}t|couldn${apostrophe}t|didn${apostrophe}t|doesn${apostrophe}t|don${apostrophe}t|hadn${apostrophe}t|hasn${apostrophe}t|haven${apostrophe}t|isn${apostrophe}t|mightn${apostrophe}t|mustn${apostrophe}t|needn${apostrophe}t|shan${apostrophe}t|shouldn${apostrophe}t|wasn${apostrophe}t|weren${apostrophe}t|won${apostrophe}t|wouldn${apostrophe}t|it${apostrophe}s|that${apostrophe}s|there${apostrophe}s|here${apostrophe}s|who${apostrophe}s|what${apostrophe}s|where${apostrophe}s|when${apostrophe}s|why${apostrophe}s|how${apostrophe}s|let${apostrophe}s|i${apostrophe}m|you${apostrophe}re|we${apostrophe}re|they${apostrophe}re|i${apostrophe}ve|you${apostrophe}ve|we${apostrophe}ve|they${apostrophe}ve|i${apostrophe}ll|you${apostrophe}ll|we${apostrophe}ll|they${apostrophe}ll|i${apostrophe}d|you${apostrophe}d|we${apostrophe}d|they${apostrophe}d)\\b"
+  local contraction_hits
+  contraction_hits="$(search_markdown_matches "$contraction_pattern" regex)"
+  if [[ -n "$contraction_hits" ]]; then
+    mark_failure "Contractions found in markdown files:"
+    echo "$contraction_hits" >&2
+  fi
+}
+
+check_jargon_blacklist() {
+  local term=""
+  for term in "${JARGON_BLACKLIST[@]}"; do
+    local term_hits
+    term_hits="$(search_markdown_matches "$term" fixed)"
+    if [[ -z "$term_hits" ]]; then
+      continue
+    fi
+    mark_failure "Jargon blacklist term matched: '${term}'"
+    while IFS= read -r hit || [[ -n "$hit" ]]; do
+      [[ -n "$hit" ]] || continue
+      echo "  ${hit}" >&2
+    done <<< "$term_hits"
+  done
+}
+
+check_spec_surface_compliance() {
+  local file=""
+  local section=""
+  for file in "${MARKDOWN_FILES[@]}"; do
+    [[ "$file" == docs/ops/specs/* ]] || continue
+    if ! grep -Fq "$SPEC_SURFACE_MARKER" "$file"; then
+      continue
+    fi
+
+    for section in "${SPEC_REQUIRED_SECTIONS[@]}"; do
+      if file_has_h2_heading "$file" "$section"; then
+        continue
+      fi
+      mark_failure "Spec-surface compliance failed: ${file} missing section '## ${section}'"
+    done
+  done
+}
 
 check_closing_block_lead_words() {
   local handoff_dir="${REPO_ROOT}/storage/handoff"
@@ -121,4 +219,12 @@ check_closing_block_lead_words() {
   done
 }
 
+collect_markdown_files
+check_markdown_contractions
+check_jargon_blacklist
+check_spec_surface_compliance
 check_closing_block_lead_words
+
+if (( STYLE_FAILURES > 0 )); then
+  exit 1
+fi
