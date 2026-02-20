@@ -5,15 +5,17 @@ Authoritative registry for `ops/bin/*` entrypoints.
 | ID | Name | File Path | Notes |
 | --- | --- | --- | --- |
 | OPS-BIN-01 | Context Session Stream | ops/bin/context | Spec: `docs/ops/specs/binaries/context.md`. Wrapper over `ops/lib/scripts/synthesize.sh`; defaults to OPS layer and injects OPEN session state. |
-| OPS-BIN-02 | Dump | ops/bin/dump | Spec: `docs/ops/specs/binaries/dump.md`. Serializes repository state into receipt payloads and manifests. |
+| OPS-BIN-02 | Dump | ops/bin/dump | Spec: `docs/ops/specs/binaries/dump.md`. Format converter and compressor that consumes the traversal stream from `ops/lib/scripts/traverse.sh`, then emits receipt payloads and manifests. |
 | OPS-BIN-03 | Help | ops/bin/help | Spec: `docs/ops/specs/binaries/help.md`. Surfaces operational docs and wayfinding pointers. |
 | OPS-BIN-04 | LLMS Bundler | ops/bin/llms | Spec: `docs/ops/specs/binaries/llms.md`. Wrapper over `ops/lib/scripts/synthesize.sh`; writes only `llms.txt`, `llms-core.txt`, and `llms-full.txt`. |
 | OPS-BIN-05 | MAP Generator | ops/bin/map | Spec: `docs/ops/specs/binaries/map.md`. Refreshes the auto-generated MAP index block. |
 | OPS-BIN-06 | Open | ops/bin/open | Spec: `docs/ops/specs/binaries/open.md`. Produces session-state OPEN artifacts with freshness details. |
-| OPS-BIN-07 | Project | ops/bin/project | Spec: `docs/ops/specs/binaries/project.md`. Project lifecycle entrypoint driven by project registry and templates. |
+| OPS-BIN-07 | Project | ops/bin/project | Spec: `docs/ops/specs/binaries/project.md`. DEPRECATED in DP-OPS-0078; replaced by `ops/bin/scaffold` (directory provisioning) and `ops/bin/meta` (context artifact generation). Scheduled for deletion in the next administrative DP cycle. |
 | OPS-BIN-08 | Prune | ops/bin/prune | Spec: `docs/ops/specs/binaries/prune.md`. Cleans local artifacts. |
 | OPS-BIN-09 | Manifest Compiler | ops/bin/compile | Spec: `docs/ops/specs/binaries/compile.md`. Compiles manifest templates from `ops/src/manifests/` into deterministic explicit outputs in `ops/lib/manifests/`. |
 | OPS-BIN-10 | Template Compatibility Router | ops/bin/template | Spec: `docs/ops/specs/binaries/template.md`. Deprecated renderer shim retained for backward compatibility; uses `exec` dispatch to `ops/bin/factory` (`agent`, `task`, `skill`) and `ops/bin/manifest` (`dp`, `results`, `task-surface`) so existing call sites in `ops/bin/draft` and `ops/bin/compile` remain unchanged. |
 | OPS-BIN-11 | Certifier | ops/bin/certify | Spec: `docs/ops/specs/binaries/certify.md`. Runs integrity and receipt verification gates, then renders and validates DP RESULTS artifacts; intake fallback is explicit-only via `--allow-intake-fallback`. |
 | OPS-BIN-12 | Factory Backend | ops/bin/factory | Factory Semantics backend for template types `agent`, `task`, and `skill`. Depends on `ops/lib/scripts/common.sh` and is dispatched by `ops/bin/template` rather than called directly by existing call sites. |
 | OPS-BIN-13 | Manifest Backend | ops/bin/manifest | Compiler Semantics backend for template types `dp`, `results`, and `task-surface`. Depends on `ops/lib/scripts/common.sh` and is dispatched by `ops/bin/template` rather than called directly by existing call sites. |
+| OPS-BIN-14 | Scaffold | ops/bin/scaffold | Project directory provisioning entrypoint. Creates `projects/<name>/` structure per `ops/lib/project/SCAFFOLD.md`, validates project-name format, and enforces uniqueness. |
+| OPS-BIN-15 | Meta | ops/bin/meta | Project context artifact generator. Invokes `ops/bin/open` and `ops/bin/dump --scope=project --project=<name>` for the named project. |

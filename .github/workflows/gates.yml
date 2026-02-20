@@ -1,4 +1,4 @@
-name: repo-gates
+name: gates
 
 on:
   pull_request:
