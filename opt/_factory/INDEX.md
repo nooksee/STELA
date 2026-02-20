@@ -16,7 +16,7 @@ This index is navigation only. Registries in `docs/ops/registry/` are the single
 - `docs/CONTEXT.md` — Context rehydration guide.
 
 ## Registries
-- `docs/ops/registry/AGENTS.md` — Canon agent registry.
-- `docs/ops/registry/SKILLS.md` — Canon skill registry.
-- `docs/ops/registry/TASKS.md` — Canon task registry.
-- `docs/ops/registry/PROJECTS.md` — Canon project registry.
+- `docs/ops/registry/agents.md` — Canon agent registry.
+- `docs/ops/registry/skills.md` — Canon skill registry.
+- `docs/ops/registry/tasks.md` — Canon task registry.
+- `docs/ops/registry/projects.md` — Canon project registry.

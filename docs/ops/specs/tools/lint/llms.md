@@ -35,6 +35,6 @@ Verify that committed llms bundle outputs are byte-equivalent to fresh generator
 - Any diff mismatch is a hard failure.
 
 ## Related pointers
-- Registry entry: `docs/ops/registry/LINT.md` (`LINT-05`).
+- Registry entry: `docs/ops/registry/lint.md` (`LINT-05`).
 - Generator spec: `docs/ops/specs/binaries/llms.md`.
 - Manifest sources: `ops/lib/manifests/CORE.md`, `ops/lib/manifests/OPS.md`, `ops/lib/manifests/DISCOVERY.md`.

@@ -9,7 +9,7 @@ This specification governs candidate and promotion pointer heads, leaf schema re
 1. `candidate:` latest candidate leaf pointer, or origin sentinel.
 2. `promotion:` latest promotion leaf pointer, or origin sentinel.
 3. `spec:` this specification path.
-4. `registry:` `docs/ops/registry/SKILLS.md`.
+4. `registry:` `docs/ops/registry/skills.md`.
 
 Allowed head values:
 - Origin sentinel: `archives/definitions/skill-candidate-(origin)` and `archives/definitions/skill-promotion-(origin)`.
@@ -22,7 +22,7 @@ Allowed head values:
   - Rewrite `candidate:` to the new leaf path.
 - Promotion emission (`ops/lib/scripts/skill.sh promote`):
   - Promote canon skill file under `opt/_factory/skills/`.
-  - Update `docs/ops/registry/SKILLS.md`.
+  - Update `docs/ops/registry/skills.md`.
   - Emit promotion leaf under `archives/definitions/`.
   - Rewrite `promotion:` to the new leaf path.
 

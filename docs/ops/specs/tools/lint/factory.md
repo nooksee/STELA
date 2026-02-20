@@ -20,9 +20,9 @@ Enforce factory pointer-head invariants and registry integrity across agent, tas
   - `docs/ops/specs/definitions/tasks.md`
   - `docs/ops/specs/definitions/skills.md`
 - Registries:
-  - `docs/ops/registry/AGENTS.md`
-  - `docs/ops/registry/TASKS.md`
-  - `docs/ops/registry/SKILLS.md`
+  - `docs/ops/registry/agents.md`
+  - `docs/ops/registry/tasks.md`
+  - `docs/ops/registry/skills.md`
 - Canon definition directories under `opt/_factory/`.
 - Delegated linters:
   - `tools/lint/agent.sh`
@@ -45,5 +45,5 @@ Enforce factory pointer-head invariants and registry integrity across agent, tas
 - Emits `OK: Factory Integrity Verified.` only when all checks pass.
 
 ## Related pointers
-- Registry entry: `docs/ops/registry/LINT.md` (`LINT-04`).
+- Registry entry: `docs/ops/registry/lint.md` (`LINT-04`).
 - Upstream head specs: `docs/ops/specs/definitions/agents.md`, `docs/ops/specs/definitions/tasks.md`, `docs/ops/specs/definitions/skills.md`.

@@ -10,11 +10,11 @@ Validate canon agent files against the agent registry and enforce pointer-first 
 - Expected exit behavior:
   - `0` when all checks pass.
   - `1` when one or more lint failures are detected.
-  - `2` when required files (for example `docs/ops/registry/AGENTS.md`) are missing.
+  - `2` when required files (for example `docs/ops/registry/agents.md`) are missing.
 
 ## Inputs
 - Git worktree root from `git rev-parse --show-toplevel`.
-- `docs/ops/registry/AGENTS.md`.
+- `docs/ops/registry/agents.md`.
 - `opt/_factory/agents/*.md`.
 
 ## Outputs
@@ -31,6 +31,6 @@ Validate canon agent files against the agent registry and enforce pointer-first 
 - Disposable artifact references and recursive context expansion patterns are rejected.
 
 ## Related pointers
-- Registry entry: `docs/ops/registry/LINT.md` (`LINT-01`).
-- Upstream registry: `docs/ops/registry/AGENTS.md`.
+- Registry entry: `docs/ops/registry/lint.md` (`LINT-01`).
+- Upstream registry: `docs/ops/registry/agents.md`.
 - Adjacent test: `tools/test/agent.sh` (`docs/ops/specs/tools/test/agent.md`).

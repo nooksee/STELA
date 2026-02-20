@@ -1,38 +1,30 @@
-# Technical Specification: ops/lib/scripts/task.sh
+<!-- SPEC-SURFACE:REQUIRED -->
+# Technical Specification
 
-## Purpose
-Manage task candidate harvesting, promotion, and context hazard checks while advancing factory pointer heads.
+## First Principles Rationale
+`ops/lib/scripts/task.sh` enforces canonical task lifecycle control so task definitions enter and leave canon through template-driven gates with provenance, scope boundaries, and registry continuity. This aligns with PoT.md Section 1.3 contract authority for `TASK.md` and Section 1.2 drift prevention by blocking ad hoc task-definition writes.
 
-## Invocation
-- Command forms:
-  - `ops/lib/scripts/task.sh harvest --id B-TASK-XX --name "..." --objective "..." [--dp "DP-OPS-XXXX"]`
-  - `ops/lib/scripts/task.sh promote <draft_path> [--delete-draft]`
-  - `ops/lib/scripts/task.sh check`
-- Exit behavior:
-  - `0` on success.
-  - Non-zero on validation failures, pointer rewrite failures, or registry update failures.
+## Mechanics and Sequencing
+1. Entry dispatch accepts `harvest`, `promote`, and `check`.
+2. `harvest` sequence:
+   - Require `--id` and `--name`; derive objective and DP-ID from `TASK.md` when not explicitly provided.
+   - Enforce task ID pattern `B-TASK-[0-9]{2,}` and reject registry collisions.
+   - Build provenance block through `heuristics.sh`.
+   - Resolve packet and trace metadata, render `ops/src/definitions/task.md.tpl`, hydrate required default orchestration fields, redact output, write candidate leaf, and rewrite `candidate:` pointer in `opt/_factory/TASKS.md`.
+3. `promote` sequence:
+   - Resolve explicit or latest draft path.
+   - Validate header shape, required sections, required field values, pointer presence, and closeout step reference to `TASK.md` Section 3.5.
+   - Derive task ID from draft filename token, rewrite draft header into canonical task header, write canonical task file, upsert registry row, emit promotion leaf, and rewrite `promotion:` pointer.
+   - Optional `--delete-draft` removes the candidate leaf after successful promotion.
+4. `check` sequence:
+   - Enforce task context hazard rule by rejecting task references in `ops/lib/manifests/CONTEXT.md`.
+   - Delegate deep schema and workflow checks to `tools/lint/task.sh`.
 
-## Inputs
-- `opt/_factory/TASKS.md` pointer head.
-- `docs/ops/registry/TASKS.md` registry table.
-- `ops/src/definitions/task.md.tpl` definition template.
-- `TASK.md` and `ops/lib/manifests/CONTEXT.md`.
+## Anecdotal Anchor
+SoP and PoW entries for `2026-02-15 01:55:45 UTC — DP-OPS-0065 Immutable Workflow Adoption and Closeout Remediation` record the cutover to template-driven DP and task-governance execution with stronger lint gating. SoP entry `2026-02-10 18:03:22 UTC — DP-OPS-0043` also documents hardening for placeholder drift and missing closeout pointers. Together these entries show the exact defect class this script addresses: unmediated task writes caused structural drift and weak closeout routing.
 
-## Outputs
-- `harvest` emits candidate leaf at `archives/definitions/task-candidate-YYYY-MM-DD-<suffix>.md` and rewrites `candidate:` in `opt/_factory/TASKS.md`.
-- `promote` writes canonical task file in `opt/_factory/tasks/`, upserts `docs/ops/registry/TASKS.md`, emits promotion leaf at `archives/definitions/task-promotion-YYYY-MM-DD-<suffix>.md`, and rewrites `promotion:` in `opt/_factory/TASKS.md`.
-- `check` enforces task context hazard rule and delegates deep validation to `tools/lint/task.sh`.
-
-## Invariants and failure modes
-- Candidate and promotion leaves always include unified schema front-matter keys: `trace_id`, `packet_id`, `created_at`, `previous`.
-- `previous` is `(none)` when prior head value ends with `-(origin)`; otherwise it is the prior head pointer path.
-- `trace_id` uses `STELA_TRACE_ID` when provided and falls back to local generation.
-- `packet_id` uses `STELA_PACKET_ID` when provided and falls back to DP input.
-- Harvest requires unique task IDs matching `B-TASK-[0-9]{2,}`.
-- Promote requires a candidate whose path contains the task ID token.
-- Pointer-head rewrite is a hard gate; missing `candidate:` or `promotion:` lines fail the command.
-
-## Related pointers
-- Factory head spec: `docs/ops/specs/definitions/tasks.md`.
-- Registry entry: `docs/ops/registry/SCRIPTS.md` (`SCRIPT-06`).
-- Task registry: `docs/ops/registry/TASKS.md`.
+## Integrity Filter Warnings
+- Promotion has no rollback transaction; failure after canonical file or registry row write can leave partial promotion state.
+- Promotion requires a `B-TASK-XX` token in the draft filename; malformed draft filenames are rejected even when body content is valid.
+- The script carries local helper copies of lifecycle primitives that also exist in `factory.sh`; divergence risk remains if one side changes first.
+- `check` relies on external lint execution (`tools/lint/task.sh`); missing or failing external tooling blocks command completion.

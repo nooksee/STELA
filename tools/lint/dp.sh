@@ -791,6 +791,8 @@ check_allowlist_pointer_integrity() {
     fi
 
     case "$normalized" in
+      storage/handoff/CLOSING-DP-OPS-*.md)
+        ;;
       storage/handoff/*|storage/dumps/*|storage/dp/intake/*|storage/dp/processed/*)
         fail "allowlist entry must be persistent repo state (runtime artifact prefix forbidden): ${normalized}"
         continue

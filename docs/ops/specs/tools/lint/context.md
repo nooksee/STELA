@@ -29,6 +29,6 @@ Enforce context manifest completeness and reject context contamination in canoni
 - Canon files must not contain dump/paste contamination markers.
 
 ## Related pointers
-- Registry entry: `docs/ops/registry/LINT.md` (`LINT-02`).
+- Registry entry: `docs/ops/registry/lint.md` (`LINT-02`).
 - Context source: `ops/lib/manifests/CONTEXT.md`.
 - Adjacent truth checks: `tools/lint/truth.sh`.

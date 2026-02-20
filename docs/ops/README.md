@@ -15,12 +15,12 @@ Project Factory (`ops/bin/project`) orchestrates project intake and lifecycle al
 ## 3. Registries
 The authoritative operational registries live in `docs/ops/registry/`.
 
-- `docs/ops/registry/PROMPTS.md`
-- `docs/ops/registry/BINARIES.md`
-- `docs/ops/registry/LINT.md`
-- `docs/ops/registry/TEST.md`
-- `docs/ops/registry/TOOLS.md`
-- `docs/ops/registry/SCRIPTS.md`
+- `docs/ops/registry/prompts.md`
+- `docs/ops/registry/binaries.md`
+- `docs/ops/registry/lint.md`
+- `docs/ops/registry/test.md`
+- `docs/ops/registry/tools.md`
+- `docs/ops/registry/scripts.md`
 
 ## 4. Specifications
 Technical specifications are pointer-first and grouped by executable surface.

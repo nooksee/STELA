@@ -35,6 +35,6 @@ Guard canon spelling integrity by rejecting forbidden platform spellings in auth
 - Any forbidden token match is a hard failure.
 
 ## Related pointers
-- Registry entry: `docs/ops/registry/LINT.md` (`LINT-09`).
+- Registry entry: `docs/ops/registry/lint.md` (`LINT-09`).
 - Policy source: `PoT.md`.
 - Adjacent style gate: `tools/lint/style.sh`.
