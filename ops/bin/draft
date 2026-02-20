@@ -4,6 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 TEMPLATE_BIN="${REPO_ROOT}/ops/bin/template"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/../lib/scripts/common.sh"
 
 usage() {
   cat <<'USAGE'
@@ -61,18 +63,6 @@ slots-file format:
 [RECEIPT_COMMANDS]
 - One or more lines
 USAGE
-}
-
-die() {
-  echo "ERROR: $*" >&2
-  exit 1
-}
-
-trim() {
-  local value="$1"
-  value="${value#"${value%%[![:space:]]*}"}"
-  value="${value%"${value##*[![:space:]]}"}"
-  printf '%s' "$value"
 }
 
 sha256_file() {

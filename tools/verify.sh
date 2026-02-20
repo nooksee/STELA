@@ -12,6 +12,8 @@ else
 fi
 
 cd "$REPO_ROOT" || exit 1
+# shellcheck source=/dev/null
+source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 
 echo "Stela Repo Hygiene Verification"
 echo "Root: $REPO_ROOT"
@@ -28,13 +30,6 @@ fail() {
 warn() {
   echo "WARN: $1" >&2
   warnings=$((warnings+1))
-}
-
-trim() {
-  local value="$1"
-  value="${value#"${value%%[![:space:]]*}"}"
-  value="${value%"${value##*[![:space:]]}"}"
-  printf '%s' "$value"
 }
 
 read_factory_head_value() {

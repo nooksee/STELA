@@ -3,6 +3,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/../lib/scripts/common.sh"
 
 usage() {
   cat <<'USAGE'
@@ -22,18 +24,6 @@ Options:
   --strict                   Enforce strict mode (default).
   --out=-                    Write rendered output to stdout.
 USAGE
-}
-
-die() {
-  echo "ERROR: $*" >&2
-  exit 1
-}
-
-trim() {
-  local value="$1"
-  value="${value#"${value%%[![:space:]]*}"}"
-  value="${value%"${value##*[![:space:]]}"}"
-  printf '%s' "$value"
 }
 
 slugify_heading() {
@@ -436,7 +426,9 @@ apply_slots() {
   local token
 
   for token in "${!SLOT_VALUES[@]}"; do
-    output_text="${output_text//\{\{${token}\}\}/${SLOT_VALUES[$token]}}"
+    # Escape '&' so replacement is literal even when patsub_replacement is enabled.
+    local replacement="${SLOT_VALUES[$token]//&/\\&}"
+    output_text="${output_text//\{\{${token}\}\}/${replacement}}"
   done
 
   printf '%s' "$output_text"

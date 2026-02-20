@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/../lib/scripts/common.sh"
+
 scope="platform"
 format="chatgpt"
 out_path=""
@@ -35,19 +40,6 @@ Notes:
   - --ignore-file removes files matching a glob against the repo-relative path (may be repeated).
 - Binary default is metadata-only (size + sha256). Use --include-binary=raw for literal bytes.
 USAGE
-}
-
-die() {
-  echo "ERROR: $*" >&2
-  usage >&2
-  exit 1
-}
-
-norm_dir() {
-  local d="$1"
-  d="${d#./}"
-  d="${d%/}"
-  printf "%s" "$d"
 }
 
 for arg in "$@"; do
@@ -93,12 +85,14 @@ for arg in "$@"; do
       include_binary="${arg#--include-binary=}"
       ;;
     --include-dir=*)
-      d="$(norm_dir "${arg#--include-dir=}")"
+      d="$(normalize_path_token "${arg#--include-dir=}")"
+      d="${d%/}"
       [[ -n "$d" ]] || die "--include-dir requires a value"
       include_dirs+=("$d")
       ;;
     --exclude-dir=*)
-      d="$(norm_dir "${arg#--exclude-dir=}")"
+      d="$(normalize_path_token "${arg#--exclude-dir=}")"
+      d="${d%/}"
       [[ -n "$d" ]] || die "--exclude-dir requires a value"
       exclude_dirs+=("$d")
       ;;
@@ -152,6 +146,7 @@ fi
 if ! repo_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
   die "git repo not found. Run from repo root."
 fi
+REPO_ROOT="$repo_root"
 
 if [[ "$(pwd -P)" != "$repo_root" ]]; then
   die "Run from repo root: $repo_root"

@@ -166,7 +166,7 @@ When reporting, include:
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-02-18-a748e585.md
+archives/surfaces/PoW-2026-02-19-fe8df16e.md
 
 
 ## README.md
@@ -180,11 +180,11 @@ See PoT.md Section 1 for the developer guide.
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-02-18-a748e585.md
+archives/surfaces/SoP-2026-02-19-fe8df16e.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0072-a748e585.md
+archives/surfaces/TASK-DP-OPS-0076-fe8df16e.md
 
 
 ## docs/INDEX.md
@@ -206,6 +206,9 @@ archives/surfaces/TASK-DP-OPS-0072-a748e585.md
 * [../opt/_factory/INDEX.md](../opt/_factory/INDEX.md) — Curated library of operator guides.
 * [MAP.md](MAP.md) — Continuity wayfinding for cross-session state.
 * [CONTEXT.md](CONTEXT.md) — Definition of required context artifacts.
+* [ops/specs/definitions/agents.md](ops/specs/definitions/agents.md) — Agent candidate and promotion head-chain specification.
+* [ops/specs/definitions/tasks.md](ops/specs/definitions/tasks.md) — Task candidate and promotion head-chain specification.
+* [ops/specs/definitions/skills.md](ops/specs/definitions/skills.md) — Skill candidate and promotion head-chain specification.
 
 
 ## docs/MAP.md

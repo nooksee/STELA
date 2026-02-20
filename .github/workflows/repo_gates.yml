@@ -47,6 +47,18 @@ jobs:
       - name: Truth lint (authored surfaces)
         run: bash tools/lint/truth.sh
 
+      - name: Enforce schema integrity on surface leaves
+        run: bash tools/lint/schema.sh
+
+      - name: Enforce Linguistic Precision mandate
+        run: bash tools/lint/style.sh
+
+      - name: Context lint
+        run: bash tools/lint/context.sh
+
+      - name: Agent lint
+        run: bash tools/lint/agent.sh
+
       # NEW: Enforce Factory Registry
       - name: Factory Guard
         run: bash tools/lint/factory.sh

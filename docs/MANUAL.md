@@ -70,10 +70,15 @@ Do not hand-edit `llms.txt`, `llms-core.txt`, or `llms-full.txt`; regenerate wit
 ./ops/bin/map
 ./ops/bin/llms --out-dir="$(pwd)"
 ~~~
+Compile snapshot policy:
+- `ops/bin/compile` is an archiving event; each successful run emits a new immutable leaf under `archives/manifests/`.
+- Treat new `archives/manifests/compile-*.md` leaves as audit artifacts and include them in branch closeout commits.
+- Allowlist policy entries may use wildcard paths (for example `archives/manifests/compile-*.md`) to cover generated compile leaves.
 
 5. Log
 Prepare SoP/PoW ledger updates before running certify so the emitted leaf snapshots capture the intended entry content.
 After certify, treat `PoW.md`, `SoP.md`, and `TASK.md` as pointer heads; do not manually edit pointer lines or emitted `archives/surfaces/*` leaves.
+If operator authorization expands scope beyond the original DP boundaries, record that authorization explicitly in SoP and PoW entry content and mirror it in the Closing Block sidecar.
 PoW contract and schema guidance are canonical in `docs/ops/specs/surfaces/pow.md`; author PoW entry content to that spec before certification snapshotting.
 PoW entry receipt pointers must include `RESULTS`, `OPEN`, and `DUMP` artifact paths.
 PoW entry `Notes` must record both positive proof and negative proof context (failed checks, ruled-out hypotheses, and abandoned attempts) when they materially affected execution.
