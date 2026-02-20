@@ -120,7 +120,7 @@ Notes:
 ### 3.2.2 DP-scoped load order (per DP)
 1. docs/ops/registry/BINARIES.md
 2. docs/ops/registry/LINT.md
-3. .github/workflows/repo_gates.yml
+3. .github/workflows/gates.yml
 4. ops/bin/template
 5. docs/ops/specs/binaries/template.md
 6. tools/verify.sh
@@ -138,7 +138,7 @@ Implement System Locked Protocol template-based certification by adding a strict
 In scope:
 - Create `ops/src/surfaces/results.md.tpl` and register it in `ops/bin/template`.
 - Implement `ops/bin/certify`, `tools/lint/integrity.sh`, and `tools/lint/results.sh` with specs and registry wiring.
-- Update governance/workflow surfaces (`PoT.md`, `docs/MANUAL.md`, `.github/workflows/repo_gates.yml`) for certification-driven closeout.
+- Update governance/workflow surfaces (`PoT.md`, `docs/MANUAL.md`, `.github/workflows/gates.yml`) for certification-driven closeout.
 - Regenerate `docs/MAP.md` and `llms` bundles after canonical updates.
 
 Out of scope:
@@ -199,7 +199,7 @@ UPDATE:
 - PoW.md
 - TASK.md
 - docs/MANUAL.md
-- .github/workflows/repo_gates.yml
+- .github/workflows/gates.yml
 - ops/bin/template
 - docs/ops/specs/binaries/template.md
 - docs/ops/registry/BINARIES.md

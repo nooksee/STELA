@@ -24,4 +24,4 @@ Authoritative registry for `tools/lint/*` executables.
 - Shadow-enforcement evaluation against `tools/test/agent.sh` is not complete for deferred-gate use.
   - `tools/lint/context.sh` gap: `tools/test/agent.sh` does not validate context-manifest completeness, context-hazard exclusions, or contamination scanning.
   - `tools/lint/agent.sh` gap: `tools/test/agent.sh` covers pointer/toolchain reachability only and does not enforce full registry duplicate checks, provenance field requirements, hazard-pattern bans, and strict section-content checks.
-  - Decision: do not defer these gates; include `tools/lint/context.sh` and `tools/lint/agent.sh` in `.github/workflows/repo_gates.yml` for this DP.
+  - Decision: do not defer these gates; include `tools/lint/context.sh` and `tools/lint/agent.sh` in `.github/workflows/gates.yml` for this DP.

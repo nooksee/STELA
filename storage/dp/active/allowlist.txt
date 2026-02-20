@@ -95,7 +95,7 @@ ops/lib/scripts/ledger.sh
 ops/bin/draft
 ops/bin/template
 ops/bin/dump
-.github/workflows/repo_gates.yml
+.github/workflows/gates.yml
 llms.txt
 llms-core.txt
 llms-full.txt
