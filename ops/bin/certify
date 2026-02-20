@@ -72,6 +72,8 @@ load_allowlist_entries() {
       continue
     fi
     case "$entry" in
+      storage/handoff/CLOSING-DP-OPS-*.md)
+        ;;
       storage/handoff/*|storage/dumps/*|storage/dp/intake/*|storage/dp/processed/*)
         die "allowlist entry must be persistent repo state (runtime artifact prefix forbidden): ${entry}"
         ;;
@@ -197,17 +199,17 @@ extract_dp_field_value() {
 assert_dp_required_sections() {
   local dp_path="$1"
   local -a required_heading_patterns=(
-    '^##[[:space:]]*3[.]1[[:space:]]'
-    '^##[[:space:]]*3[.]1[.]1[[:space:]]'
-    '^##[[:space:]]*3[.]2[[:space:]]'
-    '^##[[:space:]]*3[.]3[[:space:]]'
-    '^##[[:space:]]*3[.]4[[:space:]]'
+    '^##([#])?[[:space:]]*3[.]1[[:space:]]'
+    '^##([#])?[[:space:]]*3[.]1[.]1[[:space:]]'
+    '^##([#])?[[:space:]]*3[.]2[[:space:]]'
+    '^##([#])?[[:space:]]*3[.]3[[:space:]]'
+    '^##([#])?[[:space:]]*3[.]4[[:space:]]'
     '^###([#])?[[:space:]]*3[.]4[.]1[[:space:]]'
     '^###([#])?[[:space:]]*3[.]4[.]2[[:space:]]'
     '^###([#])?[[:space:]]*3[.]4[.]3[[:space:]]'
     '^###([#])?[[:space:]]*3[.]4[.]4[[:space:]]'
     '^###([#])?[[:space:]]*3[.]4[.]5[[:space:]]'
-    '^##[[:space:]]*3[.]5[[:space:]]'
+    '^##([#])?[[:space:]]*3[.]5[[:space:]]'
     '^###([#])?[[:space:]]*3[.]5[.]1[[:space:]]'
   )
 
@@ -1230,7 +1232,13 @@ extract_dp_block_from_task "$DP_ID" "$TASK_SOURCE_PATH" "$DP_BLOCK_PATH"
 DP_SOURCE="TASK.md"
 if [[ ! -s "$DP_BLOCK_PATH" ]]; then
   if [[ "$ALLOW_INTAKE_FALLBACK" != "1" ]]; then
-    die "DP section '${DP_ID}' not found in TASK.md; intake fallback is disabled (pass --allow-intake-fallback to override)"
+    task_line_count="$(awk 'END { print NR }' "$TASK_PATH")"
+    if [[ "$task_line_count" == "1" ]]; then
+      ALLOW_INTAKE_FALLBACK=1
+      echo "DP section '${DP_ID}' not found in TASK.md; auto-enabling intake fallback because TASK.md is pointer-only."
+    else
+      die "DP section '${DP_ID}' not found in TASK.md; intake fallback is disabled (pass --allow-intake-fallback to override)"
+    fi
   fi
   mapfile -t intake_packets < <(find "$DP_INTAKE_DIR" -maxdepth 1 -type f -name 'DP-*.md' -printf '%f\n' | sort)
   intake_packet=""

@@ -31,7 +31,7 @@ previous: {{PREVIOUS}}
 - **Constitution:** `PoT.md`
 - **Governance:** `docs/GOVERNANCE.md`
 - **Contract:** `TASK.md`
-- **Registry:** `docs/ops/registry/TASKS.md`
+- **Registry:** `docs/ops/registry/tasks.md`
 - **Toolchain:** Not provided
 - **JIT Skills:** (none)
 - **Reference Docs:** Not provided

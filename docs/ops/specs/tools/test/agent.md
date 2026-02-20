@@ -28,6 +28,6 @@ Run pointer-integrity tests for canon agent files, including authorized toolchai
 - Drift injection path `ops/bin/DRIFT-INJECTION` must not exist; existence is treated as failure.
 
 ## Related pointers
-- Registry entry: `docs/ops/registry/TEST.md` (`TEST-01`).
+- Registry entry: `docs/ops/registry/test.md` (`TEST-01`).
 - Agent lint companion: `tools/lint/agent.sh`.
-- Agent registry: `docs/ops/registry/AGENTS.md`.
+- Agent registry: `docs/ops/registry/agents.md`.

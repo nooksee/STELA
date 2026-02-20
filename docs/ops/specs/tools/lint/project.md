@@ -15,9 +15,9 @@ Validate project `STELA.md` pointers so project surfaces reference only register
 - `git` for repository root detection.
 - `rg` for token extraction.
 - Registries:
-  - `docs/ops/registry/AGENTS.md`
-  - `docs/ops/registry/SKILLS.md`
-  - `docs/ops/registry/TASKS.md`
+  - `docs/ops/registry/agents.md`
+  - `docs/ops/registry/skills.md`
+  - `docs/ops/registry/tasks.md`
 - Project contracts discovered at `projects/*/STELA.md` (search depth 2).
 
 ## Outputs
@@ -33,6 +33,6 @@ Validate project `STELA.md` pointers so project surfaces reference only register
 - Missing `git` or `rg` dependencies are hard failures.
 
 ## Related pointers
-- Registry entry: `docs/ops/registry/LINT.md` (`LINT-06`).
+- Registry entry: `docs/ops/registry/lint.md` (`LINT-06`).
 - Project contract surface: `projects/*/STELA.md`.
 - Project helper library: `ops/lib/scripts/project.sh`.

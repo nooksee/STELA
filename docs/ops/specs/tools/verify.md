@@ -36,5 +36,5 @@ Pointer validity rules:
 - Non-origin pointers must resolve to existing files under `archives/definitions/`.
 
 ## Related pointers
-- Registry entry: `docs/ops/registry/TOOLS.md`.
+- Registry entry: `docs/ops/registry/tools.md`.
 - Adjacent structural gate: `tools/lint/factory.sh`.

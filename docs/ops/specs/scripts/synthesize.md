@@ -1,66 +1,33 @@
-# Technical Specification: ops/lib/scripts/synthesize.sh
+<!-- SPEC-SURFACE:REQUIRED -->
+# Technical Specification
 
-## Constitutional Anchor
-`ops/lib/scripts/synthesize.sh` is the One Truth context engine defined by PoT filing doctrine and context hazard policy.
-It is the runtime boundary between manifest intent and emitted context bundles.
-It enforces that global context cannot include `opt/_factory/agents`, `opt/_factory/tasks`, or `opt/_factory/skills`.
-
-## Operator Contract
-- Invocation:
-  - `ops/lib/scripts/synthesize.sh [--manifest=PATH] [--mode=stream|list]`
-  - `ops/lib/scripts/synthesize.sh --list` (alias for `--mode=list`)
-- Defaults:
-  - Manifest: `ops/lib/manifests/OPS.md`
-  - Mode: `stream`
-- Inputs:
-  - Manifest markdown entries enclosed in backticks.
-  - Optional nested includes via `@manifest:<path>` backtick tokens.
-  - Compiled manifests must contain explicit file paths only; runtime glob entries are rejected.
-- Outputs:
-  - `list` mode prints resolved relative file paths, one per line.
-  - `stream` mode prints `## <path>` headers followed by file contents.
-  - For `SoP.md`, stream output is truncated to the newest entries by `SYNTHESIZE_SOP_LIMIT` (default `10`).
-- Exit behavior:
-  - `0` on success.
-  - `1` on validation, parsing, hazard, or emission failure.
-  - `0` for `-h` and `--help`.
-- Mutation policy:
-  - No file writes.
-  - No tracked file mutation.
-
-## Failure States and Drift Triggers
-- Unknown argument.
-- Missing or empty manifest path.
-- Manifest file missing.
-- Manifest entry path missing.
-- Manifest entry contains a glob pattern at runtime.
-- Recursive manifest resolution yields zero files.
-- Context hazard hit against blacklisted paths.
-- Resolved stream file disappears before emit.
-These are hard failures because they indicate context drift, policy breach, or stale pointers.
+## First Principles Rationale
+`ops/lib/scripts/synthesize.sh` is the context assembly boundary that enforces PoT.md Section 1.2 SSOT and context-hazard doctrine for worker-facing bundles. `ops/bin/context` and `ops/bin/llms` depend on this script so manifest intent, include resolution, and emitted context bytes stay deterministic and auditable.
 
 ## Mechanics and Sequencing
-1. Resolve repository root from `PROJECT_REPO_ROOT` or script-relative path.
-2. Parse CLI args and choose manifest plus mode.
-3. Resolve manifest recursively:
-- Extract every backticked token.
-- Follow `@manifest:` includes depth-first.
-- Reject any token containing glob syntax (`*`, `?`, `[`).
-- Keep first-seen insertion order and de-duplicate with associative sets.
-4. Enforce context hazards against the blacklist before any output.
+1. Parse CLI arguments:
+   - `--manifest=PATH` selects source manifest (default `ops/lib/manifests/OPS.md`).
+   - `--mode=stream|list` or `--list` selects output form.
+2. Resolve manifest path relative to repo root and fail when file is missing or empty.
+3. Resolve manifest content recursively:
+   - Extract backticked tokens.
+   - Follow `@manifest:<path>` includes depth-first.
+   - Reject runtime glob tokens (`*`, `?`, `[`).
+   - Keep first-seen path order and de-duplicate repeated entries.
+4. Enforce hazard blacklist before emission, blocking references to skill/task/agent canon paths.
 5. Emit output:
-- `list`: resolved paths only.
-- `stream`: path header, then body.
-- Strip TOC sections from each file.
-- Apply redaction filters for common secret token patterns.
-- Apply SoP head truncation before TOC/redaction when the file is `SoP.md`.
-6. Return non-zero immediately on any failed invariant.
+   - `list`: resolved paths only.
+   - `stream`: `## <path>` header plus file body.
+   - Strip TOC sections.
+   - Redact common credential signatures.
+   - For `SoP.md`, emit only the newest heading block range controlled by `SYNTHESIZE_SOP_LIMIT` (default `10`) before TOC stripping and redaction.
+6. Fail fast on unknown args, unresolved members, empty resolution sets, hazard hits, or missing files at emit time.
 
-Determinism and receipt surfaces:
-- Output ordering is deterministic relative to compiled manifest token order and include order because insertion order is preserved.
-- De-duplication is deterministic because only the first sighting of a path is kept.
-- Primary receipt consumers are `ops/bin/context`, `ops/bin/llms`, and dump artifacts that capture synthesized output.
+## Anecdotal Anchor
+SoP entry `2026-02-14 19:29:25 UTC — DP-OPS-0064 Phase 2 Structural Restructuring` records deterministic manifest compilation and context-surface hardening across synthesis consumers. That entry represents the same operational failure class this script prevents: stale or incomplete manifest synthesis fed outdated layer state into worker prompts and produced context drift.
 
-## Forensic Insight
-Synthesis centralizes context assembly into one auditable parser and one hazard gate.
-When drift occurs, failure messages identify the exact broken pointer class (manifest missing, entry missing, empty glob, hazard path) so operators can repair canon rather than shipping guessed context.
+## Integrity Filter Warnings
+- Manifest include cycles are suppressed through a seen-manifest set and do not emit explicit cycle diagnostics, which can hide accidental recursive include topology.
+- Hazard blacklist entries are literal path prefixes; unlisted aliases or path-shape variants can bypass intent if manifests are malformed.
+- Missing manifest members are hard failures; no soft-degradation path exists for partial context emission.
+- SoP truncation intentionally drops older entries, which can omit forensic context unless callers raise `SYNTHESIZE_SOP_LIMIT`.

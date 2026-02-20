@@ -9,7 +9,7 @@ This specification governs candidate and promotion pointer heads, emission requi
 1. `candidate:` latest candidate leaf pointer, or origin sentinel.
 2. `promotion:` latest promotion leaf pointer, or origin sentinel.
 3. `spec:` this specification path.
-4. `registry:` `docs/ops/registry/TASKS.md`.
+4. `registry:` `docs/ops/registry/tasks.md`.
 
 Allowed head values:
 - Origin sentinel: `archives/definitions/task-candidate-(origin)` and `archives/definitions/task-promotion-(origin)`.
@@ -28,7 +28,7 @@ Allowed head values:
   - Rewrite `candidate:` to the new leaf path.
 - Promotion emission (`ops/lib/scripts/task.sh promote`):
   - Promote canon task file under `opt/_factory/tasks/`.
-  - Upsert `docs/ops/registry/TASKS.md`.
+  - Upsert `docs/ops/registry/tasks.md`.
   - Emit promotion leaf under `archives/definitions/`.
   - Rewrite `promotion:` to the new leaf path.
 

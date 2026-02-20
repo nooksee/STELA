@@ -24,6 +24,20 @@ forbidden_legacy_phrases=(
   "Living Work Log"
 )
 
+# 1.2 Forbidden Legacy Registry Path Casing (Hard Fail)
+forbidden_legacy_registry_paths=(
+  "docs/ops/registry/AGENTS.md"
+  "docs/ops/registry/BINARIES.md"
+  "docs/ops/registry/LINT.md"
+  "docs/ops/registry/PROJECTS.md"
+  "docs/ops/registry/PROMPTS.md"
+  "docs/ops/registry/SCRIPTS.md"
+  "docs/ops/registry/SKILLS.md"
+  "docs/ops/registry/TASKS.md"
+  "docs/ops/registry/TEST.md"
+  "docs/ops/registry/TOOLS.md"
+)
+
 # 2. Scope Definition (Expanded)
 # We now scan ops/ and the root Canon files, which were previously ignored.
 scan_dirs=(
@@ -113,6 +127,14 @@ for phrase in "${forbidden_legacy_phrases[@]}"; do
   matches="$(grep -nH -I -F "${phrase}" "${files[@]}" 2>/dev/null || true)"
   if [[ -n "$matches" ]]; then
     fail "Forbidden legacy phrase found: '${phrase}'" "$matches"
+  fi
+done
+
+echo "Scanning for legacy registry path casing..."
+for path_token in "${forbidden_legacy_registry_paths[@]}"; do
+  matches="$(grep -nH -I -F "${path_token}" "${files[@]}" 2>/dev/null || true)"
+  if [[ -n "$matches" ]]; then
+    fail "Forbidden legacy registry path case found: '${path_token}'" "$matches"
   fi
 done
 

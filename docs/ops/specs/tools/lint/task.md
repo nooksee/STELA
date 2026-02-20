@@ -15,7 +15,7 @@ It protects both the root TASK dashboard schema and the task-definitions registr
 - Inputs:
   - `TASK.md` by default or provided TASK path.
   - `opt/_factory/tasks/*.md`.
-  - `docs/ops/registry/TASKS.md`.
+  - `docs/ops/registry/tasks.md`.
 
 Coverage domains:
 - TASK dashboard schema and heading order.

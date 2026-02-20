@@ -9,7 +9,7 @@ This specification is authoritative for candidate and promotion pointer heads, e
 1. `candidate:` latest candidate leaf pointer, or origin sentinel.
 2. `promotion:` latest promotion leaf pointer, or origin sentinel.
 3. `spec:` this specification path.
-4. `registry:` `docs/ops/registry/AGENTS.md`.
+4. `registry:` `docs/ops/registry/agents.md`.
 
 Allowed head values:
 - Origin sentinel: `archives/definitions/agent-candidate-(origin)` and `archives/definitions/agent-promotion-(origin)`.
@@ -22,7 +22,7 @@ Allowed head values:
   - Rewrite `candidate:` to the new leaf path.
 - Promotion emission (`ops/lib/scripts/agent.sh promote`):
   - Promote canon agent file under `opt/_factory/agents/`.
-  - Update `docs/ops/registry/AGENTS.md`.
+  - Update `docs/ops/registry/agents.md`.
   - Emit promotion leaf under `archives/definitions/`.
   - Rewrite `promotion:` to the new leaf path.
 

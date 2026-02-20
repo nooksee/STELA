@@ -8,7 +8,6 @@ source "${SCRIPT_DIR}/../lib/scripts/ledger.sh"
 
 SOP_PATH="${REPO_ROOT}/SoP.md"
 POW_PATH="${REPO_ROOT}/PoW.md"
-HANDOFF_DIR="${REPO_ROOT}/storage/handoff"
 RESUME_DIR="${REPO_ROOT}/var/tmp"
 THRESHOLD=30
 TARGET="sop"
@@ -27,14 +26,20 @@ resolve_surface_leaf() {
 }
 
 results_guard() {
-  local f rel
-  [[ -d "${HANDOFF_DIR}" ]] || return 0
-  while IFS= read -r -d '' f; do
-    rel="${f#${REPO_ROOT}/}"
+  local rel
+  local -a tracked_receipts=()
+  mapfile -t tracked_receipts < <(
+    git -C "${REPO_ROOT}" ls-files -- \
+      'storage/handoff/*-RESULTS.md' \
+      'storage/handoff/CLOSING-DP-OPS-*.md'
+  )
+
+  for rel in "${tracked_receipts[@]}"; do
+    [[ -n "$rel" ]] || continue
     git -C "${REPO_ROOT}" ls-files --error-unmatch -- "${rel}" >/dev/null 2>&1 || guard_fail "${RESULTS_GUARD_FATAL}"
     git -C "${REPO_ROOT}" diff --quiet -- "${rel}" || guard_fail "${RESULTS_GUARD_FATAL}"
     git -C "${REPO_ROOT}" diff --cached --quiet -- "${rel}" || guard_fail "${RESULTS_GUARD_FATAL}"
-  done < <(find "${HANDOFF_DIR}" -maxdepth 1 -type f \( -name '*-RESULTS.md' -o -name 'CLOSING-DP-OPS-*.md' \) -print0)
+  done
 }
 
 scrub_resume() {

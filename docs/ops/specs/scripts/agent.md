@@ -1,42 +1,43 @@
-# Technical Specification: ops/lib/scripts/agent.sh
+<!-- SPEC-SURFACE:REQUIRED -->
+# Technical Specification
 
-## Purpose
-Manage agent candidate harvesting, promotion, and guardrail checks while advancing factory pointer heads.
+## First Principles Rationale
+`ops/lib/scripts/agent.sh` enforces a single lifecycle path for agent definitions so role creation, validation, and promotion stay aligned with PoT.md Section 4.1 staffing boundaries and Section 1.2 SSOT drift controls. The script exists to prevent direct edits to agent definitions and registries that bypass lint gates, pointer ledgers, and provenance metadata.
 
-## Invocation
-- Command forms:
-  - `ops/lib/scripts/agent.sh harvest --name "..." --dp "DP-OPS-XXXX" [--specialization "..."] [--summary "..."] [--skill S-LEARN-01] [--skills S-LEARN-01,S-LEARN-02] [--open PATH] [--dump PATH] [--objective "..."]`
-  - `ops/lib/scripts/agent.sh harvest-check`
-  - `ops/lib/scripts/agent.sh promote <draft_path> [--delete-draft]`
-  - `ops/lib/scripts/agent.sh check`
-- Required flags:
-  - `harvest` requires `--name`.
-  - `harvest` requires DP provenance via `--dp` or `STELA_PACKET_ID`.
-- Exit behavior:
-  - `0` on success.
-  - Non-zero on missing inputs, validation failures, or pointer-head rewrite errors.
+## Mechanics and Sequencing
+1. Entry dispatch:
+   - `harvest`: create candidate agent leaf.
+   - `harvest-check`: print Pattern Density clusters from recent SoP history.
+   - `promote`: validate candidate and materialize canonical agent.
+   - `check`: run guardrail checks on existing agent canon.
+2. `harvest` sequence:
+   - Require `--name` and `--dp`.
+   - Resolve OPEN and dump paths from most recent artifacts unless explicit `--open` or `--dump` is provided.
+   - Derive objective from `TASK.md` when omitted.
+   - Build provenance block through `heuristics.sh`.
+   - Resolve `packet_id` and `trace_id`, read current `candidate:` pointer, compute `previous`, and derive candidate leaf path.
+   - Normalize `--skill` and `--skills` values into canonical `opt/_factory/skills/S-LEARN-XX.md` pointers.
+   - Render `ops/src/definitions/agent.md.tpl` through `ops/bin/template`, redact output, write archive leaf, and rewrite `candidate:` pointer in `opt/_factory/AGENTS.md`.
+3. `harvest-check` sequence:
+   - Read recent SoP entries.
+   - Extract verification-tool and pointer tokens per entry.
+   - Cluster by tool/pointer sets and require at least three distinct DPs per cluster.
+   - Propose name and specialization strings, then run semantic collision checks against existing/draft agents.
+4. `promote` sequence:
+   - Resolve draft path explicitly or by latest timestamp.
+   - Enforce draft schema sections, required pointers, non-placeholder specialization, and valid DP-ID.
+   - Apply `context_hazard_check` and `pot_duplication_linter`.
+   - Allocate next `R-AGENT-XX` identifier from canon files plus registry state.
+   - Rewrite draft into promoted agent form (header rewrite, `Context Sources` strip), write canonical file, insert registry row, emit promotion leaf, and rewrite `promotion:` pointer.
+5. `check` sequence:
+   - Verify each canonical agent includes `## Scope Boundary`.
+   - Reject any agent that points into agent-definition directories, which would create recursive context hazards.
 
-## Inputs
-- `opt/_factory/AGENTS.md` pointer head.
-- `docs/ops/registry/AGENTS.md` registry table.
-- `ops/src/definitions/agent.md.tpl` definition template.
-- `TASK.md`, `SoP.md`, and `ops/lib/manifests/CONTEXT.md`.
+## Anecdotal Anchor
+SoP entry `2026-02-10 16:52:29 UTC — DP-OPS-0042 Agent System Certification and Harvester Hardening` documents a recertification pass that synchronized registry state and hardened the harvester for Pattern Density role emergence. That historical remediation reflects the same drift pattern this script now blocks: manual lifecycle edits produced role and registry skew before promotion and validation logic was centralized.
 
-## Outputs
-- `harvest` emits candidate leaf at `archives/definitions/agent-candidate-YYYY-MM-DD-<suffix>.md` and rewrites `candidate:` in `opt/_factory/AGENTS.md`.
-- `promote` writes canonical agent file in `opt/_factory/agents/`, updates `docs/ops/registry/AGENTS.md`, emits promotion leaf at `archives/definitions/agent-promotion-YYYY-MM-DD-<suffix>.md`, and rewrites `promotion:` in `opt/_factory/AGENTS.md`.
-- `harvest-check` prints Pattern Density clusters.
-- `check` prints scope-boundary and context-hazard results.
-
-## Invariants and failure modes
-- Candidate and promotion leaves always include unified schema front-matter keys: `trace_id`, `packet_id`, `created_at`, `previous`.
-- `previous` is `(none)` when prior head value ends with `-(origin)`; otherwise it is the prior head pointer path.
-- `trace_id` uses `STELA_TRACE_ID` when provided and falls back to local generation.
-- `packet_id` uses `STELA_PACKET_ID` when provided and falls back to DP input.
-- Promotion enforces draft validation, context hazard checks, and PoT duplication linting before writes.
-- Pointer-head rewrite is a hard gate; missing `candidate:` or `promotion:` lines fail the command.
-
-## Related pointers
-- Factory head spec: `docs/ops/specs/definitions/agents.md`.
-- Registry entry: `docs/ops/registry/SCRIPTS.md` (`SCRIPT-01`).
-- Agent registry: `docs/ops/registry/AGENTS.md`.
+## Integrity Filter Warnings
+- Concurrent `promote` executions can race on `next_agent_id` and registry insertion because no lock file is used.
+- Promotion has no rollback transaction; if failure occurs after canonical agent write but before leaf or pointer rewrite, partial state remains.
+- Auto-selection of OPEN and dump artifacts fails hard when multiple files share identical newest timestamps.
+- `context_hazard_check` only enforces run-length limits for list items outside selected sections; semantic quality of those lists remains caller-dependent.

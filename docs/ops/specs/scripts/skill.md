@@ -1,38 +1,30 @@
-# Technical Specification: ops/lib/scripts/skill.sh
+<!-- SPEC-SURFACE:REQUIRED -->
+# Technical Specification
 
-## Purpose
-Manage skill candidate harvesting, promotion, and context hazard checks while advancing factory pointer heads.
+## First Principles Rationale
+`ops/lib/scripts/skill.sh` enforces a canonical skill lifecycle so reusable guidance enters canon through one promotion gate with provenance and pointer-head continuity. This protects PoT.md Section 1.2 Reuse-first and Drift axioms by preventing unsupervised edits to skill files and registry rows.
 
-## Invocation
-- Command forms:
-  - `ops/lib/scripts/skill.sh harvest [--name "..."] [--context "..."] [--solution "..."] [--context-stdin | --solution-stdin] [--force]`
-  - `ops/lib/scripts/skill.sh promote <draft_path> [--delete-draft]`
-  - `ops/lib/scripts/skill.sh check`
-  - Legacy positional alias: `ops/lib/scripts/skill.sh "name" "context" "solution"`.
-- Exit behavior:
-  - `0` on success.
-  - Non-zero on collisions, validation failures, pointer rewrite failures, or registry update failures.
+## Mechanics and Sequencing
+1. Entry dispatch accepts four routes: `harvest`, `promote`, `check`, and a legacy three-positional alias that forwards into `harvest`.
+2. `harvest` sequence:
+   - Collect explicit flags, optional stdin blocks, and optional `--force`.
+   - Derive default name/context from hot-zone and high-churn heuristics when fields are omitted.
+   - Insert placeholder `REPLACE_SOLUTION` when no solution is provided and print a warning.
+   - Run semantic-collision checks against canonical skills and draft leaves; block unless `--force` is present.
+   - Resolve packet and trace metadata, render template slots through `ops/bin/template`, redact output, write candidate leaf, and rewrite `candidate:` pointer in `opt/_factory/SKILLS.md`.
+3. `promote` sequence:
+   - Resolve draft path explicitly or via newest draft selection.
+   - Validate header, required sections, non-placeholder fields, and context hazard constraints.
+   - Allocate next `S-LEARN-XX` identifier from canon files and registry rows.
+   - Materialize promoted skill content (header rewrite plus pointer section injection when absent), write canonical skill file, insert registry row, emit promotion leaf, and rewrite `promotion:` pointer.
+4. `check` enforces Skills Context Hazard by rejecting skill references in `ops/lib/manifests/CONTEXT.md`.
+5. Optional `--delete-draft` on promotion removes the candidate leaf after successful promotion.
 
-## Inputs
-- `opt/_factory/SKILLS.md` pointer head.
-- `docs/ops/registry/SKILLS.md` registry table.
-- `ops/src/definitions/skill.md.tpl` definition template.
-- `TASK.md` and `ops/lib/manifests/CONTEXT.md`.
+## Anecdotal Anchor
+SoP entry `2026-02-10 15:03:09 UTC — DP-OPS-0041 Skills System Overhaul` records a subsystem recertification that realigned S-LEARN files, registry rows, and enforcement tooling. That remediation maps directly to the failure class this script now blocks: manual skill edits caused canon and registry divergence before lifecycle gating was tightened.
 
-## Outputs
-- `harvest` emits candidate leaf at `archives/definitions/skill-candidate-YYYY-MM-DD-<suffix>.md` and rewrites `candidate:` in `opt/_factory/SKILLS.md`.
-- `promote` writes canonical skill file in `opt/_factory/skills/`, updates `docs/ops/registry/SKILLS.md`, emits promotion leaf at `archives/definitions/skill-promotion-YYYY-MM-DD-<suffix>.md`, and rewrites `promotion:` in `opt/_factory/SKILLS.md`.
-- `check` enforces the Skills Context Hazard rule.
-
-## Invariants and failure modes
-- Candidate and promotion leaves always include unified schema front-matter keys: `trace_id`, `packet_id`, `created_at`, `previous`.
-- `previous` is `(none)` when prior head value ends with `-(origin)`; otherwise it is the prior head pointer path.
-- `trace_id` uses `STELA_TRACE_ID` when provided and falls back to local generation.
-- `packet_id` uses `STELA_PACKET_ID` when provided and falls back to current DP detection from `TASK.md`.
-- Promotion validates required draft sections and placeholder guards before writes.
-- Legacy positional invocation routes through harvest behavior and does not append packet logs into `opt/_factory/SKILLS.md`.
-
-## Related pointers
-- Factory head spec: `docs/ops/specs/definitions/skills.md`.
-- Registry entry: `docs/ops/registry/SCRIPTS.md` (`SCRIPT-05`).
-- Skill registry: `docs/ops/registry/SKILLS.md`.
+## Integrity Filter Warnings
+- `--force` allows semantic-collision override and can introduce near-duplicate skill concepts.
+- Promotion has no rollback transaction; failure after canonical file write can leave registry or pointer state partially advanced.
+- Draft auto-selection fails when multiple draft files share identical newest timestamps.
+- Placeholder solution text can persist in candidate leaves until promotion-time validation rejects it.
