@@ -1,59 +1,14 @@
-# Technical Specification: ops/bin/open
+<!-- SPEC-SURFACE:REQUIRED -->
+# Technical Specification
 
-## Constitutional Anchor
-`ops/bin/open` is the session freshness checkpoint for dispatch.
-It binds operator intent to exact git state before work begins and preserves pointer-first governance for TASK and RESULTS workflows.
-
-## Operator Contract
-- Invocation:
-  - `./ops/bin/open [--format=chatgpt|gemini] [--intent="..."] [--dp="..."] [--out=auto] [--tag=<token>]`
-- Freshness Gate capture (mandatory every run):
-  - `git rev-parse --abbrev-ref HEAD`
-  - `git rev-parse --short HEAD`
-  - `git status --porcelain`
-- Trace identity:
-  - `STELA_TRACE_ID` is generated locally on every invocation (`UTC timestamp + hex suffix` format).
-  - The OPEN prompt includes `- STELA_TRACE_ID: <value>` so the value is persisted in `storage/handoff/OPEN-*.txt`.
-- Artifact outputs:
-  - `storage/handoff/OPEN-<tag>-<branch>-<short-hash>.txt`
-  - `storage/handoff/OPEN-PORCELAIN-<tag>-<branch>-<short-hash>.txt` (conditionally emitted only when porcelain is non-empty).
-- Required pointer checks:
-  - `PoT.md`, `SoP.md`, `PoW.md`, `TASK.md`, `docs/INDEX.md`, `docs/MANUAL.md`, `docs/MAP.md`, `ops/lib/manifests/CONTEXT.md`.
-- Mutation boundary:
-  - Read-only with respect to tracked repository files.
-  - Allowed writes are limited to OPEN artifacts in `storage/handoff/`.
-
-## Failure States and Drift Triggers
-- Unknown argument.
-- Missing required canon pointer files.
-- Git metadata unavailable.
-- Artifact path write failure.
-
-Freshness Gate rationale:
-- Porcelain capture is mandatory because branch and hash alone do not prove clean execution state.
-- Dirty-state porcelain lines preserve exact pre-work diffs for forensics and prevent hidden mutation claims.
+## First Principles Rationale
+`ops/bin/open` exists to establish a verifiable freshness checkpoint before packet execution. It prevents stale-state execution by binding intent, branch, hash, and porcelain status to a timestamped artifact, which supports PoT drift detection and traceable operator handoff.
 
 ## Mechanics and Sequencing
-1. Parse args and validate mode.
-2. Resolve branch and short HEAD.
-3. Generate `STELA_TRACE_ID` for this OPEN session.
-4. Always run porcelain capture.
-5. If porcelain is non-empty:
-- Mark session as dirty.
-- Save normalized porcelain lines to `OPEN-PORCELAIN-*` artifact.
-- Print full list when line count is within threshold; otherwise print preview.
-6. If porcelain is empty, suppress `OPEN-PORCELAIN-*` artifact emission and report suppression explicitly in OPEN output.
-7. Verify required canon files exist.
-8. Build and emit OPEN prompt content to stdout and OPEN artifact.
-9. If `--out=auto` is set, print artifact path as a terminal receipt line.
+The binary parses format, intent, DP label, output mode, and optional tag. It emits a new `STELA_TRACE_ID`, reads branch and short hash, and captures porcelain state on every run. If porcelain is non-empty it writes normalized porcelain lines to `storage/handoff/OPEN-PORCELAIN-...txt` and includes full or preview output in the prompt body based on line count threshold. It validates the required canon pointer files, builds an OPEN prompt document with freshness gate data and operational guidance, writes the prompt to `storage/handoff/OPEN-...txt`, mirrors prompt content to stdout, and prints `OPEN saved:` only when `--out=auto` is requested.
 
-Read-only contract details:
-- OPEN must not rewrite `TASK.md`, `PoT.md`, or any tracked canon/document surface.
-- OPEN is a generator, not a mutator.
-- Any tracked-file side effect is a contract violation and drift trigger.
-- The final `OPEN saved: ...` terminal receipt line remains outside the OPEN artifact body.
-- Downstream tools may resolve `STELA_TRACE_ID` from the latest OPEN artifact when the environment variable is absent.
+## Anecdotal Anchor
+The DP-OPS-0065 freshness gate formalization addressed prior runs where work started from stale local state with no serialized checkpoint. `ops/bin/open` enforces that checkpoint and adds porcelain evidence so clean-state assertions are testable.
 
-## Forensic Insight
-`ops/bin/open` creates a timestamped, hash-bound execution anchor.
-It is the bridge between declared intent and verifiable state, and porcelain capture closes the common forensic gap where unstaged local drift is omitted from receipts.
+## Integrity Filter Warnings
+`ops/bin/open` exits on unknown arguments, missing required canon files, or git command failures. It writes artifacts in `storage/handoff` and does not mutate tracked canon files. Dirty sessions produce a porcelain artifact; clean sessions suppress porcelain artifact creation by design.

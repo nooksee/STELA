@@ -2,13 +2,13 @@
 # Technical Specification
 
 ## First Principles Rationale
-Scaffold enforces a repeatable project directory baseline so each project starts from the same known filesystem contract and avoids manual setup inconsistency.
+`ops/bin/scaffold` exists to create a repeatable project filesystem baseline from one canonical scaffold spec. It prevents initialization drift where manual project setup introduces missing or misnamed directories.
 
 ## Mechanics and Sequencing
-Validate repository root and project-name format, ensure project path does not exist, read optional directory list from ops/lib/project/SCAFFOLD.md, create directories, and copy the scaffold spec into the project root.
+The binary enforces repo-root execution, requires exactly one project name argument, validates slug format with lowercase alphanumeric and hyphen rules, blocks execution if the target project directory already exists, and requires `ops/lib/project/SCAFFOLD.md` to exist. It creates `projects/<name>`, reads scaffold spec lines, creates directories for each line that matches the list pattern `- <dirname>/`, copies `ops/lib/project/SCAFFOLD.md` into the new project as `SCAFFOLD.md`, and prints the created project path.
 
 ## Anecdotal Anchor
-Ad hoc project bootstrapping historically produced missing or misnamed folders; scaffold exists to make provisioning deterministic and machine-auditable.
+In the DP-OPS-0078 project tooling fission period, ad hoc bootstrapping repeatedly produced directory contract mismatches that later blocked automation and review. `ops/bin/scaffold` was introduced to make initial project shape deterministic from one source.
 
 ## Integrity Filter Warnings
-The command exits on missing scaffold spec, invalid slug, non-root execution context, or preexisting project directory to prevent partial provisioning states.
+`ops/bin/scaffold` exits on invalid project names, non-root invocation, preexisting project paths, or missing scaffold spec file. It creates directories only for lines that match its list parser, so malformed scaffold spec lines are ignored rather than auto-corrected.
