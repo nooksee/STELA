@@ -23,7 +23,7 @@ case "$TEMPLATE_TYPE" in
   agent|task|skill)
     "${SCRIPT_DIR}/factory" "$@"
     ;;
-  dp|results|task-surface)
+  dp|results|task-surface|spec)
     "${SCRIPT_DIR}/manifest" "$@"
     ;;
   *)
