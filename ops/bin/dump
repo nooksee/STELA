@@ -412,6 +412,32 @@ emit_dump() {
   fi
   echo "Binary handling: $include_binary"
   echo "Max lines (text): $max_lines"
+  cat <<'ORIENTATION'
+===== DUMP ORIENTATION BEGIN =====
+What this file is:
+  A Stela repo dump is a structured snapshot of the repository produced by ops/bin/dump.
+  It is a session artifact: load it at the start of a session for full context; do not
+  commit it, cite it as a canonical source, or reference it in DP content.
+
+Structural zones:
+  1. Header   — lines before [INDEX]: branch, HEAD, scope, format, and generation metadata.
+  2. Index    — the [INDEX] block: a flat list of all files included in this dump.
+  3. File-content blocks — each file delimited by:
+       <<< FILE BEGIN: <path>
+       <file content>
+       >>> FILE END: <path>
+
+Binary file representation (meta mode):
+  Binary files are not inlined. Instead, a metadata block appears in place of file content,
+  showing file type, size, and path. The raw bytes are excluded from the dump payload.
+
+Integrator consumption guide:
+  - Read the Header block to verify branch and HEAD match your session state.
+  - Use the Index to navigate to specific files by path without scanning the full payload.
+  - Treat each FILE BEGIN/END block as the canonical source for that file's current content.
+  - Do not re-read the OPEN prompt from this dump; use the standalone OPEN artifact instead.
+===== DUMP ORIENTATION END =====
+ORIENTATION
   echo "===== DUMP PAYLOAD BEGIN ====="
   echo "[INDEX]"
   for path in "${files[@]}"; do

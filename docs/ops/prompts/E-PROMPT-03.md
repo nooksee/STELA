@@ -6,6 +6,7 @@ Attach: OPEN, OPEN-PORCELAIN, dump, dump manifest, plan.md.
 Rules:
 * Refresh state using attached OPEN and dump artifacts.
 * Follow constraints in `ops/lib/manifests/CONSTRAINTS.md` (Sections 1 & 2).
+* Contractor constraints: ops/lib/manifests/CONTRACTOR.md
 * Logic: `PoT.md`. Structure: `ops/src/surfaces/dp.md.tpl`.
 
 Steps:
@@ -28,9 +29,9 @@ Steps:
    * 3.4.2 Request: Translate plan into worker requirements
    * 3.4.3 Changelog: Explicit file list (UPDATE/NEW) per file
    * 3.4.4 Patch: Implementation steps; exact files; no invented paths
-   * 3.4.5 Receipt: Include baseline per template Section 3.4.5 + scope-specific verifications.
-     The verification command list in Section 3.4.5 is the deterministic input to
-     `ops/bin/certify` — author it completely and in correct execution order.
+   * 3.4.5 Receipt: Mandatory stub commands are template-injected and must not be re-authored
+     by the DP writer. Scope-specific receipt commands go in the `{{RECEIPT_EXTRA}}` slot only.
+     The Section 3.4.5 verification list is deterministic input to `ops/bin/certify`.
    * 3.5 Closeout: Closeout protocol + Mandatory Closing Block subsection. Closeout MUST
      include `ops/bin/certify --dp="<DP_ID>" --out=auto` as the RESULTS generation step,
      preceded by maintaining `storage/handoff/CLOSING-<DP_ID>.md`. Manual receipt assembly

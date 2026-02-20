@@ -20,7 +20,7 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="1273d667c56296af116d257aee5cc02b1c4a8302395d615ca7cf0b4d72de7912"
+CANONICAL_DP_TEMPLATE_SHA256="8dea4c2e3ea951835388d9267a93ee3b7d00e030e12f68365b99a1ab74fdb4b1"
 TEMPLATE_RENDER_BIN="ops/bin/template"
 ALLOWLIST_POINTER_PATH_DEFAULT="storage/dp/active/allowlist.txt"
 
@@ -501,13 +501,13 @@ normalize_dp_structure() {
     mode == "PLAN_PATCH" {
       if ($0 ~ /^### 3[.]4[.]5/) {
         print $0
-        emit("RECEIPT_COMMANDS")
-        mode="RECEIPT_COMMANDS"
+        emit("RECEIPT_EXTRA")
+        mode="RECEIPT_EXTRA"
       }
       next
     }
 
-    mode == "RECEIPT_COMMANDS" {
+    mode == "RECEIPT_EXTRA" {
       if ($0 ~ /^##[[:space:]]*3[.]5([.]|[[:space:]])/) {
         mode=""
         print $0
@@ -894,7 +894,7 @@ render_fixture_from_template() {
   local plan_request
   local plan_changelog
   local plan_patch
-  local receipt_commands
+  local receipt_extra
 
   dp_scoped_load_order='- tools/lint/dp.sh
 - docs/ops/specs/tools/lint/dp.md'
@@ -908,7 +908,7 @@ render_fixture_from_template() {
 - Added ops/src/surfaces/dp.md.tpl'
   plan_patch='- Implemented structure hashing
 - Added allowlist pointer integrity checks'
-  receipt_commands='- ./ops/bin/open --out=auto --dp="DP-OPS-0000"
+  receipt_extra='- ./ops/bin/open --out=auto --dp="DP-OPS-0000"
 - bash tools/lint/dp.sh TASK.md
 - git diff --name-only
 - git diff --stat'
@@ -953,8 +953,8 @@ render_fixture_from_template() {
       "{{PLAN_PATCH}}")
         printf '%s\n' "$plan_patch" >> "$out_path"
         ;;
-      "{{RECEIPT_COMMANDS}}")
-        printf '%s\n' "$receipt_commands" >> "$out_path"
+      "{{RECEIPT_EXTRA}}")
+        printf '%s\n' "$receipt_extra" >> "$out_path"
         ;;
       "- storage/dp/active/allowlist.txt")
         printf '%s\n' "- ${allowlist_pointer}" >> "$out_path"

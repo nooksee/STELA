@@ -283,11 +283,13 @@ check_task_dashboard() {
   done
 
   local canon_count
-  canon_count="$(grep -cE '^[[:space:]]*[0-9]+\.[[:space:]]' <<< "$canon_block" || true)"
+  local canon_numbered
+  canon_numbered="$(grep -E '^[[:space:]]*[0-9]+\.[[:space:]]' <<< "$canon_block" || true)"
+  canon_count="$(grep -cE '^[[:space:]]*[0-9]+\.[[:space:]]' <<< "$canon_numbered" || true)"
   if [[ "$canon_count" != "7" ]]; then
     fail "TASK canon load order must contain exactly seven numbered items"
   fi
-  if grep -nE '(tools/|ops/bin/|docs/ops/specs/)' <<< "$canon_block" >/dev/null; then
+  if grep -nE '(tools/|ops/bin/|docs/ops/specs/)' <<< "$canon_numbered" >/dev/null; then
     fail "TASK canon load order is bloated; tools/binaries belong in DP-scoped load order"
   fi
 
@@ -315,11 +317,20 @@ check_task_dashboard() {
 
   local receipt_block
   receipt_block="$(extract_block "$path" '^### 3[.]4[.]5' '^## 3[.]5([.]|[[:space:]])')"
-  if ! grep -Eq '\./ops/bin/open[[:space:]]+--out=auto[[:space:]]+--dp=' <<< "$receipt_block"; then
-    fail "TASK receipt contract missing executable OPEN command"
+  if ! grep -Fq 'bash tools/lint/dp.sh TASK.md' <<< "$receipt_block"; then
+    fail "TASK receipt contract missing dp lint command"
   fi
-  if ! grep -Eq '\./ops/bin/dump[[:space:]]+--scope=platform[[:space:]]+--format=chatgpt[[:space:]]+--out=auto[[:space:]]+--bundle' <<< "$receipt_block"; then
-    fail "TASK receipt contract missing executable DUMP command"
+  if ! grep -Fq 'bash tools/lint/task.sh' <<< "$receipt_block"; then
+    fail "TASK receipt contract missing task lint command"
+  fi
+  if ! grep -Fq 'bash tools/lint/integrity.sh' <<< "$receipt_block"; then
+    fail "TASK receipt contract missing integrity lint command"
+  fi
+  if ! grep -Fq 'bash tools/lint/style.sh' <<< "$receipt_block"; then
+    fail "TASK receipt contract missing style lint command"
+  fi
+  if ! grep -Fq './ops/bin/open' <<< "$receipt_block"; then
+    fail "TASK receipt contract missing executable OPEN command"
   fi
   if ! grep -Fq 'git diff --name-only' <<< "$receipt_block"; then
     fail "TASK receipt contract missing git diff --name-only proof"
@@ -327,16 +338,11 @@ check_task_dashboard() {
   if ! grep -Fq 'git diff --stat' <<< "$receipt_block"; then
     fail "TASK receipt contract missing git diff --stat proof"
   fi
-  if ! grep -Fq 'Verify Section 3.5 Closing Block is populated in RESULTS' <<< "$receipt_block"; then
-    fail "TASK receipt contract missing Section 3.5 Closing Block verification line"
+  if ! grep -Fq 'comm -23 <(git diff --name-only | sort) <(sort storage/dp/active/allowlist.txt) || true' <<< "$receipt_block"; then
+    fail "TASK receipt contract missing allowlist diff subset proof"
   fi
-  if ! grep -iq 'required pasted outputs' <<< "$receipt_block" \
-    && ! grep -iq 'paste outputs' <<< "$receipt_block"; then
-    fail "TASK receipt contract missing required pasted outputs clause"
-  fi
-  if ! grep -Fq 'Mandatory Closing Block required in RESULTS' <<< "$receipt_block" \
-    && ! grep -iq 'Mandatory Closing Block' <<< "$receipt_block"; then
-    fail "TASK receipt contract missing Mandatory Closing Block requirement"
+  if ! grep -Fq 'comm -23 <(git ls-files --others --exclude-standard | sort) <(sort storage/dp/active/allowlist.txt) || true' <<< "$receipt_block"; then
+    fail "TASK receipt contract missing untracked allowlist subset proof"
   fi
 
   if ! grep -nE '^###[[:space:]]*3\.5\.1[.)]?[[:space:]]*Mandatory[[:space:]]+Closing[[:space:]]+Block[[:space:]]*$' "$path" >/dev/null; then

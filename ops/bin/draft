@@ -30,7 +30,7 @@ Optional:
 - --plan-request="..."
 - --plan-changelog="..."
 - --plan-patch="..."
-- --receipt-commands="..."
+- --receipt-extra="..."
 
 slots-file format:
 [DP_SCOPED_LOAD_ORDER]
@@ -60,7 +60,7 @@ slots-file format:
 [PLAN_PATCH]
 - One or more lines
 
-[RECEIPT_COMMANDS]
+[RECEIPT_EXTRA]
 - One or more lines
 USAGE
 }
@@ -93,7 +93,71 @@ block_has_content() {
   [[ -n "$(printf '%s\n' "$value" | sed '/^[[:space:]]*$/d')" ]]
 }
 
+trim() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
+strip_surface_frontmatter() {
+  local source_path="$1"
+  awk '
+    BEGIN { in_frontmatter=0 }
+    NR == 1 && $0 == "---" {
+      in_frontmatter=1
+      next
+    }
+    in_frontmatter {
+      if ($0 == "---") {
+        in_frontmatter=0
+      }
+      next
+    }
+    { print }
+  ' "$source_path"
+}
+
+resolve_task_surface_source() {
+  local task_path="$1"
+  [[ -f "$task_path" ]] || die "missing TASK.md"
+
+  local line_count
+  line_count="$(awk 'END { print NR }' "$task_path")"
+  if [[ "$line_count" != "1" ]]; then
+    printf '%s' "$task_path"
+    return 0
+  fi
+
+  local pointer_path
+  pointer_path="$(trim "$(cat "$task_path")")"
+  pointer_path="${pointer_path#./}"
+  if [[ "$pointer_path" == "${REPO_ROOT}/"* ]]; then
+    pointer_path="${pointer_path#${REPO_ROOT}/}"
+  fi
+
+  if [[ ! "$pointer_path" =~ ^archives/surfaces/[A-Za-z0-9._/-]+\.md$ ]]; then
+    die "TASK.md is single-line but not a valid archives/surfaces pointer: ${pointer_path}"
+  fi
+
+  local target_path="${REPO_ROOT}/${pointer_path}"
+  [[ -f "$target_path" ]] || die "TASK pointer target missing: ${pointer_path}"
+
+  local materialized_path
+  materialized_path="$(mktemp)"
+  strip_surface_frontmatter "$target_path" > "$materialized_path"
+  if [[ ! -s "$materialized_path" ]]; then
+    rm -f "$materialized_path"
+    die "TASK pointer target has no materialized body: ${pointer_path}"
+  fi
+
+  printf '%s' "$materialized_path"
+}
+
 require_clean_tree() {
+  if [[ "${DRAFT_ALLOW_DIRTY_TREE:-0}" == "1" ]]; then
+    return 0
+  fi
   local porcelain
   porcelain="$(git -C "$REPO_ROOT" status --porcelain)"
   if [[ -n "$porcelain" ]]; then
@@ -126,12 +190,18 @@ read_lint_constants() {
 
 require_task_markers() {
   local task_path="$REPO_ROOT/TASK.md"
-  [[ -f "$task_path" ]] || die "missing TASK.md"
+  local source_path
+  local cleanup_path=""
+  source_path="$(resolve_task_surface_source "$task_path")"
+  if [[ "$source_path" != "$task_path" ]]; then
+    cleanup_path="$source_path"
+  fi
 
   local section_count
   local dp_count
-  section_count="$(grep -cE '^##[[:space:]]*3[.][[:space:]]*Current Dispatch Packet \(DP\)[[:space:]]*$' "$task_path" || true)"
+  section_count="$(grep -cE '^##[[:space:]]*3[.][[:space:]]*Current Dispatch Packet \(DP\)[[:space:]]*$' "$source_path" || true)"
   if [[ "$section_count" != "1" ]]; then
+    [[ -n "$cleanup_path" ]] && rm -f "$cleanup_path"
     die "TASK.md must contain exactly one '## 3. Current Dispatch Packet (DP)' heading"
   fi
 
@@ -141,11 +211,14 @@ require_task_markers() {
     in_section && /^##[[:space:]]*[0-9]+[.]/ && $0 !~ /^##[[:space:]]*3[.]/ { in_section=0 }
     in_section && /^### DP-/ { count++ }
     END { print count }
-  ' "$task_path")"
+  ' "$source_path")"
 
   if [[ "$dp_count" != "1" ]]; then
+    [[ -n "$cleanup_path" ]] && rm -f "$cleanup_path"
     die "TASK.md must contain exactly one active '### DP-' block under Section 3"
   fi
+
+  [[ -n "$cleanup_path" ]] && rm -f "$cleanup_path"
 }
 
 render_dp() {
@@ -170,7 +243,7 @@ render_dp() {
     "--slot=PLAN_REQUEST=${PLAN_REQUEST}"
     "--slot=PLAN_CHANGELOG=${PLAN_CHANGELOG}"
     "--slot=PLAN_PATCH=${PLAN_PATCH}"
-    "--slot=RECEIPT_COMMANDS=${RECEIPT_COMMANDS}"
+    "--slot=RECEIPT_EXTRA=${RECEIPT_EXTRA}"
   )
 
   if [[ -n "$SLOTS_FILE" ]]; then
@@ -183,11 +256,19 @@ render_dp() {
 update_task() {
   local rendered_path="$1"
   local task_path="$REPO_ROOT/TASK.md"
+  local source_path
+  local cleanup_path=""
   local tmp_path
+  local wrote_marker_path
 
+  source_path="$(resolve_task_surface_source "$task_path")"
+  if [[ "$source_path" != "$task_path" ]]; then
+    cleanup_path="$source_path"
+  fi
   tmp_path="$(mktemp)"
+  wrote_marker_path="$(mktemp)"
 
-  awk -v replacement="$rendered_path" '
+  awk -v replacement="$rendered_path" -v wrote_marker="$wrote_marker_path" '
     BEGIN {
       in_section=0
       wrote=0
@@ -204,6 +285,7 @@ update_task() {
       }
       close(replacement)
       wrote=1
+      print "1" > wrote_marker
       skip_rest=1
       next
     }
@@ -213,9 +295,18 @@ update_task() {
     {
       print
     }
-  ' "$task_path" > "$tmp_path"
+  ' "$source_path" > "$tmp_path"
+
+  if [[ ! -s "$wrote_marker_path" ]]; then
+    rm -f "$tmp_path" "$wrote_marker_path"
+    [[ -n "$cleanup_path" ]] && rm -f "$cleanup_path"
+    die "failed to locate active DP heading inside TASK section 3"
+  fi
+
+  rm -f "$wrote_marker_path"
 
   mv "$tmp_path" "$task_path"
+  [[ -n "$cleanup_path" ]] && rm -f "$cleanup_path"
 }
 
 DP_ID=""
@@ -235,7 +326,7 @@ PLAN_STATE=""
 PLAN_REQUEST=""
 PLAN_CHANGELOG=""
 PLAN_PATCH=""
-RECEIPT_COMMANDS=""
+RECEIPT_EXTRA=""
 
 for arg in "$@"; do
   case "$arg" in
@@ -287,8 +378,12 @@ for arg in "$@"; do
     --plan-patch=*)
       PLAN_PATCH="${arg#--plan-patch=}"
       ;;
+    --receipt-extra=*)
+      RECEIPT_EXTRA="${arg#--receipt-extra=}"
+      ;;
     --receipt-commands=*)
-      RECEIPT_COMMANDS="${arg#--receipt-commands=}"
+      # Backward-compatible alias retained for older automation wrappers.
+      RECEIPT_EXTRA="${arg#--receipt-commands=}"
       ;;
     -h|--help)
       usage
@@ -318,7 +413,12 @@ if [[ -n "$SLOTS_FILE" ]]; then
   [[ -n "$PLAN_REQUEST" ]] || PLAN_REQUEST="$(read_slot "PLAN_REQUEST" "$SLOTS_FILE")"
   [[ -n "$PLAN_CHANGELOG" ]] || PLAN_CHANGELOG="$(read_slot "PLAN_CHANGELOG" "$SLOTS_FILE")"
   [[ -n "$PLAN_PATCH" ]] || PLAN_PATCH="$(read_slot "PLAN_PATCH" "$SLOTS_FILE")"
-  [[ -n "$RECEIPT_COMMANDS" ]] || RECEIPT_COMMANDS="$(read_slot "RECEIPT_COMMANDS" "$SLOTS_FILE")"
+  if [[ -z "$RECEIPT_EXTRA" ]]; then
+    RECEIPT_EXTRA="$(read_slot "RECEIPT_EXTRA" "$SLOTS_FILE")"
+  fi
+  if [[ -z "$RECEIPT_EXTRA" ]]; then
+    RECEIPT_EXTRA="$(read_slot "RECEIPT_COMMANDS" "$SLOTS_FILE")"
+  fi
 fi
 
 if ! block_has_content "$DP_SCOPED_LOAD_ORDER"; then
@@ -348,8 +448,8 @@ fi
 if ! block_has_content "$PLAN_PATCH"; then
   die "missing required slot: PLAN_PATCH"
 fi
-if ! block_has_content "$RECEIPT_COMMANDS"; then
-  die "missing required slot: RECEIPT_COMMANDS"
+if ! block_has_content "$RECEIPT_EXTRA"; then
+  die "missing required slot: RECEIPT_EXTRA"
 fi
 
 trap 'emit_binary_leaf "draft" "finish"' EXIT
