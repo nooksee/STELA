@@ -1,57 +1,14 @@
-# Technical Specification: ops/bin/prune
+<!-- SPEC-SURFACE:REQUIRED -->
+# Technical Specification
 
-## Constitutional Anchor
-`ops/bin/prune` is the retention and hygiene executor for root ledgers and storage artifacts.
-It enforces proof safety before destructive actions and keeps cleanup behavior consistent with PoT filing doctrine.
-
-## Operator Contract
-- Invocation:
-  - `./ops/bin/prune [--target=sop|pow|both] [--scrub]`
-- Default target: `sop`.
-- Retention: keep newest `30` entries per ledger.
-- Archive destinations:
-  - SoP overflow: `archives/surfaces/SoP-archive-YYYY-MM.md`
-  - PoW overflow: `archives/surfaces/PoW-archive-YYYY-MM.md`
-- Cleanup surfaces:
-  - Handoff aging cleanup (older than seven days, DP-aware keep rules).
-  - DP-target artifact cleanup in `storage/handoff/` and `storage/dumps/`.
-  - Optional `var/tmp/` scrub.
-- TASK reset:
-  - Extracts embedded template from `docs/ops/specs/surfaces/task.md`.
-  - Lints extracted template with `bash tools/lint/task.sh` before overwrite.
-  - Blocks reset unless PoW already contains matching `- Packet ID: DP-OPS-XXXX`.
-
-## Failure States and Drift Triggers
-- Required ledger file missing for selected target.
-- Invalid `--target` or empty `--dp` value.
-- Uncommitted RESULTS guard violation.
-- PoW guard violation for prune-candidate entries.
-- TASK reset attempted without valid active DP ID or missing PoW packet proof.
-- Template extraction failure or TASK lint failure during reset.
-
-PoW guard (hard stop):
-- For PoW entries beyond retention threshold, every candidate entry must contain required fields and receipt pointers.
-- Pointer kinds are validated by path class:
-  - `RESULTS` -> `storage/handoff/*-RESULTS.md`
-  - `OPEN` -> `storage/handoff/OPEN-*`
-  - `DUMP` -> `storage/dumps/dump-*`
-- Each pointer target must exist, be tracked, and be clean (no staged or unstaged diff).
-- Guard failure aborts prune with explicit diagnostics and safety fatal banner.
+## First Principles Rationale
+`ops/bin/prune` exists to enforce retention hygiene without destroying proof artifacts required for audit reconstruction. It protects PoT closeout and truth invariants by placing guard checks in front of any deletion path.
 
 ## Mechanics and Sequencing
-1. Parse args and validate target surfaces.
-2. Resolve safety preconditions (`SoP.md`, `PoW.md`, TASK template path as needed).
-3. Prune selected ledgers in deterministic order:
-- `sop`: SoP only.
-- `pow`: PoW only.
-- `both`: SoP first, then PoW.
-5. Compute cut line after retained threshold and archive overflow entries by month bucket.
-6. If requested, run `--scrub` on `var/tmp/` except `.gitkeep`.
+The binary parses target selection, dry-run mode, and optional `--scrub`, resolves pointer-first `SoP.md` and `PoW.md` heads to concrete surface leaves when needed, and executes `results_guard` before prune operations. The guard verifies that handoff RESULTS and CLOSING artifacts are tracked and clean before any deletion path executes. For PoW-prune targets it iterates candidate entries from ledger extraction, validates `RESULTS`, `OPEN`, and `DUMP` pointer presence, and verifies pointer targets are tracked. In dry-run mode it reports candidate activity and optional resume scrub actions without mutating surfaces. In normal mode it invokes ledger prune routines for selected targets with retention threshold thirty and runs optional `var/tmp` scrub that removes all entries except `.gitkeep`.
 
-Target ledger logic:
-- Ledger operations are isolated by `--target` to prevent accidental dual-prune.
-- `both` is explicit and ordered, improving audit readability and rollback reasoning.
+## Anecdotal Anchor
+The DP-OPS-0074 prune incident exposed the risk of deleting evidence artifacts before certification and commit completion. `ops/bin/prune` now puts RESULTS and pointer guards ahead of ledger deletion so evidence removal requires passing proof checks first.
 
-## Forensic Insight
-Prune is a deletion command guarded like a proof command.
-By combining RESULTS cleanliness checks, PoW receipt validation, and deterministic target sequencing, it prevents evidence loss while still enforcing retention and hygiene discipline.
+## Integrity Filter Warnings
+`ops/bin/prune` exits on invalid target values, missing guard prerequisites, untracked or dirty RESULTS and CLOSING artifacts, missing or untracked pointer targets in PoW prune candidates, and ledger prune failures. The threshold value is fixed in script state and the command does not infer missing pointer classes or repair malformed ledger entries.

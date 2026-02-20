@@ -2,13 +2,13 @@
 # Technical Specification
 
 ## First Principles Rationale
-Meta formalizes project-context artifact generation so OPEN and project-scoped DUMP artifacts are emitted consistently for downstream review and handoff workflows.
+`ops/bin/meta` exists to guarantee that project context capture emits both freshness and payload artifacts in one command. It prevents evidence gaps where operators capture only OPEN or only project-scoped dump output.
 
 ## Mechanics and Sequencing
-Validate repository context and project existence, then invoke ops/bin/open with a project intent tag and ops/bin/dump in project scope for the same project slug.
+The binary enforces repo-root execution, requires exactly one project-name argument, validates that `projects/<name>` exists, then invokes `ops/bin/open` with a project-tagged intent and `--out=auto`. It then invokes `ops/bin/dump` with `--scope=project --project=<name> --format=chatgpt --out=auto`. After both commands succeed, it prints a single completion line for the project context run.
 
 ## Anecdotal Anchor
-Manual project context capture often missed one of OPEN or DUMP artifacts; meta packages both operations to keep evidence generation complete and reproducible.
+A recurring project-context failure class involved manual capture runs where one of the two required artifacts was missing, which blocked downstream review reproducibility. `ops/bin/meta` addresses that class by chaining both artifact commands under one success contract.
 
 ## Integrity Filter Warnings
-Execution stops on missing project directory, non-root execution, or upstream open/dump failure; the binary intentionally does not degrade to partial artifact output.
+`ops/bin/meta` exits on non-root execution, missing project argument, extra arguments, missing project directory, or any non-zero exit from upstream `open` or `dump`. The command does not emit partial success output when one upstream artifact command fails.

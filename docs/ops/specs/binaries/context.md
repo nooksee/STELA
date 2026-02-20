@@ -1,22 +1,14 @@
-# Technical Specification: ops/bin/context
+<!-- SPEC-SURFACE:REQUIRED -->
+# Technical Specification
 
-## Technical Specifications
-- Wrapper over `ops/lib/scripts/synthesize.sh`.
-- Runs `ops/bin/compile` before synthesis to ensure manifests are generated from templates.
-- Defaults to `ops/lib/manifests/OPS.md` for session synthesis.
-- Executes `ops/bin/open --out=auto` and injects the OPEN artifact into the emitted session stream.
-- Supports `--manifest=<path>` override for alternate layer synthesis.
-- Supports `--out=auto|<path>` to persist the assembled session stream.
+## First Principles Rationale
+`ops/bin/context` exists to enforce PoT context hygiene by producing one session stream that binds current manifests and current OPEN state. It prevents a failure mode where operators synthesize context from stale manifests or omit the session freshness checkpoint artifact.
 
-## Requirements
-- Must run from the repository root.
-- Requires `ops/bin/compile`, `ops/bin/open`, and `ops/lib/scripts/synthesize.sh` to be executable.
-- Requires write access to `storage/handoff/` and `var/tmp/` when `--out` is used.
+## Mechanics and Sequencing
+The binary parses optional `--manifest`, `--dp`, and `--out` arguments, enforces repo-root execution, validates required binaries and the chosen manifest file, and runs `ops/bin/compile` first. It then runs `ops/bin/open --out=auto` with optional DP binding and extracts the `OPEN saved:` path from command output. It validates the OPEN artifact path, creates a temporary stream file in `var/tmp`, writes a header block, appends OPEN content, appends synthesized stream output from `ops/lib/scripts/synthesize.sh`, prints the assembled stream to stdout, and optionally writes it to `storage/handoff` or an explicit destination path.
 
-## Usage
-- `./ops/bin/context`
-- `./ops/bin/context --out=auto`
-- `./ops/bin/context --manifest=ops/lib/manifests/DISCOVERY.md --out=auto`
+## Anecdotal Anchor
+Session preparation failures appeared when stale manifest state remained on disk while operators generated context for active packets. The compile-first requirement in `ops/bin/context` was introduced to remove that stale-manifest class before synthesis.
 
-## Forensic Insight
-`ops/bin/context` is the session entrypoint wrapper. It compiles manifests, binds OPEN state, and emits synthesized OPS-layer context into one deterministic stream.
+## Integrity Filter Warnings
+The command fails on unknown arguments, missing or non-executable dependencies, missing target manifest, failure to parse an OPEN artifact path from `ops/bin/open`, or synthesis failures. It requires repo-root execution and does not emit a degraded stream when OPEN or synthesize steps fail.

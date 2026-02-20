@@ -1,24 +1,14 @@
-# Technical Specification: ops/bin/llms
+<!-- SPEC-SURFACE:REQUIRED -->
+# Technical Specification
 
-## Technical Specifications
-- Wrapper over `ops/lib/scripts/synthesize.sh`.
-- Runs `ops/bin/compile` before synthesis so emitted bundles use compiled manifests.
-- Generates `llms-core.txt` from `ops/lib/manifests/CORE.md`.
-- Generates `llms-full.txt` from `ops/lib/manifests/DISCOVERY.md`.
-- Regenerates `llms.txt` as the root pointer index.
-- Supports `--out-dir=<path>` for mirrored output copies while always refreshing root files.
-- Supports manifest overrides via `--core-manifest` and `--full-manifest`.
+## First Principles Rationale
+`ops/bin/llms` exists to keep machine discovery entry points synchronized with current manifest truth. It prevents SSOT drift where root `llms` bundles reference outdated manifest memberships or stale synthesis output.
 
-## Requirements
-- Must run from the repository root.
-- Requires `ops/bin/compile` and `ops/lib/scripts/synthesize.sh` to be executable.
-- Requires `ops/lib/manifests/CORE.md` and `ops/lib/manifests/DISCOVERY.md` to exist.
-- Requires write access to repository root and to any `--out-dir` target.
+## Mechanics and Sequencing
+The binary parses optional out directory and manifest override arguments, enforces repo-root execution, validates dependencies, and runs `ops/bin/compile` before synthesis. It synthesizes `llms-core.txt` from the core manifest and `llms-full.txt` from the discovery manifest into a temporary workspace, verifies both generated files are non-empty, constructs a fresh root `llms.txt` index with current HEAD metadata and bundle pointers, and copies all three outputs to repository root. When `--out-dir` points outside root, it also writes mirrored copies to that destination. It prints the written path set on success.
 
-## Usage
-- `./ops/bin/llms`
-- `./ops/bin/llms --out-dir="$(pwd)"`
-- `./ops/bin/llms --core-manifest=ops/lib/manifests/CORE.md --full-manifest=ops/lib/manifests/DISCOVERY.md`
+## Anecdotal Anchor
+A recurring risk in AI-driven intake was that discovery pointers could remain static while manifest state changed underneath them. `ops/bin/llms` reduces that drift by forcing compile-first synthesis and root bundle refresh on every invocation.
 
-## Forensic Insight
-`ops/bin/llms` is the static discovery wrapper. It enforces One Truth by compiling manifests first, then delegating parsing, hazard policy, and emission format logic to `ops/lib/scripts/synthesize.sh`.
+## Integrity Filter Warnings
+`ops/bin/llms` exits on unknown arguments, missing dependencies, missing manifest files, compile failures, empty synthesized output files, and write failures. It always rewrites root bundle files and does not provide a no-write preview mode.

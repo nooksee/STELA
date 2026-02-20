@@ -1,20 +1,14 @@
-# Technical Specification: ops/bin/project
+<!-- SPEC-SURFACE:REQUIRED -->
+# Technical Specification
 
-## Technical Specifications
-- Entry Point: accepts `work <id>` as the primary command.
-- Validation: enforces project ID validation via `ops/lib/scripts/project.sh`.
-- OPEN and Dump: calls `ops/bin/open` and `ops/bin/dump` to generate session artifacts.
-- Assembly: concatenates the OPEN artifact, the platform dump, and the project `STELA.md` into a single handoff file.
-- Output: writes `storage/handoff/PROJECT-<id>-<branch>-<hash>.txt` and prints the relative path.
+## First Principles Rationale
+`ops/bin/project` remains as a deprecated compatibility wrapper for historical project workflows. It exists to preserve backward-compatible orchestration while PoT-guided workflow responsibilities are split into `ops/bin/scaffold` and `ops/bin/meta`.
 
-## Requirements
-- Must run from the repository root.
-- Requires `projects/<id>/STELA.md` to exist.
-- Requires `ops/bin/open`, `ops/bin/dump`, and `ops/lib/scripts/project.sh` to be executable.
-- Requires `storage/handoff/` and `storage/dumps/` to be writable.
+## Mechanics and Sequencing
+The binary accepts `work <id>`, validates the project identifier and required project files through `ops/lib/scripts/project.sh`, derives branch and hash naming tokens, invokes `ops/bin/open` with a project tag, invokes `ops/bin/dump --scope=platform --out=auto`, verifies expected artifact file names, concatenates OPEN artifact content, dump payload content, and project `STELA.md` content into `storage/handoff/PROJECT-<id>-<branch>-<hash>.txt`, and prints the artifact path.
 
-## Usage
-- `./ops/bin/project work example-project`
+## Anecdotal Anchor
+During DP-OPS-0078 project binary fission, project lifecycle responsibilities were split to reduce scope coupling. `ops/bin/project` was left as transitional glue so existing invocation patterns did not break during that migration.
 
-## Forensic Insight
-`ops/bin/project` is the Workflow Orchestrator. Its deterministic assembly path prevents project files from overriding platform law and keeps the governance wrapper intact.
+## Integrity Filter Warnings
+`ops/bin/project` exits on unknown commands, invalid project IDs, missing project directory, missing `STELA.md`, open or dump invocation failure, or missing expected artifact files. The wrapper depends on naming conventions from `open` and `dump`, so naming-contract changes in upstream binaries can break this deprecated path.
