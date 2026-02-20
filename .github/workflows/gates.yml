@@ -68,3 +68,6 @@ jobs:
 
       - name: RESULTS lint
         run: bash tools/lint/results.sh
+
+      - name: Leaf coverage lint
+        run: bash tools/lint/leaf.sh

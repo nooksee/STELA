@@ -4,6 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # shellcheck source=/dev/null
+source "${REPO_ROOT}/ops/lib/scripts/common.sh"
+# shellcheck source=/dev/null
 source "${REPO_ROOT}/ops/lib/scripts/project.sh"
 
 TEMPLATE_DIR="ops/src/manifests"
@@ -25,13 +27,6 @@ explicit manifests under ops/lib/manifests/*.md.
 Each successful compile also emits a schema-stamped snapshot leaf in
 archives/manifests/ before runtime manifests are updated.
 USAGE
-}
-
-trim() {
-  local value="$1"
-  value="${value#"${value%%[![:space:]]*}"}"
-  value="${value%"${value##*[![:space:]]}"}"
-  printf '%s' "$value"
 }
 
 has_glob() {
@@ -377,6 +372,7 @@ main() {
   done
 
   project_require_repo_root
+  emit_binary_leaf "compile" "start"
 
   if [[ ! -d "${PROJECT_REPO_ROOT}/${TEMPLATE_DIR}" ]]; then
     project_die "missing template dir: ${TEMPLATE_DIR}"
@@ -398,6 +394,7 @@ main() {
   compile_tmp_root="$(mktemp -d "${PROJECT_REPO_ROOT}/var/tmp/compile.XXXXXX")"
 
   cleanup() {
+    emit_binary_leaf "compile" "finish"
     local tmp_root="${compile_tmp_root:-}"
     if [[ -n "$tmp_root" && -d "$tmp_root" ]]; then
       rm -rf "$tmp_root"

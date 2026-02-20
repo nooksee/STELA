@@ -1,15 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(git rev-parse --show-toplevel)/ops/lib/scripts/common.sh"
 
 usage() {
   cat <<'USAGE'
 Usage: tools/lint/results.sh [--all|path]
 USAGE
-}
-
-die() {
-  echo "ERROR: $*" >&2
-  exit 1
 }
 
 fail() {
@@ -69,6 +65,8 @@ else
 fi
 
 cd "$REPO_ROOT" || exit 1
+trap 'emit_binary_leaf "lint-results" "finish"' EXIT
+emit_binary_leaf "lint-results" "start"
 
 if [[ "$#" -gt 1 ]]; then
   usage >&2

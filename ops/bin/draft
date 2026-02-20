@@ -352,6 +352,9 @@ if ! block_has_content "$RECEIPT_COMMANDS"; then
   die "missing required slot: RECEIPT_COMMANDS"
 fi
 
+trap 'emit_binary_leaf "draft" "finish"' EXIT
+emit_binary_leaf "draft" "start"
+
 require_clean_tree
 read_lint_constants
 require_task_markers

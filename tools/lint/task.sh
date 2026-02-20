@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(git rev-parse --show-toplevel)/ops/lib/scripts/common.sh"
 
 if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   REPO_ROOT="$(git rev-parse --show-toplevel)"
@@ -9,6 +10,8 @@ else
 fi
 
 cd "$REPO_ROOT" || exit 1
+trap 'emit_binary_leaf "lint-task" "finish"' EXIT
+emit_binary_leaf "lint-task" "start"
 
 TASKS_DIR="opt/_factory/tasks"
 TASKS_REGISTRY="docs/ops/registry/TASKS.md"

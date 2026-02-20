@@ -3,21 +3,20 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=/dev/null
+source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 MAP_FILE="${REPO_ROOT}/docs/MAP.md"
 BEGIN_MARKER="<!-- MAP-GENERATED:BEGIN -->"
 END_MARKER="<!-- MAP-GENERATED:END -->"
 TMP_DIR="${REPO_ROOT}/var/tmp"
 CHECK_MODE=0
+tmp_block=""
+tmp_out=""
 
 usage() {
   cat <<'USAGE'
 Usage: ops/bin/map [--check]
 USAGE
-}
-
-die() {
-  echo "ERROR: $*" >&2
-  exit 1
 }
 
 for arg in "$@"; do
@@ -99,13 +98,17 @@ generate_block() {
   echo "$END_MARKER"
 }
 
+cleanup() {
+  emit_binary_leaf "map" "finish"
+  [[ -n "$tmp_block" ]] && rm -f "$tmp_block"
+  [[ -n "$tmp_out" ]] && rm -f "$tmp_out"
+}
+trap cleanup EXIT
+emit_binary_leaf "map" "start"
+
 mkdir -p "$TMP_DIR"
 tmp_block="$(mktemp "${TMP_DIR}/stela-map-block.XXXXXX")"
 tmp_out="$(mktemp "${TMP_DIR}/stela-map-out.XXXXXX")"
-cleanup() {
-  rm -f "$tmp_block" "$tmp_out"
-}
-trap cleanup EXIT
 
 generate_block > "$tmp_block"
 

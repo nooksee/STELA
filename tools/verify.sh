@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(git rev-parse --show-toplevel)/ops/lib/scripts/common.sh"
 
 # Stela Repo Hygiene Verification
 # Purpose: Ensure repo topology matches filing doctrine and payload surfaces remain bounded.
@@ -12,8 +13,8 @@ else
 fi
 
 cd "$REPO_ROOT" || exit 1
-# shellcheck source=/dev/null
-source "${REPO_ROOT}/ops/lib/scripts/common.sh"
+trap 'emit_binary_leaf "verify" "finish"' EXIT
+emit_binary_leaf "verify" "start"
 
 echo "Stela Repo Hygiene Verification"
 echo "Root: $REPO_ROOT"

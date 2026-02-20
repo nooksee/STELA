@@ -177,6 +177,9 @@ if (( ${#missing[@]} > 0 )); then
   die "expected directories missing. Run from repo root: ${missing[*]}"
 fi
 
+trap 'emit_binary_leaf "dump" "finish"' EXIT
+emit_binary_leaf "dump" "start"
+
 mkdir -p "$repo_root/storage/handoff"
 mkdir -p "$repo_root/storage/dumps"
 

@@ -18,6 +18,8 @@ ledger_archive_plan() {
   local ledger_file="$1"
   local archive_prefix="$2"
 
+  emit_binary_leaf "ledger" "archive-plan-start"
+
   awk -v threshold="$THRESHOLD" -v archive_dir="$ARCHIVE_DIR" -v prefix="$archive_prefix" '
     /^## [0-9]{4}-[0-9]{2}-[0-9]{2} / {
       entry++
@@ -38,6 +40,7 @@ ledger_archive_plan() {
 
 validate_pow_prune_candidates() {
   local pow_file="$1"
+  emit_binary_leaf "ledger" "validate-pow-start"
   local pointers_tmp
   pointers_tmp="$(mktemp "${RESUME_DIR}/pow-prune-pointers.XXXXXX")"
 

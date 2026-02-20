@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(git rev-parse --show-toplevel)/ops/lib/scripts/common.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
@@ -41,11 +42,14 @@ if (( missing > 0 )); then
   exit 1
 fi
 
-work_dir="$(mktemp -d)"
+work_dir=""
 cleanup() {
-  rm -rf "${work_dir}"
+  emit_binary_leaf "lint-llms" "finish"
+  [[ -n "$work_dir" ]] && rm -rf "${work_dir}"
 }
 trap cleanup EXIT
+emit_binary_leaf "lint-llms" "start"
+work_dir="$(mktemp -d)"
 
 gen_output="$("${GEN_BIN}" --out-dir="${work_dir}")"
 printf '%s\n' "${gen_output}"

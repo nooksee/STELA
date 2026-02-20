@@ -2,8 +2,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR}/../lib/scripts/common.sh"
+source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 
 MODE="${1:-}"
 [ -z "$MODE" ] && die "template: template type argument is required"
@@ -15,12 +16,15 @@ else
   TEMPLATE_TYPE="$MODE"
 fi
 
+trap 'emit_binary_leaf "template" "finish"' EXIT
+emit_binary_leaf "template" "start"
+
 case "$TEMPLATE_TYPE" in
   agent|task|skill)
-    exec "${SCRIPT_DIR}/factory" "$@"
+    "${SCRIPT_DIR}/factory" "$@"
     ;;
   dp|results|task-surface)
-    exec "${SCRIPT_DIR}/manifest" "$@"
+    "${SCRIPT_DIR}/manifest" "$@"
     ;;
   *)
     die "template: unknown template type '${TEMPLATE_TYPE}'"
