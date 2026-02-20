@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 TASKS_DIR="${REPO_ROOT}/opt/_factory/tasks"
-TASKS_REGISTRY="${REPO_ROOT}/docs/ops/registry/TASKS.md"
+TASKS_REGISTRY="${REPO_ROOT}/docs/ops/registry/tasks.md"
 TASKS_LEDGER="${REPO_ROOT}/opt/_factory/TASKS.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
@@ -574,9 +574,9 @@ insert_registry_entry() {
     status=$?
     rm -f "$tmp"
     if [[ "$status" -eq 2 ]]; then
-      die "Task registry table not found in docs/ops/registry/TASKS.md"
+      die "Task registry table not found in docs/ops/registry/tasks.md"
     fi
-    die "Failed to update docs/ops/registry/TASKS.md"
+    die "Failed to update docs/ops/registry/tasks.md"
   fi
 
   mv "$tmp" "$TASKS_REGISTRY"
@@ -617,7 +617,7 @@ update_registry_entry() {
   if [[ "$status" -eq 2 ]]; then
     return 1
   fi
-  die "Failed to update docs/ops/registry/TASKS.md"
+  die "Failed to update docs/ops/registry/tasks.md"
 }
 
 cmd_harvest() {
@@ -685,7 +685,7 @@ cmd_harvest() {
     die "Task ID must match B-TASK-XX"
   fi
   if task_id_exists "$task_id"; then
-    die "Task ID ${task_id} already exists in docs/ops/registry/TASKS.md. Review the registry or run ops/lib/scripts/task.sh check before harvesting."
+    die "Task ID ${task_id} already exists in docs/ops/registry/tasks.md. Review the registry or run ops/lib/scripts/task.sh check before harvesting."
   fi
 
   local packet_id

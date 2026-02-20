@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 SKILL_FILE="${REPO_ROOT}/opt/_factory/SKILLS.md"
-SKILLS_REGISTRY="${REPO_ROOT}/docs/ops/registry/SKILLS.md"
+SKILLS_REGISTRY="${REPO_ROOT}/docs/ops/registry/skills.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
 CONTEXT_MANIFEST="${REPO_ROOT}/ops/lib/manifests/CONTEXT.md"
 SKILLS_DIR="${REPO_ROOT}/opt/_factory/skills"
@@ -281,9 +281,9 @@ insert_skill_registry_entry() {
     status=$?
     rm -f "$tmp"
     if [[ "$status" -eq 2 ]]; then
-      die "Skills registry table not found in docs/ops/registry/SKILLS.md"
+      die "Skills registry table not found in docs/ops/registry/skills.md"
     fi
-    die "Failed to update docs/ops/registry/SKILLS.md"
+    die "Failed to update docs/ops/registry/skills.md"
   fi
 
   mv "$tmp" "$SKILLS_REGISTRY"
@@ -504,7 +504,7 @@ materialize_promoted_skill() {
         print "- Constitution: `PoT.md`"
         print "- Governance: `docs/GOVERNANCE.md`"
         print "- Contract: `TASK.md`"
-        print "- Registry: `docs/ops/registry/SKILLS.md`"
+        print "- Registry: `docs/ops/registry/skills.md`"
         print ""
         inserted=1
       }
@@ -521,7 +521,7 @@ materialize_promoted_skill() {
         print "- Constitution: `PoT.md`"
         print "- Governance: `docs/GOVERNANCE.md`"
         print "- Contract: `TASK.md`"
-        print "- Registry: `docs/ops/registry/SKILLS.md`"
+        print "- Registry: `docs/ops/registry/skills.md`"
       }
     }
   ' "$draft_path" > "$output_path"
@@ -592,7 +592,7 @@ cmd_promote() {
   mv "$tmp_skill" "$skill_path"
 
   if grep -Fq "| ${skill_id} |" "$SKILLS_REGISTRY"; then
-    die "docs/ops/registry/SKILLS.md already contains ${skill_id}"
+    die "docs/ops/registry/skills.md already contains ${skill_id}"
   fi
 
   local registry_row

@@ -18,7 +18,7 @@ Use when writing or reviewing payload code.
 - Constitution: `PoT.md`
 - Governance: `docs/GOVERNANCE.md`
 - Contract: `TASK.md`
-- Registry: `docs/ops/registry/SKILLS.md`
+- Registry: `docs/ops/registry/skills.md`
 - Project rules template: `ops/lib/project/STELA.md`
 - Reference docs: `docs/MANUAL.md`
 

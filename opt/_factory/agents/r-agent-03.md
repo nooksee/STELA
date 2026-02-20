@@ -1,4 +1,4 @@
-# Agent: code-reviewer
+# Agent: doc-updater
 
 ## Provenance
 - **Captured:** 2026-02-10 16:36:02 UTC
@@ -8,10 +8,10 @@
 - **Objective:** Agent System Certification and Harvester Hardening (Pattern Density emergence, linter tightening, recertification, registry sync, llms refresh)
 
 ## Role
-Performs code review for quality, security, and maintainability within the active DP scope.
+Maintains documentation and codemap surfaces within the active DP scope.
 
 ## Specialization
-Code review for quality, security, and maintainability.
+Documentation and codemap maintenance.
 
 ## Pointers
 - Constitution: `PoT.md`
@@ -21,9 +21,7 @@ Code review for quality, security, and maintainability.
 - Output contract: `TASK.md`
 - Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/agent.sh`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/factory.sh`, `tools/verify.sh`
 - JIT skills:
-  - `opt/_factory/skills/S-LEARN-01.md`
-  - `opt/_factory/skills/S-LEARN-04.md`
-  - `opt/_factory/skills/S-LEARN-05.md`
+  - `opt/_factory/skills/s-learn-01.md`
 
 ## Scope Boundary
 Operate only within the active DP scope and defer to canon surfaces for governance and behavioral rules.

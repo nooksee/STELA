@@ -1,17 +1,11 @@
----
-trace_id: stela-20260219T020101Z-a74a0001
-packet_id: DP-OPS-0074
-created_at: 2026-02-19T01:51:42Z
-previous: (none)
----
-# Agent: factory-chain-agent-test
+# Task: Factory Chain Validation
 
 ## Provenance
-- **Captured:** 2026-02-19 01:51:42 UTC
+- **Captured:** 2026-02-19 01:53:08 UTC
 - **DP-ID:** DP-OPS-0074
 - **Branch:** work/dp-ops-0074-2026-02-18
 - **HEAD:** 45af651efaa13ad13c457c708b399b07497a3819
-- **Objective:** Validate pointer-first factory head chain behavior.
+- **Objective:** Validate factory candidate and promotion chain workflows.
 - **Friction Context:**
   - Hot Zone: None
   - High Churn: None
@@ -20,19 +14,18 @@ previous: (none)
 (no changes)
 ```
 
-## Role
-Validates factory candidate and promotion pointer workflows.
-
-## Specialization
-Factory chain pointer remediation validation.
+## Orchestration
+- **Primary Agent:** R-AGENT-01
+- **Supporting Agents:** (none)
 
 ## Pointers
-- Constitution: `PoT.md`
-- Governance/Jurisdiction: `docs/GOVERNANCE.md`
-- Output contract: `TASK.md`
-- Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/factory.sh`, `tools/verify.sh`
-- JIT skills:
-- `opt/_factory/skills/S-LEARN-06.md`
+- **Constitution:** `PoT.md`
+- **Governance:** `docs/GOVERNANCE.md`
+- **Contract:** `TASK.md`
+- **Registry:** `docs/ops/registry/tasks.md`
+- **Toolchain:** Not provided
+- **JIT Skills:** (none)
+- **Reference Docs:** Not provided
 
 ## Constraints
 ## Section 1: Universal Template Rules
@@ -65,6 +58,14 @@ Factory chain pointer remediation validation.
 - Definition drafts must remain compatible with existing harvester/promotion lint gates.
 - Definitions must preserve closeout and verification routing expectations.
 
-## Scope Boundary
-Operate only within the active DP and defer to canon surfaces for governance and behavioral rules.
+## Execution Logic
+1. Pre-flight: Not provided.
+2. Execution: Not provided.
+3. Verification: Not provided.
+4. Correction: Not provided.
+5. Closeout: Complete Closeout per `TASK.md` Section 3.5.
 
+## Scope Boundary
+- **Allowed:** Execute only allowlisted DP changes and complete Closeout per `TASK.md` Section 3.5.
+- **Forbidden:** Do not modify out-of-scope files or skip required verification.
+- **Stop Conditions:** Stop on missing required inputs, lint failures, or scope expansion.

@@ -22,9 +22,9 @@ cd "$REPO_ROOT" || exit 1
 trap 'emit_binary_leaf "lint-project" "finish"' EXIT
 emit_binary_leaf "lint-project" "start"
 
-AGENTS_REGISTRY="docs/ops/registry/AGENTS.md"
-SKILLS_REGISTRY="docs/ops/registry/SKILLS.md"
-TASKS_REGISTRY="docs/ops/registry/TASKS.md"
+AGENTS_REGISTRY="docs/ops/registry/agents.md"
+SKILLS_REGISTRY="docs/ops/registry/skills.md"
+TASKS_REGISTRY="docs/ops/registry/tasks.md"
 
 for registry in "$AGENTS_REGISTRY" "$SKILLS_REGISTRY" "$TASKS_REGISTRY"; do
   if [[ ! -f "$registry" ]]; then

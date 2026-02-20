@@ -18,8 +18,8 @@ Use when initializing or refactoring project payloads.
 - Constitution: `PoT.md`
 - Governance: `docs/GOVERNANCE.md`
 - Contract: `TASK.md`
-- Registry: `docs/ops/registry/SKILLS.md`
-- Project registry: `docs/ops/registry/PROJECTS.md`
+- Registry: `docs/ops/registry/skills.md`
+- Project registry: `docs/ops/registry/projects.md`
 - Project rules template: `ops/lib/project/STELA.md`
 - Reference docs: `docs/MANUAL.md`
 

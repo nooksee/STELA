@@ -1268,6 +1268,23 @@ SURFACE_PHASE_DONE=0
 VERIFICATION_COMMAND_COUNT=0
 GIT_SHORT_HASH="$(git -C "$REPO_ROOT" rev-parse --short HEAD)"
 
+CMD_INDEX=$((CMD_INDEX + 1))
+CMD_ID="$(printf '%02d' "$CMD_INDEX")"
+INVOCATION_STARTED_AT="$(utc_now)"
+INVOCATION_START_EPOCH="$(date +%s)"
+INVOCATION_FINISHED_AT="$(utc_now)"
+INVOCATION_FINISH_EPOCH="$(date +%s)"
+INVOCATION_DURATION_SECONDS=$((INVOCATION_FINISH_EPOCH - INVOCATION_START_EPOCH))
+append_command_log_entry \
+  "$CMD_ID" \
+  "./ops/bin/certify --dp=${DP_ID} --out=${OUT_ARG}" \
+  "$INVOCATION_STARTED_AT" \
+  "$INVOCATION_FINISHED_AT" \
+  "$INVOCATION_DURATION_SECONDS" \
+  "0" \
+  "Certify process initialized; invocation captured for receipt provenance." \
+  "(empty)"
+
 while IFS= read -r command || [[ -n "$command" ]]; do
   CMD_INDEX=$((CMD_INDEX + 1))
   CMD_ID="$(printf '%02d' "$CMD_INDEX")"

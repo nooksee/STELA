@@ -14,7 +14,7 @@ trap 'emit_binary_leaf "lint-skill" "finish"' EXIT
 emit_binary_leaf "lint-skill" "start"
 
 SKILLS_DIR="opt/_factory/skills"
-SKILLS_REGISTRY="docs/ops/registry/SKILLS.md"
+SKILLS_REGISTRY="docs/ops/registry/skills.md"
 CONTEXT_MANIFEST="ops/lib/manifests/CONTEXT.md"
 
 failures=0
