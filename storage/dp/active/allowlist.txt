@@ -94,6 +94,8 @@ ops/lib/scripts/factory.sh
 ops/lib/scripts/ledger.sh
 ops/bin/draft
 ops/bin/template
+ops/bin/factory
+ops/bin/manifest
 ops/bin/dump
 .github/workflows/gates.yml
 llms.txt
@@ -111,3 +113,6 @@ archives/surfaces/TASK-DP-OPS-0076-fe8df16e.md
 archives/surfaces/PoW-2026-02-19-9f7b70f9.md
 archives/surfaces/SoP-2026-02-19-9f7b70f9.md
 archives/surfaces/TASK-DP-OPS-0076-9f7b70f9.md
+archives/surfaces/PoW-2026-02-20-2e979bb3.md
+archives/surfaces/SoP-2026-02-20-2e979bb3.md
+archives/surfaces/TASK-DP-OPS-0077-2e979bb3.md
