@@ -19,26 +19,20 @@ include_dirs=()
 exclude_dirs=()
 ignore_patterns=()
 
-# Binary handling:
-# - meta (default): omit bytes; include size + sha256
-# - raw: emit raw bytes (may be huge / not LLM-friendly)
-# - base64: emit base64 text (huge, but safe in text streams)
+# Retained output metadata knob for compatibility.
 include_binary="meta"
+ALLOWLIST_BASELINE_PATH="${REPO_ROOT}/var/tmp/baseline-storage-dp-active-allowlist.txt"
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/dump [--scope=platform|full|project] [--target=<slug>] [--format=chatgpt|gemini|claude]
+Usage: ops/bin/dump [--scope=platform|full|project] [--project=<slug>] [--format=chatgpt|gemini|claude]
                    [--max-lines=n] [--out=path|auto] [--compress=tar.xz] [--bundle]
                    [--include-binary=meta|raw|base64]
                    [--include-dir=DIR] [--exclude-dir=DIR] [--ignore-file=GLOB]
 
 Notes:
-- Scopes select tracked files via `git ls-files` (deterministic).
-- Refiners further restrict selection after scope:
-  - --include-dir restricts output to files under DIR (may be repeated).
-  - --exclude-dir removes files under DIR (may be repeated).
-  - --ignore-file removes files matching a glob against the repo-relative path (may be repeated).
-- Binary default is metadata-only (size + sha256). Use --include-binary=raw for literal bytes.
+- Scopes and refiners are resolved by ops/lib/scripts/traverse.sh.
+- --project is required when --scope=project.
 USAGE
 }
 
@@ -46,6 +40,12 @@ for arg in "$@"; do
   case "$arg" in
     --scope=platform|--scope=full|--scope=project)
       scope="${arg#--scope=}"
+      ;;
+    --project=*)
+      target="${arg#--project=}"
+      if [[ -z "$target" ]]; then
+        die "--project requires a value"
+      fi
       ;;
     --target=*)
       target="${arg#--target=}"
@@ -101,6 +101,10 @@ for arg in "$@"; do
       [[ -n "$p" ]] || die "--ignore-file requires a value"
       ignore_patterns+=("$p")
       ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
     *)
       die "Unknown argument: $arg"
       ;;
@@ -108,15 +112,15 @@ for arg in "$@"; do
 done
 
 if [[ "$scope" == "project" && -z "$target" ]]; then
-  die "--scope=project requires --target=<slug>"
+  die "--scope=project requires --project=<slug>"
 fi
 
 if [[ "$scope" != "project" && -n "$target" ]]; then
-  die "--target is only valid with --scope=project"
+  die "--project is only valid with --scope=project"
 fi
 
 if [[ -n "$target" && "$target" == */* ]]; then
-  die "--target must be a project slug"
+  die "--project must be a project slug"
 fi
 
 if [[ -n "$out_path" && "$out_path" != "auto" && -z "$compress_mode" ]]; then
@@ -160,30 +164,17 @@ for path in "${required_files[@]}"; do
   fi
 done
 if (( ${#missing[@]} > 0 )); then
-  echo "ERROR: expected files missing. Run from repo root." >&2
-  for path in "${missing[@]}"; do
-    echo "  - $path" >&2
-  done
-  exit 1
+  die "expected files missing. Run from repo root: ${missing[*]}"
 fi
 
+missing=()
 for dir in docs tools ops .github; do
   if [[ ! -d "$dir" ]]; then
     missing+=("$dir/")
   fi
 done
 if (( ${#missing[@]} > 0 )); then
-  echo "ERROR: expected directories missing. Run from repo root." >&2
-  for path in "${missing[@]}"; do
-    echo "  - $path" >&2
-  done
-  exit 1
-fi
-
-if [[ "$scope" == "project" ]]; then
-  if [[ ! -d "projects/$target" ]]; then
-    die "Project not found: projects/$target"
-  fi
+  die "expected directories missing. Run from repo root: ${missing[*]}"
 fi
 
 mkdir -p "$repo_root/storage/handoff"
@@ -210,87 +201,25 @@ case "$format" in
   claude) format_label="Claude" ;;
 esac
 
-path_in_any_dir() {
-  local path="$1"
-  shift
-  local d
-  for d in "$@"; do
-    if [[ "$path" == "$d"/* || "$path" == "$d" ]]; then
-      return 0
-    fi
-  done
-  return 1
-}
-
-path_matches_any_glob() {
-  local path="$1"
-  shift
-  local g
-  for g in "$@"; do
-    case "$path" in
-      $g) return 0 ;;
-    esac
-  done
-  return 1
-}
-
-include_by_scope() {
-  local path="$1"
-  case "$scope" in
-    full)
-      return 0
-      ;;
-    platform)
-      [[ "$path" != projects/* ]]
-      return $?
-      ;;
-    project)
-      if [[ "$path" == "projects/$target/"* ]]; then
-        return 0
-      fi
-      [[ "$path" != projects/* ]]
-      return $?
-      ;;
-  esac
-}
-
-include_file() {
-  local path="$1"
-
-  # Scope gate
-  if ! include_by_scope "$path"; then
-    return 1
-  fi
-
-  # Refiners
-  if (( ${#include_dirs[@]} > 0 )); then
-    if ! path_in_any_dir "$path" "${include_dirs[@]}"; then
-      return 1
-    fi
-  fi
-
-  if (( ${#exclude_dirs[@]} > 0 )); then
-    if path_in_any_dir "$path" "${exclude_dirs[@]}"; then
-      return 1
-    fi
-  fi
-
-  if (( ${#ignore_patterns[@]} > 0 )); then
-    if path_matches_any_glob "$path" "${ignore_patterns[@]}"; then
-      return 1
-    fi
-  fi
-
-  return 0
-}
-
 files=()
-mapfile -t all_files < <(git ls-files)
-for path in "${all_files[@]}"; do
-  if include_file "$path"; then
-    files+=("$path")
-  fi
+traverse_args=("--scope=${scope}")
+if [[ -n "$target" ]]; then
+  traverse_args+=("--project=${target}")
+fi
+for d in "${include_dirs[@]}"; do
+  traverse_args+=("--include-dir=${d}")
 done
+for d in "${exclude_dirs[@]}"; do
+  traverse_args+=("--exclude-dir=${d}")
+done
+for p in "${ignore_patterns[@]}"; do
+  traverse_args+=("--ignore-file=${p}")
+done
+
+while IFS= read -r filepath; do
+  [[ -n "$filepath" ]] || continue
+  files+=("$filepath")
+done < <("${SCRIPT_DIR}/../lib/scripts/traverse.sh" "${traverse_args[@]}")
 
 if (( ${#files[@]} == 0 )); then
   die "No files selected for scope: $scope"
@@ -333,21 +262,51 @@ display_path() {
   fi
 }
 
-count_lines() {
-  awk 'END { print NR }' "$1"
+content_snapshot_path() {
+  local path="$1"
+  if [[ "$path" == "storage/dp/active/allowlist.txt" && -f "$ALLOWLIST_BASELINE_PATH" ]]; then
+    printf '%s' "$ALLOWLIST_BASELINE_PATH"
+    return 0
+  fi
+  return 1
+}
+
+content_exists() {
+  local path="$1"
+  local snapshot_path=""
+  if snapshot_path="$(content_snapshot_path "$path")"; then
+    [[ -f "$snapshot_path" ]]
+    return $?
+  fi
+  git cat-file -e "HEAD:$path" 2>/dev/null
+}
+
+stream_content() {
+  local path="$1"
+  local snapshot_path=""
+  if snapshot_path="$(content_snapshot_path "$path")"; then
+    cat "$snapshot_path"
+    return 0
+  fi
+  git show "HEAD:$path"
+}
+
+count_content_lines() {
+  local path="$1"
+  stream_content "$path" | awk 'END { print NR }'
 }
 
 emit_file_contents() {
   local path="$1"
   local suppress_pipe_errors="$2"
   local max="$3"
-  if [[ ! -f "$path" ]]; then
+  if ! content_exists "$path"; then
     echo "(missing file)"
     return 0
   fi
   if (( max > 0 )); then
     if [[ "$suppress_pipe_errors" -eq 1 ]]; then
-      awk -v max="$max" '{
+      stream_content "$path" 2>/dev/null | awk -v max="$max" '{
         total++
         if (total <= max) {
           print
@@ -357,9 +316,9 @@ emit_file_contents() {
         if (total > max) {
           print "(...truncated at " max " lines; use --max-lines=0 for complete)"
         }
-      }' "$path" 2>/dev/null || true
+      }' 2>/dev/null || true
     else
-      awk -v max="$max" '{
+      stream_content "$path" | awk -v max="$max" '{
         total++
         if (total <= max) {
           print
@@ -369,100 +328,27 @@ emit_file_contents() {
         if (total > max) {
           print "(...truncated at " max " lines; use --max-lines=0 for complete)"
         }
-      }' "$path"
+      }'
     fi
   else
     if [[ "$suppress_pipe_errors" -eq 1 ]]; then
-      cat "$path" 2>/dev/null || true
+      stream_content "$path" 2>/dev/null || true
     else
-      cat "$path"
+      stream_content "$path"
     fi
   fi
-}
-
-is_binary_file() {
-  local path="$1"
-  # Treat empty as text.
-  if [[ ! -s "$path" ]]; then
-    return 1
-  fi
-  # grep -Iq returns 0 if file looks like text.
-  if LC_ALL=C grep -Iq . "$path" 2>/dev/null; then
-    return 1
-  fi
-  return 0
-}
-
-file_size_bytes() {
-  local path="$1"
-  if command -v wc >/dev/null 2>&1; then
-    wc -c < "$path" | tr -d '[:space:]'
-  else
-    echo "unknown"
-  fi
-}
-
-file_sha256() {
-  local path="$1"
-  if command -v sha256sum >/dev/null 2>&1; then
-    sha256sum "$path" | awk '{print $1}'
-  elif command -v shasum >/dev/null 2>&1; then
-    shasum -a 256 "$path" | awk '{print $1}'
-  elif command -v openssl >/dev/null 2>&1; then
-    openssl dgst -sha256 "$path" | awk '{print $NF}'
-  else
-    echo "sha256-unavailable"
-  fi
-}
-
-emit_binary_block() {
-  local path="$1"
-  local bytes sha
-  bytes="$(file_size_bytes "$path")"
-  sha="$(file_sha256 "$path")"
-
-  case "$include_binary" in
-    meta)
-      echo "(binary; content omitted)"
-      echo "BINARY-META:"
-      echo "- path: $path"
-      echo "- bytes: $bytes"
-      echo "- sha256: $sha"
-      ;;
-    raw)
-      echo "(binary; raw bytes follow)"
-      cat "$path" || true
-      ;;
-    base64)
-      echo "(binary; base64 follows)"
-      if command -v base64 >/dev/null 2>&1; then
-        # GNU base64 supports -w; BSD doesn't. Try -w then fallback.
-        base64 -w 76 "$path" 2>/dev/null || base64 "$path" 2>/dev/null || true
-      else
-        echo "(base64 unavailable)"
-        echo "BINARY-META:"
-        echo "- path: $path"
-        echo "- bytes: $bytes"
-        echo "- sha256: $sha"
-      fi
-      ;;
-  esac
 }
 
 is_file_truncated() {
   local path="$1"
   local lines
 
-  if [[ ! -f "$path" ]]; then
+  if ! content_exists "$path"; then
     return 1
   fi
 
   if (( max_lines > 0 )); then
-    # Only applies to text emission.
-    if is_binary_file "$path"; then
-      return 1
-    fi
-    lines=$(count_lines "$path")
+    lines="$(count_content_lines "$path")"
     if (( lines > max_lines )); then
       return 0
     fi
@@ -485,9 +371,6 @@ emit_dump() {
   for path in "${files[@]}"; do
     if is_file_truncated "$path"; then
       truncated_files=$((truncated_files + 1))
-    fi
-    if is_binary_file "$path"; then
-      binary_files=$((binary_files + 1))
     fi
   done
 
@@ -535,11 +418,7 @@ emit_dump() {
   echo "[FILE CONTENTS]"
   for path in "${files[@]}"; do
     echo "<<< FILE BEGIN: $path"
-    if [[ -f "$path" ]] && is_binary_file "$path"; then
-      emit_binary_block "$path"
-    else
-      emit_file_contents "$path" "$suppress_pipe_errors" "$max_lines"
-    fi
+    emit_file_contents "$path" "$suppress_pipe_errors" "$max_lines"
     echo ">>> FILE END: $path"
     echo ""
   done
@@ -618,8 +497,10 @@ if [[ "$bundle_mode" -eq 0 ]]; then
   emit_manifest "$manifest_path" "$payload_path" "$manifest_output"
 fi
 
-echo "Dump payload: $(display_path "$payload_path")"
-if [[ -n "$archive_path" ]]; then
-  echo "Dump tarball: $(display_path "$archive_path")"
+if [[ -n "$out_path" ]]; then
+  echo "Dump payload: $(display_path "$payload_path")"
+  if [[ -n "$archive_path" ]]; then
+    echo "Dump tarball: $(display_path "$archive_path")"
+  fi
+  echo "Dump manifest: $(display_path "$manifest_path")"
 fi
-echo "Dump manifest: $(display_path "$manifest_path")"

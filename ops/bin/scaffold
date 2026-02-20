@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/../lib/scripts/common.sh"
+
+if ! repo_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+  die "git repo not found. Run from repo root."
+fi
+
+if [[ "$(pwd -P)" != "$repo_root" ]]; then
+  die "Run from repo root: $repo_root"
+fi
+
+project_name="${1:-}"
+if [[ -z "$project_name" ]]; then
+  die "project name is required"
+fi
+if [[ $# -ne 1 ]]; then
+  die "usage: ops/bin/scaffold <project-name>"
+fi
+if [[ ! "$project_name" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]]; then
+  die "invalid project name: $project_name"
+fi
+
+project_dir="$repo_root/projects/$project_name"
+if [[ -e "$project_dir" ]]; then
+  die "project already exists: projects/$project_name"
+fi
+
+scaffold_spec="$repo_root/ops/lib/project/SCAFFOLD.md"
+if [[ ! -f "$scaffold_spec" ]]; then
+  die "missing scaffold spec: ops/lib/project/SCAFFOLD.md"
+fi
+
+mkdir -p "$project_dir"
+
+# Provision the standard optional directories listed in the scaffold spec.
+while IFS= read -r line; do
+  if [[ "$line" =~ ^-[[:space:]]+([a-zA-Z0-9._-]+)/$ ]]; then
+    mkdir -p "$project_dir/${BASH_REMATCH[1]}"
+  fi
+done < "$scaffold_spec"
+
+cp "$scaffold_spec" "$project_dir/SCAFFOLD.md"
+
+echo "projects/$project_name"

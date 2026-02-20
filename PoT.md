@@ -47,7 +47,7 @@ Source of Truth Read-in Order:
 5. `docs/MAP.md`: The Terrain. Continuity map for navigating the repository context.
 
 ## 2. Enforcement
-Integrator plus Automation (linters, repo-gates, and binaries).
+Integrator plus Automation (linters, gates, and binaries).
 Mandate:
 - Stop work.
 - Reject PRs.
@@ -103,7 +103,7 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 ### 5.1 Non-Negotiables
 - Do not push to `main`.
 - Work only on `work/*` branches.
-- Every PR must pass repo-gates.
+- Every PR must pass gates.
 
 ### 5.2 Standard Workflow
 - Create a branch named `work/<topic>-YYYY-MM-DD`.
@@ -111,7 +111,7 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Keep unrelated refactors out of the change set.
 - Review changes visually before commit.
 - Use clear commit messages.
-- Push the `work/*` branch, open a PR, wait for repo-gates, then merge.
+- Push the `work/*` branch, open a PR, wait for gates, then merge.
 
 ### 5.2.2 Immutable DP Workflow
 - Run `./ops/bin/open` to establish freshness state.

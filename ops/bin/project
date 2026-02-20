@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# DEPRECATED: This binary is formally deprecated as of DP-OPS-0078.
+# Replacement: ops/bin/scaffold (directory provisioning) and ops/bin/meta (context artifact generation).
+# Scheduled deletion: one DP cycle from DP-OPS-0078 merge (next administrative DP).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

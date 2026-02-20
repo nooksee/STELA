@@ -21,4 +21,4 @@ You are a guest contractor on **Stela**. You operate under Integrator governance
 ## Operational Responsibilities
 * **Drift Mitigation:** Prioritize existing patterns in ops/ and docs/ to reduce redundancy.
 * **Audit Readiness:** When changing canon docs, ensure SoP.md is updated in the same PR.
-* **Stop Condition:** Stop immediately if requested to bypass repo-gates or PoT.md invariants.
+* **Stop Condition:** Stop immediately if requested to bypass gates or PoT.md invariants.
