@@ -164,7 +164,7 @@ When reporting, include:
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-02-21-29dc0be7.md
+archives/surfaces/PoW-2026-02-21-d0f45c72.md
 
 
 ## README.md
@@ -181,14 +181,15 @@ Use [docs/MANUAL.md](docs/MANUAL.md) for command workflow and closeout routing.
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-02-21-29dc0be7.md
+archives/surfaces/SoP-2026-02-21-d0f45c72.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0088-29dc0be7.md
+archives/surfaces/TASK-DP-OPS-0089-d0f45c72.md
 
 
 ## docs/INDEX.md
+<!-- CCD: ff_target="discovery" ff_band="35-45" -->
 # Documentation Index (Front Door)
 
 ## 0. Primary Read-in (Start Here)

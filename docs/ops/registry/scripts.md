@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="operator-technical" ff_band="25-35" -->
 # Script Registry
 
 Authoritative registry for `ops/lib/scripts/*` helper scripts.
