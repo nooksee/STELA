@@ -187,8 +187,21 @@ render_compiled_manifest() {
   local output_abs="${output_base_dir}/${output_rel}"
   local tmp_file
   tmp_file="$(mktemp)"
+  local ccd_header=""
+
+  case "$output_rel" in
+    "${OUTPUT_DIR}/CONTEXT.md"|\
+    "${OUTPUT_DIR}/CORE.md"|\
+    "${OUTPUT_DIR}/OPS.md"|\
+    "${OUTPUT_DIR}/DISCOVERY.md")
+      ccd_header='<!-- CCD: ff_target="machine-dense" ff_band="10-20" -->'
+      ;;
+  esac
 
   {
+    if [[ -n "$ccd_header" ]]; then
+      echo "$ccd_header"
+    fi
     echo "# ${title} Manifest"
     echo
     echo "<!-- GENERATED FILE. DO NOT EDIT. -->"

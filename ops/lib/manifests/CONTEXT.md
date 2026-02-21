@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="machine-dense" ff_band="10-20" -->
 # CONTEXT Manifest
 
 <!-- GENERATED FILE. DO NOT EDIT. -->

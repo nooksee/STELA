@@ -333,6 +333,25 @@ band_is_outside_tolerance() {
     '
 }
 
+is_wave1_hardened() {
+  local file="$1"
+  case "$file" in
+    PoT.md|\
+    docs/MAP.md|\
+    docs/MANUAL.md|\
+    ops/lib/manifests/CONTEXT.md|\
+    ops/lib/manifests/CONSTRAINTS.md|\
+    ops/lib/manifests/CONTRACTOR.md|\
+    ops/lib/manifests/CORE.md|\
+    ops/lib/manifests/OPS.md|\
+    ops/lib/manifests/DISCOVERY.md|\
+    README.md)
+      return 0
+      ;;
+  esac
+  return 1
+}
+
 declare -a MARKDOWN_FILES=()
 mapfile -t MARKDOWN_FILES < <(git ls-files '*.md')
 
@@ -363,8 +382,13 @@ for file in "${MARKDOWN_FILES[@]}"; do
   fi
 
   if [[ "$header_source" == "none" ]]; then
-    echo "WARNING: ${file}: no CCD header declared"
-    WARNING_COUNT=$((WARNING_COUNT + 1))
+    if is_wave1_hardened "$file"; then
+      echo "FAIL: ${file}: Wave 1 file missing required CCD header" >&2
+      FAILURE_COUNT=$((FAILURE_COUNT + 1))
+    else
+      echo "WARNING: ${file}: no CCD header declared"
+      WARNING_COUNT=$((WARNING_COUNT + 1))
+    fi
     continue
   fi
 

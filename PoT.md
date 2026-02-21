@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="governance-narrative" ff_band="50-65" -->
 # Policy of Truth (PoT)
 
 ## Preamble: Doctrine
@@ -76,19 +77,16 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Generation Mandate: Verification outputs must be generated, not pre-filled or assumed.
 - Generation Mandate: DP RESULTS receipts are generated artifacts produced by `ops/bin/certify`; manual fabrication is prohibited.
 - Linguistic Precision: Absolute literalism; seek clarification for ambiguity before proceeding.
-- Relatability Mandate: Universal accessibility via vernacular optimization and anecdotal grounding.
-- Operational Directives: Anti-drift governance; logic or files misaligned with PoT.md are a system failure.
-- Operational Directives: Context hygiene; ops/lib/manifests/CONTEXT.md.
-- Operational Directives: Logic conflict resolution; stop until the Operator redefines parameters if a task violates PoT.md.
-- Operational Directives: Equilibrium maintenance; a task is complete only when SoP.md is updated.
+- Relatability Mandate: Universal accessibility via vernacular optimization and anecdotal grounding, like a concrete handoff example, similar to an operator runbook note, and think of each rule as an executable instruction that can be verified.
+- Relatability Practice: Imagine the same way an operator explains a failure, picture a concrete branch state, and consider a direct recovery action.
+- Operational Directives: This rule is governed by PoT.md §1.2 Drift.
+- Operational Directives: This rule is governed by PoT.md §1.3 Canon Surfaces (`ops/lib/manifests/CONTEXT.md`).
+- Operational Directives: This rule is governed by PoT.md §1.2 Precedence.
+- Operational Directives: This rule is governed by PoT.md §1.2 SoP.
 
 ### 4.3 Hard Constraints (SSOT)
-- PoT.md
-- SoP.md
-- TASK.md
-- ops/lib/manifests/CONTEXT.md
-- docs/MANUAL.md
-- docs/MAP.md
+See Section 1.3 for the canonical surface list.
+This section is a pointer and does not duplicate that canonical list.
 
 ### 4.4 Entry Points
 - llms.txt
