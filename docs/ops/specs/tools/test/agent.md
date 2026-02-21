@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="operator-technical" ff_band="45-60" -->
 # Technical Specification: tools/test/agent.sh
 
 ## Purpose
@@ -26,6 +27,9 @@ Run pointer-integrity tests for canon agent files, including authorized toolchai
 - Authorized toolchain entries must include backticked tokens that resolve to existing paths.
 - Non-toolchain pointers must also resolve.
 - Drift injection path `ops/bin/DRIFT-INJECTION` must not exist; existence is treated as failure.
+
+## Anecdotal Anchor
+Think of this test like a circuit check that proves each pointer path is still wired before operators trust an agent definition.
 
 ## Related pointers
 - Registry entry: `docs/ops/registry/test.md` (`TEST-01`).

@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="operator-technical" ff_band="35-50" -->
 <!-- SPEC-SURFACE:REQUIRED -->
 # Technical Specification
 
@@ -9,6 +10,7 @@ The binary parses render target and options, resolves template paths for `dp`, `
 
 ## Anecdotal Anchor
 In the DP-OPS-0065 immutable workflow cutover, manual packet and receipt assembly caused inconsistent section shape and repeated lint failures. Routing these surfaces through `ops/bin/manifest` converted packet and receipt generation into a deterministic render step.
+Think of `ops/bin/manifest` like a press template that keeps each packet surface in the same frame before it is handed to a worker.
 
 ## Integrity Filter Warnings
 `ops/bin/manifest` exits on unknown render keys, missing template files, malformed slot tokens, unclosed frontmatter, missing include files, missing include anchors, include cycles, duplicate packet ID hazards in DP mode, and unresolved placeholders in strict mode. Non-strict mode still enforces include resolution and does not allow unresolved include directives.

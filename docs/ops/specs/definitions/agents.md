@@ -1,8 +1,10 @@
+<!-- CCD: ff_target="operator-technical" ff_band="45-60" -->
 # Definition Specification: Agents Chain
 
 ## Purpose
 Define the canonical behavior for the agent definition chain rooted at `opt/_factory/AGENTS.md`.
 This specification is authoritative for candidate and promotion pointer heads, emission flow, and registry linkage.
+Think of the pointer head like a route card that tells every operator which candidate and promotion leaves are current.
 
 ## Head Contract
 `opt/_factory/AGENTS.md` is a four-line pointer head with this exact key order:

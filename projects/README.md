@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="discovery" ff_band="30-50" -->
 # projects/
 
 This directory holds project payloads.

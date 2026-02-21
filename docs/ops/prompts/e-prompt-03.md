@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="operator-technical" ff_band="25-40" -->
 ## **Architect (Refresh + Generate DP)**
 
 Use when: Drafting new DP from plan.

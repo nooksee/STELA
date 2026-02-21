@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="governance-narrative" ff_band="50-65" -->
 # Project STELA.md
 
 Project-level rules for a single project. Store at `projects/<ID>/STELA.md`.

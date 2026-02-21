@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="operator-technical" ff_band="45-60" -->
 <!-- SPEC-SURFACE:REQUIRED -->
 # Technical Specification
 
@@ -15,6 +16,7 @@
 
 ## Anecdotal Anchor
 The script targets the recurring SSOT-drift class where committed llms bundles lagged manifest changes. In that state, contractor sessions consumed outdated capability and pointer data even though canonical manifests had already changed.
+Think of this gate like a checksum handshake that confirms the committed bundles and generated bundles still describe the same system state.
 
 ## Integrity Filter Warnings
 Generator location is hard-coded to `ops/bin/llms`; relocation without script updates will fail lint. The diff step is byte-sensitive and can fail on ordering or formatting divergence even when semantic content appears equivalent. Temporary directory cleanup depends on trap execution, so forced process termination can leave residual scratch output.

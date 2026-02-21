@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="operator-technical" ff_band="45-60" -->
 <!-- SPEC-SURFACE:REQUIRED -->
 # Technical Specification
 

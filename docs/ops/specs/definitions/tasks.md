@@ -1,8 +1,10 @@
+<!-- CCD: ff_target="operator-technical" ff_band="45-60" -->
 # Definition Specification: Tasks Chain
 
 ## Purpose
 Define the canonical behavior for the task definition chain rooted at `opt/_factory/TASKS.md`.
 This specification governs candidate and promotion pointer heads, emission requirements, and task registry alignment.
+Think of the pointer head like a run queue marker that keeps the latest candidate and promotion leaves in one predictable spot.
 
 ## Head Contract
 `opt/_factory/TASKS.md` is a four-line pointer head with this exact key order:

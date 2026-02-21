@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="operator-technical" ff_band="25-40" -->
 ## **Gatekeeper (Refresh + Audit)**
 
 Use when: Auditing worker output before merge.

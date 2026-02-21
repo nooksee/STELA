@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="governance-narrative" ff_band="50-65" -->
 # Calibrated Canonical Density (CCD)
 
 ## 0. Why This Exists

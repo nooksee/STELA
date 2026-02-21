@@ -413,8 +413,8 @@ for file in "${MARKDOWN_FILES[@]}"; do
       echo "FAIL: ${file}: Wave 2 file missing required CCD header" >&2
       FAILURE_COUNT=$((FAILURE_COUNT + 1))
     else
-      echo "WARNING: ${file}: no CCD header declared"
-      WARNING_COUNT=$((WARNING_COUNT + 1))
+      echo "FAIL: ${file}: missing required CCD header"
+      FAILURE_COUNT=$((FAILURE_COUNT + 1))
     fi
     continue
   fi

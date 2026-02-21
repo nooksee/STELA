@@ -1,7 +1,9 @@
+<!-- CCD: ff_target="operator-technical" ff_band="45-60" -->
 # TASK Surface Contract
 
 ## Purpose
 `TASK.md` is the canonical task-routing and DP contract surface.
+Think of `TASK.md` like the control desk card that shows which packet is active and which checks must run before closeout.
 
 ## Surface Roles
 - `TASK.md`: Dispatch contract template and active thread routing surface.

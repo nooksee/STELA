@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="operator-technical" ff_band="35-50" -->
 <!-- SPEC-SURFACE:REQUIRED -->
 # Technical Specification
 
@@ -9,6 +10,7 @@ The binary parses render target and option flags, resolves template paths for `a
 
 ## Anecdotal Anchor
 Before rendering was centralized in the DP-OPS-0077 definition fission timeline, promoted definition files frequently drifted in heading and token layout because authors copied and adjusted markdown manually. `ops/bin/factory` was introduced to bind definition output to one rendering path.
+Think of `ops/bin/factory` like a jig in a machine shop that keeps every output shape aligned before it leaves the bench.
 
 ## Integrity Filter Warnings
 `ops/bin/factory` exits on unknown template keys, invalid slot token names, missing slots file, malformed slot pairs, unclosed frontmatter, missing include file, missing include section anchor, circular include graphs, missing required slots in strict mode, unresolved placeholders in strict mode, and unresolved include directives after expansion. `--dry-run` validates argument shape only and does not validate downstream write permissions.
