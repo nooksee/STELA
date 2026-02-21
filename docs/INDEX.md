@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="discovery" ff_band="35-45" -->
 # Documentation Index (Front Door)
 
 ## 0. Primary Read-in (Start Here)

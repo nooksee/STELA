@@ -352,6 +352,30 @@ is_wave1_hardened() {
   return 1
 }
 
+is_wave2_hardened() {
+  local file="$1"
+  case "$file" in
+    docs/GOVERNANCE.md|\
+    docs/INDEX.md|\
+    docs/CONTEXT.md|\
+    docs/ops/README.md|\
+    docs/ops/registry/agents.md|\
+    docs/ops/registry/binaries.md|\
+    docs/ops/registry/lint.md|\
+    docs/ops/registry/scripts.md|\
+    docs/ops/registry/tasks.md|\
+    docs/ops/registry/skills.md|\
+    docs/ops/registry/tools.md|\
+    docs/ops/registry/projects.md|\
+    docs/ops/registry/prompts.md|\
+    docs/ops/registry/test.md|\
+    docs/ops/prompts/README.md)
+      return 0
+      ;;
+  esac
+  return 1
+}
+
 declare -a MARKDOWN_FILES=()
 mapfile -t MARKDOWN_FILES < <(git ls-files '*.md')
 
@@ -384,6 +408,9 @@ for file in "${MARKDOWN_FILES[@]}"; do
   if [[ "$header_source" == "none" ]]; then
     if is_wave1_hardened "$file"; then
       echo "FAIL: ${file}: Wave 1 file missing required CCD header" >&2
+      FAILURE_COUNT=$((FAILURE_COUNT + 1))
+    elif is_wave2_hardened "$file"; then
+      echo "FAIL: ${file}: Wave 2 file missing required CCD header" >&2
       FAILURE_COUNT=$((FAILURE_COUNT + 1))
     else
       echo "WARNING: ${file}: no CCD header declared"

@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="operator-technical" ff_band="25-35" -->
 # Task Registry
 
 Authoritative registry for canon tasks.

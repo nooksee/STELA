@@ -1,6 +1,12 @@
+<!-- CCD: ff_target="operator-technical" ff_band="25-35" -->
 # Agent Registry
 
 Authoritative registry for canon agents.
+
+## Registry Interpretation
+This table is the canonical roster for agent identity, specialization, and provenance lineage.
+This table functions as the operator roster card that ties each role name to a verified promotion event.
+If a candidate is missing from this list, treat the candidate as non-canonical until promotion closes.
 
 | ID | Name | Provenance (DP) | Specialization |
 | --- | --- | --- | --- |

@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="operator-technical" ff_band="25-35" -->
 # Prompt Registry
 
 Authoritative registry for operator prompt stances under `docs/ops/prompts/`.
