@@ -77,7 +77,6 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Generation Mandate: Verification outputs must be generated, not pre-filled or assumed.
 - Generation Mandate: DP RESULTS receipts are generated artifacts produced by `ops/bin/certify`; manual fabrication is prohibited.
 - Linguistic Precision: Absolute literalism; seek clarification for ambiguity before proceeding.
-- Relatability Mandate: Universal accessibility via vernacular optimization and anecdotal grounding, like a concrete handoff example, similar to an operator runbook note, and think of each rule as an executable instruction that can be verified.
 - Relatability Practice: Imagine the same way an operator explains a failure, picture a concrete branch state, and consider a direct recovery action.
 - Operational Directives: This rule is governed by PoT.md §1.2 Drift.
 - Operational Directives: This rule is governed by PoT.md §1.3 Canon Surfaces (`ops/lib/manifests/CONTEXT.md`).

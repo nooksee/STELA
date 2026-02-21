@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="operator-technical" ff_band="25-40" -->
 ## **Analyst (Refresh + Discuss)**
 
 Use when: Read-only analysis, no edits.

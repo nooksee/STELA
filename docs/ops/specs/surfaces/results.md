@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="operator-technical" ff_band="45-60" -->
 # Surface Specification: RESULTS
 
 ## Constitutional Anchor
@@ -43,3 +44,4 @@ Enforcement linkage:
 ## Forensic Insight
 RESULTS is the executable evidence receipt for DP closeout.
 It keeps verification outputs deterministic and replayable while separating human narrative input to a single controlled sidecar.
+Think of RESULTS like a flight recorder that captures what actually ran and what failed before a merge decision is made.

@@ -1,8 +1,10 @@
+<!-- CCD: ff_target="operator-technical" ff_band="45-60" -->
 # Definition Specification: Skills Chain
 
 ## Purpose
 Define the canonical behavior for the skill definition chain rooted at `opt/_factory/SKILLS.md`.
 This specification governs candidate and promotion pointer heads, leaf schema requirements, and skill registry linkage.
+Think of the pointer head like a dispatch board that keeps the active candidate and promotion leaves visible to every reviewer.
 
 ## Head Contract
 `opt/_factory/SKILLS.md` is a four-line pointer head with this exact key order:

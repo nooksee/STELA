@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="operator-technical" ff_band="30-45" -->
 # {{DISPLAY_NAME}}
 
 Project ID: {{PROJECT_ID}}
