@@ -9,6 +9,8 @@ else
   exit 1
 fi
 cd "$REPO_ROOT" || exit 1
+trap 'emit_binary_leaf "lint-ff" "finish"' EXIT
+emit_binary_leaf "lint-ff" "start"
 
 declare -i SCORED_COUNT=0
 declare -i WARNING_COUNT=0
