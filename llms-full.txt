@@ -166,7 +166,7 @@ When reporting, include:
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-02-20-4d576f63.md
+archives/surfaces/PoW-2026-02-21-692b5321.md
 
 
 ## README.md
@@ -180,11 +180,11 @@ See PoT.md Section 1 for the developer guide.
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-02-20-4d576f63.md
+archives/surfaces/SoP-2026-02-21-692b5321.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0085-4d576f63.md
+archives/surfaces/TASK-DP-OPS-0087-692b5321.md
 
 
 ## docs/INDEX.md
@@ -232,6 +232,7 @@ This document defines the specific surfaces that must be loaded to preserve gove
 ## 3. The Interface (Wayfinding)
 *Operator-facing manuals for navigation.*
 * **Command Console:** [`MANUAL.md`](MANUAL.md) — Mechanics and top commands.
+* **Density Governance:** [`docs/CCD.md`](docs/CCD.md) — Calibrated Canonical Density: tier definitions, gate contract, and authoring rules.
 * **Curated Index:** [`INDEX.md`](INDEX.md) — The approved library of operator guidance.
 
 ## 4. The Bridge (Ingestion Tools)
