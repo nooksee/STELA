@@ -7,6 +7,8 @@ requires_slots:
   - MECHANICS_AND_SEQUENCING
   - ANECDOTAL_ANCHOR
   - INTEGRITY_FILTER_WARNINGS
+ff_target: governance-narrative
+ff_band: "50-65"
 ---
 <!-- SPEC-SURFACE:REQUIRED -->
 # Technical Specification

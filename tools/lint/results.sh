@@ -51,7 +51,7 @@ has_nonempty_content() {
 }
 
 RESULTS_TEMPLATE_PATH="ops/src/surfaces/results.md.tpl"
-RESULTS_TEMPLATE_SHA256="6365ca6aeab1880f7f0b42b0412e9dd3e325263aed1dadee1679a5f6d64c2e8f"
+RESULTS_TEMPLATE_SHA256="9f6dc9fc75fa7667cc3fb4fa3b4d5ebfdc233022199710870240d6e46ea9a707"
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   usage

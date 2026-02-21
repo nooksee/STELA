@@ -18,6 +18,8 @@ requires_slots:
 includes:
   - ops/lib/manifests/CONSTRAINTS.md#section-1
   - ops/lib/manifests/CONSTRAINTS.md#section-3
+ff_target: operator-technical
+ff_band: "25-40"
 ---
 ---
 trace_id: {{TRACE_ID}}

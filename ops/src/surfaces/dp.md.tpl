@@ -22,6 +22,8 @@ requires_slots:
 includes:
   - ops/lib/manifests/CONSTRAINTS.md#section-1
   - ops/lib/manifests/CONTRACTOR.md
+ff_target: operator-technical
+ff_band: "30-40"
 ---
 ### {{DP_ID}}: {{DP_TITLE}}
 
