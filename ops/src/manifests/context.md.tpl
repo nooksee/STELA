@@ -1,3 +1,10 @@
+---
+template_type: manifest
+template_id: context
+template_version: 1
+ff_target: machine-dense
+ff_band: "10-20"
+---
 # CONTEXT Manifest Template
 
 ## Members

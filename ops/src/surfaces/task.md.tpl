@@ -2,6 +2,8 @@
 template_type: surface
 template_id: task-surface
 template_version: 1
+ff_target: machine-dense
+ff_band: "15-25"
 ---
 # STELA TASK DASHBOARD
 Status: ACTIVE
