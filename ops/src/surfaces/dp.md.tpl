@@ -135,6 +135,8 @@ Target Files allowlist (hard gate):
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
 - Run prune hygiene: ./ops/bin/prune --scrub.
+- Regenerate session artifacts: `./ops/bin/open --out=auto`
+- Capture updated platform state: `./ops/bin/dump --scope=platform --format=chatgpt --out=auto`
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
 ### 3.5.1 Mandatory Closing Block

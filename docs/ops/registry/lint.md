@@ -18,6 +18,7 @@ Authoritative registry for `tools/lint/*` executables.
 | LINT-12 | Schema Lint | tools/lint/schema.sh | Spec: `docs/ops/specs/tools/lint/schema.md`. Validates unified schema front-matter keys for `archives/definitions` leaves and Phase 2 surface leaves in `archives/surfaces` (PoW/SoP/TASK snapshots), enforcing `created_at` and `previous` format rules. |
 | LINT-13 | Leaf Lint | tools/lint/leaf.sh | Spec: `docs/ops/specs/tools/lint/leaf.md`. Validates archive surface leaf schema and pointer integrity for `archives/surfaces/` entries. |
 | LINT-14 | Skill Lint | tools/lint/skill.sh | Spec: `docs/ops/specs/tools/lint/skill.md`. Enforces skill registry synchronization and pointer integrity for skill definition leaves. |
+| LINT-15 | Feynman Frequency Lint | tools/lint/ff.sh | Spec: `docs/ops/specs/tools/lint/ff.md`. Scores tracked markdown files against declared CCD density headers (`<!-- CCD: ... -->` or YAML `ff_target`/`ff_band` fields). Emits WARNING for files with no declared header; fails if a declared file scores outside its band by more than 10 points. Phase 1: WARNING-only mode for undeclared files; Wave 0 paths are always exempt. |
 
 ## Gate Status Decisions (2026-02-19)
 - `tools/lint/project.sh` is formally deprecated.

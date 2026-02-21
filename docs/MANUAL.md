@@ -35,6 +35,7 @@ Run:
 ./tools/verify.sh
 ./tools/lint/truth.sh
 ./tools/lint/style.sh
+./tools/lint/ff.sh
 ./tools/lint/context.sh
 ./tools/lint/agent.sh
 ./tools/lint/dp.sh TASK.md

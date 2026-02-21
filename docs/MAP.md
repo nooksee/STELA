@@ -18,6 +18,7 @@ This document defines the specific surfaces that must be loaded to preserve gove
 ## 3. The Interface (Wayfinding)
 *Operator-facing manuals for navigation.*
 * **Command Console:** [`MANUAL.md`](MANUAL.md) — Mechanics and top commands.
+* **Density Governance:** [`docs/CCD.md`](docs/CCD.md) — Calibrated Canonical Density: tier definitions, gate contract, and authoring rules.
 * **Curated Index:** [`INDEX.md`](INDEX.md) — The approved library of operator guidance.
 
 ## 4. The Bridge (Ingestion Tools)
