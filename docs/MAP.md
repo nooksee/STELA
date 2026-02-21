@@ -1,8 +1,10 @@
+<!-- CCD: ff_target="operator-technical" ff_band="30-40" -->
 # Continuity Map (State Persistence)
 
-## 0. Philosophy
-**The repo is stateless; the Map provides the memory.**
-This document defines the specific surfaces that must be loaded to preserve governance, history, and active intent across sessions.
+## 0. Scope
+This map lists continuity surfaces and operator navigation pointers.
+Entry sequence is `PoT.md` -> `SoP.md` -> `PoW.md` -> `TASK.md` -> `docs/MAP.md`.
+Use `docs/MANUAL.md` for command procedure details and `docs/CCD.md` for density policy.
 
 ## 1. The Constitution (Immutable Law)
 *Rules that do not change without a governance event.*
@@ -18,7 +20,7 @@ This document defines the specific surfaces that must be loaded to preserve gove
 ## 3. The Interface (Wayfinding)
 *Operator-facing manuals for navigation.*
 * **Command Console:** [`MANUAL.md`](MANUAL.md) — Mechanics and top commands.
-* **Density Governance:** [`docs/CCD.md`](docs/CCD.md) — Calibrated Canonical Density: tier definitions, gate contract, and authoring rules.
+* **Density Governance:** [`CCD.md`](CCD.md) — Calibrated Canonical Density: tier definitions, gate contract, and authoring rules.
 * **Curated Index:** [`INDEX.md`](INDEX.md) — The approved library of operator guidance.
 
 ## 4. The Bridge (Ingestion Tools)
