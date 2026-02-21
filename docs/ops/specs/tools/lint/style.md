@@ -1,44 +1,19 @@
 <!-- SPEC-SURFACE:REQUIRED -->
-# Technical Specification: tools/lint/style.sh
+# Technical Specification
 
 ## First Principles Rationale
-`tools/lint/style.sh` enforces writing discipline on markdown surfaces so policy text
-stays direct, explicit, and machine-checkable. The linter now protects two additional
-integrity boundaries: anti-jargon language and canonical spec-surface structure.
+`tools/lint/style.sh` enforces linguistic precision and structural explainability for markdown governance surfaces. The gate exists because ambiguous writing, jargon-heavy prose, and malformed spec structure reduce machine-checkable clarity and increase operator interpretation drift, which conflicts with PoT Section 4.2 precision directives.
 
 ## Mechanics and Sequencing
-1. Resolve the repository root from git state and run inside that root.
-2. Enumerate tracked markdown files with `git ls-files '*.md'`, excluding `storage/`.
-3. Fail on contraction tokens (ASCII and Unicode apostrophes).
-4. Enforce the Jargon Blacklist:
-   - Terms are defined in a centralized `JARGON_BLACKLIST` array in `tools/lint/style.sh`.
-   - Matching is case-insensitive fixed-string search against tracked markdown files.
-   - Every match reports both the matched term and file:line location.
-5. Enforce spec-surface compliance in `docs/ops/specs/`:
-   - A file is compliance-bound when it contains `<!-- SPEC-SURFACE:REQUIRED -->`.
-   - Compliance-bound files must contain all required H2 sections:
-     - `## First Principles Rationale`
-     - `## Mechanics and Sequencing`
-     - `## Anecdotal Anchor`
-     - `## Integrity Filter Warnings`
-   - Missing sections fail lint with file path plus missing section name.
-6. Run closing-block lead-word duplication checks for `storage/handoff/CLOSING-*.md`.
+1. Resolve repository root and enumerate tracked markdown files with `git ls-files '*.md'`, excluding `storage/`.
+2. Search all tracked markdown for contraction tokens using regex patterns that cover ASCII and Unicode apostrophes.
+3. Enforce anti-jargon policy by scanning case-insensitive fixed matches for every term in `JARGON_BLACKLIST`.
+4. For each spec file under `docs/ops/specs/` that contains `<!-- SPEC-SURFACE:REQUIRED -->`, require the four canonical H2 headings.
+5. Scan `storage/handoff/CLOSING-*.md` and reject duplicate opening words across Mandatory Closing Block entries.
+6. Aggregate failures and exit non-zero when any check reports an error.
 
 ## Anecdotal Anchor
-If a spec file is marked with `<!-- SPEC-SURFACE:REQUIRED -->` but omits
-`## Integrity Filter Warnings`, CI fails immediately and reports the exact file and
-missing section label. The author can repair one heading and rerun lint without a
-repo-wide documentation rewrite.
+DP-OPS-0082 introduced spec-surface enforcement and anti-jargon checks after repeated review churn on docs that passed operational gates but still carried ambiguous structure or promotional language. Later packets used this gate to block malformed spec edits before certification.
 
 ## Integrity Filter Warnings
-`tools/lint/style.sh` returns non-zero when any of the following occurs:
-- A required dependency is missing (`git`, plus either `rg` or `grep -E`).
-- Any contraction token is found in markdown.
-- Any Jargon Blacklist term is found in markdown.
-- Any compliance-bound spec file in `docs/ops/specs/` is missing a required section.
-- Any closing sidecar repeats opening lead words in the mandatory closing block.
-
-## Related Pointers
-- Registry entry: `docs/ops/registry/lint.md` (`LINT-07`).
-- Behavioral policy source: `PoT.md` Section 4.2.
-- Adjacent policy lint: `tools/lint/truth.sh`.
+The scan set includes tracked markdown only; untracked drafts are outside enforcement until tracked. Jargon checks are fixed-string matches and can flag quoted historical text that appears in explanatory context. Spec structure checks activate only when `<!-- SPEC-SURFACE:REQUIRED -->` is present, so files without that marker are not subject to four-slot heading validation.

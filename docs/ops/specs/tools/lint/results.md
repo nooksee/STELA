@@ -1,53 +1,20 @@
-# Technical Specification: tools/lint/results.sh
+<!-- SPEC-SURFACE:REQUIRED -->
+# Technical Specification
 
-## Purpose
-Validate generated RESULTS receipts against the certification template contract.
+## First Principles Rationale
+`tools/lint/results.sh` protects certification receipt integrity so generated RESULTS artifacts cannot be accepted when structurally incomplete, placeholder-filled, or hash-inconsistent. This gate enforces the PoT Section 4.2 Generation Mandate by rejecting manual fabrication patterns and malformed closeout evidence.
 
-## Invocation
-- Command forms:
-  - `bash tools/lint/results.sh`
-  - `bash tools/lint/results.sh --all`
-  - `bash tools/lint/results.sh storage/handoff/DP-OPS-XXXX-RESULTS.md`
-- Required flags: none.
-- Positional arguments:
-  - Optional explicit receipt path.
-  - `--all` forces a full scan of `storage/handoff/DP-OPS-*-RESULTS.md`.
-  - When omitted, lint auto-targets the active branch packet receipt (`storage/handoff/<DP_ID>-RESULTS.md`) when the branch matches `work/dp-...`; if no active match exists and multiple receipts are present, lint fails and requires explicit disambiguation.
-  - Git hash parity enforcement is mode-specific:
-    - explicit path mode enforces receipt `Git Hash` equals `git rev-parse HEAD`.
-    - no-argument and `--all` modes enforce structural and closing-block checks, and report historical hash parity skips without failing.
-- Exit behavior:
-  - `0` when all checked receipts pass.
-  - `1` for usage errors, template drift, or receipt validation failures.
+## Mechanics and Sequencing
+1. Resolve repository root, emit telemetry, and enforce canonical hash parity for `ops/src/surfaces/results.md.tpl`.
+2. Resolve lint target mode: explicit path, `--all` scan, active-branch inferred path, or single discovered receipt fallback.
+3. For each target file, distinguish certification format from legacy format and skip legacy only in non-explicit historical scan modes.
+4. Enforce required heading set and reject unresolved artifact placeholders or forbidden disposable-artifact references.
+5. Enforce `Git Hash` parity in explicit mode, and record historical parity skips in inferred/scan modes without blocking.
+6. Parse Mandatory Closing Block fields, require all labels, reject placeholder text, and require non-empty strict/plaintext plus permissive/markdown fields.
+7. Return non-zero when any certification-format receipt fails required checks.
 
-## Inputs
-- Canonical template: `ops/src/surfaces/results.md.tpl`.
-- Template hash constant in lint script.
-- RESULTS receipt(s) from explicit path, active-branch inference, or `--all` naming scan.
-- Current repository hash from `git rev-parse HEAD`.
+## Anecdotal Anchor
+During the DP-OPS-0069 certification cutover, the absence of a dedicated RESULTS lint path allowed structurally incomplete receipts to pass closeout and created an audit gap that required retroactive correction. This script formalizes that missing gate.
 
-## Outputs
-- No file writes.
-- Stdout:
-  - `OK: RESULTS lint passed (<count> file(s) checked).`
-  - `SKIP: legacy RESULTS format: <path>` for non-certification legacy receipts.
-- Stderr:
-  - template drift diagnostics.
-  - missing heading/field failures.
-  - explicit-mode git hash mismatch diagnostics.
-  - missing/placeholder Closing Block failures.
-
-## Enforcement Model
-1. Verify `ops/src/surfaces/results.md.tpl` matches expected sha256 constant.
-2. Resolve target receipt set (explicit path, active-branch inferred path, or `--all` scan).
-3. Skip legacy receipts not matching certification heading schema.
-4. For certification receipts, enforce:
-  - required headings/sections.
-  - explicit-path mode: recorded `Git Hash` equals `git rev-parse HEAD`.
-  - no-argument and `--all` modes: hash parity mismatch is counted and reported as a non-fatal historical skip.
-  - Mandatory Closing Block labels present.
-  - Closing Block values are non-empty and placeholder-free.
-
-## Related pointers
-- Certification renderer: `ops/bin/certify`.
-- Surface contract: `docs/ops/specs/surfaces/results.md`.
+## Integrity Filter Warnings
+Mode behavior is intentionally different: explicit path mode applies strict hash parity, while inferred and `--all` modes tolerate historical parity drift and only report skips. Legacy receipts are ignored in broad historical scans unless explicitly targeted. Template hash constants must be revised in lockstep with sanctioned template changes.

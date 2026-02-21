@@ -1,49 +1,20 @@
-# Technical Specification: tools/lint/factory.sh
+<!-- SPEC-SURFACE:REQUIRED -->
+# Technical Specification
 
-## Purpose
-Enforce factory pointer-head invariants and registry integrity across agent, task, and skill definition surfaces.
+## First Principles Rationale
+`tools/lint/factory.sh` preserves definition-promotion integrity by proving that factory head pointers, registries, and canonical files remain synchronized. This gate prevents broken head chains, dead registries, and ghost artifacts that would corrupt promotion routing and violate SSOT alignment across agent, task, and skill domains.
 
-## Invocation
-- Command: `bash tools/lint/factory.sh`
-- Exit behavior:
-  - `0` when all checks pass.
-  - `1` when one or more integrity checks fail.
-  - `2` when required files are missing.
+## Mechanics and Sequencing
+1. Resolve repository root, emit telemetry, and require all factory heads plus all definition registries.
+2. Validate each head file (`AGENTS.md`, `TASKS.md`, `SKILLS.md`) as an exact four-line key sequence (`candidate`, `promotion`, `spec`, `registry`) with non-empty values.
+3. Enforce expected `spec:` and `registry:` path equality and filesystem reachability.
+4. Validate `candidate:` and `promotion:` values as either exact `-(origin)` sentinels or reachable `archives/definitions/*` leaf paths.
+5. Invoke delegated linters (`tools/lint/agent.sh`, `tools/lint/task.sh`) and fail factory lint when either delegated gate fails.
+6. Parse registries and verify all referenced files exist, then detect ghost files under `opt/_factory/agents`, `opt/_factory/skills`, and `opt/_factory/tasks`.
+7. Apply additional guardrails: skill-pointer token existence checks, numbered-list rejection in skill files, and duplicate verification-pattern checks inside task files that already invoke `S-LEARN-01`.
 
-## Inputs
-- Factory heads:
-  - `opt/_factory/AGENTS.md`
-  - `opt/_factory/TASKS.md`
-  - `opt/_factory/SKILLS.md`
-- Definition specs:
-  - `docs/ops/specs/definitions/agents.md`
-  - `docs/ops/specs/definitions/tasks.md`
-  - `docs/ops/specs/definitions/skills.md`
-- Registries:
-  - `docs/ops/registry/agents.md`
-  - `docs/ops/registry/tasks.md`
-  - `docs/ops/registry/skills.md`
-- Canon definition directories under `opt/_factory/`.
-- Delegated linters:
-  - `tools/lint/agent.sh`
-  - `tools/lint/task.sh`
+## Anecdotal Anchor
+DP-OPS-0077 fission work exposed pointer-head inconsistency when head files were edited outside canonical promotion flow. That incident class produced dead-end promotion paths and registry/file divergence, which this script now catches before promotion state reaches closeout.
 
-## Checks
-- Each factory head file has exactly four lines in this key order: `candidate`, `promotion`, `spec`, `registry`.
-- `spec:` pointers match expected definition-spec paths and resolve on disk.
-- `registry:` pointers match expected registry paths and resolve on disk.
-- `candidate:` and `promotion:` values are valid when either:
-  - origin sentinel ending with `-(origin)` and matching expected chain sentinel, or
-  - reachable leaf path under `archives/definitions/`.
-- Registry dead-end checks for agent, task, and skill canonical files.
-- Ghost artifact checks for unregistered files in `opt/_factory/agents/`, `opt/_factory/tasks/`, and `opt/_factory/skills/`.
-- Existing skill pointer hygiene and task duplicate-verification-pattern checks.
-
-## Output Contract
-- No file mutations.
-- Emits `FAIL:` diagnostics for each violation.
-- Emits `OK: Factory Integrity Verified.` only when all checks pass.
-
-## Related pointers
-- Registry entry: `docs/ops/registry/lint.md` (`LINT-04`).
-- Upstream head specs: `docs/ops/specs/definitions/agents.md`, `docs/ops/specs/definitions/tasks.md`, `docs/ops/specs/definitions/skills.md`.
+## Integrity Filter Warnings
+The script depends on delegated outputs from `tools/lint/agent.sh` and `tools/lint/task.sh`; a failure in either script blocks factory lint even when head files are locally valid. Sentinel matching is strict: `-(origin)` values must equal exact expected strings. Pointer token checks are string-based and path-based, so semantic content quality outside enforced sections is out of scope.

@@ -2,13 +2,18 @@
 # Technical Specification
 
 ## First Principles Rationale
-skill lint protects definition integrity by enforcing registry/file synchronization, required section content, and context-manifest hazard exclusions for skill surfaces.
+`tools/lint/skill.sh` enforces skill-definition integrity by proving that registry records, filesystem files, and minimum section schema stay synchronized. The script also guards context boundaries by rejecting any skill references inside global context manifest state, which prevents on-demand definitions from being promoted into always-loaded context.
 
 ## Mechanics and Sequencing
-Validate repository and required files, parse registry table rows, detect duplicate IDs/paths, ensure referenced files exist, enforce no skill references in context manifest, and validate each skill file header/sections/placeholders.
+1. Resolve repository root, emit telemetry, and require `docs/ops/registry/skills.md` plus `ops/lib/manifests/CONTEXT.md`.
+2. Scan the context manifest for skill path or skill ID tokens and fail when any match appears.
+3. Parse registry rows (`ID` and file path), enforce unique IDs and unique file paths, and fail missing referenced files.
+4. Require `opt/_factory/skills`, then detect ghost `S-LEARN-*.md` files that have no registry entry.
+5. For each skill file, reject placeholder markers, enforce header shape, and enforce required sections (`Provenance`, `Scope`, `Pointers`, `Invocation Guidance`) including duplicate-section rejection and non-empty content checks.
+6. Return non-zero when any contract violation is detected.
 
 ## Anecdotal Anchor
-Skill definitions drifted from registry truth when manual edits bypassed validation; this lint exists to catch ghost files, stale registry pointers, and schema erosion early.
+The gate targets the drift class where manual edits to skill definitions bypassed registry validation and introduced ghost files plus stale registry pointers. Those sessions required manual file/registry reconciliation before normal promotion flow could continue.
 
 ## Integrity Filter Warnings
-The lint hard-fails on missing critical files, duplicate registry identifiers, placeholder tokens, or missing mandatory sections; output should be treated as blocking for release gates.
+Missing critical files, duplicate IDs, duplicate file paths, placeholder tokens, and missing required sections are all hard failures. Scope is limited to `opt/_factory/skills/S-LEARN-*.md` plus registry rows; archived candidate files outside that namespace are not scanned by this script.

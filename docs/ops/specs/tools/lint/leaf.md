@@ -2,13 +2,17 @@
 # Technical Specification
 
 ## First Principles Rationale
-leaf lint enforces telemetry wiring consistency so in-scope binaries and lint/test scripts emit lifecycle leaves required for traceable execution history.
+`tools/lint/leaf.sh` enforces telemetry wiring on execution-critical scripts so every in-scope binary or lint/test script emits lifecycle leaves. The gate exists because unlogged execution paths break proof reconstruction and violate the PoT proof discipline that requires generated evidence instead of inferred narratives.
 
 ## Mechanics and Sequencing
-Enumerate tracked ops/bin files (excluding deprecated project binary) and tracked shell tools under tools/lint and tools/test, then fail if any target lacks an emit_binary_leaf invocation.
+1. Resolve repository root and emit telemetry for the lint script itself.
+2. Enumerate tracked `ops/bin/*` files, excluding deprecated `ops/bin/project`.
+3. Enumerate tracked shell scripts in `tools/lint/`, `tools/test/`, and `tools/verify.sh`.
+4. For each enumerated path, search for the `emit_binary_leaf` token.
+5. Record each missing token as a failure and return non-zero when any in-scope executable lacks telemetry wiring.
 
 ## Anecdotal Anchor
-Execution trace gaps repeatedly complicated incident reconstruction; this lint exists to prevent new scripts from bypassing telemetry emission patterns.
+This gate addresses the class of incidents where execution trace gaps forced operators to correlate logs across sessions by hand to rebuild a failure sequence. Missing leaf emissions extended root-cause timelines because no deterministic start/finish markers existed for the affected script.
 
 ## Integrity Filter Warnings
-Coverage scope is path-based and string-match based; refactors that rename or indirect telemetry calls can trigger false negatives unless lint logic is updated in lockstep.
+Coverage is path-based and string-match based. A script can evade detection when telemetry is injected indirectly or renamed without the literal `emit_binary_leaf` token. Files outside the enumerated path scope are not checked, so scope expansion requires explicit script updates.
