@@ -1,74 +1,20 @@
-# Technical Specification: tools/lint/dp.sh
+<!-- SPEC-SURFACE:REQUIRED -->
+# Technical Specification
 
-## Purpose
-Validate Dispatch Packet structure integrity via canonical template hashing, enforce required slot content, validate allowlist pointer integrity, and lint RESULTS closing blocks.
+## First Principles Rationale
+`tools/lint/dp.sh` enforces DP transaction immutability so a packet cannot drift from canonical structure, allowlist contract, or closing-block requirements. The gate protects PoT Section 1.2 axioms, especially Drift and SSOT, by proving that a packet is structurally equivalent to the canonical DP template and that declared scope pointers are valid before certification.
 
-## Invocation
-- Command forms:
-  - `bash tools/lint/dp.sh --test`
-  - `bash tools/lint/dp.sh` (defaults to `TASK.md` when stdin is empty)
-  - `bash tools/lint/dp.sh TASK.md`
-  - `bash tools/lint/dp.sh <path>`
-  - `cat <dp.md> | bash tools/lint/dp.sh -`
-- Required flags: none.
-- Positional arguments: at most one (`path` or `-`).
-- Exit behavior:
-  - `0` for pass.
-  - `1` for validation failures or invalid usage.
+## Mechanics and Sequencing
+1. Resolve repository root, emit telemetry, and enforce canonical template hash parity for `ops/src/surfaces/dp.md.tpl`.
+2. Resolve input mode (`--test`, explicit path, stdin, or default `TASK.md`), including TASK pointer-head resolution and DP block extraction when the source is a TASK surface.
+3. Render canonical DP in non-strict mode, normalize both canonical and payload structures, hash both normalized forms, and fail on mismatch.
+4. Validate required fields and section blocks, including heading ID/title shape, base branch metadata, scoped load-order content, plan slots, and receipt slot non-placeholder content.
+5. Enforce allowlist pointer integrity: exactly one pointer entry, canonical pointer path match, allowlist file existence, entry normalization, runtime-prefix restrictions, wildcard policy constraints, and repository reachability checks.
+6. For RESULTS paths, enforce Mandatory Closing Block labels and field constraints, reject placeholders, and require Final Squash Stub divergence from Primary Commit Header.
+7. In `--test` mode, execute fixture-driven negative and positive checks that exercise template-hash drift, structure mismatch, allowlist-pointer mismatch, allowlist-file invalidity, and RESULTS closing-block validation.
 
-## Inputs
-- Input payload from file argument or stdin.
-- For `TASK.md`, extracts the active DP block from `### DP-...` through Section `3.5.1` content.
-- Canonical DP template: `ops/src/surfaces/dp.md.tpl`.
-- Canonical template hash constant from `tools/lint/dp.sh`.
-- Allowlist pointer file from DP Section 3.3 (`storage/dp/active/allowlist.txt` by default).
+## Anecdotal Anchor
+DP-OPS-0074 exposed an enforcement-model gap where no-argument receipt scanning and explicit certification mode did not share identical hash-parity behavior. That gap allowed a RESULTS artifact to pass without full parity enforcement, and the repair cycle introduced explicit mode-sensitive parity logic plus stricter closing-block checks.
 
-## Outputs
-- No tracked files are written.
-- Stdout:
-  - `OK: DP lint passed`
-  - `OK: DP RESULTS lint passed`
-  - `OK: --test passed`
-- Stderr:
-  - `FAIL:` diagnostics for hash mismatches, schema extraction errors, missing required slot content, allowlist integrity failures, and RESULTS block violations.
-
-## Enforcement Model
-1. Canonical template hash preflight:
-- Computes sha256 for `ops/src/surfaces/dp.md.tpl`.
-- Fails if hash does not equal `CANONICAL_DP_TEMPLATE_SHA256` constant.
-
-2. Structure-hash validation:
-- Normalizes both canonical template and DP payload by replacing variable slots with fixed placeholders.
-- Computes sha256 for normalized template and normalized payload.
-- Fails on mismatch.
-
-3. Required-field validation:
-- Enforces non-empty and non-placeholder values for:
-  - DP heading id/title.
-  - `Base Branch`, `Required Work Branch`, `Base HEAD`, `Freshness Stamp`.
-  - DP-scoped load order.
-  - Objective/In scope/Out of scope/Safety sections.
-  - Plan body sections (3.4.1 through 3.4.4).
-  - Receipt section body (3.4.5).
-
-4. Allowlist pointer integrity:
-- DP allowlist block must contain exactly one pointer entry.
-- Pointer must match canonical pointer path.
-- Pointer file must exist and be non-empty.
-- Each allowlist line must be a plain path that exists in repository scope.
-
-5. RESULTS lint path:
-- Validates Mandatory Closing Block labels.
-- Enforces strict plaintext fields and placeholder rejection.
-- Ensures Final Squash Stub differs from Primary Commit Header.
-
-## Self-test coverage (`--test`)
-- Canonical template hash mismatch failure.
-- DP structure hash mismatch failure.
-- Allowlist pointer mismatch and allowlist file path validation failures.
-- RESULTS closing block pass/fail fixtures.
-
-## Related pointers
-- Canonical DP generator: `ops/bin/draft`.
-- DP template source: `ops/src/surfaces/dp.md.tpl`.
-- TASK schema companion: `docs/ops/specs/surfaces/task.md`.
+## Integrity Filter Warnings
+Template hash constants are hard-coded; any legitimate template change requires synchronized constant updates or lint will fail every packet. Results lint behavior is mode-sensitive by design: explicit path mode enforces strict `Git Hash` parity, while historical scan modes report parity skips without blocking. Allowlist validation accepts selected generated-surface wildcard families and closing-sidecar patterns, so policy expansion mistakes in that branch can widen scope unintentionally.
