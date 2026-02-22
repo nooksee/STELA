@@ -130,7 +130,7 @@ Validates task factory files and the TASK.md dashboard: registry alignment, sect
 Registry: Registry/section/provenance/closeout checks — C, Keep. Ambiguous-language detection — B, Keep with structural redesign candidate: machine-parseable execution step format.
 
 **`tools/lint/truth.sh` — 153 lines**
-Scans all authored surfaces for forbidden spellings of "Stela", forbidden legacy phrases ("Living Document"), and forbidden legacy registry path casing. No structural prevention exists for spelling errors in prose. Detection is the only tool. 153 lines for three distinct scan categories is proportionate.
+Scans all authored surfaces for forbidden spellings of "Stela", forbidden legacy phrase variants for mutable-canon wording, and forbidden legacy registry path casing. No structural prevention exists for spelling errors in prose. Detection is the only tool. 153 lines for three distinct scan categories is proportionate.
 Deletion Test: **C.** Legacy terminology and platform name misspellings re-enter the canon across DP cycles without detection.
 Registry: C — Keep. Simple, proportionate, no structural alternative exists.
 
