@@ -9,13 +9,19 @@ source "${SCRIPT_DIR}/../lib/scripts/common.sh"
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/draft --id=DP-OPS-XXXX --title="..." --work-branch=work/... --base-head=<hash> [options]
+Usage:
+  ops/bin/draft --id=DP-OPS-XXXX --title="..." --work-branch=work/... --base-head=<hash> [options]
+  ops/bin/draft --addendum=A --base-dp=DP-OPS-XXXX
 
 Required:
 - --id=DP-OPS-XXXX
 - --title="..."
 - --work-branch=work/...
 - --base-head=<hash>
+
+Addendum generation mode (all required):
+- --addendum=A                        single uppercase letter A-Z
+- --base-dp=DP-OPS-XXXX               existing base packet in intake or processed
 
 Optional:
 - --base-branch=main                  (default: main)
@@ -188,6 +194,29 @@ read_lint_constants() {
   fi
 }
 
+read_addendum_lint_constants() {
+  local lint_path="$REPO_ROOT/tools/lint/dp.sh"
+  local template_hash
+
+  [[ -f "$lint_path" ]] || die "missing tools/lint/dp.sh"
+
+  ADDENDUM_TEMPLATE_PATH="$(awk -F'"' '/^CANONICAL_ADDENDUM_TEMPLATE_PATH="/{print $2; exit}' "$lint_path")"
+  template_hash="$(awk -F'"' '/^CANONICAL_ADDENDUM_TEMPLATE_SHA256="/{print $2; exit}' "$lint_path")"
+
+  [[ -n "$ADDENDUM_TEMPLATE_PATH" ]] || die "failed to read CANONICAL_ADDENDUM_TEMPLATE_PATH from tools/lint/dp.sh"
+  [[ -n "$template_hash" ]] || die "failed to read CANONICAL_ADDENDUM_TEMPLATE_SHA256 from tools/lint/dp.sh"
+  [[ "$template_hash" =~ ^[0-9a-f]{64}$ ]] || die "invalid CANONICAL_ADDENDUM_TEMPLATE_SHA256 in tools/lint/dp.sh"
+
+  ADDENDUM_TEMPLATE_PATH="$REPO_ROOT/$ADDENDUM_TEMPLATE_PATH"
+  [[ -f "$ADDENDUM_TEMPLATE_PATH" ]] || die "canonical addendum template missing: ${ADDENDUM_TEMPLATE_PATH}"
+
+  local actual_hash
+  actual_hash="$(sha256_file "$ADDENDUM_TEMPLATE_PATH")"
+  if [[ "$actual_hash" != "$template_hash" ]]; then
+    die "template preflight failed: canonical addendum template hash mismatch (expected ${template_hash}, got ${actual_hash})"
+  fi
+}
+
 require_task_markers() {
   local task_path="$REPO_ROOT/TASK.md"
   local source_path
@@ -253,6 +282,50 @@ render_dp() {
   "${cmd[@]}"
 }
 
+base_dp_source_path() {
+  local base_dp="$1"
+  local intake_path="$REPO_ROOT/storage/dp/intake/${base_dp}.md"
+  local processed_path="$REPO_ROOT/storage/dp/processed/${base_dp}.md"
+
+  if [[ -f "$intake_path" ]]; then
+    printf '%s' "$intake_path"
+    return 0
+  fi
+
+  if [[ -f "$processed_path" ]]; then
+    printf '%s' "$processed_path"
+    return 0
+  fi
+
+  return 1
+}
+
+render_addendum_intake() {
+  local base_dp="$1"
+  local addendum_id="$2"
+  local out_path="$3"
+  [[ -x "$TEMPLATE_BIN" ]] || die "template binary missing or not executable: ${TEMPLATE_BIN}"
+
+  "$TEMPLATE_BIN" render addendum \
+    "--out=${out_path}" \
+    "--slot=BASE_DP_ID=${base_dp}" \
+    "--slot=ADDENDUM_ID=${addendum_id}" \
+    "--slot=OPERATOR_AUTHORIZATION=Operator authorization statement must be inserted by the operator before addendum execution." \
+    "--slot=SCOPE_DELTA=REPLACE_WITH_EXACT_PATH" \
+    "--slot=ADDENDUM_OBJECTIVE=TODO: add addendum objective details." \
+    "--slot=ADDENDUM_RECEIPT=- TODO: add addendum-specific receipt commands."
+}
+
+render_closing_sidecar() {
+  local dp_label="$1"
+  local out_path="$2"
+  [[ -x "$TEMPLATE_BIN" ]] || die "template binary missing or not executable: ${TEMPLATE_BIN}"
+
+  "$TEMPLATE_BIN" render closing \
+    "--out=${out_path}" \
+    "--slot=DP_ID=${dp_label}"
+}
+
 update_task() {
   local rendered_path="$1"
   local task_path="$REPO_ROOT/TASK.md"
@@ -316,6 +389,8 @@ WORK_BRANCH=""
 BASE_HEAD=""
 FRESHNESS_STAMP="$(date -u +%F)"
 SLOTS_FILE=""
+ADDENDUM_LETTER=""
+BASE_DP_ID=""
 
 DP_SCOPED_LOAD_ORDER=""
 OBJECTIVE=""
@@ -350,6 +425,12 @@ for arg in "$@"; do
       ;;
     --slots-file=*)
       SLOTS_FILE="${arg#--slots-file=}"
+      ;;
+    --addendum=*)
+      ADDENDUM_LETTER="${arg#--addendum=}"
+      ;;
+    --base-dp=*)
+      BASE_DP_ID="${arg#--base-dp=}"
       ;;
     --dp-load-order=*)
       DP_SCOPED_LOAD_ORDER="${arg#--dp-load-order=}"
@@ -395,67 +476,107 @@ for arg in "$@"; do
   esac
 done
 
-[[ -n "$DP_ID" ]] || die "missing required --id"
-[[ -n "$DP_TITLE" ]] || die "missing required --title"
-[[ -n "$WORK_BRANCH" ]] || die "missing required --work-branch"
-[[ -n "$BASE_HEAD" ]] || die "missing required --base-head"
-[[ "$DP_ID" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]] || die "invalid --id format: ${DP_ID}"
+if [[ -n "$ADDENDUM_LETTER" && -z "$BASE_DP_ID" ]]; then
+  die "--addendum requires --base-dp"
+fi
+if [[ -n "$BASE_DP_ID" && -z "$ADDENDUM_LETTER" ]]; then
+  die "--base-dp requires --addendum"
+fi
+
+ADDENDUM_MODE=0
+if [[ -n "$ADDENDUM_LETTER" && -n "$BASE_DP_ID" ]]; then
+  ADDENDUM_MODE=1
+fi
+
+if (( ADDENDUM_MODE )); then
+  [[ "$ADDENDUM_LETTER" =~ ^[A-Z]$ ]] || die "invalid --addendum value (expected a single uppercase letter A-Z): ${ADDENDUM_LETTER}"
+  [[ "$BASE_DP_ID" =~ ^DP-OPS-[0-9]{4}$ ]] || die "invalid --base-dp format (expected DP-OPS-XXXX): ${BASE_DP_ID}"
+else
+  [[ -n "$DP_ID" ]] || die "missing required --id"
+  [[ -n "$DP_TITLE" ]] || die "missing required --title"
+  [[ -n "$WORK_BRANCH" ]] || die "missing required --work-branch"
+  [[ -n "$BASE_HEAD" ]] || die "missing required --base-head"
+  [[ "$DP_ID" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]] || die "invalid --id format: ${DP_ID}"
+fi
 
 if [[ -n "$SLOTS_FILE" ]]; then
   [[ -f "$SLOTS_FILE" ]] || die "slots file not found: ${SLOTS_FILE}"
 
-  [[ -n "$DP_SCOPED_LOAD_ORDER" ]] || DP_SCOPED_LOAD_ORDER="$(read_slot "DP_SCOPED_LOAD_ORDER" "$SLOTS_FILE")"
-  [[ -n "$OBJECTIVE" ]] || OBJECTIVE="$(read_slot "OBJECTIVE" "$SLOTS_FILE")"
-  [[ -n "$IN_SCOPE" ]] || IN_SCOPE="$(read_slot "IN_SCOPE" "$SLOTS_FILE")"
-  [[ -n "$OUT_OF_SCOPE" ]] || OUT_OF_SCOPE="$(read_slot "OUT_OF_SCOPE" "$SLOTS_FILE")"
-  [[ -n "$SAFETY_INVARIANTS" ]] || SAFETY_INVARIANTS="$(read_slot "SAFETY_INVARIANTS" "$SLOTS_FILE")"
-  [[ -n "$PLAN_STATE" ]] || PLAN_STATE="$(read_slot "PLAN_STATE" "$SLOTS_FILE")"
-  [[ -n "$PLAN_REQUEST" ]] || PLAN_REQUEST="$(read_slot "PLAN_REQUEST" "$SLOTS_FILE")"
-  [[ -n "$PLAN_CHANGELOG" ]] || PLAN_CHANGELOG="$(read_slot "PLAN_CHANGELOG" "$SLOTS_FILE")"
-  [[ -n "$PLAN_PATCH" ]] || PLAN_PATCH="$(read_slot "PLAN_PATCH" "$SLOTS_FILE")"
-  if [[ -z "$RECEIPT_EXTRA" ]]; then
-    RECEIPT_EXTRA="$(read_slot "RECEIPT_EXTRA" "$SLOTS_FILE")"
-  fi
-  if [[ -z "$RECEIPT_EXTRA" ]]; then
-    RECEIPT_EXTRA="$(read_slot "RECEIPT_COMMANDS" "$SLOTS_FILE")"
+  if (( ! ADDENDUM_MODE )); then
+    [[ -n "$DP_SCOPED_LOAD_ORDER" ]] || DP_SCOPED_LOAD_ORDER="$(read_slot "DP_SCOPED_LOAD_ORDER" "$SLOTS_FILE")"
+    [[ -n "$OBJECTIVE" ]] || OBJECTIVE="$(read_slot "OBJECTIVE" "$SLOTS_FILE")"
+    [[ -n "$IN_SCOPE" ]] || IN_SCOPE="$(read_slot "IN_SCOPE" "$SLOTS_FILE")"
+    [[ -n "$OUT_OF_SCOPE" ]] || OUT_OF_SCOPE="$(read_slot "OUT_OF_SCOPE" "$SLOTS_FILE")"
+    [[ -n "$SAFETY_INVARIANTS" ]] || SAFETY_INVARIANTS="$(read_slot "SAFETY_INVARIANTS" "$SLOTS_FILE")"
+    [[ -n "$PLAN_STATE" ]] || PLAN_STATE="$(read_slot "PLAN_STATE" "$SLOTS_FILE")"
+    [[ -n "$PLAN_REQUEST" ]] || PLAN_REQUEST="$(read_slot "PLAN_REQUEST" "$SLOTS_FILE")"
+    [[ -n "$PLAN_CHANGELOG" ]] || PLAN_CHANGELOG="$(read_slot "PLAN_CHANGELOG" "$SLOTS_FILE")"
+    [[ -n "$PLAN_PATCH" ]] || PLAN_PATCH="$(read_slot "PLAN_PATCH" "$SLOTS_FILE")"
+    if [[ -z "$RECEIPT_EXTRA" ]]; then
+      RECEIPT_EXTRA="$(read_slot "RECEIPT_EXTRA" "$SLOTS_FILE")"
+    fi
+    if [[ -z "$RECEIPT_EXTRA" ]]; then
+      RECEIPT_EXTRA="$(read_slot "RECEIPT_COMMANDS" "$SLOTS_FILE")"
+    fi
   fi
 fi
 
-if ! block_has_content "$DP_SCOPED_LOAD_ORDER"; then
-  die "missing required slot: DP_SCOPED_LOAD_ORDER"
-fi
-if ! block_has_content "$OBJECTIVE"; then
-  die "missing required slot: OBJECTIVE"
-fi
-if ! block_has_content "$IN_SCOPE"; then
-  die "missing required slot: IN_SCOPE"
-fi
-if ! block_has_content "$OUT_OF_SCOPE"; then
-  die "missing required slot: OUT_OF_SCOPE"
-fi
-if ! block_has_content "$SAFETY_INVARIANTS"; then
-  die "missing required slot: SAFETY_INVARIANTS"
-fi
-if ! block_has_content "$PLAN_STATE"; then
-  die "missing required slot: PLAN_STATE"
-fi
-if ! block_has_content "$PLAN_REQUEST"; then
-  die "missing required slot: PLAN_REQUEST"
-fi
-if ! block_has_content "$PLAN_CHANGELOG"; then
-  die "missing required slot: PLAN_CHANGELOG"
-fi
-if ! block_has_content "$PLAN_PATCH"; then
-  die "missing required slot: PLAN_PATCH"
-fi
-if ! block_has_content "$RECEIPT_EXTRA"; then
-  die "missing required slot: RECEIPT_EXTRA"
+if (( ! ADDENDUM_MODE )); then
+  if ! block_has_content "$DP_SCOPED_LOAD_ORDER"; then
+    die "missing required slot: DP_SCOPED_LOAD_ORDER"
+  fi
+  if ! block_has_content "$OBJECTIVE"; then
+    die "missing required slot: OBJECTIVE"
+  fi
+  if ! block_has_content "$IN_SCOPE"; then
+    die "missing required slot: IN_SCOPE"
+  fi
+  if ! block_has_content "$OUT_OF_SCOPE"; then
+    die "missing required slot: OUT_OF_SCOPE"
+  fi
+  if ! block_has_content "$SAFETY_INVARIANTS"; then
+    die "missing required slot: SAFETY_INVARIANTS"
+  fi
+  if ! block_has_content "$PLAN_STATE"; then
+    die "missing required slot: PLAN_STATE"
+  fi
+  if ! block_has_content "$PLAN_REQUEST"; then
+    die "missing required slot: PLAN_REQUEST"
+  fi
+  if ! block_has_content "$PLAN_CHANGELOG"; then
+    die "missing required slot: PLAN_CHANGELOG"
+  fi
+  if ! block_has_content "$PLAN_PATCH"; then
+    die "missing required slot: PLAN_PATCH"
+  fi
+  if ! block_has_content "$RECEIPT_EXTRA"; then
+    die "missing required slot: RECEIPT_EXTRA"
+  fi
 fi
 
 trap 'emit_binary_leaf "draft" "finish"' EXIT
 emit_binary_leaf "draft" "start"
 
 require_clean_tree
+
+if (( ADDENDUM_MODE )); then
+  read_addendum_lint_constants
+  base_source_path="$(base_dp_source_path "$BASE_DP_ID")" || die "base DP intake artifact not found in storage/dp/intake or storage/dp/processed: ${BASE_DP_ID}"
+
+  mkdir -p "$REPO_ROOT/storage/dp/intake" "$REPO_ROOT/storage/handoff"
+
+  addendum_intake_path="$REPO_ROOT/storage/dp/intake/${BASE_DP_ID}-ADDENDUM-${ADDENDUM_LETTER}.md"
+  addendum_closing_path="$REPO_ROOT/storage/handoff/CLOSING-${BASE_DP_ID}-ADDENDUM-${ADDENDUM_LETTER}.md"
+
+  render_addendum_intake "$BASE_DP_ID" "$ADDENDUM_LETTER" "$addendum_intake_path"
+  render_closing_sidecar "${BASE_DP_ID} Addendum ${ADDENDUM_LETTER}" "$addendum_closing_path"
+
+  echo "Base: ${base_source_path#${REPO_ROOT}/}"
+  echo "Wrote: ${addendum_intake_path#${REPO_ROOT}/}"
+  echo "Wrote: ${addendum_closing_path#${REPO_ROOT}/}"
+  exit 0
+fi
+
 read_lint_constants
 require_task_markers
 

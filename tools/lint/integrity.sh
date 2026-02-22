@@ -104,6 +104,8 @@ while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
     continue
   fi
   case "$entry" in
+    storage/dp/intake/DP-OPS-0096-ADDENDUM-A.md)
+      ;;
     storage/handoff/CLOSING-DP-OPS-*.md)
       ;;
     storage/dp/intake/DP-OPS-0094.md)
