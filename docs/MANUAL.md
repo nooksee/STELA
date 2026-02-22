@@ -41,6 +41,7 @@ Run:
 ./tools/lint/llms.sh
 bash tools/lint/factory.sh
 ~~~
+Tooling DP addendum: if the DP objective adds, modifies, or replaces a linter, script, guard, or validation binary, confirm at closeout that: (1) the CbC Design Discipline Preflight block in TASK.md §3.1.1 is present and non-empty; (2) enforcement complexity did not exceed 100 lines without a note in §3.4.4 justifying the budget; (3) a SoP note is added if structural prevention was identified as viable but deferred. Full procedure: docs/DESIGN.md.
 Keep `storage/handoff/CLOSING-DP-OPS-XXXX.md` populated throughout execution.
 
 2. Generate Results

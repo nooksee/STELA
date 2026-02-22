@@ -1,176 +1,9 @@
-## PoT.md
-<!-- CCD: ff_target="governance-narrative" ff_band="30-40" -->
-# Policy of Truth (PoT)
-
-## Preamble: Doctrine
-The system prevents action that violates policy. It does not request compliance.
-PoT is the single constitutional document for Stela governance.
-
-## 1. Physical Laws
-
-### 1.1 Filing Doctrine
-Filing:
-- `ops/` = Run (binaries, manifests, automation).
-- `docs/` = Explain (manuals and rationale).
-- `opt/` = Isolate (JIT-only  content excluded from global context).
-- `projects/` = Work (payload code).
-- `storage/` = Payload (handoff, dumps, dp).
-- `var/tmp/` = Resume (ephemeral worker scratch and task-local workspace).
-- `logs/` = Telemetry (runtime logs and diagnostics).
-- `archives/` = Cold (long-lived draft and ledger archives).
-
-### 1.2 Axioms
-- Precedence: PoT is final authority; if conflict exists, stop and ask.
-- SSOT: one canonical file per domain; other mentions are pointers.
-- Reuse-first: search `ops/` for an existing template before creating a new artifact.
-- Drift: any divergence between canon and repository state, or duplication of canon outside SSOT, is a failure state that requires stop and correction.
-- Routing Closeout; failure is a system failure state.
-- SoP: history ledger only; no permanent rules live there.
-- PoW: proof ledger only; execution evidence pointers live there.
-
-### 1.3 Canon Surfaces
-- `PoT.md` — constitution, staffing, jurisdiction, and enforcement (SSOT).
-- `TASK.md` — active work surface and DP contract.
-- `SoP.md` — history ledger and shipment record.
-- `PoW.md` — proof ledger and execution evidence pointers.
-- `docs/MANUAL.md` — operator mechanics.
-- `docs/MAP.md` — context wayfinding.
-- `ops/lib/manifests/CONTEXT.md` — required context set.
-- `llms.txt` — discovery entry point.
-
-Source of Truth Read-in Order:
-1. `PoT.md`: The Constitution. Physical laws, staffing, jurisdiction. The final authority.
-2. `SoP.md`: The History. State of Play ledger. Context on *why* things are the way they are.
-3. `PoW.md`: The Proof Ledger. Validate evidence pointers before state-changing maintenance.
-4. `TASK.md`: The Contract. Active work surface. Contains the current Dispatch Packet (DP).
-5. `docs/MAP.md`: The Terrain. Continuity map for navigating the repository context.
-
-## 2. Enforcement
-Integrator plus Automation (linters, gates, and binaries).
-Mandate:
-- Stop work.
-- Reject PRs.
-- Kill processes.
-System Failure States (Drift Triggers):
-| Failure Type | Definition | System Response |
-| :---- | :---- | :---- |
-| **Canon Drift** | Divergence between `PoT.md` and repo state. | **STOP WORK.** Reject PR. |
-| **Dirty State** | Uncommitted changes in `main`. | **STOP WORK.** Worker complaint/halt. |
-| **Ambiguity** | Instructions capable of multiple interpretations. | **STOP WORK.** Request clarification. |
-
-## 3. Jurisdiction
-Scope: `ops/`, `docs/`, `opt/`, `projects/`, `tools/`, `.github/`, and root governance surfaces.
-Law: PoT is the sole authority across all scopes. No parallel jurisdictions exist.
-
-## 4. Staffing & Logic
-Hard constraints are: PoT.md, SoP.md, TASK.md, ops/lib/manifests/CONTEXT.md, docs/MANUAL.md, and docs/MAP.md.
-
-### 4.1 Staffing Protocol
-- Operator (Human): Owns final decisions, approvals, and secrets. Performs all commits, pushes, and merges.
-- Integrator (Lead AI): Maintains governance, structural integrity, and auditing. Generates Dispatch Packets and detects system drift.
-- Contractor (Guest AI): Executes specific logic tasks and drafts implementation details within a defined scope.
-
-### 4.2 Behavioral Logic Standard
-- Linguistic Precision: No contractions across any scope, including projects.
-- Linguistic Precision: Quantitative reporting required for deviations from protocol.
-- Generation Mandate: Verification outputs must be generated, not pre-filled or assumed.
-- Generation Mandate: DP RESULTS receipts are generated artifacts produced by `ops/bin/certify`; manual fabrication is prohibited.
-- Linguistic Precision: Absolute literalism; seek clarification for ambiguity before proceeding.
-- Relatability Practice: Imagine the same way an operator explains a failure, picture a concrete branch state, and consider a direct recovery action.
-- Operational Directives: This rule is governed by PoT.md §1.2 Drift.
-- Operational Directives: This rule is governed by PoT.md §1.3 Canon Surfaces (`ops/lib/manifests/CONTEXT.md`).
-- Operational Directives: This rule is governed by PoT.md §1.2 Precedence.
-- Operational Directives: This rule is governed by PoT.md §1.2 SoP.
-- Operational Directives: Design Discipline: Before adding enforcement automation, document why structural prevention is not viable. Prefer prevention over detection. Full procedure: docs/DESIGN.md.
-
-### 4.4 Entry Points
-- llms.txt
-
-### 4.5 Epistemic Standards
-- System: everything the system proves is actually true.
-- Truth: primitive predicate governed by specific rules rather than a mere definition.
-- Action: deception or incoherence are inherently destabilizing and must be resolved.
-
-## 5 Security Policy
-Roles and access expectations are defined in PoT.md.
-
-### 5.1 Secrets Management
-- Never commit secrets, API keys, or credentials to the repo.
-- Use environment variables or a local secrets manager for sensitive values.
-- If a secret is exposed, rotate it and document the remediation.
-
-### 5.2 AI Usage Policy
-- AI assistance is allowed with human oversight.
-- All AI-proposed changes must be reviewed by a human operator.
-- Provide citations or provenance for external sources or non-trivial claims.
-
-### 5.3 Vulnerability Reporting
-Preferred:
-- Use a GitHub Security Advisory for this repository.
-
-If you cannot use GitHub Security Advisories:
-- Contact the repository owners via GitHub and request a private channel.
-- Do not disclose details publicly until coordinated.
-
-When reporting, include:
-- A clear description of the issue.
-- Minimal reproduction steps or proof-of-concept.
-- Affected files or versions (if known).
-- Suggested mitigations (optional, appreciated).
-
-### 5.4 Handling and Disclosure
-- Reports are acknowledged as soon as practical.
-- Fixes are prioritized by impact, exploitability, and clarity.
-- We aim for coordinated, responsible disclosure.
-
-## 6 Workflow
-
-### 6.1 Non-Negotiables
-- Do not push to `main`.
-- Work only on `work/*` branches.
-- Every PR must pass gates.
-
-### 6.2 Standard Workflow
-- Create a branch named `work/<topic>-YYYY-MM-DD`.
-- Make small, reviewable changes.
-- Keep unrelated refactors out of the change set.
-- Review changes visually before commit.
-- Use clear commit messages.
-- Push the `work/*` branch, open a PR, wait for gates, then merge.
-
-### 6.2.2 Immutable DP Workflow
-- Run `./ops/bin/open` to establish freshness state.
-- Generate DP structure with `./ops/bin/draft`; do not hand-author structural boilerplate in `TASK.md`.
-- Edit only approved DP slot content after draft generation.
-- If canonical DP template hash or normalized structure hash fails in `tools/lint/dp.sh`, stop and repair before proceeding.
-- Maintain closing-sidecar input at `storage/handoff/CLOSING-DP-OPS-XXXX.md` during execution.
-- Run `./ops/bin/certify --dp=DP-OPS-XXXX --out=auto` to execute receipt commands and generate RESULTS.
-
-### 6.2.3 Branching Doctrine (SSoT)
-- Immutable Trunk: main is verified state; direct pushes are forbidden.
-- Work Namespace: all work occurs on work/* branches.
-- Naming Schema: work/<topic>-YYYY-MM-DD.
-- Drift Prevention: branches outside schema are trash and subject to pruning.
-
-### 6.3 Provenance
-- Record imported or adapted external code in `docs/UPSTREAMS.md` or the correct truth-layer document.
-- Include source, purpose, changes, and known risks or limits.
-
-### 6.4 Drafting Proposal Protocol
-- Integrator proposals: An Integrator shall propose a work branch name and Base HEAD when they are not yet provided.
-- Operator authority: The Operator creates branches and provides the final Base HEAD; Contractors do not create or switch branches.
-- Provisional marking: Any provisional value must be prefixed with `PROPOSED` during drafting and must be removed or replaced with finalized values before any worker runs a DP.
-
-
-## PoW.md
-archives/surfaces/PoW-2026-02-22-8cf576288.md
-
-
-## SoP.md
-archives/surfaces/SoP-2026-02-22-8cf576288.md
-
-
-## TASK.md
+---
+trace_id: stela-20260222T225450Z-56ca1d7e
+packet_id: DP-OPS-0101
+created_at: 2026-02-22T23:03:38Z
+previous: archives/surfaces/TASK-DP-OPS-0101-728decce6.md
+---
 # STELA TASK DASHBOARD
 Status: ACTIVE
 Owner: Integrator
@@ -237,7 +70,7 @@ Input discipline (hard rule):
 Base Branch: main
 Required Work Branch: work/cbc-phase1-canonization-2026-02-22
 Base HEAD: 728decce6
-Freshness Stamp: stela-20260222T215604Z-319374a2
+Freshness Stamp: 2026-02-22
 
 Required local re-check (worker runs; paste outputs in RESULTS):
 - git rev-parse --abbrev-ref HEAD
@@ -268,7 +101,27 @@ STOP if any preflight check fails.
 ### CbC Design Discipline Preflight (TASK.md §3.1.1)
 Required when the DP objective adds, modifies, or replaces a linter, script, guard, or validation binary.
 For non-tooling DPs: state "Not applicable" with a one-line justification.
-{{CbC_PREFLIGHT}}
+This DP modifies `tools/lint/dp.sh` (a linter) and `ops/src/surfaces/dp.md.tpl` (a template whose hash is validated by that linter). Both surfaces qualify as enforcement tooling under the CbC definition.
+
+Q1 — Well-formed assertion or behavior-fighter?
+The CbC preflight slot asserts that a documented procedure was exercised before DP dispatch. The slot check in dp.sh is a yes/no assertion against observable slot content (non-empty, non-placeholder). It does not fight behavior. The template slot enforces discipline structurally: ops/bin/draft cannot produce a valid DP without populating the slot.
+
+Q2 — Structural prevention available?
+Yes. The dp.md.tpl slot IS the primary structural prevention mechanism. Once the slot exists in the template, ops/bin/draft cannot produce a complete DP without populating it. The dp.sh non-empty check (added by this DP) is a narrow safety net for renderer edge cases where a slot is present but emitted empty.
+
+Q3 — Why is detection needed alongside structure?
+A misconfigured slot renderer could emit an empty token value without failing template generation. The non-empty check in dp.sh catches that edge case. The linter complexity added is approximately 15 lines across two locations in dp.sh. This is proportionate: one `block_has_content` call in `check_required_fields` and one awk mode block in `normalize_dp_structure`.
+
+Q4 — Deletion Test score: C.
+Without the slot and check, the CbC discipline has no structural activation point in the DP workflow. DPs under pressure skip it. The discipline remains advisory with no enforcement consequence.
+
+Q5 — Complexity Budget:
+Net addition to dp.md.tpl: approximately 10 lines (frontmatter slot + subsection heading + slot token + two documentation lines).
+Net addition to dp.sh: approximately 20 lines (normalizer mode block + check_required_fields extension + SHA256 constant update).
+Total: approximately 30 lines.
+Payoff: every tooling DP is structurally required to exercise the CbC procedure before reaching valid draft state. Cost-to-payoff ratio is well below 1×. No redesign triggered.
+
+Decision Registry entry: C — Keep. Structural slot is the primary prevention; detection is a proportionate safety net.
 
 ## 3.2 Required Context Load (Read Before Doing Anything)
 
@@ -403,35 +256,12 @@ This regenerated draft exists to reactivate the TASK surface with `DP-OPS-0101` 
 - bash -n tools/lint/dp.sh
 - sha256sum ops/src/surfaces/dp.md.tpl
 - grep 'CANONICAL_DP_TEMPLATE_SHA256=' tools/lint/dp.sh
-- grep -n 'CbC_PREFLIGHT' ops/src/surfaces/dp.md.tpl
+- grep -n '^  - CbC_PREFLIGHT$' ops/src/surfaces/dp.md.tpl
 - grep -n 'CbC Design Discipline Preflight' ops/src/surfaces/dp.md.tpl tools/lint/dp.sh docs/MANUAL.md
 - grep -n 'Design Discipline' PoT.md
 - grep -n 'DESIGN.md' docs/INDEX.md PoT.md
 - wc -l tools/lint/dp.sh ops/src/surfaces/dp.md.tpl docs/DESIGN.md docs/MANUAL.md PoT.md docs/INDEX.md
 - ./tools/verify.sh
-
-[CbC_PREFLIGHT]
-This DP modifies `tools/lint/dp.sh` (a linter) and `ops/src/surfaces/dp.md.tpl` (a template whose hash is validated by that linter). Both surfaces qualify as enforcement tooling under the CbC definition.
-
-Q1 — Well-formed assertion or behavior-fighter?
-The CbC preflight slot asserts that a documented procedure was exercised before DP dispatch. The slot check in dp.sh is a yes/no assertion against observable slot content (non-empty, non-placeholder). It does not fight behavior. The template slot enforces discipline structurally: ops/bin/draft cannot produce a valid DP without populating the slot.
-
-Q2 — Structural prevention available?
-Yes. The dp.md.tpl slot IS the primary structural prevention mechanism. Once the slot exists in the template, ops/bin/draft cannot produce a complete DP without populating it. The dp.sh non-empty check (added by this DP) is a narrow safety net for renderer edge cases where a slot is present but emitted empty.
-
-Q3 — Why is detection needed alongside structure?
-A misconfigured slot renderer could emit an empty token value without failing template generation. The non-empty check in dp.sh catches that edge case. The linter complexity added is approximately 15 lines across two locations in dp.sh. This is proportionate: one `block_has_content` call in `check_required_fields` and one awk mode block in `normalize_dp_structure`.
-
-Q4 — Deletion Test score: C.
-Without the slot and check, the CbC discipline has no structural activation point in the DP workflow. DPs under pressure skip it. The discipline remains advisory with no enforcement consequence.
-
-Q5 — Complexity Budget:
-Net addition to dp.md.tpl: approximately 10 lines (frontmatter slot + subsection heading + slot token + two documentation lines).
-Net addition to dp.sh: approximately 20 lines (normalizer mode block + check_required_fields extension + SHA256 constant update).
-Total: approximately 30 lines.
-Payoff: every tooling DP is structurally required to exercise the CbC procedure before reaching valid draft state. Cost-to-payoff ratio is well below 1×. No redesign triggered.
-
-Decision Registry entry: C — Keep. Structural slot is the primary prevention; detection is a proportionate safety net.
 
 ## 3.5 Closeout (Mandatory Routing)
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
@@ -454,61 +284,3 @@ Final Squash Stub (plaintext) (Must differ from #1)
 Extended Technical Manifest (plaintext)
 
 Review Conversation Starter (markdown)
-
-
-## docs/MAP.md
-<!-- CCD: ff_target="operator-technical" ff_band="30-40" -->
-# Continuity Map (State Persistence)
-
-## 0. Scope
-This map lists continuity surfaces and operator navigation pointers.
-Entry sequence is `PoT.md` -> `SoP.md` -> `PoW.md` -> `TASK.md` -> `docs/MAP.md`.
-Use `docs/MANUAL.md` for command procedure details and `docs/CCD.md` for density policy.
-
-## 1. The Constitution (Immutable Law)
-*Rules that do not change without a governance event.*
-* **Policy of Truth:** [`../../PoT.md`](../../PoT.md) — Constitution, staffing, jurisdiction, and enforcement (SSOT).
-* **Discovery:** [`../../llms.txt`](../../llms.txt) — The machine-readable entry point.
-
-## 2. The Ledger (Mutable State)
-*Living records of what has happened and what is happening.*
-* **History:** [`../../SoP.md`](../../SoP.md) — The State of Play. (What shipped, when, why).
-* **Proof:** [`../../PoW.md`](../../PoW.md) — Proof of Work ledger. (What evidence was produced and where it is stored).
-* **Active Contract:** [`../../TASK.md`](../../TASK.md) — The Dispatch Packet. (Current objective and work log).
-
-## 3. The Interface (Wayfinding)
-*Operator-facing manuals for navigation.*
-* **Command Console:** [`MANUAL.md`](MANUAL.md) — Mechanics and top commands.
-* **Density Governance:** [`CCD.md`](CCD.md) — Calibrated Canonical Density: tier definitions, gate contract, and authoring rules.
-* **Curated Index:** [`INDEX.md`](INDEX.md) — The approved library of operator guidance.
-
-## 4. The Bridge (Ingestion Tools)
-*Mechanisms that move state from disk to context.*
-* **Proof-First Read Order:** `PoT.md` → `SoP.md` → `PoW.md` → `TASK.md` → `docs/MAP.md`.
-* **Generation:** [`../../ops/bin/open`](../../ops/bin/open) — Creates the session prompt.
-* **Capture:** [`../../ops/bin/dump`](../../ops/bin/dump) — Serializes the platform.
-* **Validation:** [`../../ops/lib/manifests/CONTEXT.md`](../../ops/lib/manifests/CONTEXT.md) — The required context checklist.
-
-## 5. Unified Jurisdiction
-*Policy of Truth governs all scopes without parallel authority.*
-* **Single Authority:** PoT is the sole authority across `ops/`, `docs/`, `opt/`, and `projects/`.
-* **Project Position:** Projects are payloads operating under PoT, not a separate provider or consumer tier.
-
-## 6. Auto-Generated Index
-<!-- MAP-GENERATED:BEGIN -->
-### Directory Index
-- ops/ - Run (binaries, manifests, automation).
-- tools/ - Lints and verification tooling.
-- docs/ - Manuals, specs, and governance surfaces.
-- opt/ - Isolated definition surfaces (JIT-only, excluded from global context).
-- projects/ - Work payload code.
-- storage/ - Payload surfaces (handoff, dumps, dp).
-- var/tmp/ - Resume workspace (ephemeral task scratch).
-- logs/ - Telemetry streams and diagnostics.
-- archives/ - Cold storage (root, tasks, skills, agents, context).
-
-### Projects
-No projects discovered.
-<!-- MAP-GENERATED:END -->
-
-

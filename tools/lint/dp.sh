@@ -20,7 +20,7 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="81280c78c816a0adb02a8a823503740de0fc3a02e30aa055e6e76965755ffb68"
+CANONICAL_DP_TEMPLATE_SHA256="a371dfcdf4cde9399081bda8d8a223ceac7e9d611bc1bbdf1af00ac92f9be89f"
 CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/surfaces/addendum.md.tpl"
 CANONICAL_ADDENDUM_TEMPLATE_SHA256="42cb7586c6ed103e995730f1a8c34a1c7e0676b717c27dfb987950feeac7ec9e"
 TEMPLATE_RENDER_BIN="ops/bin/template"
@@ -594,6 +594,14 @@ normalize_dp_structure() {
       next
     }
 
+    mode == "CbC_PREFLIGHT" {
+      if ($0 ~ /^##[[:space:]]*3[.]2([.]|[[:space:]])/) {
+        mode=""
+        print $0
+      }
+      next
+    }
+
     mode == "RECEIPT_EXTRA" {
       if ($0 ~ /^##[[:space:]]*3[.]5([.]|[[:space:]])/) {
         mode=""
@@ -632,6 +640,13 @@ normalize_dp_structure() {
         print $0
         emit("DP_SCOPED_LOAD_ORDER")
         mode="DP_SCOPED_LOAD_ORDER"
+        next
+      }
+
+      if ($0 ~ /^### CbC Design Discipline Preflight/) {
+        print $0
+        emit("CbC_PREFLIGHT")
+        mode="CbC_PREFLIGHT"
         next
       }
 
@@ -764,6 +779,7 @@ check_required_fields() {
   local changelog_block
   local patch_block
   local receipt_block
+  local cbc_preflight_block
 
   scoped_load_order="$(extract_block "$path" '^### 3[.]2[.]2' '^## 3[.]3([.]|[[:space:]])')"
   objective_block="$(extract_block "$path" '^Objective:[[:space:]]*$' '^In scope:[[:space:]]*$')"
@@ -775,6 +791,7 @@ check_required_fields() {
   changelog_block="$(extract_block "$path" '^### 3[.]4[.]3' '^### 3[.]4[.]4')"
   patch_block="$(extract_block "$path" '^### 3[.]4[.]4' '^### 3[.]4[.]5')"
   receipt_block="$(extract_block "$path" '^### 3[.]4[.]5' '^## 3[.]5([.]|[[:space:]])')"
+  cbc_preflight_block="$(extract_block "$path" '^### CbC Design Discipline Preflight' '^## 3[.]2([.]|[[:space:]])')"
 
   if ! block_has_content "$scoped_load_order"; then
     fail "missing or placeholder content for DP-scoped load order"
@@ -805,6 +822,9 @@ check_required_fields() {
   fi
   if ! block_has_content "$receipt_block"; then
     fail "missing or placeholder content for 3.4.5 Receipt"
+  fi
+  if ! block_has_content "$cbc_preflight_block"; then
+    fail "missing or placeholder content for CbC Design Discipline Preflight (TASK.md §3.1.1)"
   fi
 }
 
@@ -1040,6 +1060,7 @@ render_fixture_from_template() {
   local plan_changelog
   local plan_patch
   local receipt_extra
+  local cbc_preflight
 
   dp_scoped_load_order='- tools/lint/dp.sh
 - docs/ops/specs/tools/lint/dp.md'
@@ -1057,6 +1078,7 @@ render_fixture_from_template() {
 - bash tools/lint/dp.sh TASK.md
 - git diff --name-only
 - git diff --stat'
+  cbc_preflight='Not applicable. The fixture validates DP lint behavior and is not a DP that changes an enforcement surface.'
 
   template_source="$(mktemp)"
   render_canonical_template_non_strict "$template_source"
@@ -1100,6 +1122,9 @@ render_fixture_from_template() {
         ;;
       "{{RECEIPT_EXTRA}}")
         printf '%s\n' "$receipt_extra" >> "$out_path"
+        ;;
+      "{{CbC_PREFLIGHT}}")
+        printf '%s\n' "$cbc_preflight" >> "$out_path"
         ;;
       "- storage/dp/active/allowlist.txt")
         printf '%s\n' "- ${allowlist_pointer}" >> "$out_path"

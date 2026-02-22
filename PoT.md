@@ -80,6 +80,7 @@ Hard constraints are: PoT.md, SoP.md, TASK.md, ops/lib/manifests/CONTEXT.md, doc
 - Operational Directives: This rule is governed by PoT.md §1.3 Canon Surfaces (`ops/lib/manifests/CONTEXT.md`).
 - Operational Directives: This rule is governed by PoT.md §1.2 Precedence.
 - Operational Directives: This rule is governed by PoT.md §1.2 SoP.
+- Operational Directives: Design Discipline: Before adding enforcement automation, document why structural prevention is not viable. Prefer prevention over detection. Full procedure: docs/DESIGN.md.
 
 ### 4.4 Entry Points
 - llms.txt
