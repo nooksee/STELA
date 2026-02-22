@@ -21,6 +21,8 @@ emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
 CANONICAL_DP_TEMPLATE_SHA256="81280c78c816a0adb02a8a823503740de0fc3a02e30aa055e6e76965755ffb68"
+CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/surfaces/addendum.md.tpl"
+CANONICAL_ADDENDUM_TEMPLATE_SHA256="42cb7586c6ed103e995730f1a8c34a1c7e0676b717c27dfb987950feeac7ec9e"
 TEMPLATE_RENDER_BIN="ops/bin/template"
 ALLOWLIST_POINTER_PATH_DEFAULT="storage/dp/active/allowlist.txt"
 
@@ -137,6 +139,72 @@ check_template_hash_preflight() {
   if [[ "$actual_hash" != "$expected_hash" ]]; then
     fail "canonical template hash mismatch for ${CANONICAL_DP_TEMPLATE_PATH} (expected ${expected_hash}, got ${actual_hash})"
   fi
+}
+
+check_addendum_template_hash() {
+  if [[ ! -f "$CANONICAL_ADDENDUM_TEMPLATE_PATH" ]]; then
+    fail "canonical addendum template missing: ${CANONICAL_ADDENDUM_TEMPLATE_PATH}"
+    return
+  fi
+
+  local actual_hash
+  actual_hash="$(sha256_file "$CANONICAL_ADDENDUM_TEMPLATE_PATH")"
+
+  if [[ -z "$actual_hash" ]]; then
+    fail "unable to compute sha256 for canonical addendum template"
+    return
+  fi
+
+  if [[ "$actual_hash" != "$CANONICAL_ADDENDUM_TEMPLATE_SHA256" ]]; then
+    fail "canonical addendum template hash mismatch for ${CANONICAL_ADDENDUM_TEMPLATE_PATH} (expected ${CANONICAL_ADDENDUM_TEMPLATE_SHA256}, got ${actual_hash})"
+  fi
+}
+
+lint_addendum_intake() {
+  local path="$1"
+
+  if [[ ! -f "$path" ]]; then
+    fail "addendum intake file not found: ${path}"
+    return
+  fi
+
+  local content
+  content="$(cat "$path")"
+
+  for slot in BASE_DP_ID ADDENDUM_ID OPERATOR_AUTHORIZATION SCOPE_DELTA ADDENDUM_OBJECTIVE ADDENDUM_RECEIPT; do
+    local value
+    value="$(printf '%s' "$content" | grep -A1 "^${slot}:" | tail -n1 || true)"
+    value="$(trim "$value")"
+    if [[ -z "$value" ]]; then
+      fail "addendum intake missing required slot: ${slot}"
+    fi
+  done
+
+  local auth_value
+  auth_value="$(printf '%s' "$content" | awk '/^OPERATOR_AUTHORIZATION:/{found=1; next} found && /^[A-Z_]+:/{exit} found{print}' | tr -d '[:space:]')"
+  if contains_placeholder "$auth_value"; then
+    fail "addendum intake OPERATOR_AUTHORIZATION contains a placeholder value"
+  fi
+
+  local base_dp_value
+  base_dp_value="$(printf '%s' "$content" | grep '^BASE_DP_ID:' | sed 's/^BASE_DP_ID:[[:space:]]*//' | tr -d '[:space:]')"
+  base_dp_value="$(strip_backticks "$base_dp_value")"
+  if [[ ! "$base_dp_value" =~ ^DP-OPS-[0-9]{4}$ ]]; then
+    fail "addendum intake BASE_DP_ID does not match required pattern DP-OPS-XXXX: ${base_dp_value}"
+  fi
+
+  local scope_delta
+  scope_delta="$(printf '%s' "$content" | awk '/^SCOPE_DELTA:/{found=1; next} found && /^[A-Z_]+:/{exit} found{print}' | grep -v '^[[:space:]]*$' || true)"
+  while IFS= read -r line; do
+    line="$(trim "$line")"
+    [[ -z "$line" ]] && continue
+    if [[ "$line" =~ [*?{}\[\]] ]]; then
+      fail "addendum intake SCOPE_DELTA entry contains a glob or brace expansion: ${line}"
+    fi
+    if [[ "$line" =~ \  ]]; then
+      fail "addendum intake SCOPE_DELTA entry contains whitespace: ${line}"
+    fi
+  done <<< "$scope_delta"
 }
 
 render_canonical_template_non_strict() {
@@ -1024,6 +1092,15 @@ run_test() {
   local tmp_results_valid
   local tmp_results_invalid
 
+  failures=0
+  check_template_hash_preflight
+  check_addendum_template_hash
+  printf 'CANONICAL_DP_TEMPLATE_SHA256=%s\n' "$CANONICAL_DP_TEMPLATE_SHA256"
+  printf 'CANONICAL_ADDENDUM_TEMPLATE_SHA256=%s\n' "$CANONICAL_ADDENDUM_TEMPLATE_SHA256"
+  if (( failures )); then
+    exit 1
+  fi
+
   tmp_allowlist_valid="$(mktemp)"
   tmp_allowlist_bad="$(mktemp)"
   tmp_valid="$(mktemp)"
@@ -1124,6 +1201,40 @@ TESTRESULTS
   rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid"
   echo "OK: --test passed"
 }
+
+declare -a FILTERED_ARGS=()
+while (( $# > 0 )); do
+  case "$1" in
+    --selection=*)
+      shift
+      ;;
+    --selection)
+      if (( $# < 2 )); then
+        usage >&2
+        fail "Missing value for --selection"
+        exit 1
+      fi
+      shift 2
+      ;;
+    --dump-dir=*)
+      shift
+      ;;
+    --dump-dir)
+      if (( $# < 2 )); then
+        usage >&2
+        fail "Missing value for --dump-dir"
+        exit 1
+      fi
+      shift 2
+      ;;
+    *)
+      FILTERED_ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
+set -- "${FILTERED_ARGS[@]}"
 
 if (( $# > 1 )); then
   usage >&2
