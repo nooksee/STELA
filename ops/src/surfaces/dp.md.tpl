@@ -19,6 +19,7 @@ requires_slots:
   - PLAN_CHANGELOG
   - PLAN_PATCH
   - RECEIPT_EXTRA
+  - CbC_PREFLIGHT
 includes:
   - ops/lib/manifests/CONSTRAINTS.md#section-1
   - ops/lib/manifests/CONTRACTOR.md
@@ -58,6 +59,11 @@ Worker runs (paste outcome in RESULTS):
 - bash tools/lint/task.sh
 
 STOP if any preflight check fails.
+
+### CbC Design Discipline Preflight (TASK.md §3.1.1)
+Required when the DP objective adds, modifies, or replaces a linter, script, guard, or validation binary.
+For non-tooling DPs: state "Not applicable" with a one-line justification.
+{{CbC_PREFLIGHT}}
 
 ## 3.2 Required Context Load (Read Before Doing Anything)
 
