@@ -899,6 +899,54 @@ assert_no_disposable_refs() {
   fi
 }
 
+latest_dump_manifest_pointer() {
+  local latest_path=""
+  latest_path="$(ls -1t "${REPO_ROOT}"/storage/dumps/*_manifest.txt "${REPO_ROOT}"/storage/dumps/*.manifest.txt 2>/dev/null | head -n1 || true)"
+  [[ -n "$latest_path" ]] || return 1
+  printf '%s' "$(normalize_path "$latest_path")"
+}
+
+extract_dump_manifest_pointer_from_stdout() {
+  local stdout_body="$1"
+  local raw_pointer=""
+  raw_pointer="$(printf '%s\n' "$stdout_body" | awk '
+    /^Dump manifest:[[:space:]]*/ {
+      line=$0
+      sub(/^Dump manifest:[[:space:]]*/, "", line)
+      pointer=line
+    }
+    END {
+      if (pointer != "") {
+        print pointer
+      }
+    }
+  ')"
+  raw_pointer="$(trim "$raw_pointer")"
+  [[ -n "$raw_pointer" ]] || return 1
+  printf '%s' "$(normalize_path "$raw_pointer")"
+}
+
+maybe_capture_dump_manifest_pointer() {
+  local command="$1"
+  local stdout_body="$2"
+  local captured_pointer=""
+
+  if [[ "$command" != *"./ops/bin/dump"* && "$command" != *"ops/bin/dump"* ]]; then
+    return 0
+  fi
+
+  RECEIPT_HAS_DUMP_COMMAND=1
+
+  if captured_pointer="$(extract_dump_manifest_pointer_from_stdout "$stdout_body")"; then
+    DUMP_MANIFEST_POINTER="$(printf '%s' "$captured_pointer" | sanitize_disposable_refs)"
+    return 0
+  fi
+
+  if captured_pointer="$(latest_dump_manifest_pointer)"; then
+    DUMP_MANIFEST_POINTER="$(printf '%s' "$captured_pointer" | sanitize_disposable_refs)"
+  fi
+}
+
 append_command_log_entry() {
   local cmd_id="$1"
   local command="$2"
@@ -1279,6 +1327,12 @@ if [[ ! -s "$FINAL_COMMANDS_PATH" ]]; then
   die "no executable verification commands were assembled for ${DP_SOURCE}"
 fi
 
+RECEIPT_HAS_DUMP_COMMAND=0
+DUMP_MANIFEST_POINTER="none"
+if grep -Eq 'ops/bin/dump' "$COMMANDS_PATH"; then
+  RECEIPT_HAS_DUMP_COMMAND=1
+fi
+
 run_closing_validator_negative_self_check "$ALLOWLIST_POINTER"
 CLOSING_MANIFEST_VALIDATION_OUTPUT="$(validate_closing_block_sidecar "$CLOSING_PATH" "$ALLOWLIST_POINTER")"
 ARTIFACT_PATH_VALIDATION_OUTPUT="$(validate_artifact_path_consistency "$DP_ID")"
@@ -1339,6 +1393,7 @@ while IFS= read -r command || [[ -n "$command" ]]; do
 
   STDOUT_BODY="$(cat "$STDOUT_PATH")"
   STDERR_BODY="$(cat "$STDERR_PATH")"
+  maybe_capture_dump_manifest_pointer "$command" "$STDOUT_BODY"
   append_command_log_entry "$CMD_ID" "$command" "$STARTED_AT" "$FINISHED_AT" "$DURATION_SECONDS" "$EXIT_CODE" "$STDOUT_BODY" "$STDERR_BODY"
 
   if [[ "$EXIT_CODE" -ne 0 ]]; then
@@ -1452,6 +1507,9 @@ DIFF_STAT="$(printf '%s' "$DIFF_STAT" | sanitize_disposable_refs)"
 [[ -n "$DIFF_NAME_ONLY" ]] || DIFF_NAME_ONLY="(none)"
 [[ -n "$DIFF_STAT" ]] || DIFF_STAT="(none)"
 
+RESULTS_ALLOWLIST_POINTER="$ALLOWLIST_POINTER"
+RESULTS_ALLOWLIST_POINTER+=$'\n'"- dump_manifest: ${DUMP_MANIFEST_POINTER}"
+
 CERTIFIED_AT="$(utc_now)"
 BRANCH="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
 GIT_HASH="$(git -C "$REPO_ROOT" rev-parse HEAD)"
@@ -1461,7 +1519,7 @@ GIT_HASH="$(git -C "$REPO_ROOT" rev-parse HEAD)"
   "--slot=CERTIFIED_AT=${CERTIFIED_AT}" \
   "--slot=BRANCH=${BRANCH}" \
   "--slot=GIT_HASH=${GIT_HASH}" \
-  "--slot=ALLOWLIST_POINTER=${ALLOWLIST_POINTER}" \
+  "--slot=ALLOWLIST_POINTER=${RESULTS_ALLOWLIST_POINTER}" \
   "--slot=INTEGRITY_OUTPUT=${INTEGRITY_OUTPUT}" \
   "--slot=COMMAND_LOG=${COMMAND_LOG}" \
   "--slot=DIFF_NAME_ONLY=${DIFF_NAME_ONLY}" \
@@ -1521,6 +1579,7 @@ while IFS= read -r command || [[ -n "$command" ]]; do
   DURATION_SECONDS=$((FINISH_EPOCH - START_EPOCH))
   STDOUT_BODY="$(cat "$STDOUT_PATH")"
   STDERR_BODY="$(cat "$STDERR_PATH")"
+  maybe_capture_dump_manifest_pointer "$command" "$STDOUT_BODY"
   append_command_log_entry "$CMD_ID" "$command" "$STARTED_AT" "$FINISHED_AT" "$DURATION_SECONDS" "$EXIT_CODE" "$STDOUT_BODY" "$STDERR_BODY"
 
   if [[ "$EXIT_CODE" -ne 0 ]]; then
@@ -1622,12 +1681,15 @@ INTEGRITY_OUTPUT+="${HASH_PARITY_OUTPUT}"$'\n'
 INTEGRITY_OUTPUT+="${CLOSING_BLOCK_CHECK_OUTPUT}"$'\n'
 INTEGRITY_OUTPUT+="${SLOT_TOKEN_CHECK_OUTPUT}"
 
+RESULTS_ALLOWLIST_POINTER="$ALLOWLIST_POINTER"
+RESULTS_ALLOWLIST_POINTER+=$'\n'"- dump_manifest: ${DUMP_MANIFEST_POINTER}"
+
 "$TEMPLATE_BIN" render results --out="$OUT_PATH" \
   "--slot=DP_ID=${DP_ID}" \
   "--slot=CERTIFIED_AT=${CERTIFIED_AT}" \
   "--slot=BRANCH=${BRANCH}" \
   "--slot=GIT_HASH=${GIT_HASH}" \
-  "--slot=ALLOWLIST_POINTER=${ALLOWLIST_POINTER}" \
+  "--slot=ALLOWLIST_POINTER=${RESULTS_ALLOWLIST_POINTER}" \
   "--slot=INTEGRITY_OUTPUT=${INTEGRITY_OUTPUT}" \
   "--slot=COMMAND_LOG=${COMMAND_LOG}" \
   "--slot=DIFF_NAME_ONLY=${DIFF_NAME_ONLY}" \

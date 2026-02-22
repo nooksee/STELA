@@ -68,3 +68,10 @@ archives/surfaces/PoW-2026-02-21-8e7e0b48.md
 archives/surfaces/PoW-2026-02-21-903d2fd58.md
 archives/surfaces/SoP-2026-02-21-903d2fd58.md
 archives/surfaces/TASK-DP-OPS-0091-903d2fd58.md
+ops/bin/dump
+tools/lint/dp.sh
+storage/handoff/CLOSING-DP-OPS-0092.md
+ops/bin/certify
+archives/surfaces/PoW-2026-02-22-db52e3aa0.md
+archives/surfaces/SoP-2026-02-22-db52e3aa0.md
+archives/surfaces/TASK-DP-OPS-0092-db52e3aa0.md

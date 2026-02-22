@@ -13,11 +13,16 @@ compress_mode=""
 bundle_mode=0
 max_lines=0
 target=""
+selection_mode="scope"
+from_dp=""
 
 # Optional refiners (apply after scope selection)
 include_dirs=()
 exclude_dirs=()
 ignore_patterns=()
+include_files=()
+include_file_lists=()
+forbidden_prefixes=()
 
 # Retained output metadata knob for compatibility.
 include_binary="meta"
@@ -29,10 +34,14 @@ Usage: ops/bin/dump [--scope=platform|full|project] [--project=<slug>] [--format
                    [--max-lines=n] [--out=path|auto] [--compress=tar.xz] [--bundle]
                    [--include-binary=meta|raw|base64]
                    [--include-dir=DIR] [--exclude-dir=DIR] [--ignore-file=GLOB]
+                   [--selection=scope|dp|dp+allowlist] [--from-dp=PATH|auto]
+                   [--include-file=PATH] [--include-file-list=FILE]
+                   [--fail-on-forbidden-prefix=PREFIX]
 
 Notes:
 - Scopes and refiners are resolved by ops/lib/scripts/traverse.sh.
 - --project is required when --scope=project.
+- --selection=scope preserves traverse-based selection behavior.
 USAGE
 }
 
@@ -101,6 +110,33 @@ for arg in "$@"; do
       [[ -n "$p" ]] || die "--ignore-file requires a value"
       ignore_patterns+=("$p")
       ;;
+    --selection=*)
+      selection_mode="${arg#--selection=}"
+      if [[ -z "$selection_mode" ]]; then
+        die "--selection requires a value"
+      fi
+      ;;
+    --from-dp=*)
+      from_dp="$(normalize_path_token "${arg#--from-dp=}")"
+      if [[ -z "$from_dp" ]]; then
+        die "--from-dp requires PATH or auto"
+      fi
+      ;;
+    --include-file=*)
+      p="$(normalize_path_token "${arg#--include-file=}")"
+      [[ -n "$p" ]] || die "--include-file requires a path"
+      include_files+=("$p")
+      ;;
+    --include-file-list=*)
+      p="$(normalize_path_token "${arg#--include-file-list=}")"
+      [[ -n "$p" ]] || die "--include-file-list requires a path"
+      include_file_lists+=("$p")
+      ;;
+    --fail-on-forbidden-prefix=*)
+      p="$(normalize_path_token "${arg#--fail-on-forbidden-prefix=}")"
+      [[ -n "$p" ]] || die "--fail-on-forbidden-prefix requires a value"
+      forbidden_prefixes+=("$p")
+      ;;
     -h|--help)
       usage
       exit 0
@@ -110,6 +146,10 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+if [[ "$selection_mode" != "scope" && "$selection_mode" != "dp" && "$selection_mode" != "dp+allowlist" ]]; then
+  die "unknown --selection value: ${selection_mode}"
+fi
 
 if [[ "$scope" == "project" && -z "$target" ]]; then
   die "--scope=project requires --project=<slug>"
@@ -196,6 +236,10 @@ branch_safe="${branch//\//-}"
 dump_base="dump-${scope}-${branch_safe}-${head_short}"
 payload_path="$repo_root/storage/dumps/${dump_base}.txt"
 manifest_path="$repo_root/storage/dumps/${dump_base}.manifest.txt"
+manifest_alias_path=""
+if [[ "$selection_mode" == "dp" || "$selection_mode" == "dp+allowlist" ]]; then
+  manifest_alias_path="$repo_root/storage/dumps/${dump_base}_manifest.txt"
+fi
 
 format_label="$format"
 case "$format" in
@@ -204,28 +248,267 @@ case "$format" in
   claude) format_label="Claude" ;;
 esac
 
-files=()
-traverse_args=("--scope=${scope}")
-if [[ -n "$target" ]]; then
-  traverse_args+=("--project=${target}")
-fi
-for d in "${include_dirs[@]}"; do
-  traverse_args+=("--include-dir=${d}")
-done
-for d in "${exclude_dirs[@]}"; do
-  traverse_args+=("--exclude-dir=${d}")
-done
-for p in "${ignore_patterns[@]}"; do
-  traverse_args+=("--ignore-file=${p}")
-done
+resolve_task_source_path() {
+  local task_path="${REPO_ROOT}/TASK.md"
+  local line_count
+  line_count="$(awk 'END { print NR }' "$task_path")"
+  if [[ "$line_count" != "1" ]]; then
+    printf '%s' "$task_path"
+    return 0
+  fi
 
-while IFS= read -r filepath; do
-  [[ -n "$filepath" ]] || continue
-  files+=("$filepath")
-done < <("${SCRIPT_DIR}/../lib/scripts/traverse.sh" "${traverse_args[@]}")
+  local pointer_path
+  pointer_path="$(trim "$(normalize_path_token "$(cat "$task_path")")")"
+  if [[ ! "$pointer_path" =~ ^archives/surfaces/[A-Za-z0-9._/-]+\.md$ ]]; then
+    die "--from-dp=auto could not resolve active DP in TASK.md (invalid pointer format)"
+  fi
+
+  local resolved_path="${REPO_ROOT}/${pointer_path}"
+  if [[ ! -f "$resolved_path" ]]; then
+    die "--from-dp=auto could not resolve active DP in TASK.md (missing pointer target: ${pointer_path})"
+  fi
+  printf '%s' "$resolved_path"
+}
+
+extract_paths_from_dp_scoped_load_order() {
+  local source_path="$1"
+
+  if grep -Eq '^##[[:space:]]*3[.][[:space:]]*Current Dispatch Packet [(]DP[)][[:space:]]*$' "$source_path"; then
+    awk '
+      function emit_candidate(line, path) {
+        path=""
+        if (match(line, /^[[:space:]]*[0-9]+[.][[:space:]]*`([^`]+)`/, m)) {
+          path=m[1]
+        } else if (match(line, /^[[:space:]]*[0-9]+[.][[:space:]]*([A-Za-z0-9._\/-]+)/, m)) {
+          path=m[1]
+        }
+        if (path != "") {
+          print path
+        }
+      }
+      BEGIN {
+        in_section=0
+        in_dp=0
+        in_load_order=0
+        saw_dp=0
+      }
+      /^##[[:space:]]*3[.][[:space:]]*Current Dispatch Packet [(]DP[)][[:space:]]*$/ {
+        in_section=1
+        next
+      }
+      in_section && /^##[[:space:]]*[0-9]+[.]/ && $0 !~ /^##[[:space:]]*3[.]/ {
+        in_section=0
+        in_dp=0
+        in_load_order=0
+      }
+      in_section && /^### DP-[A-Z]+-[0-9]{4,}:[[:space:]]+/ {
+        if (saw_dp == 0) {
+          saw_dp=1
+          in_dp=1
+          next
+        }
+        if (in_dp == 1) {
+          exit
+        }
+      }
+      in_dp && /^### 3[.]2[.]2([.]|[[:space:]])/ {
+        in_load_order=1
+        next
+      }
+      in_load_order && /^##[[:space:]]*3[.]3([.]|[[:space:]])/ { exit }
+      in_load_order && /^### 3[.]3([.]|[[:space:]])/ { exit }
+      in_load_order { emit_candidate($0) }
+      END {
+        if (saw_dp == 0) {
+          exit 2
+        }
+      }
+    ' "$source_path"
+    return $?
+  fi
+
+  awk '
+    function emit_candidate(line, path) {
+      path=""
+      if (match(line, /^[[:space:]]*[0-9]+[.][[:space:]]*`([^`]+)`/, m)) {
+        path=m[1]
+      } else if (match(line, /^[[:space:]]*[0-9]+[.][[:space:]]*([A-Za-z0-9._\/-]+)/, m)) {
+        path=m[1]
+      }
+      if (path != "") {
+        print path
+      }
+    }
+    BEGIN {
+      in_load_order=0
+      saw_load_order=0
+    }
+    /^### 3[.]2[.]2([.]|[[:space:]])/ {
+      in_load_order=1
+      saw_load_order=1
+      next
+    }
+    in_load_order && /^##[[:space:]]*3[.]3([.]|[[:space:]])/ { exit }
+    in_load_order && /^### 3[.]3([.]|[[:space:]])/ { exit }
+    in_load_order { emit_candidate($0) }
+    END {
+      if (saw_load_order == 0) {
+        exit 3
+      }
+    }
+  ' "$source_path"
+}
+
+record_rejected_file() {
+  local path="$1"
+  local reason="$2"
+  rejected_files+=("${path}|${reason}")
+}
+
+add_selected_file() {
+  local raw_path="$1"
+  local normalized_path
+  normalized_path="$(normalize_path_token "$raw_path")"
+  [[ -n "$normalized_path" ]] || return 0
+
+  if [[ "$normalized_path" == /* ]]; then
+    if [[ "$normalized_path" == "${REPO_ROOT}/"* ]]; then
+      normalized_path="${normalized_path#${REPO_ROOT}/}"
+    else
+      record_rejected_file "$normalized_path" "outside-repo"
+      return 0
+    fi
+  fi
+
+  local prefix=""
+  for prefix in "${active_forbidden_prefixes[@]}"; do
+    [[ -n "$prefix" ]] || continue
+    if [[ "$normalized_path" == "$prefix"* ]]; then
+      record_rejected_file "$normalized_path" "forbidden-prefix:${prefix}"
+      return 0
+    fi
+  done
+
+  if [[ -n "${selected_file_set[$normalized_path]+set}" ]]; then
+    return 0
+  fi
+  selected_file_set["$normalized_path"]=1
+  files+=("$normalized_path")
+}
+
+load_include_file_list() {
+  local list_path="$1"
+  local resolved_list_path="$list_path"
+  if [[ "$resolved_list_path" != /* ]]; then
+    resolved_list_path="${REPO_ROOT}/${resolved_list_path}"
+  fi
+  if [[ ! -f "$resolved_list_path" ]]; then
+    die "--include-file-list points to missing file: ${list_path}"
+  fi
+
+  local raw_line=""
+  while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
+    raw_line="${raw_line%$'\r'}"
+    raw_line="$(trim "$raw_line")"
+    [[ -n "$raw_line" ]] || continue
+    if [[ "$raw_line" == \#* ]]; then
+      continue
+    fi
+    add_selected_file "$raw_line"
+  done < "$resolved_list_path"
+}
+
+files=()
+rejected_files=()
+selected_source_dp="none"
+active_forbidden_prefixes=()
+declare -A selected_file_set=()
+
+if [[ "$selection_mode" == "scope" ]]; then
+  traverse_args=("--scope=${scope}")
+  if [[ -n "$target" ]]; then
+    traverse_args+=("--project=${target}")
+  fi
+  for d in "${include_dirs[@]}"; do
+    traverse_args+=("--include-dir=${d}")
+  done
+  for d in "${exclude_dirs[@]}"; do
+    traverse_args+=("--exclude-dir=${d}")
+  done
+  for p in "${ignore_patterns[@]}"; do
+    traverse_args+=("--ignore-file=${p}")
+  done
+
+  while IFS= read -r filepath; do
+    [[ -n "$filepath" ]] || continue
+    files+=("$filepath")
+  done < <("${SCRIPT_DIR}/../lib/scripts/traverse.sh" "${traverse_args[@]}")
+else
+  canonical_baseline_files=(
+    "PoT.md"
+    "SoP.md"
+    "PoW.md"
+    "TASK.md"
+    "docs/MAP.md"
+    "docs/MANUAL.md"
+    "ops/lib/manifests/CONTEXT.md"
+  )
+  active_forbidden_prefixes=(
+    "opt/_factory/"
+    "storage/handoff/OPEN-"
+  )
+  for prefix in "${forbidden_prefixes[@]}"; do
+    active_forbidden_prefixes+=("$prefix")
+  done
+
+  for baseline_path in "${canonical_baseline_files[@]}"; do
+    add_selected_file "$baseline_path"
+  done
+
+  if [[ -n "$from_dp" ]]; then
+    dp_source_path="$from_dp"
+    if [[ "$from_dp" == "auto" ]]; then
+      dp_source_path="$(resolve_task_source_path)"
+    elif [[ "$dp_source_path" != /* ]]; then
+      dp_source_path="${REPO_ROOT}/${dp_source_path}"
+    fi
+
+    if [[ ! -f "$dp_source_path" ]]; then
+      die "--from-dp points to missing file: ${from_dp}"
+    fi
+
+    selected_source_dp="$(normalize_path_token "$dp_source_path")"
+    if [[ -z "$selected_source_dp" ]]; then
+      selected_source_dp="$from_dp"
+    fi
+
+    if ! dp_scoped_paths="$(extract_paths_from_dp_scoped_load_order "$dp_source_path")"; then
+      if [[ "$from_dp" == "auto" ]]; then
+        die "--from-dp=auto could not resolve active DP in TASK.md"
+      fi
+      die "--from-dp file does not contain a parsable 3.2.2 DP-scoped load order: ${from_dp}"
+    fi
+    while IFS= read -r candidate_path; do
+      [[ -n "$candidate_path" ]] || continue
+      add_selected_file "$candidate_path"
+    done <<< "$dp_scoped_paths"
+  fi
+
+  if [[ "$selection_mode" == "dp+allowlist" ]]; then
+    for include_path in "${include_files[@]}"; do
+      add_selected_file "$include_path"
+    done
+    for include_list_path in "${include_file_lists[@]}"; do
+      load_include_file_list "$include_list_path"
+    done
+  fi
+fi
 
 if (( ${#files[@]} == 0 )); then
-  die "No files selected for scope: $scope"
+  if [[ "$selection_mode" == "scope" ]]; then
+    die "No files selected for scope: $scope"
+  fi
+  die "No files selected for --selection=${selection_mode}"
 fi
 
 output_target=""
@@ -459,6 +742,9 @@ emit_manifest() {
   local payload="$2"
   local output="$3"
   local files_count="${#files[@]}"
+  local rejected_entry=""
+  local rejected_path=""
+  local rejected_reason=""
   {
     echo "Dump Manifest"
     echo "Branch: $branch"
@@ -490,7 +776,32 @@ emit_manifest() {
     for p in "${files[@]}"; do
       echo "- $p"
     done
+    if [[ "$selection_mode" == "dp" || "$selection_mode" == "dp+allowlist" ]]; then
+      echo ""
+      echo "[selection_provenance]"
+      echo "selector_mode: ${selection_mode}"
+      echo "source_dp: ${selected_source_dp}"
+      echo "files_included_count: ${files_count}"
+      echo "files_rejected_count: ${#rejected_files[@]}"
+      echo "files_rejected:"
+      if (( ${#rejected_files[@]} == 0 )); then
+        echo "- path: none; reason: none"
+      else
+        for rejected_entry in "${rejected_files[@]}"; do
+          rejected_path="${rejected_entry%%|*}"
+          rejected_reason="${rejected_entry#*|}"
+          echo "- path: ${rejected_path}; reason: ${rejected_reason}"
+        done
+      fi
+    fi
   } > "$path"
+}
+
+sync_manifest_alias() {
+  if [[ -z "$manifest_alias_path" ]]; then
+    return 0
+  fi
+  cp "$manifest_path" "$manifest_alias_path"
 }
 
 emit_dump > "$payload_path"
@@ -502,6 +813,7 @@ fi
 
 if [[ "$bundle_mode" -eq 1 ]]; then
   emit_manifest "$manifest_path" "$payload_path" "$manifest_output"
+  sync_manifest_alias
 fi
 
 if [[ -z "$output_target" ]]; then
@@ -524,12 +836,17 @@ fi
 
 if [[ "$bundle_mode" -eq 0 ]]; then
   emit_manifest "$manifest_path" "$payload_path" "$manifest_output"
+  sync_manifest_alias
 fi
 
 if [[ -n "$out_path" ]]; then
+  reported_manifest_path="$manifest_path"
+  if [[ -n "$manifest_alias_path" ]]; then
+    reported_manifest_path="$manifest_alias_path"
+  fi
   echo "Dump payload: $(display_path "$payload_path")"
   if [[ -n "$archive_path" ]]; then
     echo "Dump tarball: $(display_path "$archive_path")"
   fi
-  echo "Dump manifest: $(display_path "$manifest_path")"
+  echo "Dump manifest: $(display_path "$reported_manifest_path")"
 fi
