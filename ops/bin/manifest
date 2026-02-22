@@ -9,7 +9,7 @@ source "${SCRIPT_DIR}/../lib/scripts/common.sh"
 usage() {
   cat <<'USAGE'
 Usage:
-  ops/bin/manifest [render] <dp|results|task-surface|spec> --out=PATH [options]
+  ops/bin/manifest [render] <dp|results|task-surface|spec|addendum|closing> --out=PATH [options]
 
 Options:
   --slots-file=PATH          Load [TOKEN] blocks from a slots file.
@@ -43,6 +43,8 @@ declare -A TEMPLATE_PATHS=(
   [dp]="ops/src/surfaces/dp.md.tpl"
   [results]="ops/src/surfaces/results.md.tpl"
   [task-surface]="ops/src/surfaces/task.md.tpl"
+  [addendum]="ops/src/surfaces/addendum.md.tpl"
+  [closing]="ops/src/surfaces/closing.md.tpl"
   [spec]="ops/src/specs/spec.md.tpl"
 )
 
@@ -575,7 +577,7 @@ parse_args() {
     esac
   done
 
-  [[ "$render_key" =~ ^(dp|results|task-surface|spec)$ ]] || die "unknown template key '${render_key}'"
+  [[ "$render_key" =~ ^(dp|results|task-surface|spec|addendum|closing)$ ]] || die "unknown template key '${render_key}'"
   if (( dry_run )); then
     return 0
   fi

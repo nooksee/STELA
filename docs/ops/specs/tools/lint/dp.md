@@ -7,7 +7,7 @@
 
 ## Mechanics and Sequencing
 1. Resolve repository root, emit telemetry, and enforce canonical template hash parity for `ops/src/surfaces/dp.md.tpl`.
-2. Resolve input mode (`--test`, explicit path, stdin, or default `TASK.md`), including TASK pointer-head resolution and DP block extraction when the source is a TASK surface.
+2. Resolve input mode (`--test`, explicit path, stdin, or default `TASK.md`), including TASK pointer-head resolution and DP block extraction when the source is a TASK surface. Explicit addendum intake artifacts (`DP-OPS-XXXX-ADDENDUM-A.md`) dispatch to `lint_addendum_intake()` instead of DP structure hashing.
 3. Render canonical DP in non-strict mode, normalize both canonical and payload structures, hash both normalized forms, and fail on mismatch.
 4. Validate required fields and section blocks, including heading ID/title shape, base branch metadata, scoped load-order content, plan slots, and receipt slot non-placeholder content.
 5. Enforce receipt dump-selection scoping in Section 3.4.5: packets `DP-OPS-0095` and newer fail if any `ops/bin/dump` command omits `--selection=dp` or `--selection=dp+allowlist`; older packets emit a grandfathered warning only.
@@ -26,10 +26,11 @@ Template hash constants are hard-coded; any legitimate template change requires 
 ### Validation Rules (`lint_addendum_intake()`)
 `lint_addendum_intake()` validates a standalone addendum intake artifact. It enforces the following rules in order:
 
-1. **Required slots present:** `BASE_DP_ID`, `ADDENDUM_ID`, `OPERATOR_AUTHORIZATION`, `SCOPE_DELTA`, `ADDENDUM_OBJECTIVE`, and `ADDENDUM_RECEIPT` must each resolve to a non-empty value. A missing or blank slot is a hard failure.
+1. **Required slots present:** `BASE_DP_ID`, `ADDENDUM_ID`, `OPERATOR_AUTHORIZATION`, `SCOPE_DELTA`, `ADDENDUM_OBJECTIVE`, and `ADDENDUM_RECEIPT` must each resolve to a non-empty value from the rendered addendum intake labels and sections. A missing or blank slot is a hard failure.
 2. **OPERATOR_AUTHORIZATION is not a placeholder:** The value is tested with the existing `contains_placeholder()` helper. Any value matching the placeholder pattern (TBD, TODO, XXXX, `{{`, and related forms) is a hard failure.
 3. **BASE_DP_ID matches the canonical pattern:** The value must match `^DP-OPS-[0-9]{4}$` exactly. Any deviation is a hard failure.
-4. **SCOPE_DELTA contains only exact paths:** Each non-blank line in the `SCOPE_DELTA` block must contain no glob characters (`*`, `?`, `[`, `]`), no brace expansion characters (`{`, `}`), and no internal whitespace. Any violation is a hard failure.
+4. **ADDENDUM_ID matches the canonical pattern:** The value must match `^[A-Z]$` exactly. Any deviation is a hard failure.
+5. **SCOPE_DELTA contains only exact paths:** Each non-blank line in the `SCOPE_DELTA` block must contain no glob characters (`*`, `?`, `[`, `]`), no brace expansion characters (`{`, `}`), and no internal whitespace. Any violation is a hard failure.
 
 ### Operator Authorization Incantation Format
 The canonical operator authorization statement used in an addendum session must follow this exact phrase structure:

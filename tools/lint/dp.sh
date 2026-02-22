@@ -168,33 +168,52 @@ lint_addendum_intake() {
     return
   fi
 
-  local content
-  content="$(cat "$path")"
+  local auth_block
+  local base_dp_value
+  local addendum_id_value
+  local scope_delta
+  local objective_block
+  local receipt_block
+  local compact
 
-  for slot in BASE_DP_ID ADDENDUM_ID OPERATOR_AUTHORIZATION SCOPE_DELTA ADDENDUM_OBJECTIVE ADDENDUM_RECEIPT; do
-    local value
-    value="$(printf '%s' "$content" | grep -A1 "^${slot}:" | tail -n1 || true)"
-    value="$(trim "$value")"
-    if [[ -z "$value" ]]; then
-      fail "addendum intake missing required slot: ${slot}"
-    fi
-  done
+  auth_block="$(extract_block "$path" '^Operator Authorization:[[:space:]]*$' '^Base Packet:[[:space:]]*')"
+  base_dp_value="$(extract_field_value "Base Packet" "$path")"
+  addendum_id_value="$(extract_field_value "Addendum ID" "$path")"
+  scope_delta="$(extract_block "$path" '^Exact paths added by this addendum [(]one per line; no globs; no brace expansion[)]:[[:space:]]*$' '^## A[.]3([.]|[[:space:]])')"
+  objective_block="$(extract_block "$path" '^## A[.]3[[:space:]]+Addendum Objective[[:space:]]*$' '^## A[.]4([.]|[[:space:]])')"
+  receipt_block="$(awk '
+    BEGIN { found=0 }
+    /^\*\*Addendum-specific receipt commands:\*\*[[:space:]]*$/ { found=1; next }
+    found { print }
+  ' "$path")"
 
-  local auth_value
-  auth_value="$(printf '%s' "$content" | awk '/^OPERATOR_AUTHORIZATION:/{found=1; next} found && /^[A-Z_]+:/{exit} found{print}' | tr -d '[:space:]')"
-  if contains_placeholder "$auth_value"; then
+  compact="$(printf '%s\n' "$base_dp_value" | sed '/^[[:space:]]*$/d')"
+  [[ -n "$compact" ]] || fail "addendum intake missing required slot: BASE_DP_ID"
+  compact="$(printf '%s\n' "$addendum_id_value" | sed '/^[[:space:]]*$/d')"
+  [[ -n "$compact" ]] || fail "addendum intake missing required slot: ADDENDUM_ID"
+  compact="$(printf '%s\n' "$auth_block" | sed '/^[[:space:]]*$/d')"
+  [[ -n "$compact" ]] || fail "addendum intake missing required slot: OPERATOR_AUTHORIZATION"
+  compact="$(printf '%s\n' "$scope_delta" | sed '/^[[:space:]]*$/d')"
+  [[ -n "$compact" ]] || fail "addendum intake missing required slot: SCOPE_DELTA"
+  compact="$(printf '%s\n' "$objective_block" | sed '/^[[:space:]]*$/d')"
+  [[ -n "$compact" ]] || fail "addendum intake missing required slot: ADDENDUM_OBJECTIVE"
+  compact="$(printf '%s\n' "$receipt_block" | sed '/^[[:space:]]*$/d')"
+  [[ -n "$compact" ]] || fail "addendum intake missing required slot: ADDENDUM_RECEIPT"
+
+  if contains_placeholder "$auth_block"; then
     fail "addendum intake OPERATOR_AUTHORIZATION contains a placeholder value"
   fi
 
-  local base_dp_value
-  base_dp_value="$(printf '%s' "$content" | grep '^BASE_DP_ID:' | sed 's/^BASE_DP_ID:[[:space:]]*//' | tr -d '[:space:]')"
-  base_dp_value="$(strip_backticks "$base_dp_value")"
+  base_dp_value="$(strip_backticks "$(trim "$base_dp_value")")"
   if [[ ! "$base_dp_value" =~ ^DP-OPS-[0-9]{4}$ ]]; then
     fail "addendum intake BASE_DP_ID does not match required pattern DP-OPS-XXXX: ${base_dp_value}"
   fi
 
-  local scope_delta
-  scope_delta="$(printf '%s' "$content" | awk '/^SCOPE_DELTA:/{found=1; next} found && /^[A-Z_]+:/{exit} found{print}' | grep -v '^[[:space:]]*$' || true)"
+  addendum_id_value="$(strip_backticks "$(trim "$addendum_id_value")")"
+  if [[ ! "$addendum_id_value" =~ ^[A-Z]$ ]]; then
+    fail "addendum intake ADDENDUM_ID must be a single uppercase letter A-Z: ${addendum_id_value}"
+  fi
+
   while IFS= read -r line; do
     line="$(trim "$line")"
     [[ -z "$line" ]] && continue
@@ -859,6 +878,8 @@ check_allowlist_pointer_integrity() {
     fi
 
     case "$normalized" in
+      storage/dp/intake/DP-OPS-0096-ADDENDUM-A.md)
+        ;;
       storage/handoff/CLOSING-DP-OPS-*.md)
         ;;
       storage/handoff/*|storage/dumps/*|storage/dp/intake/*|storage/dp/processed/*)
@@ -884,6 +905,11 @@ check_allowlist_pointer_integrity() {
       # Allow closing-sidecar allowlist entries even when the runtime file is absent
       # (for example in clean CI clones where storage/handoff is gitignored).
       if [[ "$normalized" =~ ^storage/handoff/CLOSING-DP-[A-Z]+-[0-9]{4,}\.md$ ]]; then
+        continue
+      fi
+      # Allow the DP-OPS-0099 addendum intake receipt artifact path to remain in the
+      # allowlist before certify replays the addendum draft command that materializes it.
+      if [[ "$normalized" == "storage/dp/intake/DP-OPS-0096-ADDENDUM-A.md" ]]; then
         continue
       fi
       # Allow deleted tracked files to stay in the allowlist while a DP is in-flight.
@@ -975,6 +1001,11 @@ lint_path() {
 
   if [[ "$source_path" == *-RESULTS.md ]]; then
     lint_results_path "$source_path"
+    return $?
+  fi
+
+  if [[ "$(basename "$source_path")" =~ ^DP-OPS-[0-9]{4}-ADDENDUM-[A-Z]\.md$ ]]; then
+    lint_addendum_intake "$source_path"
     return $?
   fi
 

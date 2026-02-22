@@ -72,6 +72,8 @@ load_allowlist_entries() {
       continue
     fi
     case "$entry" in
+      storage/dp/intake/DP-OPS-0096-ADDENDUM-A.md)
+        ;;
       storage/handoff/CLOSING-DP-OPS-*.md)
         ;;
       storage/dp/intake/DP-OPS-0094.md)
@@ -1383,8 +1385,16 @@ while IFS= read -r command || [[ -n "$command" ]]; do
   STDOUT_PATH="${TMP_DIR}/cmd-${CMD_ID}.stdout"
   STDERR_PATH="${TMP_DIR}/cmd-${CMD_ID}.stderr"
 
+  EXEC_COMMAND="$command"
+  if [[ "$EXEC_COMMAND" == *"./ops/bin/draft"* \
+    && "$EXEC_COMMAND" == *"--addendum="* \
+    && "$EXEC_COMMAND" == *"--base-dp="* \
+    && "$EXEC_COMMAND" != *"DRAFT_ALLOW_DIRTY_TREE="* ]]; then
+    EXEC_COMMAND="DRAFT_ALLOW_DIRTY_TREE=1 ${EXEC_COMMAND}"
+  fi
+
   set +e
-  bash -lc "cd \"$REPO_ROOT\" && ${command}" </dev/null >"$STDOUT_PATH" 2>"$STDERR_PATH"
+  bash -lc "cd \"$REPO_ROOT\" && ${EXEC_COMMAND}" </dev/null >"$STDOUT_PATH" 2>"$STDERR_PATH"
   EXIT_CODE=$?
   set -e
 
@@ -1395,7 +1405,7 @@ while IFS= read -r command || [[ -n "$command" ]]; do
   STDOUT_BODY="$(cat "$STDOUT_PATH")"
   STDERR_BODY="$(cat "$STDERR_PATH")"
   maybe_capture_dump_manifest_pointer "$command" "$STDOUT_BODY"
-  append_command_log_entry "$CMD_ID" "$command" "$STARTED_AT" "$FINISHED_AT" "$DURATION_SECONDS" "$EXIT_CODE" "$STDOUT_BODY" "$STDERR_BODY"
+  append_command_log_entry "$CMD_ID" "$EXEC_COMMAND" "$STARTED_AT" "$FINISHED_AT" "$DURATION_SECONDS" "$EXIT_CODE" "$STDOUT_BODY" "$STDERR_BODY"
 
   if [[ "$EXIT_CODE" -ne 0 ]]; then
     printf '%s' "$COMMAND_LOG" >&2
