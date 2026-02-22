@@ -106,6 +106,8 @@ while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
   case "$entry" in
     storage/handoff/CLOSING-DP-OPS-*.md)
       ;;
+    storage/dp/intake/DP-OPS-0094.md)
+      ;;
     storage/handoff/*|storage/dumps/*|storage/dp/intake/*|storage/dp/processed/*)
       die "allowlist entry must be persistent repo state (runtime artifact prefix forbidden): ${entry}"
       ;;

@@ -53,6 +53,8 @@ ops/lib/project/README.md
 ops/lib/project/SCAFFOLD.md
 ops/lib/project/STELA.md
 tools/lint/ff.sh
+tools/lint/integrity.sh
+tools/lint/style.sh
 docs/CCD.md
 docs/ops/prompts/e-prompt-01.md
 docs/ops/prompts/e-prompt-02.md
@@ -78,5 +80,8 @@ archives/surfaces/TASK-DP-OPS-0092-db52e3aa0.md
 ops/src/surfaces/closing.md.tpl
 storage/handoff/CLOSING-DP-OPS-0093.md
 archives/surfaces/PoW-2026-02-22-6105ac331.md
+archives/surfaces/PoW-2026-02-22-6f99dc7b7.md
 archives/surfaces/SoP-2026-02-22-6105ac331.md
+archives/surfaces/SoP-2026-02-22-6f99dc7b7.md
 archives/surfaces/TASK-DP-OPS-0093-6105ac331.md
+archives/surfaces/TASK-DP-OPS-0094-6f99dc7b7.md

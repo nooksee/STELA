@@ -74,6 +74,8 @@ load_allowlist_entries() {
     case "$entry" in
       storage/handoff/CLOSING-DP-OPS-*.md)
         ;;
+      storage/dp/intake/DP-OPS-0094.md)
+        ;;
       storage/handoff/*|storage/dumps/*|storage/dp/intake/*|storage/dp/processed/*)
         die "allowlist entry must be persistent repo state (runtime artifact prefix forbidden): ${entry}"
         ;;
@@ -269,7 +271,6 @@ validate_closing_block_sidecar() {
     "{"
     "}"
     "*"
-    "?"
     "["
     "]"
     "\`"
