@@ -835,6 +835,29 @@ check_allowlist_pointer_integrity() {
   done
 }
 
+warn_dump_selection_scope() {
+  local path="$1"
+  local receipt_block
+  local line=""
+  local trimmed_line=""
+
+  receipt_block="$(extract_block "$path" '^### 3[.]4[.]5' '^## 3[.]5([.]|[[:space:]])')"
+  if [[ -z "$receipt_block" ]]; then
+    return 0
+  fi
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" != *"./ops/bin/dump"* && "$line" != *"ops/bin/dump"* ]]; then
+      continue
+    fi
+    if [[ "$line" == *"--selection=dp"* || "$line" == *"--selection=dp+allowlist"* ]]; then
+      continue
+    fi
+    trimmed_line="$(trim "$line")"
+    echo "WARN: dump invocation found without --selection=dp or --selection=dp+allowlist: \"${trimmed_line}\". Scoped selection is required for DP-authorized sessions."
+  done <<< "$receipt_block"
+}
+
 lint_payload() {
   local path="$1"
   failures=0
@@ -843,6 +866,7 @@ lint_payload() {
   check_structure_hash "$path"
   check_required_fields "$path"
   check_allowlist_pointer_integrity "$path"
+  warn_dump_selection_scope "$path"
 
   if (( failures )); then
     return 1
