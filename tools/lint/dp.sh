@@ -835,15 +835,26 @@ check_allowlist_pointer_integrity() {
   done
 }
 
-warn_dump_selection_scope() {
+check_dump_selection_scope() {
   local path="$1"
   local receipt_block
   local line=""
   local trimmed_line=""
+  local packet_header=""
+  local packet_seq=""
+  local enforce_hard_gate=0
 
   receipt_block="$(extract_block "$path" '^### 3[.]4[.]5' '^## 3[.]5([.]|[[:space:]])')"
   if [[ -z "$receipt_block" ]]; then
     return 0
+  fi
+
+  packet_header="$(grep -m1 -E '^###[[:space:]]+DP-[A-Z]+-[0-9]{4,}:' "$path" || true)"
+  if [[ "$packet_header" =~ ^###[[:space:]]+DP-[A-Z]+-([0-9]{4,}): ]]; then
+    packet_seq="${BASH_REMATCH[1]}"
+    if (( 10#${packet_seq} >= 95 )); then
+      enforce_hard_gate=1
+    fi
   fi
 
   while IFS= read -r line || [[ -n "$line" ]]; do
@@ -854,7 +865,11 @@ warn_dump_selection_scope() {
       continue
     fi
     trimmed_line="$(trim "$line")"
-    echo "WARN: dump invocation found without --selection=dp or --selection=dp+allowlist: \"${trimmed_line}\". Scoped selection is required for DP-authorized sessions."
+    if (( enforce_hard_gate )); then
+      fail "dump invocation found without --selection=dp or --selection=dp+allowlist: \"${trimmed_line}\". Scoped selection is required for DP-authorized sessions."
+    else
+      echo "WARN: legacy packet grandfathered for dump selection scope enforcement: \"${trimmed_line}\". Packets DP-OPS-0095 and newer fail without --selection=dp or --selection=dp+allowlist."
+    fi
   done <<< "$receipt_block"
 }
 
@@ -866,7 +881,7 @@ lint_payload() {
   check_structure_hash "$path"
   check_required_fields "$path"
   check_allowlist_pointer_integrity "$path"
-  warn_dump_selection_scope "$path"
+  check_dump_selection_scope "$path"
 
   if (( failures )); then
     return 1
