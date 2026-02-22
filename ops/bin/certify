@@ -21,7 +21,7 @@ TASK_SURFACE_PATH="${REPO_ROOT}/TASK.md"
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/certify --dp=DP-OPS-XXXX [--out=auto|PATH] [--allow-intake-fallback]
+Usage: ops/bin/certify --dp=DP-OPS-XXXX [--out=auto|PATH] [--allow-intake-fallback] [--addendum=X]
 USAGE
 }
 
@@ -72,11 +72,9 @@ load_allowlist_entries() {
       continue
     fi
     case "$entry" in
-      storage/dp/intake/DP-OPS-0096-ADDENDUM-A.md)
+      storage/dp/intake/*-ADDENDUM-*.md)
         ;;
       storage/handoff/CLOSING-DP-OPS-*.md)
-        ;;
-      storage/dp/intake/DP-OPS-0094.md)
         ;;
       storage/handoff/*|storage/dumps/*|storage/dp/intake/*|storage/dp/processed/*)
         die "allowlist entry must be persistent repo state (runtime artifact prefix forbidden): ${entry}"
@@ -88,6 +86,31 @@ load_allowlist_entries() {
     fi
     ALLOWLIST_ENTRIES["$entry"]=1
   done < "$allowlist_path"
+}
+
+extract_addendum_scope_delta() {
+  local intake_path="$1"
+  [[ -f "$intake_path" ]] || die "addendum intake missing for SCOPE_DELTA extraction: ${intake_path#${REPO_ROOT}/}"
+  awk '
+    BEGIN { in_block=0 }
+    /^SCOPE_DELTA[[:space:]]*$|^- SCOPE_DELTA[[:space:]]*$|^[[:space:]]*SCOPE_DELTA:[[:space:]]*$/ {
+      in_block=1; next
+    }
+    in_block && /^[A-Z_]+:[[:space:]]*$|^- [A-Z_]+[[:space:]]*$/ { in_block=0 }
+    in_block {
+      line=$0
+      sub(/^[[:space:]]*-[[:space:]]*/, "", line)
+      sub(/^[[:space:]]+/, "", line)
+      sub(/[[:space:]]+$/, "", line)
+      if (length(line) > 0) print line
+    }
+  ' "$intake_path" | while IFS= read -r path_entry || [[ -n "$path_entry" ]]; do
+    [[ -n "$path_entry" ]] || continue
+    if [[ "$path_entry" == *"*"* || "$path_entry" == *"?"* || "$path_entry" == *"["* || "$path_entry" == *"{"* || "$path_entry" == *"}"* ]]; then
+      die "addendum SCOPE_DELTA entry contains forbidden glob or brace expansion token: ${path_entry}"
+    fi
+    printf '%s\n' "$path_entry"
+  done
 }
 
 allowlist_contains_path() {
@@ -496,10 +519,42 @@ Artifact Path Consistency: PASS
 EOF
 }
 
+validate_addendum_artifact_path_consistency() {
+  local dp_id="$1"
+  local addendum_id="$2"
+  local addendum_label="ADDENDUM-${addendum_id}"
+  local intake_rel="storage/dp/intake/${dp_id}-${addendum_label}.md"
+  local closing_rel="storage/handoff/CLOSING-${dp_id}-${addendum_label}.md"
+  local results_rel="storage/handoff/${dp_id}-RESULTS-${addendum_id}.md"
+
+  [[ -f "${REPO_ROOT}/${intake_rel}" ]] || die "missing canonical addendum intake path: ${intake_rel}"
+  [[ -f "${REPO_ROOT}/${closing_rel}" ]] || die "missing canonical addendum closing sidecar path: ${closing_rel}"
+
+  [[ ! -f "${REPO_ROOT}/${dp_id}-${addendum_label}.md" ]] \
+    || die "non-canonical root addendum DP variant detected: ${dp_id}-${addendum_label}.md"
+  [[ ! -f "${REPO_ROOT}/CLOSING-${dp_id}-${addendum_label}.md" ]] \
+    || die "non-canonical root addendum closing variant detected: CLOSING-${dp_id}-${addendum_label}.md"
+  [[ ! -f "${REPO_ROOT}/${dp_id}-RESULTS-${addendum_id}.md" ]] \
+    || die "non-canonical root addendum results variant detected: ${dp_id}-RESULTS-${addendum_id}.md"
+
+  cat <<EOF
+Addendum Artifact Path Consistency: PASS
+- Addendum intake path: ${intake_rel}
+- Addendum closing sidecar path: ${closing_rel}
+- Expected addendum RESULTS path: ${results_rel}
+- Root-level lookalike variants absent: yes
+EOF
+}
+
 move_dp_packet_to_processed() {
   local dp_id="$1"
-  local intake_rel="storage/dp/intake/${dp_id}.md"
-  local processed_rel="storage/dp/processed/${dp_id}.md"
+  local addendum_id="${2:-}"
+  local packet_name="${dp_id}.md"
+  if [[ -n "$addendum_id" ]]; then
+    packet_name="${dp_id}-ADDENDUM-${addendum_id}.md"
+  fi
+  local intake_rel="storage/dp/intake/${packet_name}"
+  local processed_rel="storage/dp/processed/${packet_name}"
   local intake_abs="${REPO_ROOT}/${intake_rel}"
   local processed_abs="${REPO_ROOT}/${processed_rel}"
 
@@ -1221,6 +1276,7 @@ build_command_plan() {
 DP_ID=""
 OUT_ARG="auto"
 ALLOW_INTAKE_FALLBACK=0
+ADDENDUM_ID=""
 
 for arg in "$@"; do
   case "$arg" in
@@ -1233,6 +1289,9 @@ for arg in "$@"; do
     --allow-intake-fallback)
       ALLOW_INTAKE_FALLBACK=1
       ;;
+    --addendum=*)
+      ADDENDUM_ID="${arg#--addendum=}"
+      ;;
     -h|--help)
       usage
       exit 0
@@ -1243,6 +1302,11 @@ for arg in "$@"; do
   esac
 done
 
+if [[ -n "$ADDENDUM_ID" ]]; then
+  [[ "$ADDENDUM_ID" =~ ^[A-Z]$ ]] || die "--addendum value must be a single uppercase letter A-Z: ${ADDENDUM_ID}"
+  [[ -n "$DP_ID" ]] || die "--addendum requires --dp"
+fi
+
 emit_binary_leaf "certify" "start"
 
 [[ -n "$DP_ID" ]] || die "missing required --dp"
@@ -1250,7 +1314,7 @@ emit_binary_leaf "certify" "start"
 assert_dp_matches_work_branch "$DP_ID"
 
 if [[ "$OUT_ARG" == "auto" || -z "$OUT_ARG" ]]; then
-  OUT_PATH="${HANDOFF_DIR}/${DP_ID}-RESULTS.md"
+  OUT_PATH=""
 else
   OUT_PATH="$OUT_ARG"
   if [[ "$OUT_PATH" != /* ]]; then
@@ -1266,7 +1330,19 @@ fi
 mkdir -p "${HANDOFF_DIR}"
 mkdir -p "${SURFACE_ARCHIVE_DIR}"
 
-CLOSING_PATH="${HANDOFF_DIR}/CLOSING-${DP_ID}.md"
+if [[ -n "$ADDENDUM_ID" ]]; then
+  ADDENDUM_INTAKE_PATH="${DP_INTAKE_DIR}/${DP_ID}-ADDENDUM-${ADDENDUM_ID}.md"
+  CLOSING_PATH="${HANDOFF_DIR}/CLOSING-${DP_ID}-ADDENDUM-${ADDENDUM_ID}.md"
+  if [[ -z "$OUT_PATH" ]]; then
+    OUT_PATH="${HANDOFF_DIR}/${DP_ID}-RESULTS-${ADDENDUM_ID}.md"
+  fi
+else
+  ADDENDUM_INTAKE_PATH=""
+  CLOSING_PATH="${HANDOFF_DIR}/CLOSING-${DP_ID}.md"
+  if [[ -z "$OUT_PATH" ]]; then
+    OUT_PATH="${HANDOFF_DIR}/${DP_ID}-RESULTS.md"
+  fi
+fi
 [[ -f "$CLOSING_PATH" ]] || die "missing closing block sidecar: ${CLOSING_PATH#${REPO_ROOT}/}"
 if [[ -z "$(sed '/^[[:space:]]*$/d' "$CLOSING_PATH")" ]]; then
   die "closing block sidecar is empty: ${CLOSING_PATH#${REPO_ROOT}/}"
@@ -1276,32 +1352,39 @@ CLOSING_BLOCK="$(cat "$CLOSING_PATH")"
 TMP_DIR="$(mktemp -d "${REPO_ROOT}/var/tmp/certify.${DP_ID}.XXXXXX")"
 trap 'emit_binary_leaf "certify" "finish"; rm -rf "$TMP_DIR"' EXIT
 
-TASK_SOURCE_PATH="$(resolve_task_source_path)"
 DP_BLOCK_PATH="${TMP_DIR}/dp-block.md"
-extract_dp_block_from_task "$DP_ID" "$TASK_SOURCE_PATH" "$DP_BLOCK_PATH"
+if [[ -n "$ADDENDUM_ID" ]]; then
+  [[ -f "$ADDENDUM_INTAKE_PATH" ]] \
+    || die "addendum intake missing and no fallback is permitted: ${ADDENDUM_INTAKE_PATH#${REPO_ROOT}/}"
+  cp "$ADDENDUM_INTAKE_PATH" "$DP_BLOCK_PATH"
+  DP_SOURCE="${ADDENDUM_INTAKE_PATH#${REPO_ROOT}/}"
+else
+  TASK_SOURCE_PATH="$(resolve_task_source_path)"
+  extract_dp_block_from_task "$DP_ID" "$TASK_SOURCE_PATH" "$DP_BLOCK_PATH"
 
-DP_SOURCE="TASK.md"
-if [[ ! -s "$DP_BLOCK_PATH" ]]; then
-  if [[ "$ALLOW_INTAKE_FALLBACK" != "1" ]]; then
-    task_line_count="$(awk 'END { print NR }' "$TASK_PATH")"
-    if [[ "$task_line_count" == "1" ]]; then
-      ALLOW_INTAKE_FALLBACK=1
-      echo "DP section '${DP_ID}' not found in TASK.md; auto-enabling intake fallback because TASK.md is pointer-only."
-    else
-      die "DP section '${DP_ID}' not found in TASK.md; intake fallback is disabled (pass --allow-intake-fallback to override)"
+  DP_SOURCE="TASK.md"
+  if [[ ! -s "$DP_BLOCK_PATH" ]]; then
+    if [[ "$ALLOW_INTAKE_FALLBACK" != "1" ]]; then
+      task_line_count="$(awk 'END { print NR }' "$TASK_PATH")"
+      if [[ "$task_line_count" == "1" ]]; then
+        ALLOW_INTAKE_FALLBACK=1
+        echo "DP section '${DP_ID}' not found in TASK.md; auto-enabling intake fallback because TASK.md is pointer-only."
+      else
+        die "DP section '${DP_ID}' not found in TASK.md; intake fallback is disabled (pass --allow-intake-fallback to override)"
+      fi
     fi
+    mapfile -t intake_packets < <(find "$DP_INTAKE_DIR" -maxdepth 1 -type f -name 'DP-*.md' -printf '%f\n' | sort)
+    intake_packet=""
+    for intake_packet in "${intake_packets[@]}"; do
+      if [[ "$intake_packet" != "${DP_ID}.md" ]]; then
+        die "intake fallback blocked: non-target packet present in intake (${intake_packet})"
+      fi
+    done
+    FALLBACK_DP_PATH="${DP_INTAKE_DIR}/${DP_ID}.md"
+    [[ -f "$FALLBACK_DP_PATH" ]] || die "DP section '${DP_ID}' not found in TASK.md and fallback intake is missing: ${FALLBACK_DP_PATH#${REPO_ROOT}/}"
+    cp "$FALLBACK_DP_PATH" "$DP_BLOCK_PATH"
+    DP_SOURCE="${FALLBACK_DP_PATH#${REPO_ROOT}/}"
   fi
-  mapfile -t intake_packets < <(find "$DP_INTAKE_DIR" -maxdepth 1 -type f -name 'DP-*.md' -printf '%f\n' | sort)
-  intake_packet=""
-  for intake_packet in "${intake_packets[@]}"; do
-    if [[ "$intake_packet" != "${DP_ID}.md" ]]; then
-      die "intake fallback blocked: non-target packet present in intake (${intake_packet})"
-    fi
-  done
-  FALLBACK_DP_PATH="${DP_INTAKE_DIR}/${DP_ID}.md"
-  [[ -f "$FALLBACK_DP_PATH" ]] || die "DP section '${DP_ID}' not found in TASK.md and fallback intake is missing: ${FALLBACK_DP_PATH#${REPO_ROOT}/}"
-  cp "$FALLBACK_DP_PATH" "$DP_BLOCK_PATH"
-  DP_SOURCE="${FALLBACK_DP_PATH#${REPO_ROOT}/}"
 fi
 
 assert_no_disposable_refs "$DP_BLOCK_PATH" "$DP_SOURCE"
@@ -1315,6 +1398,24 @@ if [[ -z "$ALLOWLIST_POINTER" ]]; then
   ALLOWLIST_POINTER="storage/dp/active/allowlist.txt"
 fi
 load_allowlist_entries "$ALLOWLIST_POINTER"
+if [[ -n "$ADDENDUM_ID" ]]; then
+  SCOPE_DELTA_ADDED=()
+  while IFS= read -r delta_path || [[ -n "$delta_path" ]]; do
+    [[ -n "$delta_path" ]] || continue
+    if [[ -z "${ALLOWLIST_ENTRIES[$delta_path]+set}" ]]; then
+      ALLOWLIST_ENTRIES["$delta_path"]=1
+      SCOPE_DELTA_ADDED+=("$delta_path")
+    fi
+  done < <(extract_addendum_scope_delta "$ADDENDUM_INTAKE_PATH")
+  echo "Addendum SCOPE_DELTA Extension:"
+  if (( ${#SCOPE_DELTA_ADDED[@]} > 0 )); then
+    for delta_path in "${SCOPE_DELTA_ADDED[@]}"; do
+      printf -- "- %s\n" "$delta_path"
+    done
+  else
+    echo "- (none added; all delta paths already in base allowlist)"
+  fi
+fi
 
 RECEIPT_BLOCK_PATH="${TMP_DIR}/receipt-block.txt"
 COMMANDS_PATH="${TMP_DIR}/commands.txt"
@@ -1338,7 +1439,11 @@ fi
 
 run_closing_validator_negative_self_check "$ALLOWLIST_POINTER"
 CLOSING_MANIFEST_VALIDATION_OUTPUT="$(validate_closing_block_sidecar "$CLOSING_PATH" "$ALLOWLIST_POINTER")"
-ARTIFACT_PATH_VALIDATION_OUTPUT="$(validate_artifact_path_consistency "$DP_ID")"
+if [[ -n "$ADDENDUM_ID" ]]; then
+  ARTIFACT_PATH_VALIDATION_OUTPUT="$(validate_addendum_artifact_path_consistency "$DP_ID" "$ADDENDUM_ID")"
+else
+  ARTIFACT_PATH_VALIDATION_OUTPUT="$(validate_artifact_path_consistency "$DP_ID")"
+fi
 
 TRACE_ID="$(resolve_trace_id)"
 
@@ -1709,12 +1814,17 @@ RESULTS_ALLOWLIST_POINTER+=$'\n'"- dump_manifest: ${DUMP_MANIFEST_POINTER}"
 assert_results_closing_block_matches_sidecar "$OUT_PATH" "$CLOSING_PATH"
 assert_no_disposable_refs "$OUT_PATH" "${OUT_PATH#${REPO_ROOT}/}"
 bash "$RESULTS_LINT" "$OUT_PATH"
-DP_PACKET_MOVE_OUTPUT="$(move_dp_packet_to_processed "$DP_ID")"
+DP_PACKET_MOVE_OUTPUT="$(move_dp_packet_to_processed "$DP_ID" "$ADDENDUM_ID")"
+
+TELEMETRY_PACKET_ID="${DP_ID}"
+if [[ -n "$ADDENDUM_ID" ]]; then
+  TELEMETRY_PACKET_ID="${DP_ID}-ADDENDUM-${ADDENDUM_ID}"
+fi
 
 TELEMETRY_LEAF="$(
   emit_telemetry_leaf \
     "$TRACE_ID" \
-    "$DP_ID" \
+    "$TELEMETRY_PACKET_ID" \
     "$CERTIFIED_AT" \
     "${OUT_PATH#${REPO_ROOT}/}" \
     "$BRANCH" \
