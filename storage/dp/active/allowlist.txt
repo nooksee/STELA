@@ -9,3 +9,12 @@ archives/surfaces/PoW-2026-02-22-c60a03f9c.md
 archives/surfaces/SoP-2026-02-22-4049e928d.md
 archives/surfaces/PoW-2026-02-22-4049e928d.md
 archives/surfaces/TASK-DP-OPS-0096-4049e928d.md
+storage/handoff/CLOSING-DP-OPS-0097.md
+archives/surfaces/SoP-2026-02-22-f2269115e.md
+archives/surfaces/PoW-2026-02-22-f2269115e.md
+archives/surfaces/TASK-DP-OPS-0097-f2269115e.md
+llms.txt
+llms-core.txt
+llms-full.txt
+archives/manifests/compile-*.md
+docs/MAP.md
