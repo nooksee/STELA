@@ -26,9 +26,6 @@ Filing:
 - Routing Closeout; failure is a system failure state.
 - SoP: history ledger only; no permanent rules live there.
 - PoW: proof ledger only; execution evidence pointers live there.
-- System: everything the system proves is actually true.
-- Truth: primitive predicate governed by specific rules rather than a mere definition.
-- Action: deception or incoherence are inherently destabilizing and must be resolved.
 
 ### 1.3 Canon Surfaces
 - `PoT.md` — constitution, staffing, jurisdiction, and enforcement (SSOT).
@@ -65,6 +62,7 @@ Scope: `ops/`, `docs/`, `opt/`, `projects/`, `tools/`, `.github/`, and root gove
 Law: PoT is the sole authority across all scopes. No parallel jurisdictions exist.
 
 ## 4. Staffing & Logic
+Hard constraints are: PoT.md, SoP.md, TASK.md, ops/lib/manifests/CONTEXT.md, docs/MANUAL.md, and docs/MAP.md.
 
 ### 4.1 Staffing Protocol
 - Operator (Human): Owns final decisions, approvals, and secrets. Performs all commits, pushes, and merges.
@@ -83,14 +81,16 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Operational Directives: This rule is governed by PoT.md §1.2 Precedence.
 - Operational Directives: This rule is governed by PoT.md §1.2 SoP.
 
-### 4.3 Hard Constraints (SSOT)
-See Section 1.3 for the canonical surface list.
-This section is a pointer and does not duplicate that canonical list.
-
 ### 4.4 Entry Points
 - llms.txt
 
-### 4.5 Drafting Proposal Protocol
+### 4.5 Epistemic Standards
+- System: everything the system proves is actually true.
+- Truth: primitive predicate governed by specific rules rather than a mere definition.
+- Action: deception or incoherence are inherently destabilizing and must be resolved.
+
+### 4.6 Drafting Proposal Protocol
+PROPOSED: relocation pending PR-2
 - Integrator proposals: An Integrator shall propose a work branch name and Base HEAD when they are not yet provided.
 - Operator authority: The Operator creates branches and provides the final Base HEAD; Contractors do not create or switch branches.
 - Provisional marking: Any provisional value must be prefixed with PROPOSED: during drafting and must be removed or replaced with finalized values before any worker runs a DP.

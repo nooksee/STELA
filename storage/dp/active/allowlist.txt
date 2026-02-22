@@ -1,12 +1,11 @@
 storage/dp/active/allowlist.txt
+PoT.md
 SoP.md
 PoW.md
 TASK.md
-tools/lint/dp.sh
-docs/ops/specs/tools/lint/dp.md
-storage/handoff/CLOSING-DP-OPS-0095.md
-archives/surfaces/SoP-2026-02-22-6f99dc7b7.md
-archives/surfaces/PoW-2026-02-22-6f99dc7b7.md
+storage/handoff/CLOSING-DP-OPS-0096.md
 archives/surfaces/SoP-2026-02-22-c60a03f9c.md
 archives/surfaces/PoW-2026-02-22-c60a03f9c.md
-archives/surfaces/TASK-DP-OPS-0095-c60a03f9c.md
+archives/surfaces/SoP-2026-02-22-4049e928d.md
+archives/surfaces/PoW-2026-02-22-4049e928d.md
+archives/surfaces/TASK-DP-OPS-0096-4049e928d.md
