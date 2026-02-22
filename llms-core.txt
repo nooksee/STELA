@@ -1,5 +1,5 @@
 ## PoT.md
-<!-- CCD: ff_target="governance-narrative" ff_band="50-65" -->
+<!-- CCD: ff_target="governance-narrative" ff_band="30-40" -->
 # Policy of Truth (PoT)
 
 ## Preamble: Doctrine
@@ -27,9 +27,6 @@ Filing:
 - Routing Closeout; failure is a system failure state.
 - SoP: history ledger only; no permanent rules live there.
 - PoW: proof ledger only; execution evidence pointers live there.
-- System: everything the system proves is actually true.
-- Truth: primitive predicate governed by specific rules rather than a mere definition.
-- Action: deception or incoherence are inherently destabilizing and must be resolved.
 
 ### 1.3 Canon Surfaces
 - `PoT.md` — constitution, staffing, jurisdiction, and enforcement (SSOT).
@@ -66,6 +63,7 @@ Scope: `ops/`, `docs/`, `opt/`, `projects/`, `tools/`, `.github/`, and root gove
 Law: PoT is the sole authority across all scopes. No parallel jurisdictions exist.
 
 ## 4. Staffing & Logic
+Hard constraints are: PoT.md, SoP.md, TASK.md, ops/lib/manifests/CONTEXT.md, docs/MANUAL.md, and docs/MAP.md.
 
 ### 4.1 Staffing Protocol
 - Operator (Human): Owns final decisions, approvals, and secrets. Performs all commits, pushes, and merges.
@@ -78,72 +76,34 @@ Law: PoT is the sole authority across all scopes. No parallel jurisdictions exis
 - Generation Mandate: Verification outputs must be generated, not pre-filled or assumed.
 - Generation Mandate: DP RESULTS receipts are generated artifacts produced by `ops/bin/certify`; manual fabrication is prohibited.
 - Linguistic Precision: Absolute literalism; seek clarification for ambiguity before proceeding.
-- Relatability Mandate: Universal accessibility via vernacular optimization and anecdotal grounding, like a concrete handoff example, similar to an operator runbook note, and think of each rule as an executable instruction that can be verified.
 - Relatability Practice: Imagine the same way an operator explains a failure, picture a concrete branch state, and consider a direct recovery action.
 - Operational Directives: This rule is governed by PoT.md §1.2 Drift.
 - Operational Directives: This rule is governed by PoT.md §1.3 Canon Surfaces (`ops/lib/manifests/CONTEXT.md`).
 - Operational Directives: This rule is governed by PoT.md §1.2 Precedence.
 - Operational Directives: This rule is governed by PoT.md §1.2 SoP.
 
-### 4.3 Hard Constraints (SSOT)
-See Section 1.3 for the canonical surface list.
-This section is a pointer and does not duplicate that canonical list.
-
 ### 4.4 Entry Points
 - llms.txt
 
-### 4.5 Drafting Proposal Protocol
-- Integrator proposals: An Integrator shall propose a work branch name and Base HEAD when they are not yet provided.
-- Operator authority: The Operator creates branches and provides the final Base HEAD; Contractors do not create or switch branches.
-- Provisional marking: Any provisional value must be prefixed with PROPOSED: during drafting and must be removed or replaced with finalized values before any worker runs a DP.
+### 4.5 Epistemic Standards
+- System: everything the system proves is actually true.
+- Truth: primitive predicate governed by specific rules rather than a mere definition.
+- Action: deception or incoherence are inherently destabilizing and must be resolved.
 
-## 5. Workflow & Security
-
-### 5.1 Non-Negotiables
-- Do not push to `main`.
-- Work only on `work/*` branches.
-- Every PR must pass gates.
-
-### 5.2 Standard Workflow
-- Create a branch named `work/<topic>-YYYY-MM-DD`.
-- Make small, reviewable changes.
-- Keep unrelated refactors out of the change set.
-- Review changes visually before commit.
-- Use clear commit messages.
-- Push the `work/*` branch, open a PR, wait for gates, then merge.
-
-### 5.2.2 Immutable DP Workflow
-- Run `./ops/bin/open` to establish freshness state.
-- Generate DP structure with `./ops/bin/draft`; do not hand-author structural boilerplate in `TASK.md`.
-- Edit only approved DP slot content after draft generation.
-- If canonical DP template hash or normalized structure hash fails in `tools/lint/dp.sh`, stop and repair before proceeding.
-- Maintain closing-sidecar input at `storage/handoff/CLOSING-DP-OPS-XXXX.md` during execution.
-- Run `./ops/bin/certify --dp=DP-OPS-XXXX --out=auto` to execute receipt commands and generate RESULTS.
-
-### 5.2.3 Branching Doctrine (SSoT)
-- Immutable Trunk: main is verified state; direct pushes are forbidden.
-- Work Namespace: all work occurs on work/* branches.
-- Naming Schema: work/<topic>-YYYY-MM-DD.
-- Drift Prevention: branches outside schema are trash and subject to pruning.
-
-### 5.3 Provenance
-- Record imported or adapted external code in `docs/UPSTREAMS.md` or the correct truth-layer document.
-- Include source, purpose, changes, and known risks or limits.
-
-### 5.4 Security Policy
+## 5 Security Policy
 Roles and access expectations are defined in PoT.md.
 
-#### Secrets Management
+### 5.1 Secrets Management
 - Never commit secrets, API keys, or credentials to the repo.
 - Use environment variables or a local secrets manager for sensitive values.
 - If a secret is exposed, rotate it and document the remediation.
 
-#### AI Usage Policy
+### 5.2 AI Usage Policy
 - AI assistance is allowed with human oversight.
 - All AI-proposed changes must be reviewed by a human operator.
 - Provide citations or provenance for external sources or non-trivial claims.
 
-#### Reporting Vulnerabilities
+### 5.3 Vulnerability Reporting
 Preferred:
 - Use a GitHub Security Advisory for this repository.
 
@@ -157,22 +117,60 @@ When reporting, include:
 - Affected files or versions (if known).
 - Suggested mitigations (optional, appreciated).
 
-#### Handling and Disclosure
+### 5.4 Handling and Disclosure
 - Reports are acknowledged as soon as practical.
 - Fixes are prioritized by impact, exploitability, and clarity.
 - We aim for coordinated, responsible disclosure.
 
+## 6 Workflow
+
+### 6.1 Non-Negotiables
+- Do not push to `main`.
+- Work only on `work/*` branches.
+- Every PR must pass gates.
+
+### 6.2 Standard Workflow
+- Create a branch named `work/<topic>-YYYY-MM-DD`.
+- Make small, reviewable changes.
+- Keep unrelated refactors out of the change set.
+- Review changes visually before commit.
+- Use clear commit messages.
+- Push the `work/*` branch, open a PR, wait for gates, then merge.
+
+### 6.2.2 Immutable DP Workflow
+- Run `./ops/bin/open` to establish freshness state.
+- Generate DP structure with `./ops/bin/draft`; do not hand-author structural boilerplate in `TASK.md`.
+- Edit only approved DP slot content after draft generation.
+- If canonical DP template hash or normalized structure hash fails in `tools/lint/dp.sh`, stop and repair before proceeding.
+- Maintain closing-sidecar input at `storage/handoff/CLOSING-DP-OPS-XXXX.md` during execution.
+- Run `./ops/bin/certify --dp=DP-OPS-XXXX --out=auto` to execute receipt commands and generate RESULTS.
+
+### 6.2.3 Branching Doctrine (SSoT)
+- Immutable Trunk: main is verified state; direct pushes are forbidden.
+- Work Namespace: all work occurs on work/* branches.
+- Naming Schema: work/<topic>-YYYY-MM-DD.
+- Drift Prevention: branches outside schema are trash and subject to pruning.
+
+### 6.3 Provenance
+- Record imported or adapted external code in `docs/UPSTREAMS.md` or the correct truth-layer document.
+- Include source, purpose, changes, and known risks or limits.
+
+### 6.4 Drafting Proposal Protocol
+- Integrator proposals: An Integrator shall propose a work branch name and Base HEAD when they are not yet provided.
+- Operator authority: The Operator creates branches and provides the final Base HEAD; Contractors do not create or switch branches.
+- Provisional marking: Any provisional value must be prefixed with `PROPOSED` during drafting and must be removed or replaced with finalized values before any worker runs a DP.
+
 
 ## PoW.md
-archives/surfaces/PoW-2026-02-21-d0f45c72.md
+archives/surfaces/PoW-2026-02-22-4049e928d.md
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-02-21-d0f45c72.md
+archives/surfaces/SoP-2026-02-22-4049e928d.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0089-d0f45c72.md
+archives/surfaces/TASK-DP-OPS-0096-4049e928d.md
 
 
 ## docs/MAP.md

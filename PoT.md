@@ -1,4 +1,4 @@
-<!-- CCD: ff_target="governance-narrative" ff_band="50-65" -->
+<!-- CCD: ff_target="governance-narrative" ff_band="30-40" -->
 # Policy of Truth (PoT)
 
 ## Preamble: Doctrine
@@ -89,59 +89,20 @@ Hard constraints are: PoT.md, SoP.md, TASK.md, ops/lib/manifests/CONTEXT.md, doc
 - Truth: primitive predicate governed by specific rules rather than a mere definition.
 - Action: deception or incoherence are inherently destabilizing and must be resolved.
 
-### 4.6 Drafting Proposal Protocol
-PROPOSED: relocation pending PR-2
-- Integrator proposals: An Integrator shall propose a work branch name and Base HEAD when they are not yet provided.
-- Operator authority: The Operator creates branches and provides the final Base HEAD; Contractors do not create or switch branches.
-- Provisional marking: Any provisional value must be prefixed with PROPOSED: during drafting and must be removed or replaced with finalized values before any worker runs a DP.
-
-## 5. Workflow & Security
-
-### 5.1 Non-Negotiables
-- Do not push to `main`.
-- Work only on `work/*` branches.
-- Every PR must pass gates.
-
-### 5.2 Standard Workflow
-- Create a branch named `work/<topic>-YYYY-MM-DD`.
-- Make small, reviewable changes.
-- Keep unrelated refactors out of the change set.
-- Review changes visually before commit.
-- Use clear commit messages.
-- Push the `work/*` branch, open a PR, wait for gates, then merge.
-
-### 5.2.2 Immutable DP Workflow
-- Run `./ops/bin/open` to establish freshness state.
-- Generate DP structure with `./ops/bin/draft`; do not hand-author structural boilerplate in `TASK.md`.
-- Edit only approved DP slot content after draft generation.
-- If canonical DP template hash or normalized structure hash fails in `tools/lint/dp.sh`, stop and repair before proceeding.
-- Maintain closing-sidecar input at `storage/handoff/CLOSING-DP-OPS-XXXX.md` during execution.
-- Run `./ops/bin/certify --dp=DP-OPS-XXXX --out=auto` to execute receipt commands and generate RESULTS.
-
-### 5.2.3 Branching Doctrine (SSoT)
-- Immutable Trunk: main is verified state; direct pushes are forbidden.
-- Work Namespace: all work occurs on work/* branches.
-- Naming Schema: work/<topic>-YYYY-MM-DD.
-- Drift Prevention: branches outside schema are trash and subject to pruning.
-
-### 5.3 Provenance
-- Record imported or adapted external code in `docs/UPSTREAMS.md` or the correct truth-layer document.
-- Include source, purpose, changes, and known risks or limits.
-
-### 5.4 Security Policy
+## 5 Security Policy
 Roles and access expectations are defined in PoT.md.
 
-#### Secrets Management
+### 5.1 Secrets Management
 - Never commit secrets, API keys, or credentials to the repo.
 - Use environment variables or a local secrets manager for sensitive values.
 - If a secret is exposed, rotate it and document the remediation.
 
-#### AI Usage Policy
+### 5.2 AI Usage Policy
 - AI assistance is allowed with human oversight.
 - All AI-proposed changes must be reviewed by a human operator.
 - Provide citations or provenance for external sources or non-trivial claims.
 
-#### Reporting Vulnerabilities
+### 5.3 Vulnerability Reporting
 Preferred:
 - Use a GitHub Security Advisory for this repository.
 
@@ -155,7 +116,45 @@ When reporting, include:
 - Affected files or versions (if known).
 - Suggested mitigations (optional, appreciated).
 
-#### Handling and Disclosure
+### 5.4 Handling and Disclosure
 - Reports are acknowledged as soon as practical.
 - Fixes are prioritized by impact, exploitability, and clarity.
 - We aim for coordinated, responsible disclosure.
+
+## 6 Workflow
+
+### 6.1 Non-Negotiables
+- Do not push to `main`.
+- Work only on `work/*` branches.
+- Every PR must pass gates.
+
+### 6.2 Standard Workflow
+- Create a branch named `work/<topic>-YYYY-MM-DD`.
+- Make small, reviewable changes.
+- Keep unrelated refactors out of the change set.
+- Review changes visually before commit.
+- Use clear commit messages.
+- Push the `work/*` branch, open a PR, wait for gates, then merge.
+
+### 6.2.2 Immutable DP Workflow
+- Run `./ops/bin/open` to establish freshness state.
+- Generate DP structure with `./ops/bin/draft`; do not hand-author structural boilerplate in `TASK.md`.
+- Edit only approved DP slot content after draft generation.
+- If canonical DP template hash or normalized structure hash fails in `tools/lint/dp.sh`, stop and repair before proceeding.
+- Maintain closing-sidecar input at `storage/handoff/CLOSING-DP-OPS-XXXX.md` during execution.
+- Run `./ops/bin/certify --dp=DP-OPS-XXXX --out=auto` to execute receipt commands and generate RESULTS.
+
+### 6.2.3 Branching Doctrine (SSoT)
+- Immutable Trunk: main is verified state; direct pushes are forbidden.
+- Work Namespace: all work occurs on work/* branches.
+- Naming Schema: work/<topic>-YYYY-MM-DD.
+- Drift Prevention: branches outside schema are trash and subject to pruning.
+
+### 6.3 Provenance
+- Record imported or adapted external code in `docs/UPSTREAMS.md` or the correct truth-layer document.
+- Include source, purpose, changes, and known risks or limits.
+
+### 6.4 Drafting Proposal Protocol
+- Integrator proposals: An Integrator shall propose a work branch name and Base HEAD when they are not yet provided.
+- Operator authority: The Operator creates branches and provides the final Base HEAD; Contractors do not create or switch branches.
+- Provisional marking: Any provisional value must be prefixed with `PROPOSED` during drafting and must be removed or replaced with finalized values before any worker runs a DP.
