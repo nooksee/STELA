@@ -75,7 +75,7 @@ What good looks like:
 ```markdown
 ## What changed
 - Added per-field semantics to `docs/ops/specs/surfaces/results.md`.
-- Added canonical framing template at `ops/src/surfaces/closing.md`.
+- Added canonical framing template at `ops/src/surfaces/closing.md.tpl`.
 
 ## Why it matters
 - Closing fields now declare audience and unique job, reducing semantic duplication.
@@ -104,7 +104,7 @@ Job: A newline-separated list of file paths. Zero prose. Deliberately boring. Ma
 What good looks like:
 ```text
 docs/ops/specs/surfaces/results.md
-ops/src/surfaces/closing.md
+ops/src/surfaces/closing.md.tpl
 storage/dp/active/allowlist.txt
 ```
 
@@ -112,7 +112,7 @@ What bad looks like:
 ```text
 docs/ops/specs/surfaces/results.md
 Added this file to document field semantics.
-ops/src/surfaces/closing.md
+ops/src/surfaces/closing.md.tpl
 ```
 Failure mode: prose contamination breaks machine-oriented manifest semantics.
 
