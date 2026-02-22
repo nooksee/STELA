@@ -20,3 +20,23 @@ DP-OPS-0074 exposed an enforcement-model gap where no-argument receipt scanning 
 
 ## Integrity Filter Warnings
 Template hash constants are hard-coded; any legitimate template change requires synchronized constant updates or lint will fail every packet. Results lint behavior is mode-sensitive by design: explicit path mode enforces strict `Git Hash` parity, while historical scan modes report parity skips without blocking. Dump-selection scope enforcement is grandfathered for packets before `DP-OPS-0095`, so warning-only output on older archived packets is expected until a separate migration rewrites legacy receipt commands. Allowlist validation accepts selected generated-surface wildcard families and closing-sidecar patterns, so policy expansion mistakes in that branch can widen scope unintentionally.
+
+## Addendum Intake
+
+### Validation Rules (`lint_addendum_intake()`)
+`lint_addendum_intake()` validates a standalone addendum intake artifact. It enforces the following rules in order:
+
+1. **Required slots present:** `BASE_DP_ID`, `ADDENDUM_ID`, `OPERATOR_AUTHORIZATION`, `SCOPE_DELTA`, `ADDENDUM_OBJECTIVE`, and `ADDENDUM_RECEIPT` must each resolve to a non-empty value. A missing or blank slot is a hard failure.
+2. **OPERATOR_AUTHORIZATION is not a placeholder:** The value is tested with the existing `contains_placeholder()` helper. Any value matching the placeholder pattern (TBD, TODO, XXXX, `{{`, and related forms) is a hard failure.
+3. **BASE_DP_ID matches the canonical pattern:** The value must match `^DP-OPS-[0-9]{4}$` exactly. Any deviation is a hard failure.
+4. **SCOPE_DELTA contains only exact paths:** Each non-blank line in the `SCOPE_DELTA` block must contain no glob characters (`*`, `?`, `[`, `]`), no brace expansion characters (`{`, `}`), and no internal whitespace. Any violation is a hard failure.
+
+### Operator Authorization Incantation Format
+The canonical operator authorization statement used in an addendum session must follow this exact phrase structure:
+
+> Operator authorizes Addendum A to DP-OPS-XXXX. Scope expansion delta: [exact paths]. Generate addendum intake with `./ops/bin/draft --addendum=A --base-dp=DP-OPS-XXXX`.
+
+The verbatim text of this statement, as it appears in the session record, is the value placed in the `OPERATOR_AUTHORIZATION` slot. A contractor must not proceed with addendum execution until this authorization line exists in the session.
+
+### `--test` Mode Addendum Hash Emission
+`dp.sh --test` emits the `CANONICAL_ADDENDUM_TEMPLATE_SHA256` constant value on a labeled line immediately after the base DP hash constant line. Both constants must be present and match the on-disk template files for `--test` to pass.
