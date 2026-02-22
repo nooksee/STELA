@@ -75,3 +75,8 @@ ops/bin/certify
 archives/surfaces/PoW-2026-02-22-db52e3aa0.md
 archives/surfaces/SoP-2026-02-22-db52e3aa0.md
 archives/surfaces/TASK-DP-OPS-0092-db52e3aa0.md
+ops/src/surfaces/closing.md
+storage/handoff/CLOSING-DP-OPS-0093.md
+archives/surfaces/PoW-2026-02-22-6105ac331.md
+archives/surfaces/SoP-2026-02-22-6105ac331.md
+archives/surfaces/TASK-DP-OPS-0093-6105ac331.md
