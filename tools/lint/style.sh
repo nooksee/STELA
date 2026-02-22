@@ -219,11 +219,158 @@ check_closing_block_lead_words() {
   done
 }
 
+check_closing_block_conversation_starter_question() {
+  local handoff_dir="${REPO_ROOT}/storage/handoff"
+  [[ -d "$handoff_dir" ]] || return 0
+
+  local -a closing_files=()
+  shopt -s nullglob
+  closing_files=("$handoff_dir"/CLOSING-*.md)
+  shopt -u nullglob
+  (( ${#closing_files[@]} > 0 )) || return 0
+
+  local file base_name dp_number
+  for file in "${closing_files[@]}"; do
+    base_name="$(basename "$file")"
+    if [[ "$base_name" =~ ^CLOSING-DP-OPS-([0-9]+)\.md$ ]]; then
+      dp_number=$((10#${BASH_REMATCH[1]}))
+      if (( dp_number < 80 )); then
+        continue
+      fi
+      if (( dp_number < 94 )); then
+        continue
+      fi
+    fi
+
+    local rel_file="${file#"${REPO_ROOT}/"}"
+    local value_record value_lineno value
+    value_record="$(awk '
+      /^Review Conversation Starter \(markdown\)[[:space:]]*$/ { found=1; next }
+      found && /[^[:space:]]/ {
+        line=$0
+        sub(/^[[:space:]]+/, "", line)
+        printf "%d\t%s\n", NR, line
+        exit
+      }
+    ' "$file")"
+
+    if [[ -z "$value_record" ]]; then
+      continue
+    fi
+
+    IFS=$'\t' read -r value_lineno value <<< "$value_record"
+    local trimmed="${value%"${value##*[![:space:]]}"}"
+    if [[ "$trimmed" != *\? ]]; then
+      mark_failure "CLOSING BLOCK: Conversation Starter does not end in '?'. This field must be a genuine question."
+      echo "  ${rel_file}:${value_lineno}" >&2
+    fi
+  done
+}
+
+check_closing_block_manifest_paths() {
+  local handoff_dir="${REPO_ROOT}/storage/handoff"
+  [[ -d "$handoff_dir" ]] || return 0
+
+  local -a closing_files=()
+  shopt -s nullglob
+  closing_files=("$handoff_dir"/CLOSING-*.md)
+  shopt -u nullglob
+  (( ${#closing_files[@]} > 0 )) || return 0
+
+  local file base_name dp_number
+  for file in "${closing_files[@]}"; do
+    base_name="$(basename "$file")"
+    if [[ "$base_name" =~ ^CLOSING-DP-OPS-([0-9]+)\.md$ ]]; then
+      dp_number=$((10#${BASH_REMATCH[1]}))
+      if (( dp_number < 80 )); then
+        continue
+      fi
+      if (( dp_number < 94 )); then
+        continue
+      fi
+    fi
+
+    local rel_file="${file#"${REPO_ROOT}/"}"
+    while IFS=$'\t' read -r lineno prose_line; do
+      [[ -n "$lineno" ]] || continue
+      mark_failure "CLOSING BLOCK: Extended Technical Manifest contains prose on line ${lineno}: \"${prose_line}\". This field must contain file paths only."
+      echo "  ${rel_file}:${lineno}" >&2
+    done < <(
+      awk '
+        /^Extended Technical Manifest \(plaintext\)[[:space:]]*$/ { in_block=1; next }
+        in_block && /^(Primary Commit Header|Pull Request Title|Pull Request Description|Final Squash Stub|Review Conversation Starter)/ { in_block=0; next }
+        in_block && /[^[:space:]]/ {
+          line=$0
+          sub(/^[[:space:]]+/, "", line)
+          n=split(line, tokens, /[[:space:]]+/)
+          prose_count=0
+          for (i=1; i<=n; i++) {
+            t=tokens[i]
+            if (t !~ /^[A-Za-z0-9]/ || t !~ /\//) {
+              prose_count++
+            } else {
+              prose_count=0
+            }
+            if (prose_count >= 2) {
+              printf "%d\t%s\n", NR, line
+              break
+            }
+          }
+        }
+      ' "$file"
+    )
+  done
+}
+
+check_closing_block_pr_description_markdown() {
+  local handoff_dir="${REPO_ROOT}/storage/handoff"
+  [[ -d "$handoff_dir" ]] || return 0
+
+  local -a closing_files=()
+  shopt -s nullglob
+  closing_files=("$handoff_dir"/CLOSING-*.md)
+  shopt -u nullglob
+  (( ${#closing_files[@]} > 0 )) || return 0
+
+  local file base_name dp_number
+  for file in "${closing_files[@]}"; do
+    base_name="$(basename "$file")"
+    if [[ "$base_name" =~ ^CLOSING-DP-OPS-([0-9]+)\.md$ ]]; then
+      dp_number=$((10#${BASH_REMATCH[1]}))
+      if (( dp_number < 80 )); then
+        continue
+      fi
+      if (( dp_number < 94 )); then
+        continue
+      fi
+    fi
+
+    local rel_file="${file#"${REPO_ROOT}/"}"
+    local has_markdown
+    has_markdown="$(awk '
+      /^Pull Request Description \(markdown\)[[:space:]]*$/ { in_block=1; next }
+      in_block && /^(Primary Commit Header|Pull Request Title|Final Squash Stub|Extended Technical Manifest|Review Conversation Starter)/ { in_block=0; next }
+      in_block && /^##[[:space:]]/ { print "heading"; exit }
+      in_block && /^[-*][[:space:]]/ { print "list"; exit }
+      in_block && /^[0-9]+\.[[:space:]]/ { print "ordered"; exit }
+      in_block && /\*\*/ { print "bold"; exit }
+    ' "$file")"
+
+    if [[ -z "$has_markdown" ]]; then
+      mark_failure "CLOSING BLOCK: PR Description contains no markdown constructs. Use at least one heading (##), list item (- or 1.), or bold (**) to serve the reviewer interface."
+      echo "  ${rel_file}" >&2
+    fi
+  done
+}
+
 collect_markdown_files
 check_markdown_contractions
 check_jargon_blacklist
 check_spec_surface_compliance
 check_closing_block_lead_words
+check_closing_block_conversation_starter_question
+check_closing_block_manifest_paths
+check_closing_block_pr_description_markdown
 
 if (( STYLE_FAILURES > 0 )); then
   exit 1
