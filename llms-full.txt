@@ -69,6 +69,7 @@ Hard constraints are: PoT.md, SoP.md, TASK.md, ops/lib/manifests/CONTEXT.md, doc
 - Operator (Human): Owns final decisions, approvals, and secrets. Performs all commits, pushes, and merges.
 - Integrator (Lead AI): Maintains governance, structural integrity, and auditing. Generates Dispatch Packets and detects system drift.
 - Contractor (Guest AI): Executes specific logic tasks and drafts implementation details within a defined scope.
+- Integrator (Auditor authority): After the Contractor completes work and before the Operator commits, the Integrator performs a mandatory post-work audit. The Integrator reviews the diff, the RESULTS receipt, and the closing sidecar against the DP scope definition. If the Integrator identifies that scope was exceeded, a boundary condition was not anticipated, or an authorization is needed for work already done or needed to complete, the Integrator produces an addendum recommendation as a fully rendered artifact using `ops/src/surfaces/addendum.md.tpl`. The Operator reviews and authorizes the addendum. The authorized addendum is handed to the Contractor as a received, finished document. The Contractor does not author addendum content; the Contractor executes against it.
 
 ### 4.2 Behavioral Logic Standard
 - Linguistic Precision: No contractions across any scope, including projects.
@@ -163,7 +164,7 @@ When reporting, include:
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-02-23-7ddb1beac.md
+archives/surfaces/PoW-2026-02-23-ebd728ff7.md
 
 
 ## README.md
@@ -180,11 +181,11 @@ Use [docs/MANUAL.md](docs/MANUAL.md) for command workflow and closeout routing.
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-02-23-7ddb1beac.md
+archives/surfaces/SoP-2026-02-23-ebd728ff7.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0103-7ddb1beac.md
+archives/surfaces/TASK-DP-OPS-0104-ebd728ff7.md
 
 
 ## docs/INDEX.md
@@ -207,6 +208,7 @@ archives/surfaces/TASK-DP-OPS-0103-7ddb1beac.md
 * [../opt/_factory/INDEX.md](../opt/_factory/INDEX.md) — Curated library of operator guides.
 * [DESIGN.md](DESIGN.md) — Correct-by-Construction design discipline, retrospective audit, and decision registry.
 * [MAP.md](MAP.md) — Continuity wayfinding for cross-session state.
+* [../archives/decisions/](../archives/decisions/) — Decision record archive. Structured, queryable records of scope-expansion authorizations, certify remediations, CbC verdicts, and operator-approved exceptions. Schema: `DEC-YYYY-MM-DD-<seq>-<slug>.md` with YAML frontmatter fields `trace_id`, `decision_id`, `packet_id`, `decision_type`, `created_at`, `authorized_by`; body sections `Context`, `Decision`, `Consequence`, `Pointer`, `Status`.
 * [CONTEXT.md](CONTEXT.md) — Definition of required context artifacts.
 * [ops/specs/definitions/agents.md](ops/specs/definitions/agents.md) — Agent candidate and promotion head-chain specification.
 * [ops/specs/definitions/tasks.md](ops/specs/definitions/tasks.md) — Task candidate and promotion head-chain specification.

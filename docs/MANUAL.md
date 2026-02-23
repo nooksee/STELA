@@ -17,6 +17,7 @@
 - Surface and definition rendering is centralized in `ops/bin/template` with YAML metadata parsing, include injection, and strict slot enforcement by default.
 - Definition registry guidance is canonical in `docs/ops/specs/definitions/agents.md`, `docs/ops/specs/definitions/tasks.md`, and `docs/ops/specs/definitions/skills.md`. `opt/_factory/AGENTS.md`, `opt/_factory/TASKS.md`, and `opt/_factory/SKILLS.md` are pointer heads.
 - `ops/bin/draft`, `ops/lib/scripts/{agent,task,skill}.sh`, route through `ops/bin/template`.
+- Addendum authority: The Contractor receives an addendum as a finished, operator-authorized document. The Contractor does not produce, recommend, or assemble addendum content. If a boundary condition arises during execution, the Contractor stops and reports it to the Integrator.
 
 Local hook activation (one time): run `git config core.hooksPath .github/hooks` in each clone to enable the tracked llms hook. The hook runs `ops/bin/llms` and stages `llms.txt`, `llms-core.txt`, and `llms-full.txt` before each commit so bundle freshness is enforced structurally. Registry: `docs/ops/registry/hooks.md`.
 
@@ -60,6 +61,17 @@ bash tools/lint/results.sh storage/handoff/DP-OPS-XXXX-RESULTS.md
 If `TASK.md` does not contain the target DP block, certify now fails unless `--allow-intake-fallback` is explicitly provided.
 `bash tools/lint/results.sh` without arguments targets the active branch packet receipt when resolvable; use `--all` only for full historical receipt scans.
 Manual RESULTS fabrication is prohibited.
+
+2.5 Post-Work Audit (Integrator; mandatory before COMMIT)
+The Integrator reviews the diff (`git diff --name-only`, `git diff --stat`), the RESULTS receipt at `storage/handoff/DP-OPS-XXXX-RESULTS.md`, and the closing sidecar at `storage/handoff/CLOSING-DP-OPS-XXXX.md` against the DP scope definition (Section 3.3 In scope / Out of scope).
+
+If scope was exceeded, a boundary condition was not anticipated, or an authorization is needed for work already done or needed to complete:
+- The Integrator renders an addendum recommendation from `ops/src/surfaces/addendum.md.tpl` and outputs it as a markdown code block.
+- The Operator reviews and provides the `OPERATOR_AUTHORIZATION` field content.
+- The authorized addendum is handed to the Contractor as a received, finished document.
+- The Contractor executes against the addendum only; the Contractor does not author addendum content.
+
+If scope is clean: proceed to step 3.
 
 3. Harvest
 Run only if new reusable patterns exist.
