@@ -21,4 +21,3 @@ SoP.md
 storage/dp/active/allowlist.txt
 storage/handoff/CLOSING-DP-OPS-0102.md
 TASK.md
-tools/lint/llms.sh
