@@ -99,9 +99,9 @@ Deletion Test: **B.** Scaffold injection plus common.sh auto-invocation makes th
 Registry: B — Keep until scaffold injection is implemented. Flag for structural redesign.
 
 **`tools/lint/llms.sh` — 78 lines**
-Generates `llms.txt`, `llms-core.txt`, and `llms-full.txt` into a temp directory, diffs against committed versions, and fails on divergence. Also detects deprecated filename references. The structural fix: a pre-commit hook runs `ops/bin/llms` and stages the output before every commit, making staleness structurally impossible; the deprecated filename check is absorbed into `ops/bin/llms` directly.
-Deletion Test: **B.** Pre-commit hook plus generator-absorbed deprecation check makes the linter fully redundant when both changes land.
-Registry: B — Keep until pre-commit hook is implemented. Cleanest B-to-deletion pipeline in the queue.
+Generates `llms.txt`, `llms-core.txt`, and `llms-full.txt` into a temp directory, diffs against committed versions, and fails on divergence. Also detects deprecated filename references. The structural fix: a llms hook runs `ops/bin/llms` and stages the output before every commit, making staleness structurally impossible; the deprecated filename check is absorbed into `ops/bin/llms` directly.
+Deletion Test: **B.** LLMS hook plus generator-absorbed deprecation check makes the linter fully redundant when both changes land.
+Registry: B — Keep until llms hook is implemented. Cleanest B-to-deletion pipeline in the queue. DP-OPS-0102 implements the structural fix and retires the linter.
 
 **`tools/lint/project.sh` — 120 lines**
 Validates project directory structure and requires `README.md` in every project folder. README check: **B** — `ops/bin/project` or a scaffold equivalent could guarantee `README.md` on creation, making the check redundant for new projects. Structural checks: **C** — hard to guarantee at creation time.
@@ -155,7 +155,7 @@ Every CbC decision made against a named tool gets a row. Entries are updated whe
 | tools/lint/factory.sh | C | Keep | DP-OPS-0101 | Active |
 | tools/lint/integrity.sh | C | Keep | DP-OPS-0101 | Active |
 | tools/lint/leaf.sh | B | Keep; redesign queued: scaffold injection + common.sh auto-invocation | DP-OPS-0101 | Improvement queued |
-| tools/lint/llms.sh | B | Keep; redesign queued: pre-commit hook + generator-absorbed deprecation | DP-OPS-0101 | Improvement queued |
+| tools/lint/llms.sh | A (closed) | Deprecated — llms hook + generator absorption | DP-OPS-0102 | Deprecated |
 | tools/lint/project.sh (README check) | B | Keep; redesign queued: scaffold guarantee | DP-OPS-0101 | Improvement queued |
 | tools/lint/project.sh (structural checks) | C | Keep | DP-OPS-0101 | Active |
 | tools/lint/results.sh | C | Keep | DP-OPS-0101 | Active |

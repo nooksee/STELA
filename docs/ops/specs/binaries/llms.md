@@ -8,6 +8,9 @@
 ## Mechanics and Sequencing
 The binary parses optional out directory and manifest override arguments, enforces repo-root execution, validates dependencies, and runs `ops/bin/compile` before synthesis. It synthesizes `llms-core.txt` from the core manifest and `llms-full.txt` from the discovery manifest into a temporary workspace, verifies both generated files are non-empty, constructs a fresh root `llms.txt` index with current HEAD metadata and bundle pointers, and copies all three outputs to repository root. When `--out-dir` points outside root, it also writes mirrored copies to that destination. It prints the written path set on success.
 
+## Deprecated Filename Guard
+Before writing bundle outputs, `ops/bin/llms` checks the repository root for deprecated slice filenames: `llms-small.txt`, `llms-ops.txt`, and `llms-governance.txt`. The check runs after synthesis and non-empty output validation but before any bundle copy step. If any deprecated filename exists, the binary exits non-zero with an error identifying the offending path and does not write refreshed bundle files.
+
 ## Anecdotal Anchor
 A recurring risk in AI-driven intake was that discovery pointers could remain static while manifest state changed underneath them. `ops/bin/llms` reduces that drift by forcing compile-first synthesis and root bundle refresh on every invocation.
 

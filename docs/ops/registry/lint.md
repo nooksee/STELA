@@ -9,7 +9,7 @@ Authoritative registry for `tools/lint/*` executables.
 | LINT-02 | Context Lint | tools/lint/context.sh | Spec: `docs/ops/specs/tools/lint/context.md`. Verifies context manifest completeness and context-hazard exclusions. |
 | LINT-03 | DP Lint | tools/lint/dp.sh | Spec: `docs/ops/specs/tools/lint/dp.md`. Validates DP schema and One Truth context-load rules (`llms-full.txt` prohibited, `llms-core.txt` lightweight-only), and resolves pointer-first `TASK.md` to its surface leaf before DP payload parsing. |
 | LINT-04 | Factory Lint | tools/lint/factory.sh | Spec: `docs/ops/specs/tools/lint/factory.md`. Verifies agent/skill/task registry synchronization and pointer integrity. |
-| LINT-05 | LLMS Lint | tools/lint/llms.sh | Spec: `docs/ops/specs/tools/lint/llms.md`. Re-generates llms bundles in temp space; enforces only `llms.txt`, `llms-core.txt`, and `llms-full.txt`; fails on deprecated slices. |
+| LINT-05 | LLMS Lint | tools/lint/llms.sh | Retired by DP-OPS-0102. Deprecated-filename check absorbed into ops/bin/llms. Staleness protection replaced by .github/hooks/llms. |
 | LINT-06 | Project Lint | tools/lint/project.sh | Spec: `docs/ops/specs/tools/lint/project.md`. Deprecated: project registry is unpopulated, so this linter has no live targets. Reactivate when the project registry is populated and project scaffolding implementation is complete. |
 | LINT-07 | Style Lint | tools/lint/style.sh | Spec: `docs/ops/specs/tools/lint/style.md`. Rejects markdown contractions across tracked documentation surfaces. |
 | LINT-08 | TASK Lint | tools/lint/task.sh | Spec: `docs/ops/specs/tools/lint/task.md`. Sole TASK dashboard and task-definitions schema enforcer; resolves pointer-first `TASK.md` heads to archives/surfaces leaves before linting dashboard content. |
