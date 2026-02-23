@@ -85,6 +85,18 @@ if [[ ! -s "$full_tmp" ]]; then
   project_die "generated llms-full.txt is empty"
 fi
 
+deprecated_files=(
+  "llms-small.txt"
+  "llms-ops.txt"
+  "llms-governance.txt"
+)
+
+for file in "${deprecated_files[@]}"; do
+  if [[ -e "${ROOT_OUT_DIR}/${file}" ]]; then
+    project_die "deprecated llms slice must not exist: ${file}"
+  fi
+done
+
 head_short="$(git -C "${PROJECT_REPO_ROOT}" rev-parse --short HEAD)"
 head_time="$(git -C "${PROJECT_REPO_ROOT}" show -s --format=%cI HEAD)"
 

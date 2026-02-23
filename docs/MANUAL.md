@@ -18,6 +18,8 @@
 - Definition registry guidance is canonical in `docs/ops/specs/definitions/agents.md`, `docs/ops/specs/definitions/tasks.md`, and `docs/ops/specs/definitions/skills.md`. `opt/_factory/AGENTS.md`, `opt/_factory/TASKS.md`, and `opt/_factory/SKILLS.md` are pointer heads.
 - `ops/bin/draft`, `ops/lib/scripts/{agent,task,skill}.sh`, route through `ops/bin/template`.
 
+Local hook activation (one time): run `git config core.hooksPath .github/hooks` in each clone to enable the tracked llms hook. The hook runs `ops/bin/llms` and stages `llms.txt`, `llms-core.txt`, and `llms-full.txt` before each commit so bundle freshness is enforced structurally.
+
 **Anchor Hygiene:**
 - Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md pointer references to the newest OPEN artifact and RESULTS receipts before any work continues; do not rewrite inline branch/hash state in TASK.md.
 - Clean after use: complete closeout receipts and start the next session from a fresh OPEN artifact with matching dump artifacts.
@@ -38,7 +40,6 @@ Run:
 ./tools/lint/context.sh
 ./tools/lint/agent.sh
 ./tools/lint/dp.sh TASK.md
-./tools/lint/llms.sh
 bash tools/lint/factory.sh
 ~~~
 Tooling DP addendum: if the DP objective adds, modifies, or replaces a linter, script, guard, or validation binary, confirm at closeout that: (1) the CbC Design Discipline Preflight block in TASK.md §3.1.1 is present and non-empty; (2) enforcement complexity did not exceed 100 lines without a note in §3.4.4 justifying the budget; (3) a SoP note is added if structural prevention was identified as viable but deferred. Full procedure: docs/DESIGN.md.
