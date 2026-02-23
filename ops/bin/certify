@@ -1189,6 +1189,13 @@ extract_commands() {
         continue
         ;;
     esac
+    # DP receipt annotations in Section 3.4.5 use an explicit "Note:" prefix.
+    # These lines are documentation, not executable commands, and must be skipped.
+    case "$candidate" in
+      "Note: "*)
+        continue
+        ;;
+    esac
 
     if [[ "$candidate" =~ (^|[[:space:]])(\./)?ops/bin/certify([[:space:]]|$) ]]; then
       continue

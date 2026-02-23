@@ -1,1 +1,1 @@
-archives/surfaces/PoW-2026-02-23-ebd728ff7.md
+archives/surfaces/PoW-2026-02-23-6f54f8789.md

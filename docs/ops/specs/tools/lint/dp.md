@@ -15,6 +15,12 @@
 7. For RESULTS paths, enforce Mandatory Closing Block labels and field constraints, reject placeholders, and require Final Squash Stub divergence from Primary Commit Header.
 8. In `--test` mode, execute fixture-driven negative and positive checks that exercise template-hash drift, structure mismatch, allowlist-pointer mismatch, allowlist-file invalidity, and RESULTS closing-block validation.
 
+### Freshness Stamp and Receipt Command Substitution Checks
+`lint_payload()` runs two certify-compatibility checks immediately after `check_dump_selection_scope()`:
+
+1. `check_freshness_stamp_format()`: extracts `Freshness Stamp`, trims and dequotes it, skips blank or placeholder values (handled by existing required-field checks), and fails unless the value matches `^[0-9]{4}-[0-9]{2}-[0-9]{2}$`.
+2. `check_receipt_command_substitution()`: extracts Section `3.4.5`, scans receipt command bullet lines, and fails on any command line containing the `$(` token because certify replay requires literal commands.
+
 ## Anecdotal Anchor
 DP-OPS-0074 exposed an enforcement-model gap where no-argument receipt scanning and explicit certification mode did not share identical hash-parity behavior. That gap allowed a RESULTS artifact to pass without full parity enforcement, and the repair cycle introduced explicit mode-sensitive parity logic plus stricter closing-block checks.
 

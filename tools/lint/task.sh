@@ -357,6 +357,27 @@ check_task_dashboard() {
     "Extended Technical Manifest (plaintext)"
     "Review Conversation Starter (markdown)"
   )
+  local -a closing_list_items=(
+    "- Primary Commit Header"
+    "- Pull Request Title"
+    "- Pull Request Description"
+    "- Final Squash Stub"
+    "- Extended Technical Manifest"
+    "- Review Conversation Starter"
+  )
+  local list_format_present=1
+  local item
+  for item in "${closing_list_items[@]}"; do
+    if ! grep -Fxq -- "$item" "$path"; then
+      list_format_present=0
+      break
+    fi
+  done
+
+  if (( list_format_present )); then
+    return
+  fi
+
   local label
   for label in "${closing_labels[@]}"; do
     if [[ "$label" == "Final Squash Stub (plaintext) (Must differ from #1)" ]]; then

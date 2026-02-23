@@ -225,6 +225,21 @@ ops/lib/scripts/task.sh promote archives/definitions/task-candidate-YYYY-MM-DD-<
 * **Rule:** If a DP includes the llms command, the allowlist must include `llms.txt`, `llms-core.txt`, and `llms-full.txt`.
 * **Rule:** `storage/dp/active/allowlist.txt` is persistent-path policy only. Do not include runtime artifact prefixes (`storage/handoff/`, `storage/dumps/`, `storage/dp/intake/`, `storage/dp/processed/`).
 
+### Certify Compatibility Authoring Rules
+
+Two DP authoring constraints are enforced by both dp.sh at lint time and certify at replay time.
+
+Freshness Stamp format: The Freshness Stamp field value must be YYYY-MM-DD and nothing else.
+No trace tokens, no timestamps, no other text. Examples of invalid forms: stela-20260223T151354Z-16f27113,
+2026-02-23T15:13Z, today. Example of valid form: 2026-02-23. Certify rejects all other forms and dp.sh
+fails at preflight if the format is invalid.
+
+Receipt command substitution: Section 3.4.5 receipt commands must use literal values only.
+Command substitution forms (expressions beginning with $() ) are rejected by certify's literal replay
+engine. Example of invalid form: ./ops/bin/llms --out-dir="$(pwd)". Example of valid form:
+./ops/bin/llms --out-dir=. . Use literal relative or absolute paths in all receipt commands.
+dp.sh fails at preflight if any command substitution token is found in Section 3.4.5.
+
 ---
 
 ## 3. Scope Definition

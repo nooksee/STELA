@@ -20,7 +20,7 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="a371dfcdf4cde9399081bda8d8a223ceac7e9d611bc1bbdf1af00ac92f9be89f"
+CANONICAL_DP_TEMPLATE_SHA256="61b458131016b8596b18a04a9ed6e53e4a6b7c9f6ffa781d595e5f34effd5a24"
 CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/surfaces/addendum.md.tpl"
 CANONICAL_ADDENDUM_TEMPLATE_SHA256="42cb7586c6ed103e995730f1a8c34a1c7e0676b717c27dfb987950feeac7ec9e"
 TEMPLATE_RENDER_BIN="ops/bin/template"
@@ -828,6 +828,40 @@ check_required_fields() {
   fi
 }
 
+check_freshness_stamp_format() {
+  local path="$1"
+  local freshness_stamp
+  freshness_stamp="$(trim "$(strip_backticks "$(extract_field_value "Freshness Stamp" "$path")")")"
+  if [[ -z "$freshness_stamp" ]]; then
+    return 0
+  fi
+  if contains_placeholder "$freshness_stamp"; then
+    return 0
+  fi
+  if [[ ! "$freshness_stamp" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+    fail "Freshness Stamp must be YYYY-MM-DD format only; got: ${freshness_stamp}"
+  fi
+}
+
+check_receipt_command_substitution() {
+  local path="$1"
+  local receipt_block
+  local line
+  local trimmed_line
+  receipt_block="$(extract_block "$path" '^### 3[.]4[.]5' '^## 3[.]5([.]|[[:space:]])')"
+  if [[ -z "$receipt_block" ]]; then
+    return 0
+  fi
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ -z "$line" ]] && continue
+    trimmed_line="$(trim "$line")"
+    [[ "$trimmed_line" != -* ]] && continue
+    if [[ "$trimmed_line" == *'$('* ]]; then
+      fail "Section 3.4.5 receipt command contains command substitution (rejected by certify replay): ${trimmed_line}"
+    fi
+  done <<< "$receipt_block"
+}
+
 check_allowlist_pointer_integrity() {
   local path="$1"
   local allowlist_block
@@ -996,6 +1030,8 @@ lint_payload() {
   check_required_fields "$path"
   check_allowlist_pointer_integrity "$path"
   check_dump_selection_scope "$path"
+  check_freshness_stamp_format "$path"
+  check_receipt_command_substitution "$path"
 
   if (( failures )); then
     return 1
