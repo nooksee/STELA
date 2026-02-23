@@ -5,7 +5,8 @@
 **Execution Cycle:**
 1.  **Start:** `./ops/bin/open` (Generates prompt + freshness gate).
 2.  **Draft:** `./ops/bin/draft` (Generates canonical DP block and updates `TASK.md`).
-3.  **Capture:** `./ops/bin/dump` (Serializes state).
+3.  **Capture (CDD):** `./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto` (Serializes Contractor-visible state).
+    Note: APD (Audit Platform Dump) is produced at closeout using platform scope capture.
 4.  **Dispatch:** Hand DP to Worker (See Section 5).
 5.  **Review:** Verify `RECEIPT` (Proofs) vs `TASK.md` requirements.
 6.  **Close:** Merge PR + Update ledgers as required by closeout policy.
@@ -224,6 +225,20 @@ ops/lib/scripts/task.sh promote archives/definitions/task-candidate-YYYY-MM-DD-<
 **Allowlist Rule:**
 * **Rule:** If a DP includes the llms command, the allowlist must include `llms.txt`, `llms-core.txt`, and `llms-full.txt`.
 * **Rule:** `storage/dp/active/allowlist.txt` is persistent-path policy only. Do not include runtime artifact prefixes (`storage/handoff/`, `storage/dumps/`, `storage/dp/intake/`, `storage/dp/processed/`).
+
+### Contractor Dispatch Dump (CDD)
+
+DP writer must include a `Contractor Dispatch Dump (CDD)` field in dispatch notes.
+The value is the exact `./ops/bin/dump` command used to generate the Contractor-visible dump.
+Default recommended value for most DPs: `./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto`.
+If additional forbidden prefixes are needed for a sensitive engagement, the DP writer lists them explicitly with `--fail-on-forbidden-prefix=...`.
+
+### Auditor Visibility
+
+Auditor visibility is intentionally bounded and documented as an allow/deny contract.
+- External auditor receives: RESULTS receipt and APD (Audit Platform Dump).
+- External auditor does not receive: CDD, OPEN artifacts, closing sidecars, or any other `storage/handoff/` artifacts.
+- Evidence surfaces for audit are SoP and PoW entries plus the committed diff and RESULTS.
 
 ### Certify Compatibility Authoring Rules
 

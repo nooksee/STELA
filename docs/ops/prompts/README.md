@@ -15,8 +15,10 @@ These prompts reference canonical locations rather than duplicating content:
 * **Results surface spec:** `docs/ops/specs/surfaces/results.md`
 
 **Artifact Attachment Policy:**
-* **For DP authoring (Integrator):** Attach OPEN, DUMP, plan.md as authoring context.
+* **For DP authoring (Integrator):** Attach OPEN, APD (Audit Platform Dump), and plan.md as authoring and audit context; state the CDD command in dispatch notes.
+* **For Contractor execution context (Worker):** Use the CDD (Contractor Dispatch Dump) as the bounded Contractor-visible dump.
 * **In DP content (Worker):** DP must be self-contained; no disposable artifact citations.
+* **For closeout and audit review:** Use APD (Audit Platform Dump) for platform-scope evidence review.
 * **For closeout (Worker):** Maintain `storage/handoff/CLOSING-<DP_ID>.md` as a human-authored
   sidecar during execution. This file is a required input to `ops/bin/certify` and is not
   disposable — certify will hard-stop if it is missing or empty.
