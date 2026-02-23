@@ -22,6 +22,7 @@ The authoritative operational registries live in `docs/ops/registry/`.
 - `docs/ops/registry/test.md`
 - `docs/ops/registry/tools.md`
 - `docs/ops/registry/scripts.md`
+- `docs/ops/registry/hooks.md`
 
 ## 4. Specifications
 Technical specifications are pointer-first and grouped by executable surface.
@@ -29,6 +30,7 @@ Technical specifications are pointer-first and grouped by executable surface.
 - Binary specs: `docs/ops/specs/binaries/`
 - Tool specs: `docs/ops/specs/tools/`
 - Script specs: `docs/ops/specs/scripts/`
+- Hook specs: `docs/ops/specs/hooks/`
 
 ## 5. Interface Contract
 The Ops Kernel is the executable companion to docs. Documentation explains and justifies; ops runs. New operational capability must ship as executable logic with a registry entry and spec pointer.
