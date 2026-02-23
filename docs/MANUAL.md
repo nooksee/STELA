@@ -18,7 +18,11 @@
 - Definition registry guidance is canonical in `docs/ops/specs/definitions/agents.md`, `docs/ops/specs/definitions/tasks.md`, and `docs/ops/specs/definitions/skills.md`. `opt/_factory/AGENTS.md`, `opt/_factory/TASKS.md`, and `opt/_factory/SKILLS.md` are pointer heads.
 - `ops/bin/draft`, `ops/lib/scripts/{agent,task,skill}.sh`, route through `ops/bin/template`.
 
-Local hook activation (one time): run `git config core.hooksPath .github/hooks` in each clone to enable the tracked llms hook. The hook runs `ops/bin/llms` and stages `llms.txt`, `llms-core.txt`, and `llms-full.txt` before each commit so bundle freshness is enforced structurally.
+Local hook activation (one time): run `git config core.hooksPath .github/hooks` in each clone to enable the tracked llms hook. The hook runs `ops/bin/llms` and stages `llms.txt`, `llms-core.txt`, and `llms-full.txt` before each commit so bundle freshness is enforced structurally. Registry: `docs/ops/registry/hooks.md`.
+
+- Disable: `git config --unset core.hooksPath` restores the default hooks path and deactivates all tracked hooks.
+- Troubleshoot: if the hook aborts a commit with `ERROR: run llms refresh failed`, confirm `ops/bin/llms` is executable (`chmod +x ops/bin/llms`) and that the invocation is not in a detached HEAD state. Run `./ops/bin/llms` directly to isolate the failure.
+- CI fallback: the hook is local only; CI does not run `ops/bin/llms`. A contributor who commits without the hook active can produce stale bundles. The DP integrity lint gate (`tools/lint/integrity.sh`) and DP preflight provide the detection backstop.
 
 **Anchor Hygiene:**
 - Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md pointer references to the newest OPEN artifact and RESULTS receipts before any work continues; do not rewrite inline branch/hash state in TASK.md.
