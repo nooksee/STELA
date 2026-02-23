@@ -33,6 +33,7 @@ Base Branch: {{BASE_BRANCH}}
 Required Work Branch: {{WORK_BRANCH}}
 Base HEAD: {{BASE_HEAD}}
 Freshness Stamp: {{FRESHNESS_STAMP}}
+Note: FRESHNESS_STAMP must be YYYY-MM-DD format only. No trace tokens, no timestamps, no other text. Certify rejects all other forms. dp.sh enforces at lint time.
 
 Required local re-check (worker runs; paste outputs in RESULTS):
 - git rev-parse --abbrev-ref HEAD
@@ -136,6 +137,7 @@ Target Files allowlist (hard gate):
 - ./ops/bin/open
 
 **DP-specific receipt commands (scope-specific; author below):**
+Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by certify replay. Use literal values only. dp.sh enforces at lint time.
 {{RECEIPT_EXTRA}}
 
 ## 3.5 Closeout (Mandatory Routing)
@@ -148,14 +150,9 @@ Target Files allowlist (hard gate):
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
 ### 3.5.1 Mandatory Closing Block
-Primary Commit Header (plaintext)
-
-Pull Request Title (plaintext)
-
-Pull Request Description (markdown)
-
-Final Squash Stub (plaintext) (Must differ from #1)
-
-Extended Technical Manifest (plaintext)
-
-Review Conversation Starter (markdown)
+- Primary Commit Header
+- Pull Request Title
+- Pull Request Description
+- Final Squash Stub
+- Extended Technical Manifest
+- Review Conversation Starter

@@ -1,0 +1,239 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+TEMPLATE_BIN="${REPO_ROOT}/ops/bin/template"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/../lib/scripts/common.sh"
+
+usage() {
+  cat <<'USAGE'
+Usage:
+  ops/bin/addendum --base-dp=DP-OPS-XXXX --slots-file=PATH
+
+Required:
+- --base-dp=DP-OPS-XXXX
+- --slots-file=PATH
+USAGE
+}
+
+sha256_file() {
+  local path="$1"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$path" | awk '{print $1}'
+    return
+  fi
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$path" | awk '{print $1}'
+    return
+  fi
+  die "sha256 tool not found (need sha256sum or shasum)"
+}
+
+read_addendum_lint_constants() {
+  local lint_path="$REPO_ROOT/tools/lint/dp.sh"
+  local template_hash
+
+  [[ -f "$lint_path" ]] || die "missing tools/lint/dp.sh"
+
+  ADDENDUM_TEMPLATE_PATH="$(awk -F'"' '/^CANONICAL_ADDENDUM_TEMPLATE_PATH="/{print $2; exit}' "$lint_path")"
+  template_hash="$(awk -F'"' '/^CANONICAL_ADDENDUM_TEMPLATE_SHA256="/{print $2; exit}' "$lint_path")"
+
+  [[ -n "$ADDENDUM_TEMPLATE_PATH" ]] || die "failed to read CANONICAL_ADDENDUM_TEMPLATE_PATH from tools/lint/dp.sh"
+  [[ -n "$template_hash" ]] || die "failed to read CANONICAL_ADDENDUM_TEMPLATE_SHA256 from tools/lint/dp.sh"
+  [[ "$template_hash" =~ ^[0-9a-f]{64}$ ]] || die "invalid CANONICAL_ADDENDUM_TEMPLATE_SHA256 in tools/lint/dp.sh"
+
+  ADDENDUM_TEMPLATE_PATH="$REPO_ROOT/$ADDENDUM_TEMPLATE_PATH"
+  [[ -f "$ADDENDUM_TEMPLATE_PATH" ]] || die "canonical addendum template missing: ${ADDENDUM_TEMPLATE_PATH}"
+
+  local actual_hash
+  actual_hash="$(sha256_file "$ADDENDUM_TEMPLATE_PATH")"
+  if [[ "$actual_hash" != "$template_hash" ]]; then
+    die "template preflight failed: canonical addendum template hash mismatch (expected ${template_hash}, got ${actual_hash})"
+  fi
+}
+
+contains_placeholder() {
+  local lowered
+  lowered="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
+
+  if [[ -z "$lowered" ]]; then
+    return 0
+  fi
+
+  case "$lowered" in
+    *"tbd"*|*"todo"*|*"populate during execution"*|*"do not pre-fill"*|*"dp-xxxx"*|*"xxxx"*|*"0000000"*|*"{{"*|*"}}"*|*"<fill"*|*"replace_"*|*"enter_"*)
+      return 0
+      ;;
+  esac
+
+  return 1
+}
+
+extract_field_value() {
+  local label="$1"
+  local path="$2"
+  awk -v label="$label" '
+    {
+      if ($0 ~ "^" label ":[[:space:]]*") {
+        text=$0
+        sub("^" label ":[[:space:]]*", "", text)
+        print text
+        exit
+      }
+    }
+  ' "$path"
+}
+
+extract_block() {
+  local path="$1"
+  local start_pattern="$2"
+  local stop_pattern="$3"
+  awk -v start_regex="$start_pattern" -v stop_regex="$stop_pattern" '
+    BEGIN { in_block=0 }
+    $0 ~ start_regex { in_block=1; next }
+    in_block && $0 ~ stop_regex { exit }
+    in_block { print }
+  ' "$path"
+}
+
+extract_tail_after() {
+  local path="$1"
+  local start_pattern="$2"
+  awk -v start_regex="$start_pattern" '
+    BEGIN { in_block=0 }
+    $0 ~ start_regex { in_block=1; next }
+    in_block { print }
+  ' "$path"
+}
+
+require_non_placeholder_value() {
+  local label="$1"
+  local value="$2"
+  local compact
+
+  compact="$(printf '%s\n' "$value" | sed '/^[[:space:]]*$/d')"
+  [[ -n "$compact" ]] || die "missing required addendum content for ${label}"
+  if contains_placeholder "$compact"; then
+    die "placeholder value detected for ${label}"
+  fi
+}
+
+require_base_dp_in_processed() {
+  local base_dp="$1"
+  local processed_dir="$REPO_ROOT/storage/dp/processed"
+
+  [[ -d "$processed_dir" ]] || die "missing processed DP directory: ${processed_dir}"
+
+  shopt -s nullglob
+  local matches=("${processed_dir}/${base_dp}"*.md)
+  shopt -u nullglob
+
+  if (( ${#matches[@]} == 0 )); then
+    die "base DP not found in storage/dp/processed matching ${base_dp}*.md"
+  fi
+}
+
+next_addendum_letter() {
+  local base_dp="$1"
+  local intake_dir="$REPO_ROOT/storage/dp/intake"
+  local code
+  local letter
+
+  mkdir -p "$intake_dir"
+
+  for code in $(seq 65 90); do
+    printf -v letter '%b' "\\$(printf '%03o' "$code")"
+    if [[ ! -e "${intake_dir}/${base_dp}-ADDENDUM-${letter}.md" ]]; then
+      printf '%s' "$letter"
+      return 0
+    fi
+  done
+
+  die "no addendum letter available for ${base_dp} (A-Z exhausted)"
+}
+
+validate_rendered_addendum() {
+  local rendered_path="$1"
+  local expected_base_dp="$2"
+  local expected_letter="$3"
+  local base_packet
+  local addendum_id
+  local operator_authorization
+  local scope_delta
+  local addendum_objective
+  local addendum_receipt
+
+  base_packet="$(trim "$(extract_field_value "Base Packet" "$rendered_path")")"
+  addendum_id="$(trim "$(extract_field_value "Addendum ID" "$rendered_path")")"
+  operator_authorization="$(extract_block "$rendered_path" '^Operator Authorization:[[:space:]]*$' '^Base Packet:[[:space:]]*')"
+  scope_delta="$(extract_block "$rendered_path" '^## A[.]2 Scope Delta[[:space:]]*$' '^## A[.]3 Addendum Objective[[:space:]]*$')"
+  addendum_objective="$(extract_block "$rendered_path" '^## A[.]3 Addendum Objective[[:space:]]*$' '^## A[.]4 Context Load[[:space:]]*$')"
+  addendum_receipt="$(extract_tail_after "$rendered_path" '^\*\*Addendum-specific receipt commands:\*\*[[:space:]]*$')"
+
+  [[ "$base_packet" == "$expected_base_dp" ]] || die "rendered BASE_DP_ID mismatch (expected ${expected_base_dp}, got ${base_packet:-<empty>})"
+  [[ "$addendum_id" == "$expected_letter" ]] || die "rendered ADDENDUM_ID mismatch (expected ${expected_letter}, got ${addendum_id:-<empty>})"
+
+  require_non_placeholder_value "OPERATOR_AUTHORIZATION" "$operator_authorization"
+  require_non_placeholder_value "SCOPE_DELTA" "$scope_delta"
+  require_non_placeholder_value "ADDENDUM_OBJECTIVE" "$addendum_objective"
+  require_non_placeholder_value "ADDENDUM_RECEIPT" "$addendum_receipt"
+
+  if grep -Fq '$(' "$rendered_path"; then
+    die "rendered addendum contains command substitution token \$(: certify replay requires literal commands"
+  fi
+}
+
+BASE_DP_ID=""
+SLOTS_FILE=""
+
+for arg in "$@"; do
+  case "$arg" in
+    --base-dp=*)
+      BASE_DP_ID="${arg#--base-dp=}"
+      ;;
+    --slots-file=*)
+      SLOTS_FILE="${arg#--slots-file=}"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      die "unknown arg: ${arg}"
+      ;;
+  esac
+done
+
+[[ -n "$BASE_DP_ID" ]] || die "missing required --base-dp"
+[[ -n "$SLOTS_FILE" ]] || die "missing required --slots-file"
+[[ "$BASE_DP_ID" =~ ^DP-OPS-[0-9]{4}$ ]] || die "invalid --base-dp format (expected DP-OPS-XXXX): ${BASE_DP_ID}"
+[[ -f "$SLOTS_FILE" ]] || die "slots file not found: ${SLOTS_FILE}"
+[[ -r "$SLOTS_FILE" ]] || die "slots file is not readable: ${SLOTS_FILE}"
+[[ -x "$TEMPLATE_BIN" ]] || die "template binary missing or not executable: ${TEMPLATE_BIN}"
+
+trap 'emit_binary_leaf "addendum" "finish"' EXIT
+emit_binary_leaf "addendum" "start"
+
+read_addendum_lint_constants
+require_base_dp_in_processed "$BASE_DP_ID"
+
+ADDENDUM_LETTER="$(next_addendum_letter "$BASE_DP_ID")"
+OUTPUT_PATH="$REPO_ROOT/storage/dp/intake/${BASE_DP_ID}-ADDENDUM-${ADDENDUM_LETTER}.md"
+RENDERED_TMP="$(mktemp)"
+
+"$TEMPLATE_BIN" render addendum \
+  "--out=${RENDERED_TMP}" \
+  "--slots-file=${SLOTS_FILE}" \
+  "--slot=BASE_DP_ID=${BASE_DP_ID}" \
+  "--slot=ADDENDUM_ID=${ADDENDUM_LETTER}"
+
+validate_rendered_addendum "$RENDERED_TMP" "$BASE_DP_ID" "$ADDENDUM_LETTER"
+
+cat "$RENDERED_TMP"
+cp "$RENDERED_TMP" "$OUTPUT_PATH"
+rm -f "$RENDERED_TMP"
+
+echo
+echo "Wrote: ${OUTPUT_PATH#${REPO_ROOT}/}"
