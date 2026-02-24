@@ -24,14 +24,6 @@ declare -a JARGON_BLACKLIST=(
   "single pane of glass"
 )
 
-SPEC_SURFACE_MARKER="<!-- SPEC-SURFACE:REQUIRED -->"
-declare -a SPEC_REQUIRED_SECTIONS=(
-  "First Principles Rationale"
-  "Mechanics and Sequencing"
-  "Anecdotal Anchor"
-  "Integrity Filter Warnings"
-)
-
 declare -a MARKDOWN_FILES=()
 STYLE_FAILURES=0
 
@@ -120,24 +112,6 @@ check_jargon_blacklist() {
       [[ -n "$hit" ]] || continue
       echo "  ${hit}" >&2
     done <<< "$term_hits"
-  done
-}
-
-check_spec_surface_compliance() {
-  local file=""
-  local section=""
-  for file in "${MARKDOWN_FILES[@]}"; do
-    [[ "$file" == docs/ops/specs/* ]] || continue
-    if ! grep -Fq "$SPEC_SURFACE_MARKER" "$file"; then
-      continue
-    fi
-
-    for section in "${SPEC_REQUIRED_SECTIONS[@]}"; do
-      if file_has_h2_heading "$file" "$section"; then
-        continue
-      fi
-      mark_failure "Spec-surface compliance failed: ${file} missing section '## ${section}'"
-    done
   done
 }
 
@@ -366,7 +340,6 @@ check_closing_block_pr_description_markdown() {
 collect_markdown_files
 check_markdown_contractions
 check_jargon_blacklist
-check_spec_surface_compliance
 check_closing_block_lead_words
 check_closing_block_conversation_starter_question
 check_closing_block_manifest_paths

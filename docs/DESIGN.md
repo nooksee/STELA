@@ -163,7 +163,7 @@ Every CbC decision made against a named tool gets a row. Entries are updated whe
 | tools/lint/skill.sh | C | Keep | DP-OPS-0101 | Active |
 | tools/lint/style.sh (contraction prohibition) | C | Keep | DP-OPS-0101 | Active |
 | tools/lint/style.sh (jargon blacklist) | C | Keep | DP-OPS-0101 | Active |
-| tools/lint/style.sh (spec-surface compliance) | B | Keep; redesign queued: update spec.md.tpl | DP-OPS-0101 | Improvement queued |
+| tools/lint/style.sh (spec-surface compliance) | A (closed) | Compliance check removed; ops/src/docs/spec.md.tpl confirmed to include all four required sections by construction; check is structurally redundant | DP-OPS-0101, DP-OPS-0110 | Deprecated; CbC structural elimination complete |
 | tools/lint/style.sh (lead-word repetition) | C | Keep | DP-OPS-0101 | Active |
 | tools/lint/task.sh (registry/section/provenance/closeout) | C | Keep | DP-OPS-0101 | Active |
 | tools/lint/task.sh (ambiguous-language detection) | B | Keep; redesign queued: machine-parseable step format | DP-OPS-0101 | Improvement queued |
