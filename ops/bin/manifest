@@ -45,7 +45,7 @@ declare -A TEMPLATE_PATHS=(
   [task-surface]="ops/src/surfaces/task.md.tpl"
   [addendum]="ops/src/surfaces/addendum.md.tpl"
   [closing]="ops/src/surfaces/closing.md.tpl"
-  [spec]="ops/src/specs/spec.md.tpl"
+  [spec]="ops/src/docs/spec.md.tpl"
 )
 
 declare -A SLOT_VALUES=()

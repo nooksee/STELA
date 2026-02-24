@@ -142,7 +142,7 @@ brace expansions are prohibited.
 ### 3.2.2 DP-scoped load order (per DP)
 Worker must load these resources before authoring any spec content:
 
-1. `ops/src/specs/spec.md.tpl` — canonical four-slot structure that every spec file must conform to after this DP.
+1. `ops/src/docs/spec.md.tpl` — canonical four-slot structure that every spec file must conform to after this DP.
 2. `tools/lint/style.sh` — to understand which jargon tokens and structural failures will cause CI rejection.
 3. `docs/ops/specs/binaries/certify.md` — read existing content before authoring replacement.
 4. `docs/ops/specs/binaries/compile.md` — read existing content before authoring replacement.
@@ -209,7 +209,7 @@ Out of scope:
 - `docs/ops/specs/tools/` — reserved for DP-OPS-0086; no edits permitted in this packet.
 - `docs/ops/specs/surfaces/` — not part of the explainability refactor sequence; no edits permitted.
 - `docs/ops/specs/definitions/` — not part of the explainability refactor sequence; no edits permitted.
-- `ops/src/specs/spec.md.tpl` — schema is locked from DP-OPS-0082; no structural edits permitted.
+- `ops/src/docs/spec.md.tpl` — schema is locked from DP-OPS-0082; no structural edits permitted.
 - `tools/lint/style.sh` — linter is locked from DP-OPS-0082; no edits permitted.
 - `ops/bin/` executables — source binaries are read-only reference material; no edits permitted.
 - `docs/ops/registry/` — registry edits are out of scope unless a factual path-pointer defect blocking certification is discovered and operator scope expansion is granted.
@@ -259,7 +259,7 @@ Repository is at HEAD `1577d65b` on `main` with a clean working tree. DP-OPS-008
 - All sixteen binary executables in `ops/bin/` have a corresponding specification file in `docs/ops/specs/binaries/`.
 - Five files (draft.md, factory.md, manifest.md, meta.md, scaffold.md) were generated as stubs by `ops/bin/template render spec` during DP-OPS-0083 and carry the four-slot `spec.md.tpl` structure. These stubs contain initial prose without `PROPOSED:` markers, but the content requires deepening to satisfy the Anti-Jargon, First-Principles, Anecdotal Anchoring, and Integrity Filter requirements.
 - Eleven files (certify.md, compile.md, context.md, dump.md, help.md, llms.md, map.md, open.md, project.md, prune.md, template.md) contain pre-existing specification content authored before the `spec.md.tpl` schema was established by DP-OPS-0082. These files use varied legacy heading structures and do not conform to the canonical four-slot format.
-- `ops/src/specs/spec.md.tpl` is locked and defines the required slot structure: `First Principles Rationale`, `Mechanics and Sequencing`, `Anecdotal Anchor`, `Integrity Filter Warnings`.
+- `ops/src/docs/spec.md.tpl` is locked and defines the required slot structure: `First Principles Rationale`, `Mechanics and Sequencing`, `Anecdotal Anchor`, `Integrity Filter Warnings`.
 - `tools/lint/style.sh` is hardened from DP-OPS-0082 to reject spec files that do not conform to the four-slot structure and to enforce the Anti-Jargon jargon blacklist.
 - SoP.md records the DP-OPS-0083 functional receipt summary. PoW.md carries the corresponding proof pointer. Both are pointer-first and will be updated by `ops/bin/certify` during closeout.
 - `storage/dp/active/allowlist.txt` carries entries from DP-OPS-0083 and must be replaced with the DP-OPS-0084 target file list before work begins.
@@ -267,7 +267,7 @@ Repository is at HEAD `1577d65b` on `main` with a clean working tree. DP-OPS-008
 ### 3.4.2 Request
 Author and finalize philosophy-compliant specification content for all sixteen files in `docs/ops/specs/binaries/`. The following requirements apply to every file in this packet:
 
-**Structural requirement.** Every spec file must conform to the rendered output of `ops/src/specs/spec.md.tpl`. The canonical rendered structure is:
+**Structural requirement.** Every spec file must conform to the rendered output of `ops/src/docs/spec.md.tpl`. The canonical rendered structure is:
 ```
 <!-- SPEC-SURFACE:REQUIRED -->
 # Technical Specification
