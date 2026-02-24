@@ -151,7 +151,7 @@ Every CbC decision made against a named tool gets a row. Entries are updated whe
 | tools/lint/dp.sh | C | Keep; refactor candidate (extract test fixture) | DP-OPS-0101 | Active |
 | tools/lint/agent.sh | C | Keep | DP-OPS-0101 | Active |
 | tools/lint/context.sh (artifact existence, contamination) | C | Keep | DP-OPS-0101 | Active |
-| tools/lint/context.sh (hazard guard) | B | Keep; redesign queued: generated CONTEXT.md | DP-OPS-0101 | Improvement queued |
+| tools/lint/context.sh (hazard guard) | A | Hazard guard removed; structural prevention confirmed via generated CONTEXT.md (template: ops/src/manifests/context.md.tpl excludes opt/_factory/ paths) | DP-OPS-0108 | Deprecated; CbC structural elimination complete |
 | tools/lint/factory.sh | C | Keep | DP-OPS-0101 | Active |
 | tools/lint/integrity.sh | C | Keep | DP-OPS-0101 | Active |
 | tools/lint/leaf.sh | B | Keep; redesign queued: scaffold injection + common.sh auto-invocation | DP-OPS-0101 | Improvement queued |
