@@ -7,7 +7,12 @@
 
 ## Mechanics and Sequencing
 1. Resolve repository root, emit lifecycle telemetry, and require `ops/lib/manifests/CONTEXT.md`.
-2. Scan the manifest for forbidden factory-directory hazard tokens (`docs/factory/*` and `opt/_factory/*` variants) and raise a failure when found.
+Note (Section 1.1 — Hazard Guard): Removed in DP-OPS-0108. Structural prevention is
+in effect: ops/lib/manifests/CONTEXT.md is a generated surface produced by
+ops/bin/compile from ops/src/manifests/context.md.tpl. The source template contains no
+opt/_factory/ paths. Contamination at generation time is structurally impossible without
+a template edit. The guard was B-scored in DP-OPS-0101 and deprecated upon confirmation
+of generation model.
 3. Extract every backticked token with `awk` and treat each token as a required artifact path.
 4. Verify existence of each extracted artifact and fail each missing path.
 5. Run semantic contamination scans on canonical surfaces (`PoT.md`, `SoP.md`, `TASK.md`, `docs/MAP.md`, `llms.txt`) using strict dump-marker patterns.
