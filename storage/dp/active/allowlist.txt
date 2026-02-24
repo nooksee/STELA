@@ -1,13 +1,13 @@
+tools/lint/style.sh
 docs/DESIGN.md
 storage/dp/active/allowlist.txt
+storage/handoff/CLOSING-DP-OPS-0110.md
 TASK.md
 SoP.md
 PoW.md
-archives/surfaces/SoP-2026-02-23-eaf0cd925.md
-archives/surfaces/PoW-2026-02-23-eaf0cd925.md
 archives/surfaces/SoP-2026-02-24-*.md
 archives/surfaces/PoW-2026-02-24-*.md
-archives/surfaces/TASK-DP-OPS-0109-*.md
+archives/surfaces/TASK-DP-OPS-0110-*.md
 archives/manifests/compile-*.md
 llms.txt
 llms-core.txt
