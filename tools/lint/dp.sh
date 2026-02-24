@@ -20,7 +20,7 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="61b458131016b8596b18a04a9ed6e53e4a6b7c9f6ffa781d595e5f34effd5a24"
+CANONICAL_DP_TEMPLATE_SHA256="424d16e740099ac8a01e327a2746e958a1de2f0958d383396f2015d96bb380f2"
 CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/surfaces/addendum.md.tpl"
 CANONICAL_ADDENDUM_TEMPLATE_SHA256="42cb7586c6ed103e995730f1a8c34a1c7e0676b717c27dfb987950feeac7ec9e"
 TEMPLATE_RENDER_BIN="ops/bin/template"
@@ -672,6 +672,20 @@ normalize_dp_structure() {
 
       if ($0 ~ /--dp=DP-[A-Z]+-[0-9]{4,}/) {
         gsub(/--dp=DP-[A-Z]+-[0-9]{4,}/, "--dp=DP-OPS-0000")
+        print $0
+        next
+      }
+
+      # Canonicalize §3.5.1 closing-sidecar prose references so template/body
+      # placeholders and fixture substitutions hash to the same normalized form.
+      if ($0 ~ /storage\/handoff\/CLOSING-\{\{DP_ID\}\}\.md/) {
+        gsub(/storage\/handoff\/CLOSING-\{\{DP_ID\}\}\.md/, "storage/handoff/CLOSING-DP-OPS-0000.md")
+        print $0
+        next
+      }
+
+      if ($0 ~ /storage\/handoff\/CLOSING-DP-[A-Z]+-[0-9]{4,}\.md/) {
+        gsub(/storage\/handoff\/CLOSING-DP-[A-Z]+-[0-9]{4,}\.md/, "storage/handoff/CLOSING-DP-OPS-0000.md")
         print $0
         next
       }
