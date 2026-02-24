@@ -6,7 +6,6 @@ storage/dp/active/allowlist.txt
 TASK.md
 SoP.md
 PoW.md
-storage/handoff/CLOSING-DP-OPS-0108.md
 archives/surfaces/SoP-2026-02-23-*.md
 archives/surfaces/PoW-2026-02-23-*.md
 archives/surfaces/TASK-DP-OPS-0108-*.md
