@@ -94,9 +94,9 @@ Deletion Test: **C.** Without integrity enforcement, any file modification durin
 Registry: C — Keep. Reference implementation of a CbC-justified linter. If CbC had been policy at creation, this tool would have been held up as the model.
 
 **`tools/lint/leaf.sh` — 47 lines**
-Checks that `emit_binary_leaf` is wired into every file in `ops/bin/` and `tools/`. New binaries and tools are hand-authored without a guaranteed wiring step. The structural alternative has two parts: `ops/bin/scaffold` always includes `emit_binary_leaf` in generated scripts; and an investigation into whether `ops/lib/scripts/common.sh` can auto-invoke it on `source`, removing the per-script call requirement entirely.
-Deletion Test: **B.** Scaffold injection plus common.sh auto-invocation makes the linter redundant when both changes land. Structural fix cost: approximately 10 lines across two files.
-Registry: B — Keep until scaffold injection is implemented. Flag for structural redesign.
+Checks that `emit_binary_leaf` is wired into every file in `ops/bin/` and `tools/`. New binaries and tools are hand-authored without a guaranteed wiring step. The originally proposed structural alternative had two parts: scaffold injection (`ops/bin/scaffold` pre-wiring `emit_binary_leaf` in generated scripts) and common.sh auto-invocation (`ops/lib/scripts/common.sh` invoking `emit_binary_leaf` at source time, removing per-script calls entirely). Both parts were investigated in the DP-OPS-0109 pre-draft Integrator analysis and found not viable. Common.sh auto-invoke cannot replicate the EXIT trap lifecycle event: the trap must be registered in the sourcing script's execution context to fire on that script's exit; a source-time invocation in the library fires once at source, producing one weak event rather than the two semantically distinct start and finish events the current per-script model provides. Scaffold injection assumed `ops/bin/scaffold` generates shell scripts; it does not. The binary provisions project directory trees from `ops/lib/project/SCAFFOLD.md` and performs no bash script generation. No proportionate structural fix exists. The linter is retained permanently as the correct detection mechanism for enforcing telemetry wiring across pre-scaffold and manually authored scripts.
+Deletion Test: **C.** Without `leaf.sh`, `emit_binary_leaf` wiring gaps in `ops/bin/` and `tools/` go undetected, breaking proof reconstruction and violating the PoT proof discipline that requires generated evidence rather than inferred narratives.
+Registry: C — Keep. Structural redesign evaluated and rejected in DP-OPS-0109 pre-draft analysis.
 
 **`tools/lint/llms.sh` — 78 lines**
 Generates `llms.txt`, `llms-core.txt`, and `llms-full.txt` into a temp directory, diffs against committed versions, and fails on divergence. Also detects deprecated filename references. The structural fix: a llms hook runs `ops/bin/llms` and stages the output before every commit, making staleness structurally impossible; the deprecated filename check is absorbed into `ops/bin/llms` directly.
@@ -122,7 +122,7 @@ Deletion Test: **C.**
 Registry: C — Keep. No redesign opportunity.
 
 **`tools/lint/style.sh` — 232 lines**
-Four distinct checks: contraction prohibition, jargon blacklist, spec-surface section compliance, and closing block lead-word repetition detection. Contraction prohibition: **C** — no structural mechanism can prevent contractions in prose; detection is the only tool. Jargon blacklist: **C** — same logic. Spec-surface compliance: **B** — `ops/src/specs/spec.md.tpl` updated to include all four required sections by default makes the compliance check redundant; a spec generated from the updated template cannot be missing them. Lead-word repetition: **C** — without it, AI-generated closing blocks routinely produce six near-identical entries; the check enforces semantic differentiation.
+Four distinct checks: contraction prohibition, jargon blacklist, spec-surface section compliance, and closing block lead-word repetition detection. Contraction prohibition: **C** — no structural mechanism can prevent contractions in prose; detection is the only tool. Jargon blacklist: **C** — same logic. Spec-surface compliance: **B** — `ops/src/docs/spec.md.tpl` updated to include all four required sections by default makes the compliance check redundant; a spec generated from the updated template cannot be missing them. Lead-word repetition: **C** — without it, AI-generated closing blocks routinely produce six near-identical entries; the check enforces semantic differentiation.
 Registry: Contraction prohibition — C, Keep. Jargon — C, Keep. Spec-surface compliance — B, Keep with structural redesign candidate queued. Lead-word repetition — C, Keep.
 
 **`tools/lint/task.sh` — 587 lines**
@@ -154,7 +154,7 @@ Every CbC decision made against a named tool gets a row. Entries are updated whe
 | tools/lint/context.sh (hazard guard) | A | Hazard guard removed; structural prevention confirmed via generated CONTEXT.md (template: ops/src/manifests/context.md.tpl excludes opt/_factory/ paths) | DP-OPS-0108 | Deprecated; CbC structural elimination complete |
 | tools/lint/factory.sh | C | Keep | DP-OPS-0101 | Active |
 | tools/lint/integrity.sh | C | Keep | DP-OPS-0101 | Active |
-| tools/lint/leaf.sh | B | Keep; redesign queued: scaffold injection + common.sh auto-invocation | DP-OPS-0101 | Improvement queued |
+| tools/lint/leaf.sh | C | Keep; structural redesign evaluated and rejected in DP-OPS-0109. Common.sh auto-invoke cannot replicate the EXIT trap in the caller execution context. Scaffold injection not applicable: ops/bin/scaffold does not generate shell scripts. Linter retained as permanent safety net for pre-scaffold and manually authored scripts. | DP-OPS-0101, DP-OPS-0109 | Active |
 | tools/lint/llms.sh | A (closed) | Deprecated — llms hook + generator absorption | DP-OPS-0102 | Deprecated |
 | tools/lint/project.sh (README check) | B | Keep; redesign queued: scaffold guarantee | DP-OPS-0101 | Improvement queued |
 | tools/lint/project.sh (structural checks) | C | Keep | DP-OPS-0101 | Active |
