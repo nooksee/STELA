@@ -149,13 +149,22 @@ required_headings=(
   "^## Mandatory Closing Block$"
 )
 
-required_closing_labels=(
+required_closing_labels_legacy=(
   "^Primary Commit Header [(]plaintext[)][[:space:]]*$"
   "^Pull Request Title [(]plaintext[)][[:space:]]*$"
   "^Pull Request Description [(]markdown[)][[:space:]]*$"
   "^Final Squash Stub [(]plaintext[)]( [(]Must differ from #1[)]| [(]must differ from Primary Commit Header[)])?[[:space:]]*$"
   "^Extended Technical Manifest [(]plaintext[)][[:space:]]*$"
   "^Review Conversation Starter [(]markdown[)][[:space:]]*$"
+)
+
+required_closing_labels_v2=(
+  "^Primary Commit Header[[:space:]]*$"
+  "^Scope Summary[[:space:]]*$"
+  "^Key Files Touched[[:space:]]*$"
+  "^Notable Risks and Mitigations[[:space:]]*$"
+  "^Follow-ups and Deferred Work[[:space:]]*$"
+  "^Operator Routing Notes[[:space:]]*$"
 )
 
 placeholder_regex='{{|}}|TBD|TODO|PLACEHOLDER|ENTER_|REPLACE_|populate during execution|do not pre-fill|DP-XXXX'
@@ -228,8 +237,19 @@ for target in "${targets[@]}"; do
     continue
   fi
 
+  closing_block_is_v2=0
+  if grep -Eq '^Key Files Touched[[:space:]]*$' <<< "$closing_block"; then
+    closing_block_is_v2=1
+  fi
+
   label_pattern=""
-  for label_pattern in "${required_closing_labels[@]}"; do
+  required_label_patterns=()
+  if (( closing_block_is_v2 )); then
+    required_label_patterns=("${required_closing_labels_v2[@]}")
+  else
+    required_label_patterns=("${required_closing_labels_legacy[@]}")
+  fi
+  for label_pattern in "${required_label_patterns[@]}"; do
     if ! grep -Eq "$label_pattern" <<< "$closing_block"; then
       fail "${rel_target}: closing block missing label matching ${label_pattern}"
     fi
@@ -239,32 +259,76 @@ for target in "${targets[@]}"; do
     fail "${rel_target}: closing block contains placeholder text"
   fi
 
-  strict_value="$(
-    extract_field_block "$target" '^Primary Commit Header [(]plaintext[)][[:space:]]*$' '^Pull Request Title [(]plaintext[)][[:space:]]*$'
-  )"
-  if ! has_nonempty_content "$strict_value"; then
-    fail "${rel_target}: Primary Commit Header value is empty"
-  fi
+  if (( closing_block_is_v2 )); then
+    strict_value="$(
+      extract_field_block "$target" '^Primary Commit Header[[:space:]]*$' '^Scope Summary[[:space:]]*$'
+    )"
+    if ! has_nonempty_content "$strict_value"; then
+      fail "${rel_target}: Primary Commit Header value is empty"
+    fi
 
-  strict_value="$(
-    extract_field_block "$target" '^Pull Request Title [(]plaintext[)][[:space:]]*$' '^Pull Request Description [(]markdown[)][[:space:]]*$'
-  )"
-  if ! has_nonempty_content "$strict_value"; then
-    fail "${rel_target}: Pull Request Title value is empty"
-  fi
+    strict_value="$(
+      extract_field_block "$target" '^Scope Summary[[:space:]]*$' '^Key Files Touched[[:space:]]*$'
+    )"
+    if ! has_nonempty_content "$strict_value"; then
+      fail "${rel_target}: Scope Summary value is empty"
+    fi
 
-  strict_value="$(
-    extract_field_block "$target" '^Final Squash Stub [(]plaintext[)]( [(]Must differ from #1[)]| [(]must differ from Primary Commit Header[)])?[[:space:]]*$' '^Extended Technical Manifest [(]plaintext[)][[:space:]]*$'
-  )"
-  if ! has_nonempty_content "$strict_value"; then
-    fail "${rel_target}: Final Squash Stub value is empty"
-  fi
+    strict_value="$(
+      extract_field_block "$target" '^Key Files Touched[[:space:]]*$' '^Notable Risks and Mitigations[[:space:]]*$'
+    )"
+    if ! has_nonempty_content "$strict_value"; then
+      fail "${rel_target}: Key Files Touched value is empty"
+    fi
 
-  strict_value="$(
-    extract_field_block "$target" '^Extended Technical Manifest [(]plaintext[)][[:space:]]*$' '^Review Conversation Starter [(]markdown[)][[:space:]]*$'
-  )"
-  if ! has_nonempty_content "$strict_value"; then
-    fail "${rel_target}: Extended Technical Manifest value is empty"
+    strict_value="$(
+      extract_field_block "$target" '^Notable Risks and Mitigations[[:space:]]*$' '^Follow-ups and Deferred Work[[:space:]]*$'
+    )"
+    if ! has_nonempty_content "$strict_value"; then
+      fail "${rel_target}: Notable Risks and Mitigations value is empty"
+    fi
+
+    strict_value="$(
+      extract_field_block "$target" '^Follow-ups and Deferred Work[[:space:]]*$' '^Operator Routing Notes[[:space:]]*$'
+    )"
+    if ! has_nonempty_content "$strict_value"; then
+      fail "${rel_target}: Follow-ups and Deferred Work value is empty"
+    fi
+
+    strict_value="$(
+      extract_field_block "$target" '^Operator Routing Notes[[:space:]]*$' ''
+    )"
+    if ! has_nonempty_content "$strict_value"; then
+      fail "${rel_target}: Operator Routing Notes value is empty"
+    fi
+  else
+    strict_value="$(
+      extract_field_block "$target" '^Primary Commit Header [(]plaintext[)][[:space:]]*$' '^Pull Request Title [(]plaintext[)][[:space:]]*$'
+    )"
+    if ! has_nonempty_content "$strict_value"; then
+      fail "${rel_target}: Primary Commit Header value is empty"
+    fi
+
+    strict_value="$(
+      extract_field_block "$target" '^Pull Request Title [(]plaintext[)][[:space:]]*$' '^Pull Request Description [(]markdown[)][[:space:]]*$'
+    )"
+    if ! has_nonempty_content "$strict_value"; then
+      fail "${rel_target}: Pull Request Title value is empty"
+    fi
+
+    strict_value="$(
+      extract_field_block "$target" '^Final Squash Stub [(]plaintext[)]( [(]Must differ from #1[)]| [(]must differ from Primary Commit Header[)])?[[:space:]]*$' '^Extended Technical Manifest [(]plaintext[)][[:space:]]*$'
+    )"
+    if ! has_nonempty_content "$strict_value"; then
+      fail "${rel_target}: Final Squash Stub value is empty"
+    fi
+
+    strict_value="$(
+      extract_field_block "$target" '^Extended Technical Manifest [(]plaintext[)][[:space:]]*$' '^Review Conversation Starter [(]markdown[)][[:space:]]*$'
+    )"
+    if ! has_nonempty_content "$strict_value"; then
+      fail "${rel_target}: Extended Technical Manifest value is empty"
+    fi
   fi
 done
 
