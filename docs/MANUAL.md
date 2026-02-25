@@ -31,7 +31,15 @@ Local hook activation (one time): run `git config core.hooksPath .github/hooks` 
 - Clean after use: complete closeout receipts and start the next session from a fresh OPEN artifact with matching dump artifacts.
 
 ## Closeout Cycle
-Maintain the human-authored Closing Block sidecar during execution at `storage/handoff/CLOSING-DP-OPS-XXXX.md`.
+#### Closing Sidecar Authorship
+
+The Contractor creates and populates `storage/handoff/CLOSING-<DP-ID>.md` before
+invoking `ops/bin/certify`. This file is not Operator-authored and is not deferred
+to a later session. The Contractor uses `ops/src/surfaces/closing.md.tpl` as the
+schema. If that template is absent, the Contractor stops and requests it from the
+Operator before proceeding. Absence of the closing sidecar is a certify hard-fail;
+it is not a recoverable warning.
+
 Finalization protocol order is strict: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
 Mandatory Closing Block schema is defined in `TASK.md` Section 3.5.1.
 Only the current six-label closing sidecar schema is accepted; `ops/bin/certify` is the schema authority; `tools/lint/style.sh` enforces that schema.
@@ -53,6 +61,22 @@ Tooling DP addendum: if the DP objective adds, modifies, or replaces a linter, s
 Keep `storage/handoff/CLOSING-DP-OPS-XXXX.md` populated throughout execution.
 
 2. Generate Results
+#### Pre-Certify Allowlist Declaration (required when DP scope includes closeout)
+
+Before invoking `ops/bin/certify`, confirm that the following three paths are present
+in `storage/dp/active/allowlist.txt`:
+
+- PoW.md
+- SoP.md
+- TASK.md
+
+Rationale: `ops/bin/certify` rewrites the current heads of these three canon surfaces
+to single-line archive pointers during closeout. These mutations are tracked by git
+and must be allowlist-covered before certify runs. Certify invokes
+`tools/lint/integrity.sh` internally; if any changed file is outside the allowlist,
+integrity.sh will hard-fail. Discovering this gap at runtime is a preventable
+protocol error.
+
 Run:
 ~~~bash
 ./ops/bin/certify --dp=DP-OPS-XXXX --out=auto
@@ -105,6 +129,28 @@ PoW contract and schema guidance are canonical in `docs/ops/specs/surfaces/pow.m
 PoW entry receipt pointers must include `RESULTS`, `OPEN`, and `DUMP` artifact paths.
 PoW entry `Notes` must record both positive proof and negative proof context (failed checks, ruled-out hypotheses, and abandoned attempts) when they materially affected execution.
 Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, with reason and risk for each NOT RUN item.
+
+### Log Step: Pre-certify single-entry head authoring (`SoP.md` and `PoW.md`)
+1. Rule: before running `ops/bin/certify`, author `SoP.md` and `PoW.md` to contain only the single new entry for the current DP. Do not copy archive leaf history from prior `archives/surfaces/` leaves into the current head.
+2. Reason: `tools/lint/truth.sh` scans current heads and rejects historical strings from archive leaves. Those strings are tolerated in `archives/surfaces/` but are forbidden in head-lint context. Copying history into the head causes `truth.sh` to fail.
+3. Invariant: `ops/bin/certify` generates the `previous:` pointer on the new archive leaf and manages chain linkage. The contractor does not manage or reconstruct chain history manually.
+4. Confirmation note: DP-OPS-0116 and ADDENDUM-A confirmed that certify-managed pointer rewrites of `PoW.md`, `SoP.md`, and `TASK.md` to single-line HEAD pointers are expected closeout behavior; do not interpret those rewrites as corruption.
+5. Worked example (same pattern for both `SoP.md` and `PoW.md`):
+
+~~~md
+# Correct single-entry head (current DP only)
+## <timestamp> UTC - DP-OPS-0113 <summary>
+...current DP entry fields only...
+~~~
+
+~~~md
+# Incorrect full-history head (copied archive history)
+## <timestamp> UTC - DP-OPS-0113 <summary>
+...current DP entry fields...
+
+## <older timestamp> UTC - DP-OPS-XXXX <prior summary>
+...copied prior archive leaf entry...
+~~~
 
 ~~~
 
