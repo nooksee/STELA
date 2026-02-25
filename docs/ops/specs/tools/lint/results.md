@@ -11,7 +11,7 @@
 3. For each target file, distinguish certification format from legacy format and skip legacy only in non-explicit historical scan modes.
 4. Enforce required heading set and reject unresolved artifact placeholders or forbidden disposable-artifact references.
 5. Enforce `Git Hash` parity in explicit mode, and record historical parity skips in inferred/scan modes without blocking.
-6. Parse Mandatory Closing Block fields using `ops/bin/certify` as the schema authority, accept either the legacy label schema or the v2 label schema, reject placeholder text, and require non-empty schema-appropriate fields.
+6. Parse Mandatory Closing Block fields using `ops/bin/certify` as the schema authority, require the current six-label schema, reject placeholder text, and require all six fields to be non-empty.
 7. Return non-zero when any certification-format receipt fails required checks.
 
 ## Anecdotal Anchor
@@ -23,8 +23,6 @@ Mode behavior is intentionally different: explicit path mode applies strict hash
 ## Closing Block Schema Authority
 `ops/bin/certify` is the sole authority for accepted Mandatory Closing Block label schemas in certification-format RESULTS receipts. `tools/lint/results.sh` must remain synchronized with certify's emitted closing block labels.
 
-Supported RESULTS closing block schemas are:
-- Legacy labels: `Primary Commit Header (plaintext)`, `Pull Request Title (plaintext)`, `Pull Request Description (markdown)`, `Final Squash Stub (plaintext) (Must differ from #1)`, `Extended Technical Manifest (plaintext)`, `Review Conversation Starter (markdown)`.
-- v2 labels: `Primary Commit Header`, `Scope Summary`, `Key Files Touched`, `Notable Risks and Mitigations`, `Follow-ups and Deferred Work`, `Operator Routing Notes`.
+The accepted RESULTS closing block schema is the current six-label form: `Primary Commit Header`, `Pull Request Title`, `Pull Request Description`, `Final Squash Stub`, `Extended Technical Manifest`, `Review Conversation Starter`.
 
-Legacy-mode non-empty enforcement remains on the strict/plaintext fields (`Primary Commit Header`, `Pull Request Title`, `Final Squash Stub`, `Extended Technical Manifest`) while markdown fields remain placeholder-checked but not structure-validated by this linter. v2-mode enforcement requires all six v2 fields to be present and non-empty.
+All six schema fields are required and must be non-empty. Placeholder text is rejected.

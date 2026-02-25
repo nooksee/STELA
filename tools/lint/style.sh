@@ -87,6 +87,15 @@ file_has_h2_heading() {
   ' "$file"
 }
 
+detect_closing_sidecar_schema_kind() {
+  local file="$1"
+  if grep -Fxq "Pull Request Description" "$file"; then
+    printf 'current'
+    return 0
+  fi
+  printf 'unknown'
+}
+
 check_markdown_contractions() {
   # Contraction prohibition uses ASCII and unicode apostrophe variants.
   local apostrophe="['\\x{2019}]"
@@ -140,18 +149,12 @@ check_closing_block_lead_words() {
 
     if ! duplicate_report="$(awk '
       function is_header(line) {
-        return line ~ /^Primary Commit Header \(plaintext\)[[:space:]]*$/ \
-          || line ~ /^Pull Request Title \(plaintext\)[[:space:]]*$/ \
-          || line ~ /^Pull Request Description \(markdown\)[[:space:]]*$/ \
-          || line ~ /^Final Squash Stub \(plaintext\)( \(Must differ from #1\)| \(Must differ from Primary Commit Header in verb and subject\))?[[:space:]]*$/ \
-          || line ~ /^Extended Technical Manifest \(plaintext\)[[:space:]]*$/ \
-          || line ~ /^Review Conversation Starter \(markdown\)[[:space:]]*$/ \
-          || line ~ /^Primary Commit Header[[:space:]]*$/ \
-          || line ~ /^Scope Summary[[:space:]]*$/ \
-          || line ~ /^Key Files Touched[[:space:]]*$/ \
-          || line ~ /^Notable Risks and Mitigations[[:space:]]*$/ \
-          || line ~ /^Follow-ups and Deferred Work[[:space:]]*$/ \
-          || line ~ /^Operator Routing Notes[[:space:]]*$/
+        return line ~ /^Primary Commit Header[[:space:]]*$/ \
+          || line ~ /^Pull Request Title[[:space:]]*$/ \
+          || line ~ /^Pull Request Description[[:space:]]*$/ \
+          || line ~ /^Final Squash Stub[[:space:]]*$/ \
+          || line ~ /^Extended Technical Manifest[[:space:]]*$/ \
+          || line ~ /^Review Conversation Starter[[:space:]]*$/
       }
 
       {
@@ -222,10 +225,16 @@ check_closing_block_conversation_starter_question() {
       fi
     fi
 
+    local schema_kind
+    schema_kind="$(detect_closing_sidecar_schema_kind "$file")"
+    if [[ "$schema_kind" == "unknown" ]]; then
+      continue
+    fi
+
     local rel_file="${file#"${REPO_ROOT}/"}"
     local value_record value_lineno value
     value_record="$(awk '
-      /^Review Conversation Starter \(markdown\)[[:space:]]*$/ { found=1; next }
+      /^Review Conversation Starter[[:space:]]*$/ { found=1; next }
       found && /[^[:space:]]/ {
         line=$0
         sub(/^[[:space:]]+/, "", line)
@@ -270,15 +279,31 @@ check_closing_block_manifest_paths() {
       fi
     fi
 
+    local schema_kind
+    local manifest_start_regex='^Extended Technical Manifest[[:space:]]*$'
+    local manifest_field_name="Extended Technical Manifest"
+    schema_kind="$(detect_closing_sidecar_schema_kind "$file")"
+    if [[ "$schema_kind" != "current" ]]; then
+      continue
+    fi
+
     local rel_file="${file#"${REPO_ROOT}/"}"
     while IFS=$'\t' read -r lineno prose_line; do
       [[ -n "$lineno" ]] || continue
-      mark_failure "CLOSING BLOCK: Extended Technical Manifest contains prose on line ${lineno}: \"${prose_line}\". This field must contain file paths only."
+      mark_failure "CLOSING BLOCK: ${manifest_field_name} contains prose on line ${lineno}: \"${prose_line}\". This field must contain file paths only."
       echo "  ${rel_file}:${lineno}" >&2
     done < <(
-      awk '
-        /^Extended Technical Manifest \(plaintext\)[[:space:]]*$/ { in_block=1; next }
-        in_block && /^(Primary Commit Header|Pull Request Title|Pull Request Description|Final Squash Stub|Review Conversation Starter)/ { in_block=0; next }
+      awk -v start_regex="$manifest_start_regex" '
+        function is_header(line) {
+          return line ~ /^Primary Commit Header[[:space:]]*$/ \
+            || line ~ /^Pull Request Title[[:space:]]*$/ \
+            || line ~ /^Pull Request Description[[:space:]]*$/ \
+            || line ~ /^Final Squash Stub[[:space:]]*$/ \
+            || line ~ /^Extended Technical Manifest[[:space:]]*$/ \
+            || line ~ /^Review Conversation Starter[[:space:]]*$/
+        }
+        $0 ~ start_regex { in_block=1; next }
+        in_block && is_header($0) { in_block=0; next }
         in_block && /[^[:space:]]/ {
           line=$0
           sub(/^[[:space:]]+/, "", line)
@@ -326,17 +351,23 @@ check_closing_block_pr_description_markdown() {
     fi
 
     local rel_file="${file#"${REPO_ROOT}/"}"
-    local is_v2_schema=0
-    if grep -Fxq "Key Files Touched" "$file"; then
-      is_v2_schema=1
-    fi
-    if (( is_v2_schema )); then
+    local schema_kind
+    schema_kind="$(detect_closing_sidecar_schema_kind "$file")"
+    if [[ "$schema_kind" == "unknown" ]]; then
       continue
     fi
     local has_markdown
     has_markdown="$(awk '
-      /^Pull Request Description \(markdown\)[[:space:]]*$/ { in_block=1; next }
-      in_block && /^(Primary Commit Header|Pull Request Title|Final Squash Stub|Extended Technical Manifest|Review Conversation Starter)/ { in_block=0; next }
+      function is_header(line) {
+        return line ~ /^Primary Commit Header[[:space:]]*$/ \
+          || line ~ /^Pull Request Title[[:space:]]*$/ \
+          || line ~ /^Pull Request Description[[:space:]]*$/ \
+          || line ~ /^Final Squash Stub[[:space:]]*$/ \
+          || line ~ /^Extended Technical Manifest[[:space:]]*$/ \
+          || line ~ /^Review Conversation Starter[[:space:]]*$/
+      }
+      /^Pull Request Description[[:space:]]*$/ { in_block=1; next }
+      in_block && is_header($0) { in_block=0; next }
       in_block && /^##[[:space:]]/ { print "heading"; exit }
       in_block && /^[-*][[:space:]]/ { print "list"; exit }
       in_block && /^[0-9]+\.[[:space:]]/ { print "ordered"; exit }
