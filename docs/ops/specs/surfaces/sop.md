@@ -18,6 +18,9 @@ Proof pointers belong in `PoW.md`.
 - Separation rule:
   - Keep historical narrative in `SoP.md`.
   - Keep strict proof pointers in `PoW.md`.
+- The pre-certify single-entry-head authoring rule and a worked example are documented in `docs/MANUAL.md` in the Log step section of the Closeout Cycle.
+- The closing sidecar authorship rule and the pre-certify allowlist declaration
+  requirement are documented in `docs/MANUAL.md` in the Closeout Cycle section.
 
 ## Failure States and Drift Triggers
 - Canon changes without a matching SoP update.

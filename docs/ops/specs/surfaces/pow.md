@@ -35,6 +35,7 @@
 
 ## Operator Guidance
 - Author PoW entry content before running `ops/bin/certify`.
+- The pre-certify single-entry-head authoring rule and a worked example are documented in `docs/MANUAL.md` in the Log step section of the Closeout Cycle.
 - Treat `PoW.md` and `archives/surfaces/PoW-*.md` as generated surfaces once certify snapshots are emitted.
 - Do not embed raw OPEN or DUMP payloads inside PoW entries.
 - `Notes` must include material negative proof context when it affected execution.
