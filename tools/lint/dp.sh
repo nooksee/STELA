@@ -20,7 +20,7 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="424d16e740099ac8a01e327a2746e958a1de2f0958d383396f2015d96bb380f2"
+CANONICAL_DP_TEMPLATE_SHA256="8bc8badca1835c5f2a5df45de8a1cecb2adebc000ec729cebaa1575b52598742"
 CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/surfaces/addendum.md.tpl"
 CANONICAL_ADDENDUM_TEMPLATE_SHA256="42cb7586c6ed103e995730f1a8c34a1c7e0676b717c27dfb987950feeac7ec9e"
 TEMPLATE_RENDER_BIN="ops/bin/template"
@@ -594,7 +594,7 @@ normalize_dp_structure() {
       next
     }
 
-    mode == "CbC_PREFLIGHT" {
+    mode == "CBC_PREFLIGHT" {
       if ($0 ~ /^##[[:space:]]*3[.]2([.]|[[:space:]])/) {
         mode=""
         print $0
@@ -645,8 +645,8 @@ normalize_dp_structure() {
 
       if ($0 ~ /^### CbC Design Discipline Preflight/) {
         print $0
-        emit("CbC_PREFLIGHT")
-        mode="CbC_PREFLIGHT"
+        emit("CBC_PREFLIGHT")
+        mode="CBC_PREFLIGHT"
         next
       }
 
@@ -1035,10 +1035,40 @@ check_dump_selection_scope() {
   done <<< "$receipt_block"
 }
 
+check_proposed_token_scan() {
+  local path="$1"
+  local found=0
+  local lineno=0
+  local line=""
+  local candidate=""
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    lineno=$(( lineno + 1 ))
+    candidate="$(trim "$line")"
+    if [[ "$candidate" =~ ^-[[:space:]]+ ]]; then
+      candidate="$(trim "${candidate#-}")"
+    fi
+    if [[ "$candidate" == *:* ]]; then
+      candidate="$(trim "${candidate#*:}")"
+    fi
+
+    # Match only structural provisional value forms, not prose mentions of the
+    # feature name. We evaluate a normalized value candidate (line-start, bullet
+    # value, or field value after ':').
+    if [[ "$candidate" =~ ^PROPOSED-[A-Za-z0-9/._-]+$ ]] || [[ "$candidate" =~ ^PROPOSED[[:space:]] ]]; then
+      echo "PROPOSED token at line ${lineno}: ${line}" >&2
+      found=1
+    fi
+  done < "$path"
+  if (( found )); then
+    fail "PROPOSED token found — finalize intake packet before dispatch"
+  fi
+}
+
 lint_payload() {
   local path="$1"
   failures=0
 
+  check_proposed_token_scan "$path"
   check_template_hash_preflight
   check_structure_hash "$path"
   check_required_fields "$path"
@@ -1173,7 +1203,7 @@ render_fixture_from_template() {
       "{{RECEIPT_EXTRA}}")
         printf '%s\n' "$receipt_extra" >> "$out_path"
         ;;
-      "{{CbC_PREFLIGHT}}")
+      "{{CBC_PREFLIGHT}}")
         printf '%s\n' "$cbc_preflight" >> "$out_path"
         ;;
       "- storage/dp/active/allowlist.txt")
@@ -1197,6 +1227,8 @@ run_test() {
   local tmp_allowlist_file_bad
   local tmp_results_valid
   local tmp_results_invalid
+  local tmp_proposed_marker_bad
+  local tmp_proposed_prose_ok
 
   failures=0
   check_template_hash_preflight
@@ -1215,15 +1247,18 @@ run_test() {
   tmp_allowlist_file_bad="$(mktemp)"
   tmp_results_valid="$(mktemp --suffix=-RESULTS.md)"
   tmp_results_invalid="$(mktemp --suffix=-RESULTS.md)"
+  tmp_proposed_marker_bad="$(mktemp)"
+  tmp_proposed_prose_ok="$(mktemp)"
 
   printf '%s\n' "tools/lint/dp.sh" > "$tmp_allowlist_valid"
   printf '%s\n' "path/that/does/not/exist.txt" > "$tmp_allowlist_bad"
 
   render_fixture_from_template "$tmp_valid" "$tmp_allowlist_valid"
+  # Clean fixture (no provisional markers) must pass.
   DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_valid" >/dev/null
 
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" DP_CANONICAL_TEMPLATE_SHA256_OVERRIDE="0000000000000000000000000000000000000000000000000000000000000000" lint_path "$tmp_valid" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok"
     echo "FAIL: --test expected canonical template hash mismatch failure" >&2
     exit 1
   fi
@@ -1231,7 +1266,7 @@ run_test() {
   cp "$tmp_valid" "$tmp_structure_bad"
   sed -i 's/^## 3.4 Execution Plan (A-E)$/## 3.4 Execution Plan (BROKEN)/' "$tmp_structure_bad"
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_structure_bad" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok"
     echo "FAIL: --test expected DP structure hash mismatch failure" >&2
     exit 1
   fi
@@ -1239,14 +1274,14 @@ run_test() {
   cp "$tmp_valid" "$tmp_pointer_bad"
   sed -i "s#^- ${tmp_allowlist_valid}\$#- storage/dp/active/not-canonical.txt#" "$tmp_pointer_bad"
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_pointer_bad" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok"
     echo "FAIL: --test expected allowlist pointer mismatch failure" >&2
     exit 1
   fi
 
   render_fixture_from_template "$tmp_allowlist_file_bad" "$tmp_allowlist_bad"
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_bad" lint_path "$tmp_allowlist_file_bad" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok"
     echo "FAIL: --test expected allowlist file validation failure" >&2
     exit 1
   fi
@@ -1299,12 +1334,44 @@ Review Conversation Starter (markdown)
 PLACEHOLDER
 TESTRESULTS
   if lint_path "$tmp_results_invalid" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok"
     echo "FAIL: --test expected RESULTS validation failure" >&2
     exit 1
   fi
 
-  rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid"
+  # Real provisional branch marker must fail.
+  cp "$tmp_valid" "$tmp_proposed_marker_bad"
+  sed -i 's#^Required Work Branch: .*#Required Work Branch: PROPOSED-work/dp-ops-0000-2026-02-14#' "$tmp_proposed_marker_bad"
+  failures=0
+  check_proposed_token_scan "$tmp_proposed_marker_bad"
+  if (( failures == 0 )); then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok"
+    echo "FAIL: --test expected direct PROPOSED provisional-marker scan failure" >&2
+    exit 1
+  fi
+  if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_proposed_marker_bad" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok"
+    echo "FAIL: --test expected PROPOSED provisional-marker scan failure" >&2
+    exit 1
+  fi
+
+  # Prose that names the feature (contains the word PROPOSED) must pass.
+  cp "$tmp_valid" "$tmp_proposed_prose_ok"
+  sed -i 's/^-\s*Validate template-hash flow for DP lint\.$/- Validate PROPOSED scan prose description handling for fixture coverage./' "$tmp_proposed_prose_ok"
+  failures=0
+  check_proposed_token_scan "$tmp_proposed_prose_ok"
+  if (( failures )); then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok"
+    echo "FAIL: --test expected direct PROPOSED prose-only scan pass" >&2
+    exit 1
+  fi
+  if ! DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_proposed_prose_ok" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok"
+    echo "FAIL: --test expected PROPOSED prose-only fixture pass" >&2
+    exit 1
+  fi
+
+  rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok"
   echo "OK: --test passed"
 }
 

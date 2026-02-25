@@ -173,11 +173,12 @@ Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, 
 ### Validation (Lint)
 ~~~bash
 # Validate DP format before dispatch
-./tools/lint/dp.sh storage/dp/intake/DP-OPS-0050.md
+bash tools/lint/dp.sh storage/dp/intake/DP-OPS-0050.md
 
 # Validate Context consistency
 ./tools/lint/context.sh
 ~~~
+Pre-dispatch DP finalize gate: run `bash tools/lint/dp.sh <intake-packet>` and confirm PASS (`OK: DP lint passed`). A PASS confirms both that no `PROPOSED` tokens remain and that the packet is structurally well-formed. No separate finalize step or binary is required.
 
 ### Skills (Harvest + Promote)
 Skills remain on-demand only and must not be placed in `ops/lib/manifests/CONTEXT.md`.

@@ -19,7 +19,7 @@ requires_slots:
   - PLAN_CHANGELOG
   - PLAN_PATCH
   - RECEIPT_EXTRA
-  - CbC_PREFLIGHT
+  - CBC_PREFLIGHT
 includes:
   - ops/lib/manifests/CONSTRAINTS.md#section-1
   - ops/lib/manifests/CONTRACTOR.md
@@ -64,7 +64,7 @@ STOP if any preflight check fails.
 ### CbC Design Discipline Preflight (TASK.md §3.1.1)
 Required when the DP objective adds, modifies, or replaces a linter, script, guard, or validation binary.
 For non-tooling DPs: state "Not applicable" with a one-line justification.
-{{CbC_PREFLIGHT}}
+{{CBC_PREFLIGHT}}
 
 ## 3.2 Required Context Load (Read Before Doing Anything)
 
@@ -153,3 +153,11 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 Closing block content is generated exclusively by `ops/bin/certify` from the closing sidecar at `storage/handoff/CLOSING-{{DP_ID}}.md` at certification time. Do not author, predict, populate, or approximate any closing block field at draft time or during execution. The closing sidecar is the only human-authored narrative input certify ingests. Certify generates all of the following from observable repository state: Primary Commit Header, Pull Request Title, Pull Request Description, Final Squash Stub, Extended Technical Manifest, and Review Conversation Starter.
 
 Before running certify, confirm `storage/handoff/CLOSING-{{DP_ID}}.md` has been maintained throughout execution and reflects observable reality only.
+
+Fields certify generates from the closing sidecar and repository state:
+- Primary Commit Header
+- Pull Request Title
+- Pull Request Description
+- Final Squash Stub
+- Extended Technical Manifest
+- Review Conversation Starter

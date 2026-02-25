@@ -8,12 +8,20 @@
 ## Mechanics and Sequencing
 1. Resolve repository root, emit telemetry, and enforce canonical template hash parity for `ops/src/surfaces/dp.md.tpl`.
 2. Resolve input mode (`--test`, explicit path, stdin, or default `TASK.md`), including TASK pointer-head resolution and DP block extraction when the source is a TASK surface. Explicit addendum intake artifacts (`DP-OPS-XXXX-ADDENDUM-A.md`) dispatch to `lint_addendum_intake()` instead of DP structure hashing.
-3. Render canonical DP in non-strict mode, normalize both canonical and payload structures, hash both normalized forms, and fail on mismatch.
-4. Validate required fields and section blocks, including heading ID/title shape, base branch metadata, scoped load-order content, plan slots, and receipt slot non-placeholder content.
-5. Enforce receipt dump-selection scoping in Section 3.4.5: packets `DP-OPS-0095` and newer fail if any `ops/bin/dump` command omits `--selection=dp` or `--selection=dp+allowlist`; older packets emit a grandfathered warning only.
-6. Enforce allowlist pointer integrity: exactly one pointer entry, canonical pointer path match, allowlist file existence, entry normalization, runtime-prefix restrictions, wildcard policy constraints, and repository reachability checks.
-7. For RESULTS paths, enforce Mandatory Closing Block labels and field constraints, reject placeholders, and require Final Squash Stub divergence from Primary Commit Header.
-8. In `--test` mode, execute fixture-driven negative and positive checks that exercise template-hash drift, structure mismatch, allowlist-pointer mismatch, allowlist-file invalidity, and RESULTS closing-block validation.
+3. For DP payloads, run a provisional-marker `PROPOSED` scan as the first `lint_payload()` check before template-hash verification and structural validation. The scan normalizes each line to a candidate value (trimmed line, bullet value, or field value suffix after `:`), reports each matching line number and full offending line to stderr, and exits non-zero only when the candidate matches a provisional-marker form (`^PROPOSED-[A-Za-z0-9/._-]+$`) or begins with a bare provisional prefix (`^PROPOSED `). The scan must not fail when the word `PROPOSED` appears only as prose that describes the feature.
+4. Render canonical DP in non-strict mode, normalize both canonical and payload structures, hash both normalized forms, and fail on mismatch.
+5. Validate required fields and section blocks, including heading ID/title shape, base branch metadata, scoped load-order content, plan slots, and receipt slot non-placeholder content.
+6. Enforce receipt dump-selection scoping in Section 3.4.5: packets `DP-OPS-0095` and newer fail if any `ops/bin/dump` command omits `--selection=dp` or `--selection=dp+allowlist`; older packets emit a grandfathered warning only.
+7. Enforce allowlist pointer integrity: exactly one pointer entry, canonical pointer path match, allowlist file existence, entry normalization, runtime-prefix restrictions, wildcard policy constraints, and repository reachability checks.
+8. For RESULTS paths, enforce Mandatory Closing Block labels and field constraints, reject placeholders, and require Final Squash Stub divergence from Primary Commit Header.
+9. In `--test` mode, execute fixture-driven negative and positive checks that exercise template-hash drift, structure mismatch, allowlist-pointer mismatch, allowlist-file invalidity, narrowed `PROPOSED` provisional-marker detection, and RESULTS closing-block validation.
+
+### PROPOSED Provisional-Marker Scan Fixtures (`--test`)
+`dp.sh --test` must cover all three `PROPOSED` scan outcome classes introduced by DP-OPS-0112 addendum ADD-DP-OPS-0112-001:
+
+1. **Clean fixture (PASS):** no provisional-marker forms are present.
+2. **Real provisional marker (FAIL):** a fixture line contains an unfinalized branch-style value such as `PROPOSED-work/...`, which must fail.
+3. **Prose-only `PROPOSED` (PASS):** a fixture line contains the word `PROPOSED` as feature-description prose without a provisional-marker form, which must pass.
 
 ### Freshness Stamp and Receipt Command Substitution Checks
 `lint_payload()` runs two certify-compatibility checks immediately after `check_dump_selection_scope()`:

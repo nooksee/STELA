@@ -273,6 +273,7 @@ render_dp() {
     "--slot=PLAN_CHANGELOG=${PLAN_CHANGELOG}"
     "--slot=PLAN_PATCH=${PLAN_PATCH}"
     "--slot=RECEIPT_EXTRA=${RECEIPT_EXTRA}"
+    "--slot=CBC_PREFLIGHT=${CBC_PREFLIGHT}"
   )
 
   if [[ -n "$SLOTS_FILE" ]]; then
@@ -362,6 +363,9 @@ update_task() {
       skip_rest=1
       next
     }
+    skip_rest && /^##[[:space:]]*[0-9]+[.][[:space:]]/ && $0 !~ /^##[[:space:]]*3[.]/ {
+      skip_rest=0
+    }
     skip_rest {
       next
     }
@@ -402,6 +406,7 @@ PLAN_REQUEST=""
 PLAN_CHANGELOG=""
 PLAN_PATCH=""
 RECEIPT_EXTRA=""
+CBC_PREFLIGHT=""
 
 for arg in "$@"; do
   case "$arg" in
@@ -459,6 +464,9 @@ for arg in "$@"; do
     --plan-patch=*)
       PLAN_PATCH="${arg#--plan-patch=}"
       ;;
+    --cbc-preflight=*)
+      CBC_PREFLIGHT="${arg#--cbc-preflight=}"
+      ;;
     --receipt-extra=*)
       RECEIPT_EXTRA="${arg#--receipt-extra=}"
       ;;
@@ -512,6 +520,7 @@ if [[ -n "$SLOTS_FILE" ]]; then
     [[ -n "$PLAN_REQUEST" ]] || PLAN_REQUEST="$(read_slot "PLAN_REQUEST" "$SLOTS_FILE")"
     [[ -n "$PLAN_CHANGELOG" ]] || PLAN_CHANGELOG="$(read_slot "PLAN_CHANGELOG" "$SLOTS_FILE")"
     [[ -n "$PLAN_PATCH" ]] || PLAN_PATCH="$(read_slot "PLAN_PATCH" "$SLOTS_FILE")"
+    [[ -n "$CBC_PREFLIGHT" ]] || CBC_PREFLIGHT="$(read_slot "CBC_PREFLIGHT" "$SLOTS_FILE")"
     if [[ -z "$RECEIPT_EXTRA" ]]; then
       RECEIPT_EXTRA="$(read_slot "RECEIPT_EXTRA" "$SLOTS_FILE")"
     fi
