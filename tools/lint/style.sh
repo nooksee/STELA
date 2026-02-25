@@ -145,7 +145,13 @@ check_closing_block_lead_words() {
           || line ~ /^Pull Request Description \(markdown\)[[:space:]]*$/ \
           || line ~ /^Final Squash Stub \(plaintext\)( \(Must differ from #1\)| \(Must differ from Primary Commit Header in verb and subject\))?[[:space:]]*$/ \
           || line ~ /^Extended Technical Manifest \(plaintext\)[[:space:]]*$/ \
-          || line ~ /^Review Conversation Starter \(markdown\)[[:space:]]*$/
+          || line ~ /^Review Conversation Starter \(markdown\)[[:space:]]*$/ \
+          || line ~ /^Primary Commit Header[[:space:]]*$/ \
+          || line ~ /^Scope Summary[[:space:]]*$/ \
+          || line ~ /^Key Files Touched[[:space:]]*$/ \
+          || line ~ /^Notable Risks and Mitigations[[:space:]]*$/ \
+          || line ~ /^Follow-ups and Deferred Work[[:space:]]*$/ \
+          || line ~ /^Operator Routing Notes[[:space:]]*$/
       }
 
       {
@@ -320,6 +326,13 @@ check_closing_block_pr_description_markdown() {
     fi
 
     local rel_file="${file#"${REPO_ROOT}/"}"
+    local is_v2_schema=0
+    if grep -Fxq "Key Files Touched" "$file"; then
+      is_v2_schema=1
+    fi
+    if (( is_v2_schema )); then
+      continue
+    fi
     local has_markdown
     has_markdown="$(awk '
       /^Pull Request Description \(markdown\)[[:space:]]*$/ { in_block=1; next }

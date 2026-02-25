@@ -24,6 +24,13 @@ The scan set includes tracked markdown only; untracked drafts are outside enforc
 
 ## Closing Block Structural Checks
 
+### Closing Block Schema Authority
+`ops/bin/certify` is the sole authority defining accepted closing sidecar label schemas. `tools/lint/style.sh` implements certify's contract and must remain synchronized with certify's accepted label sets when certify's schema definitions change.
+
+Two schemas are accepted. The legacy schema requires these labels (exact-line matches): `Primary Commit Header (plaintext)`, `Pull Request Title (plaintext)`, `Pull Request Description (markdown)`, `Final Squash Stub (plaintext) (Must differ from #1)`, `Extended Technical Manifest (plaintext)`, `Review Conversation Starter (markdown)`. The v2 schema requires these labels: `Primary Commit Header`, `Scope Summary`, `Key Files Touched`, `Notable Risks and Mitigations`, `Follow-ups and Deferred Work`, `Operator Routing Notes`.
+
+Style.sh closing-block check applicability by schema: Check 1 (Conversation Starter ends in `?`) applies to legacy sidecars only; v2 sidecars have no Conversation Starter field and pass without check. Check 2 (Extended Technical Manifest paths only) applies to legacy sidecars only; v2 sidecars have no Extended Technical Manifest field and pass without check. Check 3 (PR Description contains markdown) applies to legacy sidecars only; v2 sidecars have no PR Description field and pass without check. Lead-word deduplication in `check_closing_block_lead_words` applies to both schemas.
+
 ### Check 1: Conversation Starter must end in `?`
 Detection logic: Extract the first non-blank line following the `Review Conversation Starter (markdown)` label in each `CLOSING-*.md` file. Trim trailing whitespace. Fail if the trimmed value does not end with `?`.
 Failure message: `CLOSING BLOCK: Conversation Starter does not end in '?'. This field must be a genuine question.`
