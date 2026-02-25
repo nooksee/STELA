@@ -175,14 +175,9 @@ Populate during execution; do not pre-fill in TASK.md.
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
 ### 3.5.1 Mandatory Closing Block
-Primary Commit Header (plaintext)
-
-Pull Request Title (plaintext)
-
-Pull Request Description (markdown)
-
-Final Squash Stub (plaintext) (Must differ from #1)
-
-Extended Technical Manifest (plaintext)
-
-Review Conversation Starter (markdown)
+- Primary Commit Header
+- Pull Request Title
+- Pull Request Description
+- Final Squash Stub
+- Extended Technical Manifest
+- Review Conversation Starter

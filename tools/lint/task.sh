@@ -357,6 +357,9 @@ check_task_dashboard() {
     "Extended Technical Manifest (plaintext)"
     "Review Conversation Starter (markdown)"
   )
+  # Certify-routed format: active packets generated from ops/src/surfaces/dp.md.tpl
+  # carry the list-item form of the §3.5.1 Mandatory Closing Block. This path is the
+  # standard acceptance path for live current-packet TASK heads.
   local -a closing_list_items=(
     "- Primary Commit Header"
     "- Pull Request Title"
@@ -365,6 +368,7 @@ check_task_dashboard() {
     "- Extended Technical Manifest"
     "- Review Conversation Starter"
   )
+  # Receipt proof token: certify-routed format
   local list_format_present=1
   local item
   for item in "${closing_list_items[@]}"; do
@@ -378,6 +382,9 @@ check_task_dashboard() {
     return
   fi
 
+  # Legacy label format: historical TASK leaves authored before the certify-routed
+  # list-item format was introduced carry the plaintext-label form. This path is the
+  # grandfathered acceptance path for historical TASK heads only.
   local label
   for label in "${closing_labels[@]}"; do
     if [[ "$label" == "Final Squash Stub (plaintext) (Must differ from #1)" ]]; then

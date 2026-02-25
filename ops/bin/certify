@@ -251,21 +251,13 @@ assert_dp_required_sections() {
 validate_closing_block_sidecar() {
   local closing_path="$1"
   local allowlist_pointer="$2"
-  local -a required_labels_legacy=(
-    "Primary Commit Header (plaintext)"
-    "Pull Request Title (plaintext)"
-    "Pull Request Description (markdown)"
-    "Final Squash Stub (plaintext) (Must differ from #1)"
-    "Extended Technical Manifest (plaintext)"
-    "Review Conversation Starter (markdown)"
-  )
-  local -a required_labels_v2=(
+  local -a required_labels_current=(
     "Primary Commit Header"
-    "Scope Summary"
-    "Key Files Touched"
-    "Notable Risks and Mitigations"
-    "Follow-ups and Deferred Work"
-    "Operator Routing Notes"
+    "Pull Request Title"
+    "Pull Request Description"
+    "Final Squash Stub"
+    "Extended Technical Manifest"
+    "Review Conversation Starter"
   )
 
   has_required_labels() {
@@ -280,8 +272,7 @@ validate_closing_block_sidecar() {
     return 0
   }
 
-  if ! has_required_labels "$closing_path" "${required_labels_legacy[@]}" \
-    && ! has_required_labels "$closing_path" "${required_labels_v2[@]}"; then
+  if ! has_required_labels "$closing_path" "${required_labels_current[@]}"; then
     die "closing block sidecar missing required mandatory-label schema"
   fi
 
@@ -348,17 +339,8 @@ validate_closing_block_sidecar() {
   local in_manifest=0
   local found_manifest=0
   local manifest_count=0
-  local manifest_start_label=""
-  local manifest_end_label=""
-  if grep -Fxq "Extended Technical Manifest (plaintext)" "$closing_path"; then
-    manifest_start_label="Extended Technical Manifest (plaintext)"
-    manifest_end_label="Review Conversation Starter (markdown)"
-  elif grep -Fxq "Key Files Touched" "$closing_path"; then
-    manifest_start_label="Key Files Touched"
-    manifest_end_label="Notable Risks and Mitigations"
-  else
-    die "closing block sidecar missing file-manifest section"
-  fi
+  local manifest_start_label="Extended Technical Manifest"
+  local manifest_end_label="Review Conversation Starter"
 
   local raw_line=""
   while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
@@ -586,22 +568,22 @@ run_closing_validator_negative_self_check() {
   local fixture_path="${TMP_DIR}/closing-validator-negative-fixture.md"
 
   cat > "$fixture_path" <<'EOF'
-Primary Commit Header (plaintext)
+Primary Commit Header
 fixture
 
-Pull Request Title (plaintext)
+Pull Request Title
 fixture
 
-Pull Request Description (markdown)
+Pull Request Description
 fixture
 
-Final Squash Stub (plaintext) (Must differ from #1)
+Final Squash Stub
 fixture
 
-Extended Technical Manifest (plaintext)
+Extended Technical Manifest
 ops/bin/certify{invalid}
 
-Review Conversation Starter (markdown)
+Review Conversation Starter
 fixture
 EOF
 
