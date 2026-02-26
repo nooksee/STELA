@@ -26,10 +26,47 @@ declare -a JARGON_BLACKLIST=(
 
 declare -a MARKDOWN_FILES=()
 STYLE_FAILURES=0
+CLOSING_LABELS_MANIFEST_PATH="${REPO_ROOT}/ops/lib/manifests/CLOSING.md"
+declare -a CURRENT_CLOSING_LABELS=()
+CLOSING_SCHEMA_LABELS_BLOB=""
+CLOSING_LABELS_LOADED=0
 
 mark_failure() {
   echo "ERROR: $1" >&2
   STYLE_FAILURES=$((STYLE_FAILURES + 1))
+}
+
+load_current_closing_labels() {
+  local label
+  if (( CLOSING_LABELS_LOADED )); then
+    return 0
+  fi
+
+  [[ -f "$CLOSING_LABELS_MANIFEST_PATH" ]] || die "closing labels manifest missing: ${CLOSING_LABELS_MANIFEST_PATH#${REPO_ROOT}/}"
+  if ! grep -Eq '^##[[:space:]]+Section 1:[[:space:]]+Current Closeout Labels[[:space:]]*$' "$CLOSING_LABELS_MANIFEST_PATH"; then
+    die "closing labels manifest missing required SSOT section heading"
+  fi
+
+  mapfile -t CURRENT_CLOSING_LABELS < <(
+    awk '
+      /^##[[:space:]]+Section 1:[[:space:]]+Current Closeout Labels[[:space:]]*$/ { in_section=1; next }
+      in_section && /^##[[:space:]]+/ { exit }
+      in_section && /[^[:space:]]/ { print }
+    ' "$CLOSING_LABELS_MANIFEST_PATH"
+  )
+
+  if [[ "${#CURRENT_CLOSING_LABELS[@]}" -ne 6 ]]; then
+    die "closing labels manifest must define exactly six current labels (found ${#CURRENT_CLOSING_LABELS[@]})"
+  fi
+
+  CLOSING_SCHEMA_LABELS_BLOB=""
+  for label in "${CURRENT_CLOSING_LABELS[@]}"; do
+    if [[ -n "$CLOSING_SCHEMA_LABELS_BLOB" ]]; then
+      CLOSING_SCHEMA_LABELS_BLOB+=$'\n'
+    fi
+    CLOSING_SCHEMA_LABELS_BLOB+="$label"
+  done
+  CLOSING_LABELS_LOADED=1
 }
 
 collect_markdown_files() {
@@ -89,11 +126,15 @@ file_has_h2_heading() {
 
 detect_closing_sidecar_schema_kind() {
   local file="$1"
-  if grep -Fxq "Pull Request Description" "$file"; then
-    printf 'current'
-    return 0
-  fi
-  printf 'unknown'
+  local label
+  load_current_closing_labels
+  for label in "${CURRENT_CLOSING_LABELS[@]}"; do
+    if ! grep -Fxq "$label" "$file"; then
+      printf 'unknown'
+      return 0
+    fi
+  done
+  printf 'current'
 }
 
 check_markdown_contractions() {
@@ -147,14 +188,17 @@ check_closing_block_lead_words() {
       fi
     fi
 
-    if ! duplicate_report="$(awk '
+    if ! duplicate_report="$(awk -v labels_blob="$CLOSING_SCHEMA_LABELS_BLOB" '
+      BEGIN {
+        n=split(labels_blob, labels, /\n/)
+        for (i=1; i<=n; i++) {
+          if (labels[i] != "") {
+            header[labels[i]]=1
+          }
+        }
+      }
       function is_header(line) {
-        return line ~ /^Primary Commit Header[[:space:]]*$/ \
-          || line ~ /^Pull Request Title[[:space:]]*$/ \
-          || line ~ /^Pull Request Description[[:space:]]*$/ \
-          || line ~ /^Final Squash Stub[[:space:]]*$/ \
-          || line ~ /^Commit Message \(Extended Description\)[[:space:]]*$/ \
-          || line ~ /^Review Conversation Starter[[:space:]]*$/
+        return (line in header)
       }
 
       {
@@ -213,6 +257,7 @@ check_closing_block_conversation_starter_question() {
   (( ${#closing_files[@]} > 0 )) || return 0
 
   local file base_name dp_number
+  local conversation_label="${CURRENT_CLOSING_LABELS[5]}"
   for file in "${closing_files[@]}"; do
     base_name="$(basename "$file")"
     if [[ "$base_name" =~ ^CLOSING-DP-OPS-([0-9]+)\.md$ ]]; then
@@ -233,8 +278,8 @@ check_closing_block_conversation_starter_question() {
 
     local rel_file="${file#"${REPO_ROOT}/"}"
     local value_record value_lineno value
-    value_record="$(awk '
-      /^Review Conversation Starter[[:space:]]*$/ { found=1; next }
+    value_record="$(awk -v target_label="$conversation_label" '
+      $0 == target_label { found=1; next }
       found && /[^[:space:]]/ {
         line=$0
         sub(/^[[:space:]]+/, "", line)
@@ -280,8 +325,8 @@ check_closing_block_manifest_paths() {
     fi
 
     local schema_kind
-    local manifest_start_regex='^Commit Message \(Extended Description\)[[:space:]]*$'
-    local manifest_field_name="Commit Message (Extended Description)"
+    local manifest_start_label="${CURRENT_CLOSING_LABELS[4]}"
+    local manifest_field_name="${CURRENT_CLOSING_LABELS[4]}"
     schema_kind="$(detect_closing_sidecar_schema_kind "$file")"
     if [[ "$schema_kind" != "current" ]]; then
       continue
@@ -293,16 +338,19 @@ check_closing_block_manifest_paths() {
       mark_failure "CLOSING BLOCK: ${manifest_field_name} contains prose on line ${lineno}: \"${prose_line}\". This field must contain file paths only."
       echo "  ${rel_file}:${lineno}" >&2
     done < <(
-      awk -v start_regex="$manifest_start_regex" '
-        function is_header(line) {
-          return line ~ /^Primary Commit Header[[:space:]]*$/ \
-            || line ~ /^Pull Request Title[[:space:]]*$/ \
-            || line ~ /^Pull Request Description[[:space:]]*$/ \
-            || line ~ /^Final Squash Stub[[:space:]]*$/ \
-            || line ~ /^Commit Message \(Extended Description\)[[:space:]]*$/ \
-            || line ~ /^Review Conversation Starter[[:space:]]*$/
+      awk -v start_label="$manifest_start_label" -v labels_blob="$CLOSING_SCHEMA_LABELS_BLOB" '
+        BEGIN {
+          n=split(labels_blob, labels, /\n/)
+          for (i=1; i<=n; i++) {
+            if (labels[i] != "") {
+              header[labels[i]]=1
+            }
+          }
         }
-        $0 ~ start_regex { in_block=1; next }
+        function is_header(line) {
+          return (line in header)
+        }
+        $0 == start_label { in_block=1; next }
         in_block && is_header($0) { in_block=0; next }
         in_block && /[^[:space:]]/ {
           line=$0
@@ -338,6 +386,7 @@ check_closing_block_pr_description_markdown() {
   (( ${#closing_files[@]} > 0 )) || return 0
 
   local file base_name dp_number
+  local pr_description_label="${CURRENT_CLOSING_LABELS[2]}"
   for file in "${closing_files[@]}"; do
     base_name="$(basename "$file")"
     if [[ "$base_name" =~ ^CLOSING-DP-OPS-([0-9]+)\.md$ ]]; then
@@ -357,16 +406,19 @@ check_closing_block_pr_description_markdown() {
       continue
     fi
     local has_markdown
-    has_markdown="$(awk '
-      function is_header(line) {
-        return line ~ /^Primary Commit Header[[:space:]]*$/ \
-          || line ~ /^Pull Request Title[[:space:]]*$/ \
-          || line ~ /^Pull Request Description[[:space:]]*$/ \
-          || line ~ /^Final Squash Stub[[:space:]]*$/ \
-          || line ~ /^Commit Message \(Extended Description\)[[:space:]]*$/ \
-          || line ~ /^Review Conversation Starter[[:space:]]*$/
+    has_markdown="$(awk -v start_label="$pr_description_label" -v labels_blob="$CLOSING_SCHEMA_LABELS_BLOB" '
+      BEGIN {
+        n=split(labels_blob, labels, /\n/)
+        for (i=1; i<=n; i++) {
+          if (labels[i] != "") {
+            header[labels[i]]=1
+          }
+        }
       }
-      /^Pull Request Description[[:space:]]*$/ { in_block=1; next }
+      function is_header(line) {
+        return (line in header)
+      }
+      $0 == start_label { in_block=1; next }
       in_block && is_header($0) { in_block=0; next }
       in_block && /^##[[:space:]]/ { print "heading"; exit }
       in_block && /^[-*][[:space:]]/ { print "list"; exit }
@@ -382,6 +434,7 @@ check_closing_block_pr_description_markdown() {
 }
 
 collect_markdown_files
+load_current_closing_labels
 check_markdown_contractions
 check_jargon_blacklist
 check_closing_block_lead_words

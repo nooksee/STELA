@@ -49,6 +49,35 @@ normalize_path() {
   printf '%s' "$value"
 }
 
+CLOSING_LABELS_MANIFEST_PATH="${REPO_ROOT}/ops/lib/manifests/CLOSING.md"
+declare -a CLOSING_LABELS_CURRENT=()
+CLOSING_LABELS_CURRENT_LOADED=0
+
+load_closing_labels_current() {
+  if (( CLOSING_LABELS_CURRENT_LOADED )); then
+    return 0
+  fi
+
+  [[ -f "$CLOSING_LABELS_MANIFEST_PATH" ]] || die "closing labels manifest missing: ${CLOSING_LABELS_MANIFEST_PATH#${REPO_ROOT}/}"
+  if ! grep -Eq '^##[[:space:]]+Section 1:[[:space:]]+Current Closeout Labels[[:space:]]*$' "$CLOSING_LABELS_MANIFEST_PATH"; then
+    die "closing labels manifest missing required SSOT section heading"
+  fi
+
+  mapfile -t CLOSING_LABELS_CURRENT < <(
+    awk '
+      /^##[[:space:]]+Section 1:[[:space:]]+Current Closeout Labels[[:space:]]*$/ { in_section=1; next }
+      in_section && /^##[[:space:]]+/ { exit }
+      in_section && /[^[:space:]]/ { print }
+    ' "$CLOSING_LABELS_MANIFEST_PATH"
+  )
+
+  if [[ "${#CLOSING_LABELS_CURRENT[@]}" -ne 6 ]]; then
+    die "closing labels manifest must define exactly six current labels (found ${#CLOSING_LABELS_CURRENT[@]})"
+  fi
+
+  CLOSING_LABELS_CURRENT_LOADED=1
+}
+
 declare -A ALLOWLIST_ENTRIES=()
 declare -a ALLOWLIST_PATTERNS=()
 
@@ -251,14 +280,8 @@ assert_dp_required_sections() {
 validate_closing_block_sidecar() {
   local closing_path="$1"
   local allowlist_pointer="$2"
-  local -a required_labels_current=(
-    "Primary Commit Header"
-    "Pull Request Title"
-    "Pull Request Description"
-    "Final Squash Stub"
-    "Commit Message (Extended Description)"
-    "Review Conversation Starter"
-  )
+  load_closing_labels_current
+  local -a required_labels_current=("${CLOSING_LABELS_CURRENT[@]}")
 
   has_required_labels() {
     local file_path="$1"
@@ -339,8 +362,8 @@ validate_closing_block_sidecar() {
   local in_manifest=0
   local found_manifest=0
   local manifest_count=0
-  local manifest_start_label="Commit Message (Extended Description)"
-  local manifest_end_label="Review Conversation Starter"
+  local manifest_start_label="${required_labels_current[4]}"
+  local manifest_end_label="${required_labels_current[5]}"
 
   local raw_line=""
   while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
@@ -566,26 +589,21 @@ assert_dp_matches_work_branch() {
 run_closing_validator_negative_self_check() {
   local allowlist_pointer="$1"
   local fixture_path="${TMP_DIR}/closing-validator-negative-fixture.md"
+  local manifest_field_label=""
+  local label=""
 
-  cat > "$fixture_path" <<'EOF'
-Primary Commit Header
-fixture
+  load_closing_labels_current
+  manifest_field_label="${CLOSING_LABELS_CURRENT[4]}"
 
-Pull Request Title
-fixture
-
-Pull Request Description
-fixture
-
-Final Squash Stub
-fixture
-
-Commit Message (Extended Description)
-ops/bin/certify{invalid}
-
-Review Conversation Starter
-fixture
-EOF
+  : > "$fixture_path"
+  for label in "${CLOSING_LABELS_CURRENT[@]}"; do
+    printf '%s\n' "$label" >> "$fixture_path"
+    if [[ "$label" == "$manifest_field_label" ]]; then
+      printf 'ops/bin/certify{invalid}\n\n' >> "$fixture_path"
+    else
+      printf 'fixture\n\n' >> "$fixture_path"
+    fi
+  done
 
   if (validate_closing_block_sidecar "$fixture_path" "$allowlist_pointer" >/dev/null 2>&1); then
     die "closing manifest validator regression: malformed fixture was accepted"

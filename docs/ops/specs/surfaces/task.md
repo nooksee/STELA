@@ -40,16 +40,10 @@ Think of `TASK.md` like the control desk card that shows which packet is active 
 
 `tools/lint/task.sh` accepts two §3.5.1 closing block formats in `check_task_dashboard()`.
 
-**Certify-routed format (standard for active packets):** A TASK head leaf generated from `ops/src/surfaces/dp.md.tpl` carries a §3.5.1 block containing these exact list items, one per line:
-- Primary Commit Header
-- Pull Request Title
-- Pull Request Description
-- Final Squash Stub
-- Commit Message (Extended Description)
-- Review Conversation Starter
+**Certify-routed format (standard for active packets):** A TASK head leaf generated from `ops/src/surfaces/dp.md.tpl` carries a §3.5.1 block containing the current six closeout list items, one per line. The canonical list is SSOT in `ops/lib/manifests/CLOSING.md` (Section 1), and `tools/lint/task.sh` derives the active list-format check from that manifest.
 
-When all six list items are present, `task.sh` accepts the TASK head via the `list_format_present` path and returns without further closing block checks.
+When all six SSOT list items are present, `task.sh` accepts the TASK head via the `list_format_present` path and returns without further closing block checks.
 
-**Legacy label format (grandfathered for historical leaves):** Historical TASK leaves carry the plaintext-label form: `Primary Commit Header (plaintext)`, `Pull Request Title (plaintext)`, `Pull Request Description (markdown)`, `Final Squash Stub (plaintext) (Must differ from #1)`, `Extended Technical Manifest (plaintext)`, `Review Conversation Starter (markdown)`. This format is accepted via the legacy label fallback loop. No historical leaf is retroactively reformatted.
+**Legacy label format (grandfathered for historical leaves):** Historical TASK leaves carry the plaintext-label form: `Primary Commit Header (plaintext)`, `Pull Request Title (plaintext)`, `Pull Request Description (markdown)`, `Final Squash Stub (plaintext) (Must differ from #1)`, `Extended Technical Manifest (plaintext)`, `Review Conversation Starter (markdown)`. This format is accepted via the legacy label fallback loop. This legacy fallback remains intentionally duplicated in `tools/lint/task.sh` because it validates historical leaves that do not use the current SSOT list-item schema. No historical leaf is retroactively reformatted.
 
 **Certify DP resolution order:** `ops/bin/certify` resolves the target DP from the TASK head leaf by default. Intake fallback fires only when the TASK head leaf is absent, fails container validation, or does not contain the target DP block. For standard closeout, the TASK head leaf must be structurally valid and contain the live current DP before `ops/bin/certify` is run. Intake fallback is a recovery path only, not the standard path.

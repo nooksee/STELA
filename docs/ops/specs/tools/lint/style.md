@@ -25,11 +25,11 @@ The scan set includes tracked markdown only; untracked drafts are outside enforc
 ## Closing Block Structural Checks
 
 ### Closing Block Schema Authority
-`ops/bin/certify` is the sole authority defining accepted closing sidecar label schemas. `tools/lint/style.sh` implements certify's contract and must remain synchronized with certify's accepted label sets when certify's schema definitions change.
+`ops/bin/certify` is the sole authority defining accepted closing sidecar label schemas. The current closeout label set is SSOT in `ops/lib/manifests/CLOSING.md` (Section 1). `tools/lint/style.sh` implements certify's contract and must remain synchronized with certify's accepted label sets when certify's schema definitions change.
 
-The accepted closing sidecar schema is the current six-label form: `Primary Commit Header`, `Pull Request Title`, `Pull Request Description`, `Final Squash Stub`, `Commit Message (Extended Description)`, `Review Conversation Starter`.
+The accepted closing sidecar schema is the current six-label form defined in `ops/lib/manifests/CLOSING.md` (Section 1): `Primary Commit Header`, `Pull Request Title`, `Pull Request Description`, `Final Squash Stub`, `Commit Message (Extended Description)`, `Review Conversation Starter`.
 
-Style.sh applies all three closing-block semantic checks (Conversation Starter question form, path-only `Commit Message (Extended Description)`, and markdown-bearing PR Description) to that current schema. Lead-word deduplication applies to recognized current-schema sidecars.
+Style.sh loads the closeout header-detection list from `ops/lib/manifests/CLOSING.md` (Section 1) and applies all three closing-block semantic checks (Conversation Starter question form, path-only `Commit Message (Extended Description)`, and markdown-bearing PR Description) to that current schema. Lead-word deduplication applies to recognized current-schema sidecars.
 
 ### Check 1: Conversation Starter must end in `?`
 Detection logic: Extract the first non-blank line following `Review Conversation Starter` in each recognized current-schema `CLOSING-*.md` file. Trim trailing whitespace. Fail if the trimmed value does not end with `?`.

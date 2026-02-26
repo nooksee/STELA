@@ -9,6 +9,7 @@ tools/lint/task.sh
 ops/src/surfaces/dp.md.tpl
 tools/lint/dp.sh
 ops/src/surfaces/task.md.tpl
+ops/lib/manifests/CLOSING.md
 docs/ops/specs/surfaces/results.md
 docs/ops/specs/tools/lint/style.md
 docs/ops/specs/tools/lint/results.md
@@ -21,6 +22,10 @@ llms-core.txt
 llms-full.txt
 archives/manifests/compile-*.md
 archives/manifests/compile-2026-02-26T172233-ca2286912.md
+archives/manifests/compile-2026-02-26T184150-2d1378a58.md
 archives/surfaces/SoP-2026-02-26-ca2286912.md
 archives/surfaces/PoW-2026-02-26-ca2286912.md
 archives/surfaces/TASK-DP-OPS-0115-ca2286912.md
+archives/surfaces/SoP-2026-02-26-2d1378a58.md
+archives/surfaces/PoW-2026-02-26-2d1378a58.md
+archives/surfaces/TASK-DP-OPS-0119-2d1378a58.md

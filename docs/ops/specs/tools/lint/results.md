@@ -21,8 +21,8 @@ During the DP-OPS-0069 certification cutover, the absence of a dedicated RESULTS
 Mode behavior is intentionally different: explicit path mode applies strict hash parity, while inferred and `--all` modes tolerate historical parity drift and only report skips. Legacy receipts are ignored in broad historical scans unless explicitly targeted. Template hash constants must be revised in lockstep with sanctioned template changes.
 
 ## Closing Block Schema Authority
-`ops/bin/certify` is the sole authority for accepted Mandatory Closing Block label schemas in certification-format RESULTS receipts. `tools/lint/results.sh` must remain synchronized with certify's emitted closing block labels.
+`ops/bin/certify` is the sole authority for accepted Mandatory Closing Block label schemas in certification-format RESULTS receipts. The current closeout label set is SSOT in `ops/lib/manifests/CLOSING.md` (Section 1). `tools/lint/results.sh` must remain synchronized with certify's emitted closing block labels.
 
-The accepted RESULTS closing block schema is the current six-label form: `Primary Commit Header`, `Pull Request Title`, `Pull Request Description`, `Final Squash Stub`, `Commit Message (Extended Description)`, `Review Conversation Starter`.
+The accepted RESULTS closing block schema is the current six-label form defined in `ops/lib/manifests/CLOSING.md` (Section 1): `Primary Commit Header`, `Pull Request Title`, `Pull Request Description`, `Final Squash Stub`, `Commit Message (Extended Description)`, `Review Conversation Starter`.
 
-All six schema fields are required and must be non-empty. Placeholder text is rejected.
+`tools/lint/results.sh` derives the required label order and per-field non-empty checks from `ops/lib/manifests/CLOSING.md` (Section 1). All six schema fields are required and must be non-empty. Placeholder text is rejected.
