@@ -39,6 +39,4 @@ archives/surfaces/SoP-2026-02-26-b17266c1b.md
 archives/surfaces/PoW-2026-02-26-b17266c1b.md
 archives/surfaces/TASK-DP-OPS-0121-b17266c1b.md
 archives/manifests/compile-2026-02-26T214514-b17266c1b.md
-storage/handoff/CLOSING-DP-OPS-0121-ADDENDUM-A.md
 ops/bin/addendum
-storage/handoff/CLOSING-DP-OPS-0121-ADDENDUM-C.md
