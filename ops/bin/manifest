@@ -20,7 +20,7 @@ Options:
   --work-branch=...          Convenience mapping for WORK_BRANCH.
   --base-head=...            Convenience mapping for BASE_HEAD.
   --freshness-stamp=...      Convenience mapping for FRESHNESS_STAMP.
-  --non-strict               Allow unresolved {{TOKEN}} placeholders.
+  --non-strict               Allow unresolved double-brace placeholders (for example a token placeholder marker).
   --strict                   Enforce strict mode (default).
   --dry-run                  Validate arguments and exit without rendering.
   --out=-                    Write rendered output to stdout.
@@ -60,6 +60,9 @@ out_path=""
 render_key=""
 
 template_path=""
+TASK_SURFACE_SCAN_PATH=""
+TASK_SURFACE_SOURCE_PATH=""
+TASK_SURFACE_RESOLVED_PATH=""
 
 set_slot_value() {
   local token="$1"
@@ -447,11 +450,17 @@ check_unresolved_placeholders() {
       die "unresolved template token(s): ${inline_unresolved}"
     fi
   fi
+
+  return 0
 }
 
 resolve_task_surface_path() {
   local task_path="${REPO_ROOT}/TASK.md"
+  TASK_SURFACE_SOURCE_PATH="$task_path"
+  TASK_SURFACE_RESOLVED_PATH="$task_path"
+  TASK_SURFACE_SCAN_PATH=""
   [[ -f "$task_path" ]] || return 1
+  TASK_SURFACE_SCAN_PATH="$task_path"
 
   local line_count
   line_count="$(awk 'END { print NR }' "$task_path")"
@@ -463,12 +472,13 @@ resolve_task_surface_path() {
       pointer_path="${pointer_path#${REPO_ROOT}/}"
     fi
     if [[ "$pointer_path" =~ ^archives/surfaces/[A-Za-z0-9._/-]+\.md$ ]] && [[ -f "${REPO_ROOT}/${pointer_path}" ]]; then
-      printf '%s' "${REPO_ROOT}/${pointer_path}"
+      TASK_SURFACE_RESOLVED_PATH="${REPO_ROOT}/${pointer_path}"
+      TASK_SURFACE_SCAN_PATH="$TASK_SURFACE_RESOLVED_PATH"
       return 0
     fi
   fi
 
-  printf '%s' "$task_path"
+  return 0
 }
 
 ensure_no_duplicate_packet_id() {
@@ -479,12 +489,20 @@ ensure_no_duplicate_packet_id() {
   [[ -n "$packet_id" ]] || return 0
 
   local task_surface
-  task_surface="$(resolve_task_surface_path || true)"
+  resolve_task_surface_path || true
+  task_surface="$TASK_SURFACE_SCAN_PATH"
   [[ -n "$task_surface" ]] || return 0
 
   if grep -Fq "### ${packet_id}:" "$task_surface"; then
-    die "hazard: duplicate packet id detected (${packet_id}); refusing to render"
+    die_guard_failure \
+      "hazard: duplicate packet id detected (${packet_id}); refusing to render" \
+      "task_surface_duplicate_packet_id_absent" \
+      "packet_id" "$packet_id" \
+      "task_source_path" "$TASK_SURFACE_SOURCE_PATH" \
+      "task_resolved_path" "$TASK_SURFACE_RESOLVED_PATH"
   fi
+
+  return 0
 }
 
 parse_args() {
@@ -493,7 +511,16 @@ parse_args() {
     exit 1
   fi
 
+  if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    usage
+    exit 0
+  fi
+
   if [[ "$1" == "render" ]]; then
+    if [[ "${2:-}" == "-h" || "${2:-}" == "--help" ]]; then
+      usage
+      exit 0
+    fi
     [[ "$#" -ge 2 ]] || die "template type argument is required"
     render_key="$2"
     shift 2
@@ -607,6 +634,7 @@ write_output() {
 
   mkdir -p "$(dirname "$out_path")"
   printf '%s' "$content" > "$out_path"
+  return 0
 }
 
 main() {
@@ -649,6 +677,7 @@ main() {
   write_output "$rendered"
 
   rm -f "$tmp_meta" "$tmp_body"
+  return 0
 }
 
 main "$@"

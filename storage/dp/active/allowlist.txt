@@ -15,6 +15,12 @@ docs/ops/specs/tools/lint/style.md
 docs/ops/specs/tools/lint/results.md
 docs/ops/specs/surfaces/task.md
 docs/MANUAL.md
+docs/ops/specs/binaries/draft.md
+docs/ops/specs/binaries/manifest.md
+ops/bin/draft
+ops/bin/manifest
+ops/lib/scripts/common.sh
+ops/lib/scripts/task.sh
 storage/dp/active/allowlist.txt
 storage/handoff/CLOSING-DP-OPS-*.md
 llms.txt
@@ -29,3 +35,10 @@ archives/surfaces/TASK-DP-OPS-0115-ca2286912.md
 archives/surfaces/SoP-2026-02-26-2d1378a58.md
 archives/surfaces/PoW-2026-02-26-2d1378a58.md
 archives/surfaces/TASK-DP-OPS-0119-2d1378a58.md
+archives/surfaces/SoP-2026-02-26-b17266c1b.md
+archives/surfaces/PoW-2026-02-26-b17266c1b.md
+archives/surfaces/TASK-DP-OPS-0121-b17266c1b.md
+archives/manifests/compile-2026-02-26T214514-b17266c1b.md
+storage/handoff/CLOSING-DP-OPS-0121-ADDENDUM-A.md
+ops/bin/addendum
+storage/handoff/CLOSING-DP-OPS-0121-ADDENDUM-C.md

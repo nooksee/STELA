@@ -88,6 +88,74 @@ trim() {
   printf '%s' "$value"
 }
 
+TASK_SURFACE_READ_SOURCE_PATH=""
+TASK_SURFACE_READ_RESOLVED_PATH=""
+TASK_SURFACE_READ_CONTENT_PATH=""
+TASK_SURFACE_READ_CLEANUP_PATH=""
+
+task_surface_diag_path() {
+  local value="$1"
+  value="$(trim "$value")"
+  value="${value#./}"
+  if [[ "$value" == "${REPO_ROOT}/"* ]]; then
+    value="${value#${REPO_ROOT}/}"
+  fi
+  printf '%s' "$value"
+}
+
+cleanup_task_surface_read_context() {
+  if [[ -n "$TASK_SURFACE_READ_CLEANUP_PATH" ]]; then
+    rm -f "$TASK_SURFACE_READ_CLEANUP_PATH"
+  fi
+  TASK_SURFACE_READ_CLEANUP_PATH=""
+  return 0
+}
+
+resolve_task_surface_read_context() {
+  local task_path="$TASK_FILE"
+  TASK_SURFACE_READ_SOURCE_PATH="$task_path"
+  TASK_SURFACE_READ_RESOLVED_PATH="$task_path"
+  TASK_SURFACE_READ_CONTENT_PATH="$task_path"
+  TASK_SURFACE_READ_CLEANUP_PATH=""
+
+  require_file "$task_path"
+
+  local line_count
+  line_count="$(awk 'END { print NR }' "$task_path")"
+  if [[ "$line_count" != "1" ]]; then
+    return 0
+  fi
+
+  local pointer_path
+  pointer_path="$(trim "$(cat "$task_path")")"
+  pointer_path="${pointer_path#./}"
+  if [[ "$pointer_path" == "${REPO_ROOT}/"* ]]; then
+    pointer_path="${pointer_path#${REPO_ROOT}/}"
+  fi
+
+  if [[ ! "$pointer_path" =~ ^archives/surfaces/[A-Za-z0-9._/-]+\.md$ ]]; then
+    die "TASK.md pointer is not a valid archives/surfaces leaf while reading TASK metadata (source: $(task_surface_diag_path "$task_path"); resolved: $(task_surface_diag_path "$pointer_path"))"
+  fi
+
+  local target_path="${REPO_ROOT}/${pointer_path}"
+  TASK_SURFACE_READ_RESOLVED_PATH="$target_path"
+  if [[ ! -f "$target_path" ]]; then
+    die "TASK.md pointer target missing while reading TASK metadata (source: $(task_surface_diag_path "$task_path"); resolved: $(task_surface_diag_path "$target_path"))"
+  fi
+
+  local materialized_path
+  materialized_path="$(mktemp)"
+  strip_leading_frontmatter "$target_path" > "$materialized_path"
+  if [[ ! -s "$materialized_path" ]]; then
+    rm -f "$materialized_path"
+    die "TASK.md pointer target has no materialized body while reading TASK metadata (source: $(task_surface_diag_path "$task_path"); resolved: $(task_surface_diag_path "$target_path"))"
+  fi
+
+  TASK_SURFACE_READ_CONTENT_PATH="$materialized_path"
+  TASK_SURFACE_READ_CLEANUP_PATH="$materialized_path"
+  return 0
+}
+
 iso_utc_now() {
   date -u +"%Y-%m-%dT%H:%M:%SZ"
 }
@@ -353,13 +421,15 @@ is_placeholder_value() {
 read_task_field() {
   local label="$1"
   local value
+  resolve_task_surface_read_context
   value="$(awk -v label="$label" '
     $0 ~ "\\*\\*" label "\\*\\*" {
       sub(/.*\\*\\*[^*]+\\*\\*:[[:space:]]*/, "", $0);
       print $0;
       exit
     }
-  ' "$TASK_FILE")"
+  ' "$TASK_SURFACE_READ_CONTENT_PATH")"
+  cleanup_task_surface_read_context
   value="$(trim "$value")"
   if is_placeholder_value "$value"; then
     echo "Not provided"
@@ -370,7 +440,9 @@ read_task_field() {
 
 read_current_dp() {
   local raw
-  raw="$(awk -F':' '/\\*\\*Current DP\\*\\*/ {print $2; exit}' "$TASK_FILE")"
+  resolve_task_surface_read_context
+  raw="$(awk -F':' '/\\*\\*Current DP\\*\\*/ {print $2; exit}' "$TASK_SURFACE_READ_CONTENT_PATH")"
+  cleanup_task_surface_read_context
   raw="$(trim "$raw")"
   if [[ -n "$raw" ]]; then
     raw="$(printf '%s' "$raw" | awk '{print $1}')"

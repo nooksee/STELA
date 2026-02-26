@@ -29,6 +29,47 @@ normalize_path_token() {
   printf '%s' "$value"
 }
 
+emit_diag_field() {
+  local key="$1"
+  local value="${2-}"
+  printf '  %s: %s\n' "$key" "$value" >&2
+  return 0
+}
+
+emit_diag_path_field() {
+  local key="$1"
+  local value="${2-}"
+  if [[ -n "$value" ]]; then
+    value="$(normalize_path_token "$value")"
+  else
+    value="(none)"
+  fi
+  emit_diag_field "$key" "$value"
+  return 0
+}
+
+die_guard_failure() {
+  local message="$1"
+  local guard_condition="$2"
+  shift 2
+
+  echo "ERROR: ${message}" >&2
+  emit_diag_field "guard_condition" "$guard_condition"
+
+  while [[ "$#" -ge 2 ]]; do
+    local key="$1"
+    local value="$2"
+    if [[ "$key" == *_path ]]; then
+      emit_diag_path_field "$key" "$value"
+    else
+      emit_diag_field "$key" "$value"
+    fi
+    shift 2
+  done
+
+  exit 1
+}
+
 # ---------------------------------------------------------------------------
 # Leaf Primitives (SSOT for distributed telemetry leaf emission)
 # ---------------------------------------------------------------------------
