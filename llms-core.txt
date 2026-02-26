@@ -164,11 +164,11 @@ When reporting, include:
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-02-25-298978a48.md
+archives/surfaces/PoW-2026-02-25-10e5cc3a2.md
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-02-25-298978a48.md
+archives/surfaces/SoP-2026-02-25-10e5cc3a2.md
 
 
 ## TASK.md
@@ -232,13 +232,13 @@ Input discipline (hard rule):
 - DP writer must not include pasted bundles (OPEN, DUMP payloads, manifests) inside the DP body.
 - Canon pointers only. Evidence belongs in storage artifacts and RESULTS.
 
-### DP-OPS-0114: `ops/bin/llms` Refresh Side-Effect Documentation
+### DP-OPS-0117: `CONTRACTOR-NOTES.md` Surface Formalization
 
 ## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Required Work Branch: work/DP-OPS-0114-llms-refresh-docs-2026-02-25
-Base HEAD: 10e5cc3a2
-Freshness Stamp: 2026-02-25
+Required Work Branch: work/DP-OPS-0117-contractor-notes-surface-2026-02-26
+Base HEAD: cca423d7b
+Freshness Stamp: 2026-02-26
 Note: FRESHNESS_STAMP must be YYYY-MM-DD format only. No trace tokens, no timestamps, no other text. Certify rejects all other forms. dp.sh enforces at lint time.
 
 Required local re-check (worker runs; paste outputs in RESULTS):
@@ -270,7 +270,7 @@ STOP if any preflight check fails.
 ### CbC Design Discipline Preflight (TASK.md §3.1.1)
 Required when the DP objective adds, modifies, or replaces a linter, script, guard, or validation binary.
 For non-tooling DPs: state "Not applicable" with a one-line justification.
-Not applicable. This DP adds no linter, script, guard, or validation binary. Both target changes are documentation edits only.
+Not applicable. This DP creates a surface template (`ops/src/surfaces/notes.md.tpl`) and updates closeout documentation and manifests; it does not add, modify, or replace any linter, script, guard, or validation binary. The `tools/lint/dp.sh` change in this packet is a SHA256 constant update only — a mechanical hash synchronization required whenever `ops/src/surfaces/dp.md.tpl` changes — and introduces no new check logic, function, or behavioral path.
 
 ## 3.2 Required Context Load (Read Before Doing Anything)
 
@@ -301,38 +301,41 @@ Notes:
 5 Path rule uses existing repo paths or explicit `NEW` changelog markers and forbids globs and brace expansion
 
 ### 3.2.2 DP-scoped load order (per DP)
-Read in this order before any edits begin:
-1. `docs/MANUAL.md` — target file; read the full Refresh phase guidance (Step 4 of the Closeout Cycle) before editing; locate the exact insertion anchor.
-2. `docs/ops/specs/binaries/llms.md` — read to confirm the `ops/lib/manifests/OPS.md` side-effect description before authoring the MANUAL notice.
-3. `ops/src/surfaces/dp.md.tpl` — target template file; read §3.5 Closeout in full before editing; locate the exact insertion anchor.
+- `ops/src/surfaces/notes.md.tpl` — does not exist at BASE HEAD; worker confirms absence before creating. No read required.
+- `ops/src/manifests/context.md.tpl` — source template for `ops/lib/manifests/CONTEXT.md`; worker reads the full file before editing to identify the last entry in the Members list.
+- `ops/lib/manifests/CONTEXT.md` — generated output; worker reads the full file to confirm the current member set before regeneration. Do not manually edit this file.
+- `ops/src/surfaces/dp.md.tpl` — DP structure template; worker reads the full file, specifically the `## 3.5 Closeout (Mandatory Routing)` section, to identify the exact insertion point for the CONTRACTOR-NOTES.md production requirement.
+- `tools/lint/dp.sh` — worker reads the line containing `CANONICAL_DP_TEMPLATE_SHA256` to record the existing value before update.
+- `docs/MANUAL.md` — operator manual; worker reads the full Closeout Cycle section to identify the exact location for the CONTRACTOR-NOTES.md surface documentation, specifically the area following the `2.5 Post-Work Audit` subsection.
 
 ## 3.3 Scope and Safety
 Objective:
-Document the expected side effect of `ops/bin/llms`: the binary regenerates `ops/lib/manifests/OPS.md` during Refresh in addition to the `llms*.txt` bundle outputs. Contractors must know this is expected compile-event behavior, that the pre-commit hook protects only the commit boundary and does not prevent the working-tree modification, and that `git restore` plus a re-run of `tools/lint/integrity.sh` is required if `OPS.md` is not in the active DP allowlist. Add a companion reminder in the DP closeout instructions template referencing this notice.
+Formalize `CONTRACTOR-NOTES.md` as a defined closing surface by: creating `ops/src/surfaces/notes.md.tpl` with a four-field required schema; registering `storage/handoff/CONTRACTOR-NOTES.md` in `ops/src/manifests/context.md.tpl` and regenerating `ops/lib/manifests/CONTEXT.md`; extending `ops/src/surfaces/dp.md.tpl` §3.5 to require CONTRACTOR-NOTES.md production before operator pre-audit review and updating `tools/lint/dp.sh` with the new template SHA256; and documenting authoring and routing expectations in `docs/MANUAL.md`.
 
 In scope:
-- `docs/MANUAL.md` — UPDATE: add an explicit `ops/bin/llms` Refresh side-effect notice inside the existing Refresh step (Step 4 of the Closeout Cycle). The notice must cover the following five points in order:
-  1. `ops/bin/llms` is a compile event. It regenerates `ops/lib/manifests/OPS.md` in addition to `llms*.txt` bundle outputs. This is expected behavior.
-  2. The pre-commit hook (`.github/hooks/llms`) protects against committing `OPS.md` out-of-scope. It does not prevent the working-tree modification.
-  3. If `OPS.md` is not in the active DP allowlist, restore it after Refresh: `git restore --source=HEAD --staged --worktree -- ops/lib/manifests/OPS.md`, then re-run `bash tools/lint/integrity.sh` to confirm clean state before proceeding.
-  4. If `OPS.md` content genuinely needs updating, add it to the allowlist and authorize the change explicitly before proceeding.
-  5. OPEN/DUMP Refresh can legitimately increase porcelain entries even when the DP is docs-only; account for this before running `integrity.sh`.
-- `ops/src/surfaces/dp.md.tpl` — UPDATE: add a single Refresh side-effect reminder line in §3.5 Closeout, immediately after the existing `- Ensure the next session begins with refreshed session artifacts and matching receipts.` line, referencing the MANUAL notice.
+- `ops/src/surfaces/notes.md.tpl` (NEW) — define the four-field schema: `Scope Confirmation:`, `Anomalies Encountered:`, `Open Items / Residue:`, and `Closing Schema Baseline:`. The `Closing Schema Baseline:` field uses current-schema-only wording (current six-label schema, post-0116+A baseline). The template includes a clarifying note that historical packet references may appear in narrative, but the field describes the active packet's current-schema assumptions unless the packet explicitly tests historical artifacts. Template must include YAML frontmatter with `template_type: surface`, `template_id: notes`, `template_version: 1`.
+- `ops/src/manifests/context.md.tpl` — append `- \`storage/handoff/CONTRACTOR-NOTES.md\`` to the Members list as the last entry.
+- `ops/lib/manifests/CONTEXT.md` — regenerated from `ops/src/manifests/context.md.tpl` by running `./ops/bin/compile` after the template edit. No direct manual edits permitted.
+- `ops/src/surfaces/dp.md.tpl` — in `## 3.5 Closeout (Mandatory Routing)`, insert one new bullet after the line `- Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.` requiring the contractor to produce `storage/handoff/CONTRACTOR-NOTES.md` using `ops/src/surfaces/notes.md.tpl` before operator pre-audit review.
+- `tools/lint/dp.sh` — update the value of `CANONICAL_DP_TEMPLATE_SHA256` to the SHA256 of the modified `ops/src/surfaces/dp.md.tpl`. This is a single-constant update; no check logic, function, or behavioral path changes.
+- `docs/MANUAL.md` — add a `### Contractor Notes Surface` subsection immediately following the `2.5 Post-Work Audit` subsection in the Closeout Cycle section, documenting: where the template lives, the four required fields and their intended content, the `Closing Schema Baseline:` current-schema convention, and that prior CONTRACTOR-NOTES.md files are not retroactively reformatted.
+- `storage/dp/active/allowlist.txt` — include all changed persistent repo-state files plus certify-generated ledger and TASK archive surfaces and compile archive wildcard.
 
 Out of scope:
-- `ops/bin/llms` implementation — no changes.
-- `.github/hooks/llms` pre-commit hook — no changes.
-- `ops/lib/manifests/OPS.md` content — not changed.
-- `docs/ops/specs/binaries/llms.md` — no changes; the existing spec already describes the side effect; this DP adds operator-facing guidance only.
-- Any code change of any kind.
-- Any closing-block schema, label, or toolchain topic — that is post-0116+A baseline; do not introduce closing-block changes here.
+- A linter for `CONTRACTOR-NOTES.md` — explicitly out of scope. This packet is template and documentation only. No new validator, lint gate, or schema enforcement binary for the notes surface is introduced.
+- `ops/bin/certify` — no changes. Certify fallback logic is unchanged.
+- Prior `CONTRACTOR-NOTES.md` files in `storage/handoff/` — not retroactively reformatted to the new schema.
+- Any other section of `tools/lint/dp.sh` beyond the `CANONICAL_DP_TEMPLATE_SHA256` constant update.
+- `docs/ops/specs/tools/lint/dp.md` — no changes. The dp.sh change is a hash constant update only and does not alter the check list documented in that spec.
+- Any change to `ops/bin/compile` behavior.
 
 Safety and invariants:
-- No manual edits to generated outputs (`ops/lib/manifests/OPS.md`, `llms*.txt`, `archives/*`).
-- No structural edits to TASK.md or the DP block.
-- Allowlist hard gate: every file changed must appear in `storage/dp/active/allowlist.txt` before `tools/lint/integrity.sh` runs.
-- Docs-only DP: no code changes are authorized in any file.
-- Closing-block schema assumption: current six-label schema only (post-0116+A baseline). No legacy or compatibility paths introduced.
+- No manual edits to generated outputs. `ops/lib/manifests/CONTEXT.md` carries `<!-- GENERATED FILE. DO NOT EDIT. -->`. Edit only the source template `ops/src/manifests/context.md.tpl`, then regenerate via `./ops/bin/compile`.
+- No structural edits to TASK or the DP boilerplate.
+- The allowlist hard gate enforces the exact file set; no unlisted file may be modified.
+- `ops/src/surfaces/dp.md.tpl` edits are limited to inserting one new bullet in `## 3.5`; no other section of the template may be modified.
+- `tools/lint/dp.sh` edits are limited to replacing the `CANONICAL_DP_TEMPLATE_SHA256` string value; no other line in dp.sh may be modified.
+- All existing lint gates must continue to pass after edits.
 
 Worker Constraints (SSOT injected):
 ## Section 1: Universal Template Rules
@@ -352,74 +355,158 @@ Target Files allowlist (hard gate):
 ## 3.4 Execution Plan (A-E)
 
 ### 3.4.1 State
-Repository is at HEAD `10e5cc3a2` on branch `main`. Working tree is clean. DP-OPS-0113 is closed; its archive leaf `archives/surfaces/TASK-DP-OPS-0113-298978a48.md` is present in the repository. Closing-block toolchain is current-schema-only (single six-label schema, post-0116+A baseline). `docs/MANUAL.md` Refresh phase guidance (Closeout Cycle Step 4) does not contain an explicit notice of the `ops/bin/llms` `OPS.md` working-tree side effect or the required restore procedure. `ops/src/surfaces/dp.md.tpl` §3.5 Closeout does not contain a Refresh side-effect reminder line.
+Branch `main` is at HEAD `cca423d7b`, the merge commit for DP-OPS-0114 (`ops/bin/llms` Refresh Side-Effect Documentation). Working tree is clean with zero porcelain entries. `TASK.md` is a single-line pointer to `archives/surfaces/TASK-DP-OPS-0114-10e5cc3a2.md`. `ops/src/surfaces/notes.md.tpl` does not exist in the repository. `storage/handoff/CONTRACTOR-NOTES.md` is not a member of `ops/src/manifests/context.md.tpl` or the generated `ops/lib/manifests/CONTEXT.md`. `ops/src/surfaces/dp.md.tpl` §3.5 does not reference CONTRACTOR-NOTES.md. `docs/MANUAL.md` does not document `CONTRACTOR-NOTES.md` as a required handoff surface. `CANONICAL_DP_TEMPLATE_SHA256` in `tools/lint/dp.sh` is currently `35c078b9236f5bb18d4dd471f2f7efc36734585f955a938e6992e8cf47588f44`.
 
 ### 3.4.2 Request
-1. Add an explicit, findable `ops/bin/llms` Refresh side-effect notice to `docs/MANUAL.md` under Closeout Cycle Step 4 (Refresh), covering all five documented points: the compile-event nature of the binary, the hook's commit-boundary-only scope, the `git restore` recovery command and integrity re-check, the allowlist authorization path for intentional `OPS.md` changes, and the porcelain-entry note.
-2. Add a single companion reminder line to `ops/src/surfaces/dp.md.tpl` §3.5 Closeout that references the MANUAL notice for the Refresh side effect.
-3. Update `storage/dp/active/allowlist.txt` to replace the DP-OPS-0113 entries with the DP-OPS-0114 scope entries and standard closeout paths.
-4. Run all required preflight and receipt gates. No code changes.
+Create `ops/src/surfaces/notes.md.tpl` with YAML frontmatter (`template_type: surface`, `template_id: notes`, `template_version: 1`) and four labeled fields — `Scope Confirmation:`, `Anomalies Encountered:`, `Open Items / Residue:`, and `Closing Schema Baseline:` — each with one-sentence authoring guidance. The `Closing Schema Baseline:` field guidance must state that the current six-label schema (post-0116+A baseline) is assumed and that an explicit exception is recorded here only when the packet intentionally tests historical artifacts.
+
+Append `- \`storage/handoff/CONTRACTOR-NOTES.md\`` to the Members list in `ops/src/manifests/context.md.tpl`, then run `./ops/bin/compile` to regenerate `ops/lib/manifests/CONTEXT.md`.
+
+In `ops/src/surfaces/dp.md.tpl`, in `## 3.5 Closeout (Mandatory Routing)`, insert the following bullet immediately after the line `- Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.`:
+```
+- Before handing work for operator pre-audit review, produce `storage/handoff/CONTRACTOR-NOTES.md` using `ops/src/surfaces/notes.md.tpl` as the schema. See `docs/MANUAL.md` Contractor Notes Surface for field definitions and routing.
+```
+
+Compute `sha256sum ops/src/surfaces/dp.md.tpl` and replace the value of `CANONICAL_DP_TEMPLATE_SHA256` in `tools/lint/dp.sh` with the 64-character hex digest from that output.
+
+In `docs/MANUAL.md`, in the Closeout Cycle section, insert a `### Contractor Notes Surface` subsection immediately after the `2.5 Post-Work Audit (Integrator; mandatory before COMMIT)` subsection.
+
+Update `storage/dp/active/allowlist.txt` to cover all changed files, the certify-generated surfaces, and the compile archive wildcard. Before running `ops/bin/certify`, update the three `archives/surfaces/` entries to the short SHA of the tip commit on the work branch.
 
 ### 3.4.3 Changelog
-- `docs/MANUAL.md` — UPDATE: add `ops/bin/llms` Refresh side-effect notice block under Closeout Cycle Step 4 (Refresh).
-- `ops/src/surfaces/dp.md.tpl` — UPDATE: add Refresh side-effect reminder line in §3.5 Closeout.
-- `storage/dp/active/allowlist.txt` — UPDATE: replace DP-OPS-0113 scope entries with DP-OPS-0114 scope entries and standard closeout paths.
+- NEW: `ops/src/surfaces/notes.md.tpl` — four-field CONTRACTOR-NOTES.md schema template.
+- UPDATE: `ops/src/manifests/context.md.tpl` — append `storage/handoff/CONTRACTOR-NOTES.md` to Members list.
+- UPDATE: `ops/lib/manifests/CONTEXT.md` — regenerated from updated source template via `./ops/bin/compile`; no direct manual edits.
+- UPDATE: `ops/src/surfaces/dp.md.tpl` — insert CONTRACTOR-NOTES.md production requirement bullet in `## 3.5 Closeout (Mandatory Routing)`.
+- UPDATE: `tools/lint/dp.sh` — replace `CANONICAL_DP_TEMPLATE_SHA256` value with SHA256 of modified `ops/src/surfaces/dp.md.tpl`.
+- UPDATE: `docs/MANUAL.md` — add `### Contractor Notes Surface` subsection to Closeout Cycle section.
+- UPDATE: `storage/dp/active/allowlist.txt` — cover all changed files plus certify-generated surfaces.
 
 ### 3.4.4 Patch / Diff
 
-**Step 1 — Update `storage/dp/active/allowlist.txt`**
+**Step 1.** Confirm `ops/src/surfaces/notes.md.tpl` does not exist:
+```
+ls ops/src/surfaces/notes.md.tpl
+```
+Expected: `No such file or directory`. If the file exists, STOP and report to the Integrator.
 
-Replace the full contents of `storage/dp/active/allowlist.txt` with the following entries:
+**Step 2.** Create `ops/src/surfaces/notes.md.tpl` with the following exact content:
+```
+---
+template_type: surface
+template_id: notes
+template_version: 1
+ff_target: operator-technical
+ff_band: "25-40"
+---
+# Contractor Notes — DP-OPS-0117
+
+## Scope Confirmation
+State what was executed versus what was scoped. Note any items deliberately not
+performed and state the reason for each omission.
+
+## Anomalies Encountered
+Describe friction items, unexpected behaviors, and workaround decisions encountered
+during execution. State "None." if no anomalies occurred.
+
+## Open Items / Residue
+List anything unresolved, non-blocking residue, or audit hazards remaining after
+execution. State "None." if all items are resolved.
+
+## Closing Schema Baseline
+State which closing schema was assumed for this packet. Default: current six-label
+schema (post-0116+A baseline). Historical packet references may appear in narrative
+text elsewhere, but this field describes only the active packet's schema assumptions.
+Record an explicit exception here only when this packet intentionally tests or touches
+historical artifacts or compatibility paths.
+```
+
+**Step 3.** Read `ops/src/manifests/context.md.tpl` in full. Confirm the last entry in the Members list is `- \`tools/lint/truth.sh\``.
+
+**Step 4.** In `ops/src/manifests/context.md.tpl`, append the following line as the new last entry in the Members list, immediately after the line `- \`tools/lint/truth.sh\``:
+```
+- `storage/handoff/CONTRACTOR-NOTES.md`
+```
+
+**Step 5.** Run `./ops/bin/compile`. Confirm the command exits zero. Confirm `ops/lib/manifests/CONTEXT.md` now contains `storage/handoff/CONTRACTOR-NOTES.md` in its Members list. Do not edit `ops/lib/manifests/CONTEXT.md` directly.
+
+**Step 6.** Read `ops/src/surfaces/dp.md.tpl` in full. Confirm the `## 3.5 Closeout (Mandatory Routing)` section contains the line:
+```
+- Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
+```
+
+**Step 7.** In `ops/src/surfaces/dp.md.tpl`, in `## 3.5 Closeout (Mandatory Routing)`, insert the following line immediately after the line confirmed in Step 6:
+```
+- Before handing work for operator pre-audit review, produce `storage/handoff/CONTRACTOR-NOTES.md` using `ops/src/surfaces/notes.md.tpl` as the schema. See `docs/MANUAL.md` Contractor Notes Surface for field definitions and routing.
+```
+
+**Step 8.** Compute the SHA256 of the modified `ops/src/surfaces/dp.md.tpl`:
+```
+sha256sum ops/src/surfaces/dp.md.tpl
+```
+Record the 64-character hex digest (first whitespace-delimited token in the output).
+
+**Step 9.** In `tools/lint/dp.sh`, replace the value of `CANONICAL_DP_TEMPLATE_SHA256` with the digest recorded in Step 8. The replacement targets exactly this line:
+```
+CANONICAL_DP_TEMPLATE_SHA256="35c078b9236f5bb18d4dd471f2f7efc36734585f955a938e6992e8cf47588f44"
+```
+After the edit, the line must read:
+```
+CANONICAL_DP_TEMPLATE_SHA256="<64-character hex digest from Step 8>"
+```
+No other line in `tools/lint/dp.sh` may be modified.
+
+**Step 10.** Read `docs/MANUAL.md`. Identify the `2.5 Post-Work Audit (Integrator; mandatory before COMMIT)` subsection within the Closeout Cycle section. Confirm its closing line ends with `If scope is clean: proceed to step 3.`
+
+**Step 11.** In `docs/MANUAL.md`, immediately after the paragraph ending with `If scope is clean: proceed to step 3.` and before `3. Harvest`, insert the following subsection:
+```markdown
+### Contractor Notes Surface
+The Contractor creates and populates `storage/handoff/CONTRACTOR-NOTES.md` using
+`ops/src/surfaces/notes.md.tpl` as the schema before the operator's post-work audit
+review (before step 2.5). This file is not Operator-authored and is not deferred to
+a later session.
+
+Required fields:
+- `Scope Confirmation:` — what was executed versus what was scoped; note any conditional
+  skips with reasons.
+- `Anomalies Encountered:` — friction items, unexpected behaviors, workaround decisions.
+- `Open Items / Residue:` — anything unresolved, non-blocking residue, or audit hazards.
+- `Closing Schema Baseline:` — explicit declaration that the current six-label schema was
+  assumed (post-0116+A baseline), or an explicit exception note if the packet
+  intentionally touches historical artifacts or compatibility paths. Historical packet
+  references may appear in narrative text; this field records only the active packet's
+  schema assumptions.
+
+Prior `CONTRACTOR-NOTES.md` files in `storage/handoff/` are not retroactively reformatted
+to this schema.
+
+Routing: `storage/handoff/CONTRACTOR-NOTES.md` is registered as a handoff surface member
+in `ops/lib/manifests/CONTEXT.md`.
+```
+
+**Step 12.** Update `storage/dp/active/allowlist.txt` to contain exactly the following entries:
 ```
 TASK.md
 PoW.md
 SoP.md
-docs/MANUAL.md
+ops/src/surfaces/notes.md.tpl
+ops/src/manifests/context.md.tpl
+ops/lib/manifests/CONTEXT.md
 ops/src/surfaces/dp.md.tpl
+tools/lint/dp.sh
+docs/MANUAL.md
 storage/dp/active/allowlist.txt
-storage/handoff/CLOSING-DP-OPS-0114.md
+storage/handoff/CLOSING-DP-OPS-0117.md
 llms.txt
 llms-core.txt
 llms-full.txt
 archives/manifests/compile-*.md
+archives/surfaces/SoP-2026-02-26-cca423d7b.md
+archives/surfaces/PoW-2026-02-26-cca423d7b.md
+archives/surfaces/TASK-DP-OPS-0117-cca423d7b.md
 ```
 
-Note: certify-generated `archives/surfaces/` leaf paths for SoP, PoW, and TASK (`archives/surfaces/SoP-*.md`, `archives/surfaces/PoW-*.md`, `archives/surfaces/TASK-DP-OPS-0114-*.md`) are not known at draft time because the filename includes the git short hash at certification time. Per `docs/MANUAL.md` §Generate Results pre-certify allowlist declaration: before invoking `ops/bin/certify`, add the three specific `archives/surfaces/` leaf paths to `storage/dp/active/allowlist.txt` once their filenames are determined from `git diff --name-only` output during the pre-certify state snapshot.
-
-**Step 2 — Edit `docs/MANUAL.md`: add Refresh side-effect notice**
-
-Locate the Refresh step block in the Closeout Cycle section. The anchor line is:
-```
-./ops/bin/llms --out-dir="$(pwd)"
-```
-
-Immediately after that line and before the `Compile snapshot policy:` line, insert the following block:
-```
-`ops/bin/llms` Refresh Side-Effect Notice:
-- `ops/bin/llms` is a compile event. It regenerates `ops/lib/manifests/OPS.md` in addition to `llms*.txt` bundle outputs. This is expected behavior, not a defect.
-- The pre-commit hook (`.github/hooks/llms`) protects against committing `OPS.md` out-of-scope at the commit boundary. It does not prevent the working-tree modification from occurring during Refresh.
-- If `OPS.md` is not in the active DP allowlist, restore it after Refresh before running `tools/lint/integrity.sh`:
-  `git restore --source=HEAD --staged --worktree -- ops/lib/manifests/OPS.md`
-  Then re-run `bash tools/lint/integrity.sh` to confirm clean state before proceeding.
-- If `OPS.md` content genuinely needs updating, add it to the allowlist and authorize the change explicitly before proceeding.
-- OPEN/DUMP Refresh can legitimately produce porcelain entries (e.g., modified `OPS.md`, new `archives/manifests/compile-*.md` leaves) even when the DP is docs-only. Account for these before running `integrity.sh` or interpreting `git status --porcelain` output.
-```
-
-**Step 3 — Edit `ops/src/surfaces/dp.md.tpl`: add Refresh reminder in §3.5**
-
-Locate §3.5 Closeout in `ops/src/surfaces/dp.md.tpl`. The anchor line is:
-```
-- Ensure the next session begins with refreshed session artifacts and matching receipts.
-```
-
-Immediately after that line, insert the following line:
-```
-- Refresh side-effect: `ops/bin/llms` regenerates `ops/lib/manifests/OPS.md` as a compile event; if `OPS.md` is not in the allowlist, restore it before running `integrity.sh`. See `docs/MANUAL.md` Refresh side-effect notice for the full procedure.
-```
-
-**Step 4 — Maintain closing sidecar**
-
-Create and populate `storage/handoff/CLOSING-DP-OPS-0114.md` using `ops/src/surfaces/closing.md.tpl` as the schema. Maintain this file throughout execution. It must reflect observable reality only before certify runs.
+**Step 13.** Before running `ops/bin/certify`, update the three `archives/surfaces/` entries in `storage/dp/active/allowlist.txt` to use the short SHA of the tip commit on the work branch at the time of certification. Run `git rev-parse --short HEAD` on the work branch to obtain the value, then replace `cca423d7b` in the three archive surface paths with that value.
 
 ### 3.4.5 Receipt (Proofs to collect) - MUST RUN
 
@@ -436,14 +523,21 @@ Create and populate `storage/handoff/CLOSING-DP-OPS-0114.md` using `ops/src/surf
 
 **DP-specific receipt commands (scope-specific; author below):**
 Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by certify replay. Use literal values only. dp.sh enforces at lint time.
-- bash tools/lint/truth.sh
-- grep -n "ops/lib/manifests/OPS.md" docs/MANUAL.md
-- grep -n "Refresh side-effect" ops/src/surfaces/dp.md.tpl
+- bash tools/lint/dp.sh --test
+- sha256sum ops/src/surfaces/dp.md.tpl
+- grep -n "CANONICAL_DP_TEMPLATE_SHA256" tools/lint/dp.sh
+- grep -n "CONTRACTOR-NOTES" ops/src/surfaces/dp.md.tpl
+- grep -n "CONTRACTOR-NOTES" ops/src/manifests/context.md.tpl
+- grep -n "CONTRACTOR-NOTES" ops/lib/manifests/CONTEXT.md
+- grep -n "CONTRACTOR-NOTES" docs/MANUAL.md
+- grep -n "notes.md.tpl" docs/MANUAL.md
+- wc -l ops/src/surfaces/notes.md.tpl
 
 ## 3.5 Closeout (Mandatory Routing)
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
+- Before handing work for operator pre-audit review, produce `storage/handoff/CONTRACTOR-NOTES.md` using `ops/src/surfaces/notes.md.tpl` as the schema. See `docs/MANUAL.md` Contractor Notes Surface for field definitions and routing.
 - Run prune hygiene: ./ops/bin/prune --scrub.
 - Regenerate session artifacts: `./ops/bin/open --out=auto`
 - Capture updated platform state: `./ops/bin/dump --scope=platform --format=chatgpt --out=auto`
@@ -451,9 +545,9 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 - Refresh side-effect: `ops/bin/llms` regenerates `ops/lib/manifests/OPS.md` as a compile event; if `OPS.md` is not in the allowlist, restore it before running `integrity.sh`. See `docs/MANUAL.md` Refresh side-effect notice for the full procedure.
 
 ### 3.5.1 Mandatory Closing Block
-Closing block content is generated exclusively by `ops/bin/certify` from the closing sidecar at `storage/handoff/CLOSING-DP-OPS-0114.md` at certification time. Do not author, predict, populate, or approximate any closing block field at draft time or during execution. The closing sidecar is the only human-authored narrative input certify ingests. Certify generates all of the following from observable repository state: Primary Commit Header, Pull Request Title, Pull Request Description, Final Squash Stub, Extended Technical Manifest, and Review Conversation Starter.
+Closing block content is generated exclusively by `ops/bin/certify` from the closing sidecar at `storage/handoff/CLOSING-DP-OPS-0117.md` at certification time. Do not author, predict, populate, or approximate any closing block field at draft time or during execution. The closing sidecar is the only human-authored narrative input certify ingests. Certify generates all of the following from observable repository state: Primary Commit Header, Pull Request Title, Pull Request Description, Final Squash Stub, Extended Technical Manifest, and Review Conversation Starter.
 
-Before running certify, confirm `storage/handoff/CLOSING-DP-OPS-0114.md` has been maintained throughout execution and reflects observable reality only.
+Before running certify, confirm `storage/handoff/CLOSING-DP-OPS-0117.md` has been maintained throughout execution and reflects observable reality only.
 
 Fields certify generates from the closing sidecar and repository state:
 - Primary Commit Header

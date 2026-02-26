@@ -101,6 +101,30 @@ If scope was exceeded, a boundary condition was not anticipated, or an authoriza
 
 If scope is clean: proceed to step 3.
 
+### Contractor Notes Surface
+The Contractor creates and populates `storage/handoff/CONTRACTOR-NOTES.md` using
+`ops/src/surfaces/notes.md.tpl` as the schema before the operator's post-work audit
+review (before step 2.5). This file is not Operator-authored and is not deferred to
+a later session.
+
+Required fields:
+- `Scope Confirmation:` — what was executed versus what was scoped; note any conditional
+  skips with reasons.
+- `Anomalies Encountered:` — friction items, unexpected behaviors, workaround decisions.
+- `Open Items / Residue:` — anything unresolved, non-blocking residue, or audit hazards.
+- `Closing Schema Baseline:` — explicit declaration that the current six-label schema was
+  assumed (post-0116+A baseline), or an explicit exception note if the packet
+  intentionally touches historical artifacts or compatibility paths. Historical packet
+  references may appear in narrative text; this field records only the active packet's
+  schema assumptions.
+
+Prior `CONTRACTOR-NOTES.md` files in `storage/handoff/` are not retroactively reformatted
+to this schema.
+
+Routing: `storage/handoff/CONTRACTOR-NOTES.md` is a closeout-time handoff surface under
+`storage/handoff/`. It is required by closeout procedure and DP routing, but it is not a
+global CONTEXT manifest dependency because it is produced late in the session.
+
 3. Harvest
 Run only if new reusable patterns exist.
 ~~~bash
