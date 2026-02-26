@@ -365,7 +365,7 @@ check_task_dashboard() {
     "- Pull Request Title"
     "- Pull Request Description"
     "- Final Squash Stub"
-    "- Extended Technical Manifest"
+    "- Commit Message (Extended Description)"
     "- Review Conversation Starter"
   )
   # Receipt proof token: certify-routed format

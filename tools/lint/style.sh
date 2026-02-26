@@ -153,7 +153,7 @@ check_closing_block_lead_words() {
           || line ~ /^Pull Request Title[[:space:]]*$/ \
           || line ~ /^Pull Request Description[[:space:]]*$/ \
           || line ~ /^Final Squash Stub[[:space:]]*$/ \
-          || line ~ /^Extended Technical Manifest[[:space:]]*$/ \
+          || line ~ /^Commit Message \(Extended Description\)[[:space:]]*$/ \
           || line ~ /^Review Conversation Starter[[:space:]]*$/
       }
 
@@ -280,8 +280,8 @@ check_closing_block_manifest_paths() {
     fi
 
     local schema_kind
-    local manifest_start_regex='^Extended Technical Manifest[[:space:]]*$'
-    local manifest_field_name="Extended Technical Manifest"
+    local manifest_start_regex='^Commit Message \(Extended Description\)[[:space:]]*$'
+    local manifest_field_name="Commit Message (Extended Description)"
     schema_kind="$(detect_closing_sidecar_schema_kind "$file")"
     if [[ "$schema_kind" != "current" ]]; then
       continue
@@ -299,7 +299,7 @@ check_closing_block_manifest_paths() {
             || line ~ /^Pull Request Title[[:space:]]*$/ \
             || line ~ /^Pull Request Description[[:space:]]*$/ \
             || line ~ /^Final Squash Stub[[:space:]]*$/ \
-            || line ~ /^Extended Technical Manifest[[:space:]]*$/ \
+            || line ~ /^Commit Message \(Extended Description\)[[:space:]]*$/ \
             || line ~ /^Review Conversation Starter[[:space:]]*$/
         }
         $0 ~ start_regex { in_block=1; next }
@@ -363,7 +363,7 @@ check_closing_block_pr_description_markdown() {
           || line ~ /^Pull Request Title[[:space:]]*$/ \
           || line ~ /^Pull Request Description[[:space:]]*$/ \
           || line ~ /^Final Squash Stub[[:space:]]*$/ \
-          || line ~ /^Extended Technical Manifest[[:space:]]*$/ \
+          || line ~ /^Commit Message \(Extended Description\)[[:space:]]*$/ \
           || line ~ /^Review Conversation Starter[[:space:]]*$/
       }
       /^Pull Request Description[[:space:]]*$/ { in_block=1; next }

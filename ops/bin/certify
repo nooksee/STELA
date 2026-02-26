@@ -256,7 +256,7 @@ validate_closing_block_sidecar() {
     "Pull Request Title"
     "Pull Request Description"
     "Final Squash Stub"
-    "Extended Technical Manifest"
+    "Commit Message (Extended Description)"
     "Review Conversation Starter"
   )
 
@@ -339,7 +339,7 @@ validate_closing_block_sidecar() {
   local in_manifest=0
   local found_manifest=0
   local manifest_count=0
-  local manifest_start_label="Extended Technical Manifest"
+  local manifest_start_label="Commit Message (Extended Description)"
   local manifest_end_label="Review Conversation Starter"
 
   local raw_line=""
@@ -580,7 +580,7 @@ fixture
 Final Squash Stub
 fixture
 
-Extended Technical Manifest
+Commit Message (Extended Description)
 ops/bin/certify{invalid}
 
 Review Conversation Starter
@@ -610,6 +610,28 @@ emit_surface_leaf_and_pointer() {
   if head_pointer="$(read_surface_head_pointer "$surface_abs_path")"; then
     previous="$head_pointer"
     source_path="${REPO_ROOT}/${head_pointer}"
+    # Certify leaf names are deterministic (packet/date/hash). If certify is rerun on
+    # the same HEAD before commit, the head pointer can already equal the destination
+    # leaf path. Preserve the existing leaf's previous-pointer chain instead of writing
+    # a self-referential previous field.
+    if [[ "$head_pointer" == "$leaf_rel_path" && -f "$source_path" ]]; then
+      local existing_previous
+      existing_previous="$(awk '
+        BEGIN { in_frontmatter=0 }
+        NR == 1 && $0 == "---" { in_frontmatter=1; next }
+        in_frontmatter && $0 == "---" { exit }
+        in_frontmatter && /^previous:[[:space:]]*/ {
+          line=$0
+          sub(/^previous:[[:space:]]*/, "", line)
+          print line
+          exit
+        }
+      ' "$source_path")"
+      existing_previous="$(trim "$existing_previous")"
+      if [[ -n "$existing_previous" ]]; then
+        previous="$existing_previous"
+      fi
+    fi
   fi
 
   local body_tmp="${TMP_DIR}/snapshot-${surface_rel_path##*/}.body"

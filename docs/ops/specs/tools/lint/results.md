@@ -23,6 +23,6 @@ Mode behavior is intentionally different: explicit path mode applies strict hash
 ## Closing Block Schema Authority
 `ops/bin/certify` is the sole authority for accepted Mandatory Closing Block label schemas in certification-format RESULTS receipts. `tools/lint/results.sh` must remain synchronized with certify's emitted closing block labels.
 
-The accepted RESULTS closing block schema is the current six-label form: `Primary Commit Header`, `Pull Request Title`, `Pull Request Description`, `Final Squash Stub`, `Extended Technical Manifest`, `Review Conversation Starter`.
+The accepted RESULTS closing block schema is the current six-label form: `Primary Commit Header`, `Pull Request Title`, `Pull Request Description`, `Final Squash Stub`, `Commit Message (Extended Description)`, `Review Conversation Starter`.
 
 All six schema fields are required and must be non-empty. Placeholder text is rejected.

@@ -96,7 +96,7 @@ What good looks like: `Main history now includes explicit six-field closing sema
 
 What bad looks like: `Define closing block field semantics in RESULTS surface spec.` Failure mode: commit-header echo that repeats verb and subject instead of framing trunk outcome.
 
-### Field: Extended Technical Manifest
+### Field: Commit Message (Extended Description)
 Audience: Automated tools and future archaeology.
 
 Job: A newline-separated list of file paths. Zero prose. Deliberately boring. Machine-readable and complete.

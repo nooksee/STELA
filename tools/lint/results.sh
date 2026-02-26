@@ -154,7 +154,7 @@ required_closing_labels_current=(
   "^Pull Request Title[[:space:]]*$"
   "^Pull Request Description[[:space:]]*$"
   "^Final Squash Stub[[:space:]]*$"
-  "^Extended Technical Manifest[[:space:]]*$"
+  "^Commit Message \\(Extended Description\\)[[:space:]]*$"
   "^Review Conversation Starter[[:space:]]*$"
 )
 
@@ -261,17 +261,17 @@ for target in "${targets[@]}"; do
   fi
 
   strict_value="$(
-    extract_field_block "$target" '^Final Squash Stub[[:space:]]*$' '^Extended Technical Manifest[[:space:]]*$'
+    extract_field_block "$target" '^Final Squash Stub[[:space:]]*$' '^Commit Message \\(Extended Description\\)[[:space:]]*$'
   )"
   if ! has_nonempty_content "$strict_value"; then
     fail "${rel_target}: Final Squash Stub value is empty"
   fi
 
   strict_value="$(
-    extract_field_block "$target" '^Extended Technical Manifest[[:space:]]*$' '^Review Conversation Starter[[:space:]]*$'
+    extract_field_block "$target" '^Commit Message \\(Extended Description\\)[[:space:]]*$' '^Review Conversation Starter[[:space:]]*$'
   )"
   if ! has_nonempty_content "$strict_value"; then
-    fail "${rel_target}: Extended Technical Manifest value is empty"
+    fail "${rel_target}: Commit Message (Extended Description) value is empty"
   fi
 
   strict_value="$(
