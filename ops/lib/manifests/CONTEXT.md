@@ -16,6 +16,5 @@
 - `ops/lib/manifests/DISCOVERY.md`
 - `ops/lib/manifests/OPS.md`
 - `ops/lib/scripts/synthesize.sh`
-- `storage/handoff/CONTRACTOR-NOTES.md`
 - `tools/lint/context.sh`
 - `tools/lint/truth.sh`

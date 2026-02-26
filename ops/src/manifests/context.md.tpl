@@ -20,4 +20,3 @@ ff_band: "10-20"
 - `llms-full.txt`
 - `tools/lint/context.sh`
 - `tools/lint/truth.sh`
-- `storage/handoff/CONTRACTOR-NOTES.md`

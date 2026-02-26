@@ -121,8 +121,9 @@ Required fields:
 Prior `CONTRACTOR-NOTES.md` files in `storage/handoff/` are not retroactively reformatted
 to this schema.
 
-Routing: `storage/handoff/CONTRACTOR-NOTES.md` is registered as a handoff surface member
-in `ops/lib/manifests/CONTEXT.md`.
+Routing: `storage/handoff/CONTRACTOR-NOTES.md` is a closeout-time handoff surface under
+`storage/handoff/`. It is required by closeout procedure and DP routing, but it is not a
+global CONTEXT manifest dependency because it is produced late in the session.
 
 3. Harvest
 Run only if new reusable patterns exist.
