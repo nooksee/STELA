@@ -9,6 +9,7 @@ tools/lint/dp.sh
 docs/MANUAL.md
 storage/dp/active/allowlist.txt
 storage/handoff/CLOSING-DP-OPS-0117.md
+storage/handoff/CLOSING-DP-OPS-0118.md
 llms.txt
 llms-core.txt
 llms-full.txt
@@ -16,3 +17,6 @@ archives/manifests/compile-*.md
 archives/surfaces/SoP-2026-02-26-cca423d7b.md
 archives/surfaces/PoW-2026-02-26-cca423d7b.md
 archives/surfaces/TASK-DP-OPS-0117-cca423d7b.md
+archives/surfaces/SoP-2026-02-26-1d32e5522.md
+archives/surfaces/PoW-2026-02-26-1d32e5522.md
+archives/surfaces/TASK-DP-OPS-0118-1d32e5522.md

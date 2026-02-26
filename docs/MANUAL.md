@@ -125,6 +125,58 @@ Routing: `storage/handoff/CONTRACTOR-NOTES.md` is a closeout-time handoff surfac
 `storage/handoff/`. It is required by closeout procedure and DP routing, but it is not a
 global CONTEXT manifest dependency because it is produced late in the session.
 
+### dp.md.tpl Hash-Coupling Recovery
+
+**Authorized trigger condition:** `bash tools/lint/dp.sh TASK.md` fails with a canonical
+template hash mismatch immediately after `ops/src/surfaces/dp.md.tpl` was edited in the
+current work branch.
+
+This recovery procedure is authorized for this exact trigger condition only. Any other
+`dp.sh` failure requires a stop and Integrator review, and may require an addendum before
+work continues.
+
+**Recovery steps (run in order; do not skip):**
+
+1. Compute the new template hash:
+   ~~~bash
+   sha256sum ops/src/surfaces/dp.md.tpl
+   ~~~
+   If `sha256sum` is not available, use: `shasum -a 256 ops/src/surfaces/dp.md.tpl`
+
+2. Update the `CANONICAL_DP_TEMPLATE_SHA256` constant in `tools/lint/dp.sh` to the
+   computed hash value.
+
+3. Re-run the template hash preflight and confirm PASS:
+   ~~~bash
+   bash tools/lint/dp.sh --test
+   ~~~
+
+4. Re-run the full DP lint:
+   ~~~bash
+   bash tools/lint/dp.sh TASK.md
+   ~~~
+   If PASS: recovery is complete. If the lint fails on normalized-structure mismatch
+   (not a hash mismatch): proceed to step 5.
+
+5. Rerender `TASK.md` mechanically using the canonical generator with the same arguments
+   as the original draft invocation:
+   ~~~bash
+   ./ops/bin/draft --id=<DP_ID> ...
+   ~~~
+   Do not hand-edit structural boilerplate in the rendered output.
+
+6. Re-run `bash tools/lint/dp.sh TASK.md` and confirm PASS.
+
+**Documentation requirement:** When this recovery is used, record it in the
+`Anomalies Encountered` field of `storage/handoff/CONTRACTOR-NOTES.md`. Include:
+the triggering lint failure output, the `CANONICAL_DP_TEMPLATE_SHA256` value before
+and after the update, whether a TASK rerender (step 5) was required, and the final
+`bash tools/lint/dp.sh TASK.md` PASS confirmation.
+
+**Addendum path:** If a `dp.sh` failure does not match the authorized trigger condition
+above, do not apply this recovery. Stop, report to the Integrator, and await addendum
+authorization before proceeding.
+
 3. Harvest
 Run only if new reusable patterns exist.
 ~~~bash
