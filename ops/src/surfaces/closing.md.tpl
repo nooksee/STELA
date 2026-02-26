@@ -17,7 +17,7 @@ Final Squash Stub
 
 
 List file paths only — no prose, no commentary, no headings; this field is machine-readable and must be deliberately boring.
-Extended Technical Manifest
+Commit Message (Extended Description)
 
 
 Ask the question you actually want a reviewer to engage with — name the specific tradeoff or risk this DP surfaces; do not use generic approval-seeking stems.

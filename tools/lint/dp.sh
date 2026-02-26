@@ -20,7 +20,7 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="710391475b3c9fc56e143e504ce87bbbcc4e3412e6256cad8083e5043ccb9b73"
+CANONICAL_DP_TEMPLATE_SHA256="890e82b4f7a50e1a3b321c14c1b55f05e7c129562f07e1ccf43858532ee4aed9"
 CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/surfaces/addendum.md.tpl"
 CANONICAL_ADDENDUM_TEMPLATE_SHA256="42cb7586c6ed103e995730f1a8c34a1c7e0676b717c27dfb987950feeac7ec9e"
 TEMPLATE_RENDER_BIN="ops/bin/template"
@@ -1343,7 +1343,9 @@ TESTRESULTS
   cp "$tmp_valid" "$tmp_proposed_marker_bad"
   sed -i 's#^Required Work Branch: .*#Required Work Branch: PROPOSED-work/dp-ops-0000-2026-02-14#' "$tmp_proposed_marker_bad"
   failures=0
-  check_proposed_token_scan "$tmp_proposed_marker_bad"
+  # Expected-negative self-check: suppress emitted FAIL lines from the detector so
+  # successful --test runs do not contain contradictory FAIL/OK receipt evidence.
+  check_proposed_token_scan "$tmp_proposed_marker_bad" >/dev/null 2>&1
   if (( failures == 0 )); then
     rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok"
     echo "FAIL: --test expected direct PROPOSED provisional-marker scan failure" >&2

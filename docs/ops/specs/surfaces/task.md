@@ -45,7 +45,7 @@ Think of `TASK.md` like the control desk card that shows which packet is active 
 - Pull Request Title
 - Pull Request Description
 - Final Squash Stub
-- Extended Technical Manifest
+- Commit Message (Extended Description)
 - Review Conversation Starter
 
 When all six list items are present, `task.sh` accepts the TASK head via the `list_format_present` path and returns without further closing block checks.
