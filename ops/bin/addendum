@@ -100,11 +100,18 @@ extract_block() {
 
 extract_tail_after() {
   local path="$1"
-  local start_pattern="$2"
-  awk -v start_regex="$start_pattern" '
+  local start_text="$2"
+  awk -v needle="$start_text" '
     BEGIN { in_block=0 }
-    $0 ~ start_regex { in_block=1; next }
-    in_block { print }
+    {
+      if (in_block) {
+        print
+        next
+      }
+      if (index($0, needle) > 0) {
+        in_block=1
+      }
+    }
   ' "$path"
 }
 
@@ -170,7 +177,7 @@ validate_rendered_addendum() {
   operator_authorization="$(extract_block "$rendered_path" '^Operator Authorization:[[:space:]]*$' '^Base Packet:[[:space:]]*')"
   scope_delta="$(extract_block "$rendered_path" '^## A[.]2 Scope Delta[[:space:]]*$' '^## A[.]3 Addendum Objective[[:space:]]*$')"
   addendum_objective="$(extract_block "$rendered_path" '^## A[.]3 Addendum Objective[[:space:]]*$' '^## A[.]4 Context Load[[:space:]]*$')"
-  addendum_receipt="$(extract_tail_after "$rendered_path" '^\*\*Addendum-specific receipt commands:\*\*[[:space:]]*$')"
+  addendum_receipt="$(extract_tail_after "$rendered_path" '**Addendum-specific receipt commands:**')"
 
   [[ "$base_packet" == "$expected_base_dp" ]] || die "rendered BASE_DP_ID mismatch (expected ${expected_base_dp}, got ${base_packet:-<empty>})"
   [[ "$addendum_id" == "$expected_letter" ]] || die "rendered ADDENDUM_ID mismatch (expected ${expected_letter}, got ${addendum_id:-<empty>})"

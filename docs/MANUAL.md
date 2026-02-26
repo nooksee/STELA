@@ -30,6 +30,21 @@ Local hook activation (one time): run `git config core.hooksPath .github/hooks` 
 - Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md pointer references to the newest OPEN artifact and RESULTS receipts before any work continues; do not rewrite inline branch/hash state in TASK.md.
 - Clean after use: complete closeout receipts and start the next session from a fresh OPEN artifact with matching dump artifacts.
 
+### Pointer-First TASK Diagnostics (draft/manifest)
+`ops/bin/draft` and `ops/bin/manifest` treat `TASK.md` as pointer-first at runtime. When a guard fails on a TASK-coupled path, the diagnostic now prints a named `guard_condition` plus both:
+- `task_source_path` (usually `TASK.md`)
+- `task_resolved_path` (the archived TASK surface leaf actually checked when `TASK.md` is a pointer head)
+
+This is a legibility hardening change only. Guard pass/fail semantics are unchanged. CbC rationale: the pointer-first TASK head is an intentional structural design; the failure class here is cross-surface runtime coupling, so the proportionate fix is deterministic diagnostics rather than a new enforcement branch.
+
+#### Proof Matrix (diagnostic fields only; no behavior change)
+| Tool path | Deterministic hazard | Expected diagnostic fields |
+| :--- | :--- | :--- |
+| `ops/bin/draft` TASK marker-count guard | Section 3 marker count or active `### DP-` count is not exactly one on the resolved TASK surface | `guard_condition`, `task_source_path`, `task_resolved_path`, `observed_count`, `expected_count` |
+| `ops/bin/draft` TASK replacement guard | Active DP heading cannot be located for replacement under Section 3 | `guard_condition`, `task_source_path`, `task_resolved_path`, `replacement_source_path` |
+| `ops/bin/manifest` DP duplicate-id guard | Requested `DP_ID` already exists in active TASK content | `guard_condition`, `packet_id`, `task_source_path`, `task_resolved_path` |
+| `ops/lib/scripts/task.sh` TASK metadata pointer resolution guards | TASK head pointer is malformed, missing, or materializes to an empty body during metadata reads | source path and resolved path in the error text (pointer-vs-resolved recovery seam) |
+
 ## Closeout Cycle
 #### Closing Sidecar Authorship
 

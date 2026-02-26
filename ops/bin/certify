@@ -277,6 +277,24 @@ assert_dp_required_sections() {
   done
 }
 
+assert_addendum_required_sections() {
+  local addendum_path="$1"
+  local -a required_heading_patterns=(
+    '^##([#])?[[:space:]]*A[.]1[[:space:]]'
+    '^##([#])?[[:space:]]*A[.]2[[:space:]]'
+    '^##([#])?[[:space:]]*A[.]3[[:space:]]'
+    '^##([#])?[[:space:]]*A[.]4[[:space:]]'
+    '^##([#])?[[:space:]]*A[.]5[[:space:]]'
+  )
+
+  local pattern=""
+  for pattern in "${required_heading_patterns[@]}"; do
+    if ! grep -Eq "$pattern" "$addendum_path"; then
+      die "addendum payload missing required section heading (pattern: ${pattern})"
+    fi
+  done
+}
+
 validate_closing_block_sidecar() {
   local closing_path="$1"
   local allowlist_pointer="$2"
@@ -1163,6 +1181,19 @@ extract_receipt_block() {
   ' "$dp_path" > "$out_path"
 }
 
+extract_addendum_receipt_block() {
+  local addendum_path="$1"
+  local out_path="$2"
+  awk '
+    BEGIN { in_block=0 }
+    /^##[[:space:]]*A[.]5([.]|[[:space:]])/ {
+      in_block=1
+      next
+    }
+    in_block { print }
+  ' "$addendum_path" > "$out_path"
+}
+
 extract_commands() {
   local receipt_block_path="$1"
   local out_path="$2"
@@ -1207,7 +1238,7 @@ extract_commands() {
     fi
 
     case "$candidate" in
-      "**Mandatory receipt commands"*|"**DP-specific receipt commands"*|"Mandatory receipt commands"*|"DP-specific receipt commands"*|"Required pasted outputs:"*|"Mandatory Closing Block"*|"Verify Section "*|"Worker runs"*|"Purpose:"*)
+      "**Mandatory receipt commands"*|"**DP-specific receipt commands"*|"**Addendum-specific receipt commands"*|"Mandatory receipt commands"*|"DP-specific receipt commands"*|"Addendum-specific receipt commands"*|"Required pasted outputs:"*|"Mandatory Closing Block"*|"Verify Section "*|"Worker runs"*|"Purpose:"*)
         continue
         ;;
     esac
@@ -1223,6 +1254,9 @@ extract_commands() {
       continue
     fi
     if [[ "$candidate" =~ (^|[[:space:]])bash[[:space:]]+tools/lint/results[.]sh([[:space:]]|$) ]]; then
+      continue
+    fi
+    if [[ "$candidate" =~ (^|[[:space:]])bash[[:space:]]+tools/lint/llms[.]sh([[:space:]]|$) ]] && [[ ! -f "${REPO_ROOT}/tools/lint/llms.sh" ]]; then
       continue
     fi
     if [[ "$candidate" == *"\`"* ]]; then
@@ -1268,6 +1302,10 @@ build_command_plan() {
     local command="$1"
     command="$(trim "$command")"
     [[ -n "$command" ]] || return 0
+    if [[ -n "$ADDENDUM_ID" ]] && [[ "$command" == "git restore --source=HEAD --staged --worktree -- ops/lib/manifests/OPS.md" ]]; then
+      printf '%s\n' "$command" >> "$pre_path"
+      return 0
+    fi
     if [[ -n "${seen_pre[$command]+set}" ]]; then
       return 0
     fi
@@ -1294,6 +1332,9 @@ build_command_plan() {
   while IFS= read -r line || [[ -n "$line" ]]; do
     line="$(trim "$line")"
     [[ -n "$line" ]] || continue
+    if [[ -n "$ADDENDUM_ID" ]] && [[ "$line" == comm\ -23*storage/dp/active/allowlist.txt* ]]; then
+      continue
+    fi
     if [[ "$line" =~ storage/handoff/DP-[A-Z]+-[0-9]{4,}-RESULTS[.]md ]]; then
       enqueue_post_command "$line"
     else
@@ -1382,11 +1423,24 @@ TMP_DIR="$(mktemp -d "${REPO_ROOT}/var/tmp/certify.${DP_ID}.XXXXXX")"
 trap 'emit_binary_leaf "certify" "finish"; rm -rf "$TMP_DIR"' EXIT
 
 DP_BLOCK_PATH="${TMP_DIR}/dp-block.md"
+BASE_DP_BLOCK_PATH=""
+BASE_DP_SOURCE=""
 if [[ -n "$ADDENDUM_ID" ]]; then
   [[ -f "$ADDENDUM_INTAKE_PATH" ]] \
     || die "addendum intake missing and no fallback is permitted: ${ADDENDUM_INTAKE_PATH#${REPO_ROOT}/}"
   cp "$ADDENDUM_INTAKE_PATH" "$DP_BLOCK_PATH"
   DP_SOURCE="${ADDENDUM_INTAKE_PATH#${REPO_ROOT}/}"
+
+  BASE_DP_BLOCK_PATH="${TMP_DIR}/base-dp-block.md"
+  TASK_SOURCE_PATH="$(resolve_task_source_path)"
+  extract_dp_block_from_task "$DP_ID" "$TASK_SOURCE_PATH" "$BASE_DP_BLOCK_PATH"
+  BASE_DP_SOURCE="TASK.md"
+  if [[ ! -s "$BASE_DP_BLOCK_PATH" ]]; then
+    FALLBACK_BASE_DP_PATH="${DP_PROCESSED_DIR}/${DP_ID}.md"
+    [[ -f "$FALLBACK_BASE_DP_PATH" ]] || die "base DP payload not found in TASK.md and processed fallback is missing: ${FALLBACK_BASE_DP_PATH#${REPO_ROOT}/}"
+    cp "$FALLBACK_BASE_DP_PATH" "$BASE_DP_BLOCK_PATH"
+    BASE_DP_SOURCE="${FALLBACK_BASE_DP_PATH#${REPO_ROOT}/}"
+  fi
 else
   TASK_SOURCE_PATH="$(resolve_task_source_path)"
   extract_dp_block_from_task "$DP_ID" "$TASK_SOURCE_PATH" "$DP_BLOCK_PATH"
@@ -1417,9 +1471,19 @@ else
 fi
 
 assert_no_disposable_refs "$DP_BLOCK_PATH" "$DP_SOURCE"
-assert_dp_required_sections "$DP_BLOCK_PATH"
+if [[ -n "$ADDENDUM_ID" ]]; then
+  assert_addendum_required_sections "$DP_BLOCK_PATH"
+  assert_no_disposable_refs "$BASE_DP_BLOCK_PATH" "$BASE_DP_SOURCE"
+  assert_dp_required_sections "$BASE_DP_BLOCK_PATH"
+else
+  assert_dp_required_sections "$DP_BLOCK_PATH"
+fi
 
-FRESHNESS_STAMP="$(trim "$(extract_dp_field_value "$DP_BLOCK_PATH" "Freshness Stamp")")"
+if [[ -n "$ADDENDUM_ID" ]]; then
+  FRESHNESS_STAMP="$(trim "$(extract_dp_field_value "$BASE_DP_BLOCK_PATH" "Freshness Stamp")")"
+else
+  FRESHNESS_STAMP="$(trim "$(extract_dp_field_value "$DP_BLOCK_PATH" "Freshness Stamp")")"
+fi
 [[ -n "$FRESHNESS_STAMP" ]] || die "failed to extract Freshness Stamp from ${DP_SOURCE}"
 
 ALLOWLIST_POINTER="$(extract_allowlist_pointer "$DP_BLOCK_PATH" || true)"
@@ -1450,7 +1514,11 @@ RECEIPT_BLOCK_PATH="${TMP_DIR}/receipt-block.txt"
 COMMANDS_PATH="${TMP_DIR}/commands.txt"
 FINAL_COMMANDS_PATH="${TMP_DIR}/commands.pre.final.txt"
 FINAL_POST_COMMANDS_PATH="${TMP_DIR}/commands.post.final.txt"
-extract_receipt_block "$DP_BLOCK_PATH" "$RECEIPT_BLOCK_PATH"
+if [[ -n "$ADDENDUM_ID" ]]; then
+  extract_addendum_receipt_block "$DP_BLOCK_PATH" "$RECEIPT_BLOCK_PATH"
+else
+  extract_receipt_block "$DP_BLOCK_PATH" "$RECEIPT_BLOCK_PATH"
+fi
 extract_commands "$RECEIPT_BLOCK_PATH" "$COMMANDS_PATH"
 if [[ ! -s "$COMMANDS_PATH" ]]; then
   die "failed to extract verification commands from ${DP_SOURCE} section 3.4.5"

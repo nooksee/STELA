@@ -124,14 +124,35 @@ strip_surface_frontmatter() {
   ' "$source_path"
 }
 
+TASK_SURFACE_SOURCE_PATH=""
+TASK_SURFACE_RESOLVED_PATH=""
+TASK_SURFACE_CONTENT_PATH=""
+TASK_SURFACE_CLEANUP_PATH=""
+
+cleanup_task_surface_context() {
+  if [[ -n "$TASK_SURFACE_CLEANUP_PATH" ]]; then
+    rm -f "$TASK_SURFACE_CLEANUP_PATH"
+  fi
+  TASK_SURFACE_CLEANUP_PATH=""
+  return 0
+}
+
 resolve_task_surface_source() {
   local task_path="$1"
-  [[ -f "$task_path" ]] || die "missing TASK.md"
+  TASK_SURFACE_SOURCE_PATH="$task_path"
+  TASK_SURFACE_RESOLVED_PATH="$task_path"
+  TASK_SURFACE_CONTENT_PATH="$task_path"
+  TASK_SURFACE_CLEANUP_PATH=""
+
+  [[ -f "$task_path" ]] || die_guard_failure \
+    "missing TASK.md" \
+    "task_source_exists" \
+    "task_source_path" "$task_path" \
+    "task_resolved_path" "$task_path"
 
   local line_count
   line_count="$(awk 'END { print NR }' "$task_path")"
   if [[ "$line_count" != "1" ]]; then
-    printf '%s' "$task_path"
     return 0
   fi
 
@@ -143,21 +164,36 @@ resolve_task_surface_source() {
   fi
 
   if [[ ! "$pointer_path" =~ ^archives/surfaces/[A-Za-z0-9._/-]+\.md$ ]]; then
-    die "TASK.md is single-line but not a valid archives/surfaces pointer: ${pointer_path}"
+    die_guard_failure \
+      "TASK.md is single-line but not a valid archives/surfaces pointer: ${pointer_path}" \
+      "task_head_pointer_matches_archives_surfaces_pattern" \
+      "task_source_path" "$task_path" \
+      "task_resolved_path" "$pointer_path"
   fi
 
   local target_path="${REPO_ROOT}/${pointer_path}"
-  [[ -f "$target_path" ]] || die "TASK pointer target missing: ${pointer_path}"
+  TASK_SURFACE_RESOLVED_PATH="$target_path"
+  [[ -f "$target_path" ]] || die_guard_failure \
+    "TASK pointer target missing: ${pointer_path}" \
+    "task_head_pointer_target_exists" \
+    "task_source_path" "$task_path" \
+    "task_resolved_path" "$target_path"
 
   local materialized_path
   materialized_path="$(mktemp)"
   strip_surface_frontmatter "$target_path" > "$materialized_path"
   if [[ ! -s "$materialized_path" ]]; then
     rm -f "$materialized_path"
-    die "TASK pointer target has no materialized body: ${pointer_path}"
+    die_guard_failure \
+      "TASK pointer target has no materialized body: ${pointer_path}" \
+      "task_resolved_surface_materializes_to_nonempty_body" \
+      "task_source_path" "$task_path" \
+      "task_resolved_path" "$target_path"
   fi
 
-  printf '%s' "$materialized_path"
+  TASK_SURFACE_CONTENT_PATH="$materialized_path"
+  TASK_SURFACE_CLEANUP_PATH="$materialized_path"
+  return 0
 }
 
 require_clean_tree() {
@@ -169,6 +205,7 @@ require_clean_tree() {
   if [[ -n "$porcelain" ]]; then
     die "refusing to run on dirty tree"
   fi
+  return 0
 }
 
 read_lint_constants() {
@@ -192,6 +229,7 @@ read_lint_constants() {
   if [[ "$actual_hash" != "$template_hash" ]]; then
     die "template preflight failed: canonical template hash mismatch (expected ${template_hash}, got ${actual_hash})"
   fi
+  return 0
 }
 
 read_addendum_lint_constants() {
@@ -215,23 +253,27 @@ read_addendum_lint_constants() {
   if [[ "$actual_hash" != "$template_hash" ]]; then
     die "template preflight failed: canonical addendum template hash mismatch (expected ${template_hash}, got ${actual_hash})"
   fi
+  return 0
 }
 
 require_task_markers() {
   local task_path="$REPO_ROOT/TASK.md"
   local source_path
-  local cleanup_path=""
-  source_path="$(resolve_task_surface_source "$task_path")"
-  if [[ "$source_path" != "$task_path" ]]; then
-    cleanup_path="$source_path"
-  fi
+  resolve_task_surface_source "$task_path"
+  source_path="$TASK_SURFACE_CONTENT_PATH"
 
   local section_count
   local dp_count
   section_count="$(grep -cE '^##[[:space:]]*3[.][[:space:]]*Current Dispatch Packet \(DP\)[[:space:]]*$' "$source_path" || true)"
   if [[ "$section_count" != "1" ]]; then
-    [[ -n "$cleanup_path" ]] && rm -f "$cleanup_path"
-    die "TASK.md must contain exactly one '## 3. Current Dispatch Packet (DP)' heading"
+    cleanup_task_surface_context
+    die_guard_failure \
+      "TASK.md must contain exactly one '## 3. Current Dispatch Packet (DP)' heading" \
+      "task_section_3_heading_count == 1" \
+      "task_source_path" "$TASK_SURFACE_SOURCE_PATH" \
+      "task_resolved_path" "$TASK_SURFACE_RESOLVED_PATH" \
+      "observed_count" "$section_count" \
+      "expected_count" "1"
   fi
 
   dp_count="$(awk '
@@ -243,11 +285,18 @@ require_task_markers() {
   ' "$source_path")"
 
   if [[ "$dp_count" != "1" ]]; then
-    [[ -n "$cleanup_path" ]] && rm -f "$cleanup_path"
-    die "TASK.md must contain exactly one active '### DP-' block under Section 3"
+    cleanup_task_surface_context
+    die_guard_failure \
+      "TASK.md must contain exactly one active '### DP-' block under Section 3" \
+      "task_section_3_active_dp_block_count == 1" \
+      "task_source_path" "$TASK_SURFACE_SOURCE_PATH" \
+      "task_resolved_path" "$TASK_SURFACE_RESOLVED_PATH" \
+      "observed_count" "$dp_count" \
+      "expected_count" "1"
   fi
 
-  [[ -n "$cleanup_path" ]] && rm -f "$cleanup_path"
+  cleanup_task_surface_context
+  return 0
 }
 
 render_dp() {
@@ -331,14 +380,11 @@ update_task() {
   local rendered_path="$1"
   local task_path="$REPO_ROOT/TASK.md"
   local source_path
-  local cleanup_path=""
   local tmp_path
   local wrote_marker_path
 
-  source_path="$(resolve_task_surface_source "$task_path")"
-  if [[ "$source_path" != "$task_path" ]]; then
-    cleanup_path="$source_path"
-  fi
+  resolve_task_surface_source "$task_path"
+  source_path="$TASK_SURFACE_CONTENT_PATH"
   tmp_path="$(mktemp)"
   wrote_marker_path="$(mktemp)"
 
@@ -376,14 +422,20 @@ update_task() {
 
   if [[ ! -s "$wrote_marker_path" ]]; then
     rm -f "$tmp_path" "$wrote_marker_path"
-    [[ -n "$cleanup_path" ]] && rm -f "$cleanup_path"
-    die "failed to locate active DP heading inside TASK section 3"
+    cleanup_task_surface_context
+    die_guard_failure \
+      "failed to locate active DP heading inside TASK section 3" \
+      "task_section_3_active_dp_heading_present_for_replacement" \
+      "task_source_path" "$TASK_SURFACE_SOURCE_PATH" \
+      "task_resolved_path" "$TASK_SURFACE_RESOLVED_PATH" \
+      "replacement_source_path" "$rendered_path"
   fi
 
   rm -f "$wrote_marker_path"
 
   mv "$tmp_path" "$task_path"
-  [[ -n "$cleanup_path" ]] && rm -f "$cleanup_path"
+  cleanup_task_surface_context
+  return 0
 }
 
 DP_ID=""
@@ -601,3 +653,4 @@ rm -f "$rendered_path"
 
 echo "Wrote: ${intake_path#${REPO_ROOT}/}"
 echo "Updated: TASK.md"
+exit 0
