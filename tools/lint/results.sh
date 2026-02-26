@@ -50,6 +50,40 @@ has_nonempty_content() {
   [[ -n "$(printf '%s\n' "$value" | sed '/^[[:space:]]*$/d')" ]]
 }
 
+extract_field_block_by_label() {
+  local path="$1"
+  local start_label="$2"
+  local stop_label="${3:-}"
+  awk -v start_label="$start_label" -v stop_label="$stop_label" '
+    BEGIN { in_block=0 }
+    $0 == start_label { in_block=1; next }
+    in_block && stop_label != "" && $0 == stop_label { exit }
+    in_block { print }
+  ' "$path"
+}
+
+CLOSING_LABELS_MANIFEST_PATH="ops/lib/manifests/CLOSING.md"
+declare -a CURRENT_CLOSING_LABELS=()
+
+load_current_closing_labels() {
+  [[ -f "$CLOSING_LABELS_MANIFEST_PATH" ]] || die "closing labels manifest missing: ${CLOSING_LABELS_MANIFEST_PATH}"
+  if ! grep -Eq '^##[[:space:]]+Section 1:[[:space:]]+Current Closeout Labels[[:space:]]*$' "$CLOSING_LABELS_MANIFEST_PATH"; then
+    die "closing labels manifest missing required SSOT section heading"
+  fi
+
+  mapfile -t CURRENT_CLOSING_LABELS < <(
+    awk '
+      /^##[[:space:]]+Section 1:[[:space:]]+Current Closeout Labels[[:space:]]*$/ { in_section=1; next }
+      in_section && /^##[[:space:]]+/ { exit }
+      in_section && /[^[:space:]]/ { print }
+    ' "$CLOSING_LABELS_MANIFEST_PATH"
+  )
+
+  if [[ "${#CURRENT_CLOSING_LABELS[@]}" -ne 6 ]]; then
+    die "closing labels manifest must define exactly six current labels (found ${#CURRENT_CLOSING_LABELS[@]})"
+  fi
+}
+
 RESULTS_TEMPLATE_PATH="ops/src/surfaces/results.md.tpl"
 RESULTS_TEMPLATE_SHA256="9f6dc9fc75fa7667cc3fb4fa3b4d5ebfdc233022199710870240d6e46ea9a707"
 
@@ -84,6 +118,8 @@ fi
 if [[ "$template_hash" != "$RESULTS_TEMPLATE_SHA256" ]]; then
   die "template drift detected for ${RESULTS_TEMPLATE_PATH} (expected ${RESULTS_TEMPLATE_SHA256}, got ${template_hash})"
 fi
+
+load_current_closing_labels
 
 declare -a targets=()
 explicit_target=0
@@ -147,15 +183,6 @@ required_headings=(
   "^### git diff --name-only$"
   "^### git diff --stat$"
   "^## Mandatory Closing Block$"
-)
-
-required_closing_labels_current=(
-  "^Primary Commit Header[[:space:]]*$"
-  "^Pull Request Title[[:space:]]*$"
-  "^Pull Request Description[[:space:]]*$"
-  "^Final Squash Stub[[:space:]]*$"
-  "^Commit Message \\(Extended Description\\)[[:space:]]*$"
-  "^Review Conversation Starter[[:space:]]*$"
 )
 
 placeholder_regex='{{|}}|TBD|TODO|PLACEHOLDER|ENTER_|REPLACE_|populate during execution|do not pre-fill|DP-XXXX'
@@ -228,10 +255,10 @@ for target in "${targets[@]}"; do
     continue
   fi
 
-  label_pattern=""
-  for label_pattern in "${required_closing_labels_current[@]}"; do
-    if ! grep -Eq "$label_pattern" <<< "$closing_block"; then
-      fail "${rel_target}: closing block missing label matching ${label_pattern}"
+  label=""
+  for label in "${CURRENT_CLOSING_LABELS[@]}"; do
+    if ! grep -Fxq "$label" <<< "$closing_block"; then
+      fail "${rel_target}: closing block missing label '${label}'"
     fi
   done
 
@@ -239,47 +266,19 @@ for target in "${targets[@]}"; do
     fail "${rel_target}: closing block contains placeholder text"
   fi
 
-  strict_value="$(
-    extract_field_block "$target" '^Primary Commit Header[[:space:]]*$' '^Pull Request Title[[:space:]]*$'
-  )"
-  if ! has_nonempty_content "$strict_value"; then
-    fail "${rel_target}: Primary Commit Header value is empty"
-  fi
-
-  strict_value="$(
-    extract_field_block "$target" '^Pull Request Title[[:space:]]*$' '^Pull Request Description[[:space:]]*$'
-  )"
-  if ! has_nonempty_content "$strict_value"; then
-    fail "${rel_target}: Pull Request Title value is empty"
-  fi
-
-  strict_value="$(
-    extract_field_block "$target" '^Pull Request Description[[:space:]]*$' '^Final Squash Stub[[:space:]]*$'
-  )"
-  if ! has_nonempty_content "$strict_value"; then
-    fail "${rel_target}: Pull Request Description value is empty"
-  fi
-
-  strict_value="$(
-    extract_field_block "$target" '^Final Squash Stub[[:space:]]*$' '^Commit Message \\(Extended Description\\)[[:space:]]*$'
-  )"
-  if ! has_nonempty_content "$strict_value"; then
-    fail "${rel_target}: Final Squash Stub value is empty"
-  fi
-
-  strict_value="$(
-    extract_field_block "$target" '^Commit Message \\(Extended Description\\)[[:space:]]*$' '^Review Conversation Starter[[:space:]]*$'
-  )"
-  if ! has_nonempty_content "$strict_value"; then
-    fail "${rel_target}: Commit Message (Extended Description) value is empty"
-  fi
-
-  strict_value="$(
-    extract_field_block "$target" '^Review Conversation Starter[[:space:]]*$' ''
-  )"
-  if ! has_nonempty_content "$strict_value"; then
-    fail "${rel_target}: Review Conversation Starter value is empty"
-  fi
+  for ((i=0; i<${#CURRENT_CLOSING_LABELS[@]}; i++)); do
+    label="${CURRENT_CLOSING_LABELS[i]}"
+    next_label=""
+    if (( i + 1 < ${#CURRENT_CLOSING_LABELS[@]} )); then
+      next_label="${CURRENT_CLOSING_LABELS[i+1]}"
+    fi
+    strict_value="$(
+      extract_field_block_by_label "$target" "$label" "$next_label"
+    )"
+    if ! has_nonempty_content "$strict_value"; then
+      fail "${rel_target}: ${label} value is empty"
+    fi
+  done
 done
 
 if (( failures )); then

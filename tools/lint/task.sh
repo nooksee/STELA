@@ -46,6 +46,40 @@ trim() {
   printf '%s' "$value"
 }
 
+CLOSING_LABELS_MANIFEST_PATH="ops/lib/manifests/CLOSING.md"
+declare -a CURRENT_CLOSING_LABELS=()
+CURRENT_CLOSING_LABELS_LOADED=0
+
+load_current_closing_labels() {
+  if (( CURRENT_CLOSING_LABELS_LOADED )); then
+    return 0
+  fi
+
+  if [[ ! -f "$CLOSING_LABELS_MANIFEST_PATH" ]]; then
+    fail "closing labels manifest missing: ${CLOSING_LABELS_MANIFEST_PATH}"
+    return 1
+  fi
+  if ! grep -Eq '^##[[:space:]]+Section 1:[[:space:]]+Current Closeout Labels[[:space:]]*$' "$CLOSING_LABELS_MANIFEST_PATH"; then
+    fail "closing labels manifest missing required SSOT section heading"
+    return 1
+  fi
+
+  mapfile -t CURRENT_CLOSING_LABELS < <(
+    awk '
+      /^##[[:space:]]+Section 1:[[:space:]]+Current Closeout Labels[[:space:]]*$/ { in_section=1; next }
+      in_section && /^##[[:space:]]+/ { exit }
+      in_section && /[^[:space:]]/ { print }
+    ' "$CLOSING_LABELS_MANIFEST_PATH"
+  )
+
+  if [[ "${#CURRENT_CLOSING_LABELS[@]}" -ne 6 ]]; then
+    fail "closing labels manifest must define exactly six current labels (found ${#CURRENT_CLOSING_LABELS[@]})"
+    return 1
+  fi
+
+  CURRENT_CLOSING_LABELS_LOADED=1
+}
+
 resolve_task_surface_path() {
   local source_path="$1"
   if [[ "$(basename "$source_path")" != "TASK.md" ]]; then
@@ -360,17 +394,16 @@ check_task_dashboard() {
   # Certify-routed format: active packets generated from ops/src/surfaces/dp.md.tpl
   # carry the list-item form of the §3.5.1 Mandatory Closing Block. This path is the
   # standard acceptance path for live current-packet TASK heads.
-  local -a closing_list_items=(
-    "- Primary Commit Header"
-    "- Pull Request Title"
-    "- Pull Request Description"
-    "- Final Squash Stub"
-    "- Commit Message (Extended Description)"
-    "- Review Conversation Starter"
-  )
+  local item
+  local -a closing_list_items=()
+  if ! load_current_closing_labels; then
+    return
+  fi
+  for item in "${CURRENT_CLOSING_LABELS[@]}"; do
+    closing_list_items+=("- ${item}")
+  done
   # Receipt proof token: certify-routed format
   local list_format_present=1
-  local item
   for item in "${closing_list_items[@]}"; do
     if ! grep -Fxq -- "$item" "$path"; then
       list_format_present=0
