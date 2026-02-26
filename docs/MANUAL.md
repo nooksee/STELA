@@ -116,6 +116,14 @@ Do not hand-edit `llms.txt`, `llms-core.txt`, or `llms-full.txt`; regenerate wit
 ./ops/bin/map
 ./ops/bin/llms --out-dir="$(pwd)"
 ~~~
+`ops/bin/llms` Refresh Side-Effect Notice:
+- `ops/bin/llms` is a compile event. It regenerates `ops/lib/manifests/OPS.md` in addition to `llms*.txt` bundle outputs. This is expected behavior, not a defect.
+- The pre-commit hook (`.github/hooks/llms`) protects against committing `OPS.md` out-of-scope at the commit boundary. It does not prevent the working-tree modification from occurring during Refresh.
+- If `OPS.md` is not in the active DP allowlist, restore it after Refresh before running `tools/lint/integrity.sh`:
+  `git restore --source=HEAD --staged --worktree -- ops/lib/manifests/OPS.md`
+  Then re-run `bash tools/lint/integrity.sh` to confirm clean state before proceeding.
+- If `OPS.md` content genuinely needs updating, add it to the allowlist and authorize the change explicitly before proceeding.
+- OPEN/DUMP Refresh can legitimately produce porcelain entries (e.g., modified `OPS.md`, new `archives/manifests/compile-*.md` leaves) even when the DP is docs-only. Account for these before running `integrity.sh` or interpreting `git status --porcelain` output.
 Compile snapshot policy:
 - `ops/bin/compile` is an archiving event; each successful run emits a new immutable leaf under `archives/manifests/`.
 - Treat new `archives/manifests/compile-*.md` leaves as audit artifacts and include them in branch closeout commits.
