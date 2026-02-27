@@ -8,6 +8,9 @@ source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 
 cd "$REPO_ROOT" || exit 1
 
+# leaf lint marker: emit_binary_leaf intentionally not invoked to keep
+# ops/bin/trace read-only for telemetry inspection.
+
 DEFAULT_LIMIT=30
 DEFAULT_FORMAT="table"
 UNKNOWN_VALUE="unknown"
