@@ -88,6 +88,10 @@ in `storage/dp/active/allowlist.txt`:
 - SoP.md
 - TASK.md
 
+Then run `./ops/bin/allowlist` as a required pre-certify dry-run. This helper
+reproduces the RESULTS allowlist subset checks for tracked-changed and untracked
+paths and prints ready-to-paste allowlist lines for any missing entries.
+
 Rationale: `ops/bin/certify` rewrites the current heads of these three canon surfaces
 to single-line archive pointers during closeout. These mutations are tracked by git
 and must be allowlist-covered before certify runs. Certify invokes
@@ -97,6 +101,7 @@ protocol error.
 
 Run:
 ~~~bash
+./ops/bin/allowlist
 ./ops/bin/certify --dp=DP-OPS-XXXX --out=auto
 bash tools/lint/results.sh storage/handoff/DP-OPS-XXXX-RESULTS.md
 ~~~

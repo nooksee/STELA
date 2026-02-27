@@ -152,7 +152,7 @@ Notes:
 ## 3.3 Scope and Safety
 Objective:
 Rename the closing sidecar field `Confirm Merge (Extended Description)` to `Confirm Merge (Extended Description)` across the full synchronized contract: closing sidecar template, certify validator and emitter, style lint, results lint, task lint (certify-routed path only), DP template, TASK template, surface specs, and MANUAL guidance. Cutover is strict: new label only; old label is rejected immediately in all current-schema paths. The grandfathered legacy label `Confirm Merge (Extended Description) (plaintext)` in `tools/lint/task.sh` `closing_labels` retains its exact current text for historical TASK leaves only and is not modified.
-- Commit Message (Subject Line)
+- Commit Message
 - Create Pull Request (Title)
 - Create Pull Request (Description)
 - Confirm Merge (Commit Message)

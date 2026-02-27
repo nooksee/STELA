@@ -2,7 +2,7 @@
 # Closing Labels Manifest
 
 ## Section 1: Current Closeout Labels
-Commit Message (Subject Line)
+Commit Message
 
 
 Create Pull Request (Title)
