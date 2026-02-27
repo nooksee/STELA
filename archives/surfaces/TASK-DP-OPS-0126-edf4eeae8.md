@@ -1,8 +1,8 @@
 ---
-trace_id: stela-20260226T180149Z-49ae4768
-packet_id: DP-OPS-0115
-created_at: 2026-02-26T18:05:53Z
-previous: archives/surfaces/TASK-DP-OPS-0115-ca2286912.md
+trace_id: stela-20260227T164101Z-16dc4448
+packet_id: DP-OPS-0126
+created_at: 2026-02-27T16:51:11Z
+previous: archives/surfaces/TASK-DP-OPS-0125-11aab0a10.md
 ---
 # STELA TASK DASHBOARD
 Status: ACTIVE
@@ -152,6 +152,12 @@ Notes:
 ## 3.3 Scope and Safety
 Objective:
 Rename the closing sidecar field `Confirm Merge (Extended Description)` to `Confirm Merge (Extended Description)` across the full synchronized contract: closing sidecar template, certify validator and emitter, style lint, results lint, task lint (certify-routed path only), DP template, TASK template, surface specs, and MANUAL guidance. Cutover is strict: new label only; old label is rejected immediately in all current-schema paths. The grandfathered legacy label `Confirm Merge (Extended Description) (plaintext)` in `tools/lint/task.sh` `closing_labels` retains its exact current text for historical TASK leaves only and is not modified.
+- Commit Message (Subject Line)
+- Create Pull Request (Title)
+- Create Pull Request (Description)
+- Confirm Merge (Commit Message)
+- Confirm Merge (Extended Description)
+- Confirm Merge (Add a Comment)
 
 In scope:
 - `ops/src/surfaces/closing.md.tpl` — rename field label line `Confirm Merge (Extended Description)` to `Confirm Merge (Extended Description)`

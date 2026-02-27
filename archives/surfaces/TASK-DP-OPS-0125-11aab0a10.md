@@ -212,7 +212,7 @@ Target Files allowlist (hard gate):
 Branch: `main`. HEAD: `ca2286912`. Working tree: clean. Porcelain entries: 0. Last commit: `ca2286912 Capture manual recovery procedure for dp md tpl hash coupling mismatch`. No active DP in TASK.md. DP-OPS-0118 (with Addenda A, B, and C) is the most recently completed packet; final audit PASS confirmed. No open policy questions remain in the 0111–0119 series. DP-OPS-0115 is the last required code-touching packet for blocker-removal closeout.
 
 ### 3.4.2 Request
-Perform a full synchronized rename of the closing sidecar field `Confirm Merge (Extended Description)` to `Confirm Merge (Extended Description)` across all current-schema surfaces. The rename touches: the closing sidecar template, the certify binary (validator and emitter), three lint gates (style, results, task — certify-routed path only), the DP template, the TASK template, two surface specs, two lint specs, and MANUAL guidance. The cutover is strict: after this packet's edits are complete, no current-schema validation path may accept the old label. The legacy grandfathered path in `tools/lint/task.sh` retains `Confirm Merge (Extended Description) (plaintext)` unchanged. After editing `ops/src/surfaces/dp.md.tpl`, compute and install the new `CANONICAL_DP_TEMPLATE_SHA256` in `tools/lint/dp.sh` and rerender `TASK.md` via `./ops/bin/draft --dp=DP-OPS-0115` before running any DP lint gate. Author `storage/handoff/CONTRACTOR-NOTES.md` using `ops/src/surfaces/notes.md.tpl` schema before pre-audit handoff. Author the closing sidecar using the new label `Confirm Merge (Extended Description)`.
+Perform a full synchronized rename of the closing sidecar field `Confirm Merge (Extended Description)` to `Confirm Merge (Extended Description)` across all current-schema surfaces. The rename touches: the closing sidecar template, the certify binary (validator and emitter), three lint gates (style, results, task — certify-routed path only), the DP template, the TASK template, two surface specs, two lint specs, and MANUAL guidance. The cutover is strict: after this packet's edits are complete, no current-schema validation path may accept the old label. The legacy grandfathered path in `tools/lint/task.sh` retains `Confirm Merge (Extended Description) (plaintext)` unchanged. After editing `ops/src/surfaces/dp.md.tpl`, compute and install the new `CANONICAL_DP_TEMPLATE_SHA256` in `tools/lint/dp.sh` and rerender `TASK.md` via `./ops/bin/draft --dp=DP-OPS-0115` before running any DP lint gate. Author `storage/dp/active/notes.md` using `ops/src/surfaces/notes.md.tpl` schema before pre-audit handoff. Author the closing sidecar using the new label `Confirm Merge (Extended Description)`.
 
 ### 3.4.3 Changelog
 - UPDATE `ops/src/surfaces/closing.md.tpl` — rename field label
@@ -303,7 +303,7 @@ docs/MANUAL.md
 storage/dp/active/allowlist.txt
 storage/handoff/CLOSING-DP-OPS-0115.md
 storage/handoff/DP-OPS-0115-RESULTS.md
-storage/handoff/CONTRACTOR-NOTES.md
+storage/dp/active/notes.md
 llms.txt
 llms-core.txt
 llms-full.txt
@@ -353,7 +353,7 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
-- Before handing work for operator pre-audit review, produce `storage/handoff/CONTRACTOR-NOTES.md` using `ops/src/surfaces/notes.md.tpl` as the schema. See `docs/MANUAL.md` Contractor Notes Surface for field definitions and routing.
+- Before handing work for operator pre-audit review, produce `storage/dp/active/notes.md` using `ops/src/surfaces/notes.md.tpl` as the schema. See `docs/MANUAL.md` Contractor Notes Surface for field definitions and routing.
 - Run prune hygiene: ./ops/bin/prune --scrub.
 - Regenerate session artifacts: `./ops/bin/open --out=auto`
 - Capture updated platform state: `./ops/bin/dump --scope=platform --format=chatgpt --out=auto`

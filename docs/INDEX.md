@@ -3,6 +3,7 @@
 
 ## 0. Primary Read-in (Start Here)
 * [MANUAL.md](MANUAL.md) — Operator command and mechanics.
+* [MANUAL.md#trace-cookbook](MANUAL.md#trace-cookbook) — Quick telemetry caller and leaf trace commands.
 
 ## 1. The Constitution (Law & Logic)
 * [../PoT.md](../PoT.md) — Policy of Truth: constitution, staffing, jurisdiction, and enforcement.

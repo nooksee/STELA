@@ -144,7 +144,7 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
-- Before handing work for operator pre-audit review, produce `storage/handoff/CONTRACTOR-NOTES.md` using `ops/src/surfaces/notes.md.tpl` as the schema. See `docs/MANUAL.md` Contractor Notes Surface for field definitions and routing.
+- Before handing work for operator pre-audit review, produce `storage/dp/active/notes.md` using `ops/src/surfaces/notes.md.tpl` as the schema. See `docs/MANUAL.md` Contractor Notes Surface for field definitions and routing.
 - Run prune hygiene: ./ops/bin/prune --scrub.
 - Regenerate session artifacts: `./ops/bin/open --out=auto`
 - Capture updated platform state: `./ops/bin/dump --scope=platform --format=chatgpt --out=auto`
