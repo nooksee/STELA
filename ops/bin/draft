@@ -22,11 +22,18 @@ Required:
 Addendum generation mode (all required):
 - --addendum=A                        single uppercase letter A-Z
 - --base-dp=DP-OPS-XXXX               existing base packet in intake or processed
+- --slots-file=PATH                   addendum sidecar with required slot blocks
+
+Addendum slots-file required tokens:
+- [OPERATOR_AUTHORIZATION]
+- [SCOPE_DELTA]
+- [ADDENDUM_OBJECTIVE]
+- [ADDENDUM_RECEIPT]
 
 Optional:
 - --base-branch=main                  (default: main)
 - --freshness-stamp=YYYY-MM-DD        (default: UTC today)
-- --slots-file=PATH                   sidecar with tagged sections
+- --slots-file=PATH                   sidecar with tagged sections (optional in base DP mode)
 - --dp-load-order="..."
 - --objective="..."
 - --in-scope="..."
@@ -353,17 +360,15 @@ base_dp_source_path() {
 render_addendum_intake() {
   local base_dp="$1"
   local addendum_id="$2"
-  local out_path="$3"
+  local slots_file="$3"
+  local out_path="$4"
   [[ -x "$TEMPLATE_BIN" ]] || die "template binary missing or not executable: ${TEMPLATE_BIN}"
 
   "$TEMPLATE_BIN" render addendum \
     "--out=${out_path}" \
+    "--slots-file=${slots_file}" \
     "--slot=BASE_DP_ID=${base_dp}" \
-    "--slot=ADDENDUM_ID=${addendum_id}" \
-    "--slot=OPERATOR_AUTHORIZATION=Operator authorization statement must be inserted by the operator before addendum execution." \
-    "--slot=SCOPE_DELTA=REPLACE_WITH_EXACT_PATH" \
-    "--slot=ADDENDUM_OBJECTIVE=TODO: add addendum objective details." \
-    "--slot=ADDENDUM_RECEIPT=- TODO: add addendum-specific receipt commands."
+    "--slot=ADDENDUM_ID=${addendum_id}"
 }
 
 render_closing_sidecar() {
@@ -551,6 +556,7 @@ fi
 if (( ADDENDUM_MODE )); then
   [[ "$ADDENDUM_LETTER" =~ ^[A-Z]$ ]] || die "invalid --addendum value (expected a single uppercase letter A-Z): ${ADDENDUM_LETTER}"
   [[ "$BASE_DP_ID" =~ ^DP-OPS-[0-9]{4}$ ]] || die "invalid --base-dp format (expected DP-OPS-XXXX): ${BASE_DP_ID}"
+  [[ -n "$SLOTS_FILE" ]] || die "--addendum/--base-dp mode requires --slots-file=PATH"
 else
   [[ -n "$DP_ID" ]] || die "missing required --id"
   [[ -n "$DP_TITLE" ]] || die "missing required --title"
@@ -629,7 +635,7 @@ if (( ADDENDUM_MODE )); then
   addendum_intake_path="$REPO_ROOT/storage/dp/intake/${BASE_DP_ID}-ADDENDUM-${ADDENDUM_LETTER}.md"
   addendum_closing_path="$REPO_ROOT/storage/handoff/CLOSING-${BASE_DP_ID}-ADDENDUM-${ADDENDUM_LETTER}.md"
 
-  render_addendum_intake "$BASE_DP_ID" "$ADDENDUM_LETTER" "$addendum_intake_path"
+  render_addendum_intake "$BASE_DP_ID" "$ADDENDUM_LETTER" "$SLOTS_FILE" "$addendum_intake_path"
   render_closing_sidecar "${BASE_DP_ID} Addendum ${ADDENDUM_LETTER}" "$addendum_closing_path"
 
   echo "Base: ${base_source_path#${REPO_ROOT}/}"
