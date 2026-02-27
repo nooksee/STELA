@@ -142,13 +142,13 @@ Notes:
 
 ## 3.3 Scope and Safety
 Objective:
-Formalize `CONTRACTOR-NOTES.md` as a defined closing surface by: creating `ops/src/surfaces/notes.md.tpl` with a four-field required schema; registering `storage/handoff/CONTRACTOR-NOTES.md` in `ops/src/manifests/context.md.tpl` and regenerating `ops/lib/manifests/CONTEXT.md`; extending `ops/src/surfaces/dp.md.tpl` §3.5 to require CONTRACTOR-NOTES.md production before operator pre-audit review and updating `tools/lint/dp.sh` with the new template SHA256; and documenting authoring and routing expectations in `docs/MANUAL.md`.
+Formalize `CONTRACTOR-NOTES.md` as a defined closing surface by: creating `ops/src/surfaces/notes.md.tpl` with a four-field required schema; registering `storage/dp/active/notes.md` in `ops/src/manifests/context.md.tpl` and regenerating `ops/lib/manifests/CONTEXT.md`; extending `ops/src/surfaces/dp.md.tpl` §3.5 to require CONTRACTOR-NOTES.md production before operator pre-audit review and updating `tools/lint/dp.sh` with the new template SHA256; and documenting authoring and routing expectations in `docs/MANUAL.md`.
 
 In scope:
 - `ops/src/surfaces/notes.md.tpl` (NEW) — define the four-field schema: `Scope Confirmation:`, `Anomalies Encountered:`, `Open Items / Residue:`, and `Closing Schema Baseline:`. The `Closing Schema Baseline:` field uses current-schema-only wording (current six-label schema, post-0116+A baseline). The template includes a clarifying note that historical packet references may appear in narrative, but the field describes the active packet's current-schema assumptions unless the packet explicitly tests historical artifacts. Template must include YAML frontmatter with `template_type: surface`, `template_id: notes`, `template_version: 1`.
-- `ops/src/manifests/context.md.tpl` — append `- \`storage/handoff/CONTRACTOR-NOTES.md\`` to the Members list as the last entry.
+- `ops/src/manifests/context.md.tpl` — append `- \`storage/dp/active/notes.md\`` to the Members list as the last entry.
 - `ops/lib/manifests/CONTEXT.md` — regenerated from `ops/src/manifests/context.md.tpl` by running `./ops/bin/compile` after the template edit. No direct manual edits permitted.
-- `ops/src/surfaces/dp.md.tpl` — in `## 3.5 Closeout (Mandatory Routing)`, insert one new bullet after the line `- Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.` requiring the contractor to produce `storage/handoff/CONTRACTOR-NOTES.md` using `ops/src/surfaces/notes.md.tpl` before operator pre-audit review.
+- `ops/src/surfaces/dp.md.tpl` — in `## 3.5 Closeout (Mandatory Routing)`, insert one new bullet after the line `- Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.` requiring the contractor to produce `storage/dp/active/notes.md` using `ops/src/surfaces/notes.md.tpl` before operator pre-audit review.
 - `tools/lint/dp.sh` — update the value of `CANONICAL_DP_TEMPLATE_SHA256` to the SHA256 of the modified `ops/src/surfaces/dp.md.tpl`. This is a single-constant update; no check logic, function, or behavioral path changes.
 - `docs/MANUAL.md` — add a `### Contractor Notes Surface` subsection immediately following the `2.5 Post-Work Audit` subsection in the Closeout Cycle section, documenting: where the template lives, the four required fields and their intended content, the `Closing Schema Baseline:` current-schema convention, and that prior CONTRACTOR-NOTES.md files are not retroactively reformatted.
 - `storage/dp/active/allowlist.txt` — include all changed persistent repo-state files plus certify-generated ledger and TASK archive surfaces and compile archive wildcard.
@@ -187,16 +187,16 @@ Target Files allowlist (hard gate):
 ## 3.4 Execution Plan (A-E)
 
 ### 3.4.1 State
-Branch `main` is at HEAD `cca423d7b`, the merge commit for DP-OPS-0114 (`ops/bin/llms` Refresh Side-Effect Documentation). Working tree is clean with zero porcelain entries. `TASK.md` is a single-line pointer to `archives/surfaces/TASK-DP-OPS-0114-10e5cc3a2.md`. `ops/src/surfaces/notes.md.tpl` does not exist in the repository. `storage/handoff/CONTRACTOR-NOTES.md` is not a member of `ops/src/manifests/context.md.tpl` or the generated `ops/lib/manifests/CONTEXT.md`. `ops/src/surfaces/dp.md.tpl` §3.5 does not reference CONTRACTOR-NOTES.md. `docs/MANUAL.md` does not document `CONTRACTOR-NOTES.md` as a required handoff surface. `CANONICAL_DP_TEMPLATE_SHA256` in `tools/lint/dp.sh` is currently `35c078b9236f5bb18d4dd471f2f7efc36734585f955a938e6992e8cf47588f44`.
+Branch `main` is at HEAD `cca423d7b`, the merge commit for DP-OPS-0114 (`ops/bin/llms` Refresh Side-Effect Documentation). Working tree is clean with zero porcelain entries. `TASK.md` is a single-line pointer to `archives/surfaces/TASK-DP-OPS-0114-10e5cc3a2.md`. `ops/src/surfaces/notes.md.tpl` does not exist in the repository. `storage/dp/active/notes.md` is not a member of `ops/src/manifests/context.md.tpl` or the generated `ops/lib/manifests/CONTEXT.md`. `ops/src/surfaces/dp.md.tpl` §3.5 does not reference CONTRACTOR-NOTES.md. `docs/MANUAL.md` does not document `CONTRACTOR-NOTES.md` as a required handoff surface. `CANONICAL_DP_TEMPLATE_SHA256` in `tools/lint/dp.sh` is currently `35c078b9236f5bb18d4dd471f2f7efc36734585f955a938e6992e8cf47588f44`.
 
 ### 3.4.2 Request
 Create `ops/src/surfaces/notes.md.tpl` with YAML frontmatter (`template_type: surface`, `template_id: notes`, `template_version: 1`) and four labeled fields — `Scope Confirmation:`, `Anomalies Encountered:`, `Open Items / Residue:`, and `Closing Schema Baseline:` — each with one-sentence authoring guidance. The `Closing Schema Baseline:` field guidance must state that the current six-label schema (post-0116+A baseline) is assumed and that an explicit exception is recorded here only when the packet intentionally tests historical artifacts.
 
-Append `- \`storage/handoff/CONTRACTOR-NOTES.md\`` to the Members list in `ops/src/manifests/context.md.tpl`, then run `./ops/bin/compile` to regenerate `ops/lib/manifests/CONTEXT.md`.
+Append `- \`storage/dp/active/notes.md\`` to the Members list in `ops/src/manifests/context.md.tpl`, then run `./ops/bin/compile` to regenerate `ops/lib/manifests/CONTEXT.md`.
 
 In `ops/src/surfaces/dp.md.tpl`, in `## 3.5 Closeout (Mandatory Routing)`, insert the following bullet immediately after the line `- Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.`:
 ```
-- Before handing work for operator pre-audit review, produce `storage/handoff/CONTRACTOR-NOTES.md` using `ops/src/surfaces/notes.md.tpl` as the schema. See `docs/MANUAL.md` Contractor Notes Surface for field definitions and routing.
+- Before handing work for operator pre-audit review, produce `storage/dp/active/notes.md` using `ops/src/surfaces/notes.md.tpl` as the schema. See `docs/MANUAL.md` Contractor Notes Surface for field definitions and routing.
 ```
 
 Compute `sha256sum ops/src/surfaces/dp.md.tpl` and replace the value of `CANONICAL_DP_TEMPLATE_SHA256` in `tools/lint/dp.sh` with the 64-character hex digest from that output.
@@ -207,7 +207,7 @@ Update `storage/dp/active/allowlist.txt` to cover all changed files, the certify
 
 ### 3.4.3 Changelog
 - NEW: `ops/src/surfaces/notes.md.tpl` — four-field CONTRACTOR-NOTES.md schema template.
-- UPDATE: `ops/src/manifests/context.md.tpl` — append `storage/handoff/CONTRACTOR-NOTES.md` to Members list.
+- UPDATE: `ops/src/manifests/context.md.tpl` — append `storage/dp/active/notes.md` to Members list.
 - UPDATE: `ops/lib/manifests/CONTEXT.md` — regenerated from updated source template via `./ops/bin/compile`; no direct manual edits.
 - UPDATE: `ops/src/surfaces/dp.md.tpl` — insert CONTRACTOR-NOTES.md production requirement bullet in `## 3.5 Closeout (Mandatory Routing)`.
 - UPDATE: `tools/lint/dp.sh` — replace `CANONICAL_DP_TEMPLATE_SHA256` value with SHA256 of modified `ops/src/surfaces/dp.md.tpl`.
@@ -257,10 +257,10 @@ historical artifacts or compatibility paths.
 
 **Step 4.** In `ops/src/manifests/context.md.tpl`, append the following line as the new last entry in the Members list, immediately after the line `- \`tools/lint/truth.sh\``:
 ```
-- `storage/handoff/CONTRACTOR-NOTES.md`
+- `storage/dp/active/notes.md`
 ```
 
-**Step 5.** Run `./ops/bin/compile`. Confirm the command exits zero. Confirm `ops/lib/manifests/CONTEXT.md` now contains `storage/handoff/CONTRACTOR-NOTES.md` in its Members list. Do not edit `ops/lib/manifests/CONTEXT.md` directly.
+**Step 5.** Run `./ops/bin/compile`. Confirm the command exits zero. Confirm `ops/lib/manifests/CONTEXT.md` now contains `storage/dp/active/notes.md` in its Members list. Do not edit `ops/lib/manifests/CONTEXT.md` directly.
 
 **Step 6.** Read `ops/src/surfaces/dp.md.tpl` in full. Confirm the `## 3.5 Closeout (Mandatory Routing)` section contains the line:
 ```
@@ -269,7 +269,7 @@ historical artifacts or compatibility paths.
 
 **Step 7.** In `ops/src/surfaces/dp.md.tpl`, in `## 3.5 Closeout (Mandatory Routing)`, insert the following line immediately after the line confirmed in Step 6:
 ```
-- Before handing work for operator pre-audit review, produce `storage/handoff/CONTRACTOR-NOTES.md` using `ops/src/surfaces/notes.md.tpl` as the schema. See `docs/MANUAL.md` Contractor Notes Surface for field definitions and routing.
+- Before handing work for operator pre-audit review, produce `storage/dp/active/notes.md` using `ops/src/surfaces/notes.md.tpl` as the schema. See `docs/MANUAL.md` Contractor Notes Surface for field definitions and routing.
 ```
 
 **Step 8.** Compute the SHA256 of the modified `ops/src/surfaces/dp.md.tpl`:
@@ -293,7 +293,7 @@ No other line in `tools/lint/dp.sh` may be modified.
 **Step 11.** In `docs/MANUAL.md`, immediately after the paragraph ending with `If scope is clean: proceed to step 3.` and before `3. Harvest`, insert the following subsection:
 ```markdown
 ### Contractor Notes Surface
-The Contractor creates and populates `storage/handoff/CONTRACTOR-NOTES.md` using
+The Contractor creates and populates `storage/dp/active/notes.md` using
 `ops/src/surfaces/notes.md.tpl` as the schema before the operator's post-work audit
 review (before step 2.5). This file is not Operator-authored and is not deferred to
 a later session.
@@ -312,7 +312,7 @@ Required fields:
 Prior `CONTRACTOR-NOTES.md` files in `storage/handoff/` are not retroactively reformatted
 to this schema.
 
-Routing: `storage/handoff/CONTRACTOR-NOTES.md` is registered as a handoff surface member
+Routing: `storage/dp/active/notes.md` is registered as a handoff surface member
 in `ops/lib/manifests/CONTEXT.md`.
 ```
 
@@ -369,7 +369,7 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
-- Before handing work for operator pre-audit review, produce `storage/handoff/CONTRACTOR-NOTES.md` using `ops/src/surfaces/notes.md.tpl` as the schema. See `docs/MANUAL.md` Contractor Notes Surface for field definitions and routing.
+- Before handing work for operator pre-audit review, produce `storage/dp/active/notes.md` using `ops/src/surfaces/notes.md.tpl` as the schema. See `docs/MANUAL.md` Contractor Notes Surface for field definitions and routing.
 - Run prune hygiene: ./ops/bin/prune --scrub.
 - Regenerate session artifacts: `./ops/bin/open --out=auto`
 - Capture updated platform state: `./ops/bin/dump --scope=platform --format=chatgpt --out=auto`

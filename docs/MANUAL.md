@@ -120,7 +120,7 @@ If scope was exceeded, a boundary condition was not anticipated, or an authoriza
 If scope is clean: proceed to step 3.
 
 ### Contractor Notes Surface
-The Contractor creates and populates `storage/handoff/CONTRACTOR-NOTES.md` using
+The Contractor creates and populates `storage/dp/active/notes.md` using
 `ops/src/surfaces/notes.md.tpl` as the schema before the operator's post-work audit
 review (before step 2.5). This file is not Operator-authored and is not deferred to
 a later session.
@@ -151,11 +151,11 @@ Decision Record Trigger:
   are in YAML frontmatter.
 See docs/ops/specs/surfaces/notes.md for the Contractor Notes and decision-record contract specification.
 
-Prior `CONTRACTOR-NOTES.md` files in `storage/handoff/` are not retroactively reformatted
+Prior `notes.md` files in `storage/dp/active/` are not retroactively reformatted
 to this schema.
 
-Routing: `storage/handoff/CONTRACTOR-NOTES.md` is a closeout-time handoff surface under
-`storage/handoff/`. It is required by closeout procedure and DP routing, but it is not a
+Routing: `storage/dp/active/notes.md` is a closeout-time handoff surface under
+`storage/dp/active/`. It is required by closeout procedure and DP routing, but it is not a
 global CONTEXT manifest dependency because it is produced late in the session.
 
 ### dp.md.tpl Hash-Coupling Recovery
@@ -201,7 +201,7 @@ work continues.
 6. Re-run `bash tools/lint/dp.sh TASK.md` and confirm PASS.
 
 **Documentation requirement:** When this recovery is used, record it in the
-`Anomalies Encountered` field of `storage/handoff/CONTRACTOR-NOTES.md`. Include:
+`Anomalies Encountered` field of `storage/dp/active/notes.md`. Include:
 the triggering lint failure output, the `CANONICAL_DP_TEMPLATE_SHA256` value before
 and after the update, whether a TASK rerender (step 5) was required, and the final
 `bash tools/lint/dp.sh TASK.md` PASS confirmation.
@@ -439,3 +439,51 @@ dp.sh fails at preflight if any command substitution token is found in Section 3
 * **Resume cache:** `var/tmp/` (ephemeral worker scratch).
 * **Telemetry:** `logs/` (runtime diagnostics).
 * **Archives:** `archives/` (Museum).
+
+### Trace Cookbook
+Telemetry callers write leaves at `logs/<caller>-<label>-<stamp>-<trace-digest>.md` and update
+`logs/<caller>.telemetry.head` to point at the latest leaf for that caller.
+
+~~~bash
+# Run from repository root.
+# 1) Latest caller heads
+echo "== latest caller heads =="
+find logs -maxdepth 1 -type f -name '*.telemetry.head' -print | sort | while IFS= read -r head; do
+  caller="${head#logs/}"
+  caller="${caller%.telemetry.head}"
+  leaf=""
+  IFS= read -r leaf < "$head" || true
+  if [ -n "$leaf" ]; then
+    printf '%s\t%s\n' "$caller" "$leaf"
+  fi
+done
+
+echo
+# 2) Latest leaf per caller (from each head pointer)
+echo "== latest leaf per caller =="
+find logs -maxdepth 1 -type f -name '*.telemetry.head' -print | sort | while IFS= read -r head; do
+  leaf=""
+  IFS= read -r leaf < "$head" || true
+  if [ -n "$leaf" ] && [ -f "$leaf" ]; then
+    printf '----- %s -----\n' "$leaf"
+    sed -n '1,16p' "$leaf"
+  fi
+done
+
+echo
+# 3) Grep by trace id (set TRACE_ID first)
+echo "== grep by trace id =="
+TRACE_ID="replace-with-trace-id"
+find logs -maxdepth 1 -type f -name '*.md' -print | sort | while IFS= read -r leaf; do
+  grep -nH -m 1 -F "trace_id: ${TRACE_ID}" "$leaf" || true
+done
+
+echo
+# 4) Recent certify + lint activity (sorted by filename stamp token)
+echo "== recent certify and lint activity =="
+find logs -maxdepth 1 -type f \( -name 'certify-*.md' -o -name 'lint-*.md' \) -print \
+| awk -F'[-/]' '{ stamp=$(NF-1); print stamp "\t" $0 }' \
+| sort -k1,1 -k2,2 \
+| tail -n 30 \
+| cut -f2-
+~~~

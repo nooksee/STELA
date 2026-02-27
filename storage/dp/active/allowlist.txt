@@ -16,5 +16,9 @@ archives/surfaces/SoP-????-??-??-*.md
 archives/surfaces/SoP-2026-02-27-11aab0a10.md
 archives/surfaces/PoW-????-??-??-*.md
 archives/surfaces/PoW-2026-02-27-11aab0a10.md
+archives/surfaces/PoW-2026-02-27-edf4eeae8.md
 archives/surfaces/TASK-DP-OPS-0125-*.md
 archives/surfaces/TASK-DP-OPS-0125-11aab0a10.md
+archives/surfaces/TASK-DP-OPS-0126-*.md
+archives/surfaces/SoP-2026-02-27-edf4eeae8.md
+archives/surfaces/TASK-DP-OPS-0126-edf4eeae8.md

@@ -2,13 +2,13 @@
 # Surface Specification: Contractor Notes
 
 ## Purpose
-`storage/handoff/CONTRACTOR-NOTES.md` is the closeout-time handoff surface used for
+`storage/dp/active/notes.md` is the closeout-time handoff surface used for
 operator pre-audit review before final closeout decisions.
 
 ## Surface Roles
 - `ops/src/surfaces/notes.md.tpl`: SSOT schema template for the Contractor Notes
   surface.
-- `storage/handoff/CONTRACTOR-NOTES.md`: Authored instance for the active packet.
+- `storage/dp/active/notes.md`: Authored instance for the active packet.
 - DP closeout routing consumes this surface as a handoff narrative input before
   operator pre-audit review.
 
