@@ -1,7 +1,7 @@
-# Contractor Notes — DP-OPS-0128
+# Contractor Notes — DP-OPS-0129
 
 ## Scope Confirmation
-Executed the scoped implementation and documentation work for DP-OPS-0128 by adding `ops/bin/allowlist`, updating pre-certify instructions in `docs/MANUAL.md`, and updating `storage/dp/active/allowlist.txt` for helper/closeout coverage. Executed required preflight, mandatory receipt, DP-specific receipt, harvest-check, and pre-certify dump commands in preparation for certify closeout routing.
+Executed scoped work for DP-OPS-0129 by adding `ops/bin/trace`, authoring `docs/ops/specs/binaries/trace.md`, updating `docs/MANUAL.md` Trace Cookbook routing, and updating `storage/dp/active/allowlist.txt` for scoped and closeout paths. Maintained `storage/handoff/CLOSING-DP-OPS-0129.md` during execution and prepared SoP and PoW single-entry heads before certify.
 
 ## Anomalies Encountered
 None.
