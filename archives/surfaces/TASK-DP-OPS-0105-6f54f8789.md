@@ -258,12 +258,12 @@ The worker must produce the following:
    **Change C — §3.5.1 Mandatory Closing Block list format.** Replace the entire §3.5.1 body (the six bare-label lines including blank separators) with the following list verbatim:
 ```
    ### 3.5.1 Mandatory Closing Block
-   - Primary Commit Header
-   - Pull Request Title
-   - Pull Request Description
-   - Final Squash Stub
-   - Extended Technical Manifest
-   - Review Conversation Starter
+   - Commit Message
+   - Create Pull Request (Title)
+   - Create Pull Request (Description)
+   - Confirm Merge (Commit Message)
+   - Confirm Merge (Extended Description)
+   - Confirm Merge (Add a Comment)
 ```
    Note: This is an instruction-format change only. The parenthetical type labels (plaintext, markdown) remain required in the actual `storage/handoff/CLOSING-DP-OPS-XXXX.md` sidecar and RESULTS artifact; the style.sh and dp.sh validators are unchanged.
 
@@ -456,9 +456,9 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
 ### 3.5.1 Mandatory Closing Block
-- Primary Commit Header
-- Pull Request Title
-- Pull Request Description
-- Final Squash Stub
-- Extended Technical Manifest
-- Review Conversation Starter
+- Commit Message
+- Create Pull Request (Title)
+- Create Pull Request (Description)
+- Confirm Merge (Commit Message)
+- Confirm Merge (Extended Description)
+- Confirm Merge (Add a Comment)

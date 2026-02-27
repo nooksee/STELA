@@ -249,7 +249,7 @@ extract_results_closing_block() {
   ' "$path"
 }
 
-results_label_regex='^(Primary Commit Header [(]plaintext[)]|Pull Request Title [(]plaintext[)]|Pull Request Description [(]markdown[)]|Final Squash Stub [(]plaintext[)]( [(]Must differ from #1[)]| [(]must differ from Primary Commit Header[)])?|Extended Technical Manifest [(]plaintext[)]|Review Conversation Starter [(]markdown[)])$'
+results_label_regex='^(Commit Message [(]plaintext[)]|Create Pull Request (Title) [(]plaintext[)]|Create Pull Request (Description) [(]markdown[)]|Confirm Merge (Commit Message) [(]plaintext[)]( [(]Must differ from #1[)]| [(]must differ from Commit Message[)])?|Confirm Merge (Extended Description) [(]plaintext[)]|Confirm Merge (Add a Comment) [(]markdown[)])$'
 
 extract_results_field_block() {
   local path="$1"
@@ -282,12 +282,12 @@ lint_results_path() {
   fi
 
   local -a required_label_patterns=(
-    '^Primary Commit Header [(]plaintext[)][[:space:]]*$'
-    '^Pull Request Title [(]plaintext[)][[:space:]]*$'
-    '^Pull Request Description [(]markdown[)][[:space:]]*$'
-    '^Final Squash Stub [(]plaintext[)]( [(]Must differ from #1[)]| [(]must differ from Primary Commit Header[)])?[[:space:]]*$'
-    '^Extended Technical Manifest [(]plaintext[)][[:space:]]*$'
-    '^Review Conversation Starter [(]markdown[)][[:space:]]*$'
+    '^Commit Message [(]plaintext[)][[:space:]]*$'
+    '^Create Pull Request (Title) [(]plaintext[)][[:space:]]*$'
+    '^Create Pull Request (Description) [(]markdown[)][[:space:]]*$'
+    '^Confirm Merge (Commit Message) [(]plaintext[)]( [(]Must differ from #1[)]| [(]must differ from Commit Message[)])?[[:space:]]*$'
+    '^Confirm Merge (Extended Description) [(]plaintext[)][[:space:]]*$'
+    '^Confirm Merge (Add a Comment) [(]markdown[)][[:space:]]*$'
   )
 
   local pattern
@@ -304,18 +304,18 @@ lint_results_path() {
   local pr_description
   local review_starter
 
-  primary_header="$(extract_results_field_block "$closing_tmp" '^Primary Commit Header [(]plaintext[)][[:space:]]*$')"
-  pr_title="$(extract_results_field_block "$closing_tmp" '^Pull Request Title [(]plaintext[)][[:space:]]*$')"
-  final_stub="$(extract_results_field_block "$closing_tmp" '^Final Squash Stub [(]plaintext[)]( [(]Must differ from #1[)]| [(]must differ from Primary Commit Header[)])?[[:space:]]*$')"
-  extended_manifest="$(extract_results_field_block "$closing_tmp" '^Extended Technical Manifest [(]plaintext[)][[:space:]]*$')"
-  pr_description="$(extract_results_field_block "$closing_tmp" '^Pull Request Description [(]markdown[)][[:space:]]*$')"
-  review_starter="$(extract_results_field_block "$closing_tmp" '^Review Conversation Starter [(]markdown[)][[:space:]]*$')"
+  primary_header="$(extract_results_field_block "$closing_tmp" '^Commit Message [(]plaintext[)][[:space:]]*$')"
+  pr_title="$(extract_results_field_block "$closing_tmp" '^Create Pull Request (Title) [(]plaintext[)][[:space:]]*$')"
+  final_stub="$(extract_results_field_block "$closing_tmp" '^Confirm Merge (Commit Message) [(]plaintext[)]( [(]Must differ from #1[)]| [(]must differ from Commit Message[)])?[[:space:]]*$')"
+  extended_manifest="$(extract_results_field_block "$closing_tmp" '^Confirm Merge (Extended Description) [(]plaintext[)][[:space:]]*$')"
+  pr_description="$(extract_results_field_block "$closing_tmp" '^Create Pull Request (Description) [(]markdown[)][[:space:]]*$')"
+  review_starter="$(extract_results_field_block "$closing_tmp" '^Confirm Merge (Add a Comment) [(]markdown[)][[:space:]]*$')"
 
   local -a strict_labels=(
-    "Primary Commit Header (plaintext)"
-    "Pull Request Title (plaintext)"
-    "Final Squash Stub (plaintext)"
-    "Extended Technical Manifest (plaintext)"
+    "Commit Message (plaintext)"
+    "Create Pull Request (Title) (plaintext)"
+    "Confirm Merge (Commit Message) (plaintext)"
+    "Confirm Merge (Extended Description) (plaintext)"
   )
   local -a strict_values=(
     "$primary_header"
@@ -336,17 +336,17 @@ lint_results_path() {
   done
 
   if ! field_block_nonempty "$pr_description"; then
-    fail "RESULTS permissive field empty: Pull Request Description (markdown)"
+    fail "RESULTS permissive field empty: Create Pull Request (Description) (markdown)"
   fi
   if ! field_block_nonempty "$review_starter"; then
-    fail "RESULTS permissive field empty: Review Conversation Starter (markdown)"
+    fail "RESULTS permissive field empty: Confirm Merge (Add a Comment) (markdown)"
   fi
 
   if grep -Eiq 'ENTER[[:space:]_-]*DESCRIPTION[[:space:]_-]*HERE|PLACEHOLDER' <<< "$pr_description"; then
-    fail "RESULTS permissive field contains placeholder text: Pull Request Description (markdown)"
+    fail "RESULTS permissive field contains placeholder text: Create Pull Request (Description) (markdown)"
   fi
   if grep -Eiq 'ENTER[[:space:]_-]*DESCRIPTION[[:space:]_-]*HERE|PLACEHOLDER' <<< "$review_starter"; then
-    fail "RESULTS permissive field contains placeholder text: Review Conversation Starter (markdown)"
+    fail "RESULTS permissive field contains placeholder text: Confirm Merge (Add a Comment) (markdown)"
   fi
 
   local primary_first
@@ -354,7 +354,7 @@ lint_results_path() {
   primary_first="$(printf '%s\n' "$primary_header" | sed -n '/[^[:space:]]/ { s/^[[:space:]]*//; s/[[:space:]]*$//; p; q; }')"
   final_first="$(printf '%s\n' "$final_stub" | sed -n '/[^[:space:]]/ { s/^[[:space:]]*//; s/[[:space:]]*$//; p; q; }')"
   if [[ -n "$primary_first" && -n "$final_first" && "$primary_first" == "$final_first" ]]; then
-    fail "RESULTS Final Squash Stub must differ from Primary Commit Header"
+    fail "RESULTS Confirm Merge (Commit Message) must differ from Commit Message"
   fi
 
   rm -f "$closing_tmp"
@@ -1290,23 +1290,23 @@ run_test() {
 # DP-OPS-0099 RESULTS
 
 ## Mandatory Closing Block
-Primary Commit Header (plaintext)
+Commit Message (plaintext)
 DP-OPS-0099 validate results lint path
 
-Pull Request Title (plaintext)
+Create Pull Request (Title) (plaintext)
 DP-OPS-0099 Validate RESULTS lint path
 
-Pull Request Description (markdown)
+Create Pull Request (Description) (markdown)
 ### Summary
 - Added RESULTS mandatory closing block checks.
 
-Final Squash Stub (plaintext) (Must differ from #1)
+Confirm Merge (Commit Message) (plaintext) (Must differ from #1)
 Validate RESULTS mandatory closing block rules
 
-Extended Technical Manifest (plaintext)
+Confirm Merge (Extended Description) (plaintext)
 tools/lint/dp.sh
 
-Review Conversation Starter (markdown)
+Confirm Merge (Add a Comment) (markdown)
 Does this validator enforce strict plaintext versus permissive markdown fields correctly?
 TESTRESULTS
   lint_path "$tmp_results_valid" >/dev/null
@@ -1315,22 +1315,22 @@ TESTRESULTS
 # DP-OPS-0099 RESULTS
 
 ## Mandatory Closing Block
-Primary Commit Header (plaintext)
+Commit Message (plaintext)
 *invalid markdown token*
 
-Pull Request Title (plaintext)
+Create Pull Request (Title) (plaintext)
 DP-OPS-0099 Validate RESULTS lint path
 
-Pull Request Description (markdown)
+Create Pull Request (Description) (markdown)
 ENTER DESCRIPTION HERE
 
-Final Squash Stub (plaintext) (Must differ from #1)
+Confirm Merge (Commit Message) (plaintext) (Must differ from #1)
 DP-OPS-0099 Validate RESULTS lint path
 
-Extended Technical Manifest (plaintext)
+Confirm Merge (Extended Description) (plaintext)
 tools/lint/dp.sh
 
-Review Conversation Starter (markdown)
+Confirm Merge (Add a Comment) (markdown)
 PLACEHOLDER
 TESTRESULTS
   if lint_path "$tmp_results_invalid" >/dev/null 2>&1; then

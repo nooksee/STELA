@@ -1,4 +1,4 @@
-<!-- CCD: ff_target="governance-narrative" ff_band="30-40" -->
+<!-- CCD: ff_target="governance-narrative" ff_band="40-65" -->
 # Policy of Truth (PoT)
 
 ## Preamble: Doctrine
