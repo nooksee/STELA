@@ -1,3 +1,9 @@
+---
+trace_id: stela-20260227T201040Z-b059dd62
+packet_id: DP-OPS-0129
+created_at: 2026-02-27T20:10:40Z
+previous: archives/surfaces/TASK-DP-OPS-0128-8930f88f8.md
+---
 # STELA TASK DASHBOARD
 Status: ACTIVE
 Owner: Integrator
