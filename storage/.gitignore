@@ -6,6 +6,7 @@ dp/*
 !dp/active/
 dp/active/*
 !dp/active/allowlist.txt
+!dp/active/notes.md
 !dp/intake/
 dp/intake/*
 !dp/intake/.gitkeep

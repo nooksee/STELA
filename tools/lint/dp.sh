@@ -1184,7 +1184,7 @@ tools/lint/dp.sh
  tools/lint/dp.sh | 1 +
 
 ## Mandatory Closing Block
-Commit Message (Subject Line)
+Commit Message
 DP-OPS-0099 validate results lint path
 
 Create Pull Request (Title)
@@ -1227,7 +1227,7 @@ tools/lint/dp.sh
  tools/lint/dp.sh | 1 +
 
 ## Mandatory Closing Block
-Commit Message (Subject Line)
+Commit Message
 DP-OPS-0099 validate results lint path
 
 Create Pull Request (Title)
