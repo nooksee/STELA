@@ -1,0 +1,666 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=/dev/null
+source "${REPO_ROOT}/ops/lib/scripts/common.sh"
+
+cd "$REPO_ROOT" || exit 1
+
+# leaf lint marker: emit_binary_leaf intentionally not invoked to keep
+# ops/bin/trace read-only for telemetry inspection.
+
+DEFAULT_LIMIT=30
+DEFAULT_FORMAT="table"
+UNKNOWN_VALUE="unknown"
+UNRESOLVED_HEAD_VALUE="(unresolved)"
+
+declare -A HEAD_POINTERS=()
+declare -a HEAD_CALLERS=()
+declare -a HEAD_CALLERS_BY_LENGTH=()
+declare -a ROW_BUFFER=()
+
+top_usage() {
+  cat <<'USAGE'
+Usage: ops/bin/trace <subcommand> [args] [--limit=N] [--format=json|md]
+
+Read-only telemetry explorer for logs/.
+
+Subcommands:
+  recent [--limit=N] [--format=json|md]
+  callers [--format=json|md]
+  by-caller <name> [--limit=N] [--format=json|md]
+  by-trace <trace_id> [--format=json|md]
+  heads [--format=json|md]
+
+Defaults:
+  --format=table
+  --limit=30 (recent, by-caller)
+USAGE
+}
+
+subcommand_usage() {
+  local subcommand="$1"
+  case "$subcommand" in
+    recent)
+      cat <<'USAGE'
+Usage: ops/bin/trace recent [--limit=N] [--format=json|md]
+USAGE
+      ;;
+    callers)
+      cat <<'USAGE'
+Usage: ops/bin/trace callers [--format=json|md]
+USAGE
+      ;;
+    by-caller)
+      cat <<'USAGE'
+Usage: ops/bin/trace by-caller <name> [--limit=N] [--format=json|md]
+USAGE
+      ;;
+    by-trace)
+      cat <<'USAGE'
+Usage: ops/bin/trace by-trace <trace_id> [--format=json|md]
+USAGE
+      ;;
+    heads)
+      cat <<'USAGE'
+Usage: ops/bin/trace heads [--format=json|md]
+USAGE
+      ;;
+    *)
+      die "Unknown subcommand for help: ${subcommand}"
+      ;;
+  esac
+}
+
+validate_format() {
+  local format="$1"
+  case "$format" in
+    table|json|md)
+      ;;
+    *)
+      die "Unsupported --format value: ${format} (expected table, json, or md)"
+      ;;
+  esac
+}
+
+validate_limit() {
+  local value="$1"
+  [[ "$value" =~ ^[1-9][0-9]*$ ]] || die "Invalid --limit value: ${value} (expected positive integer)"
+}
+
+json_escape() {
+  local value="$1"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  value="${value//$'\n'/\\n}"
+  value="${value//$'\r'/\\r}"
+  value="${value//$'\t'/\\t}"
+  printf '%s' "$value"
+}
+
+md_escape() {
+  local value="$1"
+  value="${value//|/\\|}"
+  printf '%s' "$value"
+}
+
+render_rows() {
+  local format="$1"
+  local row=""
+
+  case "$format" in
+    table)
+      printf 'caller\tlabel\tstamp\ttrace_digest\tpath\n'
+      if (( ${#ROW_BUFFER[@]} > 0 )); then
+        for row in "${ROW_BUFFER[@]}"; do
+          printf '%s\n' "$row"
+        done
+      fi
+      ;;
+    md)
+      printf '| caller | label | stamp | trace_digest | path |\n'
+      printf '| --- | --- | --- | --- | --- |\n'
+      if (( ${#ROW_BUFFER[@]} > 0 )); then
+        for row in "${ROW_BUFFER[@]}"; do
+          local caller label stamp digest path
+          IFS=$'\t' read -r caller label stamp digest path <<< "$row"
+          printf '| %s | %s | %s | %s | %s |\n' \
+            "$(md_escape "$caller")" \
+            "$(md_escape "$label")" \
+            "$(md_escape "$stamp")" \
+            "$(md_escape "$digest")" \
+            "$(md_escape "$path")"
+        done
+      fi
+      ;;
+    json)
+      printf '[\n'
+      if (( ${#ROW_BUFFER[@]} > 0 )); then
+        local index=0
+        local total="${#ROW_BUFFER[@]}"
+        for row in "${ROW_BUFFER[@]}"; do
+          local caller label stamp digest path
+          IFS=$'\t' read -r caller label stamp digest path <<< "$row"
+          index=$((index + 1))
+          local comma=""
+          if (( index < total )); then
+            comma=","
+          fi
+          printf '  {"caller":"%s","label":"%s","stamp":"%s","trace_digest":"%s","path":"%s"}%s\n' \
+            "$(json_escape "$caller")" \
+            "$(json_escape "$label")" \
+            "$(json_escape "$stamp")" \
+            "$(json_escape "$digest")" \
+            "$(json_escape "$path")" \
+            "$comma"
+        done
+      fi
+      printf ']\n'
+      ;;
+    *)
+      die "renderer received unsupported format: ${format}"
+      ;;
+  esac
+}
+
+load_heads() {
+  HEAD_POINTERS=()
+  HEAD_CALLERS=()
+  HEAD_CALLERS_BY_LENGTH=()
+
+  if [[ ! -d logs ]]; then
+    return 0
+  fi
+
+  shopt -s nullglob
+  local head_file=""
+  for head_file in logs/*.telemetry.head; do
+    local caller
+    caller="${head_file##*/}"
+    caller="${caller%.telemetry.head}"
+    HEAD_CALLERS+=("$caller")
+
+    local pointer_raw=""
+    IFS= read -r pointer_raw < "$head_file" || true
+    pointer_raw="$(trim "$pointer_raw")"
+    HEAD_POINTERS["$caller"]="$pointer_raw"
+  done
+  shopt -u nullglob
+
+  if (( ${#HEAD_CALLERS[@]} > 0 )); then
+    mapfile -t HEAD_CALLERS_BY_LENGTH < <(
+      printf '%s\n' "${HEAD_CALLERS[@]}" | awk 'NF { print length, $0 }' | sort -nr -k1,1 -k2,2 | cut -d' ' -f2-
+    )
+  fi
+}
+
+resolve_head_value_for_heads() {
+  local pointer_raw="$1"
+  if [[ -z "$pointer_raw" ]]; then
+    printf '%s' "$UNRESOLVED_HEAD_VALUE"
+    return 0
+  fi
+
+  if [[ "$pointer_raw" == /* ]]; then
+    printf '%s' "$UNRESOLVED_HEAD_VALUE"
+    return 0
+  fi
+
+  if [[ ! -f "$pointer_raw" ]]; then
+    printf '%s' "$UNRESOLVED_HEAD_VALUE"
+    return 0
+  fi
+
+  printf '%s' "$pointer_raw"
+}
+
+resolve_head_value_for_callers() {
+  local pointer_raw="$1"
+  if [[ -z "$pointer_raw" ]]; then
+    printf '%s' "$UNRESOLVED_HEAD_VALUE"
+    return 0
+  fi
+  if [[ "$pointer_raw" == /* ]]; then
+    printf '%s' "$UNRESOLVED_HEAD_VALUE"
+    return 0
+  fi
+  printf '%s' "$pointer_raw"
+}
+
+read_frontmatter_fields() {
+  local file="$1"
+  FM_TRACE_ID=""
+  FM_CALLER=""
+  FM_LABEL=""
+  FM_CREATED_AT=""
+  FM_PREVIOUS=""
+
+  local first_line=""
+  exec 3<"$file"
+  if ! IFS= read -r first_line <&3; then
+    exec 3<&-
+    return 0
+  fi
+
+  if [[ "$first_line" != "---" ]]; then
+    exec 3<&-
+    return 0
+  fi
+
+  local line=""
+  while IFS= read -r line <&3; do
+    [[ "$line" == "---" ]] && break
+    [[ "$line" == *:* ]] || continue
+
+    local key value
+    key="${line%%:*}"
+    value="${line#*:}"
+    value="$(trim "$value")"
+
+    case "$key" in
+      trace_id)
+        FM_TRACE_ID="$value"
+        ;;
+      caller)
+        FM_CALLER="$value"
+        ;;
+      label)
+        FM_LABEL="$value"
+        ;;
+      created_at)
+        FM_CREATED_AT="$value"
+        ;;
+      previous)
+        FM_PREVIOUS="$value"
+        ;;
+      *)
+        ;;
+    esac
+  done
+
+  exec 3<&-
+}
+
+parse_leaf_filename() {
+  local path="$1"
+  LEAF_PREFIX=""
+  LEAF_STAMP=""
+  LEAF_DIGEST=""
+
+  local base
+  base="${path##*/}"
+  [[ "$base" == *.md ]] || return 1
+
+  base="${base%.md}"
+  [[ "$base" == *-* ]] || return 1
+
+  local digest remainder stamp prefix
+  digest="${base##*-}"
+  remainder="${base%-*}"
+  [[ "$remainder" == *-* ]] || return 1
+  stamp="${remainder##*-}"
+  prefix="${remainder%-*}"
+
+  [[ -n "$prefix" ]] || return 1
+  [[ -n "$digest" ]] || return 1
+  [[ "$stamp" =~ ^[0-9]{8}T[0-9]{6}Z$ ]] || return 1
+
+  LEAF_PREFIX="$prefix"
+  LEAF_STAMP="$stamp"
+  LEAF_DIGEST="$digest"
+  return 0
+}
+
+infer_caller_label() {
+  local prefix="$1"
+  local fm_caller="$2"
+  local fm_label="$3"
+
+  RES_CALLER=""
+  RES_LABEL=""
+
+  if [[ -n "$fm_caller" ]]; then
+    RES_CALLER="$(slugify_token "$fm_caller")"
+  fi
+
+  if [[ -z "$RES_CALLER" && ${#HEAD_CALLERS_BY_LENGTH[@]} -gt 0 ]]; then
+    local candidate=""
+    for candidate in "${HEAD_CALLERS_BY_LENGTH[@]}"; do
+      if [[ "$prefix" == "$candidate" || "$prefix" == "$candidate-"* ]]; then
+        RES_CALLER="$candidate"
+        break
+      fi
+    done
+  fi
+
+  if [[ -z "$RES_CALLER" ]]; then
+    RES_CALLER="${prefix%%-*}"
+  fi
+
+  if [[ -z "$RES_CALLER" ]]; then
+    RES_CALLER="$UNKNOWN_VALUE"
+  fi
+
+  if [[ -n "$fm_label" ]]; then
+    RES_LABEL="$fm_label"
+  elif [[ "$prefix" == "$RES_CALLER" ]]; then
+    RES_LABEL="$UNKNOWN_VALUE"
+  elif [[ "$prefix" == "$RES_CALLER-"* ]]; then
+    RES_LABEL="${prefix#${RES_CALLER}-}"
+  else
+    RES_LABEL="$UNKNOWN_VALUE"
+  fi
+
+  if [[ -z "$RES_LABEL" ]]; then
+    RES_LABEL="$UNKNOWN_VALUE"
+  fi
+}
+
+build_leaf_rows() {
+  local filter_caller="$1"
+  local filter_digest="$2"
+  local filter_trace_id="$3"
+  local read_frontmatter="$4"
+
+  ROW_BUFFER=()
+
+  if [[ ! -d logs ]]; then
+    return 0
+  fi
+
+  local file=""
+  while IFS= read -r file; do
+    parse_leaf_filename "$file" || continue
+
+    if [[ -n "$filter_digest" && "$LEAF_DIGEST" != "$filter_digest" ]]; then
+      continue
+    fi
+
+    if [[ "$read_frontmatter" == "1" ]]; then
+      read_frontmatter_fields "$file"
+    else
+      FM_TRACE_ID=""
+      FM_CALLER=""
+      FM_LABEL=""
+      FM_CREATED_AT=""
+      FM_PREVIOUS=""
+    fi
+    infer_caller_label "$LEAF_PREFIX" "$FM_CALLER" "$FM_LABEL"
+
+    if [[ -n "$filter_caller" && "$RES_CALLER" != "$filter_caller" ]]; then
+      continue
+    fi
+
+    if [[ -n "$filter_trace_id" && -n "$FM_TRACE_ID" && "$FM_TRACE_ID" != "$filter_trace_id" ]]; then
+      continue
+    fi
+
+    ROW_BUFFER+=("${RES_CALLER}"$'\t'"${RES_LABEL}"$'\t'"${LEAF_STAMP}"$'\t'"${LEAF_DIGEST}"$'\t'"${file}")
+  done < <(find logs -maxdepth 1 -type f -name '*.md' -print)
+}
+
+sort_rows_by_stamp_desc() {
+  if (( ${#ROW_BUFFER[@]} == 0 )); then
+    return 0
+  fi
+
+  mapfile -t ROW_BUFFER < <(printf '%s\n' "${ROW_BUFFER[@]}" | sort -t $'\t' -k3,3r -k5,5)
+}
+
+limit_rows() {
+  local limit="$1"
+  if (( ${#ROW_BUFFER[@]} > limit )); then
+    ROW_BUFFER=("${ROW_BUFFER[@]:0:limit}")
+  fi
+}
+
+cmd_recent() {
+  local limit="$DEFAULT_LIMIT"
+  local format="$DEFAULT_FORMAT"
+
+  while (($# > 0)); do
+    case "$1" in
+      --limit=*)
+        limit="${1#--limit=}"
+        validate_limit "$limit"
+        ;;
+      --format=*)
+        format="${1#--format=}"
+        validate_format "$format"
+        ;;
+      -h|--help)
+        subcommand_usage "recent"
+        exit 0
+        ;;
+      *)
+        die "Unknown argument for recent: $1"
+        ;;
+    esac
+    shift
+  done
+
+  load_heads
+  build_leaf_rows "" "" "" "0"
+  sort_rows_by_stamp_desc
+  limit_rows "$limit"
+  render_rows "$format"
+}
+
+cmd_callers() {
+  local format="$DEFAULT_FORMAT"
+
+  while (($# > 0)); do
+    case "$1" in
+      --format=*)
+        format="${1#--format=}"
+        validate_format "$format"
+        ;;
+      -h|--help)
+        subcommand_usage "callers"
+        exit 0
+        ;;
+      *)
+        die "Unknown argument for callers: $1"
+        ;;
+    esac
+    shift
+  done
+
+  load_heads
+  build_leaf_rows "" "" "" "0"
+
+  declare -A caller_set=()
+  local caller=""
+
+  if (( ${#HEAD_CALLERS[@]} > 0 )); then
+    for caller in "${HEAD_CALLERS[@]}"; do
+      caller_set["$caller"]=1
+    done
+  fi
+
+  local row=""
+  for row in "${ROW_BUFFER[@]}"; do
+    local parsed_caller parsed_label parsed_stamp parsed_digest parsed_path
+    IFS=$'\t' read -r parsed_caller parsed_label parsed_stamp parsed_digest parsed_path <<< "$row"
+    caller_set["$parsed_caller"]=1
+  done
+
+  local -a sorted_callers=()
+  if (( ${#caller_set[@]} > 0 )); then
+    mapfile -t sorted_callers < <(printf '%s\n' "${!caller_set[@]}" | sort)
+  fi
+
+  ROW_BUFFER=()
+  for caller in "${sorted_callers[@]}"; do
+    local pointer="${HEAD_POINTERS[$caller]-}"
+    local pointer_display
+    pointer_display="$(resolve_head_value_for_callers "$pointer")"
+    ROW_BUFFER+=("${caller}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${pointer_display}")
+  done
+
+  render_rows "$format"
+}
+
+cmd_by_caller() {
+  local caller_input=""
+  local limit="$DEFAULT_LIMIT"
+  local format="$DEFAULT_FORMAT"
+
+  while (($# > 0)); do
+    case "$1" in
+      --limit=*)
+        limit="${1#--limit=}"
+        validate_limit "$limit"
+        ;;
+      --format=*)
+        format="${1#--format=}"
+        validate_format "$format"
+        ;;
+      -h|--help)
+        subcommand_usage "by-caller"
+        exit 0
+        ;;
+      --*)
+        die "Unknown argument for by-caller: $1"
+        ;;
+      *)
+        if [[ -n "$caller_input" ]]; then
+          die "Unexpected extra argument for by-caller: $1"
+        fi
+        caller_input="$1"
+        ;;
+    esac
+    shift
+  done
+
+  [[ -n "$caller_input" ]] || die "by-caller requires <name>"
+
+  local caller_slug
+  caller_slug="$(slugify_token "$caller_input")"
+  [[ -n "$caller_slug" ]] || die "by-caller resolved empty caller slug from input: ${caller_input}"
+
+  load_heads
+  build_leaf_rows "$caller_slug" "" "" "0"
+  sort_rows_by_stamp_desc
+  limit_rows "$limit"
+  render_rows "$format"
+}
+
+cmd_by_trace() {
+  local trace_id=""
+  local format="$DEFAULT_FORMAT"
+
+  while (($# > 0)); do
+    case "$1" in
+      --format=*)
+        format="${1#--format=}"
+        validate_format "$format"
+        ;;
+      -h|--help)
+        subcommand_usage "by-trace"
+        exit 0
+        ;;
+      --*)
+        die "Unknown argument for by-trace: $1"
+        ;;
+      *)
+        if [[ -n "$trace_id" ]]; then
+          die "Unexpected extra argument for by-trace: $1"
+        fi
+        trace_id="$1"
+        ;;
+    esac
+    shift
+  done
+
+  [[ -n "$trace_id" ]] || die "by-trace requires <trace_id>"
+
+  local digest
+  digest="$(short_hash "$trace_id")"
+
+  load_heads
+  build_leaf_rows "" "$digest" "$trace_id" "1"
+  sort_rows_by_stamp_desc
+  render_rows "$format"
+}
+
+cmd_heads() {
+  local format="$DEFAULT_FORMAT"
+
+  while (($# > 0)); do
+    case "$1" in
+      --format=*)
+        format="${1#--format=}"
+        validate_format "$format"
+        ;;
+      -h|--help)
+        subcommand_usage "heads"
+        exit 0
+        ;;
+      *)
+        die "Unknown argument for heads: $1"
+        ;;
+    esac
+    shift
+  done
+
+  load_heads
+
+  local -a sorted_callers=()
+  if (( ${#HEAD_CALLERS[@]} > 0 )); then
+    mapfile -t sorted_callers < <(printf '%s\n' "${HEAD_CALLERS[@]}" | sort)
+  fi
+
+  ROW_BUFFER=()
+  local caller=""
+  for caller in "${sorted_callers[@]}"; do
+    local pointer_raw="${HEAD_POINTERS[$caller]-}"
+    local pointer_display
+    pointer_display="$(resolve_head_value_for_heads "$pointer_raw")"
+    ROW_BUFFER+=("${caller}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${pointer_display}")
+  done
+
+  render_rows "$format"
+}
+
+main() {
+  if (($# == 0)); then
+    top_usage >&2
+    exit 1
+  fi
+
+  case "$1" in
+    -h|--help)
+      top_usage
+      exit 0
+      ;;
+  esac
+
+  local subcommand="$1"
+  shift
+
+  case "$subcommand" in
+    recent)
+      cmd_recent "$@"
+      ;;
+    callers)
+      cmd_callers "$@"
+      ;;
+    by-caller)
+      cmd_by_caller "$@"
+      ;;
+    by-trace)
+      cmd_by_trace "$@"
+      ;;
+    heads)
+      cmd_heads "$@"
+      ;;
+    *)
+      die "Unknown subcommand: ${subcommand}"
+      ;;
+  esac
+}
+
+main "$@"

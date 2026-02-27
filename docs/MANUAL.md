@@ -452,13 +452,36 @@ dp.sh fails at preflight if any command substitution token is found in Section 3
 * **Archives:** `archives/` (Museum).
 
 ### Trace Cookbook
+Primary interface: `ops/bin/trace`.
 Telemetry callers write leaves at `logs/<caller>-<label>-<stamp>-<trace-digest>.md` and update
 `logs/<caller>.telemetry.head` to point at the latest leaf for that caller.
 
 ~~~bash
 # Run from repository root.
-# 1) Latest caller heads
-echo "== latest caller heads =="
+# Latest head pointers per caller (stable placeholder for missing targets)
+./ops/bin/trace heads
+
+# Caller list with current head pointer values
+./ops/bin/trace callers
+
+# Recent telemetry leaves (default table output)
+./ops/bin/trace recent --limit=30
+
+# Recent leaves in markdown or JSON
+./ops/bin/trace recent --limit=5 --format=md
+./ops/bin/trace recent --limit=5 --format=json
+
+# Filter by caller slug
+./ops/bin/trace by-caller open --limit=10
+
+# Filter by trace identifier (digest computed internally)
+./ops/bin/trace by-trace stela-20260227T202038Z-6dd41793
+~~~
+
+Legacy shell pipelines remain available as secondary reference:
+
+~~~bash
+# Latest caller heads
 find logs -maxdepth 1 -type f -name '*.telemetry.head' -print | sort | while IFS= read -r head; do
   caller="${head#logs/}"
   caller="${caller%.telemetry.head}"
@@ -469,29 +492,13 @@ find logs -maxdepth 1 -type f -name '*.telemetry.head' -print | sort | while IFS
   fi
 done
 
-echo
-# 2) Latest leaf per caller (from each head pointer)
-echo "== latest leaf per caller =="
-find logs -maxdepth 1 -type f -name '*.telemetry.head' -print | sort | while IFS= read -r head; do
-  leaf=""
-  IFS= read -r leaf < "$head" || true
-  if [ -n "$leaf" ] && [ -f "$leaf" ]; then
-    printf '----- %s -----\n' "$leaf"
-    sed -n '1,16p' "$leaf"
-  fi
-done
-
-echo
-# 3) Grep by trace id (set TRACE_ID first)
-echo "== grep by trace id =="
+# Grep by trace id (set TRACE_ID first)
 TRACE_ID="replace-with-trace-id"
 find logs -maxdepth 1 -type f -name '*.md' -print | sort | while IFS= read -r leaf; do
   grep -nH -m 1 -F "trace_id: ${TRACE_ID}" "$leaf" || true
 done
 
-echo
-# 4) Recent certify + lint activity (sorted by filename stamp token)
-echo "== recent certify and lint activity =="
+# Recent certify + lint activity (sorted by filename stamp token)
 find logs -maxdepth 1 -type f \( -name 'certify-*.md' -o -name 'lint-*.md' \) -print \
 | awk -F'[-/]' '{ stamp=$(NF-1); print stamp "\t" $0 }' \
 | sort -k1,1 -k2,2 \
