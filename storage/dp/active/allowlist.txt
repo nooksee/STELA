@@ -4,6 +4,8 @@ PoW.md
 ops/bin/draft
 docs/ops/specs/binaries/draft.md
 storage/dp/active/allowlist.txt
+ops/lib/manifests/CLOSING.md
+tools/lint/style.sh
 llms.txt
 llms-core.txt
 llms-full.txt
@@ -17,3 +19,5 @@ archives/surfaces/PoW-????-??-??-*.md
 archives/surfaces/PoW-2026-02-26-d14fcf144.md
 archives/surfaces/TASK-DP-OPS-0122-*.md
 archives/surfaces/TASK-DP-OPS-0122-d14fcf144.md
+archives/surfaces/TASK-DP-OPS-0123-552293f05.md
+storage/handoff/CLOSING-DP-OPS-0123.md

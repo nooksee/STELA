@@ -1,20 +1,20 @@
-<!-- CCD: ff_target="machine-dense" ff_band="10-20" -->
+<!-- CCD: ff_target="machine-dense" ff_band="70-85" -->
 # Closing Labels Manifest
 
 ## Section 1: Current Closeout Labels
-Primary Commit Header
+Commit Message (Subject Line)
 
 
-Pull Request Title
+Create Pull Request (Title)
 
 
-Pull Request Description
+Create Pull Request (Description)
 
 
-Final Squash Stub
+Confirm Merge (Commit Message)
 
 
-Commit Message (Extended Description)
+Confirm Merge (Extended Description)
 
 
-Review Conversation Starter
+Confirm Merge (Add a Comment)

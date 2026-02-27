@@ -48,7 +48,7 @@ Think of RESULTS like a flight recorder that captures what actually ran and what
 
 ## Mandatory Closing Block Field Specifications
 
-### Field: Primary Commit Header
+### Field: Commit Message
 Audience: Engineer running `git log --oneline`.
 
 Job: Identify the change with maximum compression. No motivation, no scope narrative. One imperative-mood line.
@@ -87,7 +87,7 @@ What good looks like:
 
 What bad looks like: `Added doc updates for closing blocks.` Failure mode: single-line restatement that omits risks and does not direct reviewer attention.
 
-### Field: Final Squash Stub
+### Field: Confirm Merge (Commit Message)
 Audience: Main branch history reader.
 
 Job: Frame what landed on trunk, not what was worked on in the branch. Verb and subject must differ from the commit header.
@@ -96,7 +96,7 @@ What good looks like: `Main history now includes explicit six-field closing sema
 
 What bad looks like: `Define closing block field semantics in RESULTS surface spec.` Failure mode: commit-header echo that repeats verb and subject instead of framing trunk outcome.
 
-### Field: Commit Message (Extended Description)
+### Field: Confirm Merge (Extended Description)
 Audience: Automated tools and future archaeology.
 
 Job: A newline-separated list of file paths. Zero prose. Deliberately boring. Machine-readable and complete.
@@ -116,7 +116,7 @@ ops/src/surfaces/closing.md.tpl
 ```
 Failure mode: prose contamination breaks machine-oriented manifest semantics.
 
-### Field: Review Conversation Starter
+### Field: Confirm Merge (Add a Comment)
 Audience: Reviewer receiving the PR.
 
 Job: A genuine question specific to this DP's design decision, tradeoff, or risk. If a reviewer reads it and thinks "good question," it is working.

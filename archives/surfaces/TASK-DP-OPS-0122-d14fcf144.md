@@ -151,29 +151,35 @@ Notes:
 
 ## 3.3 Scope and Safety
 Objective:
-Rename the closing sidecar field `Extended Technical Manifest` to `Commit Message (Extended Description)` across the full synchronized contract: closing sidecar template, certify validator and emitter, style lint, results lint, task lint (certify-routed path only), DP template, TASK template, surface specs, and MANUAL guidance. Cutover is strict: new label only; old label is rejected immediately in all current-schema paths. The grandfathered legacy label `Extended Technical Manifest (plaintext)` in `tools/lint/task.sh` `closing_labels` retains its exact current text for historical TASK leaves only and is not modified.
+Rename the closing sidecar field `Confirm Merge (Extended Description)` to `Confirm Merge (Extended Description)` across the full synchronized contract: closing sidecar template, certify validator and emitter, style lint, results lint, task lint (certify-routed path only), DP template, TASK template, surface specs, and MANUAL guidance. Cutover is strict: new label only; old label is rejected immediately in all current-schema paths. The grandfathered legacy label `Confirm Merge (Extended Description) (plaintext)` in `tools/lint/task.sh` `closing_labels` retains its exact current text for historical TASK leaves only and is not modified.
+- Commit Message (Subject Line)
+- Create Pull Request (Title)
+- Create Pull Request (Description)
+- Confirm Merge (Commit Message)
+- Confirm Merge (Extended Description)
+- Confirm Merge (Add a Comment)
 
 In scope:
-- `ops/src/surfaces/closing.md.tpl` — rename field label line `Extended Technical Manifest` to `Commit Message (Extended Description)`
+- `ops/src/surfaces/closing.md.tpl` — rename field label line `Confirm Merge (Extended Description)` to `Confirm Merge (Extended Description)`
 - `ops/bin/certify` — rename `manifest_start_label` constant; rename the emitted §3.5.1 closing block list label; rename the validator regression fixture label; confirm no other occurrences of the old label remain
-- `tools/lint/style.sh` — rename all occurrences of `Extended Technical Manifest` in closing-block check functions: `check_closing_block_lead_words`, `check_closing_block_manifest_paths` (including `manifest_start_regex` and `manifest_field_name` variables), and `check_closing_block_pr_description_markdown`
-- `tools/lint/results.sh` — rename `Extended Technical Manifest` in `required_closing_labels_current` array; rename the `extract_field_block` call boundary that references the old label; rename the empty-check failure message
-- `tools/lint/task.sh` — rename `- Extended Technical Manifest` to `- Commit Message (Extended Description)` in the `closing_list_items` array (certify-routed path); leave `Extended Technical Manifest (plaintext)` in the `closing_labels` array (legacy grandfathered path) unchanged
-- `ops/src/surfaces/dp.md.tpl` — rename `- Extended Technical Manifest` to `- Commit Message (Extended Description)` in the §3.5.1 Mandatory Closing Block list; rename the matching label occurrence in the §3.5.1 certify-generates narrative text
+- `tools/lint/style.sh` — rename all occurrences of `Confirm Merge (Extended Description)` in closing-block check functions: `check_closing_block_lead_words`, `check_closing_block_manifest_paths` (including `manifest_start_regex` and `manifest_field_name` variables), and `check_closing_block_pr_description_markdown`
+- `tools/lint/results.sh` — rename `Confirm Merge (Extended Description)` in `required_closing_labels_current` array; rename the `extract_field_block` call boundary that references the old label; rename the empty-check failure message
+- `tools/lint/task.sh` — rename `- Confirm Merge (Extended Description)` to `- Confirm Merge (Extended Description)` in the `closing_list_items` array (certify-routed path); leave `Confirm Merge (Extended Description) (plaintext)` in the `closing_labels` array (legacy grandfathered path) unchanged
+- `ops/src/surfaces/dp.md.tpl` — rename `- Confirm Merge (Extended Description)` to `- Confirm Merge (Extended Description)` in the §3.5.1 Mandatory Closing Block list; rename the matching label occurrence in the §3.5.1 certify-generates narrative text
 - `tools/lint/dp.sh` — replace `CANONICAL_DP_TEMPLATE_SHA256` with the sha256 of the modified `ops/src/surfaces/dp.md.tpl`; no logic changes
-- `ops/src/surfaces/task.md.tpl` — rename `- Extended Technical Manifest` to `- Commit Message (Extended Description)` in the §3.5.1 list
-- `docs/ops/specs/surfaces/results.md` — rename the `### Field: Extended Technical Manifest` section heading to `### Field: Commit Message (Extended Description)`; rename all occurrences of `Extended Technical Manifest` in the field description body
-- `docs/ops/specs/tools/lint/style.md` — rename all occurrences of `Extended Technical Manifest` to `Commit Message (Extended Description)` in the accepted closing sidecar schema description and in Check 2 description text
-- `docs/ops/specs/tools/lint/results.md` — rename `Extended Technical Manifest` to `Commit Message (Extended Description)` in the accepted RESULTS closing block schema description text
-- `docs/ops/specs/surfaces/task.md` — rename `- Extended Technical Manifest` to `- Commit Message (Extended Description)` in the §3.5.1 certify-routed format list; leave the legacy label text `Extended Technical Manifest (plaintext)` in the legacy format description unchanged
-- `docs/MANUAL.md` — in the Closing Sidecar Authorship section, add a named reference to `Commit Message (Extended Description)` as the field for prefix-constrained repo-relative paths; add a one-liner stating that root-level canonical surface changes (`PoW.md`, `SoP.md`, `TASK.md`, `llms*.txt`) are not valid entries in this field and are accounted for in the RESULTS narrative instead
+- `ops/src/surfaces/task.md.tpl` — rename `- Confirm Merge (Extended Description)` to `- Confirm Merge (Extended Description)` in the §3.5.1 list
+- `docs/ops/specs/surfaces/results.md` — rename the `### Field: Confirm Merge (Extended Description)` section heading to `### Field: Confirm Merge (Extended Description)`; rename all occurrences of `Confirm Merge (Extended Description)` in the field description body
+- `docs/ops/specs/tools/lint/style.md` — rename all occurrences of `Confirm Merge (Extended Description)` to `Confirm Merge (Extended Description)` in the accepted closing sidecar schema description and in Check 2 description text
+- `docs/ops/specs/tools/lint/results.md` — rename `Confirm Merge (Extended Description)` to `Confirm Merge (Extended Description)` in the accepted RESULTS closing block schema description text
+- `docs/ops/specs/surfaces/task.md` — rename `- Confirm Merge (Extended Description)` to `- Confirm Merge (Extended Description)` in the §3.5.1 certify-routed format list; leave the legacy label text `Confirm Merge (Extended Description) (plaintext)` in the legacy format description unchanged
+- `docs/MANUAL.md` — in the Closing Sidecar Authorship section, add a named reference to `Confirm Merge (Extended Description)` as the field for prefix-constrained repo-relative paths; add a one-liner stating that root-level canonical surface changes (`PoW.md`, `SoP.md`, `TASK.md`, `llms*.txt`) are not valid entries in this field and are accounted for in the RESULTS narrative instead
 - `storage/dp/active/allowlist.txt` — replace stale prior-DP entries; add all files modified by this DP plus required closeout artifacts
 
 Out of scope:
 - Expanding the certify validator to accept root-level paths — not in scope
 - Adding a second field for root-level paths — not in scope
 - Reintroducing legacy/v2 closing schema compatibility branches — not in scope
-- The `Extended Technical Manifest (plaintext)` text in `tools/lint/task.sh` `closing_labels` — this grandfathered label is unchanged; no historical TASK leaf is retroactively reformatted
+- The `Confirm Merge (Extended Description) (plaintext)` text in `tools/lint/task.sh` `closing_labels` — this grandfathered label is unchanged; no historical TASK leaf is retroactively reformatted
 - Any other certify behavior, validator logic, or path prefix rules — unchanged
 - Any file not listed above
 
@@ -181,9 +187,9 @@ Safety and invariants:
 - No manual edits to generated outputs (`RESULTS` artifacts, `llms*.txt`, `ops/lib/manifests/OPS.md`)
 - No structural edits to `TASK.md` or the active DP outside the rerender step authorized in §3.4.4
 - Allowlist hard gate: every file modified by this DP must appear in `storage/dp/active/allowlist.txt` before any lint or certify gate is run
-- Strict cutover invariant: after all edits are complete, the string `Extended Technical Manifest` must not appear in any current-schema acceptance path; the regression grep in §3.4.4 step 18 confirms this before closing sidecar authoring
+- Strict cutover invariant: after all edits are complete, the string `Confirm Merge (Extended Description)` must not appear in any current-schema acceptance path; the regression grep in §3.4.4 step 18 confirms this before closing sidecar authoring
 - `dp.md.tpl` hash-coupling invariant: `CANONICAL_DP_TEMPLATE_SHA256` in `tools/lint/dp.sh` must equal `sha256sum ops/src/surfaces/dp.md.tpl` before any `bash tools/lint/dp.sh TASK.md` run; `TASK.md` must be rerendered via `./ops/bin/draft --dp=DP-OPS-0115` after the template change and before `bash tools/lint/dp.sh TASK.md` is run
-- The closing sidecar `storage/handoff/CLOSING-DP-OPS-0115.md` must use the new field label `Commit Message (Extended Description)`; authoring it with the old label will cause certify to fail
+- The closing sidecar `storage/handoff/CLOSING-DP-OPS-0115.md` must use the new field label `Confirm Merge (Extended Description)`; authoring it with the old label will cause certify to fail
 
 Worker Constraints (SSOT injected):
 ## Section 1: Universal Template Rules
@@ -206,7 +212,7 @@ Target Files allowlist (hard gate):
 Branch: `main`. HEAD: `ca2286912`. Working tree: clean. Porcelain entries: 0. Last commit: `ca2286912 Capture manual recovery procedure for dp md tpl hash coupling mismatch`. No active DP in TASK.md. DP-OPS-0118 (with Addenda A, B, and C) is the most recently completed packet; final audit PASS confirmed. No open policy questions remain in the 0111–0119 series. DP-OPS-0115 is the last required code-touching packet for blocker-removal closeout.
 
 ### 3.4.2 Request
-Perform a full synchronized rename of the closing sidecar field `Extended Technical Manifest` to `Commit Message (Extended Description)` across all current-schema surfaces. The rename touches: the closing sidecar template, the certify binary (validator and emitter), three lint gates (style, results, task — certify-routed path only), the DP template, the TASK template, two surface specs, two lint specs, and MANUAL guidance. The cutover is strict: after this packet's edits are complete, no current-schema validation path may accept the old label. The legacy grandfathered path in `tools/lint/task.sh` retains `Extended Technical Manifest (plaintext)` unchanged. After editing `ops/src/surfaces/dp.md.tpl`, compute and install the new `CANONICAL_DP_TEMPLATE_SHA256` in `tools/lint/dp.sh` and rerender `TASK.md` via `./ops/bin/draft --dp=DP-OPS-0115` before running any DP lint gate. Author `storage/handoff/CONTRACTOR-NOTES.md` using `ops/src/surfaces/notes.md.tpl` schema before pre-audit handoff. Author the closing sidecar using the new label `Commit Message (Extended Description)`.
+Perform a full synchronized rename of the closing sidecar field `Confirm Merge (Extended Description)` to `Confirm Merge (Extended Description)` across all current-schema surfaces. The rename touches: the closing sidecar template, the certify binary (validator and emitter), three lint gates (style, results, task — certify-routed path only), the DP template, the TASK template, two surface specs, two lint specs, and MANUAL guidance. The cutover is strict: after this packet's edits are complete, no current-schema validation path may accept the old label. The legacy grandfathered path in `tools/lint/task.sh` retains `Confirm Merge (Extended Description) (plaintext)` unchanged. After editing `ops/src/surfaces/dp.md.tpl`, compute and install the new `CANONICAL_DP_TEMPLATE_SHA256` in `tools/lint/dp.sh` and rerender `TASK.md` via `./ops/bin/draft --dp=DP-OPS-0115` before running any DP lint gate. Author `storage/handoff/CONTRACTOR-NOTES.md` using `ops/src/surfaces/notes.md.tpl` schema before pre-audit handoff. Author the closing sidecar using the new label `Confirm Merge (Extended Description)`.
 
 ### 3.4.3 Changelog
 - UPDATE `ops/src/surfaces/closing.md.tpl` — rename field label
@@ -227,27 +233,27 @@ Perform a full synchronized rename of the closing sidecar field `Extended Techni
 ### 3.4.4 Patch / Diff
 **Step 1.** Read all files listed in §3.2.2 before making any edits. Do not begin editing until all fourteen files have been loaded.
 
-**Step 2.** In `ops/src/surfaces/closing.md.tpl`: replace the standalone label line `Extended Technical Manifest` with `Commit Message (Extended Description)`. The label appears between the `Final Squash Stub` prompt block and the `Review Conversation Starter` prompt block. The surrounding prompt text and blank lines are unchanged.
+**Step 2.** In `ops/src/surfaces/closing.md.tpl`: replace the standalone label line `Confirm Merge (Extended Description)` with `Confirm Merge (Extended Description)`. The label appears between the `Confirm Merge (Commit Message)` prompt block and the `Confirm Merge (Add a Comment)` prompt block. The surrounding prompt text and blank lines are unchanged.
 
 **Step 3.** In `ops/bin/certify`: apply all three of the following renames.
-- Replace `manifest_start_label="Extended Technical Manifest"` with `manifest_start_label="Commit Message (Extended Description)"`.
-- Locate the emitted §3.5.1 closing block list label (the literal string `Extended Technical Manifest` that certify writes into RESULTS output) and replace it with `Commit Message (Extended Description)`.
-- Locate the validator regression fixture label `Extended Technical Manifest` and replace it with `Commit Message (Extended Description)`.
+- Replace `manifest_start_label="Confirm Merge (Extended Description)"` with `manifest_start_label="Confirm Merge (Extended Description)"`.
+- Locate the emitted §3.5.1 closing block list label (the literal string `Confirm Merge (Extended Description)` that certify writes into RESULTS output) and replace it with `Confirm Merge (Extended Description)`.
+- Locate the validator regression fixture label `Confirm Merge (Extended Description)` and replace it with `Confirm Merge (Extended Description)`.
 
 **Step 4.** In `tools/lint/style.sh`: apply all of the following renames.
-- In `check_closing_block_lead_words`: replace the awk pattern `line ~ /^Extended Technical Manifest[[:space:]]*$/` with `line ~ /^Commit Message \(Extended Description\)[[:space:]]*$/`.
-- In `check_closing_block_manifest_paths`: replace `manifest_start_regex='^Extended Technical Manifest[[:space:]]*$'` with `manifest_start_regex='^Commit Message \(Extended Description\)[[:space:]]*$'`; replace `manifest_field_name="Extended Technical Manifest"` with `manifest_field_name="Commit Message (Extended Description)"`; replace the awk pattern `line ~ /^Extended Technical Manifest[[:space:]]*$/` with `line ~ /^Commit Message \(Extended Description\)[[:space:]]*$/`.
-- In `check_closing_block_pr_description_markdown`: replace the awk pattern `line ~ /^Extended Technical Manifest[[:space:]]*$/` with `line ~ /^Commit Message \(Extended Description\)[[:space:]]*$/`.
+- In `check_closing_block_lead_words`: replace the awk pattern `line ~ /^Confirm Merge (Extended Description)[[:space:]]*$/` with `line ~ /^Commit Message \(Extended Description\)[[:space:]]*$/`.
+- In `check_closing_block_manifest_paths`: replace `manifest_start_regex='^Confirm Merge (Extended Description)[[:space:]]*$'` with `manifest_start_regex='^Commit Message \(Extended Description\)[[:space:]]*$'`; replace `manifest_field_name="Confirm Merge (Extended Description)"` with `manifest_field_name="Confirm Merge (Extended Description)"`; replace the awk pattern `line ~ /^Confirm Merge (Extended Description)[[:space:]]*$/` with `line ~ /^Commit Message \(Extended Description\)[[:space:]]*$/`.
+- In `check_closing_block_pr_description_markdown`: replace the awk pattern `line ~ /^Confirm Merge (Extended Description)[[:space:]]*$/` with `line ~ /^Commit Message \(Extended Description\)[[:space:]]*$/`.
 
 **Step 5.** In `tools/lint/results.sh`: apply all of the following renames.
-- In `required_closing_labels_current`: replace `"^Extended Technical Manifest[[:space:]]*$"` with `"^Commit Message \(Extended Description\)[[:space:]]*$"`.
-- In the `extract_field_block` call that extracts the manifest field value: replace the boundary argument `'^Extended Technical Manifest[[:space:]]*$'` with `'^Commit Message \(Extended Description\)[[:space:]]*$'`.
-- In the `extract_field_block` call that uses `Extended Technical Manifest` as the start boundary for the next field block extraction: replace `'^Extended Technical Manifest[[:space:]]*$'` with `'^Commit Message \(Extended Description\)[[:space:]]*$'`.
-- In the empty-check failure message: replace `"${rel_target}: Extended Technical Manifest value is empty"` with `"${rel_target}: Commit Message (Extended Description) value is empty"`.
+- In `required_closing_labels_current`: replace `"^Confirm Merge (Extended Description)[[:space:]]*$"` with `"^Commit Message \(Extended Description\)[[:space:]]*$"`.
+- In the `extract_field_block` call that extracts the manifest field value: replace the boundary argument `'^Confirm Merge (Extended Description)[[:space:]]*$'` with `'^Commit Message \(Extended Description\)[[:space:]]*$'`.
+- In the `extract_field_block` call that uses `Confirm Merge (Extended Description)` as the start boundary for the next field block extraction: replace `'^Confirm Merge (Extended Description)[[:space:]]*$'` with `'^Commit Message \(Extended Description\)[[:space:]]*$'`.
+- In the empty-check failure message: replace `"${rel_target}: Confirm Merge (Extended Description) value is empty"` with `"${rel_target}: Confirm Merge (Extended Description) value is empty"`.
 
-**Step 6.** In `tools/lint/task.sh`: in the `closing_list_items` array only, replace `"- Extended Technical Manifest"` with `"- Commit Message (Extended Description)"`. Do not modify the `closing_labels` array; the `"Extended Technical Manifest (plaintext)"` entry there is the grandfathered legacy label and remains unchanged.
+**Step 6.** In `tools/lint/task.sh`: in the `closing_list_items` array only, replace `"- Confirm Merge (Extended Description)"` with `"- Confirm Merge (Extended Description)"`. Do not modify the `closing_labels` array; the `"Confirm Merge (Extended Description) (plaintext)"` entry there is the grandfathered legacy label and remains unchanged.
 
-**Step 7.** In `ops/src/surfaces/dp.md.tpl`: replace `- Extended Technical Manifest` with `- Commit Message (Extended Description)` in the §3.5.1 Mandatory Closing Block list. In the §3.5.1 certify-generates narrative text, replace the label occurrence `Extended Technical Manifest` with `Commit Message (Extended Description)`.
+**Step 7.** In `ops/src/surfaces/dp.md.tpl`: replace `- Confirm Merge (Extended Description)` with `- Confirm Merge (Extended Description)` in the §3.5.1 Mandatory Closing Block list. In the §3.5.1 certify-generates narrative text, replace the label occurrence `Confirm Merge (Extended Description)` with `Confirm Merge (Extended Description)`.
 
 **Step 8.** Run `sha256sum ops/src/surfaces/dp.md.tpl` and record the resulting hash string.
 
@@ -257,24 +263,24 @@ Perform a full synchronized rename of the closing sidecar field `Extended Techni
 
 **Step 11.** Run `bash tools/lint/dp.sh TASK.md` and confirm PASS before proceeding to the next step.
 
-**Step 12.** In `ops/src/surfaces/task.md.tpl`: replace `- Extended Technical Manifest` with `- Commit Message (Extended Description)` in the §3.5.1 list.
+**Step 12.** In `ops/src/surfaces/task.md.tpl`: replace `- Confirm Merge (Extended Description)` with `- Confirm Merge (Extended Description)` in the §3.5.1 list.
 
-**Step 13.** In `docs/ops/specs/surfaces/results.md`: replace the section heading `### Field: Extended Technical Manifest` with `### Field: Commit Message (Extended Description)`. Replace all occurrences of `Extended Technical Manifest` in the field description body (audience, job, examples) with `Commit Message (Extended Description)`.
+**Step 13.** In `docs/ops/specs/surfaces/results.md`: replace the section heading `### Field: Confirm Merge (Extended Description)` with `### Field: Confirm Merge (Extended Description)`. Replace all occurrences of `Confirm Merge (Extended Description)` in the field description body (audience, job, examples) with `Confirm Merge (Extended Description)`.
 
-**Step 14.** In `docs/ops/specs/tools/lint/style.md`: replace every occurrence of `Extended Technical Manifest` with `Commit Message (Extended Description)` in the accepted closing sidecar schema description (the six-label list under "Closing Block Schema Authority") and in the Check 2 section heading and body text.
+**Step 14.** In `docs/ops/specs/tools/lint/style.md`: replace every occurrence of `Confirm Merge (Extended Description)` with `Confirm Merge (Extended Description)` in the accepted closing sidecar schema description (the six-label list under "Closing Block Schema Authority") and in the Check 2 section heading and body text.
 
-**Step 15.** In `docs/ops/specs/tools/lint/results.md`: replace `Extended Technical Manifest` with `Commit Message (Extended Description)` in the accepted RESULTS closing block schema description (the six-label list under "Closing Block Schema Authority" and the "All six schema fields" sentence).
+**Step 15.** In `docs/ops/specs/tools/lint/results.md`: replace `Confirm Merge (Extended Description)` with `Confirm Merge (Extended Description)` in the accepted RESULTS closing block schema description (the six-label list under "Closing Block Schema Authority" and the "All six schema fields" sentence).
 
-**Step 16.** In `docs/ops/specs/surfaces/task.md`: in the §3.5.1 Closing Block Schema Contract section, replace `- Extended Technical Manifest` with `- Commit Message (Extended Description)` in the certify-routed format list. In the legacy label format description, the text `Extended Technical Manifest (plaintext)` remains unchanged as it describes the grandfathered historical leaf label.
+**Step 16.** In `docs/ops/specs/surfaces/task.md`: in the §3.5.1 Closing Block Schema Contract section, replace `- Confirm Merge (Extended Description)` with `- Confirm Merge (Extended Description)` in the certify-routed format list. In the legacy label format description, the text `Confirm Merge (Extended Description) (plaintext)` remains unchanged as it describes the grandfathered historical leaf label.
 
 **Step 17.** In `docs/MANUAL.md`: in the Closing Sidecar Authorship section, after the existing line `Only the current six-label closing sidecar schema is accepted; \`ops/bin/certify\` is the schema authority; \`tools/lint/style.sh\` enforces that schema.`, add the following two lines:
-- `The \`Commit Message (Extended Description)\` field accepts only approved-prefix, repo-relative literal paths; root-level canonical surfaces (\`PoW.md\`, \`SoP.md\`, \`TASK.md\`, \`llms*.txt\`) are not valid entries in this field.`
-- `Root-level surface changes that are not valid entries in \`Commit Message (Extended Description)\` are accounted for in RESULTS narrative text and the Contractor Notes surface instead.`
+- `The \`Confirm Merge (Extended Description)\` field accepts only approved-prefix, repo-relative literal paths; root-level canonical surfaces (\`PoW.md\`, \`SoP.md\`, \`TASK.md\`, \`llms*.txt\`) are not valid entries in this field.`
+- `Root-level surface changes that are not valid entries in \`Confirm Merge (Extended Description)\` are accounted for in RESULTS narrative text and the Contractor Notes surface instead.`
 
 **Step 18.** Run the following regression grep command and confirm zero output:
-`grep -rn "Extended Technical Manifest" ops/src/surfaces/closing.md.tpl ops/bin/certify tools/lint/style.sh tools/lint/results.sh ops/src/surfaces/dp.md.tpl ops/src/surfaces/task.md.tpl docs/ops/specs/surfaces/results.md docs/ops/specs/tools/lint/style.md docs/ops/specs/tools/lint/results.md docs/ops/specs/surfaces/task.md docs/MANUAL.md`
+`grep -rn "Confirm Merge (Extended Description)" ops/src/surfaces/closing.md.tpl ops/bin/certify tools/lint/style.sh tools/lint/results.sh ops/src/surfaces/dp.md.tpl ops/src/surfaces/task.md.tpl docs/ops/specs/surfaces/results.md docs/ops/specs/tools/lint/style.md docs/ops/specs/tools/lint/results.md docs/ops/specs/surfaces/task.md docs/MANUAL.md`
 
-**Step 19.** Run `grep -n "Extended Technical Manifest" tools/lint/task.sh` and confirm that only the `closing_labels` array entries remain (legacy grandfathered path: `Extended Technical Manifest (plaintext)`), and that the `closing_list_items` array entry shows `Commit Message (Extended Description)`.
+**Step 19.** Run `grep -n "Confirm Merge (Extended Description)" tools/lint/task.sh` and confirm that only the `closing_labels` array entries remain (legacy grandfathered path: `Confirm Merge (Extended Description) (plaintext)`), and that the `closing_list_items` array entry shows `Confirm Merge (Extended Description)`.
 
 **Step 20.** Run `git rev-parse --short HEAD` to obtain the current work branch HEAD hash. Run `date -u +%Y-%m-%d` to obtain the current UTC date. Update `storage/dp/active/allowlist.txt` to the following content, substituting the actual HEAD hash and date in the three archive surface entries:
 ```
@@ -309,7 +315,7 @@ archives/surfaces/TASK-DP-OPS-0115-<HEAD>.md
 
 **Step 21.** Run `bash tools/lint/style.sh` and confirm PASS.
 
-**Step 22.** Author `storage/handoff/CLOSING-DP-OPS-0115.md` using `ops/src/surfaces/closing.md.tpl` as the schema. Use the new field label `Commit Message (Extended Description)`. Entries in that field must be approved-prefix, repo-relative literal paths only. Account for any root-level surface changes in the PR Description and Contractor Notes surfaces instead.
+**Step 22.** Author `storage/handoff/CLOSING-DP-OPS-0115.md` using `ops/src/surfaces/closing.md.tpl` as the schema. Use the new field label `Confirm Merge (Extended Description)`. Entries in that field must be approved-prefix, repo-relative literal paths only. Account for any root-level surface changes in the PR Description and Contractor Notes surfaces instead.
 
 **Step 23.** Run `bash tools/lint/style.sh` on `storage/handoff/CLOSING-DP-OPS-0115.md` specifically and confirm PASS.
 
@@ -328,15 +334,15 @@ archives/surfaces/TASK-DP-OPS-0115-<HEAD>.md
 
 **DP-specific receipt commands (scope-specific; author below):**
 Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by certify replay. Use literal values only. dp.sh enforces at lint time.
-- grep -n "Commit Message (Extended Description)" ops/src/surfaces/closing.md.tpl
-- grep -n "Commit Message (Extended Description)" ops/bin/certify
-- grep -n "Commit Message (Extended Description)" tools/lint/style.sh
-- grep -n "Commit Message (Extended Description)" tools/lint/results.sh
-- grep -n "Commit Message (Extended Description)" tools/lint/task.sh
-- grep -nFx -- "- Commit Message (Extended Description)" ops/src/surfaces/dp.md.tpl
-- grep -n "Commit Message (Extended Description)" ops/src/surfaces/task.md.tpl
-- grep -rn "Extended Technical Manifest" ops/src/surfaces/closing.md.tpl ops/bin/certify tools/lint/style.sh tools/lint/results.sh ops/src/surfaces/dp.md.tpl ops/src/surfaces/task.md.tpl docs/ops/specs/surfaces/results.md docs/ops/specs/tools/lint/style.md docs/ops/specs/tools/lint/results.md docs/ops/specs/surfaces/task.md docs/MANUAL.md
-- grep -n "Extended Technical Manifest" tools/lint/task.sh
+- grep -n "Confirm Merge (Extended Description)" ops/src/surfaces/closing.md.tpl
+- grep -n "Confirm Merge (Extended Description)" ops/bin/certify
+- grep -n "Confirm Merge (Extended Description)" tools/lint/style.sh
+- grep -n "Confirm Merge (Extended Description)" tools/lint/results.sh
+- grep -n "Confirm Merge (Extended Description)" tools/lint/task.sh
+- grep -nFx -- "- Confirm Merge (Extended Description)" ops/src/surfaces/dp.md.tpl
+- grep -n "Confirm Merge (Extended Description)" ops/src/surfaces/task.md.tpl
+- grep -rn "Confirm Merge (Extended Description)" ops/src/surfaces/closing.md.tpl ops/bin/certify tools/lint/style.sh tools/lint/results.sh ops/src/surfaces/dp.md.tpl ops/src/surfaces/task.md.tpl docs/ops/specs/surfaces/results.md docs/ops/specs/tools/lint/style.md docs/ops/specs/tools/lint/results.md docs/ops/specs/surfaces/task.md docs/MANUAL.md
+- grep -n "Confirm Merge (Extended Description)" tools/lint/task.sh
 - grep CANONICAL_DP_TEMPLATE_SHA256= tools/lint/dp.sh
 - sha256sum ops/src/surfaces/dp.md.tpl
 - bash tools/lint/dp.sh --test
@@ -355,14 +361,14 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 - Refresh side-effect: `ops/bin/llms` regenerates `ops/lib/manifests/OPS.md` as a compile event; if `OPS.md` is not in the allowlist, restore it before running `integrity.sh`. See `docs/MANUAL.md` Refresh side-effect notice for the full procedure.
 
 ### 3.5.1 Mandatory Closing Block
-Closing block content is generated exclusively by `ops/bin/certify` from the closing sidecar at `storage/handoff/CLOSING-DP-OPS-0115.md` at certification time. Do not author, predict, populate, or approximate any closing block field at draft time or during execution. The closing sidecar is the only human-authored narrative input certify ingests. Certify generates all of the following from observable repository state: Primary Commit Header, Pull Request Title, Pull Request Description, Final Squash Stub, Commit Message (Extended Description), and Review Conversation Starter.
+Closing block content is generated exclusively by `ops/bin/certify` from the closing sidecar at `storage/handoff/CLOSING-DP-OPS-0115.md` at certification time. Do not author, predict, populate, or approximate any closing block field at draft time or during execution. The closing sidecar is the only human-authored narrative input certify ingests. Certify generates all of the following from observable repository state: Commit Message, Create Pull Request (Title), Create Pull Request (Description), Confirm Merge (Commit Message), Confirm Merge (Extended Description), and Confirm Merge (Add a Comment).
 
 Before running certify, confirm `storage/handoff/CLOSING-DP-OPS-0115.md` has been maintained throughout execution and reflects observable reality only.
 
 Fields certify generates from the closing sidecar and repository state:
-- Primary Commit Header
-- Pull Request Title
-- Pull Request Description
-- Final Squash Stub
-- Commit Message (Extended Description)
-- Review Conversation Starter
+- Commit Message
+- Create Pull Request (Title)
+- Create Pull Request (Description)
+- Confirm Merge (Commit Message)
+- Confirm Merge (Extended Description)
+- Confirm Merge (Add a Comment)

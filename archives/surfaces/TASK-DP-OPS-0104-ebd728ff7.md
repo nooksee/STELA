@@ -273,14 +273,14 @@ This regenerated draft exists to reactivate the TASK surface with `DP-OPS-0101` 
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 
 ### 3.5.1 Mandatory Closing Block
-Primary Commit Header (plaintext)
+Commit Message (plaintext)
 
-Pull Request Title (plaintext)
+Create Pull Request (Title) (plaintext)
 
-Pull Request Description (markdown)
+Create Pull Request (Description) (markdown)
 
-Final Squash Stub (plaintext) (Must differ from #1)
+Confirm Merge (Commit Message) (plaintext) (Must differ from #1)
 
-Extended Technical Manifest (plaintext)
+Confirm Merge (Extended Description) (plaintext)
 
-Review Conversation Starter (markdown)
+Confirm Merge (Add a Comment) (markdown)

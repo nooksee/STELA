@@ -152,14 +152,14 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 - Refresh side-effect: `ops/bin/llms` regenerates `ops/lib/manifests/OPS.md` as a compile event; if `OPS.md` is not in the allowlist, restore it before running `integrity.sh`. See `docs/MANUAL.md` Refresh side-effect notice for the full procedure.
 
 ### 3.5.1 Mandatory Closing Block
-Closing block content is generated exclusively by `ops/bin/certify` from the closing sidecar at `storage/handoff/CLOSING-{{DP_ID}}.md` at certification time. Do not author, predict, populate, or approximate any closing block field at draft time or during execution. The closing sidecar is the only human-authored narrative input certify ingests. Certify generates all of the following from observable repository state: Primary Commit Header, Pull Request Title, Pull Request Description, Final Squash Stub, Commit Message (Extended Description), and Review Conversation Starter.
+Closing block content is generated exclusively by `ops/bin/certify` from the closing sidecar at `storage/handoff/CLOSING-{{DP_ID}}.md` at certification time. Do not author, predict, populate, or approximate any closing block field at draft time or during execution. The closing sidecar is the only human-authored narrative input certify ingests. Certify generates all of the following from observable repository state: Commit Message, Create Pull Request (Title), Create Pull Request (Description), Confirm Merge (Commit Message), Confirm Merge (Extended Description), and Confirm Merge (Add a Comment).
 
 Before running certify, confirm `storage/handoff/CLOSING-{{DP_ID}}.md` has been maintained throughout execution and reflects observable reality only.
 
 Fields certify generates from the closing sidecar and repository state:
-- Primary Commit Header
-- Pull Request Title
-- Pull Request Description
-- Final Squash Stub
-- Commit Message (Extended Description)
-- Review Conversation Starter
+- Commit Message
+- Create Pull Request (Title)
+- Create Pull Request (Description)
+- Confirm Merge (Commit Message)
+- Confirm Merge (Extended Description)
+- Confirm Merge (Add a Comment)

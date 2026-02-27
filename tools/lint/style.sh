@@ -333,9 +333,9 @@ check_closing_block_manifest_paths() {
     fi
 
     local rel_file="${file#"${REPO_ROOT}/"}"
-    while IFS=$'\t' read -r lineno prose_line; do
+    while IFS=$'\t' read -r lineno invalid_line reason; do
       [[ -n "$lineno" ]] || continue
-      mark_failure "CLOSING BLOCK: ${manifest_field_name} contains prose on line ${lineno}: \"${prose_line}\". This field must contain file paths only."
+      mark_failure "CLOSING BLOCK: ${manifest_field_name} invalid path entry on line ${lineno}: \"${invalid_line}\" (${reason}). This field must contain repository-relative file paths only."
       echo "  ${rel_file}:${lineno}" >&2
     done < <(
       awk -v start_label="$manifest_start_label" -v labels_blob="$CLOSING_SCHEMA_LABELS_BLOB" '
@@ -350,24 +350,32 @@ check_closing_block_manifest_paths() {
         function is_header(line) {
           return (line in header)
         }
+        function report(reason, line) {
+          printf "%d\t%s\t%s\n", NR, line, reason
+        }
         $0 == start_label { in_block=1; next }
         in_block && is_header($0) { in_block=0; next }
         in_block && /[^[:space:]]/ {
           line=$0
-          sub(/^[[:space:]]+/, "", line)
-          n=split(line, tokens, /[[:space:]]+/)
-          prose_count=0
-          for (i=1; i<=n; i++) {
-            t=tokens[i]
-            if (t !~ /^[A-Za-z0-9]/ || t !~ /\//) {
-              prose_count++
-            } else {
-              prose_count=0
-            }
-            if (prose_count >= 2) {
-              printf "%d\t%s\n", NR, line
-              break
-            }
+          if (line ~ /^[[:space:]]/ || line ~ /[[:space:]]$/) {
+            report("leading or trailing whitespace", line)
+            next
+          }
+          if (line ~ /[[:space:]]/) {
+            report("internal whitespace", line)
+            next
+          }
+          if (line ~ /^#{1,6}([[:space:]]|$)/) {
+            report("markdown heading marker", line)
+            next
+          }
+          if (line ~ /^(\.\/|\/)/) {
+            report("must not begin with ./ or /", line)
+            next
+          }
+          if (line !~ /^[A-Za-z0-9][A-Za-z0-9._\/-]*$/) {
+            report("must match ^[A-Za-z0-9][A-Za-z0-9._/-]*$", line)
+            next
           }
         }
       ' "$file"

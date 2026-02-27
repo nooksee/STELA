@@ -13,7 +13,7 @@
 5. Validate required fields and section blocks, including heading ID/title shape, base branch metadata, scoped load-order content, plan slots, and receipt slot non-placeholder content.
 6. Enforce receipt dump-selection scoping in Section 3.4.5: packets `DP-OPS-0095` and newer fail if any `ops/bin/dump` command omits `--selection=dp` or `--selection=dp+allowlist`; older packets emit a grandfathered warning only.
 7. Enforce allowlist pointer integrity: exactly one pointer entry, canonical pointer path match, allowlist file existence, entry normalization, runtime-prefix restrictions, wildcard policy constraints, and repository reachability checks.
-8. For RESULTS paths, enforce Mandatory Closing Block labels and field constraints, reject placeholders, and require Final Squash Stub divergence from Primary Commit Header.
+8. For RESULTS paths, enforce Mandatory Closing Block labels and field constraints, reject placeholders, and require Confirm Merge (Commit Message) divergence from Commit Message.
 9. In `--test` mode, execute fixture-driven negative and positive checks that exercise template-hash drift, structure mismatch, allowlist-pointer mismatch, allowlist-file invalidity, narrowed `PROPOSED` provisional-marker detection, and RESULTS closing-block validation.
 
 ### PROPOSED Provisional-Marker Scan Fixtures (`--test`)
