@@ -19,6 +19,16 @@ during execution. State "None." if no anomalies occurred.
 List anything unresolved, non-blocking residue, or audit hazards remaining after
 execution. State "None." if all items are resolved.
 
+## Execution Decision Record
+Decision Required: Yes|No
+Decision Pointer: archives/decisions/... or None
+
+Authoring rules:
+- `Decision Required: No` is allowed only when `Anomalies Encountered` is "None."
+  and `Open Items / Residue` is "None."
+- `Decision Required: Yes` requires `Decision Pointer` to be a repo-relative path
+  under `archives/decisions/`.
+
 ## Closing Schema Baseline
 State which closing schema was assumed for this packet. Default: current six-label
 schema (post-0116+A baseline). Historical packet references may appear in narrative

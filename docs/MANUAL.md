@@ -130,6 +130,9 @@ Required fields:
   skips with reasons.
 - `Anomalies Encountered:` — friction items, unexpected behaviors, workaround decisions.
 - `Open Items / Residue:` — anything unresolved, non-blocking residue, or audit hazards.
+- `Execution Decision Record:` — include both fields exactly as written:
+  `Decision Required: Yes|No` and
+  `Decision Pointer: archives/decisions/... or None`.
 - `Closing Schema Baseline:` — explicit declaration that the current six-label schema was
   assumed (post-0116+A baseline), or an explicit exception note if the packet
   intentionally touches historical artifacts or compatibility paths. Historical packet
@@ -137,10 +140,13 @@ Required fields:
   schema assumptions.
 
 Decision Record Trigger:
-- Trigger rule: A decision record is required only when `Anomalies Encountered:` or
-  `Open Items / Residue:` is not `None.`
-- Optional rule: When both fields are `None.`, a decision record is optional and must
-  not be forced for noise.
+- Mapping rule: If `Anomalies Encountered:` or `Open Items / Residue:` is not `None.`,
+  set `Decision Required: Yes`.
+- Mapping rule: If both `Anomalies Encountered:` and `Open Items / Residue:` are
+  `None.`, set `Decision Required: No`.
+- Authoring rule: `Decision Required: Yes` requires `Decision Pointer` to be a
+  repo-relative path under `archives/decisions/` and a decision leaf authored per the
+  decision-record guidance below.
 - Routing rule: When required, the contractor writes a decision record leaf under
   `archives/decisions/` and includes its repo-relative pointer in the relevant
   `Anomalies Encountered:` or `Open Items / Residue:` narrative text.
