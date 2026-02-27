@@ -1,5 +1,5 @@
 ## PoT.md
-<!-- CCD: ff_target="governance-narrative" ff_band="30-40" -->
+<!-- CCD: ff_target="governance-narrative" ff_band="40-65" -->
 # Policy of Truth (PoT)
 
 ## Preamble: Doctrine
@@ -164,7 +164,7 @@ When reporting, include:
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-02-26-d14fcf144.md
+archives/surfaces/PoW-2026-02-26-552293f05.md
 
 
 ## README.md
@@ -181,11 +181,11 @@ Use [docs/MANUAL.md](docs/MANUAL.md) for command workflow and closeout routing.
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-02-26-d14fcf144.md
+archives/surfaces/SoP-2026-02-26-552293f05.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0122-d14fcf144.md
+archives/surfaces/TASK-DP-OPS-0123-552293f05.md
 
 
 ## docs/INDEX.md
