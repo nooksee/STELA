@@ -3,7 +3,6 @@ docs/INDEX.md
 docs/ops/specs/surfaces/notes.md
 ops/src/surfaces/notes.md.tpl
 storage/dp/active/allowlist.txt
-storage/dp/active/notes.md
 storage/handoff/CLOSING-DP-OPS-0127.md
 SoP.md
 PoW.md
