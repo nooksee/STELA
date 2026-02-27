@@ -17,7 +17,8 @@
 * [../opt/_factory/INDEX.md](../opt/_factory/INDEX.md) — Curated library of operator guides.
 * [DESIGN.md](DESIGN.md) — Correct-by-Construction design discipline, retrospective audit, and decision registry.
 * [MAP.md](MAP.md) — Continuity wayfinding for cross-session state.
-* [../archives/decisions/](../archives/decisions/) — Decision record archive. Structured, queryable records of scope-expansion authorizations, certify remediations, CbC verdicts, and operator-approved exceptions. Schema: `DEC-YYYY-MM-DD-<seq>-<slug>.md` with YAML frontmatter fields `trace_id`, `decision_id`, `packet_id`, `decision_type`, `created_at`, `authorized_by`; body sections `Context`, `Decision`, `Consequence`, `Pointer`, `Status`.
+* [ops/specs/surfaces/notes.md](ops/specs/surfaces/notes.md) — Contractor Notes surface contract and decision record trigger/schema documentation.
+* [../archives/decisions/](../archives/decisions/) — Decision record archive. Structured, queryable records of scope-expansion authorizations, certify remediations, CbC verdicts, and operator-approved exceptions. Schema: `DEC-YYYY-MM-DD-<seq>-<slug>.md` with YAML frontmatter fields `trace_id`, `decision_id`, `packet_id`, `decision_type`, `created_at`, `authorized_by`; body sections `Context`, `Decision`, `Consequence`, `Pointer`, `Status`. Trigger rule: decision record required only when Contractor Notes `Anomalies Encountered` or `Open Items / Residue` is not `None.` See ops/specs/surfaces/notes.md.
 * [CONTEXT.md](CONTEXT.md) — Definition of required context artifacts.
 * [ops/specs/definitions/agents.md](ops/specs/definitions/agents.md) — Agent candidate and promotion head-chain specification.
 * [ops/specs/definitions/tasks.md](ops/specs/definitions/tasks.md) — Task candidate and promotion head-chain specification.

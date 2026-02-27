@@ -1,4 +1,4 @@
-<!-- CCD: ff_target="machine-dense" ff_band="70-85" -->
+<!-- CCD: ff_target="machine-dense" ff_band="10-20" -->
 # Closing Labels Manifest
 
 ## Section 1: Current Closeout Labels
