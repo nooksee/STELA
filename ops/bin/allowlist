@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/allowlist
+
+Checks tracked-changed and untracked paths against storage/dp/active/allowlist.txt.
+USAGE
+}
+
+if [[ "$#" -gt 1 ]]; then
+  usage >&2
+  exit 1
+fi
+
+if [[ "$#" -eq 1 ]]; then
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      usage >&2
+      exit 1
+      ;;
+  esac
+fi
+
+if ! command -v git >/dev/null 2>&1 || ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "ERROR: Must be run inside a git repository." >&2
+  exit 1
+fi
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT" || exit 1
+
+# shellcheck source=/dev/null
+source "${REPO_ROOT}/ops/lib/scripts/common.sh"
+
+trap 'emit_binary_leaf "allowlist" "finish"' EXIT
+emit_binary_leaf "allowlist" "start"
+
+allowlist_path="storage/dp/active/allowlist.txt"
+[[ -f "$allowlist_path" ]] || die "allowlist file missing: ${allowlist_path}"
+
+mapfile -t missing_tracked_changed < <(comm -23 <(git diff --name-only | sort) <(sort "$allowlist_path") || true)
+mapfile -t missing_untracked < <(comm -23 <(git ls-files --others --exclude-standard | sort) <(sort "$allowlist_path") || true)
+
+printf 'tracked-changed missing count: %d\n' "${#missing_tracked_changed[@]}"
+printf 'untracked missing count: %d\n' "${#missing_untracked[@]}"
+
+if (( ${#missing_tracked_changed[@]} > 0 )); then
+  printf '\ntracked-changed ready-to-paste:\n'
+  printf '%s\n' "${missing_tracked_changed[@]}"
+fi
+
+if (( ${#missing_untracked[@]} > 0 )); then
+  printf '\nuntracked ready-to-paste:\n'
+  printf '%s\n' "${missing_untracked[@]}"
+fi
+
+if (( ${#missing_tracked_changed[@]} > 0 || ${#missing_untracked[@]} > 0 )); then
+  exit 1
+fi
+
+exit 0
