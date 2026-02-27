@@ -384,12 +384,12 @@ check_task_dashboard() {
   fi
 
   local -a closing_labels=(
-    "Commit Message (plaintext)"
-    "Create Pull Request (Title) (plaintext)"
-    "Create Pull Request (Description) (markdown)"
-    "Confirm Merge (Commit Message) (plaintext) (Must differ from #1)"
-    "Confirm Merge (Extended Description) (plaintext)"
-    "Confirm Merge (Add a Comment) (markdown)"
+    "Commit Message"
+    "Create Pull Request (Title)"
+    "Create Pull Request (Description)"
+    "Confirm Merge (Commit Message)"
+    "Confirm Merge (Extended Description)"
+    "Confirm Merge (Add a Comment)"
   )
   # Certify-routed format: active packets generated from ops/src/surfaces/dp.md.tpl
   # carry the list-item form of the §3.5.1 Mandatory Closing Block. This path is the
@@ -420,13 +420,6 @@ check_task_dashboard() {
   # grandfathered acceptance path for historical TASK heads only.
   local label
   for label in "${closing_labels[@]}"; do
-    if [[ "$label" == "Confirm Merge (Commit Message) (plaintext) (Must differ from #1)" ]]; then
-      if ! grep -Fxq "$label" "$path" \
-        && ! grep -Fxq "Confirm Merge (Commit Message) (plaintext) (must differ from Commit Message)" "$path"; then
-        fail "TASK closeout block missing label '${label}'"
-      fi
-      continue
-    fi
     if ! grep -Fxq "$label" "$path"; then
       fail "TASK closeout block missing label '${label}'"
     fi

@@ -240,132 +240,6 @@ render_canonical_template_non_strict() {
   fi
 }
 
-extract_results_closing_block() {
-  local path="$1"
-  awk '
-    BEGIN { in_block=0 }
-    /^##[[:space:]]*Mandatory Closing Block[[:space:]]*$/ { in_block=1; next }
-    in_block { print }
-  ' "$path"
-}
-
-results_label_regex='^(Commit Message [(]plaintext[)]|Create Pull Request (Title) [(]plaintext[)]|Create Pull Request (Description) [(]markdown[)]|Confirm Merge (Commit Message) [(]plaintext[)]( [(]Must differ from #1[)]| [(]must differ from Commit Message[)])?|Confirm Merge (Extended Description) [(]plaintext[)]|Confirm Merge (Add a Comment) [(]markdown[)])$'
-
-extract_results_field_block() {
-  local path="$1"
-  local start_pattern="$2"
-  awk -v start_regex="$start_pattern" -v label_regex="$results_label_regex" '
-    BEGIN { in_block=0 }
-    $0 ~ start_regex { in_block=1; next }
-    in_block && $0 ~ label_regex { exit }
-    in_block { print }
-  ' "$path"
-}
-
-field_block_nonempty() {
-  local value="$1"
-  [[ -n "$(printf '%s\n' "$value" | sed '/^[[:space:]]*$/d')" ]]
-}
-
-lint_results_path() {
-  local path="$1"
-  failures=0
-
-  local closing_tmp
-  closing_tmp="$(mktemp)"
-  extract_results_closing_block "$path" > "$closing_tmp"
-
-  if [[ ! -s "$closing_tmp" ]]; then
-    rm -f "$closing_tmp"
-    fail "RESULTS file missing Mandatory Closing Block"
-    return 1
-  fi
-
-  local -a required_label_patterns=(
-    '^Commit Message [(]plaintext[)][[:space:]]*$'
-    '^Create Pull Request (Title) [(]plaintext[)][[:space:]]*$'
-    '^Create Pull Request (Description) [(]markdown[)][[:space:]]*$'
-    '^Confirm Merge (Commit Message) [(]plaintext[)]( [(]Must differ from #1[)]| [(]must differ from Commit Message[)])?[[:space:]]*$'
-    '^Confirm Merge (Extended Description) [(]plaintext[)][[:space:]]*$'
-    '^Confirm Merge (Add a Comment) [(]markdown[)][[:space:]]*$'
-  )
-
-  local pattern
-  for pattern in "${required_label_patterns[@]}"; do
-    if ! grep -Eq "$pattern" "$closing_tmp"; then
-      fail "RESULTS missing required Mandatory Closing Block label matching pattern: ${pattern}"
-    fi
-  done
-
-  local primary_header
-  local pr_title
-  local final_stub
-  local extended_manifest
-  local pr_description
-  local review_starter
-
-  primary_header="$(extract_results_field_block "$closing_tmp" '^Commit Message [(]plaintext[)][[:space:]]*$')"
-  pr_title="$(extract_results_field_block "$closing_tmp" '^Create Pull Request (Title) [(]plaintext[)][[:space:]]*$')"
-  final_stub="$(extract_results_field_block "$closing_tmp" '^Confirm Merge (Commit Message) [(]plaintext[)]( [(]Must differ from #1[)]| [(]must differ from Commit Message[)])?[[:space:]]*$')"
-  extended_manifest="$(extract_results_field_block "$closing_tmp" '^Confirm Merge (Extended Description) [(]plaintext[)][[:space:]]*$')"
-  pr_description="$(extract_results_field_block "$closing_tmp" '^Create Pull Request (Description) [(]markdown[)][[:space:]]*$')"
-  review_starter="$(extract_results_field_block "$closing_tmp" '^Confirm Merge (Add a Comment) [(]markdown[)][[:space:]]*$')"
-
-  local -a strict_labels=(
-    "Commit Message (plaintext)"
-    "Create Pull Request (Title) (plaintext)"
-    "Confirm Merge (Commit Message) (plaintext)"
-    "Confirm Merge (Extended Description) (plaintext)"
-  )
-  local -a strict_values=(
-    "$primary_header"
-    "$pr_title"
-    "$final_stub"
-    "$extended_manifest"
-  )
-
-  local i
-  for ((i=0; i<${#strict_labels[@]}; i++)); do
-    if ! field_block_nonempty "${strict_values[i]}"; then
-      fail "RESULTS strict field empty: ${strict_labels[i]}"
-      continue
-    fi
-    if grep -Eq '\*|`|\[|\]' <<< "${strict_values[i]}"; then
-      fail "RESULTS strict field contains forbidden markdown tokens (* \` [ ]): ${strict_labels[i]}"
-    fi
-  done
-
-  if ! field_block_nonempty "$pr_description"; then
-    fail "RESULTS permissive field empty: Create Pull Request (Description) (markdown)"
-  fi
-  if ! field_block_nonempty "$review_starter"; then
-    fail "RESULTS permissive field empty: Confirm Merge (Add a Comment) (markdown)"
-  fi
-
-  if grep -Eiq 'ENTER[[:space:]_-]*DESCRIPTION[[:space:]_-]*HERE|PLACEHOLDER' <<< "$pr_description"; then
-    fail "RESULTS permissive field contains placeholder text: Create Pull Request (Description) (markdown)"
-  fi
-  if grep -Eiq 'ENTER[[:space:]_-]*DESCRIPTION[[:space:]_-]*HERE|PLACEHOLDER' <<< "$review_starter"; then
-    fail "RESULTS permissive field contains placeholder text: Confirm Merge (Add a Comment) (markdown)"
-  fi
-
-  local primary_first
-  local final_first
-  primary_first="$(printf '%s\n' "$primary_header" | sed -n '/[^[:space:]]/ { s/^[[:space:]]*//; s/[[:space:]]*$//; p; q; }')"
-  final_first="$(printf '%s\n' "$final_stub" | sed -n '/[^[:space:]]/ { s/^[[:space:]]*//; s/[[:space:]]*$//; p; q; }')"
-  if [[ -n "$primary_first" && -n "$final_first" && "$primary_first" == "$final_first" ]]; then
-    fail "RESULTS Confirm Merge (Commit Message) must differ from Commit Message"
-  fi
-
-  rm -f "$closing_tmp"
-
-  if (( failures )); then
-    return 1
-  fi
-
-  echo "OK: DP RESULTS lint passed"
-}
-
 is_task_surface() {
   local path="$1"
   grep -Eq '^#[[:space:]]*STELA TASK DASHBOARD' "$path" \
@@ -1100,7 +974,7 @@ lint_path() {
   fi
 
   if [[ "$source_path" == *-RESULTS.md ]]; then
-    lint_results_path "$source_path"
+    bash tools/lint/results.sh "$source_path"
     return $?
   fi
 
@@ -1249,6 +1123,8 @@ run_test() {
   tmp_results_invalid="$(mktemp --suffix=-RESULTS.md)"
   tmp_proposed_marker_bad="$(mktemp)"
   tmp_proposed_prose_ok="$(mktemp)"
+  local current_git_hash
+  current_git_hash="$(git rev-parse HEAD)"
 
   printf '%s\n' "tools/lint/dp.sh" > "$tmp_allowlist_valid"
   printf '%s\n' "path/that/does/not/exist.txt" > "$tmp_allowlist_bad"
@@ -1286,52 +1162,88 @@ run_test() {
     exit 1
   fi
 
-  cat > "$tmp_results_valid" <<'TESTRESULTS'
+  cat > "$tmp_results_valid" <<TESTRESULTS
 # DP-OPS-0099 RESULTS
 
-## Mandatory Closing Block
-Commit Message (plaintext)
-DP-OPS-0099 validate results lint path
+## Certification Metadata
+- Packet ID: DP-OPS-0099
+- Git Hash: ${current_git_hash}
 
-Create Pull Request (Title) (plaintext)
-DP-OPS-0099 Validate RESULTS lint path
+## Scope Verification
+### Integrity Lint Output
+PASS
 
-Create Pull Request (Description) (markdown)
-### Summary
-- Added RESULTS mandatory closing block checks.
+## Verification Command Log
+- bash tools/lint/dp.sh TASK.md
 
-Confirm Merge (Commit Message) (plaintext) (Must differ from #1)
-Validate RESULTS mandatory closing block rules
-
-Confirm Merge (Extended Description) (plaintext)
+## Git State Impact
+### git diff --name-only
 tools/lint/dp.sh
 
-Confirm Merge (Add a Comment) (markdown)
-Does this validator enforce strict plaintext versus permissive markdown fields correctly?
+### git diff --stat
+ tools/lint/dp.sh | 1 +
+
+## Mandatory Closing Block
+Commit Message (Subject Line)
+DP-OPS-0099 validate results lint path
+
+Create Pull Request (Title)
+DP-OPS-0099 Validate RESULTS lint path
+
+Create Pull Request (Description)
+### Summary
+- Delegated RESULTS lint to tools/lint/results.sh.
+
+Confirm Merge (Commit Message)
+DP-OPS-0099 finalize delegated results lint path
+
+Confirm Merge (Extended Description)
+tools/lint/dp.sh
+
+Confirm Merge (Add a Comment)
+Does delegated results lint pass and reject invalid filler text?
 TESTRESULTS
   lint_path "$tmp_results_valid" >/dev/null
 
-  cat > "$tmp_results_invalid" <<'TESTRESULTS'
+  cat > "$tmp_results_invalid" <<TESTRESULTS
 # DP-OPS-0099 RESULTS
 
-## Mandatory Closing Block
-Commit Message (plaintext)
-*invalid markdown token*
+## Certification Metadata
+- Packet ID: DP-OPS-0099
+- Git Hash: ${current_git_hash}
 
-Create Pull Request (Title) (plaintext)
-DP-OPS-0099 Validate RESULTS lint path
+## Scope Verification
+### Integrity Lint Output
+PASS
 
-Create Pull Request (Description) (markdown)
-ENTER DESCRIPTION HERE
+## Verification Command Log
+- bash tools/lint/dp.sh TASK.md
 
-Confirm Merge (Commit Message) (plaintext) (Must differ from #1)
-DP-OPS-0099 Validate RESULTS lint path
-
-Confirm Merge (Extended Description) (plaintext)
+## Git State Impact
+### git diff --name-only
 tools/lint/dp.sh
 
-Confirm Merge (Add a Comment) (markdown)
+### git diff --stat
+ tools/lint/dp.sh | 1 +
+
+## Mandatory Closing Block
+Commit Message (Subject Line)
+DP-OPS-0099 validate results lint path
+
+Create Pull Request (Title)
+DP-OPS-0099 Validate RESULTS lint path
+
+Create Pull Request (Description)
 PLACEHOLDER
+
+Confirm Merge (Commit Message)
+DP-OPS-0099 finalize delegated results lint path
+
+Confirm Merge (Extended Description)
+tools/lint/dp.sh
+
+Confirm Merge (Add a Comment)
+Delegated results lint should reject placeholders in this fixture.
 TESTRESULTS
   if lint_path "$tmp_results_invalid" >/dev/null 2>&1; then
     rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok"
