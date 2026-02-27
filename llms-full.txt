@@ -164,7 +164,7 @@ When reporting, include:
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-02-26-a4ce9f3c7.md
+archives/surfaces/PoW-2026-02-27-39282b37f.md
 
 
 ## README.md
@@ -181,11 +181,11 @@ Use [docs/MANUAL.md](docs/MANUAL.md) for command workflow and closeout routing.
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-02-26-a4ce9f3c7.md
+archives/surfaces/SoP-2026-02-27-39282b37f.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0124-a4ce9f3c7.md
+archives/surfaces/TASK-DP-OPS-0127-39282b37f.md
 
 
 ## docs/INDEX.md
@@ -194,6 +194,7 @@ archives/surfaces/TASK-DP-OPS-0124-a4ce9f3c7.md
 
 ## 0. Primary Read-in (Start Here)
 * [MANUAL.md](MANUAL.md) — Operator command and mechanics.
+* [MANUAL.md#trace-cookbook](MANUAL.md#trace-cookbook) — Quick telemetry caller and leaf trace commands.
 
 ## 1. The Constitution (Law & Logic)
 * [../PoT.md](../PoT.md) — Policy of Truth: constitution, staffing, jurisdiction, and enforcement.
