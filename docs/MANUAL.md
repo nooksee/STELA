@@ -136,6 +136,21 @@ Required fields:
   references may appear in narrative text; this field records only the active packet's
   schema assumptions.
 
+Decision Record Trigger:
+- Trigger rule: A decision record is required only when `Anomalies Encountered:` or
+  `Open Items / Residue:` is not `None.`
+- Optional rule: When both fields are `None.`, a decision record is optional and must
+  not be forced for noise.
+- Routing rule: When required, the contractor writes a decision record leaf under
+  `archives/decisions/` and includes its repo-relative pointer in the relevant
+  `Anomalies Encountered:` or `Open Items / Residue:` narrative text.
+- Minimum fields: `decision_id`, `trace_id`, `packet_id`, `decision_type`, `context`,
+  `decision`, `consequence`, `status`, `pointer`.
+- Mapping rule: `context`, `decision`, `consequence`, `status`, and `pointer` are
+  expressed as body sections in the decision leaf; the remaining required identifiers
+  are in YAML frontmatter.
+See docs/ops/specs/surfaces/notes.md for the Contractor Notes and decision-record contract specification.
+
 Prior `CONTRACTOR-NOTES.md` files in `storage/handoff/` are not retroactively reformatted
 to this schema.
 
