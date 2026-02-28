@@ -478,6 +478,19 @@ Telemetry callers write leaves at `logs/<caller>-<label>-<stamp>-<trace-digest>.
 ./ops/bin/trace by-trace stela-20260227T202038Z-6dd41793
 ~~~
 
+#### Trace Health Check
+~~~bash
+./ops/bin/trace health
+~~~
+
+~~~bash
+bash tools/lint/leaf.sh --health
+~~~
+
+`trace health` reports gap findings but exits zero and is safe to run at any
+time. `bash tools/lint/leaf.sh --health` exits non-zero when gaps are found and
+is suitable for CI or pre-closeout manual gates.
+
 Legacy shell pipelines remain available as secondary reference:
 
 ~~~bash

@@ -9,11 +9,34 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
 failures=0
+health_mode=0
 
 fail() {
   echo "FAIL: $*" >&2
   failures=1
 }
+
+usage() {
+  cat <<'USAGE'
+Usage: bash tools/lint/leaf.sh [--health]
+USAGE
+}
+
+while (($# > 0)); do
+  case "$1" in
+    --health)
+      health_mode=1
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      fail "unknown argument: $1"
+      ;;
+  esac
+  shift
+done
 
 # All ops/bin/ files except ops/bin/project (deprecated).
 mapfile -t BINARIES < <(git ls-files ops/bin/ | grep -v 'ops/bin/project$' | sort)
@@ -42,3 +65,23 @@ if (( failures == 1 )); then
 fi
 
 echo "leaf lint: PASS"
+
+if (( health_mode == 1 )); then
+  # Close this invocation before scanning so lint-leaf does not self-report
+  # as an active start leaf while health checks are running.
+  emit_binary_leaf "lint-leaf" "finish"
+
+  health_output=""
+  if ! health_output="$(./ops/bin/trace health)"; then
+    echo "FAIL: trace health invocation failed" >&2
+    exit 1
+  fi
+
+  if printf '%s\n' "$health_output" | grep -q '^GAP:'; then
+    printf '%s\n' "$health_output" | grep '^GAP:'
+    echo "FAIL: health gaps detected" >&2
+    exit 1
+  fi
+
+  echo "OK: health check passed"
+fi
