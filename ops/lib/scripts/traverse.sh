@@ -14,14 +14,14 @@ ignore_patterns=()
 
 usage() {
   cat <<'USAGE'
-Usage: ops/lib/scripts/traverse.sh [--scope=platform|full|project] [--project=<slug>]
+Usage: ops/lib/scripts/traverse.sh [--scope=core|platform|full|factory|project] [--project=<slug>]
                                   [--include-dir=DIR] [--exclude-dir=DIR] [--ignore-file=GLOB]
 USAGE
 }
 
 for arg in "$@"; do
   case "$arg" in
-    --scope=platform|--scope=full|--scope=project)
+    --scope=core|--scope=platform|--scope=full|--scope=factory|--scope=project)
       scope="${arg#--scope=}"
       ;;
     --project=*)
@@ -118,8 +118,16 @@ include_by_scope() {
     full)
       return 0
       ;;
+    core)
+      [[ "$path" != projects/* && "$path" != opt/_factory/* ]]
+      return $?
+      ;;
     platform)
       [[ "$path" != projects/* ]]
+      return $?
+      ;;
+    factory)
+      [[ "$path" == opt/_factory/* ]]
       return $?
       ;;
     project)

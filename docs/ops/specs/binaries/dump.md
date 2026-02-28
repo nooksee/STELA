@@ -17,7 +17,7 @@ The following named scopes define traversal boundaries for audit clarity and ope
 
 - `core`: All tracked text content except `projects/` and `opt/_factory/`. Use for standard operator audit dumps where factory content is not under review.
 - `platform`: All tracked text content except `projects/`. Keeps `opt/_factory/` visible. Use when factory surfaces are intentionally included in scope.
-- `factory`: Only `opt/_factory/`. Use for targeted factory-only inspection. Not implemented as a traversal scope value at HEAD; defined here for future implementation in Slice D2.
+- `factory`: Only `opt/_factory/`. Use for targeted factory-only inspection. Implemented as a traversal scope value in `ops/lib/scripts/traverse.sh` and `ops/bin/dump`.
 - `dp+allowlist` (contractor baseline): Not a traversal scope. Uses `--selection=dp+allowlist` mode. Assembles a bounded file set from canon baseline files, DP-scoped load-order files, and explicit allowlisted additions. Forbidden-prefix behavior (`opt/_factory/`, `storage/handoff/OPEN-`) remains in effect for all contractor-authorized sessions. This is the default contractor context path.
 
 - `--selection=scope` (scalar, default `scope`): preserves existing behavior and builds files via `ops/lib/scripts/traverse.sh` using `--scope`, `--project`, `--include-dir`, `--exclude-dir`, and `--ignore-file`.
