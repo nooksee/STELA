@@ -30,6 +30,17 @@ Subcommands:
   frontmatter `trace_id` when present.
 - `heads`: enumerates `logs/*.telemetry.head` and reports caller plus pointed leaf
   path; empty, missing, or non-existent pointers render as `(unresolved)`.
+- `health`: scans `logs/` and reports three classes of gap: unclosed runs (a
+  caller whose latest leaf is labeled `start` with no subsequent `finish` leaf
+  for the same caller and trace digest, after a short in-flight grace window),
+  unresolved heads (a
+  `logs/*.telemetry.head` pointer that targets a non-existent leaf), and
+  malformed filenames (leaf files whose names do not match the canonical
+  `<caller>-<label>-<stamp>-<trace-digest>.md` shape). Prints
+  `OK: no health gaps detected` when no gaps are found. Prints one
+  `GAP: <condition-type>: <detail>` line per finding when gaps exist. Exits
+  zero in all cases; gating is the responsibility of the opt-in `--health`
+  mode in `tools/lint/leaf.sh`.
 
 Frontmatter handling:
 - The binary reads YAML frontmatter fields (`trace_id`, `caller`, `label`,
@@ -47,6 +58,7 @@ CLI examples:
 ./ops/bin/trace recent --limit=10
 ./ops/bin/trace by-caller open --limit=10
 ./ops/bin/trace by-trace stela-20260227T202038Z-6dd41793
+./ops/bin/trace health
 ./ops/bin/trace recent --limit=5 --format=md
 ./ops/bin/trace recent --limit=5 --format=json
 ~~~
@@ -58,3 +70,9 @@ The binary fails on unknown subcommands, invalid flags, unsupported formats,
 and invalid non-positive limits.
 Head-pointer corruption (empty pointer, absolute pointer, missing target) is
 handled gracefully with the stable `(unresolved)` placeholder in `heads` output.
+`trace health` exits zero regardless of findings. Operators who require a
+non-zero exit on gap detection must use `bash tools/lint/leaf.sh --health`.
+Best-effort single-leaf writes such as retro-leaves with no corresponding head
+file do not produce false positives; a finding is raised only when a head file
+exists and its target is missing, or when the latest leaf for a caller remains
+`start` after the in-flight grace window.

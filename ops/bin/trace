@@ -15,6 +15,7 @@ DEFAULT_LIMIT=30
 DEFAULT_FORMAT="table"
 UNKNOWN_VALUE="unknown"
 UNRESOLVED_HEAD_VALUE="(unresolved)"
+HEALTH_UNCLOSED_GRACE_SECONDS=120
 
 declare -A HEAD_POINTERS=()
 declare -a HEAD_CALLERS=()
@@ -33,6 +34,7 @@ Subcommands:
   by-caller <name> [--limit=N] [--format=json|md]
   by-trace <trace_id> [--format=json|md]
   heads [--format=json|md]
+  health
 
 Defaults:
   --format=table
@@ -66,6 +68,11 @@ USAGE
     heads)
       cat <<'USAGE'
 Usage: ops/bin/trace heads [--format=json|md]
+USAGE
+      ;;
+    health)
+      cat <<'USAGE'
+Usage: ops/bin/trace health
 USAGE
       ;;
     *)
@@ -311,6 +318,52 @@ parse_leaf_filename() {
   LEAF_STAMP="$stamp"
   LEAF_DIGEST="$digest"
   return 0
+}
+
+parse_health_leaf_filename() {
+  local path="$1"
+  HEALTH_PREFIX=""
+  HEALTH_STAMP=""
+  HEALTH_DIGEST=""
+
+  local base
+  base="${path##*/}"
+  [[ "$base" == *.md ]] || return 1
+
+  base="${base%.md}"
+  [[ "$base" == *-* ]] || return 1
+
+  local digest remainder stamp prefix
+  digest="${base##*-}"
+  remainder="${base%-*}"
+  [[ "$remainder" == *-* ]] || return 1
+  stamp="${remainder##*-}"
+  prefix="${remainder%-*}"
+
+  # Health mode requires a caller-label prefix and canonical stamp/digest tokens.
+  [[ "$prefix" == *-* ]] || return 1
+  [[ "$stamp" =~ ^[0-9]{8}T[0-9]{6}Z$ ]] || return 1
+  [[ "$digest" =~ ^[a-f0-9]{8,}$ ]] || return 1
+
+  HEALTH_PREFIX="$prefix"
+  HEALTH_STAMP="$stamp"
+  HEALTH_DIGEST="$digest"
+  return 0
+}
+
+stamp_to_epoch() {
+  local stamp="$1"
+  [[ "$stamp" =~ ^[0-9]{8}T[0-9]{6}Z$ ]] || return 1
+
+  local yyyy mm dd hh mi ss
+  yyyy="${stamp:0:4}"
+  mm="${stamp:4:2}"
+  dd="${stamp:6:2}"
+  hh="${stamp:9:2}"
+  mi="${stamp:11:2}"
+  ss="${stamp:13:2}"
+
+  date -u -d "${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}" +%s 2>/dev/null
 }
 
 infer_caller_label() {
@@ -625,6 +678,119 @@ cmd_heads() {
   render_rows "$format"
 }
 
+cmd_health() {
+  while (($# > 0)); do
+    case "$1" in
+      -h|--help)
+        subcommand_usage "health"
+        exit 0
+        ;;
+      *)
+        die "Unknown argument for health: $1"
+        ;;
+    esac
+    shift
+  done
+
+  load_heads
+
+  local -a findings=()
+  declare -A latest_stamp_by_caller=()
+  declare -A latest_label_by_caller=()
+  declare -A latest_digest_by_caller=()
+  declare -A finish_stamp_by_caller_digest=()
+
+  if [[ -d logs ]]; then
+    local leaf_file=""
+    while IFS= read -r leaf_file; do
+      local leaf_base="${leaf_file##*/}"
+      if [[ "$leaf_base" == *-retroleaf.md ]]; then
+        continue
+      fi
+
+      if ! parse_health_leaf_filename "$leaf_file"; then
+        findings+=("malformed-filename"$'\t'"${leaf_file}")
+        continue
+      fi
+
+      infer_caller_label "$HEALTH_PREFIX" "" ""
+
+      local caller="$RES_CALLER"
+      local label="$RES_LABEL"
+      local stamp="$HEALTH_STAMP"
+      local digest="$HEALTH_DIGEST"
+
+      local latest_stamp="${latest_stamp_by_caller[$caller]-}"
+      if [[ -z "$latest_stamp" || "$stamp" > "$latest_stamp" ]]; then
+        latest_stamp_by_caller["$caller"]="$stamp"
+        latest_label_by_caller["$caller"]="$label"
+        latest_digest_by_caller["$caller"]="$digest"
+      fi
+
+      if [[ "$label" == "finish" ]]; then
+        local finish_key="${caller}"$'\t'"${digest}"
+        local finish_stamp="${finish_stamp_by_caller_digest[$finish_key]-}"
+        if [[ -z "$finish_stamp" || "$stamp" > "$finish_stamp" ]]; then
+          finish_stamp_by_caller_digest["$finish_key"]="$stamp"
+        fi
+      fi
+    done < <(find logs -maxdepth 1 -type f -name '*.md' -print | sort)
+
+    shopt -s nullglob
+    local head_file=""
+    for head_file in logs/*.telemetry.head; do
+      local pointer_raw=""
+      IFS= read -r pointer_raw < "$head_file" || true
+      pointer_raw="$(trim "$pointer_raw")"
+
+      if [[ -z "$pointer_raw" || "$pointer_raw" == /* || ! -f "$pointer_raw" ]]; then
+        findings+=("unresolved-head"$'\t'"${head_file}")
+      fi
+    done
+    shopt -u nullglob
+  fi
+
+  local caller=""
+  local now_epoch
+  now_epoch="$(date -u +%s)"
+
+  for caller in "${!latest_stamp_by_caller[@]}"; do
+    local latest_label="${latest_label_by_caller[$caller]-}"
+    if [[ "$latest_label" != "start" ]]; then
+      continue
+    fi
+
+    local latest_stamp="${latest_stamp_by_caller[$caller]-}"
+    local latest_digest="${latest_digest_by_caller[$caller]-}"
+    local finish_key="${caller}"$'\t'"${latest_digest}"
+    local finish_stamp="${finish_stamp_by_caller_digest[$finish_key]-}"
+    if [[ -z "$finish_stamp" || "$finish_stamp" < "$latest_stamp" ]]; then
+      local latest_epoch=""
+      latest_epoch="$(stamp_to_epoch "$latest_stamp" || true)"
+      if [[ -n "$latest_epoch" ]]; then
+        local age_seconds=$((now_epoch - latest_epoch))
+        if (( age_seconds >= 0 && age_seconds < HEALTH_UNCLOSED_GRACE_SECONDS )); then
+          continue
+        fi
+      fi
+      findings+=("unclosed-run"$'\t'"${caller}")
+    fi
+  done
+
+  if (( ${#findings[@]} == 0 )); then
+    printf 'OK: no health gaps detected\n'
+    return 0
+  fi
+
+  mapfile -t findings < <(printf '%s\n' "${findings[@]}" | sort -u)
+  local finding=""
+  for finding in "${findings[@]}"; do
+    local condition_type detail
+    IFS=$'\t' read -r condition_type detail <<< "$finding"
+    printf 'GAP: %s: %s\n' "$condition_type" "$detail"
+  done
+}
+
 main() {
   if (($# == 0)); then
     top_usage >&2
@@ -656,6 +822,9 @@ main() {
       ;;
     heads)
       cmd_heads "$@"
+      ;;
+    health)
+      cmd_health "$@"
       ;;
     *)
       die "Unknown subcommand: ${subcommand}"

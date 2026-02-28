@@ -1,21 +1,25 @@
-# Contractor Notes — DP-OPS-0131
+# Contractor Notes — DP-OPS-0132
 
 ## Scope Confirmation
-Executed scoped work for DP-OPS-0131 by updating `tools/lint/style.sh` with
-conditional validation for Contractor Notes Execution Decision Record fields and
-updating `docs/ops/specs/tools/lint/style.md` to document that enforcement.
-Updated `storage/dp/active/allowlist.txt` for this packet scope and closeout
-artifacts, and maintained `storage/handoff/CLOSING-DP-OPS-0131.md` for certify.
+Executed all in-scope code and documentation updates for DP-OPS-0132:
+- Added `trace health` to `ops/bin/trace` with deterministic reporting for `unclosed-run`, `unresolved-head`, and `malformed-filename` findings.
+- Added opt-in `--health` mode to `tools/lint/leaf.sh` with non-zero exit behavior on gaps while preserving default lint behavior.
+- Updated `docs/ops/specs/binaries/trace.md`, `docs/ops/specs/tools/lint/leaf.md`, and `docs/MANUAL.md` for the new command/flag and operator recipe.
+- Updated `storage/dp/active/allowlist.txt` for modified paths.
+No out-of-scope files were edited.
 
 ## Anomalies Encountered
-None.
+Integrator post-work audit identified one deviation: platform dump artifacts for
+this packet included `opt/_factory/` paths without an explicit authorization
+record in the packet artifacts. Retrospective authorization is documented in
+`archives/decisions/DEC-2026-02-28-001-factory-dump-scope-0132.md`.
 
 ## Open Items / Residue
 None.
 
 ## Execution Decision Record
-Decision Required: No
-Decision Pointer: None
+Decision Required: Yes
+Decision Pointer: archives/decisions/DEC-2026-02-28-001-factory-dump-scope-0132.md
 
 ## Closing Schema Baseline
-Current six-label schema baseline assumed (post-0116+A).
+Assumed the current six-label closing schema (post-0116+A baseline) for this active packet.
