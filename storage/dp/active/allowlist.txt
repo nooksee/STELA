@@ -4,6 +4,7 @@ docs/ops/specs/tools/lint/leaf.md
 docs/ops/specs/tools/lint/style.md
 docs/ops/specs/binaries/trace.md
 docs/ops/specs/binaries/decision.md
+docs/ops/specs/binaries/certify.md
 docs/ops/specs/surfaces/notes.md
 ops/bin/allowlist
 ops/bin/dump
@@ -76,6 +77,7 @@ archives/surfaces/TASK-DP-OPS-0129-*.md
 archives/surfaces/TASK-DP-OPS-0130-*.md
 archives/surfaces/TASK-DP-OPS-0131-*.md
 archives/surfaces/TASK-DP-OPS-0132-*.md
+archives/surfaces/TASK-DP-OPS-0133-*.md
 archives/surfaces/TASK-DP-OPS-0129-cae86c58c.md
 archives/surfaces/TASK-DP-OPS-0130-d65d13ba6.md
 archives/surfaces/TASK-DP-OPS-0128-8930f88f8.md

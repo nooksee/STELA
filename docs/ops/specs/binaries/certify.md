@@ -16,3 +16,26 @@ The DP-OPS-0074 enforcement-model gap exposed ambiguity between permissive recei
 ## Integrity Filter Warnings
 Certification stops on unknown arguments, packet mismatch against work-branch naming, missing closing sidecar, empty closing sidecar, missing DP block in TASK when intake fallback is not explicitly authorized, malformed allowlist pointers, unsupported command substitution or glob tokens in receipt commands, integrity lint failure, any verification command failure, invalid Freshness Stamp format, missing trace identity, pointer resolution failure, unresolved template tokens in RESULTS, results lint failure, or changed files outside the allowlist. The binary sanitizes disposable artifact references in command logs, but it does not permit disposable artifact references inside DP or RESULTS surfaces.
 In addendum mode, the binary additionally stops on: `--addendum` present without `--dp`; `--addendum` value that is not a single uppercase letter; missing addendum intake artifact with no fallback; or addendum SCOPE_DELTA entries containing glob or brace expansion tokens.
+
+## Rerun Path
+
+When `ops/bin/certify` has already completed at least one invocation and has moved the
+intake packet from `storage/dp/intake/` to `storage/dp/processed/`, a rerun requires
+the operator to restore the intake before invoking certify again.
+
+The restore procedure is:
+1. Copy the intake artifact from `storage/dp/processed/DP-OPS-XXXX.md` back to
+   `storage/dp/intake/DP-OPS-XXXX.md`.
+2. Move the processed copy to `var/tmp/DP-OPS-XXXX.pre-rerun-processed.md` to
+   eliminate intake/processed coexistence.
+3. Invoke certify normally: `./ops/bin/certify --dp=DP-OPS-XXXX --out=auto`.
+
+The coexistence prohibition is a hard constraint: certify artifact path resolution is
+indeterminate when the same packet exists in both `storage/dp/intake/` and
+`storage/dp/processed/` simultaneously.
+
+The full procedure with literal commands is documented in `docs/MANUAL.md`
+under `### Certify Rerun (Post-Move Recovery)` in the Closeout Cycle section.
+
+The `--reuse-processed-fallback` guarded flag is not implemented in this slice.
+Binary-level rerun ergonomics are deferred to a future packet.
