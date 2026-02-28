@@ -1,5 +1,6 @@
 docs/MANUAL.md
 docs/INDEX.md
+docs/ops/specs/binaries/dump.md
 docs/ops/specs/tools/lint/leaf.md
 docs/ops/specs/tools/lint/style.md
 docs/ops/specs/binaries/trace.md
@@ -22,6 +23,7 @@ storage/handoff/CLOSING-DP-OPS-0129.md
 storage/handoff/CLOSING-DP-OPS-0130.md
 storage/handoff/CLOSING-DP-OPS-0131.md
 storage/handoff/CLOSING-DP-OPS-0132.md
+storage/handoff/CLOSING-DP-OPS-0134.md
 SoP.md
 PoW.md
 TASK.md
@@ -78,6 +80,7 @@ archives/surfaces/TASK-DP-OPS-0130-*.md
 archives/surfaces/TASK-DP-OPS-0131-*.md
 archives/surfaces/TASK-DP-OPS-0132-*.md
 archives/surfaces/TASK-DP-OPS-0133-*.md
+archives/surfaces/TASK-DP-OPS-0134-7407d534b.md
 archives/surfaces/TASK-DP-OPS-0129-cae86c58c.md
 archives/surfaces/TASK-DP-OPS-0130-d65d13ba6.md
 archives/surfaces/TASK-DP-OPS-0128-8930f88f8.md

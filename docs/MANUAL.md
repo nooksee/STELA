@@ -364,6 +364,15 @@ Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, 
 ./ops/bin/dump --scope=platform --out=auto --bundle
 ~~~
 
+### Scope Taxonomy
+
+The following named scopes define traversal boundaries. Definitions are canonical in `docs/ops/specs/binaries/dump.md`.
+
+- `core`: All tracked text content except `projects/` and `opt/_factory/`. Use for standard operator audit dumps where factory content is not under review.
+- `platform`: All tracked text content except `projects/`. Keeps `opt/_factory/` visible. Use when factory surfaces are intentionally included in scope.
+- `factory`: Only `opt/_factory/`. Use for targeted factory-only inspection. Not implemented as a traversal scope value at HEAD; defined here for future implementation in Slice D2.
+- `dp+allowlist` (contractor baseline): Not a traversal scope. Uses `--selection=dp+allowlist` mode. Assembles a bounded file set from canon baseline files, DP-scoped load-order files, and explicit allowlisted additions. Forbidden-prefix behavior (`opt/_factory/`, `storage/handoff/OPEN-`) remains in effect for all contractor-authorized sessions. This is the default contractor context path.
+
 ### Map (Auto-Generated Index)
 ~~~bash
 # Refresh the auto-generated MAP block
