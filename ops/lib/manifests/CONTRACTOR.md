@@ -1,4 +1,4 @@
-<!-- CCD: ff_target="machine-dense" ff_band="10-20" -->
+<!-- CCD: ff_target="machine-dense" ff_band="30-40" -->
 # Contractor Brief
 
 1 Temp path rule uses `var/tmp` only

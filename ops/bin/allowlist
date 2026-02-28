@@ -44,8 +44,58 @@ emit_binary_leaf "allowlist" "start"
 allowlist_path="storage/dp/active/allowlist.txt"
 [[ -f "$allowlist_path" ]] || die "allowlist file missing: ${allowlist_path}"
 
-mapfile -t missing_tracked_changed < <(comm -23 <(git diff --name-only | sort) <(sort "$allowlist_path") || true)
-mapfile -t missing_untracked < <(comm -23 <(git ls-files --others --exclude-standard | sort) <(sort "$allowlist_path") || true)
+declare -A allow_exact=()
+declare -a allow_patterns=()
+
+while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
+  entry="$(trim "$raw_line")"
+  [[ -n "$entry" ]] || continue
+  [[ "$entry" == \#* ]] && continue
+
+  # Support inline markdown-code allowlist entries.
+  entry="${entry#\`}"
+  entry="${entry%\`}"
+  entry="${entry#./}"
+
+  if [[ "$entry" == *"*"* || "$entry" == *"?"* || "$entry" == *"["* ]]; then
+    allow_patterns+=("$entry")
+    continue
+  fi
+
+  allow_exact["$entry"]=1
+done < "$allowlist_path"
+
+allowlist_contains_path() {
+  local path="$1"
+  if [[ -n "${allow_exact[$path]+set}" ]]; then
+    return 0
+  fi
+
+  local pattern
+  for pattern in "${allow_patterns[@]}"; do
+    if [[ "$path" == $pattern ]]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+missing_tracked_changed=()
+while IFS= read -r changed_path; do
+  [[ -n "$changed_path" ]] || continue
+  if ! allowlist_contains_path "$changed_path"; then
+    missing_tracked_changed+=("$changed_path")
+  fi
+done < <(git diff --name-only | sort)
+
+missing_untracked=()
+while IFS= read -r untracked_path; do
+  [[ -n "$untracked_path" ]] || continue
+  if ! allowlist_contains_path "$untracked_path"; then
+    missing_untracked+=("$untracked_path")
+  fi
+done < <(git ls-files --others --exclude-standard | sort)
 
 printf 'tracked-changed missing count: %d\n' "${#missing_tracked_changed[@]}"
 printf 'untracked missing count: %d\n' "${#missing_untracked[@]}"
