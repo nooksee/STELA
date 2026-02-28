@@ -1,5 +1,6 @@
 docs/MANUAL.md
 docs/INDEX.md
+docs/ops/specs/tools/lint/style.md
 docs/ops/specs/binaries/trace.md
 docs/ops/specs/binaries/decision.md
 docs/ops/specs/surfaces/notes.md
@@ -9,12 +10,14 @@ ops/bin/trace
 ops/bin/decision
 ops/src/surfaces/notes.md.tpl
 ops/src/surfaces/decision.md.tpl
+tools/lint/style.sh
 storage/dp/active/allowlist.txt
 storage/dp/active/notes.md
 storage/handoff/CLOSING-DP-OPS-0127.md
 storage/handoff/CLOSING-DP-OPS-0128.md
 storage/handoff/CLOSING-DP-OPS-0129.md
 storage/handoff/CLOSING-DP-OPS-0130.md
+storage/handoff/CLOSING-DP-OPS-0131.md
 SoP.md
 PoW.md
 TASK.md
@@ -45,10 +48,12 @@ archives/manifests/compile-2026-02-27T233037-d65d13ba6.md
 archives/manifests/compile-2026-02-27T233218-d65d13ba6.md
 archives/manifests/compile-2026-02-27T233419-d65d13ba6.md
 archives/manifests/compile-2026-02-28T013214-d65d13ba6.md
+archives/manifests/compile-2026-02-28T032127-115e5e2a4.md
 archives/surfaces/SoP-????-??-??-*.md
 archives/surfaces/SoP-2026-02-27-11aab0a10.md
 archives/surfaces/SoP-2026-02-27-39282b37f.md
 archives/surfaces/SoP-2026-02-27-8930f88f8.md
+archives/surfaces/SoP-2026-02-27-115e5e2a4.md
 archives/surfaces/PoW-????-??-??-*.md
 archives/surfaces/PoW-2026-02-27-11aab0a10.md
 archives/surfaces/PoW-2026-02-27-edf4eeae8.md
@@ -56,6 +61,7 @@ archives/surfaces/PoW-2026-02-27-39282b37f.md
 archives/surfaces/PoW-2026-02-27-8930f88f8.md
 archives/surfaces/PoW-2026-02-27-cae86c58c.md
 archives/surfaces/PoW-2026-02-27-d65d13ba6.md
+archives/surfaces/PoW-2026-02-27-115e5e2a4.md
 archives/surfaces/TASK-DP-OPS-0125-*.md
 archives/surfaces/TASK-DP-OPS-0125-11aab0a10.md
 archives/surfaces/TASK-DP-OPS-0126-*.md
@@ -63,6 +69,7 @@ archives/surfaces/TASK-DP-OPS-0127-*.md
 archives/surfaces/TASK-DP-OPS-0128-*.md
 archives/surfaces/TASK-DP-OPS-0129-*.md
 archives/surfaces/TASK-DP-OPS-0130-*.md
+archives/surfaces/TASK-DP-OPS-0131-*.md
 archives/surfaces/TASK-DP-OPS-0129-cae86c58c.md
 archives/surfaces/TASK-DP-OPS-0130-d65d13ba6.md
 archives/surfaces/TASK-DP-OPS-0128-8930f88f8.md
@@ -71,3 +78,4 @@ archives/surfaces/SoP-2026-02-27-edf4eeae8.md
 archives/surfaces/SoP-2026-02-27-cae86c58c.md
 archives/surfaces/SoP-2026-02-27-d65d13ba6.md
 archives/surfaces/TASK-DP-OPS-0126-edf4eeae8.md
+archives/surfaces/TASK-DP-OPS-0131-115e5e2a4.md
