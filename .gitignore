@@ -32,11 +32,16 @@ archives/definitions/*
 archives/manifests/*
 !archives/manifests/.gitkeep
 !archives/manifests/compile-????-??-??T??????-*.md
+!archives/decisions/
+archives/decisions/*
+!archives/decisions/.gitkeep
+!archives/decisions/DEC-????-??-??-*.md
 
 # IDE/editor noise
 nbproject/
 .idea/
 .vscode/
+.claude/
 
 # IDE (machine-specific)
 nbproject/private/

@@ -30,7 +30,7 @@ ALLOWLIST_BASELINE_PATH="${REPO_ROOT}/var/tmp/baseline-storage-dp-active-allowli
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/dump [--scope=platform|full|project] [--project=<slug>] [--format=chatgpt|gemini|claude]
+Usage: ops/bin/dump [--scope=core|platform|full|factory|project] [--project=<slug>] [--format=chatgpt|gemini|claude]
                    [--max-lines=n] [--out=path|auto] [--compress=tar.xz] [--bundle]
                    [--include-binary=meta|raw|base64]
                    [--include-dir=DIR] [--exclude-dir=DIR] [--ignore-file=GLOB]
@@ -47,7 +47,7 @@ USAGE
 
 for arg in "$@"; do
   case "$arg" in
-    --scope=platform|--scope=full|--scope=project)
+    --scope=core|--scope=platform|--scope=full|--scope=factory|--scope=project)
       scope="${arg#--scope=}"
       ;;
     --project=*)
@@ -685,7 +685,9 @@ emit_dump() {
   echo "Binary files: $binary_files"
   echo "Truncated text files: $truncated_files"
   case "$scope" in
+    core)     echo "Excluded dirs (scope): projects/ opt/_factory/" ;;
     platform) echo "Excluded dirs (scope): projects/" ;;
+    factory)  echo "Excluded dirs (scope): (all except opt/_factory/)" ;;
     project)  echo "Excluded dirs (scope): projects/* (except projects/$target/)" ;;
     full)     echo "Excluded dirs (scope): none" ;;
   esac
