@@ -1,12 +1,9 @@
-# Contractor Notes — DP-OPS-0133
+# Contractor Notes - DP-OPS-0134
 
 ## Scope Confirmation
-Executed all in-scope documentation and closeout updates for DP-OPS-0133:
-- Added `### Certify Rerun (Post-Move Recovery)` in `docs/MANUAL.md` with literal rerun commands and coexistence prohibition.
-- Added `## Rerun Path` in `docs/ops/specs/binaries/certify.md` with restore sequence and hard coexistence constraint.
-- Updated `storage/dp/active/allowlist.txt` to include `docs/ops/specs/binaries/certify.md` and maintained required closeout paths.
-- Ran required verify, receipt, refresh, and closeout commands; generated refreshed `llms*.txt` outputs and compile leaf artifacts.
-No out-of-scope binaries, scripts, guards, or validation tools were modified.
+Executed the scoped docs-only taxonomy updates for `docs/ops/specs/binaries/dump.md`, `docs/MANUAL.md`, and `docs/INDEX.md`, plus required allowlist updates.
+Operator authorized closeout expansion was applied to complete closeout routing, including `storage/handoff/CLOSING-DP-OPS-0134.md`, pre-certify single-entry ledger heads in `SoP.md` and `PoW.md`, certify receipts, refresh artifacts, and prune hygiene.
+No behavior changes were made to dump or traverse tooling.
 
 ## Anomalies Encountered
 None.
