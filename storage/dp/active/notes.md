@@ -1,25 +1,22 @@
-# Contractor Notes — DP-OPS-0132
+# Contractor Notes — DP-OPS-0133
 
 ## Scope Confirmation
-Executed all in-scope code and documentation updates for DP-OPS-0132:
-- Added `trace health` to `ops/bin/trace` with deterministic reporting for `unclosed-run`, `unresolved-head`, and `malformed-filename` findings.
-- Added opt-in `--health` mode to `tools/lint/leaf.sh` with non-zero exit behavior on gaps while preserving default lint behavior.
-- Updated `docs/ops/specs/binaries/trace.md`, `docs/ops/specs/tools/lint/leaf.md`, and `docs/MANUAL.md` for the new command/flag and operator recipe.
-- Updated `storage/dp/active/allowlist.txt` for modified paths.
-No out-of-scope files were edited.
+Executed all in-scope documentation and closeout updates for DP-OPS-0133:
+- Added `### Certify Rerun (Post-Move Recovery)` in `docs/MANUAL.md` with literal rerun commands and coexistence prohibition.
+- Added `## Rerun Path` in `docs/ops/specs/binaries/certify.md` with restore sequence and hard coexistence constraint.
+- Updated `storage/dp/active/allowlist.txt` to include `docs/ops/specs/binaries/certify.md` and maintained required closeout paths.
+- Ran required verify, receipt, refresh, and closeout commands; generated refreshed `llms*.txt` outputs and compile leaf artifacts.
+No out-of-scope binaries, scripts, guards, or validation tools were modified.
 
 ## Anomalies Encountered
-Integrator post-work audit identified one deviation: platform dump artifacts for
-this packet included `opt/_factory/` paths without an explicit authorization
-record in the packet artifacts. Retrospective authorization is documented in
-`archives/decisions/DEC-2026-02-28-001-factory-dump-scope-0132.md`.
+None.
 
 ## Open Items / Residue
 None.
 
 ## Execution Decision Record
-Decision Required: Yes
-Decision Pointer: archives/decisions/DEC-2026-02-28-001-factory-dump-scope-0132.md
+Decision Required: No
+Decision Pointer: None
 
 ## Closing Schema Baseline
 Assumed the current six-label closing schema (post-0116+A baseline) for this active packet.

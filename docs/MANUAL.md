@@ -113,6 +113,46 @@ If `TASK.md` does not contain the target DP block, certify now fails unless `--a
 `bash tools/lint/results.sh` without arguments targets the active branch packet receipt when resolvable; use `--all` only for full historical receipt scans.
 Manual RESULTS fabrication is prohibited.
 
+### Certify Rerun (Post-Move Recovery)
+
+**Trigger condition:** `ops/bin/certify` has completed at least one invocation for the
+active DP and has moved the intake packet from `storage/dp/intake/DP-OPS-XXXX.md` to
+`storage/dp/processed/DP-OPS-XXXX.md`. A second certify invocation is required (for
+example, after an allowlist correction or a sidecar fix identified during the first run).
+
+**Coexistence prohibition:** The intake packet must not exist simultaneously in both
+`storage/dp/intake/` and `storage/dp/processed/` when certify is invoked. Violating this
+constraint produces an indeterminate path for certify artifact resolution.
+
+**Recovery steps (run in order; do not skip):**
+
+1. Copy the intake packet back from processed to the intake directory:
+~~~bash
+cp storage/dp/processed/DP-OPS-XXXX.md storage/dp/intake/DP-OPS-XXXX.md
+~~~
+
+2. Move the processed copy to `var/tmp/` to eliminate coexistence:
+~~~bash
+mv storage/dp/processed/DP-OPS-XXXX.md var/tmp/DP-OPS-XXXX.pre-rerun-processed.md
+~~~
+
+3. Confirm `storage/dp/processed/DP-OPS-XXXX.md` no longer exists:
+~~~bash
+ls storage/dp/processed/
+~~~
+
+4. Run certify:
+~~~bash
+./ops/bin/certify --dp=DP-OPS-XXXX --out=auto
+~~~
+
+On success, certify moves `storage/dp/intake/DP-OPS-XXXX.md` to
+`storage/dp/processed/DP-OPS-XXXX.md` again. The `var/tmp/` staging copy is
+disposable and does not require cleanup before certify runs.
+
+**Note:** Replace `DP-OPS-XXXX` with the literal DP identifier for the active packet.
+Substitute `DP-OPS-XXXX.md` accordingly in all three commands above.
+
 2.5 Post-Work Audit (Integrator; mandatory before COMMIT)
 The Integrator reviews the diff (`git diff --name-only`, `git diff --stat`), the RESULTS receipt at `storage/handoff/DP-OPS-XXXX-RESULTS.md`, and the closing sidecar at `storage/handoff/CLOSING-DP-OPS-XXXX.md` against the DP scope definition (Section 3.3 In scope / Out of scope).
 
