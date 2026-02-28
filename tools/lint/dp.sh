@@ -846,7 +846,7 @@ check_allowlist_pointer_integrity() {
     if [[ ! -e "${REPO_ROOT}/${normalized}" ]]; then
       # Allow closing-sidecar allowlist entries even when the runtime file is absent
       # (for example in clean CI clones where storage/handoff is gitignored).
-      if [[ "$normalized" =~ ^storage/handoff/CLOSING-DP-[A-Z]+-[0-9]{4,}\.md$ ]]; then
+      if [[ "$normalized" =~ ^storage/handoff/CLOSING-DP-[A-Z]+-[0-9]{4,}(-ADDENDUM-[A-Z]+)?\.md$ ]]; then
         continue
       fi
       # Allow the DP-OPS-0099 addendum intake receipt artifact path to remain in the

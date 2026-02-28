@@ -15,6 +15,7 @@ ops/src/surfaces/notes.md.tpl
 ops/src/surfaces/decision.md.tpl
 tools/lint/leaf.sh
 tools/lint/style.sh
+tools/lint/dp.sh
 storage/dp/active/allowlist.txt
 storage/dp/active/notes.md
 storage/handoff/CLOSING-DP-OPS-0127.md
