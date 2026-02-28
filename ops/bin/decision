@@ -1,0 +1,292 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=/dev/null
+source "${REPO_ROOT}/ops/lib/scripts/common.sh"
+
+DECISION_TEMPLATE_PATH="${REPO_ROOT}/ops/src/surfaces/decision.md.tpl"
+DECISION_ARCHIVE_DIR="${REPO_ROOT}/archives/decisions"
+TMP_DIR="${REPO_ROOT}/var/tmp"
+
+declare -a TMP_FILES=()
+
+cleanup() {
+  emit_binary_leaf "decision" "finish"
+  local tmp
+  for tmp in "${TMP_FILES[@]}"; do
+    [[ -n "$tmp" ]] && rm -f "$tmp"
+  done
+}
+
+make_tmp_file() {
+  local tmp_file
+  tmp_file="$(mktemp "${TMP_DIR}/decision.XXXXXX")"
+  TMP_FILES+=("$tmp_file")
+  printf '%s' "$tmp_file"
+}
+
+usage() {
+  cat <<'USAGE'
+Usage:
+  ops/bin/decision create --dp=DP-OPS-XXXX --type=<type> --status=<status> --out=auto
+  ops/bin/decision decision create --dp=DP-OPS-XXXX --type=<type> --status=<status> --out=auto
+
+Required flags for create:
+  --dp=DP-OPS-XXXX
+  --type=<decision-type>
+  --status=<status>
+  --out=auto|PATH
+USAGE
+}
+
+strip_template_frontmatter() {
+  local source_path="$1"
+  awk '
+    BEGIN { in_frontmatter=0 }
+    NR == 1 && $0 == "---" {
+      in_frontmatter=1
+      next
+    }
+    in_frontmatter {
+      if ($0 == "---") {
+        in_frontmatter=0
+      }
+      next
+    }
+    { print }
+  ' "$source_path"
+}
+
+next_decision_sequence() {
+  local utc_day="$1"
+  local max_seq=0
+  local path
+
+  mkdir -p "$DECISION_ARCHIVE_DIR"
+
+  shopt -s nullglob
+  for path in "${DECISION_ARCHIVE_DIR}"/DEC-"${utc_day}"-*.md; do
+    local base_name
+    local seq_num
+    base_name="$(basename "$path")"
+    if [[ "$base_name" =~ ^DEC-${utc_day}-([0-9]{3})-[a-z0-9][a-z0-9-]*\.md$ ]]; then
+      seq_num=$((10#${BASH_REMATCH[1]}))
+      if (( seq_num > max_seq )); then
+        max_seq=$seq_num
+      fi
+    fi
+  done
+  shopt -u nullglob
+
+  printf '%03d' "$((max_seq + 1))"
+}
+
+resolve_output_path() {
+  local out_arg="$1"
+  local decision_id="$2"
+  local slug_suffix="$3"
+  local rel_path=""
+
+  if [[ "$out_arg" == "auto" ]]; then
+    rel_path="archives/decisions/${decision_id}-${slug_suffix}.md"
+  else
+    [[ "$out_arg" = /* ]] && die "--out must be repo-relative or auto"
+    rel_path="${out_arg#./}"
+    [[ -n "$rel_path" ]] || die "--out path cannot be empty"
+  fi
+
+  printf '%s' "$rel_path"
+}
+
+render_decision_leaf() {
+  local out_path="$1"
+  local trace_id="$2"
+  local decision_id="$3"
+  local packet_id="$4"
+  local decision_type="$5"
+  local created_at="$6"
+  local authorized_by="$7"
+  local context_block="$8"
+  local decision_block="$9"
+  local consequence_block="${10}"
+  local pointer_block="${11}"
+  local status_value="${12}"
+  local stripped_template
+
+  stripped_template="$(make_tmp_file)"
+  strip_template_frontmatter "$DECISION_TEMPLATE_PATH" > "$stripped_template"
+
+  awk \
+    -v trace_id="$trace_id" \
+    -v decision_id="$decision_id" \
+    -v packet_id="$packet_id" \
+    -v decision_type="$decision_type" \
+    -v created_at="$created_at" \
+    -v authorized_by="$authorized_by" \
+    -v context_block="$context_block" \
+    -v decision_block="$decision_block" \
+    -v consequence_block="$consequence_block" \
+    -v pointer_block="$pointer_block" \
+    -v status_value="$status_value" '
+      {
+        line=$0
+
+        if (line == "{{CONTEXT}}") {
+          print context_block
+          next
+        }
+        if (line == "{{DECISION}}") {
+          print decision_block
+          next
+        }
+        if (line == "{{CONSEQUENCE}}") {
+          print consequence_block
+          next
+        }
+        if (line == "{{POINTER}}") {
+          print pointer_block
+          next
+        }
+        if (line == "{{STATUS}}") {
+          print status_value
+          next
+        }
+
+        gsub(/\{\{TRACE_ID\}\}/, trace_id, line)
+        gsub(/\{\{DECISION_ID\}\}/, decision_id, line)
+        gsub(/\{\{PACKET_ID\}\}/, packet_id, line)
+        gsub(/\{\{DECISION_TYPE\}\}/, decision_type, line)
+        gsub(/\{\{CREATED_AT\}\}/, created_at, line)
+        gsub(/\{\{AUTHORIZED_BY\}\}/, authorized_by, line)
+
+        print line
+      }
+    ' "$stripped_template" > "$out_path"
+
+  if grep -Eq '\{\{[A-Z0-9_]+\}\}' "$out_path"; then
+    die "render failed: unresolved slot markers remain in output"
+  fi
+}
+
+create_decision() {
+  local dp_id=""
+  local decision_type_input=""
+  local status_value=""
+  local out_arg=""
+
+  local arg
+  for arg in "$@"; do
+    case "$arg" in
+      --dp=*)
+        dp_id="${arg#--dp=}"
+        ;;
+      --type=*)
+        decision_type_input="${arg#--type=}"
+        ;;
+      --status=*)
+        status_value="${arg#--status=}"
+        ;;
+      --out=*)
+        out_arg="${arg#--out=}"
+        ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      *)
+        die "unknown arg: ${arg}"
+        ;;
+    esac
+  done
+
+  [[ -n "$dp_id" ]] || die "missing required --dp"
+  [[ -n "$decision_type_input" ]] || die "missing required --type"
+  [[ -n "$status_value" ]] || die "missing required --status"
+  [[ -n "$out_arg" ]] || die "missing required --out"
+
+  if [[ ! "$dp_id" =~ ^DP-OPS-([0-9]{4})$ ]]; then
+    die "invalid --dp format (expected DP-OPS-XXXX): ${dp_id}"
+  fi
+  local dp_suffix="${BASH_REMATCH[1]}"
+
+  local decision_type_slug
+  decision_type_slug="$(slugify_token "$decision_type_input")"
+  [[ -n "$decision_type_slug" ]] || die "--type must contain at least one alphanumeric character"
+
+  local utc_day
+  local sequence
+  local decision_id
+  local output_slug
+  local output_rel
+  local output_path
+  local trace_id
+  local created_at
+
+  utc_day="$(date -u +%Y-%m-%d)"
+  sequence="$(next_decision_sequence "$utc_day")"
+  decision_id="DEC-${utc_day}-${sequence}"
+  output_slug="${decision_type_slug}-${dp_suffix}"
+  output_rel="$(resolve_output_path "$out_arg" "$decision_id" "$output_slug")"
+  output_path="${REPO_ROOT}/${output_rel}"
+
+  mkdir -p "$(dirname "$output_path")"
+
+  created_at="$(utc_now)"
+  trace_id="${STELA_TRACE_ID:-stela-$(date -u '+%Y%m%dT%H%M%SZ')-$(short_hash "${dp_id}-${decision_id}-${decision_type_slug}")}"
+
+  render_decision_leaf \
+    "$output_path" \
+    "$trace_id" \
+    "$decision_id" \
+    "$dp_id" \
+    "$decision_type_slug" \
+    "$created_at" \
+    "Operator" \
+    "Populate during execution." \
+    "Populate during execution." \
+    "Populate during execution." \
+    "- Populate during execution." \
+    "$status_value"
+
+  printf 'Wrote: %s\n' "$output_rel"
+}
+
+main() {
+  mkdir -p "$TMP_DIR"
+  [[ -f "$DECISION_TEMPLATE_PATH" ]] || die "missing decision template: ${DECISION_TEMPLATE_PATH#${REPO_ROOT}/}"
+
+  if [[ "$#" -eq 0 ]]; then
+    usage
+    exit 0
+  fi
+
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+  esac
+
+  local top_command="$1"
+  if [[ "$top_command" == "decision" ]]; then
+    shift
+    [[ "$#" -gt 0 ]] || die "missing subcommand"
+    top_command="$1"
+  fi
+
+  case "$top_command" in
+    create)
+      shift
+      create_decision "$@"
+      ;;
+    *)
+      die "unknown subcommand: ${top_command}"
+      ;;
+  esac
+}
+
+trap cleanup EXIT
+emit_binary_leaf "decision" "start"
+main "$@"

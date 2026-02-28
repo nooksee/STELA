@@ -564,6 +564,11 @@ content_exists() {
     [[ -f "$snapshot_path" ]]
     return $?
   fi
+
+  if [[ -f "${REPO_ROOT}/${path}" ]]; then
+    return 0
+  fi
+
   git cat-file -e "HEAD:$path" 2>/dev/null
 }
 
@@ -574,6 +579,12 @@ stream_content() {
     cat "$snapshot_path"
     return 0
   fi
+
+  if [[ -f "${REPO_ROOT}/${path}" ]]; then
+    cat "${REPO_ROOT}/${path}"
+    return 0
+  fi
+
   git show "HEAD:$path"
 }
 
