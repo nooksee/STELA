@@ -15,6 +15,7 @@ Use `docs/MANUAL.md` for command procedure details and `docs/CCD.md` for density
 *Living records of what has happened and what is happening.*
 * **History:** [`../../SoP.md`](../../SoP.md) — The State of Play. (What shipped, when, why).
 * **Proof:** [`../../PoW.md`](../../PoW.md) — Proof of Work ledger. (What evidence was produced and where it is stored).
+* **Decisions:** [`../../RoR.md`](../../RoR.md) — Record of Record. Pointer head to the most recent decision leaf under `archives/decisions/`.
 * **Active Contract:** [`../../TASK.md`](../../TASK.md) — The Dispatch Packet. (Current objective and work log).
 
 ## 3. The Interface (Wayfinding)
