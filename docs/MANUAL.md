@@ -354,14 +354,20 @@ Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, 
 
 ### State Capture (Dump)
 ~~~bash
-# Platform Scope (Default - Excludes projects/)
+# Core Scope (Default - Excludes projects/ and opt/_factory/)
+./ops/bin/dump --scope=core --format=chatgpt --out=auto
+
+# Platform Scope (Opt-in - Keeps opt/_factory/ visible)
 ./ops/bin/dump --scope=platform --format=chatgpt --out=auto
+
+# Factory Scope (Opt-in - Only opt/_factory/)
+./ops/bin/dump --scope=factory --format=chatgpt --out=auto
 
 # Full Scope (Includes projects/ - auto-compressed)
 ./ops/bin/dump --scope=full --format=chatgpt --out=auto
 
 # Receipt Bundle (Dump + Manifest inside tarball)
-./ops/bin/dump --scope=platform --out=auto --bundle
+./ops/bin/dump --scope=core --out=auto --bundle
 ~~~
 
 ### Scope Taxonomy
@@ -370,7 +376,7 @@ The following named scopes define traversal boundaries. Definitions are canonica
 
 - `core`: All tracked text content except `projects/` and `opt/_factory/`. Use for standard operator audit dumps where factory content is not under review.
 - `platform`: All tracked text content except `projects/`. Keeps `opt/_factory/` visible. Use when factory surfaces are intentionally included in scope.
-- `factory`: Only `opt/_factory/`. Use for targeted factory-only inspection. Not implemented as a traversal scope value at HEAD; defined here for future implementation in Slice D2.
+- `factory`: Only `opt/_factory/`. Use for targeted factory-only inspection.
 - `dp+allowlist` (contractor baseline): Not a traversal scope. Uses `--selection=dp+allowlist` mode. Assembles a bounded file set from canon baseline files, DP-scoped load-order files, and explicit allowlisted additions. Forbidden-prefix behavior (`opt/_factory/`, `storage/handoff/OPEN-`) remains in effect for all contractor-authorized sessions. This is the default contractor context path.
 
 ### Map (Auto-Generated Index)
@@ -487,7 +493,7 @@ dp.sh fails at preflight if any command substitution token is found in Section 3
 ## 3. Scope Definition
 * **Platform:** `ops/`, `docs/`, `tools/`, `.github/`. (OS).
 * **Project:** `projects/`. (Payload).
-* **Rule:** Default to `--scope=platform` unless the DP explicitly targets a project.
+* **Rule:** Default to `--scope=core` unless the DP explicitly targets a project. Use `--scope=platform` only when `opt/_factory/` visibility is intentionally required. Use `--scope=factory` for targeted factory-only inspection.
 
 ---
 

@@ -28,6 +28,7 @@ These prompts reference canonical locations rather than duplicating content:
 * **E-PROMPT-02:** Hygiene (conform rough draft to canonical structure)
 * **E-PROMPT-03:** Architect (generate DP from plan)
 * **E-PROMPT-04:** Analyst (read-only analysis)
+* **E-PROMPT-05:** Auditor (authorize addendum to unblock certify)
 
 **Immutable Workflow:**
 * Use `ops/bin/draft` or Architect stance to generate DPs.
