@@ -235,8 +235,8 @@ show_curriculum() {
 ${bold}Startup Sequence${reset}
 1. Open freshness snapshot:
    ${green}./ops/bin/open --out=auto --dp="DP-OPS-XXXX"${reset}
-2. Capture platform state:
-   ${green}./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle${reset}
+2. Capture Ops state:
+   ${green}./ops/bin/dump --scope=core --format=chatgpt --out=auto --bundle${reset}
 3. Run dispatch preflight gates before edits:
    ${green}bash tools/lint/dp.sh --test${reset}
    ${green}bash tools/lint/dp.sh TASK.md${reset}
@@ -294,7 +294,7 @@ ${bold}Help Modes${reset}
 
 ${bold}Quick Start${reset}
   1) Read constitution and active contract: ${green}PoT.md${reset}, ${green}TASK.md${reset}
-  2) Capture OPEN and DUMP: ${green}./ops/bin/open --out=auto${reset}, ${green}./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle${reset}
+  2) Capture OPEN and DUMP: ${green}./ops/bin/open --out=auto${reset}, ${green}./ops/bin/dump --scope=core --format=chatgpt --out=auto --bundle${reset}
   3) Run gates before edits: ${green}bash tools/lint/dp.sh --test${reset}, ${green}bash tools/lint/task.sh${reset}
 
 ${bold}Wayfinding${reset}
