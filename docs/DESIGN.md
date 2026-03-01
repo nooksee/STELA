@@ -68,75 +68,97 @@ The findings are recorded below and indexed in the Decision Registry in §5.
 Checks that all required platform directories exist, factory head files are reachable, storage subdirs are present, and the Filing Doctrine is obeyed. Every check is a yes/no assertion against the filesystem. No structural prevention exists for filesystem layout violations in a permissive git repository. The alternative (custom git hooks or filesystem ACLs) is disproportionate.
 Deletion Test: **C.** Without `verify.sh`, Filing Doctrine violations surface as silent downstream failures rather than clean early errors.
 Registry: C — Keep. No redesign recommended.
+Leaf: archives/decisions/RoR-2026-03-01-003-cbc-0140.md
 
 **`tools/lint/dp.sh` — 1,127 lines**
 Validates TASK.md and RESULTS files via canonical template SHA256, normalized structure hash, allowlist pointer integrity, placeholder detection, and closing block field validation. The template hash mechanism is prevention-adjacent: `ops/bin/draft` generates the structure; `dp.sh` confirms it was not tampered with. The 1,127-line count is partially explained by the embedded `--test` mode fixture harness (approximately 200 lines), which is a refactor candidate: extracting it to `tools/test/dp.sh` would reduce the core linter to approximately 900 lines.
 Deletion Test: **C.** Without `dp.sh`, hand-authored DPs with arbitrary structure pass all gates and the allowlist pointer check vanishes.
 Registry: C — Keep. Refactor candidate noted: extract test fixture to `tools/test/dp.sh` as a standalone future work item. Not urgent.
+Leaf: archives/decisions/RoR-2026-03-01-004-cbc-0140.md
 
 **`tools/lint/agent.sh` — 258 lines**
 Validates registry alignment, required section presence, provenance field completeness, pointer existence, and hazard pattern detection for agent definitions. `ops/src/definitions/agent.md.tpl` generates structure; this linter validates that AI-authored content filled the structure correctly. Two distinct concerns, clean division.
 Deletion Test: **C.** Registry drift and hazard pattern violations (for example, an agent pointer to a dump artifact) go undetected.
 Registry: C — Keep. The two-layer design (template for structure, linter for content) is the correct prevention model.
+Leaf: archives/decisions/RoR-2026-03-01-005-cbc-0140.md
 
 **`tools/lint/context.sh` — 131 lines**
 Verifies artifact existence, guards against factory directory paths in the manifest (hazard guard), and scans for semantic contamination. Artifact existence and contamination scan: **C**, justified. Hazard guard: **B** — `CONTEXT.md` is hand-authored; if `ops/bin/context` always generated it, the generator could structurally exclude `opt/_factory/` paths and the hazard guard would become redundant. Redesign cost: approximately 12 lines of the 131 total.
 Registry: Artifact existence and contamination scan — C, Keep. Hazard guard — B, Keep with structural redesign candidate queued.
+Leaf (artifact existence, contamination): archives/decisions/RoR-2026-03-01-006-cbc-0140.md
+Leaf (hazard guard): archives/decisions/RoR-2026-03-01-007-cbc-0140.md
 
 **`tools/lint/factory.sh` — 397 lines**
 Validates factory head files, pointer integrity within factory definitions, and candidate/promotion pipeline structure. Factory binary generates the skeleton; AI fills it; linter validates the result. Same clean two-layer design as `agent.sh`. The 397-line count is explained by pipeline breadth.
 Deletion Test: **C.**
 Registry: C — Keep. No redesign opportunity identified.
+Leaf: archives/decisions/RoR-2026-03-01-008-cbc-0140.md
 
 **`tools/lint/integrity.sh` — 183 lines**
 Reads the allowlist pointer from TASK.md, resolves the allowlist file, compares it against all changed and untracked paths, fails if any unauthorized path appears. The allowlist per DP is itself a structural contract. The linter enforces a scoped contract the Operator explicitly authored in the DP. Prevention model enacted at the DP contract layer.
 Deletion Test: **C.** Without integrity enforcement, any file modification during a DP execution passes gates regardless of declared scope.
 Registry: C — Keep. Reference implementation of a CbC-justified linter. If CbC had been policy at creation, this tool would have been held up as the model.
+Leaf: archives/decisions/RoR-2026-03-01-009-cbc-0140.md
 
 **`tools/lint/leaf.sh` — 47 lines**
 Checks that `emit_binary_leaf` is wired into every file in `ops/bin/` and `tools/`. New binaries and tools are hand-authored without a guaranteed wiring step. The originally proposed structural alternative had two parts: scaffold injection (`ops/bin/scaffold` pre-wiring `emit_binary_leaf` in generated scripts) and common.sh auto-invocation (`ops/lib/scripts/common.sh` invoking `emit_binary_leaf` at source time, removing per-script calls entirely). Both parts were investigated in the DP-OPS-0109 pre-draft Integrator analysis and found not viable. Common.sh auto-invoke cannot replicate the EXIT trap lifecycle event: the trap must be registered in the sourcing script's execution context to fire on that script's exit; a source-time invocation in the library fires once at source, producing one weak event rather than the two semantically distinct start and finish events the current per-script model provides. Scaffold injection assumed `ops/bin/scaffold` generates shell scripts; it does not. The binary provisions project directory trees from `ops/lib/project/SCAFFOLD.md` and performs no bash script generation. No proportionate structural fix exists. The linter is retained permanently as the correct detection mechanism for enforcing telemetry wiring across pre-scaffold and manually authored scripts.
 Deletion Test: **C.** Without `leaf.sh`, `emit_binary_leaf` wiring gaps in `ops/bin/` and `tools/` go undetected, breaking proof reconstruction and violating the PoT proof discipline that requires generated evidence rather than inferred narratives.
 Registry: C — Keep. Structural redesign evaluated and rejected in DP-OPS-0109 pre-draft analysis.
+Leaf: archives/decisions/RoR-2026-03-01-010-cbc-0140.md
 
 **`tools/lint/llms.sh` — 78 lines**
 Generates `llms.txt`, `llms-core.txt`, and `llms-full.txt` into a temp directory, diffs against committed versions, and fails on divergence. Also detects deprecated filename references. The structural fix: a llms hook runs `ops/bin/llms` and stages the output before every commit, making staleness structurally impossible; the deprecated filename check is absorbed into `ops/bin/llms` directly.
 Deletion Test: **B.** LLMS hook plus generator-absorbed deprecation check makes the linter fully redundant when both changes land.
 Registry: B — Keep until llms hook is implemented. Cleanest B-to-deletion pipeline in the queue. DP-OPS-0102 implements the structural fix and retires the linter.
+Leaf: archives/decisions/RoR-2026-03-01-011-cbc-0140.md
 
 **`tools/lint/project.sh` — 120 lines**
 Validates project directory structure and requires `README.md` in every project folder. README check: **B** — `ops/bin/project` or a scaffold equivalent could guarantee `README.md` on creation, making the check redundant for new projects. Structural checks: **C** — hard to guarantee at creation time.
 Registry: README check B — flag for scaffold redesign, low priority. Structural checks C — Keep.
+Leaf (README check): archives/decisions/RoR-2026-03-01-012-cbc-0140.md
+Leaf (structural checks): archives/decisions/RoR-2026-03-01-013-cbc-0140.md
 
 **`tools/lint/results.sh` — 287 lines**
 Validates RESULTS receipts: heading structure, template hash parity, closing block completeness, placeholder detection, and forbidden disposable-artifact references. `ops/bin/certify` generates the RESULTS structure; `results.sh` validates that AI-authored fields are complete and structure was not tampered with.
 Deletion Test: **C.** Certify could produce an incomplete RESULTS receipt without detection; the PR merges with an incomplete evidence chain.
 Registry: C — Keep. Same analysis as `dp.sh`. Well-justified.
+Leaf: archives/decisions/RoR-2026-03-01-014-cbc-0140.md
 
 **`tools/lint/schema.sh` — 208 lines**
 Validates YAML frontmatter in `archives/definitions/`, `archives/surfaces/`, and `archives/manifests/` — required keys, ISO-8601 timestamps, valid `previous` pointers. Generator bug coverage: **B** — unit tests for `ops/lib/scripts/ledger.sh` would make schema checks redundant for well-tested generation paths. Manual edit coverage: **C** — archive files can be manually edited; the linter catches manual corruption.
 Registry: B/C — Keep. The schema linter's value decreases as ledger script test coverage increases. The two are inversely correlated. Revisit as test coverage grows.
+Leaf: archives/decisions/RoR-2026-03-01-015-cbc-0140.md
 
 **`tools/lint/skill.sh` — 166 lines**
 Same two-layer design as `agent.sh`. Factory template generates structure; AI fills content; linter validates content completeness and registry alignment.
 Deletion Test: **C.**
 Registry: C — Keep. No redesign opportunity.
+Leaf: archives/decisions/RoR-2026-03-01-016-cbc-0140.md
 
 **`tools/lint/style.sh` — 232 lines**
 Four distinct checks: contraction prohibition, jargon blacklist, spec-surface section compliance, and closing block lead-word repetition detection. Contraction prohibition: **C** — no structural mechanism can prevent contractions in prose; detection is the only tool. Jargon blacklist: **C** — same logic. Spec-surface compliance: **B** — `ops/src/docs/spec.md.tpl` updated to include all four required sections by default makes the compliance check redundant; a spec generated from the updated template cannot be missing them. Lead-word repetition: **C** — without it, AI-generated closing blocks routinely produce six near-identical entries; the check enforces semantic differentiation.
 Registry: Contraction prohibition — C, Keep. Jargon — C, Keep. Spec-surface compliance — B, Keep with structural redesign candidate queued. Lead-word repetition — C, Keep.
+Leaf (contraction prohibition): archives/decisions/RoR-2026-03-01-017-cbc-0140.md
+Leaf (jargon blacklist): archives/decisions/RoR-2026-03-01-018-cbc-0140.md
+Leaf (spec-surface compliance): archives/decisions/RoR-2026-03-01-019-cbc-0140.md
+Leaf (lead-word repetition): archives/decisions/RoR-2026-03-01-020-cbc-0140.md
 
 **`tools/lint/task.sh` — 587 lines**
 Validates task factory files and the TASK.md dashboard: registry alignment, section presence, provenance fields, pointer existence, ambiguous-language detection in execution steps, and closeout pointer validation. Registry, section, provenance, closeout checks: **C**, same analysis as `agent.sh`. Ambiguous-language detection: **B** — if task execution steps followed a machine-parseable format rather than prose, ambiguous language would be impossible to express and the check would be unnecessary.
 Registry: Registry/section/provenance/closeout checks — C, Keep. Ambiguous-language detection — B, Keep with structural redesign candidate: machine-parseable execution step format.
+Leaf (registry/section/provenance/closeout): archives/decisions/RoR-2026-03-01-021-cbc-0140.md
+Leaf (ambiguous-language detection): archives/decisions/RoR-2026-03-01-022-cbc-0140.md
 
 **`tools/lint/truth.sh` — 153 lines**
 Scans all authored surfaces for forbidden spellings of "Stela", forbidden legacy phrase variants for mutable-canon wording, and forbidden legacy registry path casing. No structural prevention exists for spelling errors in prose. Detection is the only tool. 153 lines for three distinct scan categories is proportionate.
 Deletion Test: **C.** Legacy terminology and platform name misspellings re-enter the canon across DP cycles without detection.
 Registry: C — Keep. Simple, proportionate, no structural alternative exists.
+Leaf: archives/decisions/RoR-2026-03-01-023-cbc-0140.md
 
 **`tools/test/agent.sh` — 128 lines**
 Test harness for the agent promotion pipeline. Test coverage is categorically distinct from enforcement linting and is not subject to the same CbC scrutiny. Deletion would remove the only automated validation of the factory promotion path.
 Registry: Out of CbC scope — Keep.
+Leaf: archives/decisions/RoR-2026-03-01-024-cbc-0140.md
 
 **Audit Summary**
 Sixteen tools audited. 4,389 total lines across the suite. Ten surfaces score C and are fully justified. Four specific checks within existing tools score B and have identified structural alternatives. One check (spec-surface compliance in `style.sh`) scores B with a clear and low-effort fix. Zero surfaces score A or D. Zero tools would have been blocked by CbC at creation. The total code surface that structural redesign would eventually eliminate is approximately 120 lines across 4,389 — a 2.7% reduction in enforcement code. The discipline will have its most significant impact on future tooling rather than requiring mass remediation.

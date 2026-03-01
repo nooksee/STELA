@@ -23,5 +23,6 @@ Steps:
 3. **AUTHORIZE**: Produce a complete addendum per `ops/src/surfaces/addendum.md.tpl`
    (A.1 Authorization through A.5 Addendum Receipt). The decision leaf is the addendum
    case — no separate problem statement is required.
+4. **SCAN**: `storage/dp/intake/` for existing addenda matching `<BASE_DP_ID>-ADDENDUM-[A-Z].md` and select the first available letter from `A` through `Z`.
 
 Output only: Complete addendum (A.1–A.5) in a markdown code block.

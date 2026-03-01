@@ -126,3 +126,5 @@ storage/handoff/CLOSING-DP-OPS-0139.md
 archives/surfaces/TASK-DP-OPS-0139-*.md
 archives/decisions/RoR-????-??-??-???-cbc-*.md
 archives/decisions/RoR-????-??-??-???-op-*.md
+storage/handoff/CLOSING-DP-OPS-0140.md
+archives/surfaces/TASK-DP-OPS-0140-*.md
