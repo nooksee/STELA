@@ -148,7 +148,7 @@ Populate during execution; do not pre-fill in TASK.md.
 
 ### 3.4.5 Receipt (Proofs to collect) - MUST RUN
 - ./ops/bin/open --out=auto --dp="DP-OPS-XXXX"
-- ./ops/bin/dump --scope=platform --format=chatgpt --out=auto --bundle
+- ./ops/bin/dump --scope=core --format=chatgpt --out=auto --bundle
 - Zero-byte check: test -s <dump_payload_path>
 - bash tools/lint/context.sh
 - bash tools/lint/style.sh

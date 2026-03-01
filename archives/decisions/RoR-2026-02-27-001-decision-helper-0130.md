@@ -1,6 +1,6 @@
 ---
 trace_id: stela-20260227T223228Z-c8f870c7
-decision_id: DEC-2026-02-27-001
+decision_id: RoR-2026-02-27-001
 packet_id: DP-OPS-0130
 decision_type: decision-helper
 created_at: 2026-02-27T22:32:28Z
@@ -17,9 +17,9 @@ template to generate those leaves consistently.
 ## Decision
 
 Adopt `ops/bin/decision create` as the deterministic authoring interface for
-decision leaves. The helper now renders `ops/src/surfaces/decision.md.tpl`,
-assigns `decision_id` as `DEC-YYYY-MM-DD-NNN`, and writes
-`archives/decisions/DEC-YYYY-MM-DD-NNN-<type-slug>-<dp-suffix>.md` when
+decision leaves. The helper now renders `ops/src/decisions/dec.md.tpl`,
+assigns `decision_id` as `RoR-YYYY-MM-DD-NNN`, and writes
+`archives/decisions/RoR-YYYY-MM-DD-NNN-<type-slug>-<dp-suffix>.md` when
 `--out=auto` is used.
 
 ## Consequence
@@ -31,7 +31,7 @@ removed from the normal operator and contractor path.
 ## Pointer
 
 - ops/bin/decision
-- ops/src/surfaces/decision.md.tpl
+- ops/src/decisions/dec.md.tpl
 - docs/ops/specs/binaries/decision.md
 - storage/handoff/DP-OPS-0130-RESULTS.md
 

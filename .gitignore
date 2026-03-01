@@ -35,7 +35,7 @@ archives/manifests/*
 !archives/decisions/
 archives/decisions/*
 !archives/decisions/.gitkeep
-!archives/decisions/DEC-????-??-??-*.md
+!archives/decisions/RoR-????-??-??-*.md
 
 # IDE/editor noise
 nbproject/

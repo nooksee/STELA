@@ -1,5 +1,5 @@
 ---
-decision_id: DEC-2026-02-28-002
+decision_id: RoR-2026-02-28-002
 trace_id: stela-20260228T162305Z-4b23293a
 packet_id: DP-OPS-0135
 decision_type: scope-correction
@@ -24,4 +24,4 @@ The dump.md diff matches exactly the specification in Step 7. The `.claude/` dir
 Resolved. Both corrections applied during assessment before receipt commands were run.
 
 ## Pointer
-archives/decisions/DEC-2026-02-28-002-dump-md-extra-line-0135.md
+archives/decisions/RoR-2026-02-28-002-dump-md-extra-line-0135.md

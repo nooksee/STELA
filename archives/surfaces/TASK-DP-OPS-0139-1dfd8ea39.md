@@ -1,8 +1,8 @@
 ---
-trace_id: stela-20260228T131550Z-05850a2f
-packet_id: DP-OPS-0132
-created_at: 2026-02-28T13:17:13Z
-previous: archives/surfaces/TASK-DP-OPS-0131-115e5e2a4.md
+trace_id: stela-20260301T164420Z-0134531a
+packet_id: DP-OPS-0139
+created_at: 2026-03-01T16:51:23Z
+previous: archives/surfaces/TASK-DP-OPS-0138-cfdf07cd4.md
 ---
 # STELA TASK DASHBOARD
 Status: ACTIVE
@@ -288,7 +288,7 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 - Before handing work for operator pre-audit review, produce `storage/dp/active/notes.md` using `ops/src/surfaces/notes.md.tpl` as the schema. See `docs/MANUAL.md` Contractor Notes Surface for field definitions and routing.
 - Run prune hygiene: ./ops/bin/prune --scrub.
 - Regenerate session artifacts: `./ops/bin/open --out=auto`
-- Capture updated platform state: `./ops/bin/dump --scope=platform --format=chatgpt --out=auto`
+- Capture updated Ops state: `./ops/bin/dump --scope=core --format=chatgpt --out=auto`
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 - Refresh side-effect: `ops/bin/llms` regenerates `ops/lib/manifests/OPS.md` as a compile event; if `OPS.md` is not in the allowlist, restore it before running `integrity.sh`. See `docs/MANUAL.md` Refresh side-effect notice for the full procedure.
 

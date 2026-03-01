@@ -24,3 +24,6 @@ FF% field documentation: `docs/ops/specs/binaries/template.md`.
 | TPL-15 | ops/src/docs/microdoc.md.tpl | machine-dense | 5–15% | docs |
 | TPL-16 | ops/src/docs/changelog.md.tpl | discovery | 30–45% | docs |
 | TPL-17 | ops/src/docs/consumer.md.tpl | operator-technical | 25–40% | docs |
+| TPL-18 | ops/src/decisions/exec.md.tpl | operator-technical | 25–40% | decision |
+| TPL-19 | ops/src/decisions/cbc.md.tpl | operator-technical | 25–40% | decision |
+| TPL-20 | ops/src/decisions/op.md.tpl | operator-technical | 25–40% | decision |

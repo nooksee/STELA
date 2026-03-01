@@ -181,4 +181,59 @@ if [[ "${#unauthorized[@]}" -gt 0 ]]; then
   exit 1
 fi
 
+# CbC Design Discipline Preflight enforcement
+# Fail when the CbC preflight is applicable (slot content does not start with
+# "Not applicable") and the allowlist contains no cbc decision leaf entry or
+# pattern under archives/decisions/ with "-cbc-" in the name.
+
+extract_cbc_preflight_first_line() {
+  local source_path="$1"
+  awk '
+    BEGIN { in_section=0; past_boilerplate=0 }
+    /^### CbC Design Discipline Preflight/ { in_section=1; next }
+    in_section && /^###/ { exit }
+    in_section && /^##/ { exit }
+    in_section && /^Required when the DP objective/ { next }
+    in_section && /^For non-tooling DPs:/ { past_boilerplate=1; next }
+    in_section && past_boilerplate && /^[[:space:]]*$/ { next }
+    in_section && past_boilerplate && /[^[:space:]]/ { print; exit }
+  ' "$source_path"
+}
+
+cbc_first_line="$(extract_cbc_preflight_first_line "$TASK_SOURCE_PATH")"
+
+cbc_applicable=1
+if [[ -z "$cbc_first_line" ]]; then
+  cbc_applicable=0
+elif [[ "$cbc_first_line" == "Not applicable"* ]]; then
+  cbc_applicable=0
+fi
+
+if [[ "$cbc_applicable" -eq 1 ]]; then
+  cbc_covered=0
+  for entry in "${!allowlisted[@]}"; do
+    if [[ "$entry" == archives/decisions/*-cbc-* ]]; then
+      cbc_covered=1
+      break
+    fi
+  done
+  if [[ "$cbc_covered" -eq 0 ]]; then
+    for pat in "${allowlist_patterns[@]}"; do
+      if [[ "$pat" == archives/decisions/*-cbc-* ]]; then
+        cbc_covered=1
+        break
+      fi
+    done
+  fi
+  if [[ "$cbc_covered" -eq 0 ]]; then
+    {
+      echo "FAIL: CbC preflight is applicable but no cbc decision leaf entry or pattern"
+      echo "  (archives/decisions/*-cbc-*) found in the allowlist."
+      echo "  Run: ./ops/bin/decision create --dp=<DP-ID> --type=cbc --status=accepted --out=auto"
+      echo "  Then add the generated leaf path to storage/dp/active/allowlist.txt."
+    } >&2
+    exit 1
+  fi
+fi
+
 echo "OK: integrity lint passed (${#observed[@]} observed paths)."

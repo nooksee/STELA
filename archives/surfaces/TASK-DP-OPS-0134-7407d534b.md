@@ -139,7 +139,7 @@ Notes:
 2. docs/ops/specs/binaries/certify.md
 3. docs/ops/specs/binaries/trace.md
 4. ops/bin/open
-5. archives/decisions/DEC-2026-02-23-001-certify-compat-0103.md
+5. archives/decisions/RoR-2026-02-23-001-certify-compat-0103.md
 
 ## 3.3 Scope and Safety
 Objective:
@@ -147,10 +147,10 @@ Provide a decision record surface template and a decision helper binary that cre
 Document the binary behavior and schema in a new spec.
 
 In scope:
-- ops/src/surfaces/decision.md.tpl (NEW)
+- ops/src/decisions/dec.md.tpl (NEW)
 - ops/bin/decision (NEW)
 - docs/ops/specs/binaries/decision.md (NEW)
-- archives/decisions/DEC-2026-02-27-001-decision-helper-0130.md (NEW)
+- archives/decisions/RoR-2026-02-27-001-decision-helper-0130.md (NEW)
 - storage/handoff/CLOSING-DP-OPS-0130.md (NEW, maintained throughout execution)
 - storage/dp/active/allowlist.txt (UPDATE)
 - storage/dp/active/notes.md (UPDATE, authored during closeout)
@@ -204,7 +204,7 @@ Target Files allowlist (hard gate):
 - storage/dp/active/allowlist.txt includes current DP-OPS-0130 scope paths and remediation updates.
 
 ### 3.4.2 Request
-- Create ops/src/surfaces/decision.md.tpl as a canonical decision leaf template that renders a YAML decision header and required body sections.
+- Create ops/src/decisions/dec.md.tpl as a canonical decision leaf template that renders a YAML decision header and required body sections.
 - Create ops/bin/decision with a create subcommand that renders the decision template with deterministic archive naming and writes to archives/decisions/ when --out=auto is provided.
 - Create docs/ops/specs/binaries/decision.md describing CLI usage, required arguments, output pathing, and rendered leaf schema.
 - Use the helper once to create a seed decision leaf for this DP, then author the body content to reflect the DP intent and consequences.
@@ -213,10 +213,10 @@ Target Files allowlist (hard gate):
 
 ### 3.4.3 Changelog
 NEW:
-- ops/src/surfaces/decision.md.tpl
+- ops/src/decisions/dec.md.tpl
 - ops/bin/decision
 - docs/ops/specs/binaries/decision.md
-- archives/decisions/DEC-2026-02-27-001-decision-helper-0130.md
+- archives/decisions/RoR-2026-02-27-001-decision-helper-0130.md
 - storage/handoff/CLOSING-DP-OPS-0130.md
 
 UPDATE:
@@ -233,13 +233,13 @@ UPDATE:
 - ops/lib/manifests/CONTRACTOR.md
 
 ### 3.4.4 Patch / Diff
-1. Create ops/src/surfaces/decision.md.tpl with template frontmatter and a rendered decision leaf body matching section ordering: Context, Decision, Consequence, Pointer, Status.
+1. Create ops/src/decisions/dec.md.tpl with template frontmatter and a rendered decision leaf body matching section ordering: Context, Decision, Consequence, Pointer, Status.
 2. Create ops/bin/decision as an executable bash binary that supports subcommand `create` and flags --dp, --type, --status, and --out=auto.
 3. In ops/bin/decision create, implement deterministic output pathing by UTC date, next sequence scan in archives/decisions/, slug suffix construction, and decision_id assignment.
 4. In ops/bin/decision create, render by stripping template frontmatter, substituting required slots, and exiting non-zero on unresolved tokens.
 5. Create docs/ops/specs/binaries/decision.md documenting `./ops/bin/decision create --dp=DP-OPS-XXXX --type=<type> --status=<status> --out=auto` and file naming contract.
-6. Run `./ops/bin/decision create --dp=DP-OPS-0130 --type=decision-helper --status=Accepted --out=auto` and confirm `archives/decisions/DEC-2026-02-27-001-decision-helper-0130.md` is created.
-7. Edit `archives/decisions/DEC-2026-02-27-001-decision-helper-0130.md` body to DP-OPS-0130-specific content and final status.
+6. Run `./ops/bin/decision create --dp=DP-OPS-0130 --type=decision-helper --status=Accepted --out=auto` and confirm `archives/decisions/RoR-2026-02-27-001-decision-helper-0130.md` is created.
+7. Edit `archives/decisions/RoR-2026-02-27-001-decision-helper-0130.md` body to DP-OPS-0130-specific content and final status.
 8. Update storage/dp/active/allowlist.txt for all new or modified paths in this DP.
 9. Ensure `ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto --fail-on-forbidden-prefix=opt/_factory` emits payload and manifest with matching file inventories and no forbidden prefix files.
 
@@ -264,19 +264,19 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 - ./tools/lint/context.sh
 - ./tools/lint/agent.sh
 - bash tools/lint/factory.sh
-- ls ops/src/surfaces/decision.md.tpl
+- ls ops/src/decisions/dec.md.tpl
 - ls ops/bin/decision
 - ls docs/ops/specs/binaries/decision.md
 - ./ops/bin/decision --help
-- test -f archives/decisions/DEC-2026-02-27-001-decision-helper-0130.md
-- grep -n '^decision_id: DEC-2026-02-27-001$' archives/decisions/DEC-2026-02-27-001-decision-helper-0130.md
-- grep -n '^packet_id: DP-OPS-0130$' archives/decisions/DEC-2026-02-27-001-decision-helper-0130.md
-- grep -n '^decision_type: decision-helper$' archives/decisions/DEC-2026-02-27-001-decision-helper-0130.md
-- grep -n '^## Context$' archives/decisions/DEC-2026-02-27-001-decision-helper-0130.md
-- grep -n '^## Decision$' archives/decisions/DEC-2026-02-27-001-decision-helper-0130.md
-- grep -n '^## Consequence$' archives/decisions/DEC-2026-02-27-001-decision-helper-0130.md
-- grep -n '^## Pointer$' archives/decisions/DEC-2026-02-27-001-decision-helper-0130.md
-- grep -n '^## Status$' archives/decisions/DEC-2026-02-27-001-decision-helper-0130.md
+- test -f archives/decisions/RoR-2026-02-27-001-decision-helper-0130.md
+- grep -n '^decision_id: RoR-2026-02-27-001$' archives/decisions/RoR-2026-02-27-001-decision-helper-0130.md
+- grep -n '^packet_id: DP-OPS-0130$' archives/decisions/RoR-2026-02-27-001-decision-helper-0130.md
+- grep -n '^decision_type: decision-helper$' archives/decisions/RoR-2026-02-27-001-decision-helper-0130.md
+- grep -n '^## Context$' archives/decisions/RoR-2026-02-27-001-decision-helper-0130.md
+- grep -n '^## Decision$' archives/decisions/RoR-2026-02-27-001-decision-helper-0130.md
+- grep -n '^## Consequence$' archives/decisions/RoR-2026-02-27-001-decision-helper-0130.md
+- grep -n '^## Pointer$' archives/decisions/RoR-2026-02-27-001-decision-helper-0130.md
+- grep -n '^## Status$' archives/decisions/RoR-2026-02-27-001-decision-helper-0130.md
 - ./ops/bin/map
 - ./ops/bin/llms --out-dir=.
 - ./ops/bin/allowlist

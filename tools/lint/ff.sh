@@ -91,7 +91,7 @@ extract_html_ccd_header() {
 is_wave0_exempt() {
   local file="$1"
   case "$file" in
-    PoW.md|SoP.md|TASK.md|llms.txt|llms-core.txt|llms-full.txt)
+    PoW.md|SoP.md|TASK.md|RoR.md|llms.txt|llms-core.txt|llms-full.txt)
       return 0
       ;;
   esac

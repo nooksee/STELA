@@ -1,5 +1,5 @@
 ---
-decision_id: DEC-2026-02-28-004-audit-deviations-0137
+decision_id: RoR-2026-02-28-004-audit-deviations-0137
 trace_id: stela-20260301T033332Z-7f4372b7
 packet_id: DP-OPS-0137
 decision_type: audit-finding

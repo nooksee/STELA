@@ -1,5 +1,5 @@
 ---
-decision_id: DEC-2026-02-28-003
+decision_id: RoR-2026-02-28-003
 trace_id: stela-20260228T204009Z-7e3a91f2
 packet_id: DP-OPS-0136
 decision_type: certify-blocker
@@ -61,4 +61,4 @@ Anomaly 1: Resolved. Anomalies 2–4: Blocked — awaiting Integrator review and
 authorization.
 
 ## Pointer
-archives/decisions/DEC-2026-02-28-003-certify-receipt-authoring-error-0136.md
+archives/decisions/RoR-2026-02-28-003-certify-receipt-authoring-error-0136.md
