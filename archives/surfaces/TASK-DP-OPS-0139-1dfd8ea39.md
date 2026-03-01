@@ -288,7 +288,7 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 - Before handing work for operator pre-audit review, produce `storage/dp/active/notes.md` using `ops/src/surfaces/notes.md.tpl` as the schema. See `docs/MANUAL.md` Contractor Notes Surface for field definitions and routing.
 - Run prune hygiene: ./ops/bin/prune --scrub.
 - Regenerate session artifacts: `./ops/bin/open --out=auto`
-- Capture updated platform state: `./ops/bin/dump --scope=platform --format=chatgpt --out=auto`
+- Capture updated Ops state: `./ops/bin/dump --scope=core --format=chatgpt --out=auto`
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 - Refresh side-effect: `ops/bin/llms` regenerates `ops/lib/manifests/OPS.md` as a compile event; if `OPS.md` is not in the allowlist, restore it before running `integrity.sh`. See `docs/MANUAL.md` Refresh side-effect notice for the full procedure.
 
