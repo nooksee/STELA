@@ -185,8 +185,10 @@ Do not:
 - ops/lib/manifests/CONTEXT.md
 
 [DUMP]
-- If you need full repo context, run: ./ops/bin/dump --scope=platform --exclude-dir=opt/_factory --format=chatgpt (or gemini).
-- For a file output: ./ops/bin/dump --scope=platform --exclude-dir=opt/_factory --format=chatgpt --out=auto
+- If you need full repo context, run: ./ops/bin/dump --scope=core --format=chatgpt (or gemini).
+- For a file output: ./ops/bin/dump --scope=core --format=chatgpt --out=auto
+- If factory content is intentionally in scope: ./ops/bin/dump --scope=platform --format=chatgpt --out=auto
+- For factory-only inspection: ./ops/bin/dump --scope=factory --format=chatgpt --out=auto
 
 [GIT STATE]
 - Working tree: $status_summary
@@ -213,7 +215,7 @@ fi
   cat <<EOF
 
 [NEXT OPERATOR MOVES]
-- ./ops/bin/dump --scope=platform --exclude-dir=opt/_factory --format=chatgpt
+- ./ops/bin/dump --scope=core --format=chatgpt
 
 [OPERATOR CONTEXT]
 - If any canon pointers are missing, say so.

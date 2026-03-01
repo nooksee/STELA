@@ -29,8 +29,9 @@ Steps:
      Verification section).
    * Reject "trust me" receipts, missing outputs, or receipts with unresolved slot tokens.
 4. **ALLOWLIST**: Verify `storage/dp/active/allowlist.txt` exists and contains all changed files.
-5. **DRIFT**: No out-of-scope edits. No global-context inclusion of `opt/_factory/` unless
-   authorized.
+5. **DRIFT**: No out-of-scope edits. Default dump scope is `--scope=core`, which structurally
+   excludes `opt/_factory/`. Any session using `--scope=platform` or `--scope=factory` must
+   carry explicit authorization.
 6. **GENERATED OUTPUTS**: Require tool-based regeneration proofs (no manual edits to manifests,
    llms bundles, dumps, or RESULTS receipts).
 

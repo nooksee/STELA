@@ -101,3 +101,9 @@ archives/decisions/DEC-2026-02-28-002-dump-md-extra-line-0135.md
 archives/surfaces/TASK-DP-OPS-0135-5aca36a29.md
 storage/handoff/CLOSING-DP-OPS-0135-ADDENDUM-A.md
 archives/decisions/DEC-2026-02-27-001-decision-helper-0130.md
+ops/bin/open
+docs/ops/prompts/e-prompt-01.md
+storage/handoff/CLOSING-DP-OPS-0136.md
+archives/surfaces/TASK-DP-OPS-0136-*.md
+archives/surfaces/TASK-DP-OPS-0136-d16759de8.md
+archives/decisions/DEC-2026-02-28-003-certify-receipt-authoring-error-0136.md
