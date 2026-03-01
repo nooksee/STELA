@@ -1,53 +1,55 @@
-# Contractor Notes — DP-OPS-0136
+# Contractor Notes — DP-OPS-0137
 
 ## Scope Confirmation
-All four in-scope guidance surfaces were updated per Steps 1 through 7 of the DP
-patch specification:
+All in-scope documentation targets updated per §3.4.4 patch specification:
 
-- ops/bin/open: DUMP heredoc block (Steps 1) and NEXT OPERATOR MOVES block (Step 2)
-  updated; --scope=platform --exclude-dir=opt/_factory replaced with --scope=core;
-  --scope=platform and --scope=factory opt-in lines added.
-- docs/MANUAL.md: State Capture (Dump) section (Step 3), Scope Taxonomy factory
-  entry (Step 4), and Section 3 Scope Definition rule (Step 5) updated.
-- docs/INDEX.md: dump.md bullet extended with default scope note (Step 6).
-- docs/ops/prompts/e-prompt-01.md: DRIFT point updated (Step 7).
-- storage/dp/active/allowlist.txt: ops/bin/open, docs/ops/prompts/e-prompt-01.md,
-  storage/handoff/CLOSING-DP-OPS-0136.md, and archives/surfaces/TASK-DP-OPS-0136-*.md
-  entries added (Step 8).
+- docs/ops/specs/binaries/dump.md: Factory-Only Audit Recipe and Guardrail Examples subsection
+  inserted immediately before ## Anecdotal Anchor heading, within ## Scope Taxonomy section.
+- docs/MANUAL.md: Factory-Only Audit Recipe and Guardrail Examples subsection inserted
+  immediately after dp+allowlist scope entry and immediately before ### Map (Auto-Generated Index)
+  heading, within ### Scope Taxonomy section.
+- storage/dp/active/notes.md: Replaced with DP-OPS-0137 notes (this file).
+- storage/dp/active/allowlist.txt: Added storage/handoff/CLOSING-DP-OPS-0137.md,
+  archives/surfaces/TASK-DP-OPS-0137-*.md, and
+  archives/decisions/DEC-2026-02-28-004-audit-deviations-0137.md entries.
 
-All files listed as out of scope were not touched: ops/lib/scripts/traverse.sh,
-ops/bin/dump, docs/ops/specs/binaries/dump.md, opt/_factory/.
+Change set is documentation-only. No linters, scripts, guards, or validation binaries were
+modified. ops/bin/dump, ops/lib/scripts/traverse.sh, and selection or scope resolution logic
+were not touched.
 
-Receipt commands run through pre-certify verification phase. Certify NOT run (blocked; see Anomalies Encountered).
+Addendum ADD-OPS-0137-01 received and executed. Operator authorized Option 1: authorize
+--scope=platform for DP-OPS-0137 closeout APD, correct SoP/PoW timestamps to match actual
+execution timestamps, and make archive surface leaves reviewable via staging before dump.
+Decision leaf: archives/decisions/DEC-2026-02-28-004-audit-deviations-0137.md.
 
 ## Anomalies Encountered
-Four receipt command authoring errors found in DP-OPS-0136 §3.4.5 during pre-certify
-verification. Three are unresolvable by the contractor and block certify.
+Three post-certify audit deviations identified by Integrator, resolved via addendum ADD-OPS-0137-01:
 
-Anomaly 1 (RESOLVED): `grep -n "scope=core" docs/INDEX.md` — Step 6 spec used `core`
-in replacement text but receipt command pattern requires `scope=core`. Resolved by setting
-INDEX.md text to `--scope=core` (consistent with all other surfaces and receipt command
-intent).
+Deviation 1 (RESOLVED via addendum): Platform-scope APD dump used in initial closeout without
+explicit Operator authorization on record. Operator authorized via ADD-OPS-0137-01 Option 1.
 
-Anomaly 2 (BLOCKED): `grep -n "Not implemented" docs/MANUAL.md` — exits 1 after correct
-Step 4 execution; certify dies. Should have been `grep -c`.
+Deviation 2 (RESOLVED via addendum): Archive surface leaves (PoW, SoP, TASK-DP-OPS-0137)
+were untracked at initial dump time, absent from content blocks. Resolved by staging surfaces
+before rerun dump so dump reads content from disk.
 
-Anomaly 3 (BLOCKED): `grep -n "exclude-dir=opt/_factory" ops/bin/open` — exits 1 after
-correct Steps 1–2 execution; certify dies. Should have been `grep -c`.
+Deviation 3 (RESOLVED via addendum): SoP/PoW ledger timestamps authored as 2026-02-28 01:00:00
+UTC; actual execution timestamps from OPEN (stela-20260301T003653Z) and certify
+(certify-dp-ops-0137-20260301T033511Z) are 2026-03-01 UTC. Corrected to 2026-03-01 03:35:11 UTC
+and certify rerun to regenerate archive leaves with correct timestamps.
 
-Anomaly 4 (BLOCKED): `grep -n "exclude-dir=opt/_factory" docs/MANUAL.md` — exits 1
-after correct Steps 3–5 execution; certify dies. Should have been `grep -c`.
+Controlled exception: OPEN "Intent for today:" is empty in RESULTS. Certify §3.4.5 replays
+./ops/bin/open without --intent=; therefore intent-line gating is not applicable for this
+packet. Authorization and controlled exception are carried by the decision leaf (see below).
 
-Decision record: archives/decisions/DEC-2026-02-28-003-certify-receipt-authoring-error-0136.md
+Decision record (SSOT for authorization and controlled exception):
+archives/decisions/DEC-2026-02-28-004-audit-deviations-0137.md
 
 ## Open Items / Residue
-Certify cannot run. Closeout blocked. Integrator review and addendum authorization
-required to resolve Anomalies 2–4 (replace broken `grep -n` negative-proof receipt
-commands with `grep -c` equivalents or authorize an alternative closeout path).
+None.
 
 ## Execution Decision Record
 Decision Required: Yes
-Decision Pointer: archives/decisions/DEC-2026-02-28-003-certify-receipt-authoring-error-0136.md
+Decision Pointer: archives/decisions/DEC-2026-02-28-004-audit-deviations-0137.md
 
 ## Closing Schema Baseline
 Assumed the current six-label closing schema (post-0116+A baseline) for this active packet.

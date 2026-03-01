@@ -45,6 +45,23 @@ For qualifying DP selection runs (`--selection=dp` or `--selection=dp+allowlist`
 
 After selection, the binary emits a dump header with branch and hash metadata, writes index entries for selected files, and emits per-file content blocks from `HEAD` state through `git show`. Optional truncation limits are applied per file when `--max-lines` is set. It writes payload and manifest artifacts under `storage/dumps`, optionally packs payload and manifest into a tarball, and prints artifact paths when `--out` is used.
 
+### Factory-Only Audit Recipe and Guardrail Examples
+
+Use factory scope only when factory inspection is intentional. Factory scope is never a contractor baseline.
+
+Side-by-side scope examples:
+- Contractor baseline (CDD): `./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto`
+- Core audit (default operator audit baseline): `./ops/bin/dump --scope=core --format=chatgpt --out=auto`
+- Factory audit (opt-in): `./ops/bin/dump --scope=factory --format=chatgpt --out=auto`
+
+When to use:
+- Use `--scope=factory` only when reviewing `opt/_factory/` content directly.
+- Use `--scope=core` for standard operator audits when factory content is not under review.
+
+Do not use:
+- Do not use `--scope=platform` or `--scope=factory` for contractor baseline dumps.
+- Contractor baseline dumps must use `--selection=dp+allowlist` with forbidden-prefix enforcement.
+
 ## Anecdotal Anchor
 During immutable workflow adoption, one identified risk was that untracked local artifacts could reshape the narrative of what governed a packet execution, and another was oversharing platform context to Contractors when a bounded packet context was sufficient. The CDD/APD split addresses both concerns: CDD defaults toward bounded Contractor visibility, while APD preserves full-platform evidence for closeout and audit support. `ops/bin/dump` reduces those risks by grounding dump payloads in tracked repository state and explicit selection or traversal rules.
 

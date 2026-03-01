@@ -379,6 +379,29 @@ The following named scopes define traversal boundaries. Definitions are canonica
 - `factory`: Only `opt/_factory/`. Use for targeted factory-only inspection.
 - `dp+allowlist` (contractor baseline): Not a traversal scope. Uses `--selection=dp+allowlist` mode. Assembles a bounded file set from canon baseline files, DP-scoped load-order files, and explicit allowlisted additions. Forbidden-prefix behavior (`opt/_factory/`, `storage/handoff/OPEN-`) remains in effect for all contractor-authorized sessions. This is the default contractor context path.
 
+### Factory-Only Audit Recipe and Guardrail Examples
+
+Use factory scope only when factory inspection is intentional. Factory scope is never a contractor baseline.
+
+~~~bash
+# Contractor baseline (CDD): DP + allowlist selection (excludes opt/_factory/ by forbidden-prefix policy)
+./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto
+
+# Core audit (default operator audit baseline): excludes projects/ and opt/_factory/
+./ops/bin/dump --scope=core --format=chatgpt --out=auto
+
+# Factory audit (opt-in): only opt/_factory/
+./ops/bin/dump --scope=factory --format=chatgpt --out=auto
+~~~
+
+When to use:
+- Use `--scope=factory` only when reviewing `opt/_factory/` content directly.
+- Use `--scope=core` for standard operator audits when factory content is not under review.
+
+Do not use:
+- Do not use `--scope=platform` or `--scope=factory` for contractor baseline dumps.
+- Contractor baseline dumps must use `--selection=dp+allowlist` with forbidden-prefix enforcement.
+
 ### Map (Auto-Generated Index)
 ~~~bash
 # Refresh the auto-generated MAP block
