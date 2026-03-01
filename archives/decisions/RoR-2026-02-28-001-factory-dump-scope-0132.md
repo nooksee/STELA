@@ -1,6 +1,6 @@
 ---
 trace_id: stela-20260228T131805Z-6c5c0e91
-decision_id: DEC-2026-02-28-001
+decision_id: RoR-2026-02-28-001
 packet_id: DP-OPS-0132
 decision_type: audit-remediation
 created_at: 2026-02-28T13:28:30Z

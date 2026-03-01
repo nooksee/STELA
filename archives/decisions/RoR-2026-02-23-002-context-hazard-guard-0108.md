@@ -1,6 +1,6 @@
 ---
 trace_id: stela-20260224T004504Z-402e7c92
-decision_id: DEC-2026-02-23-002
+decision_id: RoR-2026-02-23-002
 packet_id: DP-OPS-0108
 decision_type: cbc-verdict
 created_at: 2026-02-23

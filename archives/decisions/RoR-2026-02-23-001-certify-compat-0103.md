@@ -1,6 +1,6 @@
 ---
 trace_id: stela-20260223T125515Z-2cdc3fbf
-decision_id: DEC-2026-02-23-001
+decision_id: RoR-2026-02-23-001
 packet_id: DP-OPS-0103
 decision_type: certify-remediation
 created_at: 2026-02-23T13:06:48Z

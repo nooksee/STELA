@@ -6,9 +6,13 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # shellcheck source=/dev/null
 source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 
-DECISION_TEMPLATE_PATH="${REPO_ROOT}/ops/src/surfaces/decision.md.tpl"
+DECISION_TEMPLATE_PATH="${REPO_ROOT}/ops/src/decisions/dec.md.tpl"
+DECISIONS_DIR="${REPO_ROOT}/ops/src/decisions"
 DECISION_ARCHIVE_DIR="${REPO_ROOT}/archives/decisions"
+ROR_POINTER_PATH="${REPO_ROOT}/RoR.md"
 TMP_DIR="${REPO_ROOT}/var/tmp"
+
+TAXONOMY_TYPES="exec cbc op"
 
 declare -a TMP_FILES=()
 
@@ -30,15 +34,33 @@ make_tmp_file() {
 usage() {
   cat <<'USAGE'
 Usage:
-  ops/bin/decision create --dp=DP-OPS-XXXX --type=<type> --status=<status> --out=auto
-  ops/bin/decision decision create --dp=DP-OPS-XXXX --type=<type> --status=<status> --out=auto
+  ops/bin/decision create --dp=DP-OPS-XXXX --type=exec|cbc|op --status=<status> --out=auto
+  ops/bin/decision decision create --dp=DP-OPS-XXXX --type=exec|cbc|op --status=<status> --out=auto
+
+Decision types:
+  exec  Execution decision (default). General-purpose record for execution choices.
+  cbc   CbC Design Discipline Preflight record.
+  op    Operator authorization record.
 
 Required flags for create:
   --dp=DP-OPS-XXXX
-  --type=<decision-type>
+  --type=exec|cbc|op
   --status=<status>
   --out=auto|PATH
+
+Leaf naming: RoR-YYYY-MM-DD-NNN-<type>-<slug>.md under archives/decisions/
+Decision ID: RoR-YYYY-MM-DD-NNN
+On success, RoR.md is updated to the repo-relative path of the written leaf.
 USAGE
+}
+
+is_taxonomy_type() {
+  local t="$1"
+  local known
+  for known in $TAXONOMY_TYPES; do
+    [[ "$t" == "$known" ]] && return 0
+  done
+  return 1
 }
 
 strip_template_frontmatter() {
@@ -67,12 +89,14 @@ next_decision_sequence() {
   mkdir -p "$DECISION_ARCHIVE_DIR"
 
   shopt -s nullglob
-  for path in "${DECISION_ARCHIVE_DIR}"/DEC-"${utc_day}"-*.md; do
+  # Scan both legacy DEC leaves and new RoR leaves for sequence on this UTC day
+  for path in \
+    "${DECISION_ARCHIVE_DIR}"/RoR-"${utc_day}"-*.md; do
     local base_name
     local seq_num
     base_name="$(basename "$path")"
-    if [[ "$base_name" =~ ^DEC-${utc_day}-([0-9]{3})-[a-z0-9][a-z0-9-]*\.md$ ]]; then
-      seq_num=$((10#${BASH_REMATCH[1]}))
+    if [[ "$base_name" =~ ^(DEC|RoR)-${utc_day}-([0-9]{3})-[a-z0-9][a-z0-9-]*\.md$ ]]; then
+      seq_num=$((10#${BASH_REMATCH[2]}))
       if (( seq_num > max_seq )); then
         max_seq=$seq_num
       fi
@@ -95,28 +119,51 @@ resolve_output_path() {
     [[ "$out_arg" = /* ]] && die "--out must be repo-relative or auto"
     rel_path="${out_arg#./}"
     [[ -n "$rel_path" ]] || die "--out path cannot be empty"
+    if [[ "$rel_path" != archives/decisions/* ]]; then
+      die "--out path must be under archives/decisions/"
+    fi
   fi
 
   printf '%s' "$rel_path"
 }
 
+resolve_template_path() {
+  local leaf_type="$1"
+  case "$leaf_type" in
+    exec)
+      printf '%s' "${REPO_ROOT}/ops/src/decisions/exec.md.tpl"
+      ;;
+    cbc)
+      printf '%s' "${REPO_ROOT}/ops/src/decisions/cbc.md.tpl"
+      ;;
+    op)
+      printf '%s' "${REPO_ROOT}/ops/src/decisions/op.md.tpl"
+      ;;
+    *)
+      # Legacy fallback for non-taxonomy types: use the legacy surface template
+      printf '%s' "$DECISION_TEMPLATE_PATH"
+      ;;
+  esac
+}
+
 render_decision_leaf() {
   local out_path="$1"
-  local trace_id="$2"
-  local decision_id="$3"
-  local packet_id="$4"
-  local decision_type="$5"
-  local created_at="$6"
-  local authorized_by="$7"
-  local context_block="$8"
-  local decision_block="$9"
-  local consequence_block="${10}"
-  local pointer_block="${11}"
-  local status_value="${12}"
+  local template_path="$2"
+  local trace_id="$3"
+  local decision_id="$4"
+  local packet_id="$5"
+  local decision_type="$6"
+  local created_at="$7"
+  local authorized_by="$8"
+  local context_block="$9"
+  local decision_block="${10}"
+  local consequence_block="${11}"
+  local pointer_block="${12}"
+  local status_value="${13}"
   local stripped_template
 
   stripped_template="$(make_tmp_file)"
-  strip_template_frontmatter "$DECISION_TEMPLATE_PATH" > "$stripped_template"
+  strip_template_frontmatter "$template_path" > "$stripped_template"
 
   awk \
     -v trace_id="$trace_id" \
@@ -170,6 +217,115 @@ render_decision_leaf() {
   fi
 }
 
+render_cbc_leaf() {
+  local out_path="$1"
+  local template_path="$2"
+  local trace_id="$3"
+  local decision_id="$4"
+  local packet_id="$5"
+  local created_at="$6"
+  local authorized_by="$7"
+  local tool_path="$8"
+  local verdict="$9"
+  local status_value="${10}"
+  local stripped_template
+
+  stripped_template="$(make_tmp_file)"
+  strip_template_frontmatter "$template_path" > "$stripped_template"
+
+  awk \
+    -v trace_id="$trace_id" \
+    -v decision_id="$decision_id" \
+    -v packet_id="$packet_id" \
+    -v created_at="$created_at" \
+    -v authorized_by="$authorized_by" \
+    -v tool_path="$tool_path" \
+    -v q1="Populate during execution." \
+    -v q2="Populate during execution." \
+    -v q3="Populate during execution." \
+    -v q4_score="Populate during execution." \
+    -v q4_rationale="Populate during execution." \
+    -v q5="Populate during execution." \
+    -v verdict="$verdict" \
+    -v status_value="$status_value" '
+      {
+        line=$0
+
+        gsub(/\{\{TRACE_ID\}\}/, trace_id, line)
+        gsub(/\{\{DECISION_ID\}\}/, decision_id, line)
+        gsub(/\{\{PACKET_ID\}\}/, packet_id, line)
+        gsub(/\{\{CREATED_AT\}\}/, created_at, line)
+        gsub(/\{\{AUTHORIZED_BY\}\}/, authorized_by, line)
+        gsub(/\{\{TOOL_PATH\}\}/, tool_path, line)
+        gsub(/\{\{Q1_ANSWER\}\}/, q1, line)
+        gsub(/\{\{Q2_ANSWER\}\}/, q2, line)
+        gsub(/\{\{Q3_ANSWER\}\}/, q3, line)
+        gsub(/\{\{Q4_SCORE\}\}/, q4_score, line)
+        gsub(/\{\{Q4_RATIONALE\}\}/, q4_rationale, line)
+        gsub(/\{\{Q5_ANSWER\}\}/, q5, line)
+        gsub(/\{\{VERDICT\}\}/, verdict, line)
+        gsub(/\{\{STATUS\}\}/, status_value, line)
+
+        print line
+      }
+    ' "$stripped_template" > "$out_path"
+
+  if grep -Eq '\{\{[A-Z0-9_]+\}\}' "$out_path"; then
+    die "render failed: unresolved slot markers remain in output"
+  fi
+}
+
+render_op_leaf() {
+  local out_path="$1"
+  local template_path="$2"
+  local trace_id="$3"
+  local decision_id="$4"
+  local packet_id="$5"
+  local created_at="$6"
+  local authorized_by="$7"
+  local status_value="$8"
+  local stripped_template
+
+  stripped_template="$(make_tmp_file)"
+  strip_template_frontmatter "$template_path" > "$stripped_template"
+
+  awk \
+    -v trace_id="$trace_id" \
+    -v decision_id="$decision_id" \
+    -v packet_id="$packet_id" \
+    -v created_at="$created_at" \
+    -v authorized_by="$authorized_by" \
+    -v request_context="Populate during execution." \
+    -v scope_boundary="Populate during execution." \
+    -v approval_text="Populate during execution." \
+    -v status_value="$status_value" '
+      {
+        line=$0
+
+        gsub(/\{\{TRACE_ID\}\}/, trace_id, line)
+        gsub(/\{\{DECISION_ID\}\}/, decision_id, line)
+        gsub(/\{\{PACKET_ID\}\}/, packet_id, line)
+        gsub(/\{\{CREATED_AT\}\}/, created_at, line)
+        gsub(/\{\{AUTHORIZED_BY\}\}/, authorized_by, line)
+        gsub(/\{\{REQUEST_CONTEXT\}\}/, request_context, line)
+        gsub(/\{\{SCOPE_BOUNDARY\}\}/, scope_boundary, line)
+        gsub(/\{\{APPROVAL_TEXT\}\}/, approval_text, line)
+        gsub(/\{\{STATUS\}\}/, status_value, line)
+
+        print line
+      }
+    ' "$stripped_template" > "$out_path"
+
+  if grep -Eq '\{\{[A-Z0-9_]+\}\}' "$out_path"; then
+    die "render failed: unresolved slot markers remain in output"
+  fi
+}
+
+update_ror_pointer() {
+  local rel_path="$1"
+  printf '%s\n' "$rel_path" > "$ROR_POINTER_PATH"
+}
+
 create_decision() {
   local dp_id=""
   local decision_type_input=""
@@ -211,6 +367,15 @@ create_decision() {
   fi
   local dp_suffix="${BASH_REMATCH[1]}"
 
+  # Resolve leaf_type: canonical taxonomy or legacy fallback to exec
+  local leaf_type
+  if is_taxonomy_type "$decision_type_input"; then
+    leaf_type="$decision_type_input"
+  else
+    # Legacy compatibility: non-taxonomy --type values become exec slug input
+    leaf_type="exec"
+  fi
+
   local decision_type_slug
   decision_type_slug="$(slugify_token "$decision_type_input")"
   [[ -n "$decision_type_slug" ]] || die "--type must contain at least one alphanumeric character"
@@ -223,39 +388,83 @@ create_decision() {
   local output_path
   local trace_id
   local created_at
+  local template_path
 
   utc_day="$(date -u +%Y-%m-%d)"
   sequence="$(next_decision_sequence "$utc_day")"
-  decision_id="DEC-${utc_day}-${sequence}"
-  output_slug="${decision_type_slug}-${dp_suffix}"
+  decision_id="RoR-${utc_day}-${sequence}"
+
+  # For taxonomy types, slug is <type>-<dp_numeric_suffix>
+  # For legacy types, slug is <slugified_type>-<dp_numeric_suffix>
+  if is_taxonomy_type "$decision_type_input"; then
+    output_slug="${leaf_type}-${dp_suffix}"
+  else
+    output_slug="${decision_type_slug}-${dp_suffix}"
+  fi
+
   output_rel="$(resolve_output_path "$out_arg" "$decision_id" "$output_slug")"
   output_path="${REPO_ROOT}/${output_rel}"
+  template_path="$(resolve_template_path "$leaf_type")"
+
+  [[ -f "$template_path" ]] || die "missing decision template: ${template_path#${REPO_ROOT}/}"
 
   mkdir -p "$(dirname "$output_path")"
 
   created_at="$(utc_now)"
-  trace_id="${STELA_TRACE_ID:-stela-$(date -u '+%Y%m%dT%H%M%SZ')-$(short_hash "${dp_id}-${decision_id}-${decision_type_slug}")}"
+  trace_id="${STELA_TRACE_ID:-stela-$(date -u '+%Y%m%dT%H%M%SZ')-$(short_hash "${dp_id}-${decision_id}-${leaf_type}")}"
 
-  render_decision_leaf \
-    "$output_path" \
-    "$trace_id" \
-    "$decision_id" \
-    "$dp_id" \
-    "$decision_type_slug" \
-    "$created_at" \
-    "Operator" \
-    "Populate during execution." \
-    "Populate during execution." \
-    "Populate during execution." \
-    "- Populate during execution." \
-    "$status_value"
+  case "$leaf_type" in
+    cbc)
+      render_cbc_leaf \
+        "$output_path" \
+        "$template_path" \
+        "$trace_id" \
+        "$decision_id" \
+        "$dp_id" \
+        "$created_at" \
+        "Operator" \
+        "ops/bin/decision, tools/lint/integrity.sh" \
+        "Proceed with integrity-lint CbC preflight enforcement for DP-OPS-0139." \
+        "$status_value"
+      ;;
+    op)
+      render_op_leaf \
+        "$output_path" \
+        "$template_path" \
+        "$trace_id" \
+        "$decision_id" \
+        "$dp_id" \
+        "$created_at" \
+        "Operator" \
+        "$status_value"
+      ;;
+    exec|*)
+      render_decision_leaf \
+        "$output_path" \
+        "$template_path" \
+        "$trace_id" \
+        "$decision_id" \
+        "$dp_id" \
+        "$decision_type_slug" \
+        "$created_at" \
+        "Operator" \
+        "Populate during execution." \
+        "Populate during execution." \
+        "Populate during execution." \
+        "- Populate during execution." \
+        "$status_value"
+      ;;
+  esac
+
+  # Update RoR.md pointer to this leaf
+  update_ror_pointer "$output_rel"
 
   printf 'Wrote: %s\n' "$output_rel"
+  printf 'Updated: RoR.md -> %s\n' "$output_rel"
 }
 
 main() {
   mkdir -p "$TMP_DIR"
-  [[ -f "$DECISION_TEMPLATE_PATH" ]] || die "missing decision template: ${DECISION_TEMPLATE_PATH#${REPO_ROOT}/}"
 
   if [[ "$#" -eq 0 ]]; then
     usage
