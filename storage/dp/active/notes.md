@@ -1,55 +1,33 @@
-# Contractor Notes — DP-OPS-0137
+# Contractor Notes — DP-OPS-0138
 
 ## Scope Confirmation
-All in-scope documentation targets updated per §3.4.4 patch specification:
+All in-scope deliverables executed per §3.4.4 patch specification:
 
-- docs/ops/specs/binaries/dump.md: Factory-Only Audit Recipe and Guardrail Examples subsection
-  inserted immediately before ## Anecdotal Anchor heading, within ## Scope Taxonomy section.
-- docs/MANUAL.md: Factory-Only Audit Recipe and Guardrail Examples subsection inserted
-  immediately after dp+allowlist scope entry and immediately before ### Map (Auto-Generated Index)
-  heading, within ### Scope Taxonomy section.
-- storage/dp/active/notes.md: Replaced with DP-OPS-0137 notes (this file).
-- storage/dp/active/allowlist.txt: Added storage/handoff/CLOSING-DP-OPS-0137.md,
-  archives/surfaces/TASK-DP-OPS-0137-*.md, and
-  archives/decisions/DEC-2026-02-28-004-audit-deviations-0137.md entries.
+- RoR.md: Created as a single-line pointer head containing exactly
+  `archives/decisions/DEC-2026-02-28-004-audit-deviations-0137.md`.
+- docs/ops/registry/decisions.md: Created with the introductory paragraph and full Decision
+  Registry table migrated verbatim from docs/DESIGN.md §5.
+- docs/DESIGN.md: §5 body replaced with a pointer-only reference to docs/ops/registry/decisions.md.
+  The registry table no longer appears in DESIGN.md.
+- docs/MAP.md: §2 (The Ledger) updated with a RoR.md entry immediately after PoW.md, using the
+  existing relative-link style.
+- storage/dp/active/allowlist.txt: Added RoR.md, docs/ops/registry/decisions.md,
+  docs/DESIGN.md, storage/handoff/CLOSING-DP-OPS-0138.md, and archives/surfaces/TASK-DP-OPS-0138-*.md.
+- ops/bin/llms: Run to refresh llms.txt, llms-core.txt, llms-full.txt, and compile side-effect
+  archives/manifests/compile-2026-03-01T140356-cfdf07cd4.md. All outputs staged.
 
-Change set is documentation-only. No linters, scripts, guards, or validation binaries were
-modified. ops/bin/dump, ops/lib/scripts/traverse.sh, and selection or scope resolution logic
-were not touched.
-
-Addendum ADD-OPS-0137-01 received and executed. Operator authorized Option 1: authorize
---scope=platform for DP-OPS-0137 closeout APD, correct SoP/PoW timestamps to match actual
-execution timestamps, and make archive surface leaves reviewable via staging before dump.
-Decision leaf: archives/decisions/DEC-2026-02-28-004-audit-deviations-0137.md.
+Out-of-scope items confirmed not touched: ops/bin/decision, decision templates, leaf naming
+conventions, certify, lint tooling, hooks, CI gates, notes.md schema, factory surfaces.
 
 ## Anomalies Encountered
-Three post-certify audit deviations identified by Integrator, resolved via addendum ADD-OPS-0137-01:
-
-Deviation 1 (RESOLVED via addendum): Platform-scope APD dump used in initial closeout without
-explicit Operator authorization on record. Operator authorized via ADD-OPS-0137-01 Option 1.
-
-Deviation 2 (RESOLVED via addendum): Archive surface leaves (PoW, SoP, TASK-DP-OPS-0137)
-were untracked at initial dump time, absent from content blocks. Resolved by staging surfaces
-before rerun dump so dump reads content from disk.
-
-Deviation 3 (RESOLVED via addendum): SoP/PoW ledger timestamps authored as 2026-02-28 01:00:00
-UTC; actual execution timestamps from OPEN (stela-20260301T003653Z) and certify
-(certify-dp-ops-0137-20260301T033511Z) are 2026-03-01 UTC. Corrected to 2026-03-01 03:35:11 UTC
-and certify rerun to regenerate archive leaves with correct timestamps.
-
-Controlled exception: OPEN "Intent for today:" is empty in RESULTS. Certify §3.4.5 replays
-./ops/bin/open without --intent=; therefore intent-line gating is not applicable for this
-packet. Authorization and controlled exception are carried by the decision leaf (see below).
-
-Decision record (SSOT for authorization and controlled exception):
-archives/decisions/DEC-2026-02-28-004-audit-deviations-0137.md
+None.
 
 ## Open Items / Residue
 None.
 
 ## Execution Decision Record
-Decision Required: Yes
-Decision Pointer: archives/decisions/DEC-2026-02-28-004-audit-deviations-0137.md
+Decision Required: No
+Decision Pointer: None
 
 ## Closing Schema Baseline
 Assumed the current six-label closing schema (post-0116+A baseline) for this active packet.

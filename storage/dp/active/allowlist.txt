@@ -110,3 +110,8 @@ archives/decisions/DEC-2026-02-28-003-certify-receipt-authoring-error-0136.md
 storage/handoff/CLOSING-DP-OPS-0137.md
 archives/surfaces/TASK-DP-OPS-0137-*.md
 archives/decisions/DEC-2026-02-28-004-audit-deviations-0137.md
+RoR.md
+docs/ops/registry/decisions.md
+docs/DESIGN.md
+storage/handoff/CLOSING-DP-OPS-0138.md
+archives/surfaces/TASK-DP-OPS-0138-*.md
