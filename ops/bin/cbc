@@ -1,0 +1,211 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=/dev/null
+source "${REPO_ROOT}/ops/lib/scripts/common.sh"
+
+TMP_DIR="${REPO_ROOT}/var/tmp"
+DEFAULT_REGISTRY="docs/ops/registry/decisions.md"
+DEFAULT_THRESHOLD_MONTHS=6
+
+cleanup() {
+  emit_binary_leaf "cbc" "finish"
+}
+
+usage() {
+  cat <<'USAGE'
+Usage: ./ops/bin/cbc [OPTIONS]
+
+Generates a CbC escalation report. Reads the decision registry and identifies
+B-scored entries older than the staleness threshold (default: six months).
+
+Options:
+  --registry=PATH        Decision registry path (default: docs/ops/registry/decisions.md)
+  --threshold-months=N   Staleness threshold in months (default: 6; two quarters)
+  --as-of=STAMP          Report date for deterministic output (default: current UTC date).
+                         Accepts YYYY-MM-DD or ISO-8601 format; only the date portion is used.
+  -h|--help              Show this help and exit
+
+Exit codes:
+  0  Always. The report is informational and does not gate certify.
+USAGE
+}
+
+date_to_epoch() {
+  local d="$1"
+  if date --version >/dev/null 2>&1; then
+    # GNU date
+    date -d "$d" +%s
+  else
+    # BSD date (macOS)
+    date -jf "%Y-%m-%d" "$d" +%s
+  fi
+}
+
+add_months_to_date() {
+  local date_str="$1"
+  local n_months="$2"
+  local year month day
+  year="${date_str:0:4}"
+  month="${date_str:5:2}"
+  day="${date_str:8:2}"
+  month=$((10#$month + n_months))
+  year=$((10#$year))
+  while (( month > 12 )); do
+    month=$((month - 12))
+    year=$((year + 1))
+  done
+  printf '%04d-%02d-%02d' "$year" "$month" "$day"
+}
+
+days_diff() {
+  local from_date="$1"
+  local to_date="$2"
+  local from_epoch to_epoch
+  from_epoch="$(date_to_epoch "$from_date")"
+  to_epoch="$(date_to_epoch "$to_date")"
+  echo $(( (to_epoch - from_epoch) / 86400 ))
+}
+
+extract_created_date() {
+  local leaf_rel="$1"
+  local leaf_abs="${REPO_ROOT}/${leaf_rel}"
+  if [[ ! -f "$leaf_abs" ]]; then
+    printf ''
+    return
+  fi
+  awk '
+    BEGIN { in_fm=0 }
+    NR==1 && /^---/ { in_fm=1; next }
+    in_fm && /^---/ { exit }
+    in_fm && /^created_at:/ {
+      val=$0
+      sub(/^created_at:[[:space:]]*/, "", val)
+      sub(/T.*$/, "", val)
+      print val
+      exit
+    }
+  ' "$leaf_abs"
+}
+
+parse_b_rows() {
+  local registry_path="$1"
+  awk -F'|' '
+    !/^\|/ { next }
+    $2 ~ /^[[:space:]]*Tool[[:space:]]*$/ { next }
+    $2 ~ /---/ { next }
+    NF < 7 { next }
+    {
+      tool=$2; sub(/^[[:space:]]+/, "", tool); sub(/[[:space:]]+$/, "", tool)
+      score=$3; sub(/^[[:space:]]+/, "", score); sub(/[[:space:]]+$/, "", score)
+      dp=$5; sub(/^[[:space:]]+/, "", dp); sub(/[[:space:]]+$/, "", dp)
+      leaf=$7; sub(/^[[:space:]]+/, "", leaf); sub(/[[:space:]]+$/, "", leaf)
+      if (score ~ /^B/) {
+        print tool "|" score "|" dp "|" leaf
+      }
+    }
+  ' "$registry_path"
+}
+
+main() {
+  mkdir -p "$TMP_DIR"
+
+  local registry="${DEFAULT_REGISTRY}"
+  local threshold_months="${DEFAULT_THRESHOLD_MONTHS}"
+  local as_of=""
+
+  local arg
+  for arg in "$@"; do
+    case "$arg" in
+      --registry=*)
+        registry="${arg#--registry=}"
+        ;;
+      --threshold-months=*)
+        threshold_months="${arg#--threshold-months=}"
+        ;;
+      --as-of=*)
+        as_of="${arg#--as-of=}"
+        as_of="${as_of:0:10}"
+        ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      *)
+        die "unknown flag: ${arg}"
+        ;;
+    esac
+  done
+
+  if ! [[ "$threshold_months" =~ ^[0-9]+$ ]] || (( threshold_months < 1 )); then
+    die "--threshold-months must be a positive integer, got: ${threshold_months}"
+  fi
+
+  if [[ -z "$as_of" ]]; then
+    as_of="$(date -u +%Y-%m-%d)"
+  fi
+
+  local registry_full="${REPO_ROOT}/${registry}"
+  [[ -f "$registry_full" ]] || die "registry file not found: ${registry}"
+
+  local b_rows
+  b_rows="$(parse_b_rows "$registry_full")"
+
+  local b_count=0
+  local -a stale_entries=()
+
+  if [[ -n "$b_rows" ]]; then
+    while IFS='|' read -r row_tool row_score row_dp row_leaf; do
+      [[ -z "$row_tool" ]] && continue
+      b_count=$((b_count + 1))
+
+      local created_date
+      created_date="$(extract_created_date "$row_leaf")"
+
+      if [[ -z "$created_date" ]]; then
+        continue
+      fi
+
+      local due_date
+      due_date="$(add_months_to_date "$created_date" "$threshold_months")"
+
+      local overdue_days
+      overdue_days="$(days_diff "$due_date" "$as_of")"
+
+      if (( overdue_days > 0 )); then
+        stale_entries+=("${row_tool}|${row_score}|${row_dp}|${overdue_days}|${row_leaf}")
+      fi
+    done <<< "$b_rows"
+  fi
+
+  local stale_count="${#stale_entries[@]}"
+
+  printf '# CbC Escalation Report\n\n'
+  printf 'As-of: %s\n' "$as_of"
+  printf 'Threshold: %d months (two quarters)\n' "$threshold_months"
+  printf 'Registry: %s\n\n' "$registry"
+  printf '## Summary\n\n'
+  printf 'B-scored entries reviewed: %d\n' "$b_count"
+  printf 'Stale entries (overdue): %d\n' "$stale_count"
+
+  if (( stale_count == 0 )); then
+    printf '\nAll B-scored entries are within the %d-month escalation threshold as of %s.\n' \
+      "$threshold_months" "$as_of"
+  else
+    printf '\n## Stale Entries\n\n'
+    printf '| Tool | Score | DP | Days Overdue | Leaf |\n'
+    printf '| :--- | :---: | :--- | ---: | :--- |\n'
+    local entry
+    for entry in "${stale_entries[@]}"; do
+      IFS='|' read -r e_tool e_score e_dp e_days e_leaf <<< "$entry"
+      printf '| %s | %s | %s | %d | %s |\n' \
+        "$e_tool" "$e_score" "$e_dp" "$e_days" "$e_leaf"
+    done
+  fi
+}
+
+trap cleanup EXIT
+emit_binary_leaf "cbc" "start"
+main "$@"
