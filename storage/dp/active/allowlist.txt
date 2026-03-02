@@ -144,3 +144,6 @@ docs/ops/specs/tools/lint/results.md
 ops/src/surfaces/dp.md.tpl
 storage/handoff/CLOSING-DP-OPS-0142.md
 archives/surfaces/TASK-DP-OPS-0142-*.md
+docs/ops/specs/surfaces/notes.md
+ops/src/surfaces/notes.md.tpl
+storage/dp/active/notes.md
