@@ -85,7 +85,7 @@ load_current_closing_labels() {
 }
 
 RESULTS_TEMPLATE_PATH="ops/src/surfaces/results.md.tpl"
-RESULTS_TEMPLATE_SHA256="9f6dc9fc75fa7667cc3fb4fa3b4d5ebfdc233022199710870240d6e46ea9a707"
+RESULTS_TEMPLATE_SHA256="b50fb633128d2806c675e52d2e026005d7129557acf47daa3b38f764d258a6dc"
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   usage
@@ -182,6 +182,7 @@ required_headings=(
   "^## Git State Impact$"
   "^### git diff --name-only$"
   "^### git diff --stat$"
+  "^## Contractor Execution Narrative$"
   "^## Mandatory Closing Block$"
 )
 
@@ -218,6 +219,27 @@ for target in "${targets[@]}"; do
       fail "${rel_target}: missing required heading matching ${heading_pattern}"
     fi
   done
+
+  narrative_required_subheadings=(
+    "^### Preflight State$"
+    "^### Implemented Changes$"
+    "^### Closeout Notes$"
+    "^### Decision Leaf$"
+  )
+  subheading_pattern=""
+  for subheading_pattern in "${narrative_required_subheadings[@]}"; do
+    if ! grep -Eq "$subheading_pattern" "$target"; then
+      fail "${rel_target}: missing required narrative subheading matching ${subheading_pattern}"
+    fi
+  done
+
+  narrative_block="$(extract_field_block "$target" '^## Contractor Execution Narrative[[:space:]]*$' '^## Mandatory Closing Block[[:space:]]*$')"
+  if ! grep -Eq '^Decision Required:' <<< "$narrative_block"; then
+    fail "${rel_target}: Contractor Execution Narrative Decision Leaf subsection missing 'Decision Required:' line"
+  fi
+  if ! grep -Eq '^Decision Leaf:' <<< "$narrative_block"; then
+    fail "${rel_target}: Contractor Execution Narrative Decision Leaf subsection missing 'Decision Leaf:' line"
+  fi
 
   if grep -Eiq "$forbidden_disposable_regex" "$target"; then
     fail "${rel_target}: contains forbidden disposable-artifact references"

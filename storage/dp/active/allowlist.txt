@@ -7,13 +7,11 @@ docs/ops/specs/tools/lint/integrity.md
 docs/ops/specs/binaries/trace.md
 docs/ops/specs/binaries/decision.md
 docs/ops/specs/binaries/certify.md
-docs/ops/specs/surfaces/notes.md
 docs/ops/registry/templates.md
 ops/bin/allowlist
 ops/bin/dump
 ops/bin/trace
 ops/bin/decision
-ops/src/surfaces/notes.md.tpl
 ops/src/decisions/dec.md.tpl
 ops/src/decisions/exec.md.tpl
 ops/src/decisions/cbc.md.tpl
@@ -24,7 +22,6 @@ tools/lint/style.sh
 tools/lint/dp.sh
 tools/lint/integrity.sh
 storage/dp/active/allowlist.txt
-storage/dp/active/notes.md
 storage/handoff/CLOSING-DP-OPS-0127.md
 storage/handoff/CLOSING-DP-OPS-0128.md
 storage/handoff/CLOSING-DP-OPS-0129.md
@@ -136,3 +133,11 @@ archives/surfaces/PoW-2026-03-01-0ba0157e.md
 docs/ops/registry/binaries.md
 docs/ops/specs/binaries/cbc.md
 ops/bin/cbc
+ops/src/surfaces/results.md.tpl
+ops/bin/certify
+tools/lint/results.sh
+docs/ops/specs/surfaces/results.md
+docs/ops/specs/tools/lint/results.md
+ops/src/surfaces/dp.md.tpl
+storage/handoff/CLOSING-DP-OPS-0142.md
+archives/surfaces/TASK-DP-OPS-0142-*.md
