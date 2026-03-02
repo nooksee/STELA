@@ -144,7 +144,6 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
-- Before handing work for operator pre-audit review, produce `storage/dp/active/notes.md` using `ops/src/surfaces/notes.md.tpl` as the schema. See `docs/MANUAL.md` Contractor Notes Surface for field definitions and routing.
 - Run prune hygiene: ./ops/bin/prune --scrub.
 - Regenerate session artifacts: `./ops/bin/open --out=auto`
 - Capture updated Ops state: `./ops/bin/dump --scope=core --format=chatgpt --out=auto`
@@ -152,7 +151,8 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 - Refresh side-effect: `ops/bin/llms` regenerates `ops/lib/manifests/OPS.md` as a compile event; if `OPS.md` is not in the allowlist, restore it before running `integrity.sh`. See `docs/MANUAL.md` Refresh side-effect notice for the full procedure.
 
 ### 3.5.1 Mandatory Closing Block
-Closing block content is generated exclusively by `ops/bin/certify` from the closing sidecar at `storage/handoff/CLOSING-{{DP_ID}}.md` at certification time. Do not author, predict, populate, or approximate any closing block field at draft time or during execution. The closing sidecar is the only human-authored narrative input certify ingests. Certify generates all of the following from observable repository state: Commit Message, Create Pull Request (Title), Create Pull Request (Description), Confirm Merge (Commit Message), Confirm Merge (Extended Description), and Confirm Merge (Add a Comment).
+Closing block content is generated exclusively by `ops/bin/certify` from the closing sidecar at `storage/handoff/CLOSING-{{DP_ID}}.md` at certification time. Do not author, predict, populate, or approximate any closing block field at draft time or during execution.
+Certify separately collects contractor-authored narrative for the RESULTS Contractor Execution Narrative section at certify time via interactive editor prompt; this narrative input does not populate closing block fields.
 
 Before running certify, confirm `storage/handoff/CLOSING-{{DP_ID}}.md` has been maintained throughout execution and reflects observable reality only.
 

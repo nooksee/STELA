@@ -1554,6 +1554,54 @@ INTEGRITY_OUTPUT+="${CLOSING_MANIFEST_VALIDATION_OUTPUT}"
 INTEGRITY_OUTPUT+=$'\n\n'
 INTEGRITY_OUTPUT+="${ARTIFACT_PATH_VALIDATION_OUTPUT}"
 
+NARRATIVE_SCAFFOLD_PATH="${TMP_DIR}/narrative.md"
+cat > "$NARRATIVE_SCAFFOLD_PATH" << 'NARRATIVE_SCAFFOLD'
+### Preflight State
+State the preflight outcome: branch, Base HEAD, clean working tree, and preflight lint results.
+
+### Implemented Changes
+Describe each change made: what was modified, created, or removed, and why.
+
+### Closeout Notes
+Describe any anomalies, open items, or residue. State None. if all items are resolved.
+
+### Decision Leaf
+Decision Required: Yes|No
+Decision Leaf: archives/decisions/... or None
+NARRATIVE_SCAFFOLD
+
+echo ""
+echo "CONTRACTOR EXECUTION NARRATIVE:"
+echo "Edit the narrative scaffold now. Save and exit when complete."
+echo "File: ${NARRATIVE_SCAFFOLD_PATH}"
+echo ""
+${EDITOR:-vi} "$NARRATIVE_SCAFFOLD_PATH"
+
+CONTRACTOR_NARRATIVE="$(cat "$NARRATIVE_SCAFFOLD_PATH")"
+
+if printf '%s
+' "$CONTRACTOR_NARRATIVE" | grep -Eiq '\{\{|}}|\bTBD\b|\bTODO\b|PLACEHOLDER|ENTER_|REPLACE_|populate during execution|do not pre-fill|DP-XXXX'; then
+  die "contractor narrative contains placeholder text; fill in all fields before certifying"
+fi
+for narrative_subheading in "^### Preflight State$" "^### Implemented Changes$" "^### Closeout Notes$" "^### Decision Leaf$"; do
+  if ! printf '%s
+' "$CONTRACTOR_NARRATIVE" | grep -Eq "$narrative_subheading"; then
+    die "contractor narrative missing required subheading (pattern: ${narrative_subheading})"
+  fi
+done
+if ! printf '%s
+' "$CONTRACTOR_NARRATIVE" | grep -Eq '^Decision Required:'; then
+  die "contractor narrative Decision Leaf subsection missing 'Decision Required:' line"
+fi
+if ! printf '%s
+' "$CONTRACTOR_NARRATIVE" | grep -Eq '^Decision Leaf:'; then
+  die "contractor narrative Decision Leaf subsection missing 'Decision Leaf:' line"
+fi
+if printf '%s
+' "$CONTRACTOR_NARRATIVE" | grep -Eq '^/|[[:space:]]/[A-Za-z]'; then
+  die "contractor narrative contains absolute path; use repo-relative paths only"
+fi
+
 COMMAND_LOG=""
 CMD_INDEX=0
 SURFACE_PHASE_DONE=0
@@ -1726,6 +1774,7 @@ RESULTS_ALLOWLIST_POINTER+=$'\n'"- dump_manifest: ${DUMP_MANIFEST_POINTER}"
 CERTIFIED_AT="$(utc_now)"
 BRANCH="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
 GIT_HASH="$(git -C "$REPO_ROOT" rev-parse HEAD)"
+COMMAND_LOG="$(printf '%s' "$COMMAND_LOG" | sed 's/{{/{ {/g; s/}}/} }/g')"
 
 "$TEMPLATE_BIN" render results --out="$OUT_PATH" \
   "--slot=DP_ID=${DP_ID}" \
@@ -1737,6 +1786,7 @@ GIT_HASH="$(git -C "$REPO_ROOT" rev-parse HEAD)"
   "--slot=COMMAND_LOG=${COMMAND_LOG}" \
   "--slot=DIFF_NAME_ONLY=${DIFF_NAME_ONLY}" \
   "--slot=DIFF_STAT=${DIFF_STAT}" \
+  "--slot=CONTRACTOR_NARRATIVE=${CONTRACTOR_NARRATIVE}" \
   "--slot=CLOSING_BLOCK=${CLOSING_BLOCK}"
 assert_no_disposable_refs "$OUT_PATH" "${OUT_PATH#${REPO_ROOT}/}"
 RESULTS_LINT_STARTED_AT="$(utc_now)"
@@ -1875,6 +1925,7 @@ for required_heading in \
   "## Git State Impact" \
   "### git diff --name-only" \
   "### git diff --stat" \
+  "## Contractor Execution Narrative" \
   "## Mandatory Closing Block"; do
   if ! grep -Fxq "$required_heading" "$OUT_PATH"; then
     TEMPLATE_STRUCTURE_OUTPUT="FAIL: missing required heading '${required_heading}'"
@@ -1907,6 +1958,7 @@ RESULTS_ALLOWLIST_POINTER+=$'\n'"- dump_manifest: ${DUMP_MANIFEST_POINTER}"
   "--slot=COMMAND_LOG=${COMMAND_LOG}" \
   "--slot=DIFF_NAME_ONLY=${DIFF_NAME_ONLY}" \
   "--slot=DIFF_STAT=${DIFF_STAT}" \
+  "--slot=CONTRACTOR_NARRATIVE=${CONTRACTOR_NARRATIVE}" \
   "--slot=CLOSING_BLOCK=${CLOSING_BLOCK}"
 assert_results_closing_block_matches_sidecar "$OUT_PATH" "$CLOSING_PATH"
 assert_no_disposable_refs "$OUT_PATH" "${OUT_PATH#${REPO_ROOT}/}"

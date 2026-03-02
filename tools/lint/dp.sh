@@ -20,7 +20,7 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="8e7e536e798b1a0cefff5df7eaee739f313aec4f1dee310c5def626eb884c644"
+CANONICAL_DP_TEMPLATE_SHA256="d40d2e18710c60357ccc0f179d6c7a3c92027938d69dc2498a29fd09adf81c6c"
 CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/surfaces/addendum.md.tpl"
 CANONICAL_ADDENDUM_TEMPLATE_SHA256="42cb7586c6ed103e995730f1a8c34a1c7e0676b717c27dfb987950feeac7ec9e"
 TEMPLATE_RENDER_BIN="ops/bin/template"
@@ -1183,6 +1183,20 @@ tools/lint/dp.sh
 ### git diff --stat
  tools/lint/dp.sh | 1 +
 
+## Contractor Execution Narrative
+### Preflight State
+Branch work/dp-ops-0099-2026-01-01 at HEAD. Clean tree. All preflight lints passed.
+
+### Implemented Changes
+Updated tools/lint/dp.sh to delegate RESULTS validation to tools/lint/results.sh.
+
+### Closeout Notes
+None.
+
+### Decision Leaf
+Decision Required: No
+Decision Leaf: None
+
 ## Mandatory Closing Block
 Commit Message
 DP-OPS-0099 validate results lint path
@@ -1225,6 +1239,20 @@ tools/lint/dp.sh
 
 ### git diff --stat
  tools/lint/dp.sh | 1 +
+
+## Contractor Execution Narrative
+### Preflight State
+Branch work/dp-ops-0099-2026-01-01 at HEAD. Clean tree. All preflight lints passed.
+
+### Implemented Changes
+Updated tools/lint/dp.sh to delegate RESULTS validation to tools/lint/results.sh.
+
+### Closeout Notes
+None.
+
+### Decision Leaf
+Decision Required: No
+Decision Leaf: None
 
 ## Mandatory Closing Block
 Commit Message

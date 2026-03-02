@@ -10,22 +10,17 @@
 2. Search all tracked markdown for contraction tokens using regex patterns that cover ASCII and Unicode apostrophes.
 3. Enforce anti-jargon policy by scanning case-insensitive fixed matches for every term in `JARGON_BLACKLIST`.
 4. For each spec file under `docs/ops/specs/` that contains `<!-- SPEC-SURFACE:REQUIRED -->`, require the four canonical H2 headings.
-5. Read `storage/dp/active/notes.md` and validate the `## Execution Decision Record` fields:
-   - `Decision Required` must be exactly `Yes` or `No`.
-   - `Decision Pointer` must be present.
-   - When `Decision Required: Yes`, `Decision Pointer` must be non-`None`, repository-relative, prefixed by `archives/decisions/`, suffixed by `.md`, and resolve to an existing file.
-   - When `Decision Required: No`, `Decision Pointer` remains permissive (including `None`).
-6a. Scan `storage/handoff/CLOSING-*.md` and reject duplicate opening words across Mandatory Closing Block field entries.
-6b. Check that the Confirm Merge (Add a Comment) field value ends with `?`; emit failure with filename when it does not.
-6c. Check that every non-blank line in the Confirm Merge (Extended Description) field value matches a path pattern (two or more consecutive non-path tokens on a single line is a prose failure); emit failure with filename and line number for each detected prose line.
-6d. Check that the PR Description field value contains at least one markdown construct — a heading beginning with `##`, a list item beginning with `-`, `*`, or a digit followed by `.`, or a bold span (`**`); emit failure with filename when none is found.
+5. Scan `storage/handoff/CLOSING-*.md` and reject duplicate opening words across Mandatory Closing Block field entries.
+6a. Check that the Confirm Merge (Add a Comment) field value ends with `?`; emit failure with filename when it does not.
+6b. Check that every non-blank line in the Confirm Merge (Extended Description) field value matches a path pattern (two or more consecutive non-path tokens on a single line is a prose failure); emit failure with filename and line number for each detected prose line.
+6c. Check that the PR Description field value contains at least one markdown construct — a heading beginning with `##`, a list item beginning with `-`, `*`, or a digit followed by `.`, or a bold span (`**`); emit failure with filename when none is found.
 7. Aggregate failures and exit non-zero when any check reports an error.
 
 ## Anecdotal Anchor
 DP-OPS-0082 introduced spec-surface enforcement and anti-jargon checks after repeated review churn on docs that passed operational gates but still carried ambiguous structure or promotional language. Later packets used this gate to block malformed spec edits before certification.
 
 ## Integrity Filter Warnings
-The scan set includes tracked markdown only; untracked drafts are outside enforcement until tracked. `storage/` is excluded from the bulk markdown scan, but style lint explicitly reads `storage/dp/active/notes.md` for Execution Decision Record validation and scans `storage/handoff/CLOSING-*.md` for closing sidecar checks. Jargon checks are fixed-string matches and can flag quoted historical text that appears in explanatory context. Spec structure checks activate only when `<!-- SPEC-SURFACE:REQUIRED -->` is present, so files without that marker are not subject to four-slot heading validation. Closing block structural checks preserve the legacy `DP-OPS-0080+` threshold guard and additionally grandfather pre-`DP-OPS-0094` handoff receipts so historical audit artifacts are not rewritten.
+The scan set includes tracked markdown only; untracked drafts are outside enforcement until tracked. `storage/` is excluded from the bulk markdown scan. Jargon checks are fixed-string matches and can flag quoted historical text that appears in explanatory context. Spec structure checks activate only when `<!-- SPEC-SURFACE:REQUIRED -->` is present, so files without that marker are not subject to four-slot heading validation. Closing block structural checks preserve the legacy `DP-OPS-0080+` threshold guard and additionally grandfather pre-`DP-OPS-0094` handoff receipts so historical audit artifacts are not rewritten.
 
 ## Closing Block Structural Checks
 

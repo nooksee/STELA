@@ -12,6 +12,7 @@ requires_slots:
   - COMMAND_LOG
   - DIFF_NAME_ONLY
   - DIFF_STAT
+  - CONTRACTOR_NARRATIVE
   - CLOSING_BLOCK
 ff_target: machine-dense
 ff_band: "15-25"
@@ -45,6 +46,9 @@ ff_band: "15-25"
 ~~~text
 {{DIFF_STAT}}
 ~~~
+
+## Contractor Execution Narrative
+{{CONTRACTOR_NARRATIVE}}
 
 ## Mandatory Closing Block
 {{CLOSING_BLOCK}}
