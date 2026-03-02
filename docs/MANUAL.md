@@ -279,7 +279,8 @@ After certify, treat `PoW.md`, `SoP.md`, and `TASK.md` as pointer heads; do not 
 If operator authorization expands scope beyond the original DP boundaries, record that authorization explicitly in SoP and PoW entry content and mirror it in the Closing Block sidecar.
 PoW contract and schema guidance are canonical in `docs/ops/specs/surfaces/pow.md`; author PoW entry content to that spec before certification snapshotting.
 PoW entry receipt pointers must include `RESULTS`, `OPEN`, and `DUMP` artifact paths.
-PoW entry `Notes` must record both positive proof and negative proof context (failed checks, ruled-out hypotheses, and abandoned attempts) when they materially affected execution.
+Do not reproduce the verification command list in SoP or PoW entries; RESULTS carries the full command log with outputs.
+PoW entry `Notes` are artifact-level context only (scope anomalies affecting the artifact inventory). Execution narrative and anomaly resolution belong in RESULTS Contractor Execution Narrative.
 Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, with reason and risk for each NOT RUN item.
 
 ### Log Step: Pre-certify single-entry head authoring (`SoP.md` and `PoW.md`)
