@@ -187,7 +187,6 @@ opt/_factory/skills/s-learn-08.md
 opt/_factory/tasks/b-task-08.md
 archives/definitions/agent-promotion-2026-03-03-3f712e64.md
 archives/definitions/skill-promotion-2026-03-03-3f712e64.md
-ops/bin/project
 archives/definitions/task-promotion-2026-03-03-3f712e64-B-TASK-08.md
 opt/_factory/agents/r-agent-08.md
 archives/surfaces/TASK-DP-OPS-0145-*.md
