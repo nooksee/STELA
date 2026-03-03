@@ -5,6 +5,7 @@ Authoritative registry for canon skills.
 
 | ID | Name | File Path | Notes |
 | --- | --- | --- | --- |
+| S-LEARN-08 | Skill: Bundle Profile Governance | opt/_factory/skills/s-learn-08.md | |
 | S-LEARN-07 | Skill: Factory Chain Validation Skill | opt/_factory/skills/s-learn-07.md | |
 | SKILLS-TEMPLATE | Skills Promotion Template | opt/_factory/SKILLS.md | |
 | S-LEARN-01 | Skill: Verification Loop | opt/_factory/skills/s-learn-01.md | |

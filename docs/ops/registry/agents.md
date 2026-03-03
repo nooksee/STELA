@@ -10,6 +10,7 @@ If a candidate is missing from this list, treat the candidate as non-canonical u
 
 | ID | Name | Provenance (DP) | Specialization |
 | --- | --- | --- | --- |
+| R-AGENT-08 | bundle-coordinator | DP-OPS-0145 | Bundle artifact coordination and routing governance. |
 | R-AGENT-07 | factory-chain-agent-test | DP-OPS-0074 | Factory chain pointer remediation validation. |
 | R-AGENT-01 | architect | DP-OPS-0042 | Architecture planning and system design |
 | R-AGENT-02 | code-reviewer | DP-OPS-0042 | Code review for quality, security, and maintainability |

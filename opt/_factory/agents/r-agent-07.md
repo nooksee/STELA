@@ -1,9 +1,3 @@
----
-trace_id: stela-20260219T020101Z-a74a0001
-packet_id: DP-OPS-0074
-created_at: 2026-02-19T01:51:42Z
-previous: (none)
----
 # Agent: factory-chain-agent-test
 
 ## Provenance
@@ -67,4 +61,3 @@ Factory chain pointer remediation validation.
 
 ## Scope Boundary
 Operate only within the active DP and defer to canon surfaces for governance and behavioral rules.
-

@@ -20,6 +20,7 @@ Authoritative registry for `tools/lint/*` executables.
 | LINT-13 | Leaf Lint | tools/lint/leaf.sh | Spec: `docs/ops/specs/tools/lint/leaf.md`. Validates archive surface leaf schema and pointer integrity for `archives/surfaces/` entries. |
 | LINT-14 | Skill Lint | tools/lint/skill.sh | Spec: `docs/ops/specs/tools/lint/skill.md`. Enforces skill registry synchronization and pointer integrity for skill definition leaves. |
 | LINT-15 | Feynman Frequency Lint | tools/lint/ff.sh | Spec: `docs/ops/specs/tools/lint/ff.md`. Scores tracked markdown files against declared CCD density headers (`<!-- CCD: ... -->` or YAML `ff_target`/`ff_band` fields). Fails when declared files score outside band tolerance, and fails when Wave 1 or Wave 2 hardened paths miss a CCD header. Non-hardened undeclared files emit WARNING; Wave 0 paths remain exempt. |
+| LINT-16 | PLAN Lint | tools/lint/plan.sh | Spec: `docs/ops/specs/tools/lint/plan.md`. Minimal deterministic safety-floor check for `storage/handoff/PLAN.md` used only by `ops/bin/bundle --profile=auto` route gating. |
 
 ## Gate Status Decisions (2026-02-19)
 - `tools/lint/project.sh` is formally deprecated.

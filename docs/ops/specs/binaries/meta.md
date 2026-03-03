@@ -3,13 +3,13 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/bin/meta` exists to guarantee that project context capture emits both freshness and payload artifacts in one command. It prevents evidence gaps where operators capture only OPEN or only project-scoped dump output.
+`ops/bin/meta` guarantees one-command project context capture while preserving its stable CLI (`ops/bin/meta <project-name>`). DP-OPS-0145 routes that capture through `ops/bin/bundle --profile=project` so project workflows receive the same deterministic transport contract as analyst/architect/audit flows.
 
 ## Mechanics and Sequencing
-The binary enforces repo-root execution, requires exactly one project-name argument, validates that `projects/<name>` exists, then invokes `ops/bin/open` with a project-tagged intent and `--out=auto`. It then invokes `ops/bin/dump` with `--scope=project --project=<name> --format=chatgpt --out=auto`. After both commands succeed, it prints a single completion line for the project context run.
+The binary enforces repo-root execution, requires exactly one project-name argument, validates that `projects/<name>` exists, then invokes `ops/bin/bundle --profile=project --project=<name> --out=auto`. Bundle internally executes OPEN and project-scoped dump capture, selects prompt stance, and emits both bundle text artifact and machine-readable sidecar manifest in `storage/handoff/`. Meta remains a thin orchestration wrapper and prints one completion line on success.
 
 ## Anecdotal Anchor
-A recurring project-context failure class involved manual capture runs where one of the two required artifacts was missing, which blocked downstream review reproducibility. `ops/bin/meta` addresses that class by chaining both artifact commands under one success contract.
+A recurring project-context failure class involved manual capture runs where one of the required artifacts was missing. The original meta wrapper solved this for OPEN + dump; bundle integration extends the same protection to prompt stance and routing metadata without changing operator-facing meta ergonomics.
 
 ## Integrity Filter Warnings
-`ops/bin/meta` exits on non-root execution, missing project argument, extra arguments, missing project directory, or any non-zero exit from upstream `open` or `dump`. The command does not emit partial success output when one upstream artifact command fails.
+`ops/bin/meta` exits on non-root execution, missing project argument, extra arguments, missing project directory, or any non-zero exit from `ops/bin/bundle`. The binary does not emit partial success output when bundle generation fails.

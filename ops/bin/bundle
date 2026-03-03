@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=/dev/null
+source "${REPO_ROOT}/ops/lib/scripts/common.sh"
+# shellcheck source=/dev/null
+source "${REPO_ROOT}/ops/lib/scripts/bundle.sh"
+
+if [[ "$(pwd -P)" != "$REPO_ROOT" ]]; then
+  die "Run from repo root: ${REPO_ROOT}"
+fi
+
+trap 'emit_binary_leaf "bundle" "finish"' EXIT
+emit_binary_leaf "bundle" "start"
+
+bundle_run "$@"

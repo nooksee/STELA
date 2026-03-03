@@ -15,10 +15,13 @@ These prompts reference canonical locations rather than duplicating content:
 * **Results surface spec:** `docs/ops/specs/surfaces/results.md`
 
 **Artifact Attachment Policy:**
-* **For DP authoring (Integrator):** Attach OPEN, APD (Audit Platform Dump), and plan.md as authoring and audit context; state the CDD command in dispatch notes.
-* **For Contractor execution context (Worker):** Use the CDD (Contractor Dispatch Dump) as the bounded Contractor-visible dump.
+* **For prompt intake (all stances):** Generate and attach bundle artifacts from `ops/bin/bundle` (`bundle .txt` + `.manifest.json`) so OPEN freshness metadata, dump pointers, and prompt stance text travel together.
+* **For DP authoring (Integrator):** Use `./ops/bin/bundle --profile=architect --out=auto` (or `--profile=auto`) and attach `PLAN.md` when drafting from plan input.
+* **For read-only analysis (Integrator/Operator):** Use `./ops/bin/bundle --profile=analyst --out=auto`, and provide an operator query source (`storage/handoff/TOPIC.md` or inline `ANALYZE/SYNTHESIZE/FORMULATE` query). For bundle-only dispatch, `storage/handoff/TOPIC.md` is required.
+* **For audit review (Integrator/Operator):** Use `./ops/bin/bundle --profile=audit --out=auto`.
+* **For addendum-required authorization intake (Contractor):** Generate decision leaf + OPEN intent + core dump artifacts per `docs/ops/prompts/e-prompt-06.md` (bundle is optional convenience and does not replace OPEN intent proof).
+* **For project-scoped context capture:** Use `./ops/bin/bundle --profile=project --project=<name> --out=auto`.
 * **In DP content (Worker):** DP must be self-contained; no disposable artifact citations.
-* **For closeout and audit review:** Use APD (Audit Platform Dump) for platform-scope evidence review.
 * **For closeout (Worker):** Maintain `storage/handoff/CLOSING-<DP_ID>.md` as a human-authored
   sidecar during execution. This file is a required input to `ops/bin/certify` and is not
   disposable — certify will hard-stop if it is missing or empty.
@@ -29,6 +32,7 @@ These prompts reference canonical locations rather than duplicating content:
 * **E-PROMPT-03:** Architect (generate DP from plan)
 * **E-PROMPT-04:** Analyst (read-only analysis)
 * **E-PROMPT-05:** Auditor (authorize addendum to unblock certify)
+* **E-PROMPT-06:** Contractor (generate addendum authorization artifacts)
 
 **Immutable Workflow:**
 * Use `ops/bin/draft` or Architect stance to generate DPs.

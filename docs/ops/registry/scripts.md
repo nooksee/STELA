@@ -15,3 +15,4 @@ Authoritative registry for `ops/lib/scripts/*` helper scripts.
 | SCRIPT-08 | Common Utility Library | ops/lib/scripts/common.sh | Spec: `docs/ops/specs/scripts/common.md`. Sourced shared-function library providing foundational utilities consumed by `ops/bin/factory` and `ops/bin/manifest`. |
 | SCRIPT-09 | Factory Lifecycle Library | ops/lib/scripts/factory.sh | Spec: `docs/ops/specs/scripts/factory.md`. Sourced library providing agent, skill, and task definition lifecycle helpers consumed by `ops/bin/factory`. |
 | SCRIPT-10 | Ledger Update Library | ops/lib/scripts/ledger.sh | Spec: `docs/ops/specs/scripts/ledger.md`. Sourced library providing SoP.md and PoW.md append helpers consumed by closeout tooling. |
+| SCRIPT-11 | Bundle Routing Library | ops/lib/scripts/bundle.sh | Spec: `docs/ops/specs/scripts/bundle.md`. Shared deterministic routing and artifact composition logic used by `ops/bin/bundle`. |
