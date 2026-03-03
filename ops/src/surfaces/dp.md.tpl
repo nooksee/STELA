@@ -150,13 +150,13 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
 - Refresh side-effect: `ops/bin/llms` regenerates `ops/lib/manifests/OPS.md` as a compile event; if `OPS.md` is not in the allowlist, restore it before running `integrity.sh`. See `docs/MANUAL.md` Refresh side-effect notice for the full procedure.
 
-### 3.5.1 Mandatory Closing Block
-Closing block content is generated exclusively by `ops/bin/certify` from the closing sidecar at `storage/handoff/CLOSING-{{DP_ID}}.md` at certification time. Do not author, predict, populate, or approximate any closing block field at draft time or during execution.
-Certify separately collects contractor-authored narrative for the RESULTS Contractor Execution Narrative section at certify time via interactive editor prompt; this narrative input does not populate closing block fields.
+### 3.5.1 Mandatory Closing Sidecar
+Closing sidecar content is generated and maintained at `storage/handoff/CLOSING-{{DP_ID}}.md` and is validated by `ops/bin/certify` as a hard gate at certification time. Do not author, predict, populate, or approximate any sidecar-derived closeout output outside this sidecar.
+Certify separately collects contractor-authored narrative for the RESULTS Contractor Execution Narrative section at certify time via interactive editor prompt; this narrative input is independent from closing sidecar content.
 
 Before running certify, confirm `storage/handoff/CLOSING-{{DP_ID}}.md` has been maintained throughout execution and reflects observable reality only.
 
-Fields certify generates from the closing sidecar and repository state:
+Closing sidecar fields required at certify time:
 - Commit Message
 - Create Pull Request (Title)
 - Create Pull Request (Description)

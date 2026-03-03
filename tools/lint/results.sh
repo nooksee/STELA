@@ -45,47 +45,8 @@ extract_field_block() {
   ' "$path"
 }
 
-has_nonempty_content() {
-  local value="$1"
-  [[ -n "$(printf '%s\n' "$value" | sed '/^[[:space:]]*$/d')" ]]
-}
-
-extract_field_block_by_label() {
-  local path="$1"
-  local start_label="$2"
-  local stop_label="${3:-}"
-  awk -v start_label="$start_label" -v stop_label="$stop_label" '
-    BEGIN { in_block=0 }
-    $0 == start_label { in_block=1; next }
-    in_block && stop_label != "" && $0 == stop_label { exit }
-    in_block { print }
-  ' "$path"
-}
-
-CLOSING_LABELS_MANIFEST_PATH="ops/lib/manifests/CLOSING.md"
-declare -a CURRENT_CLOSING_LABELS=()
-
-load_current_closing_labels() {
-  [[ -f "$CLOSING_LABELS_MANIFEST_PATH" ]] || die "closing labels manifest missing: ${CLOSING_LABELS_MANIFEST_PATH}"
-  if ! grep -Eq '^##[[:space:]]+Section 1:[[:space:]]+Current Closeout Labels[[:space:]]*$' "$CLOSING_LABELS_MANIFEST_PATH"; then
-    die "closing labels manifest missing required SSOT section heading"
-  fi
-
-  mapfile -t CURRENT_CLOSING_LABELS < <(
-    awk '
-      /^##[[:space:]]+Section 1:[[:space:]]+Current Closeout Labels[[:space:]]*$/ { in_section=1; next }
-      in_section && /^##[[:space:]]+/ { exit }
-      in_section && /[^[:space:]]/ { print }
-    ' "$CLOSING_LABELS_MANIFEST_PATH"
-  )
-
-  if [[ "${#CURRENT_CLOSING_LABELS[@]}" -ne 6 ]]; then
-    die "closing labels manifest must define exactly six current labels (found ${#CURRENT_CLOSING_LABELS[@]})"
-  fi
-}
-
 RESULTS_TEMPLATE_PATH="ops/src/surfaces/results.md.tpl"
-RESULTS_TEMPLATE_SHA256="b50fb633128d2806c675e52d2e026005d7129557acf47daa3b38f764d258a6dc"
+RESULTS_TEMPLATE_SHA256="a66297e37a1d3faa649b640d1d0ef2fddf2742f6120fe1b9058d87432ef3ff65"
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   usage
@@ -118,8 +79,6 @@ fi
 if [[ "$template_hash" != "$RESULTS_TEMPLATE_SHA256" ]]; then
   die "template drift detected for ${RESULTS_TEMPLATE_PATH} (expected ${RESULTS_TEMPLATE_SHA256}, got ${template_hash})"
 fi
-
-load_current_closing_labels
 
 declare -a targets=()
 explicit_target=0
@@ -183,10 +142,8 @@ required_headings=(
   "^### git diff --name-only$"
   "^### git diff --stat$"
   "^## Contractor Execution Narrative$"
-  "^## Mandatory Closing Block$"
 )
 
-placeholder_regex='{{|}}|TBD|TODO|PLACEHOLDER|ENTER_|REPLACE_|populate during execution|do not pre-fill|DP-XXXX'
 unresolved_artifact_marker_regex='<PORCELAIN_ARTIFACT>|<SESSION_ARTIFACT>|<DUMP_ARTIFACT>|<[^>]*ARTIFACT[^>]*>'
 forbidden_disposable_regex='Local artifacts|Disposable artifact policy|storage/handoff/OPEN-|storage/handoff/OPEN-PORCELAIN-|storage/handoff/\*|storage/dumps/dump-|storage/dumps/\*|OPEN-work-dp-ops-[0-9]+|OPEN-PORCELAIN-work-dp-ops-[0-9]+|dump-platform-work-dp-ops-[0-9]+'
 
@@ -233,7 +190,7 @@ for target in "${targets[@]}"; do
     fi
   done
 
-  narrative_block="$(extract_field_block "$target" '^## Contractor Execution Narrative[[:space:]]*$' '^## Mandatory Closing Block[[:space:]]*$')"
+  narrative_block="$(extract_field_block "$target" '^## Contractor Execution Narrative[[:space:]]*$' '')"
   if ! grep -Eq '^Decision Required:' <<< "$narrative_block"; then
     fail "${rel_target}: Contractor Execution Narrative Decision Leaf subsection missing 'Decision Required:' line"
   fi
@@ -271,36 +228,6 @@ for target in "${targets[@]}"; do
     fi
   fi
 
-  closing_block="$(extract_field_block "$target" '^## Mandatory Closing Block[[:space:]]*$' '')"
-  if ! has_nonempty_content "$closing_block"; then
-    fail "${rel_target}: Mandatory Closing Block is empty"
-    continue
-  fi
-
-  label=""
-  for label in "${CURRENT_CLOSING_LABELS[@]}"; do
-    if ! grep -Fxq "$label" <<< "$closing_block"; then
-      fail "${rel_target}: closing block missing label '${label}'"
-    fi
-  done
-
-  if grep -Eiq "$placeholder_regex" <<< "$closing_block"; then
-    fail "${rel_target}: closing block contains placeholder text"
-  fi
-
-  for ((i=0; i<${#CURRENT_CLOSING_LABELS[@]}; i++)); do
-    label="${CURRENT_CLOSING_LABELS[i]}"
-    next_label=""
-    if (( i + 1 < ${#CURRENT_CLOSING_LABELS[@]} )); then
-      next_label="${CURRENT_CLOSING_LABELS[i+1]}"
-    fi
-    strict_value="$(
-      extract_field_block_by_label "$target" "$label" "$next_label"
-    )"
-    if ! has_nonempty_content "$strict_value"; then
-      fail "${rel_target}: ${label} value is empty"
-    fi
-  done
 done
 
 if (( failures )); then

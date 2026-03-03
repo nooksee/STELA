@@ -16,7 +16,7 @@
    - Enforce required heading set and order.
    - Reject forbidden legacy sections and inline branch/hash mirrors.
    - Enforce canonical seven-item load order and receipt command contract in Section 3.4.5.
-   - Enforce Mandatory Closing Block labels.
+   - Enforce `### 3.5.1 Mandatory Closing Sidecar` heading and closeout labels.
 4. Aggregate all failures and exit non-zero when any task-definition or TASK-container check fails.
 
 ## Anecdotal Anchor

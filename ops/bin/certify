@@ -474,40 +474,6 @@ CLOSING Manifest Validation: PASS
 EOF
 }
 
-extract_results_mandatory_closing_block() {
-  local results_path="$1"
-  local out_path="$2"
-  awk '
-    BEGIN { in_block=0 }
-    /^## Mandatory Closing Block$/ { in_block=1; next }
-    in_block { print }
-  ' "$results_path" > "$out_path"
-}
-
-assert_results_closing_block_matches_sidecar() {
-  local results_path="$1"
-  local sidecar_path="$2"
-  local extracted_path="${TMP_DIR}/results-closing-block.txt"
-
-  extract_results_mandatory_closing_block "$results_path" "$extracted_path"
-
-  mapfile -t sidecar_lines < "$sidecar_path"
-  mapfile -t results_lines < "$extracted_path"
-
-  local sidecar_count="${#sidecar_lines[@]}"
-  local results_count="${#results_lines[@]}"
-  if [[ "$sidecar_count" -ne "$results_count" ]]; then
-    die "mandatory closing block mismatch between sidecar and RESULTS (line-count differs)"
-  fi
-
-  local i=0
-  for ((i=0; i<sidecar_count; i++)); do
-    if [[ "${sidecar_lines[$i]}" != "${results_lines[$i]}" ]]; then
-      die "mandatory closing block mismatch between sidecar and RESULTS (line $((i + 1)))"
-    fi
-  done
-}
-
 validate_artifact_path_consistency() {
   local dp_id="$1"
   local dp_intake_rel="storage/dp/intake/${dp_id}.md"
@@ -1238,7 +1204,7 @@ extract_commands() {
     fi
 
     case "$candidate" in
-      "**Mandatory receipt commands"*|"**DP-specific receipt commands"*|"**Addendum-specific receipt commands"*|"Mandatory receipt commands"*|"DP-specific receipt commands"*|"Addendum-specific receipt commands"*|"Required pasted outputs:"*|"Mandatory Closing Block"*|"Verify Section "*|"Worker runs"*|"Purpose:"*)
+      "**Mandatory receipt commands"*|"**DP-specific receipt commands"*|"**Addendum-specific receipt commands"*|"Mandatory receipt commands"*|"DP-specific receipt commands"*|"Addendum-specific receipt commands"*|"Required pasted outputs:"*|"Mandatory Closing Block"*|"Mandatory Closing Sidecar"*|"Verify Section "*|"Worker runs"*|"Purpose:"*)
         continue
         ;;
     esac
@@ -1417,7 +1383,6 @@ fi
 if [[ -z "$(sed '/^[[:space:]]*$/d' "$CLOSING_PATH")" ]]; then
   die "closing block sidecar is empty: ${CLOSING_PATH#${REPO_ROOT}/}"
 fi
-CLOSING_BLOCK="$(cat "$CLOSING_PATH")"
 
 TMP_DIR="$(mktemp -d "${REPO_ROOT}/var/tmp/certify.${DP_ID}.XXXXXX")"
 trap 'emit_binary_leaf "certify" "finish"; rm -rf "$TMP_DIR"' EXIT
@@ -1535,7 +1500,7 @@ if grep -Eq 'ops/bin/dump' "$COMMANDS_PATH"; then
 fi
 
 run_closing_validator_negative_self_check "$ALLOWLIST_POINTER"
-CLOSING_MANIFEST_VALIDATION_OUTPUT="$(validate_closing_block_sidecar "$CLOSING_PATH" "$ALLOWLIST_POINTER")"
+validate_closing_block_sidecar "$CLOSING_PATH" "$ALLOWLIST_POINTER" >/dev/null
 if [[ -n "$ADDENDUM_ID" ]]; then
   ARTIFACT_PATH_VALIDATION_OUTPUT="$(validate_addendum_artifact_path_consistency "$DP_ID" "$ADDENDUM_ID")"
 else
@@ -1549,8 +1514,6 @@ if ! INTEGRITY_OUTPUT="$(bash "$INTEGRITY_LINT" 2>&1)"; then
   die "integrity gate failed"
 fi
 INTEGRITY_OUTPUT="$(printf '%s' "$INTEGRITY_OUTPUT" | sanitize_disposable_refs)"
-INTEGRITY_OUTPUT+=$'\n\n'
-INTEGRITY_OUTPUT+="${CLOSING_MANIFEST_VALIDATION_OUTPUT}"
 INTEGRITY_OUTPUT+=$'\n\n'
 INTEGRITY_OUTPUT+="${ARTIFACT_PATH_VALIDATION_OUTPUT}"
 
@@ -1786,8 +1749,7 @@ COMMAND_LOG="$(printf '%s' "$COMMAND_LOG" | sed 's/{{/{ {/g; s/}}/} }/g')"
   "--slot=COMMAND_LOG=${COMMAND_LOG}" \
   "--slot=DIFF_NAME_ONLY=${DIFF_NAME_ONLY}" \
   "--slot=DIFF_STAT=${DIFF_STAT}" \
-  "--slot=CONTRACTOR_NARRATIVE=${CONTRACTOR_NARRATIVE}" \
-  "--slot=CLOSING_BLOCK=${CLOSING_BLOCK}"
+  "--slot=CONTRACTOR_NARRATIVE=${CONTRACTOR_NARRATIVE}"
 assert_no_disposable_refs "$OUT_PATH" "${OUT_PATH#${REPO_ROOT}/}"
 RESULTS_LINT_STARTED_AT="$(utc_now)"
 RESULTS_LINT_START_EPOCH="$(date +%s)"
@@ -1851,38 +1813,6 @@ while IFS= read -r command || [[ -n "$command" ]]; do
   fi
 done < "$FINAL_POST_COMMANDS_PATH"
 
-CLOSING_SECTION_CHECK_COMMAND="grep -F \"CLOSING Manifest Validation: PASS\" ${OUT_PATH#${REPO_ROOT}/}"
-if ! grep -Fxq "$CLOSING_SECTION_CHECK_COMMAND" "$FINAL_POST_COMMANDS_PATH"; then
-  CMD_INDEX=$((CMD_INDEX + 1))
-  CMD_ID="$(printf '%02d' "$CMD_INDEX")"
-  CLOSING_SECTION_CHECK_STARTED_AT="$(utc_now)"
-  CLOSING_SECTION_CHECK_START_EPOCH="$(date +%s)"
-  CLOSING_SECTION_CHECK_STDOUT_PATH="${TMP_DIR}/closing-section-check.stdout"
-  CLOSING_SECTION_CHECK_STDERR_PATH="${TMP_DIR}/closing-section-check.stderr"
-  set +e
-  bash -lc "cd \"$REPO_ROOT\" && ${CLOSING_SECTION_CHECK_COMMAND}" </dev/null >"$CLOSING_SECTION_CHECK_STDOUT_PATH" 2>"$CLOSING_SECTION_CHECK_STDERR_PATH"
-  CLOSING_SECTION_CHECK_EXIT_CODE=$?
-  set -e
-  CLOSING_SECTION_CHECK_FINISHED_AT="$(utc_now)"
-  CLOSING_SECTION_CHECK_FINISH_EPOCH="$(date +%s)"
-  CLOSING_SECTION_CHECK_DURATION_SECONDS=$((CLOSING_SECTION_CHECK_FINISH_EPOCH - CLOSING_SECTION_CHECK_START_EPOCH))
-  CLOSING_SECTION_CHECK_STDOUT="$(cat "$CLOSING_SECTION_CHECK_STDOUT_PATH")"
-  CLOSING_SECTION_CHECK_STDERR="$(cat "$CLOSING_SECTION_CHECK_STDERR_PATH")"
-  append_command_log_entry \
-    "$CMD_ID" \
-    "$CLOSING_SECTION_CHECK_COMMAND" \
-    "$CLOSING_SECTION_CHECK_STARTED_AT" \
-    "$CLOSING_SECTION_CHECK_FINISHED_AT" \
-    "$CLOSING_SECTION_CHECK_DURATION_SECONDS" \
-    "$CLOSING_SECTION_CHECK_EXIT_CODE" \
-    "$CLOSING_SECTION_CHECK_STDOUT" \
-    "$CLOSING_SECTION_CHECK_STDERR"
-  if [[ "$CLOSING_SECTION_CHECK_EXIT_CODE" -ne 0 ]]; then
-    printf '%s' "$COMMAND_LOG" >&2
-    die "results missing closing manifest validation evidence"
-  fi
-fi
-
 SLOT_TOKEN_CHECK_OUTPUT="PASS: unresolved slot token scan clear"
 if grep -E -q '\{\{|}}' "$OUT_PATH"; then
   SLOT_TOKEN_CHECK_OUTPUT="FAIL: unresolved slot token scan detected placeholder tokens"
@@ -1905,17 +1835,6 @@ else
   die "$HASH_PARITY_OUTPUT (recorded=${RECORDED_HASH} head=${GIT_HASH})"
 fi
 
-CLOSING_BLOCK_CHECK_OUTPUT="FAIL: mandatory closing block is empty"
-if [[ -n "$(awk '
-  BEGIN { in_block=0 }
-  /^## Mandatory Closing Block$/ { in_block=1; next }
-  in_block && /[^[:space:]]/ { print; exit }
-' "$OUT_PATH")" ]]; then
-  CLOSING_BLOCK_CHECK_OUTPUT="PASS: mandatory closing block is populated"
-else
-  die "$CLOSING_BLOCK_CHECK_OUTPUT"
-fi
-
 TEMPLATE_STRUCTURE_OUTPUT="PASS: results template structure headings are present"
 for required_heading in \
   "## Certification Metadata" \
@@ -1925,8 +1844,7 @@ for required_heading in \
   "## Git State Impact" \
   "### git diff --name-only" \
   "### git diff --stat" \
-  "## Contractor Execution Narrative" \
-  "## Mandatory Closing Block"; do
+  "## Contractor Execution Narrative"; do
   if ! grep -Fxq "$required_heading" "$OUT_PATH"; then
     TEMPLATE_STRUCTURE_OUTPUT="FAIL: missing required heading '${required_heading}'"
     die "$TEMPLATE_STRUCTURE_OUTPUT"
@@ -1942,7 +1860,6 @@ fi
 INTEGRITY_OUTPUT+=$'\n'
 INTEGRITY_OUTPUT+="${TEMPLATE_STRUCTURE_OUTPUT}"$'\n'
 INTEGRITY_OUTPUT+="${HASH_PARITY_OUTPUT}"$'\n'
-INTEGRITY_OUTPUT+="${CLOSING_BLOCK_CHECK_OUTPUT}"$'\n'
 INTEGRITY_OUTPUT+="${SLOT_TOKEN_CHECK_OUTPUT}"
 
 RESULTS_ALLOWLIST_POINTER="$ALLOWLIST_POINTER"
@@ -1958,9 +1875,7 @@ RESULTS_ALLOWLIST_POINTER+=$'\n'"- dump_manifest: ${DUMP_MANIFEST_POINTER}"
   "--slot=COMMAND_LOG=${COMMAND_LOG}" \
   "--slot=DIFF_NAME_ONLY=${DIFF_NAME_ONLY}" \
   "--slot=DIFF_STAT=${DIFF_STAT}" \
-  "--slot=CONTRACTOR_NARRATIVE=${CONTRACTOR_NARRATIVE}" \
-  "--slot=CLOSING_BLOCK=${CLOSING_BLOCK}"
-assert_results_closing_block_matches_sidecar "$OUT_PATH" "$CLOSING_PATH"
+  "--slot=CONTRACTOR_NARRATIVE=${CONTRACTOR_NARRATIVE}"
 assert_no_disposable_refs "$OUT_PATH" "${OUT_PATH#${REPO_ROOT}/}"
 bash "$RESULTS_LINT" "$OUT_PATH"
 DP_PACKET_MOVE_OUTPUT="$(move_dp_packet_to_processed "$DP_ID" "$ADDENDUM_ID")"

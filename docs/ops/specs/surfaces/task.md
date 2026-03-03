@@ -13,7 +13,7 @@ Think of `TASK.md` like the control desk card that shows which packet is active 
 
 ## Enforcement
 - `tools/lint/task.sh`: Enforces TASK surface schema and TASK-only container rules.
-- `tools/lint/dp.sh`: Enforces DP transaction rules in Section 3 and validates RESULTS Mandatory Closing Block artifacts.
+- `tools/lint/dp.sh`: Enforces DP transaction rules in Section 3 and validates RESULTS artifacts.
 - `ops/bin/draft`: Generates canonical DP structure from `ops/src/surfaces/dp.md.tpl` and updates `TASK.md`.
 - Separation of concerns is strict: DP lint does not duplicate TASK container validation.
 
@@ -36,14 +36,14 @@ Think of `TASK.md` like the control desk card that shows which packet is active 
 - Manual edits after generation are limited to slot content only; structural heading/label edits are prohibited.
 - `tools/lint/dp.sh` enforces canonical template hash and normalized structure-hash parity.
 
-## §3.5.1 Closing Block Schema Contract
+## §3.5.1 Mandatory Closing Sidecar Schema Contract
 
-`tools/lint/task.sh` accepts two §3.5.1 closing block formats in `check_task_dashboard()`.
+`tools/lint/task.sh` requires the §3.5.1 heading `Mandatory Closing Sidecar` in `check_task_dashboard()`.
 
-**Certify-routed format (standard for active packets):** A TASK head leaf generated from `ops/src/surfaces/dp.md.tpl` carries a §3.5.1 block containing the current six closeout list items, one per line. The canonical list is SSOT in `ops/lib/manifests/CLOSING.md` (Section 1), and `tools/lint/task.sh` derives the active list-format check from that manifest.
+**Certify-routed format (standard for active packets):** A TASK head leaf generated from `ops/src/surfaces/dp.md.tpl` carries a §3.5.1 sidecar block containing the current six closeout list items, one per line. The canonical list is SSOT in `ops/lib/manifests/CLOSING.md` (Section 1), and `tools/lint/task.sh` derives the active list-format check from that manifest.
 
-When all six SSOT list items are present, `task.sh` accepts the TASK head via the `list_format_present` path and returns without further closing block checks.
+When all six SSOT list items are present, `task.sh` accepts the TASK head via the `list_format_present` path and returns without further sidecar checks.
 
-**Legacy label format (grandfathered for historical leaves):** Historical TASK leaves carry the plaintext-label form: `Commit Message`, `Create Pull Request (Title)`, `Create Pull Request (Description)`, `Confirm Merge (Commit Message)`, `Confirm Merge (Extended Description)`, `Confirm Merge (Add a Comment)`. This format is accepted via the legacy label fallback loop. This legacy fallback remains intentionally duplicated in `tools/lint/task.sh` because it validates historical leaves that do not use the current SSOT list-item schema. No historical leaf is retroactively reformatted.
+**Legacy label format (grandfathered for historical leaves):** Historical TASK leaves carry the plaintext-label form: `Commit Message`, `Create Pull Request (Title)`, `Create Pull Request (Description)`, `Confirm Merge (Commit Message)`, `Confirm Merge (Extended Description)`, `Confirm Merge (Add a Comment)`. This format is accepted via the legacy label fallback loop for label content only. Heading enforcement remains new-term only (`Mandatory Closing Sidecar`) for active TASK head validation. No historical leaf is retroactively reformatted.
 
 **Certify DP resolution order:** `ops/bin/certify` resolves the target DP from the TASK head leaf by default. Intake fallback fires only when the TASK head leaf is absent, fails container validation, or does not contain the target DP block. For standard closeout, the TASK head leaf must be structurally valid and contain the live current DP before `ops/bin/certify` is run. Intake fallback is a recovery path only, not the standard path.

@@ -41,6 +41,7 @@ llms-full.txt
 ops/lib/manifests/OPS.md
 ops/lib/manifests/CONTRACTOR.md
 archives/manifests/compile-*.md
+archives/manifests/compile-2026-03-03T012036-2d8df85d.md
 archives/manifests/compile-2026-02-27T153132-11aab0a10.md
 archives/manifests/compile-2026-02-27T175108-39282b37f.md
 archives/manifests/compile-2026-02-27T210549-cae86c58c.md
@@ -109,6 +110,13 @@ storage/handoff/CLOSING-DP-OPS-0135-ADDENDUM-A.md
 archives/decisions/RoR-2026-02-27-001-decision-helper-0130.md
 ops/bin/open
 docs/ops/prompts/e-prompt-01.md
+docs/ops/prompts/e-prompt-03.md
+docs/ops/registry/lint.md
+docs/ops/specs/surfaces/task.md
+docs/ops/specs/tools/lint/dp.md
+docs/ops/specs/tools/lint/task.md
+ops/src/surfaces/task.md.tpl
+tools/lint/task.sh
 storage/handoff/CLOSING-DP-OPS-0136.md
 archives/surfaces/TASK-DP-OPS-0136-*.md
 archives/surfaces/TASK-DP-OPS-0136-d16759de8.md
@@ -143,8 +151,12 @@ docs/ops/specs/tools/lint/results.md
 ops/src/surfaces/dp.md.tpl
 storage/handoff/CLOSING-DP-OPS-0142.md
 storage/handoff/CLOSING-DP-OPS-0143.md
+storage/handoff/CLOSING-DP-OPS-0144.md
 archives/surfaces/TASK-DP-OPS-0142-*.md
 archives/surfaces/TASK-DP-OPS-0143-*.md
 archives/surfaces/PoW-2026-03-02-09c63c67.md
 archives/surfaces/SoP-2026-03-02-09c63c67.md
+archives/surfaces/PoW-2026-03-02-2d8df85d.md
+archives/surfaces/SoP-2026-03-02-2d8df85d.md
+archives/surfaces/TASK-DP-OPS-0144-2d8df85d.md
 archives/surfaces/TASK-DP-OPS-0143-09c63c67.md
