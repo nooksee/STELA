@@ -6,23 +6,24 @@ Generate addendum authorization artifacts now for <DP_ID>.
 1. Create decision leaf first:
 ./ops/bin/decision create --dp=<DP_ID> --type=op --status=accepted --out=auto
 
-2. Open the new leaf (path printed by the command), replace placeholder text with real addendum reasoning/blocker details.
+2. Open the new leaf (path printed by command), replace placeholder text with real addendum reasoning and blocker details.
 
-3. Stage the decision artifacts so dump can include them:
+3. Stage decision artifacts so dump can include them:
 git add RoR.md <new_decision_leaf_path>
 
-4. Generate OPEN with intent that references the decision ID:
+4. Generate OPEN with intent that references decision ID:
 ./ops/bin/open --intent="ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>" --out=auto
 
-5. Generate core dump payload + manifest:
+5. Generate core dump payload and manifest:
 ./ops/bin/dump --scope=core --format=chatgpt --out=auto
 
-6. Verify preconditions before handoff:
-- Confirm OPEN `Intent for today:` includes `ADDENDUM REQUIRED: <DECISION_ID> - ...`.
-- Confirm the referenced decision leaf is present in the dump payload.
+6. Generate auditor bundle with same intent:
+./ops/bin/bundle --profile=auditor --intent="ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>" --out=auto
 
-7. Optional convenience bundle:
-./ops/bin/bundle --profile=audit --out=auto
+7. Verify preconditions before handoff:
+- Confirm OPEN `Intent for today:` includes `ADDENDUM REQUIRED: <DECISION_ID> - ...`.
+- Confirm referenced decision leaf is present in dump payload.
+- Confirm bundle manifest shows `resolved_profile=auditor`.
 
 Return file paths for:
 - OPEN
@@ -30,4 +31,5 @@ Return file paths for:
 - dump manifest
 - bundle .txt
 - bundle .manifest.json
+- bundle .tar
 - decision leaf path used in intent

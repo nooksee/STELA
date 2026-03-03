@@ -9,7 +9,7 @@
 The binary parses selection, scope, output, compression, bundling, and traversal refiner arguments, validates combinations, enforces repo-root execution, validates required canon files and top-level directories, then resolves files with one of two selection modes:
 The documented two-tier usage model is:
 - Contractor Dispatch Dump (CDD): a DP-selection dump intended for Contractor visibility, typically `./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto`. The DP writer specifies the exact command and any added `--fail-on-forbidden-prefix=...` values.
-- Audit Platform Dump (APD): a platform-scope dump used for Integrator and Operator review and for external audit support during closeout.
+- Audit Evidence Dump (APD legacy term): an operator/integrator audit dump from scope selection. Default audit baseline is `--scope=core`; use `--scope=platform` or `--scope=factory` only when expanded context is intentionally required.
 
 ## Scope Taxonomy
 
@@ -63,7 +63,7 @@ Do not use:
 - Contractor baseline dumps must use `--selection=dp+allowlist` with forbidden-prefix enforcement.
 
 ## Anecdotal Anchor
-During immutable workflow adoption, one identified risk was that untracked local artifacts could reshape the narrative of what governed a packet execution, and another was oversharing platform context to Contractors when a bounded packet context was sufficient. The CDD/APD split addresses both concerns: CDD defaults toward bounded Contractor visibility, while APD preserves full-platform evidence for closeout and audit support. `ops/bin/dump` reduces those risks by grounding dump payloads in tracked repository state and explicit selection or traversal rules.
+During immutable workflow adoption, one identified risk was that untracked local artifacts could reshape the narrative of what governed a packet execution, and another was oversharing platform context to Contractors when a bounded packet context was sufficient. The CDD/APD split addresses both concerns: CDD defaults toward bounded Contractor visibility, while APD preserves optional expanded audit evidence only when explicitly required by scope. `ops/bin/dump` reduces those risks by grounding dump payloads in tracked repository state and explicit selection or traversal rules.
 
 ## Integrity Filter Warnings
 `ops/bin/dump` fails on invalid argument combinations, unknown `--selection` values, missing project target for project scope, non-root invocation, missing required canon surfaces, missing traversal output, missing `tar` when archive output is requested, `--include-file-list` values that point to missing files, and `--from-dp=auto` when no active DP can be resolved from `TASK.md`. By design, untracked local files are not serialized into payload content, so local-only artifacts remain outside the dump unless they are committed.

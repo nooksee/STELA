@@ -15,8 +15,16 @@ fi
 
 bundle_usage() {
   cat <<'USAGE'
-Usage: ops/bin/bundle [--profile=auto|analyst|architect|audit|project] [--out=auto|PATH] [--project=<name>]
+Usage: ops/bin/bundle [--profile=auto|analyst|architect|audit|project|hygiene|auditor] [--out=auto|PATH] [--project=<name>] [--intent=<text>]
 USAGE
+}
+
+bundle_generate_trace_id() {
+  local stamp
+  local suffix
+  stamp="$(date -u '+%Y%m%dT%H%M%SZ')"
+  suffix="$(printf '%04x%04x' "$RANDOM" "$RANDOM")"
+  printf 'stela-%s-%s' "$stamp" "$suffix"
 }
 
 bundle_to_rel_path() {
@@ -84,7 +92,7 @@ bundle_resolve_output_path() {
 bundle_prompt_path_for_profile() {
   local profile="$1"
   case "$profile" in
-    analyst)
+    analyst|project)
       printf 'docs/ops/prompts/e-prompt-04.md'
       ;;
     architect)
@@ -93,9 +101,11 @@ bundle_prompt_path_for_profile() {
     audit)
       printf 'docs/ops/prompts/e-prompt-01.md'
       ;;
-    project)
-      # Project routing uses Analyst stance plus project-scoped dump capture.
-      printf 'docs/ops/prompts/e-prompt-04.md'
+    hygiene)
+      printf 'docs/ops/prompts/e-prompt-02.md'
+      ;;
+    auditor)
+      printf 'docs/ops/prompts/e-prompt-05.md'
       ;;
     *)
       die "unsupported resolved profile: ${profile}"
@@ -103,35 +113,78 @@ bundle_prompt_path_for_profile() {
   esac
 }
 
-bundle_extract_open_meta() {
-  local open_abs="$1"
-  local key="$2"
-
-  case "$key" in
-    branch)
-      grep -m1 '^- Active branch:' "$open_abs" | sed -E 's/^- Active branch:[[:space:]]*//' || true
+bundle_dump_scope_for_profile() {
+  local profile="$1"
+  case "$profile" in
+    analyst|architect|hygiene)
+      printf 'full'
       ;;
-    head)
-      grep -m1 '^- HEAD short hash:' "$open_abs" | sed -E 's/^- HEAD short hash:[[:space:]]*//' || true
+    audit|auditor)
+      printf 'core'
       ;;
-    trace)
-      grep -m1 '^- STELA_TRACE_ID:' "$open_abs" | sed -E 's/^- STELA_TRACE_ID:[[:space:]]*//' || true
+    project)
+      printf 'project'
       ;;
     *)
-      printf ''
+      die "unsupported resolved profile for dump scope: ${profile}"
       ;;
   esac
+}
+
+bundle_emit_prompt_stance() {
+  local prompt_abs="$1"
+  awk '
+    BEGIN {
+      mode=0
+      comments_seen=0
+    }
+    {
+      if (mode == 0) {
+        if ($0 ~ /^[[:space:]]*<!--.*-->[[:space:]]*$/) {
+          comments_seen=1
+          next
+        }
+        if (comments_seen == 1 && $0 ~ /^[[:space:]]*$/) {
+          mode=1
+          next
+        }
+        mode=2
+        print
+        next
+      }
+      if (mode == 1) {
+        if ($0 ~ /^[[:space:]]*$/) {
+          next
+        }
+        mode=2
+        print
+        next
+      }
+      print
+    }
+  ' "$prompt_abs"
+}
+
+bundle_parse_auditor_intent() {
+  local intent_text="$1"
+  if [[ "$intent_text" =~ ^ADDENDUM[[:space:]]+REQUIRED:[[:space:]]+([^[:space:]]+)[[:space:]]+-[[:space:]]+(.+)$ ]]; then
+    BUNDLE_AUDITOR_DECISION_ID="${BASH_REMATCH[1]}"
+    BUNDLE_AUDITOR_BLOCKER="${BASH_REMATCH[2]}"
+    return 0
+  fi
+  return 1
 }
 
 bundle_run() {
   local requested_profile="auto"
   local out_token="auto"
   local project_name=""
+  local intent_token=""
 
   local arg
   for arg in "$@"; do
     case "$arg" in
-      --profile=auto|--profile=analyst|--profile=architect|--profile=audit|--profile=project)
+      --profile=auto|--profile=analyst|--profile=architect|--profile=audit|--profile=project|--profile=hygiene|--profile=auditor)
         requested_profile="${arg#--profile=}"
         ;;
       --out=*)
@@ -141,6 +194,10 @@ bundle_run() {
       --project=*)
         project_name="${arg#--project=}"
         [[ -n "$project_name" ]] || die "--project requires a value"
+        ;;
+      --intent=*)
+        intent_token="${arg#--intent=}"
+        [[ -n "$intent_token" ]] || die "--intent requires a value"
         ;;
       -h|--help)
         bundle_usage
@@ -158,6 +215,9 @@ bundle_run() {
   if [[ "$requested_profile" != "project" && -n "$project_name" ]]; then
     die "--project is only valid with --profile=project"
   fi
+  if [[ "$requested_profile" == "auditor" && -z "$intent_token" ]]; then
+    die "--intent is required when --profile=auditor"
+  fi
 
   if [[ -n "$project_name" && ! "$project_name" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]]; then
     die "project name must match ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"
@@ -170,6 +230,7 @@ bundle_run() {
   local branch_safe="${branch//\//-}"
   local generated_at
   generated_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  local trace_id="${STELA_TRACE_ID:-$(bundle_generate_trace_id)}"
 
   local topic_rel="storage/handoff/TOPIC.md"
   local plan_rel="storage/handoff/PLAN.md"
@@ -222,46 +283,48 @@ bundle_run() {
   local manifest_rel
   manifest_rel="$(bundle_to_rel_path "$manifest_abs")"
 
+  local package_abs=""
+  if [[ "$out_abs" == *.* ]]; then
+    package_abs="${out_abs%.*}.tar"
+  else
+    package_abs="${out_abs}.tar"
+  fi
+  local package_rel
+  package_rel="$(bundle_to_rel_path "$package_abs")"
+
   mkdir -p "$(dirname "$out_abs")"
+  mkdir -p "${REPO_ROOT}/storage/dumps"
 
-  local open_tag="bundle-${resolved_profile}"
-  if [[ -n "$project_name" ]]; then
-    open_tag="bundle-${resolved_profile}-${project_name}"
-  fi
-
-  local open_intent="Bundle profile: ${resolved_profile}"
-  if [[ "$requested_profile" == "auto" ]]; then
+  local open_intent=""
+  if [[ -n "$intent_token" ]]; then
+    open_intent="$intent_token"
+  elif [[ "$requested_profile" == "auto" ]]; then
     open_intent="Bundle profile (auto -> ${resolved_profile})"
+  else
+    open_intent="Bundle profile: ${resolved_profile}"
   fi
 
-  local open_output
-  open_output="$("${REPO_ROOT}/ops/bin/open" --intent="$open_intent" --tag="$open_tag" --out=auto)"
-  local open_rel
-  open_rel="$(printf '%s\n' "$open_output" | sed -n 's/^OPEN saved: //p' | tail -n 1)"
-  [[ -n "$open_rel" ]] || die "failed to resolve OPEN artifact path from ops/bin/open output"
-  open_rel="$(bundle_to_rel_path "$open_rel")"
-  local open_abs="${REPO_ROOT}/${open_rel}"
-  [[ -f "$open_abs" ]] || die "OPEN artifact missing: ${open_rel}"
+  local addendum_required=0
+  local decision_id=""
+  local decision_leaf_present=0
+  if [[ "$resolved_profile" == "auditor" ]]; then
+    addendum_required=1
+    if ! bundle_parse_auditor_intent "$open_intent"; then
+      die "auditor intent must match: ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>"
+    fi
+    decision_id="$BUNDLE_AUDITOR_DECISION_ID"
+  fi
+
+  local dump_scope
+  dump_scope="$(bundle_dump_scope_for_profile "$resolved_profile")"
+  local dump_payload_target_rel="storage/dumps/dump-${dump_scope}-${branch_safe}-${head_short}.txt"
 
   local dump_output
-  local dump_scope="core"
-  case "$resolved_profile" in
-    project)
-      dump_scope="project"
-      dump_output="$("${REPO_ROOT}/ops/bin/dump" --scope=project --project="$project_name" --format=chatgpt --out=auto)"
-      ;;
-    analyst|architect)
-      dump_scope="full"
-      dump_output="$("${REPO_ROOT}/ops/bin/dump" --scope=full --format=chatgpt --out=auto)"
-      ;;
-    audit)
-      dump_scope="core"
-      dump_output="$("${REPO_ROOT}/ops/bin/dump" --scope=core --format=chatgpt --out=auto)"
-      ;;
-    *)
-      die "unsupported resolved profile for dump scope: ${resolved_profile}"
-      ;;
-  esac
+  if [[ "$dump_scope" == "project" ]]; then
+    dump_output="$(${REPO_ROOT}/ops/bin/dump --scope=project --project="$project_name" --format=chatgpt --out="$dump_payload_target_rel")"
+  else
+    dump_output="$(${REPO_ROOT}/ops/bin/dump --scope="$dump_scope" --format=chatgpt --out="$dump_payload_target_rel")"
+  fi
 
   local dump_payload_rel
   local dump_manifest_rel
@@ -275,15 +338,13 @@ bundle_run() {
   [[ -f "${REPO_ROOT}/${dump_payload_rel}" ]] || die "dump payload missing: ${dump_payload_rel}"
   [[ -f "${REPO_ROOT}/${dump_manifest_rel}" ]] || die "dump manifest missing: ${dump_manifest_rel}"
 
-  local open_branch
-  local open_head
-  local open_trace_id
-  open_branch="$(bundle_extract_open_meta "$open_abs" branch)"
-  open_head="$(bundle_extract_open_meta "$open_abs" head)"
-  open_trace_id="$(bundle_extract_open_meta "$open_abs" trace)"
-  [[ -n "$open_branch" ]] || open_branch="$branch"
-  [[ -n "$open_head" ]] || open_head="$head_short"
-  [[ -n "$open_trace_id" ]] || open_trace_id="(missing)"
+  if [[ "$resolved_profile" == "auditor" ]]; then
+    if grep -Fq "$decision_id" "${REPO_ROOT}/${dump_payload_rel}"; then
+      decision_leaf_present=1
+    else
+      die "auditor decision leaf not present in dump payload: ${decision_id}"
+    fi
+  fi
 
   {
     echo "===== STELA BUNDLE ====="
@@ -296,10 +357,11 @@ bundle_run() {
     fi
     echo
     echo "[OPEN]"
-    echo "- Artifact path: ${open_rel}"
-    echo "- Active branch: ${open_branch}"
-    echo "- HEAD short hash: ${open_head}"
-    echo "- STELA_TRACE_ID: ${open_trace_id}"
+    echo "- Embedded: true"
+    echo "- Active branch: ${branch}"
+    echo "- HEAD short hash: ${head_short}"
+    echo "- STELA_TRACE_ID: ${trace_id}"
+    echo "- Intent for today: ${open_intent}"
     echo
     echo "[DUMP]"
     echo "- Scope: ${dump_scope}"
@@ -315,6 +377,10 @@ bundle_run() {
     if [[ "$requested_profile" == "auto" ]]; then
       echo "- PLAN lint status: ${plan_lint_status}"
     fi
+    if [[ "$resolved_profile" == "auditor" ]]; then
+      echo "- Addendum decision id: ${decision_id}"
+      echo "- Decision leaf present in dump: $([[ "$decision_leaf_present" == "1" ]] && echo true || echo false)"
+    fi
     echo
     if [[ "$requested_profile" == "auto" ]]; then
       echo "[PLAN LINT OUTPUT]"
@@ -322,14 +388,27 @@ bundle_run() {
       echo
     fi
     echo "===== PROMPT STANCE BEGIN ====="
-    cat "$prompt_abs"
+    bundle_emit_prompt_stance "$prompt_abs"
     echo "===== PROMPT STANCE END ====="
     echo "===== END STELA BUNDLE ====="
   } > "$out_abs"
 
+  local -a package_files=(
+    "$out_rel"
+    "$manifest_rel"
+    "$dump_payload_rel"
+    "$dump_manifest_rel"
+  )
+  if (( topic_present )); then
+    package_files+=("$topic_rel")
+  fi
+  if (( plan_present )); then
+    package_files+=("$plan_rel")
+  fi
+
   {
     echo "{"
-    echo "  \"bundle_version\": \"1\"," 
+    echo "  \"bundle_version\": \"2\"," 
     echo "  \"generated_at\": \"$(bundle_json_escape "$generated_at")\"," 
     echo "  \"requested_profile\": \"$(bundle_json_escape "$requested_profile")\"," 
     echo "  \"resolved_profile\": \"$(bundle_json_escape "$resolved_profile")\"," 
@@ -341,10 +420,11 @@ bundle_run() {
     fi
     echo "  \"bundle_path\": \"$(bundle_json_escape "$out_rel")\"," 
     echo "  \"open\": {"
-    echo "    \"path\": \"$(bundle_json_escape "$open_rel")\"," 
-    echo "    \"branch\": \"$(bundle_json_escape "$open_branch")\"," 
-    echo "    \"head_short\": \"$(bundle_json_escape "$open_head")\"," 
-    echo "    \"trace_id\": \"$(bundle_json_escape "$open_trace_id")\""
+    echo "    \"embedded\": true,"
+    echo "    \"branch\": \"$(bundle_json_escape "$branch")\"," 
+    echo "    \"head_short\": \"$(bundle_json_escape "$head_short")\"," 
+    echo "    \"trace_id\": \"$(bundle_json_escape "$trace_id")\"," 
+    echo "    \"intent\": \"$(bundle_json_escape "$open_intent")\""
     echo "  },"
     echo "  \"dump\": {"
     echo "    \"scope\": \"$(bundle_json_escape "$dump_scope")\"," 
@@ -362,10 +442,35 @@ bundle_run() {
     echo "    \"path\": \"$(bundle_json_escape "$plan_rel")\"," 
     echo "    \"present\": $(bundle_bool "$plan_present"),"
     echo "    \"lint_status\": \"$(bundle_json_escape "$plan_lint_status")\""
+    echo "  },"
+    echo "  \"addendum\": {"
+    echo "    \"required\": $(bundle_bool "$addendum_required"),"
+    if [[ -n "$decision_id" ]]; then
+      echo "    \"decision_id\": \"$(bundle_json_escape "$decision_id")\"," 
+    else
+      echo "    \"decision_id\": null," 
+    fi
+    echo "    \"decision_leaf_present\": $(bundle_bool "$decision_leaf_present")"
+    echo "  },"
+    echo "  \"package\": {"
+    echo "    \"path\": \"$(bundle_json_escape "$package_rel")\"," 
+    echo "    \"files\": ["
+    local i
+    for (( i=0; i<${#package_files[@]}; i++ )); do
+      local comma=""
+      if (( i + 1 < ${#package_files[@]} )); then
+        comma=","
+      fi
+      echo "      \"$(bundle_json_escape "${package_files[$i]}")\"${comma}"
+    done
+    echo "    ]"
     echo "  }"
     echo "}"
   } > "$manifest_abs"
 
+  tar -cf "$package_abs" -C "$REPO_ROOT" "${package_files[@]}"
+
   echo "Bundle artifact: $(bundle_display_path "$out_rel")"
   echo "Bundle manifest: $(bundle_display_path "$manifest_rel")"
+  echo "Bundle package: $(bundle_display_path "$package_rel")"
 }

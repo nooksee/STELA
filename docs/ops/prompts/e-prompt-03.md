@@ -5,15 +5,21 @@ Use when: Drafting new DP from plan.
 Attach: bundle artifact, bundle manifest, PLAN.md.
 
 Rules:
-* Generate architect intake with `./ops/bin/bundle --profile=architect --out=auto` (or `--profile=auto` for route-gated intake).
 * Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
+* Require attached bundle manifest `resolved_profile=architect`; if not, **STOP** and request a correct architect bundle.
 * Follow constraints in `ops/lib/manifests/CONSTRAINTS.md` (Sections 1 & 2).
 * Contractor constraints: ops/lib/manifests/CONTRACTOR.md
 * Logic: `PoT.md`. Structure: `ops/src/surfaces/dp.md.tpl`.
+* Draft from `PLAN.md` `Architect Handoff` selections only: `Selected Option`, `Slice Mode`, `Selected Slices`, and `Execution Order` (required when `Slice Mode=multi`).
+* Do not add, rewrite, or propose new options, phases, or slices in architect mode.
 
 Steps:
-0. **PRECONDITIONS**: If plan/bundle artifacts are missing: **STOP** and request them.
-1. **ANALYZE** `<plan>` to determine Objective, Scope, and Execution Plan.
+0. **PRECONDITIONS**: If bundle artifact, bundle manifest, or PLAN.md is missing: **STOP** and request missing artifacts.
+1. **VALIDATE PLAN HANDOFF**:
+   * Require `Architect Handoff` section in PLAN.md.
+   * Require `Selected Option`, `Slice Mode`, and `Selected Slices`.
+   * Require `Execution Order` when `Slice Mode=multi`.
+   * If any required handoff field is missing or ambiguous: **STOP**.
 2. **CONSTRUCT** DP using canonical structure from `ops/src/surfaces/dp.md.tpl`:
    * 3.1 Freshness Gate (Must Pass Before Work)
    * 3.1.1 DP Preflight Gate (Run Before Any Edits)
@@ -22,29 +28,21 @@ Steps:
    * 3.4 Execution Plan (A-E): State, Request, Changelog, Patch/Diff, Receipt
    * 3.5 Closeout (Mandatory Routing)
 3. **CONTENT REQUIREMENTS**:
-   * 3.2 DP-scoped load order: Minimal canon docs/specs/lints worker must load
-   * 3.3 Objective: 1-3 lines
-   * 3.3 Scope: Explicit boundaries + context hazard exclusions
-   * 3.3 Safety: "no manual edits to generated outputs", "no structural edits to TASK/DP",
-     "allowlist hard gate"
-   * 3.4.1 State: Repo state from OPEN (high-level; no pasted payloads)
-   * 3.4.2 Request: Translate plan into worker requirements
-   * 3.4.3 Changelog: Explicit file list (UPDATE/NEW) per file
-   * 3.4.4 Patch: Implementation steps; exact files; no invented paths
-   * 3.4.5 Receipt: Mandatory stub commands are template-injected and must not be re-authored
-     by the DP writer. Scope-specific receipt commands go in the `{{RECEIPT_EXTRA}}` slot only.
-     The Section 3.4.5 verification list is deterministic input to `ops/bin/certify`.
-   * 3.5 Closeout: Closeout protocol + Mandatory Closing Sidecar subsection. Closeout MUST
-     include `ops/bin/certify --dp="<DP_ID>" --out=auto` as the RESULTS generation step,
-     preceded by maintaining `storage/handoff/CLOSING-<DP_ID>.md`. Manual receipt assembly
-     is prohibited.
+   * 3.2 DP-scoped load order: Minimal canon docs/specs/lints worker must load.
+   * 3.3 Objective: 1-3 lines.
+   * 3.3 Scope: Explicit boundaries plus context hazard exclusions.
+   * 3.3 Safety: include no-manual-generated-output, no structural TASK/DP edits, allowlist hard gate.
+   * 3.4.1 State: Repo state from bundle metadata (high-level; no pasted payloads).
+   * 3.4.2 Request: Translate PLAN into worker requirements using handoff selections only.
+   * 3.4.3 Changelog: Explicit file list (UPDATE/NEW) per file.
+   * 3.4.4 Patch: Linear implementation steps, exact files, no invented paths.
+   * 3.4.5 Receipt: Add scope-specific commands in `{{RECEIPT_EXTRA}}` only.
 4. **CONSTRAINTS**:
-   * Stay in plan scope. Paths exist in dump or marked NEW.
-   * No pattern-paths/globs/brace-expansions (be literal).
+   * Stay in plan scope. Paths exist in dump or are marked NEW.
+   * No pattern-paths, globs, or brace expansions.
    * Use exact section numbering per template.
-   * Do not author, predict, or populate any §3.5.1 Mandatory Closing Sidecar field (Commit Message, Create Pull Request (Title), Create Pull Request (Description), Confirm Merge (Commit Message), Confirm Merge (Extended Description), Confirm Merge (Add a Comment)) at draft time or in any DP slot. These fields are validated by `ops/bin/certify` from the closing sidecar at certification time only.
-   * Do not include conditional execution paths ("if X is found, then Y", "if viable, proceed with") in §3.4.4 Patch steps. Every step must be linear and unconditional. A DP requiring conditional branching is a mixed packet and must be split before drafting.
-   * Do not cite OPEN artifacts, dump bundles, or any session artifact as a canonical source in any DP slot. These are non-canonical session artifacts for Integrator state refresh only.
-   * STOP if any required input is missing, unverifiable, or ambiguous. Do not infer, approximate, or proceed on assumption.
+   * Do not author or populate any §3.5.1 Mandatory Closing Sidecar field at draft time.
+   * Do not infer missing handoff intent. Use explicit selections only or **STOP**.
 
-Output only: Full DP (starting at `### 3.1 Freshness Gate`) in markdown code block.
+Output only: Full DP (starting at `### 3.1 Freshness Gate`) in one markdown code block.
+Do not output option menus, planning chatter, or confirmation prompts once preconditions pass.

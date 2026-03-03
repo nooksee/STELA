@@ -15,10 +15,27 @@ Rules:
 
 Steps:
 0. **PRECONDITIONS**: If neither `storage/handoff/TOPIC.md` nor an inline operator query is provided: **STOP** and request a query source.
-1. **ANALYZE** Operator query using attached context.
-2. **SYNTHESIZE** findings based on `PoT.md` and repository state, treating OPEN and dump
-   bundles as session artifacts rather than canonical sources.
-3. **FORMULATE** Strategic Options menu (2-3 actionable paths).
+1. **ANALYZE** operator query using attached context.
+2. **SYNTHESIZE** findings based on `PoT.md` and repository state, treating OPEN and dump bundles as session artifacts rather than canonical sources.
+3. **FORMULATE** strategic options menu (2-3 actionable paths).
+4. **PLAN OUTPUT MODE**: When operator asks for an architect-ready plan, output only a complete `PLAN.md` draft in a markdown code block, generated against `ops/src/surfaces/plan.md.tpl`.
+   * Required `Architect Handoff` fields:
+     * `Selected Option: <A|B|C|RECOMMENDED>`
+     * `Slice Mode: <single|multi>`
+     * `Selected Slices: <S1[,S2...]>`
+     * `Execution Order: <required when multi>`
+     * `Architect Constraints: <no new options; draft from selected fields only>`
+   * Required `DP Slot Source Map` fields:
+     * `DP_ID`
+     * `DP_TITLE`
+     * `BASE_BRANCH`
+     * `WORK_BRANCH`
+     * `BASE_HEAD`
+     * `FRESHNESS_STAMP`
+     * `CBC_PREFLIGHT`
+     * `DP_SCOPED_LOAD_ORDER`
+     * `SAFETY_INVARIANTS`
+     * `PLAN_STATE`
 
 Operator query template:
 1. ANALYZE `<topic>`.
@@ -26,9 +43,10 @@ Operator query template:
 3. FORMULATE `<solutions>`.
 
 Output Structure:
-1. Analysis/Discussion (The "Why" and "What")
-2. Strategic Options (The "How"):
+1. Analysis and Discussion (The Why and What)
+2. Strategic Options (The How):
    * 2-3 distinct paths with Pros, Cons, Risk
-   * Include Recommendation/Proposal
+   * Include Recommendation or Proposal
 
-Output: Recommendation/Discussion followed by Strategic Options menu.
+Output: Recommendation or Discussion followed by Strategic Options menu.
+For PLAN output mode: output only the complete PLAN markdown code block.

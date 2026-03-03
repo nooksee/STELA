@@ -8,6 +8,7 @@ Operator-facing prompt stances for DP generation and audit workflows.
 These prompts reference canonical locations rather than duplicating content:
 * **Common constraints:** `ops/lib/manifests/CONSTRAINTS.md` (Sections 1 & 2)
 * **DP structure:** `ops/src/surfaces/dp.md.tpl`
+* **PLAN structure:** `ops/src/surfaces/plan.md.tpl`
 * **RESULTS surface:** `ops/src/surfaces/results.md.tpl`
 * **Receipt baseline:** `ops/src/surfaces/dp.md.tpl` Section 3.4.5
 * **Path rules:** `PoT.md` Section 1.2
@@ -15,29 +16,32 @@ These prompts reference canonical locations rather than duplicating content:
 * **Results surface spec:** `docs/ops/specs/surfaces/results.md`
 
 **Artifact Attachment Policy:**
-* **For prompt intake (all stances):** Generate and attach bundle artifacts from `ops/bin/bundle` (`bundle .txt` + `.manifest.json`) so OPEN freshness metadata, dump pointers, and prompt stance text travel together.
-* **For DP authoring (Integrator):** Use `./ops/bin/bundle --profile=architect --out=auto` (or `--profile=auto`) and attach `PLAN.md` when drafting from plan input.
-* **For read-only analysis (Integrator/Operator):** Use `./ops/bin/bundle --profile=analyst --out=auto`, and provide an operator query source (`storage/handoff/TOPIC.md` or inline `ANALYZE/SYNTHESIZE/FORMULATE` query). For bundle-only dispatch, `storage/handoff/TOPIC.md` is required.
-* **For audit review (Integrator/Operator):** Use `./ops/bin/bundle --profile=audit --out=auto`.
-* **For addendum-required authorization intake (Contractor):** Generate decision leaf + OPEN intent + core dump artifacts per `docs/ops/prompts/e-prompt-06.md` (bundle is optional convenience and does not replace OPEN intent proof).
+* **For prompt intake (all stances):** Generate and attach bundle artifacts from `ops/bin/bundle` (`bundle .txt` + `.manifest.json`).
+* **For DP authoring (Integrator):** Use `./ops/bin/bundle --profile=architect --out=auto` and attach `PLAN.md`.
+* **For read-only analysis (Integrator or Operator):** Use `./ops/bin/bundle --profile=analyst --out=auto` and provide an operator query source (`storage/handoff/TOPIC.md` or inline `ANALYZE/SYNTHESIZE/FORMULATE` query).
+* **For audit review (Integrator or Operator):** Use `./ops/bin/bundle --profile=audit --out=auto` only, and attach native `BUNDLE-*` outputs (do not relabel as `AUDIT-*`).
+* **For addendum authorization intake (Integrator/Auditor):** Use `./ops/bin/bundle --profile=auditor --intent="ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>" --out=auto` only.
+* **For addendum artifact generation (Contractor):** Follow `docs/ops/prompts/e-prompt-06.md` decision-first flow (decision leaf, OPEN intent, core dump, auditor bundle).
 * **For project-scoped context capture:** Use `./ops/bin/bundle --profile=project --project=<name> --out=auto`.
-* **In DP content (Worker):** DP must be self-contained; no disposable artifact citations.
-* **For closeout (Worker):** Maintain `storage/handoff/CLOSING-<DP_ID>.md` as a human-authored
-  sidecar during execution. This file is a required input to `ops/bin/certify` and is not
-  disposable — certify will hard-stop if it is missing or empty.
+* **For hygiene normalization intake:** Use `./ops/bin/bundle --profile=hygiene --out=auto`.
+* **In DP content (Worker):** DP must be self-contained. No disposable artifact citations.
+* **For closeout (Worker):** Maintain `storage/handoff/CLOSING-<DP_ID>.md` as a human-authored sidecar during execution.
 
 **Stance Index:**
 * **E-PROMPT-01:** Gatekeeper (audit before merge)
-* **E-PROMPT-02:** Hygiene (conform rough draft to canonical structure)
-* **E-PROMPT-03:** Architect (generate DP from plan)
-* **E-PROMPT-04:** Analyst (read-only analysis)
-* **E-PROMPT-05:** Auditor (authorize addendum to unblock certify)
+* **E-PROMPT-02:** Hygiene (bundle-first DP conformance)
+* **E-PROMPT-03:** Architect (generate DP from plan handoff)
+* **E-PROMPT-04:** Analyst (read-only analysis + architect-ready PLAN mode)
+* **E-PROMPT-05:** Auditor (authorize addendum from auditor bundle)
 * **E-PROMPT-06:** Contractor (generate addendum authorization artifacts)
+
+**Mode Split (Hard Rule):**
+* `audit` profile is for PASS/FAIL audit verdicts only.
+* `auditor` profile is for addendum authorization only.
 
 **Immutable Workflow:**
 * Use `ops/bin/draft` or Architect stance to generate DPs.
-* Use `ops/bin/certify` to generate RESULTS receipts at closeout. RESULTS receipts are
-  generated artifacts — manual authoring is prohibited.
+* Use `ops/bin/certify` to generate RESULTS receipts at closeout.
 * Never hand-edit TASK.md structural boilerplate or DP structure.
 * `storage/dp/active/allowlist.txt` is the hard gate for permitted file touches.
 
@@ -45,6 +49,7 @@ These prompts reference canonical locations rather than duplicating content:
 * Constitution: `PoT.md`
 * Active Contract: `TASK.md`
 * DP Template: `ops/src/surfaces/dp.md.tpl`
+* PLAN Template: `ops/src/surfaces/plan.md.tpl`
 * RESULTS Template: `ops/src/surfaces/results.md.tpl`
 * Validation: `tools/lint/dp.sh`, `tools/lint/task.sh`, `tools/lint/integrity.sh`,
-  `tools/lint/results.sh`
+  `tools/lint/results.sh`, `tools/lint/plan.sh`

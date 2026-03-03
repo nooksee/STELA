@@ -33,6 +33,17 @@ plan_fail() {
   return 1
 }
 
+plan_require_pattern() {
+  local abs_path="$1"
+  local pattern="$2"
+  local message="$3"
+  if ! grep -Eq "$pattern" "$abs_path"; then
+    plan_fail "$message"
+    return 1
+  fi
+  return 0
+}
+
 lint_plan_file() {
   local input_path="$1"
   local rel_path
@@ -69,6 +80,41 @@ lint_plan_file() {
     return 1
   fi
 
+  local has_architect_handoff=0
+  if grep -Eq '^##+[[:space:]]+Architect Handoff([[:space:]]*)$' "$abs_path"; then
+    has_architect_handoff=1
+  fi
+
+  if (( has_architect_handoff )); then
+    plan_require_pattern "$abs_path" 'Selected Option:[[:space:]]+[^[:space:]]+' "Architect Handoff requires 'Selected Option:' value (${rel_path})" || return 1
+    plan_require_pattern "$abs_path" 'Slice Mode:[[:space:]]+(single|multi)' "Architect Handoff requires 'Slice Mode: single|multi' (${rel_path})" || return 1
+    plan_require_pattern "$abs_path" 'Selected Slices:[[:space:]]+[^[:space:]]+' "Architect Handoff requires 'Selected Slices:' value (${rel_path})" || return 1
+
+    if grep -Eq 'Slice Mode:[[:space:]]+multi([[:space:]]|$)' "$abs_path"; then
+      plan_require_pattern "$abs_path" 'Execution Order:[[:space:]]+[^[:space:]]+' "Architect Handoff requires 'Execution Order:' when Slice Mode is multi (${rel_path})" || return 1
+    fi
+
+    plan_require_pattern "$abs_path" '^##+[[:space:]]+DP Slot Source Map([[:space:]]*)$' "Architect-targeted PLAN requires 'DP Slot Source Map' heading (${rel_path})" || return 1
+
+    local required_keys=(
+      DP_ID
+      DP_TITLE
+      BASE_BRANCH
+      WORK_BRANCH
+      BASE_HEAD
+      FRESHNESS_STAMP
+      CBC_PREFLIGHT
+      DP_SCOPED_LOAD_ORDER
+      SAFETY_INVARIANTS
+      PLAN_STATE
+    )
+
+    local key
+    for key in "${required_keys[@]}"; do
+      plan_require_pattern "$abs_path" "${key}:[[:space:]]+[^[:space:]]+" "DP Slot Source Map missing key '${key}' with value (${rel_path})" || return 1
+    done
+  fi
+
   echo "PLAN lint: PASS (${rel_path})"
   return 0
 }
@@ -102,6 +148,77 @@ EOF_HEADING_ONLY
 {{PLACEHOLDER}}
 EOF_TOKEN
 
+  cat > "${test_dir}/architect-valid.md" <<'EOF_ARCH_OK'
+# PLAN
+
+## Architect Handoff
+- Selected Option: RECOMMENDED
+- Slice Mode: single
+- Selected Slices: S1
+
+## DP Slot Source Map
+- DP_ID: From OPEN Freshness Gate values
+- DP_TITLE: From operator topic summary
+- BASE_BRANCH: main
+- WORK_BRANCH: work/example
+- BASE_HEAD: abc12345
+- FRESHNESS_STAMP: 2026-03-03
+- CBC_PREFLIGHT: Bundle tooling changes
+- DP_SCOPED_LOAD_ORDER: plan list in section 3.2.2
+- SAFETY_INVARIANTS: scope list in section 3.3
+- PLAN_STATE: from plan state section
+EOF_ARCH_OK
+
+  cat > "${test_dir}/architect-missing-slot-heading.md" <<'EOF_ARCH_NO_SLOT_HEADING'
+# PLAN
+
+## Architect Handoff
+- Selected Option: RECOMMENDED
+- Slice Mode: single
+- Selected Slices: S1
+EOF_ARCH_NO_SLOT_HEADING
+
+  cat > "${test_dir}/architect-missing-key.md" <<'EOF_ARCH_NO_KEY'
+# PLAN
+
+## Architect Handoff
+- Selected Option: RECOMMENDED
+- Slice Mode: single
+- Selected Slices: S1
+
+## DP Slot Source Map
+- DP_ID: source
+- DP_TITLE: source
+- BASE_BRANCH: main
+- WORK_BRANCH: work/example
+- BASE_HEAD: abc12345
+- FRESHNESS_STAMP: 2026-03-03
+- CBC_PREFLIGHT: text
+- DP_SCOPED_LOAD_ORDER: text
+- SAFETY_INVARIANTS: text
+EOF_ARCH_NO_KEY
+
+  cat > "${test_dir}/architect-multi-missing-order.md" <<'EOF_ARCH_MULTI_NO_ORDER'
+# PLAN
+
+## Architect Handoff
+- Selected Option: RECOMMENDED
+- Slice Mode: multi
+- Selected Slices: S1,S2
+
+## DP Slot Source Map
+- DP_ID: source
+- DP_TITLE: source
+- BASE_BRANCH: main
+- WORK_BRANCH: work/example
+- BASE_HEAD: abc12345
+- FRESHNESS_STAMP: 2026-03-03
+- CBC_PREFLIGHT: text
+- DP_SCOPED_LOAD_ORDER: text
+- SAFETY_INVARIANTS: text
+- PLAN_STATE: text
+EOF_ARCH_MULTI_NO_ORDER
+
   if ! lint_plan_file "${test_dir}/valid.md" >/dev/null 2>&1; then
     echo "FAIL: --test expected valid plan to pass" >&2
     failures=1
@@ -124,6 +241,26 @@ EOF_TOKEN
 
   if lint_plan_file "${test_dir}/missing.md" >/dev/null 2>&1; then
     echo "FAIL: --test expected missing file to fail" >&2
+    failures=1
+  fi
+
+  if ! lint_plan_file "${test_dir}/architect-valid.md" >/dev/null 2>&1; then
+    echo "FAIL: --test expected architect-valid plan to pass" >&2
+    failures=1
+  fi
+
+  if lint_plan_file "${test_dir}/architect-missing-slot-heading.md" >/dev/null 2>&1; then
+    echo "FAIL: --test expected architect plan missing slot heading to fail" >&2
+    failures=1
+  fi
+
+  if lint_plan_file "${test_dir}/architect-missing-key.md" >/dev/null 2>&1; then
+    echo "FAIL: --test expected architect plan missing key to fail" >&2
+    failures=1
+  fi
+
+  if lint_plan_file "${test_dir}/architect-multi-missing-order.md" >/dev/null 2>&1; then
+    echo "FAIL: --test expected architect multi plan missing execution order to fail" >&2
     failures=1
   fi
 

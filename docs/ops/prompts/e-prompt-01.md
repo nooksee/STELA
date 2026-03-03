@@ -2,16 +2,20 @@
 ## **Gatekeeper (Refresh + Audit)**
 
 Use when: Auditing worker output before merge.
-Attach: DP-RESULTS.md, TASK.md, bundle artifact, bundle manifest.
+Attach: DP-RESULTS.md, TASK.md, native bundle artifact (`BUNDLE-*.txt`), native bundle manifest (`BUNDLE-*.manifest.json`).
 
 Rules:
 * Generate audit intake with `./ops/bin/bundle --profile=audit --out=auto`.
+* Use native `BUNDLE-*` filenames from bundle output; do not relabel artifacts to `AUDIT-*`.
 * Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
+* Require attached bundle manifest `resolved_profile=audit`; if not, **STOP** and request a correct audit bundle.
+* `--profile=auditor` is addendum-authorization mode and is never valid for audit verdict workflows.
 * Follow constraints in `ops/lib/manifests/CONSTRAINTS.md` (Sections 1 & 2).
 * Contractor constraints: ops/lib/manifests/CONTRACTOR.md
 * Logic: `PoT.md`. Structure: `TASK.md` + `ops/src/surfaces/dp.md.tpl`.
 
 Steps:
+0. **PRECONDITIONS**: If bundle artifact, bundle manifest, DP-RESULTS.md, or TASK.md is missing: **STOP**.
 1. **PoT Compliance**: Identify canon drift, ambiguity glossing, invented paths, or
    disposable-artifact dependence.
 2. **DP Integrity**:
