@@ -38,8 +38,8 @@ while (($# > 0)); do
   shift
 done
 
-# All ops/bin/ files except ops/bin/project (deprecated).
-mapfile -t BINARIES < <(git ls-files ops/bin/ | grep -v 'ops/bin/project$' | sort)
+# All ops/bin/ files in scope.
+mapfile -t BINARIES < <(git ls-files ops/bin/ | sort)
 
 # All tools/ executables in scope.
 mapfile -t TOOLS < <(git ls-files tools/lint/ tools/verify.sh tools/test/ | grep '\.sh$' | sort)

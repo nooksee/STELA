@@ -215,6 +215,7 @@ fi
   cat <<EOF
 
 [NEXT OPERATOR MOVES]
+- ./ops/bin/bundle --profile=auto --out=auto
 - ./ops/bin/dump --scope=core --format=chatgpt
 
 [OPERATOR CONTEXT]

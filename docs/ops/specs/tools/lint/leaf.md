@@ -7,7 +7,7 @@
 
 ## Mechanics and Sequencing
 1. Resolve repository root and emit telemetry for the lint script itself.
-2. Enumerate tracked `ops/bin/*` files, excluding deprecated `ops/bin/project`.
+2. Enumerate tracked `ops/bin/*` files.
 3. Enumerate tracked shell scripts in `tools/lint/`, `tools/test/`, and `tools/verify.sh`.
 4. For each enumerated path, search for the `emit_binary_leaf` token.
 5. Record each missing token as a failure and return non-zero when any in-scope executable lacks telemetry wiring.

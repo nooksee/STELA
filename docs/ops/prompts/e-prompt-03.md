@@ -2,16 +2,17 @@
 ## **Architect (Refresh + Generate DP)**
 
 Use when: Drafting new DP from plan.
-Attach: OPEN, OPEN-PORCELAIN, dump, dump manifest, plan.md.
+Attach: bundle artifact, bundle manifest, PLAN.md.
 
 Rules:
-* Refresh state using attached OPEN and dump artifacts.
+* Generate architect intake with `./ops/bin/bundle --profile=architect --out=auto` (or `--profile=auto` for route-gated intake).
+* Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
 * Follow constraints in `ops/lib/manifests/CONSTRAINTS.md` (Sections 1 & 2).
 * Contractor constraints: ops/lib/manifests/CONTRACTOR.md
 * Logic: `PoT.md`. Structure: `ops/src/surfaces/dp.md.tpl`.
 
 Steps:
-0. **PRECONDITIONS**: If plan/OPEN/dump missing: **STOP** and request them.
+0. **PRECONDITIONS**: If plan/bundle artifacts are missing: **STOP** and request them.
 1. **ANALYZE** `<plan>` to determine Objective, Scope, and Execution Plan.
 2. **CONSTRUCT** DP using canonical structure from `ops/src/surfaces/dp.md.tpl`:
    * 3.1 Freshness Gate (Must Pass Before Work)

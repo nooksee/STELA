@@ -5,6 +5,7 @@ Authoritative registry for canon tasks.
 
 | ID | Name | File Path | Notes |
 | --- | --- | --- | --- |
+| B-TASK-08 | Task: Bundle Orchestration | opt/_factory/tasks/b-task-08.md | |
 | B-TASK-07 | Task: Factory Chain Validation | opt/_factory/tasks/b-task-07.md | |
 | B-TASK-01 | Task: Code Review | opt/_factory/tasks/b-task-01.md | |
 | B-TASK-02 | Task: Verification Command | opt/_factory/tasks/b-task-02.md | |

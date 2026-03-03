@@ -11,7 +11,7 @@ The Ops Kernel is the executable layer that turns governance into action. It own
 ## 2. Core Subsystems
 Context Bundler (`ops/bin/llms`) compiles canonical and supporting surfaces into session bundles while enforcing context hazard exclusion rules.
 
-Project Factory (`ops/bin/project`) orchestrates project intake and lifecycle alignment through registry-driven templates and validation helpers.
+Workflow Bundler (`ops/bin/bundle`) emits deterministic handoff artifacts that bind OPEN freshness state, dump pointers, prompt stance text, and routing metadata for Analyst, Architect, Audit, and Project profiles.
 
 ## 3. Registries
 The authoritative operational registries live in `docs/ops/registry/`.

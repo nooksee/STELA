@@ -113,7 +113,7 @@ Registry: B — Keep until llms hook is implemented. Cleanest B-to-deletion pipe
 Leaf: archives/decisions/RoR-2026-03-01-011-cbc-0140.md
 
 **`tools/lint/project.sh` — 120 lines**
-Validates project directory structure and requires `README.md` in every project folder. README check: **B** — `ops/bin/project` or a scaffold equivalent could guarantee `README.md` on creation, making the check redundant for new projects. Structural checks: **C** — hard to guarantee at creation time.
+Validates project directory structure and requires `README.md` in every project folder. README check: **B** — `ops/bin/scaffold` can guarantee `README.md` on creation, making the check redundant for new projects. Structural checks: **C** — hard to guarantee at creation time.
 Registry: README check B — flag for scaffold redesign, low priority. Structural checks C — Keep.
 Leaf (README check): archives/decisions/RoR-2026-03-01-012-cbc-0140.md
 Leaf (structural checks): archives/decisions/RoR-2026-03-01-013-cbc-0140.md
@@ -166,3 +166,14 @@ Sixteen tools audited. 4,389 total lines across the suite. Ten surfaces score C 
 ## 5. Decision Registry
 
 The Decision Registry has been relocated to its canonical home. See `docs/ops/registry/decisions.md`.
+
+## 6. DP-OPS-0145 CbC Note (Bundle Routing + PLAN Gate)
+
+DP-OPS-0145 introduces `ops/bin/bundle` auto-routing and a new PLAN route gate at `tools/lint/plan.sh`.
+Structural prevention alone is not sufficient for this route decision because `storage/handoff/PLAN.md` is operator-provided runtime input. The system can enforce PLAN presence and minimal deterministic validity, but it cannot structurally guarantee plan quality before runtime intake.
+
+CbC application for this case:
+- Prevention first: auto route defaults to Analyst when PLAN is missing.
+- Minimal detection: PLAN lint is PASS/FAIL only (existence, non-empty, heading presence, non-heading content, unresolved token guard).
+- No style enforcement: subjective checks are intentionally excluded.
+- Scope bound: PLAN lint is a routing safety floor for `ops/bin/bundle --profile=auto`; it is not added as a global closeout gate.

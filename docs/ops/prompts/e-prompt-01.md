@@ -2,10 +2,11 @@
 ## **Gatekeeper (Refresh + Audit)**
 
 Use when: Auditing worker output before merge.
-Attach: DP-RESULTS.md, TASK.md, OPEN, OPEN-PORCELAIN (if any), dump bundle.
+Attach: DP-RESULTS.md, TASK.md, bundle artifact, bundle manifest.
 
 Rules:
-* Refresh state using attached OPEN and dump artifacts.
+* Generate audit intake with `./ops/bin/bundle --profile=audit --out=auto`.
+* Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
 * Follow constraints in `ops/lib/manifests/CONSTRAINTS.md` (Sections 1 & 2).
 * Contractor constraints: ops/lib/manifests/CONTRACTOR.md
 * Logic: `PoT.md`. Structure: `TASK.md` + `ops/src/surfaces/dp.md.tpl`.
