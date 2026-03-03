@@ -213,7 +213,7 @@ check_task_dashboard() {
     "### 3.4.4 Patch / Diff (Implementation details)"
     "### 3.4.5 Receipt (Proofs to collect) — MUST RUN"
     "## 3.5 Closeout (Mandatory Routing)"
-    "### 3.5.1 Mandatory Closing Block"
+    "### 3.5.1 Mandatory Closing Sidecar"
   )
 
   local -a patterns=(
@@ -233,7 +233,7 @@ check_task_dashboard() {
     '^###[[:space:]]*3\\.4\\.4[.)]?[[:space:]]*PATCH'
     '^###[[:space:]]*3\\.4\\.5[.)]?[[:space:]]*RECEIPT'
     '^##[[:space:]]*3\\.5[.)]?[[:space:]]*CLOSEOUT'
-    '^###[[:space:]]*3\\.5\\.1[.)]?[[:space:]]*MANDATORY CLOSING BLOCK'
+    '^###[[:space:]]*3\\.5\\.1[.)]?[[:space:]]*MANDATORY CLOSING SIDECAR'
   )
 
   local -a heading_lines=()
@@ -379,8 +379,8 @@ check_task_dashboard() {
     fail "TASK receipt contract missing untracked allowlist subset proof"
   fi
 
-  if ! grep -nE '^###[[:space:]]*3\.5\.1[.)]?[[:space:]]*Mandatory[[:space:]]+Closing[[:space:]]+Block[[:space:]]*$' "$path" >/dev/null; then
-    fail "TASK closeout block missing heading '### 3.5.1 Mandatory Closing Block'"
+  if ! grep -nE '^###[[:space:]]*3\.5\.1[.)]?[[:space:]]*Mandatory[[:space:]]+Closing[[:space:]]+Sidecar[[:space:]]*$' "$path" >/dev/null; then
+    fail "TASK closeout block missing heading '### 3.5.1 Mandatory Closing Sidecar'"
   fi
 
   local -a closing_labels=(
@@ -392,7 +392,7 @@ check_task_dashboard() {
     "Confirm Merge (Add a Comment)"
   )
   # Certify-routed format: active packets generated from ops/src/surfaces/dp.md.tpl
-  # carry the list-item form of the §3.5.1 Mandatory Closing Block. This path is the
+  # carry the list-item form of the §3.5.1 Mandatory Closing Sidecar. This path is the
   # standard acceptance path for live current-packet TASK heads.
   local item
   local -a closing_list_items=()

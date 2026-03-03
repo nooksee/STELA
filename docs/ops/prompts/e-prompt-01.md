@@ -24,7 +24,8 @@ Steps:
      scope-specific commands to the `{{RECEIPT_EXTRA}}` slot.
    * Verify `tools/lint/results.sh` passes against the receipt: template structure matches
      `ops/src/surfaces/results.md.tpl`, recorded git hash equals HEAD at closeout, and the
-     Mandatory Closing Block is populated without placeholder markers.
+     Contractor Execution Narrative includes required subheadings and Decision Leaf lines.
+   * Verify `ops/bin/certify` maintained strict closing sidecar validation as a hard gate.
    * Verify `tools/lint/integrity.sh` passed (its output must appear in the receipt's Scope
      Verification section).
    * Reject "trust me" receipts, missing outputs, or receipts with unresolved slot tokens.

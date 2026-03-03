@@ -20,7 +20,7 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="d40d2e18710c60357ccc0f179d6c7a3c92027938d69dc2498a29fd09adf81c6c"
+CANONICAL_DP_TEMPLATE_SHA256="41124cab3cb74fe60549b689a8c260a28d43c646dcd4c0d508830b4b90335d99"
 CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/surfaces/addendum.md.tpl"
 CANONICAL_ADDENDUM_TEMPLATE_SHA256="42cb7586c6ed103e995730f1a8c34a1c7e0676b717c27dfb987950feeac7ec9e"
 TEMPLATE_RENDER_BIN="ops/bin/template"
@@ -1196,26 +1196,6 @@ None.
 ### Decision Leaf
 Decision Required: No
 Decision Leaf: None
-
-## Mandatory Closing Block
-Commit Message
-DP-OPS-0099 validate results lint path
-
-Create Pull Request (Title)
-DP-OPS-0099 Validate RESULTS lint path
-
-Create Pull Request (Description)
-### Summary
-- Delegated RESULTS lint to tools/lint/results.sh.
-
-Confirm Merge (Commit Message)
-DP-OPS-0099 finalize delegated results lint path
-
-Confirm Merge (Extended Description)
-tools/lint/dp.sh
-
-Confirm Merge (Add a Comment)
-Does delegated results lint pass and reject invalid filler text?
 TESTRESULTS
   lint_path "$tmp_results_valid" >/dev/null
 
@@ -1252,26 +1232,6 @@ None.
 
 ### Decision Leaf
 Decision Required: No
-Decision Leaf: None
-
-## Mandatory Closing Block
-Commit Message
-DP-OPS-0099 validate results lint path
-
-Create Pull Request (Title)
-DP-OPS-0099 Validate RESULTS lint path
-
-Create Pull Request (Description)
-PLACEHOLDER
-
-Confirm Merge (Commit Message)
-DP-OPS-0099 finalize delegated results lint path
-
-Confirm Merge (Extended Description)
-tools/lint/dp.sh
-
-Confirm Merge (Add a Comment)
-Delegated results lint should reject placeholders in this fixture.
 TESTRESULTS
   if lint_path "$tmp_results_invalid" >/dev/null 2>&1; then
     rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok"

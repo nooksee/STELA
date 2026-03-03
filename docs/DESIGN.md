@@ -71,7 +71,7 @@ Registry: C — Keep. No redesign recommended.
 Leaf: archives/decisions/RoR-2026-03-01-003-cbc-0140.md
 
 **`tools/lint/dp.sh` — 1,127 lines**
-Validates TASK.md and RESULTS files via canonical template SHA256, normalized structure hash, allowlist pointer integrity, placeholder detection, and closing block field validation. The template hash mechanism is prevention-adjacent: `ops/bin/draft` generates the structure; `dp.sh` confirms it was not tampered with. The 1,127-line count is partially explained by the embedded `--test` mode fixture harness (approximately 200 lines), which is a refactor candidate: extracting it to `tools/test/dp.sh` would reduce the core linter to approximately 900 lines.
+Validates TASK.md and RESULTS files via canonical template SHA256, normalized structure hash, allowlist pointer integrity, placeholder detection, and delegated RESULTS schema validation. The template hash mechanism is prevention-adjacent: `ops/bin/draft` generates the structure; `dp.sh` confirms it was not tampered with. The 1,127-line count is partially explained by the embedded `--test` mode fixture harness (approximately 200 lines), which is a refactor candidate: extracting it to `tools/test/dp.sh` would reduce the core linter to approximately 900 lines.
 Deletion Test: **C.** Without `dp.sh`, hand-authored DPs with arbitrary structure pass all gates and the allowlist pointer check vanishes.
 Registry: C — Keep. Refactor candidate noted: extract test fixture to `tools/test/dp.sh` as a standalone future work item. Not urgent.
 Leaf: archives/decisions/RoR-2026-03-01-004-cbc-0140.md
@@ -119,7 +119,7 @@ Leaf (README check): archives/decisions/RoR-2026-03-01-012-cbc-0140.md
 Leaf (structural checks): archives/decisions/RoR-2026-03-01-013-cbc-0140.md
 
 **`tools/lint/results.sh` — 287 lines**
-Validates RESULTS receipts: heading structure, template hash parity, closing block completeness, placeholder detection, and forbidden disposable-artifact references. `ops/bin/certify` generates the RESULTS structure; `results.sh` validates that AI-authored fields are complete and structure was not tampered with.
+Validates RESULTS receipts: heading structure, template hash parity, narrative completeness, placeholder detection, and forbidden disposable-artifact references. `ops/bin/certify` generates the RESULTS structure; `results.sh` validates that AI-authored fields are complete and structure was not tampered with.
 Deletion Test: **C.** Certify could produce an incomplete RESULTS receipt without detection; the PR merges with an incomplete evidence chain.
 Registry: C — Keep. Same analysis as `dp.sh`. Well-justified.
 Leaf: archives/decisions/RoR-2026-03-01-014-cbc-0140.md
@@ -136,7 +136,7 @@ Registry: C — Keep. No redesign opportunity.
 Leaf: archives/decisions/RoR-2026-03-01-016-cbc-0140.md
 
 **`tools/lint/style.sh` — 232 lines**
-Four distinct checks: contraction prohibition, jargon blacklist, spec-surface section compliance, and closing block lead-word repetition detection. Contraction prohibition: **C** — no structural mechanism can prevent contractions in prose; detection is the only tool. Jargon blacklist: **C** — same logic. Spec-surface compliance: **B** — `ops/src/docs/spec.md.tpl` updated to include all four required sections by default makes the compliance check redundant; a spec generated from the updated template cannot be missing them. Lead-word repetition: **C** — without it, AI-generated closing blocks routinely produce six near-identical entries; the check enforces semantic differentiation.
+Four distinct checks: contraction prohibition, jargon blacklist, spec-surface section compliance, and closing sidecar lead-word repetition detection. Contraction prohibition: **C** — no structural mechanism can prevent contractions in prose; detection is the only tool. Jargon blacklist: **C** — same logic. Spec-surface compliance: **B** — `ops/src/docs/spec.md.tpl` updated to include all four required sections by default makes the compliance check redundant; a spec generated from the updated template cannot be missing them. Lead-word repetition: **C** — without it, AI-generated closing sidecars routinely produce six near-identical entries; the check enforces semantic differentiation.
 Registry: Contraction prohibition — C, Keep. Jargon — C, Keep. Spec-surface compliance — B, Keep with structural redesign candidate queued. Lead-word repetition — C, Keep.
 Leaf (contraction prohibition): archives/decisions/RoR-2026-03-01-017-cbc-0140.md
 Leaf (jargon blacklist): archives/decisions/RoR-2026-03-01-018-cbc-0140.md

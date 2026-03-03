@@ -56,7 +56,7 @@ Operator before proceeding. Absence of the closing sidecar is a certify hard-fai
 it is not a recoverable warning.
 
 Finalization protocol order is strict: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
-Mandatory Closing Block schema is defined in `TASK.md` Section 3.5.1.
+Mandatory Closing Sidecar schema is defined in `TASK.md` Section 3.5.1.
 Only the current six-label closing sidecar schema is accepted; `ops/bin/certify` is the schema authority; `tools/lint/style.sh` enforces that schema. The current label set is SSOT in `ops/lib/manifests/CLOSING.md` (Section 1), and `ops/src/surfaces/closing.md.tpl` includes that section.
 Closeout label update procedure (future packets): edit `ops/lib/manifests/CLOSING.md` first, then validate and update every consumer that derives or validates the closing schema (`ops/src/surfaces/closing.md.tpl`, `ops/bin/certify`, `tools/lint/style.sh`, `tools/lint/results.sh`, and any coupled TASK lint logic), then rerun the full verify/certify closeout gates.
 The `Confirm Merge (Extended Description)` field accepts only approved-prefix, repo-relative literal paths; root-level canonical surfaces (`PoW.md`, `SoP.md`, `TASK.md`, `llms*.txt`) are not valid entries in this field.
@@ -107,7 +107,7 @@ bash tools/lint/results.sh storage/handoff/DP-OPS-XXXX-RESULTS.md
 ~~~
 `ops/bin/certify` runs integrity checks, executes the Section 3.4.5 verification command list, renders the RESULTS receipt from template, and runs `tools/lint/results.sh` as a hard gate.
 Note: certify resolves the target DP from the TASK head leaf by default. Ensure the TASK head leaf is structurally valid and contains the live current DP block before running certify. If the TASK head leaf is absent or invalid, certify falls back to the intake packet; this fallback is a recovery path only.
-`tools/lint/results.sh` accepts only the current six-label Mandatory Closing Block schema emitted by `ops/bin/certify`; certify remains the schema authority for RESULTS closing-block labels. The current label set is sourced from `ops/lib/manifests/CLOSING.md` (Section 1) in certify and synchronized lint consumers.
+`tools/lint/results.sh` enforces the RESULTS schema through `## Contractor Execution Narrative` and required Decision Leaf lines. Closing sidecar schema validation remains `ops/bin/certify` authority against `ops/lib/manifests/CLOSING.md` (Section 1).
 `ops/bin/certify` also emits schema-stamped surface leaves for PoW/SoP/TASK under `archives/surfaces/` and rewrites `PoW.md`, `SoP.md`, and `TASK.md` to single-line HEAD pointers to those leaves.
 If `TASK.md` does not contain the target DP block, certify now fails unless `--allow-intake-fallback` is explicitly provided.
 `bash tools/lint/results.sh` without arguments targets the active branch packet receipt when resolvable; use `--all` only for full historical receipt scans.
@@ -168,8 +168,8 @@ If scope is clean: proceed to step 3.
 The Contractor Execution Narrative is collected interactively by `ops/bin/certify` at
 certify time. When certify runs, it writes a scaffold block to a temp file and opens
 the configured editor (`$EDITOR` or `vi`). The worker fills in the narrative before
-certify proceeds. The narrative is rendered into the RESULTS receipt between
-`## Git State Impact` and `## Mandatory Closing Block`.
+certify proceeds. The narrative is rendered into the RESULTS receipt under
+`## Contractor Execution Narrative`.
 
 Required subsections:
 - `### Preflight State` — state the preflight outcome: branch, Base HEAD, clean tree, and preflight lint results.
@@ -276,7 +276,7 @@ Compile snapshot policy:
 5. Log
 Prepare SoP/PoW ledger updates before running certify so the emitted leaf snapshots capture the intended entry content.
 After certify, treat `PoW.md`, `SoP.md`, and `TASK.md` as pointer heads; do not manually edit pointer lines or emitted `archives/surfaces/*` leaves.
-If operator authorization expands scope beyond the original DP boundaries, record that authorization explicitly in SoP and PoW entry content and mirror it in the Closing Block sidecar.
+If operator authorization expands scope beyond the original DP boundaries, record that authorization explicitly in SoP and PoW entry content and mirror it in the closing sidecar.
 PoW contract and schema guidance are canonical in `docs/ops/specs/surfaces/pow.md`; author PoW entry content to that spec before certification snapshotting.
 PoW entry receipt pointers must include `RESULTS`, `OPEN`, and `DUMP` artifact paths.
 Do not reproduce the verification command list in SoP or PoW entries; RESULTS carries the full command log with outputs.

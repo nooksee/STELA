@@ -12,21 +12,18 @@
 4. Enforce required heading set and reject unresolved artifact placeholders or forbidden disposable-artifact references.
 5. Enforce presence of required Contractor Execution Narrative subsections (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`) and require both `Decision Required:` and `Decision Leaf:` field lines in the narrative section.
 6. Enforce `Git Hash` parity in explicit mode, and record historical parity skips in inferred/scan modes without blocking.
-7. Parse Mandatory Closing Block fields using `ops/bin/certify` as the schema authority, require the current six-label schema, reject placeholder text, and require all six fields to be non-empty.
-8. Return non-zero when any certification-format receipt fails required checks.
+7. Return non-zero when any certification-format receipt fails required checks.
 
 ## Anecdotal Anchor
 During the DP-OPS-0069 certification cutover, the absence of a dedicated RESULTS lint path allowed structurally incomplete receipts to pass closeout and created an audit gap that required retroactive correction. This script formalizes that missing gate.
 
 ## Integrity Filter Warnings
-Mode behavior is intentionally different: explicit path mode applies strict hash parity, while inferred and `--all` modes tolerate historical parity drift and only report skips. Legacy receipts are ignored in broad historical scans unless explicitly targeted. Template hash constants must be revised in lockstep with sanctioned template changes. Narrative subheading and Decision Leaf field checks apply only to the Contractor Execution Narrative section extracted between `## Contractor Execution Narrative` and `## Mandatory Closing Block`.
+Mode behavior is intentionally different: explicit path mode applies strict hash parity, while inferred and `--all` modes tolerate historical parity drift and only report skips. Legacy receipts are ignored in broad historical scans unless explicitly targeted. Template hash constants must be revised in lockstep with sanctioned template changes. Narrative subheading and Decision Leaf field checks apply to the Contractor Execution Narrative section from `## Contractor Execution Narrative` through EOF; legacy trailing sections are tolerated.
 
-## Closing Block Schema Authority
-`ops/bin/certify` is the sole authority for accepted Mandatory Closing Block label schemas in certification-format RESULTS receipts. The current closeout label set is SSOT in `ops/lib/manifests/CLOSING.md` (Section 1). `tools/lint/results.sh` must remain synchronized with certify's emitted closing block labels.
+## Closing Sidecar Authority
+`ops/bin/certify` is the sole authority for closing sidecar validation in closeout. Closing sidecar schema remains SSOT in `ops/lib/manifests/CLOSING.md` (Section 1), but `tools/lint/results.sh` no longer parses or enforces sidecar labels inside RESULTS.
 
-The accepted RESULTS closing block schema is the current six-label form defined in `ops/lib/manifests/CLOSING.md` (Section 1): `Commit Message`, `Create Pull Request (Title)`, `Create Pull Request (Description)`, `Confirm Merge (Commit Message)`, `Confirm Merge (Extended Description)`, `Confirm Merge (Add a Comment)`.
-
-`tools/lint/results.sh` derives the required label order and per-field non-empty checks from `ops/lib/manifests/CLOSING.md` (Section 1). All six schema fields are required and must be non-empty. Placeholder text is rejected.
+RESULTS schema ends at `## Contractor Execution Narrative`. Any closing sidecar validation evidence remains certify-internal and is not embedded in RESULTS.
 
 ## Contractor Execution Narrative Validation
 The lint requires the following within the RESULTS artifact:
