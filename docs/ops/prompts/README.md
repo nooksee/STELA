@@ -33,7 +33,7 @@ These prompts reference canonical locations rather than duplicating content:
 | --- | --- | --- | --- |
 | `analyst` | `./ops/bin/bundle --profile=analyst --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, query source (`storage/handoff/TOPIC.md` or inline `ANALYZE/SYNTHESIZE/FORMULATE`) | Attach `BUNDLE-*.tar` when the model session reliably ingests tar artifacts. |
 | `architect` | `./ops/bin/bundle --profile=architect --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, `storage/handoff/PLAN.md` | PLAN must include Architect Handoff fields for deterministic DP drafting. |
-| `audit` | `./ops/bin/bundle --profile=audit --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, DP RESULTS receipt, `TASK.md` | PASS/FAIL audit verdict only. |
+| `audit` | `./ops/bin/bundle --profile=audit --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, DP RESULTS receipt | PASS/FAIL audit verdict only. |
 | `auditor` | `./ops/bin/bundle --profile=auditor --intent="ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>" --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json` | Addendum authorization only. |
 | `project` | `./ops/bin/bundle --profile=project --project=<name> --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json` | Project-scoped context bundle. |
 | `hygiene` | `./ops/bin/bundle --profile=hygiene --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, draft DP input | Structure-conformance normalization flow. |

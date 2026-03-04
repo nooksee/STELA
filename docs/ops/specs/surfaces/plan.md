@@ -1,4 +1,4 @@
-<!-- CCD: ff_target="operator-technical" ff_band="45-60" -->
+<!-- CCD: ff_target="operator-technical" ff_band="30-45" -->
 # Surface Specification: PLAN
 
 ## Constitutional Anchor

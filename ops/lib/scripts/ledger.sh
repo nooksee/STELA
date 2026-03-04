@@ -17,10 +17,11 @@ ledger_entry_count() {
 ledger_archive_plan() {
   local ledger_file="$1"
   local archive_prefix="$2"
+  local keep_count="${3:-$THRESHOLD}"
 
   emit_binary_leaf "ledger" "archive-plan-start"
 
-  awk -v threshold="$THRESHOLD" -v archive_dir="$ARCHIVE_DIR" -v prefix="$archive_prefix" '
+  awk -v threshold="$keep_count" -v archive_dir="$ARCHIVE_DIR" -v prefix="$archive_prefix" '
     /^## [0-9]{4}-[0-9]{2}-[0-9]{2} / {
       entry++
       if (entry > threshold) {
@@ -40,11 +41,12 @@ ledger_archive_plan() {
 
 validate_pow_prune_candidates() {
   local pow_file="$1"
+  local keep_count="${2:-$THRESHOLD}"
   emit_binary_leaf "ledger" "validate-pow-start"
   local pointers_tmp
   pointers_tmp="$(mktemp "${RESUME_DIR}/pow-prune-pointers.XXXXXX")"
 
-  if ! awk -v threshold="$THRESHOLD" '
+  if ! awk -v threshold="$keep_count" '
     function trim(s) {
       gsub(/^[[:space:]]+/, "", s)
       gsub(/[[:space:]]+$/, "", s)
@@ -207,6 +209,7 @@ validate_pow_prune_candidates() {
 ledger_extract_candidates() {
   local pow_file="$1"
   local sop_file="$2"
+  local keep_count="${3:-$THRESHOLD}"
 
   [[ -f "$pow_file" ]] || die "PoW.md not found at ${pow_file}"
   [[ -f "$sop_file" ]] || die "SoP.md not found at ${sop_file}"
@@ -214,19 +217,19 @@ ledger_extract_candidates() {
   local entry_count
   entry_count="$(ledger_entry_count "$pow_file")"
   [[ -z "$entry_count" ]] && entry_count=0
-  if (( entry_count <= THRESHOLD )); then
+  if (( entry_count <= keep_count )); then
     return 0
   fi
 
-  local prune_count=$((entry_count - THRESHOLD))
+  local prune_count=$((entry_count - keep_count))
   local cut_line
-  cut_line="$(grep -nE '^## [0-9]{4}-[0-9]{2}-[0-9]{2} ' "$pow_file" | awk -F: -v threshold="$THRESHOLD" 'NR==threshold+1 { print $1; exit }')"
+  cut_line="$(grep -nE '^## [0-9]{4}-[0-9]{2}-[0-9]{2} ' "$pow_file" | awk -F: -v threshold="$keep_count" 'NR==threshold+1 { print $1; exit }')"
   [[ -n "$cut_line" ]] || die "Unable to determine prune cut line for PoW."
   [[ "$prune_count" -ge 1 ]] || return 0
 
   local index_tmp
   index_tmp="$(mktemp "${RESUME_DIR}/pow-prune-index.XXXXXX")"
-  awk -v threshold="$THRESHOLD" '
+  awk -v threshold="$keep_count" '
     /^## [0-9]{4}-[0-9]{2}-[0-9]{2} / {
       entry++
       if (entry > threshold) {
@@ -259,7 +262,7 @@ ledger_extract_candidates() {
       OPEN) open_by_header["$header"]="$pointer" ;;
       DUMP) dump_by_header["$header"]="$pointer" ;;
     esac
-  done < <(validate_pow_prune_candidates "$pow_file")
+  done < <(validate_pow_prune_candidates "$pow_file" "$keep_count")
 
   for header in "${ordered_headers[@]}"; do
     entry_index="${index_by_header[$header]}"
@@ -278,35 +281,70 @@ ledger_extract_candidates() {
   rm -f "$index_tmp"
 }
 
+ledger_candidate_metrics() {
+  local ledger_file="$1"
+  local keep_count="${2:-$THRESHOLD}"
+
+  [[ -f "$ledger_file" ]] || die "ledger file not found: ${ledger_file}"
+
+  awk -v threshold="$keep_count" '
+    function emit_entry() {
+      if (entry > threshold) {
+        print entry "\t" header "\t" bytes
+      }
+    }
+    /^## [0-9]{4}-[0-9]{2}-[0-9]{2} / {
+      if (entry > 0) {
+        emit_entry()
+      }
+      entry++
+      header=$0
+      bytes=0
+      next
+    }
+    {
+      if (entry > 0) {
+        bytes += length($0) + 1
+      }
+    }
+    END {
+      if (entry > 0) {
+        emit_entry()
+      }
+    }
+  ' "$ledger_file"
+}
+
 ledger_prune_surface() {
   local ledger_name="$1"
   local ledger_file="$2"
   local archive_prefix="$3"
+  local keep_count="${4:-$THRESHOLD}"
   [[ -f "$ledger_file" ]] || die "${ledger_name}.md not found at ${ledger_file}"
 
   local entry_count
   entry_count="$(ledger_entry_count "$ledger_file")"
   [[ -z "$entry_count" ]] && entry_count=0
-  if (( entry_count <= THRESHOLD )); then
+  if (( entry_count <= keep_count )); then
     return 0
   fi
 
-  local prune_count=$((entry_count - THRESHOLD))
+  local prune_count=$((entry_count - keep_count))
   local cut_line
-  cut_line="$(grep -nE '^## [0-9]{4}-[0-9]{2}-[0-9]{2} ' "$ledger_file" | awk -F: -v threshold="$THRESHOLD" 'NR==threshold+1 { print $1; exit }')"
+  cut_line="$(grep -nE '^## [0-9]{4}-[0-9]{2}-[0-9]{2} ' "$ledger_file" | awk -F: -v threshold="$keep_count" 'NR==threshold+1 { print $1; exit }')"
   [[ -n "$cut_line" ]] || die "Unable to determine prune cut line for ${ledger_name}."
 
   if [[ "$ledger_name" == "PoW" ]]; then
-    validate_pow_prune_candidates "$ledger_file" >/dev/null
+    validate_pow_prune_candidates "$ledger_file" "$keep_count" >/dev/null
   fi
 
   local archive_plan
-  archive_plan="$(ledger_archive_plan "$ledger_file" "$archive_prefix")"
+  archive_plan="$(ledger_archive_plan "$ledger_file" "$archive_prefix" "$keep_count")"
   mkdir -p "${ARCHIVE_DIR}"
   local tmp_keep
   tmp_keep="$(mktemp "${RESUME_DIR}/${archive_prefix,,}-keep.XXXXXX")"
 
-  awk -v threshold="$THRESHOLD" -v keep_file="$tmp_keep" -v archive_dir="$ARCHIVE_DIR" -v prefix="$archive_prefix" '
+  awk -v threshold="$keep_count" -v keep_file="$tmp_keep" -v archive_dir="$ARCHIVE_DIR" -v prefix="$archive_prefix" '
     BEGIN { entry=0; archive_file="" }
     /^## [0-9]{4}-[0-9]{2}-[0-9]{2} / {
       entry++
@@ -329,5 +367,5 @@ ledger_prune_surface() {
     [[ -z "$archive_path" ]] && continue
     echo "${ledger_name} archive wrote ${count} entries to ${archive_path#${REPO_ROOT}/}."
   done <<< "$archive_plan"
-  echo "Archived ${prune_count} ${ledger_name} entries beyond ${THRESHOLD}."
+  echo "Archived ${prune_count} ${ledger_name} entries beyond ${keep_count}."
 }
