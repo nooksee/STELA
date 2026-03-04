@@ -12,15 +12,20 @@ Public interface:
 3. `--project=<name>` (required only for `project`)
 4. `--intent=<text>` (required only for `auditor`)
 
+Policy source:
+1. Runtime contract is loaded from `ops/lib/manifests/BUNDLE.md`.
+2. Missing required policy keys or invalid values are fail-closed errors.
+3. Profile routing and prompt/scope mappings are resolved from this manifest.
+
 Profile intent split:
 1. `audit` is the audit-verdict intake profile.
 2. `auditor` is addendum-authorization intake profile.
 3. `auditor` is not a substitute for `audit`.
 
 Routing rules:
-1. Explicit `analyst|architect|audit|project|hygiene|auditor` selects that profile.
-2. `--profile=auto` selects `architect` only when `storage/handoff/PLAN.md` exists and `tools/lint/plan.sh` passes.
-3. Otherwise auto resolves to `analyst`.
+1. Explicit supported profile selects that profile.
+2. `--profile=auto` resolves to `auto_plan_profile` when `storage/handoff/PLAN.md` exists and `tools/lint/plan.sh` passes.
+3. Otherwise auto resolves to `auto_default_profile`.
 
 Artifact contract (written under `storage/handoff/`):
 1. Bundle text artifact (`.txt`) with embedded OPEN block, dump pointers, prompt pointer, and embedded prompt contract excerpt.
@@ -54,4 +59,4 @@ Bundle runtime invokes dump with explicit `.txt` output path to suppress dump au
 DP-OPS-0146 hardened bundle intake after web-model architect runs looped on option menus and failed to map DP slots reliably from PLAN handoff context.
 
 ## Integrity Filter Warnings
-Bundle enforces output paths under `storage/handoff/`. Project profile rejects missing or invalid slugs. PLAN lint remains a deterministic safety floor; it validates structure, not plan quality. Bundle runtime must remain deterministic and must not parse factory markdown governance files at runtime.
+Bundle enforces output paths under `storage/handoff/`. Project profile rejects missing or invalid slugs. PLAN lint remains a deterministic safety floor; it validates structure, not plan quality. Policy parse errors in `ops/lib/manifests/BUNDLE.md` are fail-closed. Bundle runtime must remain deterministic and must not parse factory markdown governance files at runtime.

@@ -223,3 +223,6 @@ docs/ops/specs/tools/lint/debt.md
 docs/ops/specs/binaries/hygiene.md
 storage/handoff/CLOSING-DP-OPS-0149.md
 archives/surfaces/TASK-DP-OPS-0149-*.md
+ops/lib/manifests/BUNDLE.md
+storage/handoff/CLOSING-DP-OPS-0150.md
+archives/surfaces/TASK-DP-OPS-0150-*.md

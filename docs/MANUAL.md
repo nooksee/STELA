@@ -459,6 +459,8 @@ ops/lib/scripts/task.sh promote archives/definitions/task-candidate-YYYY-MM-DD-<
 
 ### Attachment Contract Table
 
+Attachment contract defaults and profile routing semantics are governed by `ops/lib/manifests/BUNDLE.md`.
+
 | Profile | Bundle Command | Required Attachments | Notes |
 | --- | --- | --- | --- |
 | `analyst` | `./ops/bin/bundle --profile=analyst --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, query source (`storage/handoff/TOPIC.md` or inline `ANALYZE/SYNTHESIZE/FORMULATE`) | Attach `BUNDLE-*.tar` when the model session reliably ingests tar artifacts. |

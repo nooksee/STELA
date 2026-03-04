@@ -13,6 +13,19 @@ if ! declare -F die >/dev/null 2>&1; then
   source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 fi
 
+BUNDLE_POLICY_PATH="${REPO_ROOT}/ops/lib/manifests/BUNDLE.md"
+declare -a BUNDLE_SUPPORTED_PROFILES=()
+declare -a BUNDLE_HANDOFF_OMIT_PROFILES=()
+declare -A BUNDLE_PROMPT_PATH_BY_PROFILE=()
+declare -A BUNDLE_DUMP_SCOPE_BY_PROFILE=()
+
+BUNDLE_AUTO_DEFAULT_PROFILE=""
+BUNDLE_AUTO_PLAN_PROFILE=""
+BUNDLE_PROJECT_PROFILE=""
+BUNDLE_AUDIT_PROFILE=""
+BUNDLE_AUDITOR_PROFILE=""
+BUNDLE_AUDITOR_INTENT_FORM=""
+
 bundle_usage() {
   cat <<'USAGE'
 Usage: ops/bin/bundle [--profile=auto|analyst|architect|audit|project|hygiene|auditor] [--out=auto|PATH] [--project=<name>] [--intent=<text>]
@@ -64,6 +77,121 @@ bundle_bool() {
   fi
 }
 
+bundle_policy_scalar() {
+  local key="$1"
+  local value
+  value="$(awk -F'=' -v key="$key" '$1==key { print substr($0, index($0, "=") + 1); exit }' "$BUNDLE_POLICY_PATH")"
+  trim "$value"
+}
+
+bundle_parse_csv_lines() {
+  local csv="$1"
+  local IFS=','
+  local item
+  for item in $csv; do
+    item="$(trim "$item")"
+    [[ -n "$item" ]] && printf '%s\n' "$item"
+  done
+}
+
+bundle_array_contains() {
+  local needle="$1"
+  shift
+  local value
+  for value in "$@"; do
+    if [[ "$needle" == "$value" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+bundle_profile_supported() {
+  local profile="$1"
+  bundle_array_contains "$profile" "${BUNDLE_SUPPORTED_PROFILES[@]}"
+}
+
+bundle_profile_handoff_omitted() {
+  local profile="$1"
+  bundle_array_contains "$profile" "${BUNDLE_HANDOFF_OMIT_PROFILES[@]}"
+}
+
+bundle_load_policy() {
+  local required_key
+  local profile
+  local prompt_key
+  local scope_key
+  local prompt_path
+  local dump_scope
+  local omit_csv
+
+  [[ -f "$BUNDLE_POLICY_PATH" ]] || die "bundle policy missing: ${BUNDLE_POLICY_PATH#${REPO_ROOT}/}"
+
+  for required_key in \
+    bundle_manifest_version \
+    supported_profiles \
+    auto_default_profile \
+    auto_plan_profile \
+    project_profile \
+    audit_profile \
+    auditor_profile \
+    auditor_intent_form \
+    handoff_omit_profiles; do
+    if [[ -z "$(bundle_policy_scalar "$required_key")" ]]; then
+      die "bundle policy missing required key: ${required_key}"
+    fi
+  done
+
+  BUNDLE_SUPPORTED_PROFILES=()
+  mapfile -t BUNDLE_SUPPORTED_PROFILES < <(bundle_parse_csv_lines "$(bundle_policy_scalar supported_profiles)")
+  (( ${#BUNDLE_SUPPORTED_PROFILES[@]} > 0 )) || die "bundle policy supported_profiles is empty"
+
+  BUNDLE_AUTO_DEFAULT_PROFILE="$(bundle_policy_scalar auto_default_profile)"
+  BUNDLE_AUTO_PLAN_PROFILE="$(bundle_policy_scalar auto_plan_profile)"
+  BUNDLE_PROJECT_PROFILE="$(bundle_policy_scalar project_profile)"
+  BUNDLE_AUDIT_PROFILE="$(bundle_policy_scalar audit_profile)"
+  BUNDLE_AUDITOR_PROFILE="$(bundle_policy_scalar auditor_profile)"
+  BUNDLE_AUDITOR_INTENT_FORM="$(bundle_policy_scalar auditor_intent_form)"
+
+  for profile in \
+    "$BUNDLE_AUTO_DEFAULT_PROFILE" \
+    "$BUNDLE_AUTO_PLAN_PROFILE" \
+    "$BUNDLE_PROJECT_PROFILE" \
+    "$BUNDLE_AUDIT_PROFILE" \
+    "$BUNDLE_AUDITOR_PROFILE"; do
+    bundle_profile_supported "$profile" || die "bundle policy references unsupported profile: ${profile}"
+  done
+
+  BUNDLE_PROMPT_PATH_BY_PROFILE=()
+  BUNDLE_DUMP_SCOPE_BY_PROFILE=()
+  for profile in "${BUNDLE_SUPPORTED_PROFILES[@]}"; do
+    prompt_key="prompt_path_${profile}"
+    scope_key="dump_scope_${profile}"
+    prompt_path="$(bundle_policy_scalar "$prompt_key")"
+    dump_scope="$(bundle_policy_scalar "$scope_key")"
+    [[ -n "$prompt_path" ]] || die "bundle policy missing required key: ${prompt_key}"
+    [[ -n "$dump_scope" ]] || die "bundle policy missing required key: ${scope_key}"
+    case "$dump_scope" in
+      full|core|project)
+        ;;
+      *)
+        die "bundle policy has invalid dump scope for ${profile}: ${dump_scope}"
+        ;;
+    esac
+    BUNDLE_PROMPT_PATH_BY_PROFILE["$profile"]="$prompt_path"
+    BUNDLE_DUMP_SCOPE_BY_PROFILE["$profile"]="$dump_scope"
+  done
+
+  omit_csv="$(bundle_policy_scalar handoff_omit_profiles)"
+  BUNDLE_HANDOFF_OMIT_PROFILES=()
+  mapfile -t BUNDLE_HANDOFF_OMIT_PROFILES < <(bundle_parse_csv_lines "$omit_csv")
+  (( ${#BUNDLE_HANDOFF_OMIT_PROFILES[@]} > 0 )) || die "bundle policy handoff_omit_profiles is empty"
+  for profile in "${BUNDLE_HANDOFF_OMIT_PROFILES[@]}"; do
+    bundle_profile_supported "$profile" || die "bundle policy handoff_omit_profiles references unsupported profile: ${profile}"
+  done
+
+}
+
 bundle_resolve_output_path() {
   local out_token="$1"
   local resolved_profile="$2"
@@ -91,44 +219,16 @@ bundle_resolve_output_path() {
 
 bundle_prompt_path_for_profile() {
   local profile="$1"
-  case "$profile" in
-    analyst|project)
-      printf 'docs/ops/prompts/e-prompt-04.md'
-      ;;
-    architect)
-      printf 'docs/ops/prompts/e-prompt-03.md'
-      ;;
-    audit)
-      printf 'docs/ops/prompts/e-prompt-01.md'
-      ;;
-    hygiene)
-      printf 'docs/ops/prompts/e-prompt-02.md'
-      ;;
-    auditor)
-      printf 'docs/ops/prompts/e-prompt-05.md'
-      ;;
-    *)
-      die "unsupported resolved profile: ${profile}"
-      ;;
-  esac
+  local mapped_path="${BUNDLE_PROMPT_PATH_BY_PROFILE[$profile]:-}"
+  [[ -n "$mapped_path" ]] || die "bundle policy missing prompt path for profile: ${profile}"
+  printf '%s' "$mapped_path"
 }
 
 bundle_dump_scope_for_profile() {
   local profile="$1"
-  case "$profile" in
-    analyst|architect|hygiene)
-      printf 'full'
-      ;;
-    audit|auditor)
-      printf 'core'
-      ;;
-    project)
-      printf 'project'
-      ;;
-    *)
-      die "unsupported resolved profile for dump scope: ${profile}"
-      ;;
-  esac
+  local mapped_scope="${BUNDLE_DUMP_SCOPE_BY_PROFILE[$profile]:-}"
+  [[ -n "$mapped_scope" ]] || die "bundle policy missing dump scope for profile: ${profile}"
+  printf '%s' "$mapped_scope"
 }
 
 bundle_emit_prompt_contract() {
@@ -198,8 +298,9 @@ bundle_run() {
   local arg
   for arg in "$@"; do
     case "$arg" in
-      --profile=auto|--profile=analyst|--profile=architect|--profile=audit|--profile=project|--profile=hygiene|--profile=auditor)
+      --profile=*)
         requested_profile="${arg#--profile=}"
+        [[ -n "$requested_profile" ]] || die "--profile requires a value"
         ;;
       --out=*)
         out_token="${arg#--out=}"
@@ -223,13 +324,19 @@ bundle_run() {
     esac
   done
 
-  if [[ "$requested_profile" == "project" && -z "$project_name" ]]; then
+  bundle_load_policy
+
+  if [[ "$requested_profile" != "auto" ]] && ! bundle_profile_supported "$requested_profile"; then
+    die "unsupported profile: ${requested_profile}"
+  fi
+
+  if [[ "$requested_profile" == "$BUNDLE_PROJECT_PROFILE" && -z "$project_name" ]]; then
     die "--project is required when --profile=project"
   fi
-  if [[ "$requested_profile" != "project" && -n "$project_name" ]]; then
+  if [[ "$requested_profile" != "$BUNDLE_PROJECT_PROFILE" && -n "$project_name" ]]; then
     die "--project is only valid with --profile=project"
   fi
-  if [[ "$requested_profile" == "auditor" && -z "$intent_token" ]]; then
+  if [[ "$requested_profile" == "$BUNDLE_AUDITOR_PROFILE" && -z "$intent_token" ]]; then
     die "--intent is required when --profile=auditor"
   fi
 
@@ -262,16 +369,16 @@ bundle_run() {
   if [[ "$requested_profile" == "auto" ]]; then
     if (( plan_present )); then
       if plan_lint_output="$(bash "${REPO_ROOT}/tools/lint/plan.sh" "$plan_rel" 2>&1)"; then
-        resolved_profile="architect"
+        resolved_profile="$BUNDLE_AUTO_PLAN_PROFILE"
         route_reason="auto: PLAN.md present and plan lint passed"
         plan_lint_status="PASS"
       else
-        resolved_profile="analyst"
+        resolved_profile="$BUNDLE_AUTO_DEFAULT_PROFILE"
         route_reason="auto: PLAN.md present but plan lint failed"
         plan_lint_status="FAIL"
       fi
     else
-      resolved_profile="analyst"
+      resolved_profile="$BUNDLE_AUTO_DEFAULT_PROFILE"
       route_reason="auto: PLAN.md missing"
       plan_lint_status="SKIPPED_MISSING"
       plan_lint_output="(missing storage/handoff/PLAN.md)"
@@ -321,10 +428,10 @@ bundle_run() {
   local addendum_required=0
   local decision_id=""
   local decision_leaf_present=0
-  if [[ "$resolved_profile" == "auditor" ]]; then
+  if [[ "$resolved_profile" == "$BUNDLE_AUDITOR_PROFILE" ]]; then
     addendum_required=1
     if ! bundle_parse_auditor_intent "$open_intent"; then
-      die "auditor intent must match: ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>"
+      die "auditor intent must match: ${BUNDLE_AUDITOR_INTENT_FORM}"
     fi
     decision_id="$BUNDLE_AUDITOR_DECISION_ID"
   fi
@@ -352,7 +459,7 @@ bundle_run() {
   [[ -f "${REPO_ROOT}/${dump_payload_rel}" ]] || die "dump payload missing: ${dump_payload_rel}"
   [[ -f "${REPO_ROOT}/${dump_manifest_rel}" ]] || die "dump manifest missing: ${dump_manifest_rel}"
 
-  if [[ "$resolved_profile" == "auditor" ]]; then
+  if [[ "$resolved_profile" == "$BUNDLE_AUDITOR_PROFILE" ]]; then
     if grep -Fq "$decision_id" "${REPO_ROOT}/${dump_payload_rel}"; then
       decision_leaf_present=1
     else
@@ -385,7 +492,7 @@ bundle_run() {
     echo "[PROMPT]"
     echo "- Canonical prompt path: ${prompt_rel}"
     echo
-    if [[ "$resolved_profile" != "audit" && "$resolved_profile" != "auditor" ]]; then
+    if ! bundle_profile_handoff_omitted "$resolved_profile"; then
       echo "[HANDOFF]"
       echo "- ${topic_rel}: $([[ "$topic_present" == "1" ]] && echo present || echo missing)"
       echo "- ${plan_rel}: $([[ "$plan_present" == "1" ]] && echo present || echo missing)"
@@ -394,7 +501,7 @@ bundle_run() {
       fi
       echo
     fi
-    if [[ "$resolved_profile" == "auditor" ]]; then
+    if [[ "$resolved_profile" == "$BUNDLE_AUDITOR_PROFILE" ]]; then
       echo "- Addendum decision id: ${decision_id}"
       echo "- Decision leaf present in dump: $([[ "$decision_leaf_present" == "1" ]] && echo true || echo false)"
       echo

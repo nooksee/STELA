@@ -9,7 +9,7 @@ source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 source "${REPO_ROOT}/ops/lib/scripts/bundle.sh"
 
 if [[ "$(pwd -P)" != "$REPO_ROOT" ]]; then
-  die "Run from repo root: ${REPO_ROOT}"
+  die "Run from repo root."
 fi
 
 trap 'emit_binary_leaf "bundle" "finish"' EXIT

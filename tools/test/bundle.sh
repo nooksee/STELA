@@ -19,6 +19,7 @@ RUN_STATUS=0
 LAST_ARTIFACT=""
 LAST_MANIFEST=""
 LAST_PACKAGE=""
+BUNDLE_POLICY_REL="ops/lib/manifests/BUNDLE.md"
 
 cleanup_generated() {
   local rel_path
@@ -254,6 +255,34 @@ test_auditor_valid_path() {
   assert_manifest_has "$LAST_MANIFEST" '"decision_leaf_present": true'
 }
 
+test_manifest_fail_closed() {
+  local policy_abs="${REPO_ROOT}/${BUNDLE_POLICY_REL}"
+  local backup_path=""
+
+  [[ -f "$policy_abs" ]] || {
+    fail "bundle policy missing for fail-closed test: ${BUNDLE_POLICY_REL}"
+    return
+  }
+
+  backup_path="$(mktemp "${REPO_ROOT}/var/tmp/bundle-policy-backup.XXXXXX")"
+  cp "$policy_abs" "$backup_path"
+
+  # Remove one required key to force parser failure.
+  grep -v '^supported_profiles=' "$backup_path" > "$policy_abs"
+
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --out=auto
+  if (( RUN_STATUS == 0 )); then
+    fail "bundle should fail when required manifest key is missing"
+  fi
+  if ! printf '%s\n' "$RUN_OUTPUT" | grep -Fq 'bundle policy missing required key'; then
+    fail "bundle fail-closed output did not include expected manifest-key error"
+  fi
+
+  cp "$backup_path" "$policy_abs"
+  rm -f "$backup_path"
+}
+
+test_manifest_fail_closed
 test_valid_profiles
 test_auditor_invalid_paths
 test_auditor_valid_path

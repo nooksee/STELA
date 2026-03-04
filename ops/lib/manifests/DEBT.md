@@ -1,5 +1,5 @@
-<!-- CCD: ff_target="operator-technical" ff_band="30-45" -->
-# Guard Debt Registry
+<!-- CCD: ff_target="operator-technical" ff_band="10-20" -->
+# Debt Registry
 
 ## Schema
 Format:
