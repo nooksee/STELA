@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/../lib/scripts/common.sh"
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/hygiene [--debt-file=PATH] [--emit-patch-candidates]
+                       [--one-time-sweep] [--sweep-out=PATH]
+USAGE
+}
+
+DEBT_FILE="ops/lib/manifests/DEBT.md"
+EMIT_PATCH_CANDIDATES=0
+ONE_TIME_SWEEP=0
+SWEEP_OUT_PATH=""
+
+for arg in "$@"; do
+  case "$arg" in
+    --debt-file=*)
+      DEBT_FILE="${arg#--debt-file=}"
+      ;;
+    --emit-patch-candidates)
+      EMIT_PATCH_CANDIDATES=1
+      ;;
+    --one-time-sweep)
+      ONE_TIME_SWEEP=1
+      ;;
+    --sweep-out=*)
+      ONE_TIME_SWEEP=1
+      SWEEP_OUT_PATH="${arg#--sweep-out=}"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      die "Unknown arg: ${arg}"
+      ;;
+  esac
+done
+
+[[ "$DEBT_FILE" != /* ]] || die "--debt-file must be repo-relative"
+if [[ -n "$SWEEP_OUT_PATH" && "$SWEEP_OUT_PATH" == /* ]]; then
+  die "--sweep-out must be repo-relative"
+fi
+
+if [[ "$(pwd -P)" != "$REPO_ROOT" ]]; then
+  die "Run from repo root."
+fi
+
+trap 'emit_binary_leaf "hygiene" "finish"' EXIT
+emit_binary_leaf "hygiene" "start"
+
+[[ -f "$DEBT_FILE" ]] || die "debt registry missing: ${DEBT_FILE}"
+
+emit_one_time_sweep() {
+  local stamp out_path
+  local -a sweep_hits=()
+  stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+  out_path="${SWEEP_OUT_PATH:-var/tmp/hygiene-one-time-sweep-${stamp}.md}"
+
+  mkdir -p "$(dirname "$out_path")"
+
+  mapfile -t sweep_hits < <(
+    rg -n --no-heading -S \
+      '(TODO_REMOVE|FIXME|HACK|temporary guard|one-off|workaround|remove_by_dp|sunset|deprecated|compat)' \
+      docs ops tools || true
+  )
+
+  {
+    echo "# One-Time Guard Sweep"
+    echo
+    echo "Generated at: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    echo "Search scope: docs/ ops/ tools/"
+    echo "Signal pattern: TODO_REMOVE|FIXME|HACK|temporary guard|one-off|workaround|remove_by_dp|sunset|deprecated|compat"
+    echo
+    if (( ${#sweep_hits[@]} == 0 )); then
+      echo "No sweep hits."
+    else
+      echo "## Sweep Hits"
+      for hit in "${sweep_hits[@]}"; do
+        echo "- ${hit}"
+      done
+    fi
+  } > "$out_path"
+
+  echo "One-time sweep report: ${out_path}"
+  echo "One-time sweep hits: ${#sweep_hits[@]}"
+}
+
+if (( ONE_TIME_SWEEP )); then
+  emit_one_time_sweep
+fi
+
+stale_output="$(bash tools/lint/debt.sh --list-stale "$DEBT_FILE")"
+
+if [[ -z "$stale_output" ]]; then
+  echo "Hygiene report: no stale guard debt entries."
+  exit 0
+fi
+
+echo "Hygiene report: stale guard debt entries detected"
+while IFS= read -r row || [[ -n "$row" ]]; do
+  [[ -n "$row" ]] || continue
+  IFS='|' read -r guard_id remove_by owner reason <<< "$row"
+  echo "- guard_id=${guard_id} remove_by=${remove_by} owner=${owner} reason=${reason}"
+done <<< "$stale_output"
+
+if (( EMIT_PATCH_CANDIDATES )); then
+  mkdir -p var/tmp
+  stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+  out_path="var/tmp/hygiene-guard-debt-candidates-${stamp}.md"
+  {
+    echo "# Guard Debt Patch Candidates"
+    echo
+    echo "Source: ${DEBT_FILE}"
+    echo "Generated at: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    echo
+    echo "## Suggested updates"
+    while IFS= read -r row || [[ -n "$row" ]]; do
+      [[ -n "$row" ]] || continue
+      IFS='|' read -r guard_id remove_by owner reason <<< "$row"
+      echo "- ${guard_id}: set status to resolved or move remove_by_dp forward with explicit authorization."
+      echo "  - remove_by_dp: ${remove_by}"
+      echo "  - owner: ${owner}"
+      echo "  - reason: ${reason}"
+    done <<< "$stale_output"
+  } > "$out_path"
+  echo "Patch candidates: ${out_path}"
+fi

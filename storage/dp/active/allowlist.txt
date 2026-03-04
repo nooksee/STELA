@@ -212,3 +212,14 @@ archives/surfaces/TASK-DP-OPS-0147-*.md
 archives/surfaces/TASK-DP-OPS-0148-*.md
 tools/lint/response.sh
 docs/ops/specs/tools/lint/response.md
+ops/bin/prune
+ops/lib/scripts/ledger.sh
+docs/ops/specs/binaries/prune.md
+ops/lib/manifests/PRUNE.md
+ops/lib/manifests/DEBT.md
+tools/lint/debt.sh
+ops/bin/hygiene
+docs/ops/specs/tools/lint/debt.md
+docs/ops/specs/binaries/hygiene.md
+storage/handoff/CLOSING-DP-OPS-0149.md
+archives/surfaces/TASK-DP-OPS-0149-*.md

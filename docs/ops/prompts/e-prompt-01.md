@@ -2,7 +2,7 @@
 ## **Gatekeeper (Refresh + Audit)**
 
 Use when: Auditing worker output before merge.
-Attach: DP-RESULTS.md, TASK.md, native bundle artifact (`BUNDLE-*.txt`), native bundle manifest (`BUNDLE-*.manifest.json`).
+Attach: DP-RESULTS.md, native bundle artifact (`BUNDLE-*.txt`), native bundle manifest (`BUNDLE-*.manifest.json`).
 
 Rules:
 * Generate audit intake with `./ops/bin/bundle --profile=audit --out=auto`.
@@ -18,11 +18,11 @@ Rules:
 * Logic: `PoT.md`. Structure: `TASK.md` + `ops/src/surfaces/dp.md.tpl`.
 
 Steps:
-0. **PRECONDITIONS**: If bundle artifact, bundle manifest, DP-RESULTS.md, or TASK.md is missing: **STOP**.
+0. **PRECONDITIONS**: If bundle artifact, bundle manifest, or DP-RESULTS.md is missing: **STOP**.
 1. **PoT Compliance**: Identify canon drift, ambiguity glossing, invented paths, or
    disposable-artifact dependence.
 2. **DP Integrity**:
-   * Confirm DP structure matches `ops/src/surfaces/dp.md.tpl`.
+   * Confirm DP structure matches `ops/src/surfaces/dp.md.tpl` using TASK evidence from direct attachment or attached dump payload.
    * Confirm Section 3.2 includes the Contractor brief include and no disposable artifact citations.
    * Verify lint proofs: `bash tools/lint/task.sh` and `bash tools/lint/dp.sh TASK.md`.
 3. **RECEIPTS**: Confirm the RESULTS receipt at `storage/handoff/<DP_ID>-RESULTS.md` was

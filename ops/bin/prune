@@ -9,20 +9,51 @@ source "${SCRIPT_DIR}/../lib/scripts/ledger.sh"
 SOP_PATH="${REPO_ROOT}/SoP.md"
 POW_PATH="${REPO_ROOT}/PoW.md"
 RESUME_DIR="${REPO_ROOT}/var/tmp"
-THRESHOLD=30
+POLICY_PATH="${REPO_ROOT}/ops/lib/manifests/PRUNE.md"
 TARGET="sop"
 DRY_RUN=0
 SCRUB=0
+PHASE=""
+APPROVE_TOKEN=""
+USE_QUARANTINE=0
+QUARANTINE_PATH_OVERRIDE=""
 RESULTS_GUARD_FATAL="SAFETY VIOLATION: Uncommitted Results artifact detected. Commit or stash before pruning."
 POW_GUARD_FATAL="SAFETY VIOLATION: PoW prune requires committed RESULTS/OPEN/DUMP receipt pointers in prune-candidate entries."
 
-usage() { echo "Usage: ops/bin/prune [--target=sop|pow|both] [--dry-run] [--scrub]"; }
+POLICY_DEFAULT_PHASE=""
+POLICY_APPLY_TOKEN=""
+HIGH_WATERMARK=0
+LOW_WATERMARK=0
+TARGET_SOP_TIER=""
+TARGET_POW_TIER=""
+WEIGHT_OPERATIONAL=1
+WEIGHT_HISTORICAL=1
+POLICY_QUARANTINE_PATH=""
+
+declare -a CRITICAL_PATTERNS=()
+declare -a DENYLIST_PATTERNS=()
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/prune [--target=sop|pow|both] [--phase=report|apply] [--approve=TOKEN]
+                    [--dry-run] [--scrub] [--quarantine] [--quarantine-path=PATH]
+
+Notes:
+- report phase is non-mutating and is the default from policy.
+- apply phase requires --approve token that matches PRUNE policy.
+USAGE
+}
+
 guard_fail() { echo "$1" >&2; exit 1; }
 
 resolve_surface_leaf() {
   local path="$1" raw=""
   [[ -f "$path" ]] && raw="$(normalize_path_token "$(tr -d '\r' < "$path")")"
-  if [[ "$raw" == archives/surfaces/*.md && -f "${REPO_ROOT}/${raw}" ]]; then echo "${REPO_ROOT}/${raw}"; else echo "$path"; fi
+  if [[ "$raw" == archives/surfaces/*.md && -f "${REPO_ROOT}/${raw}" ]]; then
+    echo "${REPO_ROOT}/${raw}"
+  else
+    echo "$path"
+  fi
 }
 
 results_guard() {
@@ -42,52 +73,301 @@ results_guard() {
   done
 }
 
+clean_state_guard() {
+  if ! git -C "${REPO_ROOT}" diff --quiet; then
+    guard_fail "SAFETY VIOLATION: apply phase requires clean tracked unstaged state."
+  fi
+  if ! git -C "${REPO_ROOT}" diff --cached --quiet; then
+    guard_fail "SAFETY VIOLATION: apply phase requires clean tracked staged state."
+  fi
+}
+
 scrub_resume() {
   local item removed=0
   [[ -d "${RESUME_DIR}" ]] || return 0
   while IFS= read -r -d '' item; do
-    (( DRY_RUN )) && { echo "DRY-RUN scrub: ${item#${REPO_ROOT}/}"; continue; }
-    rm -rf "$item"; removed=$((removed + 1))
+    if (( DRY_RUN )); then
+      echo "DRY-RUN scrub: ${item#${REPO_ROOT}/}"
+      continue
+    fi
+    rm -rf "$item"
+    removed=$((removed + 1))
   done < <(find "${RESUME_DIR}" -mindepth 1 -maxdepth 1 ! -name '.gitkeep' -print0 | sort -z)
-  (( DRY_RUN )) || echo "var/tmp cleanup: removed ${removed} item(s)."
+
+  if (( ! DRY_RUN )); then
+    echo "var/tmp cleanup: removed ${removed} item(s)."
+  fi
+}
+
+policy_scalar() {
+  local key="$1"
+  local value
+  value="$(awk -F'=' -v key="$key" '$1==key { print substr($0, index($0, "=") + 1); exit }' "$POLICY_PATH")"
+  trim "$value"
+}
+
+policy_patterns() {
+  local section_heading="$1"
+  awk -v section="$section_heading" '
+    $0 == section { in_section=1; next }
+    in_section && /^## / { exit }
+    in_section && /^pattern=/ {
+      sub(/^pattern=/, "", $0)
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", $0)
+      if ($0 != "") {
+        print $0
+      }
+    }
+  ' "$POLICY_PATH"
+}
+
+require_int() {
+  local name="$1"
+  local value="$2"
+  [[ "$value" =~ ^[0-9]+$ ]] || die "invalid integer policy value: ${name}=${value}"
+}
+
+load_prune_policy() {
+  [[ -f "$POLICY_PATH" ]] || die "prune policy missing: ${POLICY_PATH#${REPO_ROOT}/}"
+
+  POLICY_DEFAULT_PHASE="$(policy_scalar default_phase)"
+  POLICY_APPLY_TOKEN="$(policy_scalar apply_token)"
+  HIGH_WATERMARK="$(policy_scalar high_watermark)"
+  LOW_WATERMARK="$(policy_scalar low_watermark)"
+  TARGET_SOP_TIER="$(policy_scalar target_sop_tier)"
+  TARGET_POW_TIER="$(policy_scalar target_pow_tier)"
+  WEIGHT_OPERATIONAL="$(policy_scalar weight_operational)"
+  WEIGHT_HISTORICAL="$(policy_scalar weight_historical)"
+  POLICY_QUARANTINE_PATH="$(policy_scalar quarantine_path)"
+
+  [[ "$POLICY_DEFAULT_PHASE" == "report" || "$POLICY_DEFAULT_PHASE" == "apply" ]] || die "invalid default_phase in PRUNE.md"
+  [[ -n "$POLICY_APPLY_TOKEN" ]] || die "missing apply_token in PRUNE.md"
+
+  require_int high_watermark "$HIGH_WATERMARK"
+  require_int low_watermark "$LOW_WATERMARK"
+  require_int weight_operational "$WEIGHT_OPERATIONAL"
+  require_int weight_historical "$WEIGHT_HISTORICAL"
+
+  (( HIGH_WATERMARK > LOW_WATERMARK )) || die "PRUNE.md requires high_watermark > low_watermark"
+  [[ "$TARGET_SOP_TIER" == "critical" || "$TARGET_SOP_TIER" == "operational" || "$TARGET_SOP_TIER" == "historical" ]] || die "invalid target_sop_tier in PRUNE.md"
+  [[ "$TARGET_POW_TIER" == "critical" || "$TARGET_POW_TIER" == "operational" || "$TARGET_POW_TIER" == "historical" ]] || die "invalid target_pow_tier in PRUNE.md"
+
+  mapfile -t CRITICAL_PATTERNS < <(policy_patterns "## Critical Patterns")
+  mapfile -t DENYLIST_PATTERNS < <(policy_patterns "## Denylist")
+
+  (( ${#CRITICAL_PATTERNS[@]} > 0 )) || die "PRUNE.md missing critical patterns"
+  (( ${#DENYLIST_PATTERNS[@]} > 0 )) || die "PRUNE.md missing denylist patterns"
+}
+
+path_matches_any_pattern() {
+  local path="$1"
+  shift
+  local pattern
+  for pattern in "$@"; do
+    if [[ "$path" == $pattern ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+denylist_guard() {
+  local path="$1"
+  local rel_path="${path#${REPO_ROOT}/}"
+  local pattern
+  for pattern in "${DENYLIST_PATTERNS[@]}"; do
+    if [[ "$rel_path" == $pattern ]]; then
+      guard_fail "SAFETY VIOLATION: prune target ${rel_path} matches denylist pattern ${pattern}."
+    fi
+  done
+}
+
+critical_guard() {
+  local path="$1"
+  local rel_path="${path#${REPO_ROOT}/}"
+  local pattern
+  for pattern in "${CRITICAL_PATTERNS[@]}"; do
+    if [[ "$rel_path" == $pattern ]]; then
+      guard_fail "SAFETY VIOLATION: prune target ${rel_path} matches critical pattern ${pattern}."
+    fi
+  done
+}
+
+weight_for_tier() {
+  local tier="$1"
+  case "$tier" in
+    critical) echo 0 ;;
+    operational) echo "$WEIGHT_OPERATIONAL" ;;
+    historical) echo "$WEIGHT_HISTORICAL" ;;
+    *) die "unknown tier '${tier}'" ;;
+  esac
+}
+
+tier_for_target() {
+  local target_key="$1"
+  case "$target_key" in
+    sop) echo "$TARGET_SOP_TIER" ;;
+    pow) echo "$TARGET_POW_TIER" ;;
+    *) die "unknown target key '${target_key}'" ;;
+  esac
+}
+
+emit_candidate_report() {
+  local target_key="$1"
+  local tier="$2"
+  local keep_count="$3"
+  local ledger_file="$4"
+  local action="$5"
+  local weight
+  local rank=0
+  local total_bytes=0
+  local score=0
+  local entry_index=""
+  local header=""
+  local bytes=""
+
+  weight="$(weight_for_tier "$tier")"
+
+  while IFS=$'\t' read -r entry_index header bytes; do
+    [[ -n "$entry_index" ]] || continue
+    rank=$((rank + 1))
+    score=$((weight * rank))
+    total_bytes=$((total_bytes + bytes))
+    echo "${action}: target=${target_key} tier=${tier} entry_index=${entry_index} score=${score} bytes=${bytes} reason=above_high_watermark"
+  done < <(ledger_candidate_metrics "$ledger_file" "$keep_count")
+
+  echo "SUMMARY: target=${target_key} tier=${tier} keep_count=${keep_count} bytes_total=${total_bytes} action=${action}"
+}
+
+run_target() {
+  local target_key="$1"
+  local ledger_file="$2"
+  local ledger_name="$3"
+  local archive_prefix="$4"
+
+  local tier
+  tier="$(tier_for_target "$target_key")"
+
+  local entry_count
+  entry_count="$(ledger_entry_count "$ledger_file")"
+  [[ -z "$entry_count" ]] && entry_count=0
+
+  if [[ "$tier" == "critical" ]]; then
+    echo "SUMMARY: target=${target_key} tier=critical action=skip reason=critical_tier"
+    return 0
+  fi
+
+  if (( entry_count <= HIGH_WATERMARK )); then
+    echo "SUMMARY: target=${target_key} tier=${tier} action=none reason=below_high_watermark count=${entry_count}"
+    return 0
+  fi
+
+  local keep_count="$LOW_WATERMARK"
+  local entry_index=""
+  local results_path=""
+  local open_path=""
+  local dump_path=""
+
+  if [[ "$target_key" == "pow" ]]; then
+    # Validate pointer triples for rows that would be pruned.
+    while IFS=$'\t' read -r entry_index results_path open_path dump_path; do
+      [[ -n "$entry_index" ]] || continue
+      echo "PoW candidate #${entry_index}: ${results_path} | ${open_path} | ${dump_path}"
+    done < <(ledger_extract_candidates "$POW_PATH" "$SOP_PATH" "$keep_count")
+  fi
+
+  local action="would_remove"
+  if [[ "$PHASE" == "apply" && "$DRY_RUN" -eq 0 ]]; then
+    action="did_remove"
+  fi
+
+  emit_candidate_report "$target_key" "$tier" "$keep_count" "$ledger_file" "$action"
+
+  if [[ "$PHASE" == "apply" && "$DRY_RUN" -eq 0 ]]; then
+    denylist_guard "$ledger_file"
+    critical_guard "$ledger_file"
+
+    if (( USE_QUARANTINE )); then
+      local quarantine_abs="${REPO_ROOT}/${POLICY_QUARANTINE_PATH}"
+      if [[ -n "$QUARANTINE_PATH_OVERRIDE" ]]; then
+        [[ "$QUARANTINE_PATH_OVERRIDE" != /* ]] || die "--quarantine-path must be repo-relative"
+        quarantine_abs="${REPO_ROOT}/${QUARANTINE_PATH_OVERRIDE}"
+      fi
+      mkdir -p "$quarantine_abs"
+      cp "$ledger_file" "$quarantine_abs/${ledger_name}-before-prune-$(date -u +%Y%m%dT%H%M%SZ).md"
+      echo "Quarantine snapshot written: ${quarantine_abs#${REPO_ROOT}/}"
+    fi
+
+    ledger_prune_surface "$ledger_name" "$ledger_file" "$archive_prefix" "$keep_count"
+  fi
 }
 
 for arg in "$@"; do
   case "$arg" in
-    --target=sop|--target=pow|--target=both) TARGET="${arg#--target=}" ;;
-    --dry-run) DRY_RUN=1 ;;
-    --scrub) SCRUB=1 ;;
-    -h|--help) usage; exit 0 ;;
-    *) die "Unknown arg: ${arg}" ;;
+    --target=sop|--target=pow|--target=both)
+      TARGET="${arg#--target=}"
+      ;;
+    --dry-run)
+      DRY_RUN=1
+      ;;
+    --scrub)
+      SCRUB=1
+      ;;
+    --phase=report|--phase=apply)
+      PHASE="${arg#--phase=}"
+      ;;
+    --approve=*)
+      APPROVE_TOKEN="${arg#--approve=}"
+      ;;
+    --quarantine)
+      USE_QUARANTINE=1
+      ;;
+    --quarantine-path=*)
+      USE_QUARANTINE=1
+      QUARANTINE_PATH_OVERRIDE="${arg#--quarantine-path=}"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      die "Unknown arg: ${arg}"
+      ;;
   esac
 done
 
 [[ "$TARGET" == "sop" || "$TARGET" == "pow" || "$TARGET" == "both" ]] || die "--target must be one of: sop, pow, both"
+
 SOP_PATH="$(resolve_surface_leaf "${SOP_PATH}")"
 POW_PATH="$(resolve_surface_leaf "${POW_PATH}")"
 
 trap 'emit_binary_leaf "prune" "finish"' EXIT
 emit_binary_leaf "prune" "start"
 
+load_prune_policy
+
+if [[ -z "$PHASE" ]]; then
+  PHASE="$POLICY_DEFAULT_PHASE"
+fi
+[[ "$PHASE" == "report" || "$PHASE" == "apply" ]] || die "--phase must be report or apply"
+
 results_guard
 
+if [[ "$PHASE" == "apply" && "$DRY_RUN" -eq 0 ]]; then
+  [[ -n "$APPROVE_TOKEN" ]] || guard_fail "SAFETY VIOLATION: apply phase requires --approve token"
+  [[ "$APPROVE_TOKEN" == "$POLICY_APPLY_TOKEN" ]] || guard_fail "SAFETY VIOLATION: invalid --approve token"
+  clean_state_guard
+fi
+
+if [[ "$TARGET" == "sop" || "$TARGET" == "both" ]]; then
+  run_target "sop" "$SOP_PATH" "SoP" "SoP"
+fi
 if [[ "$TARGET" == "pow" || "$TARGET" == "both" ]]; then
-  while IFS=$'\t' read -r entry_index results_path open_path dump_path; do
-    for p in "$results_path" "$open_path" "$dump_path"; do
-      p="$(normalize_path_token "$p")"
-      [[ -n "$p" ]] || guard_fail "${POW_GUARD_FATAL}"
-      git -C "${REPO_ROOT}" ls-files --error-unmatch -- "$p" >/dev/null 2>&1 || guard_fail "${POW_GUARD_FATAL}"
-    done
-    echo "PoW candidate #${entry_index}: ${results_path} | ${open_path} | ${dump_path}"
-  done < <(ledger_extract_candidates "${POW_PATH}" "${SOP_PATH}")
+  run_target "pow" "$POW_PATH" "PoW" "PoW"
 fi
 
-if (( DRY_RUN )); then
-  echo "DRY-RUN complete for target=${TARGET}"
-  (( SCRUB )) && scrub_resume
-  exit 0
+if (( SCRUB )); then
+  scrub_resume
 fi
 
-[[ "$TARGET" == "sop" || "$TARGET" == "both" ]] && ledger_prune_surface "SoP" "${SOP_PATH}" "SoP"
-[[ "$TARGET" == "pow" || "$TARGET" == "both" ]] && ledger_prune_surface "PoW" "${POW_PATH}" "PoW"
-(( SCRUB )) && scrub_resume
+echo "Prune phase complete: phase=${PHASE} target=${TARGET} dry_run=${DRY_RUN}"

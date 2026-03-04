@@ -284,6 +284,12 @@ elif ! bash tools/lint/response.sh --test; then
   fail "Response envelope lint self-test failed: tools/lint/response.sh --test"
 fi
 
+if [[ ! -f "tools/lint/debt.sh" ]]; then
+  fail "Missing required lint script: tools/lint/debt.sh"
+elif ! bash tools/lint/debt.sh; then
+  fail "Guard debt lint failed: tools/lint/debt.sh"
+fi
+
 echo
 if [[ $errors -eq 0 ]]; then
   if [[ $warnings -eq 0 ]]; then
