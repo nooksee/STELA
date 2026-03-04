@@ -45,3 +45,29 @@ Rationale: The path-manifest field is consumed by automated tools and future arc
 Detection logic: Extract the value block of `Create Pull Request (Description)` in each recognized current-schema `CLOSING-*.md` file. Scan for: any heading line beginning with `##`, any list item beginning with `-` or `*` followed by a space, any ordered list item beginning with a digit followed by `.` and a space, or any occurrence of `**` (bold span). Fail if none of these constructs are present in the block.
 Failure message: `CLOSING BLOCK: PR Description contains no markdown constructs. Use at least one heading (##), list item (- or 1.), or bold (**) to serve the reviewer interface.`
 Rationale: The PR Description renders in the GitHub pull request interface, which supports full markdown. A plaintext paragraph in a markdown rendering surface indicates the writer used the field as a text box rather than a structured reviewer handoff. At minimum, one markdown construct is required to demonstrate intentional use of the rendering surface.
+
+## Audit-Auditor Mode Split Guardrails
+
+### Guard 1: Audit stance marker in `e-prompt-01`
+Target file: `docs/ops/prompts/e-prompt-01.md`
+Assertion: file must include `` `--profile=auditor` is addendum-authorization mode and is never valid for audit verdict workflows. ``
+Failure message: `e-prompt-01.md missing audit-verdict stance marker`
+Invariant: audit verdict flow and auditor authorization flow remain separated by explicit prompt guidance.
+
+### Guard 2: Auditor stance marker in `e-prompt-05`
+Target file: `docs/ops/prompts/e-prompt-05.md`
+Assertion: file must include `This stance is not used for audit PASS/FAIL verdicts.`
+Failure message: `e-prompt-05.md missing addendum-authorization stance marker`
+Invariant: auditor stance remains authorization-only and never drifts into verdict behavior.
+
+### Guard 3: Audit split line in prompts README
+Target file: `docs/ops/prompts/README.md`
+Assertion: file must include `* \`audit\` profile is for PASS/FAIL audit verdicts only.`
+Failure message: `README.md missing audit mode split line`
+Invariant: registry-level prompt guidance keeps audit mode semantics explicit and enforceable.
+
+### Guard 4: Auditor split line in prompts README
+Target file: `docs/ops/prompts/README.md`
+Assertion: file must include `* \`auditor\` profile is for addendum authorization only.`
+Failure message: `README.md missing auditor mode split line`
+Invariant: registry-level prompt guidance keeps auditor mode semantics explicit and enforceable.

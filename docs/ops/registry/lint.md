@@ -7,11 +7,11 @@ Authoritative registry for `tools/lint/*` executables.
 | --- | --- | --- | --- |
 | LINT-01 | Agent Lint | tools/lint/agent.sh | Spec: `docs/ops/specs/tools/lint/agent.md`. Enforces agent schema, pointer validity, and disposable-artifact hazard rules. |
 | LINT-02 | Context Lint | tools/lint/context.sh | Spec: `docs/ops/specs/tools/lint/context.md`. Verifies context manifest completeness and context-hazard exclusions. |
-| LINT-03 | DP Lint | tools/lint/dp.sh | Spec: `docs/ops/specs/tools/lint/dp.md`. Validates DP schema and One Truth context-load rules (`llms-full.txt` prohibited, `llms-core.txt` lightweight-only), and resolves pointer-first `TASK.md` to its surface leaf before DP payload parsing. |
+| LINT-03 | DP Lint | tools/lint/dp.sh | Spec: `docs/ops/specs/tools/lint/dp.md`. Validates DP schema and One Truth context-load rules (`llms-full.txt` prohibited, `llms-core.txt` lightweight-only), resolves pointer-first `TASK.md` to its surface leaf before DP payload parsing, and rejects foreign citation contamination tokens in DP body text. |
 | LINT-04 | Factory Lint | tools/lint/factory.sh | Spec: `docs/ops/specs/tools/lint/factory.md`. Verifies agent/skill/task registry synchronization and pointer integrity. |
 | LINT-05 | LLMS Lint | tools/lint/llms.sh | Retired by DP-OPS-0102. Deprecated-filename check absorbed into ops/bin/llms. Staleness protection replaced by .github/hooks/llms. |
 | LINT-06 | Project Lint | tools/lint/project.sh | Spec: `docs/ops/specs/tools/lint/project.md`. Deprecated: project registry is unpopulated, so this linter has no live targets. Reactivate when the project registry is populated and project scaffolding implementation is complete. |
-| LINT-07 | Style Lint | tools/lint/style.sh | Spec: `docs/ops/specs/tools/lint/style.md`. Rejects markdown contractions across tracked documentation surfaces. |
+| LINT-07 | Style Lint | tools/lint/style.sh | Spec: `docs/ops/specs/tools/lint/style.md`. Rejects markdown contractions across tracked documentation surfaces and enforces audit-versus-auditor mode split guard lines in prompt surfaces. |
 | LINT-08 | TASK Lint | tools/lint/task.sh | Spec: `docs/ops/specs/tools/lint/task.md`. Sole TASK dashboard and task-definitions schema enforcer; resolves pointer-first `TASK.md` heads to archives/surfaces leaves before linting dashboard content. |
 | LINT-09 | Truth Lint | tools/lint/truth.sh | Spec: `docs/ops/specs/tools/lint/truth.md`. Scans authored surfaces for forbidden canon spellings. |
 | LINT-10 | Integrity Lint | tools/lint/integrity.sh | Spec: `docs/ops/specs/tools/lint/integrity.md`. Fails when changed or untracked paths are outside the active Target Files allowlist; resolves pointer-first `TASK.md` to extract allowlist pointers from the leaf payload. |

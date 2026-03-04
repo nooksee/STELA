@@ -271,6 +271,13 @@ if [[ -d "projects" ]]; then
   done
 fi
 
+# 5. Deterministic test suite checks
+if [[ ! -f "tools/test/bundle.sh" ]]; then
+  fail "Missing required test script: tools/test/bundle.sh"
+elif ! bash tools/test/bundle.sh; then
+  fail "Bundle smoke test failed: tools/test/bundle.sh"
+fi
+
 echo
 if [[ $errors -eq 0 ]]; then
   if [[ $warnings -eq 0 ]]; then

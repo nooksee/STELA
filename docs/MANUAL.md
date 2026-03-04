@@ -457,6 +457,19 @@ ops/lib/scripts/task.sh promote archives/definitions/task-candidate-YYYY-MM-DD-<
 **Operator Prompts:**
 * `docs/ops/prompts` — Operator prompt stances and usage.
 
+### Attachment Contract Table
+
+| Profile | Bundle Command | Required Attachments | Notes |
+| --- | --- | --- | --- |
+| `analyst` | `./ops/bin/bundle --profile=analyst --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, query source (`storage/handoff/TOPIC.md` or inline `ANALYZE/SYNTHESIZE/FORMULATE`) | Attach `BUNDLE-*.tar` when the model session reliably ingests tar artifacts. |
+| `architect` | `./ops/bin/bundle --profile=architect --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, `storage/handoff/PLAN.md` | PLAN-driven drafting requires Architect Handoff fields in PLAN. |
+| `audit` | `./ops/bin/bundle --profile=audit --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, DP RESULTS receipt, `TASK.md` | Audit stance is PASS/FAIL verdict only. |
+| `auditor` | `./ops/bin/bundle --profile=auditor --intent="ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>" --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json` | Addendum authorization intake only; not used for PASS/FAIL verdicts. |
+| `project` | `./ops/bin/bundle --profile=project --project=<name> --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json` | Project-scoped dump context is embedded in the bundle metadata. |
+| `hygiene` | `./ops/bin/bundle --profile=hygiene --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, draft DP input | Hygiene stance normalizes structure without changing intent. |
+
+> **Model-compat fallback:** If tar ingestion is unreliable in a web model context, attach the dump payload (`dump-*.txt`) and dump manifest (`dump-*.manifest.txt`) directly in place of the bundle tar.
+
 **Disapproval Triggers (When to Reject):**
 * ❌ Missing `RECEIPT` (Proof Bundle).
 * ❌ Verification steps reported as "NOT RUN".
