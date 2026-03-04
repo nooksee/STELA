@@ -27,6 +27,19 @@ These prompts reference canonical locations rather than duplicating content:
 * **In DP content (Worker):** DP must be self-contained. No disposable artifact citations.
 * **For closeout (Worker):** Maintain `storage/handoff/CLOSING-<DP_ID>.md` as a human-authored sidecar during execution.
 
+**Attachment Contract Table:**
+
+| Profile | Bundle Command | Required Attachments | Notes |
+| --- | --- | --- | --- |
+| `analyst` | `./ops/bin/bundle --profile=analyst --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, query source (`storage/handoff/TOPIC.md` or inline `ANALYZE/SYNTHESIZE/FORMULATE`) | Attach `BUNDLE-*.tar` when the model session reliably ingests tar artifacts. |
+| `architect` | `./ops/bin/bundle --profile=architect --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, `storage/handoff/PLAN.md` | PLAN must include Architect Handoff fields for deterministic DP drafting. |
+| `audit` | `./ops/bin/bundle --profile=audit --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, DP RESULTS receipt, `TASK.md` | PASS/FAIL audit verdict only. |
+| `auditor` | `./ops/bin/bundle --profile=auditor --intent="ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>" --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json` | Addendum authorization only. |
+| `project` | `./ops/bin/bundle --profile=project --project=<name> --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json` | Project-scoped context bundle. |
+| `hygiene` | `./ops/bin/bundle --profile=hygiene --out=auto` | `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, draft DP input | Structure-conformance normalization flow. |
+
+> **Model-compat fallback:** If tar ingestion is unreliable in a web model context, attach the dump payload (`dump-*.txt`) and dump manifest (`dump-*.manifest.txt`) directly in place of the bundle tar.
+
 **Stance Index:**
 * **E-PROMPT-01:** Gatekeeper (audit before merge)
 * **E-PROMPT-02:** Hygiene (bundle-first DP conformance)
