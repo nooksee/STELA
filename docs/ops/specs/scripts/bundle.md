@@ -11,23 +11,25 @@ The script provides `bundle_run` plus helpers for:
 2. Policy load from `ops/lib/manifests/BUNDLE.md` with required-key validation and fail-closed behavior.
 3. Repo-relative path normalization and output confinement to `storage/handoff/`.
 4. Auto routing using PLAN presence and `tools/lint/plan.sh` status.
-5. Prompt path and dump scope resolution per resolved profile from policy mappings.
+5. Prompt path, dump scope, and stance template key resolution per resolved profile from policy mappings.
 6. Deterministic embedded OPEN block generation (no internal `ops/bin/open` invocation).
 7. Dump orchestration with explicit `.txt` output path under `storage/dumps/`.
-8. Auditor intent parsing and decision-leaf validation against dump payload.
-9. Bundle text rendering with embedded prompt contract text.
+8. Foreman intent parsing and decision-leaf validation against dump payload.
+9. Bundle text rendering with embedded prompt contract text rendered through `ops/bin/manifest` stance template keys.
 10. Manifest v2 emission and package `.tar` emission with manifest-aligned member list.
 
-Prompt contract extraction rule:
+Prompt contract extraction and render rules:
+- Resolve profile stance template key from `ops/lib/manifests/BUNDLE.md`.
+- Render stance body via `ops/bin/manifest render <stance-key> --out=-`.
 - Strip only contiguous leading HTML comment lines and immediately following leading blank lines.
-- If `Rules:` exists in the prompt, emit from `Rules:` through end-of-file.
+- If `Rules:` exists in the rendered stance body, emit from `Rules:` through end-of-file.
 - Otherwise emit the stripped prompt body as-is.
 
 Text artifact profile conditional rule:
-- Emit `[HANDOFF]` (`TOPIC.md` / `PLAN.md` presence) only when resolved profile is not `audit` and not `auditor`.
+- Emit `[HANDOFF]` (`TOPIC.md` / `PLAN.md` presence) only when resolved profile is not `audit` and not `foreman`.
 
 ## Anecdotal Anchor
-DP-OPS-0145 introduced bundle as a transport primitive. DP-OPS-0146 hardened it for attach-only architect workflows and addendum auditor flows by eliminating OPEN artifact dependence and adding deterministic package metadata.
+DP-OPS-0145 introduced bundle as a transport primitive. DP-OPS-0146 hardened it for attach-only architect workflows and addendum authorization flows by eliminating OPEN artifact dependence and adding deterministic package metadata.
 
 ## Integrity Filter Warnings
-The script assumes canonical prompt files under `docs/ops/prompts/`. Path movement without policy updates causes hard failure. `ops/lib/manifests/BUNDLE.md` parse failures are fail-closed and block bundle generation. Runtime behavior must remain deterministic and pointer-first; dump payload bodies must not be inlined into bundle text.
+The script assumes canonical prompt pointers under `docs/ops/prompts/` and canonical stance templates under `ops/src/stances/` via manifest key mapping. Path/key drift without policy updates causes hard failure. `ops/lib/manifests/BUNDLE.md` parse failures are fail-closed and block bundle generation. Runtime behavior must remain deterministic and pointer-first; dump payload bodies must not be inlined into bundle text.

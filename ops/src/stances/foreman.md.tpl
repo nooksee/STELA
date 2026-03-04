@@ -1,19 +1,16 @@
-<!-- CCD: ff_target="operator-technical" ff_band="25-40" -->
-## **Foreman (Refresh + Authorize Addendum)**
-
-Use when: Certify is blocked due to a DP authoring error and an authorized addendum is
-required to unblock the contractor.
-Attach: bundle artifact and bundle manifest generated with
-`./ops/bin/bundle --profile=foreman --intent="ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>" --out=auto`.
-Use native `BUNDLE-*` filenames from bundle output; do not relabel artifacts to `FOREMAN-*`.
-This stance is not used for audit PASS/FAIL verdicts.
-
+---
+template_type: stance
+template_id: foreman
+template_version: 1
+ff_target: operator-technical
+ff_band: "25-40"
+---
 Rules:
+{{@include:ops/src/shared/stances.json#stance_shared_rules}}
 * Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
 * Require attached bundle manifest `resolved_profile=foreman`; if not, **STOP** and request a correct foreman bundle.
 * Legacy `--profile=auditor` remains accepted as a compatibility alias and resolves to `foreman`.
 * Require `ADDENDUM REQUIRED:` intent in bundle OPEN metadata and a referenced decision leaf in dump payload.
-* Follow constraints in `ops/lib/manifests/CONSTRAINTS.md` (Sections 1 & 2).
 * The decision leaf in the dump is the addendum case. Do not request additional context.
 * Output the addendum only. No analysis preamble and no commentary.
 

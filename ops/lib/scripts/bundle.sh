@@ -18,17 +18,18 @@ declare -a BUNDLE_SUPPORTED_PROFILES=()
 declare -a BUNDLE_HANDOFF_OMIT_PROFILES=()
 declare -A BUNDLE_PROMPT_PATH_BY_PROFILE=()
 declare -A BUNDLE_DUMP_SCOPE_BY_PROFILE=()
+declare -A BUNDLE_STANCE_TEMPLATE_BY_PROFILE=()
 
 BUNDLE_AUTO_DEFAULT_PROFILE=""
 BUNDLE_AUTO_PLAN_PROFILE=""
 BUNDLE_PROJECT_PROFILE=""
 BUNDLE_AUDIT_PROFILE=""
-BUNDLE_AUDITOR_PROFILE=""
-BUNDLE_AUDITOR_INTENT_FORM=""
+BUNDLE_FOREMAN_PROFILE=""
+BUNDLE_FOREMAN_INTENT_FORM=""
 
 bundle_usage() {
   cat <<'USAGE'
-Usage: ops/bin/bundle [--profile=auto|analyst|architect|audit|project|hygiene|auditor] [--out=auto|PATH] [--project=<name>] [--intent=<text>]
+Usage: ops/bin/bundle [--profile=auto|analyst|architect|audit|project|conform|hygiene|foreman|auditor] [--out=auto|PATH] [--project=<name>] [--intent=<text>]
 USAGE
 }
 
@@ -121,8 +122,10 @@ bundle_load_policy() {
   local profile
   local prompt_key
   local scope_key
+  local stance_key_name
   local prompt_path
   local dump_scope
+  local stance_key
   local omit_csv
 
   [[ -f "$BUNDLE_POLICY_PATH" ]] || die "bundle policy missing: ${BUNDLE_POLICY_PATH#${REPO_ROOT}/}"
@@ -134,8 +137,6 @@ bundle_load_policy() {
     auto_plan_profile \
     project_profile \
     audit_profile \
-    auditor_profile \
-    auditor_intent_form \
     handoff_omit_profiles; do
     if [[ -z "$(bundle_policy_scalar "$required_key")" ]]; then
       die "bundle policy missing required key: ${required_key}"
@@ -150,27 +151,39 @@ bundle_load_policy() {
   BUNDLE_AUTO_PLAN_PROFILE="$(bundle_policy_scalar auto_plan_profile)"
   BUNDLE_PROJECT_PROFILE="$(bundle_policy_scalar project_profile)"
   BUNDLE_AUDIT_PROFILE="$(bundle_policy_scalar audit_profile)"
-  BUNDLE_AUDITOR_PROFILE="$(bundle_policy_scalar auditor_profile)"
-  BUNDLE_AUDITOR_INTENT_FORM="$(bundle_policy_scalar auditor_intent_form)"
+  BUNDLE_FOREMAN_PROFILE="$(bundle_policy_scalar foreman_profile)"
+  if [[ -z "$BUNDLE_FOREMAN_PROFILE" ]]; then
+    BUNDLE_FOREMAN_PROFILE="$(bundle_policy_scalar auditor_profile)"
+  fi
+  BUNDLE_FOREMAN_INTENT_FORM="$(bundle_policy_scalar foreman_intent_form)"
+  if [[ -z "$BUNDLE_FOREMAN_INTENT_FORM" ]]; then
+    BUNDLE_FOREMAN_INTENT_FORM="$(bundle_policy_scalar auditor_intent_form)"
+  fi
+  [[ -n "$BUNDLE_FOREMAN_PROFILE" ]] || die "bundle policy missing required key: foreman_profile"
+  [[ -n "$BUNDLE_FOREMAN_INTENT_FORM" ]] || die "bundle policy missing required key: foreman_intent_form"
 
   for profile in \
     "$BUNDLE_AUTO_DEFAULT_PROFILE" \
     "$BUNDLE_AUTO_PLAN_PROFILE" \
     "$BUNDLE_PROJECT_PROFILE" \
     "$BUNDLE_AUDIT_PROFILE" \
-    "$BUNDLE_AUDITOR_PROFILE"; do
+    "$BUNDLE_FOREMAN_PROFILE"; do
     bundle_profile_supported "$profile" || die "bundle policy references unsupported profile: ${profile}"
   done
 
   BUNDLE_PROMPT_PATH_BY_PROFILE=()
   BUNDLE_DUMP_SCOPE_BY_PROFILE=()
+  BUNDLE_STANCE_TEMPLATE_BY_PROFILE=()
   for profile in "${BUNDLE_SUPPORTED_PROFILES[@]}"; do
     prompt_key="prompt_path_${profile}"
     scope_key="dump_scope_${profile}"
+    stance_key_name="stance_template_${profile}"
     prompt_path="$(bundle_policy_scalar "$prompt_key")"
     dump_scope="$(bundle_policy_scalar "$scope_key")"
+    stance_key="$(bundle_policy_scalar "$stance_key_name")"
     [[ -n "$prompt_path" ]] || die "bundle policy missing required key: ${prompt_key}"
     [[ -n "$dump_scope" ]] || die "bundle policy missing required key: ${scope_key}"
+    [[ -n "$stance_key" ]] || die "bundle policy missing required key: ${stance_key_name}"
     case "$dump_scope" in
       full|core|project)
         ;;
@@ -178,8 +191,16 @@ bundle_load_policy() {
         die "bundle policy has invalid dump scope for ${profile}: ${dump_scope}"
         ;;
     esac
+    case "$stance_key" in
+      stance-*)
+        ;;
+      *)
+        die "bundle policy has invalid stance template key for ${profile}: ${stance_key}"
+        ;;
+    esac
     BUNDLE_PROMPT_PATH_BY_PROFILE["$profile"]="$prompt_path"
     BUNDLE_DUMP_SCOPE_BY_PROFILE["$profile"]="$dump_scope"
+    BUNDLE_STANCE_TEMPLATE_BY_PROFILE["$profile"]="$stance_key"
   done
 
   omit_csv="$(bundle_policy_scalar handoff_omit_profiles)"
@@ -231,6 +252,27 @@ bundle_dump_scope_for_profile() {
   printf '%s' "$mapped_scope"
 }
 
+bundle_stance_template_for_profile() {
+  local profile="$1"
+  local mapped_key="${BUNDLE_STANCE_TEMPLATE_BY_PROFILE[$profile]:-}"
+  [[ -n "$mapped_key" ]] || die "bundle policy missing stance template key for profile: ${profile}"
+  printf '%s' "$mapped_key"
+}
+
+bundle_render_prompt_source_for_profile() {
+  local profile="$1"
+  local fallback_prompt_abs="$2"
+  local stance_key
+  stance_key="$(bundle_stance_template_for_profile "$profile")"
+
+  if [[ -n "$stance_key" ]]; then
+    "${REPO_ROOT}/ops/bin/manifest" render "$stance_key" --out=-
+    return 0
+  fi
+
+  cat "$fallback_prompt_abs"
+}
+
 bundle_emit_prompt_contract() {
   local prompt_abs="$1"
   local normalized_tmp
@@ -279,11 +321,11 @@ bundle_emit_prompt_contract() {
   rm -f "$normalized_tmp"
 }
 
-bundle_parse_auditor_intent() {
+bundle_parse_foreman_intent() {
   local intent_text="$1"
   if [[ "$intent_text" =~ ^ADDENDUM[[:space:]]+REQUIRED:[[:space:]]+([^[:space:]]+)[[:space:]]+-[[:space:]]+(.+)$ ]]; then
-    BUNDLE_AUDITOR_DECISION_ID="${BASH_REMATCH[1]}"
-    BUNDLE_AUDITOR_BLOCKER="${BASH_REMATCH[2]}"
+    BUNDLE_FOREMAN_DECISION_ID="${BASH_REMATCH[1]}"
+    BUNDLE_FOREMAN_BLOCKER="${BASH_REMATCH[2]}"
     return 0
   fi
   return 1
@@ -291,9 +333,12 @@ bundle_parse_auditor_intent() {
 
 bundle_run() {
   local requested_profile="auto"
+  local requested_profile_input="auto"
   local out_token="auto"
   local project_name=""
   local intent_token=""
+  local used_legacy_hygiene_alias=0
+  local used_legacy_auditor_alias=0
 
   local arg
   for arg in "$@"; do
@@ -325,9 +370,20 @@ bundle_run() {
   done
 
   bundle_load_policy
+  requested_profile_input="$requested_profile"
+
+  if [[ "$requested_profile" == "hygiene" ]]; then
+    requested_profile="conform"
+    used_legacy_hygiene_alias=1
+  fi
+
+  if [[ "$requested_profile" == "auditor" ]]; then
+    requested_profile="$BUNDLE_FOREMAN_PROFILE"
+    used_legacy_auditor_alias=1
+  fi
 
   if [[ "$requested_profile" != "auto" ]] && ! bundle_profile_supported "$requested_profile"; then
-    die "unsupported profile: ${requested_profile}"
+    die "unsupported profile: ${requested_profile_input}"
   fi
 
   if [[ "$requested_profile" == "$BUNDLE_PROJECT_PROFILE" && -z "$project_name" ]]; then
@@ -336,8 +392,8 @@ bundle_run() {
   if [[ "$requested_profile" != "$BUNDLE_PROJECT_PROFILE" && -n "$project_name" ]]; then
     die "--project is only valid with --profile=project"
   fi
-  if [[ "$requested_profile" == "$BUNDLE_AUDITOR_PROFILE" && -z "$intent_token" ]]; then
-    die "--intent is required when --profile=auditor"
+  if [[ "$requested_profile" == "$BUNDLE_FOREMAN_PROFILE" && -z "$intent_token" ]]; then
+    die "--intent is required when --profile=${BUNDLE_FOREMAN_PROFILE}"
   fi
 
   if [[ -n "$project_name" && ! "$project_name" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]]; then
@@ -384,11 +440,21 @@ bundle_run() {
       plan_lint_output="(missing storage/handoff/PLAN.md)"
     fi
   fi
+  if (( used_legacy_auditor_alias )); then
+    route_reason="explicit profile alias: auditor -> ${BUNDLE_FOREMAN_PROFILE}"
+  elif (( used_legacy_hygiene_alias )); then
+    route_reason="explicit profile alias: hygiene -> conform"
+  fi
 
   local prompt_rel
   prompt_rel="$(bundle_prompt_path_for_profile "$resolved_profile")"
   local prompt_abs="${REPO_ROOT}/${prompt_rel}"
   [[ -f "$prompt_abs" ]] || die "prompt file missing: ${prompt_rel}"
+  local stance_template_key
+  stance_template_key="$(bundle_stance_template_for_profile "$resolved_profile")"
+  local rendered_prompt_tmp
+  rendered_prompt_tmp="$(mktemp)"
+  bundle_render_prompt_source_for_profile "$resolved_profile" "$prompt_abs" > "$rendered_prompt_tmp"
 
   local out_abs
   out_abs="$(bundle_resolve_output_path "$out_token" "$resolved_profile" "$branch_safe" "$head_short" "$project_name")"
@@ -428,12 +494,12 @@ bundle_run() {
   local addendum_required=0
   local decision_id=""
   local decision_leaf_present=0
-  if [[ "$resolved_profile" == "$BUNDLE_AUDITOR_PROFILE" ]]; then
+  if [[ "$resolved_profile" == "$BUNDLE_FOREMAN_PROFILE" ]]; then
     addendum_required=1
-    if ! bundle_parse_auditor_intent "$open_intent"; then
-      die "auditor intent must match: ${BUNDLE_AUDITOR_INTENT_FORM}"
+    if ! bundle_parse_foreman_intent "$open_intent"; then
+      die "${BUNDLE_FOREMAN_PROFILE} intent must match: ${BUNDLE_FOREMAN_INTENT_FORM}"
     fi
-    decision_id="$BUNDLE_AUDITOR_DECISION_ID"
+    decision_id="$BUNDLE_FOREMAN_DECISION_ID"
   fi
 
   local dump_scope
@@ -459,18 +525,18 @@ bundle_run() {
   [[ -f "${REPO_ROOT}/${dump_payload_rel}" ]] || die "dump payload missing: ${dump_payload_rel}"
   [[ -f "${REPO_ROOT}/${dump_manifest_rel}" ]] || die "dump manifest missing: ${dump_manifest_rel}"
 
-  if [[ "$resolved_profile" == "$BUNDLE_AUDITOR_PROFILE" ]]; then
+  if [[ "$resolved_profile" == "$BUNDLE_FOREMAN_PROFILE" ]]; then
     if grep -Fq "$decision_id" "${REPO_ROOT}/${dump_payload_rel}"; then
       decision_leaf_present=1
     else
-      die "auditor decision leaf not present in dump payload: ${decision_id}"
+      die "${BUNDLE_FOREMAN_PROFILE} decision leaf not present in dump payload: ${decision_id}"
     fi
   fi
 
   {
     echo "===== STELA BUNDLE ====="
     echo "Generated at: ${generated_at}"
-    echo "Requested profile: ${requested_profile}"
+    echo "Requested profile: ${requested_profile_input}"
     echo "Resolved profile: ${resolved_profile}"
     echo "Route reason: ${route_reason}"
     if [[ -n "$project_name" ]]; then
@@ -491,6 +557,7 @@ bundle_run() {
     echo
     echo "[PROMPT]"
     echo "- Canonical prompt path: ${prompt_rel}"
+    echo "- Stance template key: ${stance_template_key}"
     echo
     if ! bundle_profile_handoff_omitted "$resolved_profile"; then
       echo "[HANDOFF]"
@@ -501,7 +568,7 @@ bundle_run() {
       fi
       echo
     fi
-    if [[ "$resolved_profile" == "$BUNDLE_AUDITOR_PROFILE" ]]; then
+    if [[ "$resolved_profile" == "$BUNDLE_FOREMAN_PROFILE" ]]; then
       echo "- Addendum decision id: ${decision_id}"
       echo "- Decision leaf present in dump: $([[ "$decision_leaf_present" == "1" ]] && echo true || echo false)"
       echo
@@ -512,10 +579,12 @@ bundle_run() {
       echo
     fi
     echo "===== PROMPT CONTRACT BEGIN ====="
-    bundle_emit_prompt_contract "$prompt_abs"
+    bundle_emit_prompt_contract "$rendered_prompt_tmp"
     echo "===== PROMPT CONTRACT END ====="
     echo "===== END STELA BUNDLE ====="
   } > "$out_abs"
+
+  rm -f "$rendered_prompt_tmp"
 
   local -a package_files=(
     "$out_rel"
@@ -534,7 +603,7 @@ bundle_run() {
     echo "{"
     echo "  \"bundle_version\": \"2\"," 
     echo "  \"generated_at\": \"$(bundle_json_escape "$generated_at")\"," 
-    echo "  \"requested_profile\": \"$(bundle_json_escape "$requested_profile")\"," 
+    echo "  \"requested_profile\": \"$(bundle_json_escape "$requested_profile_input")\"," 
     echo "  \"resolved_profile\": \"$(bundle_json_escape "$resolved_profile")\"," 
     echo "  \"route_reason\": \"$(bundle_json_escape "$route_reason")\"," 
     if [[ -n "$project_name" ]]; then
@@ -556,7 +625,8 @@ bundle_run() {
     echo "    \"manifest_path\": \"$(bundle_json_escape "$dump_manifest_rel")\""
     echo "  },"
     echo "  \"prompt\": {"
-    echo "    \"path\": \"$(bundle_json_escape "$prompt_rel")\""
+    echo "    \"path\": \"$(bundle_json_escape "$prompt_rel")\","
+    echo "    \"stance_template_key\": \"$(bundle_json_escape "$stance_template_key")\""
     echo "  },"
     echo "  \"topic\": {"
     echo "    \"path\": \"$(bundle_json_escape "$topic_rel")\"," 

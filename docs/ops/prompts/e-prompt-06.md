@@ -17,13 +17,13 @@ git add RoR.md <new_decision_leaf_path>
 5. Generate core dump payload and manifest:
 ./ops/bin/dump --scope=core --format=chatgpt --out=auto
 
-6. Generate auditor bundle with same intent:
-./ops/bin/bundle --profile=auditor --intent="ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>" --out=auto
+6. Generate foreman bundle with same intent:
+./ops/bin/bundle --profile=foreman --intent="ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>" --out=auto
 
 7. Verify preconditions before handoff:
 - Confirm OPEN `Intent for today:` includes `ADDENDUM REQUIRED: <DECISION_ID> - ...`.
 - Confirm referenced decision leaf is present in dump payload.
-- Confirm bundle manifest shows `resolved_profile=auditor`.
+- Confirm bundle manifest shows `resolved_profile=foreman`.
 
 Return file paths for:
 - OPEN

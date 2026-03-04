@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "stance_shared_rules": [
+    "* Follow constraints in `ops/lib/manifests/CONSTRAINTS.md` (Sections 1 & 2).",
+    "* Contractor constraints: ops/lib/manifests/CONTRACTOR.md"
+  ]
+}

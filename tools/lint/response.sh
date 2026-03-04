@@ -443,7 +443,7 @@ EOF_VALID_HEAD
 
   {
     echo 'To: Operator'
-    echo 'From: Auditor'
+    echo 'From: Foreman'
     echo
     cat "$response_audit_valid"
   } > "$response_audit_preface"

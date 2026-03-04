@@ -7,20 +7,25 @@
 
 ## Mechanics and Sequencing
 Public interface:
-1. `--profile=auto|analyst|architect|audit|project|hygiene|auditor`
+1. `--profile=auto|analyst|architect|audit|project|conform|hygiene|foreman|auditor`
+   - Canonical conformance profile is `conform`.
+   - Legacy `hygiene` is accepted as a compatibility alias to `conform`.
+   - Canonical addendum authorization profile is `foreman`.
+   - Legacy `auditor` is accepted as a compatibility alias to `foreman`.
 2. `--out=auto|PATH`
 3. `--project=<name>` (required only for `project`)
-4. `--intent=<text>` (required only for `auditor`)
+4. `--intent=<text>` (required for `foreman` and legacy alias `auditor`)
 
 Policy source:
 1. Runtime contract is loaded from `ops/lib/manifests/BUNDLE.md`.
 2. Missing required policy keys or invalid values are fail-closed errors.
-3. Profile routing and prompt/scope mappings are resolved from this manifest.
+3. Profile routing, prompt pointer mappings, dump scopes, and stance template render keys are resolved from this manifest.
 
 Profile intent split:
 1. `audit` is the audit-verdict intake profile.
-2. `auditor` is addendum-authorization intake profile.
-3. `auditor` is not a substitute for `audit`.
+2. `foreman` is addendum-authorization intake profile.
+3. Legacy `auditor` resolves to `foreman`.
+4. `foreman` is not a substitute for `audit`.
 
 Routing rules:
 1. Explicit supported profile selects that profile.
@@ -28,29 +33,31 @@ Routing rules:
 3. Otherwise auto resolves to `auto_default_profile`.
 
 Artifact contract (written under `storage/handoff/`):
-1. Bundle text artifact (`.txt`) with embedded OPEN block, dump pointers, prompt pointer, and embedded prompt contract excerpt.
+1. Bundle text artifact (`.txt`) with embedded OPEN block, dump pointers, prompt pointer, stance template key, and embedded prompt contract excerpt.
 2. Bundle manifest (`.manifest.json`) with `bundle_version: "2"` and structured metadata:
    - profile routing metadata
    - embedded OPEN metadata (`embedded`, `branch`, `head_short`, `trace_id`, `intent`)
    - dump pointers
    - topic/plan presence
+   - prompt template metadata (`stance_template_key`)
    - addendum metadata (`required`, `decision_id`, `decision_leaf_present`)
    - package metadata (`path`, `files`)
 3. Bundle package (`.tar`) containing bundle `.txt`, manifest, dump payload, dump manifest, and `TOPIC.md`/`PLAN.md` when present.
-4. Canonical bundle artifact names use `BUNDLE-` prefix; profile aliases such as `AUDIT-*` or `AUDITOR-*` are non-canonical relabels.
+4. Canonical bundle artifact names use `BUNDLE-` prefix; relabels such as `AUDIT-*`, `FOREMAN-*`, or `AUDITOR-*` are non-canonical.
 
 Text artifact profile conditional block:
 1. The `[HANDOFF]` block (`TOPIC.md` / `PLAN.md` presence) is emitted for non-audit profiles.
-2. For `audit` and `auditor` resolved profiles, the text artifact omits `[HANDOFF]` to avoid unrelated intake noise in audit flows.
+2. For `audit` and `foreman` resolved profiles, the text artifact omits `[HANDOFF]` to avoid unrelated intake noise in audit flows.
 
-Auditor gate:
-1. `--profile=auditor` requires `--intent`.
-2. Intent format must be `ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>`.
-3. Bundle runtime verifies `<DECISION_ID>` exists in dump payload; missing decision leaf is a hard failure.
+Foreman gate:
+1. `--profile=foreman` requires `--intent`.
+2. `--profile=auditor` (legacy alias) also requires `--intent`.
+3. Intent format must be `ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>`.
+4. Bundle runtime verifies `<DECISION_ID>` exists in dump payload; missing decision leaf is a hard failure.
 
 Dump scope mapping by resolved profile:
-1. `analyst|architect|hygiene` -> `ops/bin/dump --scope=full`.
-2. `audit|auditor` -> `ops/bin/dump --scope=core`.
+1. `analyst|architect|conform` -> `ops/bin/dump --scope=full`.
+2. `audit|foreman` -> `ops/bin/dump --scope=core`.
 3. `project` -> `ops/bin/dump --scope=project --project=<name>`.
 
 Bundle runtime invokes dump with explicit `.txt` output path to suppress dump auto-compression side effects during bundle orchestration.

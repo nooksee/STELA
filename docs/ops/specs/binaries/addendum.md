@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/bin/addendum` exists to prevent hand-authored addendum intake drift and to preserve addendum issuance authority boundaries during post-work audit. It renders addendum artifacts from the canonical `ops/src/surfaces/addendum.md.tpl` template, assigns the next addendum letter automatically, and rejects incomplete or placeholder slot content before writing to `storage/dp/intake/`.
+`ops/bin/addendum` exists to prevent hand-authored addendum intake drift and to preserve addendum issuance authority boundaries during post-work audit. It renders addendum artifacts from the canonical `ops/src/stances/addendum.md.tpl` template, assigns the next addendum letter automatically, and rejects incomplete or placeholder slot content before writing to `storage/dp/intake/`.
 
 ## Mechanics and Sequencing
 1. Parse required arguments `--base-dp=DP-OPS-XXXX` and `--slots-file=PATH`, reject unknown arguments, and validate `--base-dp` against the canonical packet ID pattern.
@@ -45,7 +45,7 @@ The binary checks `storage/dp/intake/` for existing addenda for the base packet 
 Hard-stop errors include: missing required arguments, malformed `--base-dp`, unreadable or missing slots file, missing canonical template or template hash mismatch, base DP absent from `storage/dp/processed/`, no addendum letters available, required rendered slot content missing or placeholder, rendered identity mismatch, command substitution tokens in output, and write failures.
 
 ### Role Restriction and Manual Relationship
-`ops/bin/addendum` is an Integrator/auditor issuance tool used during the `docs/MANUAL.md` Closeout Cycle Post-Work Audit step when an authorized addendum is required. The Contractor does not invoke this binary and does not author addendum content.
+`ops/bin/addendum` is an Integrator/foreman issuance tool used during the `docs/MANUAL.md` Closeout Cycle Post-Work Audit step when an authorized addendum is required. The Contractor does not invoke this binary and does not author addendum content.
 
 ## Anecdotal Anchor
 Repeated certify-compatibility remediations in consecutive DPs showed that late-session structural fixes need an auditable intake-generation path that does not depend on hand-authored markdown. `ops/bin/addendum` applies the same template-first discipline used by `ops/bin/draft` to the addendum issuance path.
