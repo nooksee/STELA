@@ -194,7 +194,6 @@ archives/surfaces/SoP-2026-03-03-*.md
 archives/surfaces/PoW-2026-03-03-*.md
 opt/_factory/agents/r-agent-07.md
 ops/src/stances/plan.md.tpl
-ops/src/surfaces/plan.md.tpl
 docs/ops/specs/surfaces/plan.md
 docs/ops/prompts/e-prompt-02.md
 docs/ops/prompts/e-prompt-05.md
@@ -242,7 +241,6 @@ docs/ops/specs/stances/foreman.md
 storage/handoff/CLOSING-DP-OPS-0151.md
 archives/surfaces/TASK-DP-OPS-0151-*.md
 ops/src/stances/addendum.md.tpl
-ops/src/surfaces/addendum.md.tpl
 docs/ops/specs/binaries/addendum.md
 ops/src/stances/contractor.md.tpl
 docs/ops/specs/stances/contractor.md
