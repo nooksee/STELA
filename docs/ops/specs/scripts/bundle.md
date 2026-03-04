@@ -8,14 +8,15 @@
 ## Mechanics and Sequencing
 The script provides `bundle_run` plus helpers for:
 1. Argument parsing and validation (`profile`, `out`, `project`, `intent`).
-2. Repo-relative path normalization and output confinement to `storage/handoff/`.
-3. Auto routing using PLAN presence and `tools/lint/plan.sh` status.
-4. Prompt path resolution per resolved profile.
-5. Deterministic embedded OPEN block generation (no internal `ops/bin/open` invocation).
-6. Dump orchestration with explicit `.txt` output path under `storage/dumps/`.
-7. Auditor intent parsing and decision-leaf validation against dump payload.
-8. Bundle text rendering with embedded prompt contract text.
-9. Manifest v2 emission and package `.tar` emission with manifest-aligned member list.
+2. Policy load from `ops/lib/manifests/BUNDLE.md` with required-key validation and fail-closed behavior.
+3. Repo-relative path normalization and output confinement to `storage/handoff/`.
+4. Auto routing using PLAN presence and `tools/lint/plan.sh` status.
+5. Prompt path and dump scope resolution per resolved profile from policy mappings.
+6. Deterministic embedded OPEN block generation (no internal `ops/bin/open` invocation).
+7. Dump orchestration with explicit `.txt` output path under `storage/dumps/`.
+8. Auditor intent parsing and decision-leaf validation against dump payload.
+9. Bundle text rendering with embedded prompt contract text.
+10. Manifest v2 emission and package `.tar` emission with manifest-aligned member list.
 
 Prompt contract extraction rule:
 - Strip only contiguous leading HTML comment lines and immediately following leading blank lines.
@@ -29,4 +30,4 @@ Text artifact profile conditional rule:
 DP-OPS-0145 introduced bundle as a transport primitive. DP-OPS-0146 hardened it for attach-only architect workflows and addendum auditor flows by eliminating OPEN artifact dependence and adding deterministic package metadata.
 
 ## Integrity Filter Warnings
-The script assumes canonical prompt files under `docs/ops/prompts/`. Path movement without map updates causes hard failure. Runtime behavior must remain deterministic and pointer-first; dump payload bodies must not be inlined into bundle text.
+The script assumes canonical prompt files under `docs/ops/prompts/`. Path movement without policy updates causes hard failure. `ops/lib/manifests/BUNDLE.md` parse failures are fail-closed and block bundle generation. Runtime behavior must remain deterministic and pointer-first; dump payload bodies must not be inlined into bundle text.

@@ -12,10 +12,12 @@ These prompts reference canonical locations rather than duplicating content:
 * **RESULTS surface:** `ops/src/surfaces/results.md.tpl`
 * **Receipt baseline:** `ops/src/surfaces/dp.md.tpl` Section 3.4.5
 * **Path rules:** `PoT.md` Section 1.2
+* **Bundle policy contract:** `ops/lib/manifests/BUNDLE.md`
 * **Certify spec:** `docs/ops/specs/binaries/certify.md`
 * **Results surface spec:** `docs/ops/specs/surfaces/results.md`
 
 **Artifact Attachment Policy:**
+* **Policy authority:** Profile routing and attachment contract defaults are governed by `ops/lib/manifests/BUNDLE.md`.
 * **For prompt intake (all stances):** Generate and attach bundle artifacts from `ops/bin/bundle` (`bundle .txt` + `.manifest.json`).
 * **For DP authoring (Integrator):** Use `./ops/bin/bundle --profile=architect --out=auto` and attach `PLAN.md`.
 * **For read-only analysis (Integrator or Operator):** Use `./ops/bin/bundle --profile=analyst --out=auto` and provide an operator query source (`storage/handoff/TOPIC.md` or inline `ANALYZE/SYNTHESIZE/FORMULATE` query).
