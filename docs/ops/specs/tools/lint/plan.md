@@ -20,11 +20,6 @@ Baseline deterministic checks:
 Architect-targeted checks (only when `Architect Handoff` heading is present):
 1. Require `Selected Option`, `Slice Mode`, and `Selected Slices` fields.
 2. Require `Execution Order` when `Slice Mode=multi`.
-3. Require `DP Slot Source Map` heading.
-4. Require slot-map keys with values:
-   - `DP_ID`, `DP_TITLE`, `BASE_BRANCH`, `WORK_BRANCH`, `BASE_HEAD`,
-     `FRESHNESS_STAMP`, `CBC_PREFLIGHT`, `DP_SCOPED_LOAD_ORDER`,
-     `SAFETY_INVARIANTS`, `PLAN_STATE`.
 
 On pass, lint prints `PLAN lint: PASS (<path>)` and exits 0.
 On failure, lint prints `FAIL: ...` and exits non-zero.

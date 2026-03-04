@@ -170,6 +170,12 @@ check_audit_auditor_mode_split() {
   local prompt_auditor="${REPO_ROOT}/docs/ops/prompts/e-prompt-05.md"
   local prompts_readme="${REPO_ROOT}/docs/ops/prompts/README.md"
   local required_audit_guard='`--profile=auditor` is addendum-authorization mode and is never valid for audit verdict workflows.'
+  local required_audit_empty_input='If user text is empty and required attachments are present, proceed and emit only the final audit block.'
+  local required_audit_output='Output only: Complete audit report.'
+  local required_audit_output_first='First non-empty line must start with `**AUDIT —`.'
+  local required_audit_no_citations='Do not emit citation tokens (`:contentReference[` or `oaicite`).'
+  local required_audit_authority='If interpretation conflicts with receipt command outputs, treat command outputs and lint results as authoritative and mark the interpretation as non-blocking.'
+  local required_audit_allowlist_authority='For allowlist interpretation, `tools/lint/integrity.sh` plus certify changed-file subset check are authoritative; raw `comm` output is informational.'
   local required_auditor_guard='This stance is not used for audit PASS/FAIL verdicts.'
   local required_readme_audit='* `audit` profile is for PASS/FAIL audit verdicts only.'
   local required_readme_auditor='* `auditor` profile is for addendum authorization only.'
@@ -180,6 +186,30 @@ check_audit_auditor_mode_split() {
 
   if [[ -f "$prompt_audit" ]] && ! grep -Fq -- "$required_audit_guard" "$prompt_audit"; then
     mark_failure "e-prompt-01.md missing audit-verdict stance marker"
+  fi
+
+  if [[ -f "$prompt_audit" ]] && ! grep -Fq -- "$required_audit_empty_input" "$prompt_audit"; then
+    mark_failure "e-prompt-01.md missing empty-input attach-only rule line"
+  fi
+
+  if [[ -f "$prompt_audit" ]] && ! grep -Fq -- "$required_audit_output" "$prompt_audit"; then
+    mark_failure "e-prompt-01.md missing audit output contract line"
+  fi
+
+  if [[ -f "$prompt_audit" ]] && ! grep -Fq -- "$required_audit_output_first" "$prompt_audit"; then
+    mark_failure "e-prompt-01.md missing audit first-line marker output line"
+  fi
+
+  if [[ -f "$prompt_audit" ]] && ! grep -Fq -- "$required_audit_no_citations" "$prompt_audit"; then
+    mark_failure "e-prompt-01.md missing audit no-citations output line"
+  fi
+
+  if [[ -f "$prompt_audit" ]] && ! grep -Fq -- "$required_audit_authority" "$prompt_audit"; then
+    mark_failure "e-prompt-01.md missing audit evidence-authority conflict rule line"
+  fi
+
+  if [[ -f "$prompt_audit" ]] && ! grep -Fq -- "$required_audit_allowlist_authority" "$prompt_audit"; then
+    mark_failure "e-prompt-01.md missing audit allowlist-authority interpretation rule line"
   fi
 
   if [[ -f "$prompt_auditor" ]] && ! grep -Fq -- "$required_auditor_guard" "$prompt_auditor"; then

@@ -14,12 +14,16 @@ The script provides `bundle_run` plus helpers for:
 5. Deterministic embedded OPEN block generation (no internal `ops/bin/open` invocation).
 6. Dump orchestration with explicit `.txt` output path under `storage/dumps/`.
 7. Auditor intent parsing and decision-leaf validation against dump payload.
-8. Bundle text rendering with embedded prompt stance text.
+8. Bundle text rendering with embedded prompt contract text.
 9. Manifest v2 emission and package `.tar` emission with manifest-aligned member list.
 
-Prompt embedding rule:
+Prompt contract extraction rule:
 - Strip only contiguous leading HTML comment lines and immediately following leading blank lines.
-- Preserve all remaining prompt content verbatim.
+- If `Rules:` exists in the prompt, emit from `Rules:` through end-of-file.
+- Otherwise emit the stripped prompt body as-is.
+
+Text artifact profile conditional rule:
+- Emit `[HANDOFF]` (`TOPIC.md` / `PLAN.md` presence) only when resolved profile is not `audit` and not `auditor`.
 
 ## Anecdotal Anchor
 DP-OPS-0145 introduced bundle as a transport primitive. DP-OPS-0146 hardened it for attach-only architect workflows and addendum auditor flows by eliminating OPEN artifact dependence and adding deterministic package metadata.

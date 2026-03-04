@@ -9,7 +9,10 @@ Rules:
 * Use native `BUNDLE-*` filenames from bundle output; do not relabel artifacts to `AUDIT-*`.
 * Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
 * Require attached bundle manifest `resolved_profile=audit`; if not, **STOP** and request a correct audit bundle.
+* If user text is empty and required attachments are present, proceed and emit only the final audit block.
 * `--profile=auditor` is addendum-authorization mode and is never valid for audit verdict workflows.
+* If interpretation conflicts with receipt command outputs, treat command outputs and lint results as authoritative and mark the interpretation as non-blocking.
+* For allowlist interpretation, `tools/lint/integrity.sh` plus certify changed-file subset check are authoritative; raw `comm` output is informational.
 * Follow constraints in `ops/lib/manifests/CONSTRAINTS.md` (Sections 1 & 2).
 * Contractor constraints: ops/lib/manifests/CONTRACTOR.md
 * Logic: `PoT.md`. Structure: `TASK.md` + `ops/src/surfaces/dp.md.tpl`.
@@ -41,4 +44,7 @@ Steps:
 6. **GENERATED OUTPUTS**: Require tool-based regeneration proofs (no manual edits to manifests,
    llms bundles, dumps, or RESULTS receipts).
 
-Output: PASS or FAIL. If FAIL, list specific deviations.
+Output only: Complete audit report.
+Do not output option menus, planning chatter, or confirmation prompts once preconditions pass.
+First non-empty line must start with `**AUDIT —`.
+Do not emit citation tokens (`:contentReference[` or `oaicite`).

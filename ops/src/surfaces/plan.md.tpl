@@ -7,7 +7,6 @@ requires_slots:
   - SUMMARY
   - SCOPE
   - ARCHITECT_HANDOFF
-  - DP_SLOT_SOURCE_MAP
   - INTERFACES
   - IMPLEMENTATION_PLAN
   - FILE_CHANGE_MAP
@@ -27,21 +26,6 @@ ff_band: "30-45"
 
 ## Architect Handoff
 {{ARCHITECT_HANDOFF}}
-
-## DP Slot Source Map
-{{DP_SLOT_SOURCE_MAP}}
-
-Required keys:
-- DP_ID:
-- DP_TITLE:
-- BASE_BRANCH:
-- WORK_BRANCH:
-- BASE_HEAD:
-- FRESHNESS_STAMP:
-- CBC_PREFLIGHT:
-- DP_SCOPED_LOAD_ORDER:
-- SAFETY_INVARIANTS:
-- PLAN_STATE:
 
 ## Public Interfaces and Contract Changes
 {{INTERFACES}}

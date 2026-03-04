@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/bin/bundle` is the deterministic transport primitive for workflow intake. It unifies OPEN freshness metadata, dump pointers, prompt stance text, and route metadata into one portable contract so operator handoffs do not depend on manual prompt copy or ad hoc artifact selection.
+`ops/bin/bundle` is the deterministic transport primitive for workflow intake. It unifies OPEN freshness metadata, dump pointers, prompt contract text, and route metadata into one portable contract so operator handoffs do not depend on manual prompt copy or ad hoc artifact selection.
 
 ## Mechanics and Sequencing
 Public interface:
@@ -23,7 +23,7 @@ Routing rules:
 3. Otherwise auto resolves to `analyst`.
 
 Artifact contract (written under `storage/handoff/`):
-1. Bundle text artifact (`.txt`) with embedded OPEN block, dump pointers, prompt pointer, and embedded prompt stance.
+1. Bundle text artifact (`.txt`) with embedded OPEN block, dump pointers, prompt pointer, and embedded prompt contract excerpt.
 2. Bundle manifest (`.manifest.json`) with `bundle_version: "2"` and structured metadata:
    - profile routing metadata
    - embedded OPEN metadata (`embedded`, `branch`, `head_short`, `trace_id`, `intent`)
@@ -33,6 +33,10 @@ Artifact contract (written under `storage/handoff/`):
    - package metadata (`path`, `files`)
 3. Bundle package (`.tar`) containing bundle `.txt`, manifest, dump payload, dump manifest, and `TOPIC.md`/`PLAN.md` when present.
 4. Canonical bundle artifact names use `BUNDLE-` prefix; profile aliases such as `AUDIT-*` or `AUDITOR-*` are non-canonical relabels.
+
+Text artifact profile conditional block:
+1. The `[HANDOFF]` block (`TOPIC.md` / `PLAN.md` presence) is emitted for non-audit profiles.
+2. For `audit` and `auditor` resolved profiles, the text artifact omits `[HANDOFF]` to avoid unrelated intake noise in audit flows.
 
 Auditor gate:
 1. `--profile=auditor` requires `--intent`.

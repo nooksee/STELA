@@ -11,7 +11,7 @@ Authoritative registry for `tools/lint/*` executables.
 | LINT-04 | Factory Lint | tools/lint/factory.sh | Spec: `docs/ops/specs/tools/lint/factory.md`. Verifies agent/skill/task registry synchronization and pointer integrity. |
 | LINT-05 | LLMS Lint | tools/lint/llms.sh | Retired by DP-OPS-0102. Deprecated-filename check absorbed into ops/bin/llms. Staleness protection replaced by .github/hooks/llms. |
 | LINT-06 | Project Lint | tools/lint/project.sh | Spec: `docs/ops/specs/tools/lint/project.md`. Deprecated: project registry is unpopulated, so this linter has no live targets. Reactivate when the project registry is populated and project scaffolding implementation is complete. |
-| LINT-07 | Style Lint | tools/lint/style.sh | Spec: `docs/ops/specs/tools/lint/style.md`. Rejects markdown contractions across tracked documentation surfaces and enforces audit-versus-auditor mode split guard lines in prompt surfaces. |
+| LINT-07 | Style Lint | tools/lint/style.sh | Spec: `docs/ops/specs/tools/lint/style.md`. Rejects markdown contractions across tracked documentation surfaces and enforces audit-versus-auditor mode split guard lines plus gatekeeper output marker and no-citations lines in prompt surfaces. |
 | LINT-08 | TASK Lint | tools/lint/task.sh | Spec: `docs/ops/specs/tools/lint/task.md`. Sole TASK dashboard and task-definitions schema enforcer; resolves pointer-first `TASK.md` heads to archives/surfaces leaves before linting dashboard content. |
 | LINT-09 | Truth Lint | tools/lint/truth.sh | Spec: `docs/ops/specs/tools/lint/truth.md`. Scans authored surfaces for forbidden canon spellings. |
 | LINT-10 | Integrity Lint | tools/lint/integrity.sh | Spec: `docs/ops/specs/tools/lint/integrity.md`. Fails when changed or untracked paths are outside the active Target Files allowlist; resolves pointer-first `TASK.md` to extract allowlist pointers from the leaf payload. |
@@ -20,7 +20,8 @@ Authoritative registry for `tools/lint/*` executables.
 | LINT-13 | Leaf Lint | tools/lint/leaf.sh | Spec: `docs/ops/specs/tools/lint/leaf.md`. Validates archive surface leaf schema and pointer integrity for `archives/surfaces/` entries. |
 | LINT-14 | Skill Lint | tools/lint/skill.sh | Spec: `docs/ops/specs/tools/lint/skill.md`. Enforces skill registry synchronization and pointer integrity for skill definition leaves. |
 | LINT-15 | Feynman Frequency Lint | tools/lint/ff.sh | Spec: `docs/ops/specs/tools/lint/ff.md`. Scores tracked markdown files against declared CCD density headers (`<!-- CCD: ... -->` or YAML `ff_target`/`ff_band` fields). Fails when declared files score outside band tolerance, and fails when Wave 1 or Wave 2 hardened paths miss a CCD header. Non-hardened undeclared files emit WARNING; Wave 0 paths remain exempt. |
-| LINT-16 | PLAN Lint | tools/lint/plan.sh | Spec: `docs/ops/specs/tools/lint/plan.md`. Deterministic safety-floor check for `storage/handoff/PLAN.md` used by bundle route gating; when `Architect Handoff` is present, enforces required handoff fields and `DP Slot Source Map` key presence. |
+| LINT-16 | PLAN Lint | tools/lint/plan.sh | Spec: `docs/ops/specs/tools/lint/plan.md`. Deterministic safety-floor check for `storage/handoff/PLAN.md` used by bundle route gating; when `Architect Handoff` is present, enforces required handoff fields only. |
+| LINT-17 | Response Lint | tools/lint/response.sh | Spec: `docs/ops/specs/tools/lint/response.md`. Enforces raw-model response intake for both DP and audit (`--mode=dp|audit`): strict fenced-envelope + no-outside-text for DP mode, normalized audit-body marker checks, and drift-token rejection; delegates DP body validation to `tools/lint/dp.sh` in `dp` mode. |
 
 ## Gate Status Decisions (2026-02-19)
 - `tools/lint/project.sh` is formally deprecated.

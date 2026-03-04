@@ -44,5 +44,8 @@ Steps:
    * Do not author or populate any §3.5.1 Mandatory Closing Sidecar field at draft time.
    * Do not infer missing handoff intent. Use explicit selections only or **STOP**.
 
-Output only: Full DP (starting at `### 3.1 Freshness Gate`) in one markdown code block.
+Output only: Full DP (starting at `### DP-...`) in one markdown code block.
 Do not output option menus, planning chatter, or confirmation prompts once preconditions pass.
+Emit exactly one fenced markdown code block.
+Emit no text before or after the fenced code block.
+First non-empty line inside the code block must start with `### DP-`.
