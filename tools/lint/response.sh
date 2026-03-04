@@ -21,6 +21,7 @@ USAGE
 
 failures=0
 response_mode="dp"
+response_skip_dp_delegate=0
 
 response_fail() {
   echo "FAIL: $*" >&2
@@ -290,7 +291,7 @@ lint_response_file() {
     return 1
   fi
 
-  if [[ "$response_mode" == "dp" ]]; then
+  if [[ "$response_mode" == "dp" && "$response_skip_dp_delegate" != "1" ]]; then
     if ! bash tools/lint/dp.sh "$body_tmp"; then
       rm -f "$body_tmp"
       return 1
@@ -303,7 +304,6 @@ lint_response_file() {
 
 run_test() {
   local test_dir
-  local body_valid
   local response_valid
   local response_outside
   local response_multiple
@@ -322,7 +322,6 @@ run_test() {
   test_dir="$(mktemp -d)"
   trap 'rm -rf "$test_dir"' RETURN
 
-  body_valid="${test_dir}/body-valid.md"
   response_valid="${test_dir}/response-valid.md"
   response_outside="${test_dir}/response-outside.md"
   response_multiple="${test_dir}/response-multiple.md"
@@ -336,14 +335,25 @@ run_test() {
   response_audit_meta="${test_dir}/response-audit-meta.md"
   response_audit_marker_with_inner_fence="${test_dir}/response-audit-marker-inner-fence.md"
 
-  extract_active_dp_payload "$body_valid"
   response_mode="dp"
+  response_skip_dp_delegate=1
 
-  cat > "$response_valid" <<'EOF_VALID_HEAD'
+  if ! bash tools/lint/dp.sh --test >/dev/null 2>&1; then
+    echo "FAIL: --test expected dp lint self-test to pass" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_valid" <<'EOF_VALID'
 ```markdown
-EOF_VALID_HEAD
-  cat "$body_valid" >> "$response_valid"
-  printf '```\n' >> "$response_valid"
+### DP-OPS-9999: Response Envelope Self-Test
+
+## 3.1 Freshness Gate (Must Pass Before Work)
+Base Branch: main
+Required Work Branch: work/dp-ops-9999-response-envelope-self-test-2026-03-04
+Base HEAD: 00000000
+Freshness Stamp: 2026-03-04
+```
+EOF_VALID
 
   if ! lint_response_file "$response_valid" >/dev/null 2>&1; then
     echo "FAIL: --test expected valid single-block response to pass" >&2
@@ -443,7 +453,7 @@ EOF_VALID_HEAD
 
   {
     echo 'To: Operator'
-    echo 'From: Auditor'
+    echo 'From: Foreman'
     echo
     cat "$response_audit_valid"
   } > "$response_audit_preface"
@@ -471,6 +481,7 @@ EOF_VALID_HEAD
   fi
 
   response_mode="$saved_mode"
+  response_skip_dp_delegate=0
 
   if (( failures_local != 0 )); then
     return 1

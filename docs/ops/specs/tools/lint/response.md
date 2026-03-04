@@ -32,7 +32,8 @@ Exit behavior:
 - Fail: prints `FAIL: ...` and exits non-zero.
 
 `--test` fixtures:
-- PASS: single fenced block with valid DP body (`dp` mode).
+- PASS: `tools/lint/dp.sh --test` succeeds (delegate health check).
+- PASS: single fenced block with valid DP envelope (`dp` mode; delegate skipped in self-test fixture for determinism).
 - PASS: single fenced block with `**AUDIT —` marker (`audit` mode).
 - PASS: plain markdown with `**AUDIT —` marker (`audit` mode).
 - PASS: preface lines plus a fenced markdown block (`audit` mode; first fenced block is authoritative).

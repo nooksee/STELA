@@ -46,13 +46,13 @@ Detection logic: Extract the value block of `Create Pull Request (Description)` 
 Failure message: `CLOSING BLOCK: PR Description contains no markdown constructs. Use at least one heading (##), list item (- or 1.), or bold (**) to serve the reviewer interface.`
 Rationale: The PR Description renders in the GitHub pull request interface, which supports full markdown. A plaintext paragraph in a markdown rendering surface indicates the writer used the field as a text box rather than a structured reviewer handoff. At minimum, one markdown construct is required to demonstrate intentional use of the rendering surface.
 
-## Audit-Auditor Mode Split Guardrails
+## Audit-Foreman Mode Split Guardrails
 
 ### Guard 1: Audit stance marker in `e-prompt-01`
 Target file: `docs/ops/prompts/e-prompt-01.md`
-Assertion: file must include `` `--profile=auditor` is addendum-authorization mode and is never valid for audit verdict workflows. ``
+Assertion: file must include `` `--profile=foreman` is addendum-authorization mode and is never valid for audit verdict workflows. ``
 Failure message: `e-prompt-01.md missing audit-verdict stance marker`
-Invariant: audit verdict flow and auditor authorization flow remain separated by explicit prompt guidance.
+Invariant: audit verdict flow and foreman authorization flow remain separated by explicit prompt guidance.
 
 ### Guard 2: Audit code-block output contract line in `e-prompt-01`
 Target file: `docs/ops/prompts/e-prompt-01.md`
@@ -64,19 +64,19 @@ Invariant: attach-only audit intake proceeds deterministically without requiring
 Target file: `docs/ops/prompts/e-prompt-01.md`
 Assertion: file must include `Output only: Complete audit report.`
 Failure message: `e-prompt-01.md missing audit output contract line`
-Invariant: gatekeeper output remains deterministic while avoiding renderer-specific code-block coupling.
+Invariant: auditor output remains deterministic while avoiding renderer-specific code-block coupling.
 
 ### Guard 4: Audit first-line marker in `e-prompt-01`
 Target file: `docs/ops/prompts/e-prompt-01.md`
 Assertion: file must include `First non-empty line must start with \`**AUDIT —\`.`
 Failure message: `e-prompt-01.md missing audit first-line marker output line`
-Invariant: gatekeeper output has a stable entry marker for deterministic intake checks independent of markdown rendering wrappers.
+Invariant: auditor output has a stable entry marker for deterministic intake checks independent of markdown rendering wrappers.
 
 ### Guard 5: Audit no-citations line in `e-prompt-01`
 Target file: `docs/ops/prompts/e-prompt-01.md`
 Assertion: file must include `Do not emit citation tokens (\`:contentReference[\` or \`oaicite\`).`
 Failure message: `e-prompt-01.md missing audit no-citations output line`
-Invariant: gatekeeper output avoids citation-token contamination and renderer artifacts.
+Invariant: auditor output avoids citation-token contamination and renderer artifacts.
 
 ### Guard 6: Audit evidence-authority conflict rule in `e-prompt-01`
 Target file: `docs/ops/prompts/e-prompt-01.md`
@@ -90,11 +90,11 @@ Assertion: file must include `For allowlist interpretation, \`tools/lint/integri
 Failure message: `e-prompt-01.md missing audit allowlist-authority interpretation rule line`
 Invariant: audit output does not misclassify raw comm output as a hard gate failure when authoritative checks pass.
 
-### Guard 8: Auditor stance marker in `e-prompt-05`
+### Guard 8: Foreman stance marker in `e-prompt-05`
 Target file: `docs/ops/prompts/e-prompt-05.md`
 Assertion: file must include `This stance is not used for audit PASS/FAIL verdicts.`
 Failure message: `e-prompt-05.md missing addendum-authorization stance marker`
-Invariant: auditor stance remains authorization-only and never drifts into verdict behavior.
+Invariant: foreman stance remains authorization-only and never drifts into verdict behavior.
 
 ### Guard 9: Audit split line in prompts README
 Target file: `docs/ops/prompts/README.md`
@@ -102,8 +102,8 @@ Assertion: file must include `* \`audit\` profile is for PASS/FAIL audit verdict
 Failure message: `README.md missing audit mode split line`
 Invariant: registry-level prompt guidance keeps audit mode semantics explicit and enforceable.
 
-### Guard 10: Auditor split line in prompts README
+### Guard 10: Foreman split line in prompts README
 Target file: `docs/ops/prompts/README.md`
-Assertion: file must include `* \`auditor\` profile is for addendum authorization only.`
-Failure message: `README.md missing auditor mode split line`
-Invariant: registry-level prompt guidance keeps auditor mode semantics explicit and enforceable.
+Assertion: file must include `* \`foreman\` profile is for addendum authorization only.`
+Failure message: `README.md missing foreman mode split line`
+Invariant: registry-level prompt guidance keeps foreman mode semantics explicit and enforceable.

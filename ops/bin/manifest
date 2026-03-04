@@ -9,7 +9,7 @@ source "${SCRIPT_DIR}/../lib/scripts/common.sh"
 usage() {
   cat <<'USAGE'
 Usage:
-  ops/bin/manifest [render] <dp|results|task-surface|spec|addendum|closing> --out=PATH [options]
+  ops/bin/manifest [render] <dp|results|task-surface|spec|addendum|closing|stance-analyst|stance-architect|stance-auditor|stance-audit|stance-foreman|stance-authority|stance-conformist> --out=PATH [options]
 
 Options:
   --slots-file=PATH          Load [TOKEN] blocks from a slots file.
@@ -43,9 +43,16 @@ declare -A TEMPLATE_PATHS=(
   [dp]="ops/src/surfaces/dp.md.tpl"
   [results]="ops/src/surfaces/results.md.tpl"
   [task-surface]="ops/src/surfaces/task.md.tpl"
-  [addendum]="ops/src/surfaces/addendum.md.tpl"
+  [addendum]="ops/src/stances/addendum.md.tpl"
   [closing]="ops/src/surfaces/closing.md.tpl"
   [spec]="ops/src/docs/spec.md.tpl"
+  [stance-analyst]="ops/src/stances/analyst.md.tpl"
+  [stance-architect]="ops/src/stances/architect.md.tpl"
+  [stance-auditor]="ops/src/stances/auditor.md.tpl"
+  [stance-audit]="ops/src/stances/auditor.md.tpl"
+  [stance-foreman]="ops/src/stances/foreman.md.tpl"
+  [stance-authority]="ops/src/stances/foreman.md.tpl"
+  [stance-conformist]="ops/src/stances/conformist.md.tpl"
 )
 
 declare -A SLOT_VALUES=()
@@ -286,6 +293,66 @@ extract_section_from_file() {
   }
 }
 
+extract_json_include_key() {
+  local source_path="$1"
+  local section_anchor="$2"
+  local out_path="$3"
+  local key_name
+  key_name="$(trim "${section_anchor#\#}")"
+  [[ -n "$key_name" ]] || die "invalid include key '${section_anchor}' in ${source_path}"
+
+  awk -v key="$key_name" '
+    function unescape_json(value) {
+      gsub(/\\"/, "\"", value)
+      gsub(/\\\\/, "\\", value)
+      return value
+    }
+    BEGIN {
+      found=0
+      in_array=0
+    }
+    {
+      if (!found) {
+        if (match($0, "^[[:space:]]*\"" key "\"[[:space:]]*:[[:space:]]*\"(.*)\"[[:space:]]*,?[[:space:]]*$", parts)) {
+          found=1
+          print unescape_json(parts[1])
+          exit
+        }
+        if ($0 ~ "^[[:space:]]*\"" key "\"[[:space:]]*:[[:space:]]*\\[[[:space:]]*$") {
+          found=1
+          in_array=1
+          next
+        }
+        next
+      }
+
+      if (in_array) {
+        if ($0 ~ /^[[:space:]]*\][[:space:]]*,?[[:space:]]*$/) {
+          exit
+        }
+
+        if ($0 ~ /^[[:space:]]*"[^"]*"[[:space:]]*,?[[:space:]]*$/) {
+          line=$0
+          sub(/^[[:space:]]*"/, "", line)
+          sub(/"[[:space:]]*,?[[:space:]]*$/, "", line)
+          print unescape_json(line)
+        }
+      }
+    }
+    END {
+      if (!found) {
+        exit 2
+      }
+    }
+  ' "$source_path" > "$out_path" || {
+    local status=$?
+    if [[ "$status" -eq 2 ]]; then
+      die "include key not found: ${source_path}#${section_anchor}"
+    fi
+    die "failed to extract key from include: ${source_path}#${section_anchor}"
+  }
+}
+
 stack_contains() {
   local stack="$1"
   local descriptor="$2"
@@ -381,7 +448,11 @@ render_file_body() {
   local tmp_section=""
   if [[ -n "$section_anchor" ]]; then
     tmp_section="$(mktemp)"
-    extract_section_from_file "$tmp_body" "$section_anchor" "$tmp_section"
+    if [[ "$source_path" == *.json ]]; then
+      extract_json_include_key "$tmp_body" "$section_anchor" "$tmp_section"
+    else
+      extract_section_from_file "$tmp_body" "$section_anchor" "$tmp_section"
+    fi
     source_block="$tmp_section"
   fi
 
@@ -604,7 +675,7 @@ parse_args() {
     esac
   done
 
-  [[ "$render_key" =~ ^(dp|results|task-surface|spec|addendum|closing)$ ]] || die "unknown template key '${render_key}'"
+  [[ "$render_key" =~ ^(dp|results|task-surface|spec|addendum|closing|stance-analyst|stance-architect|stance-auditor|stance-audit|stance-foreman|stance-authority|stance-conformist)$ ]] || die "unknown template key '${render_key}'"
   if (( dry_run )); then
     return 0
   fi

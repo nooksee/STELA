@@ -165,23 +165,23 @@ check_jargon_blacklist() {
   done
 }
 
-check_audit_auditor_mode_split() {
+check_audit_foreman_mode_split() {
   local prompt_audit="${REPO_ROOT}/docs/ops/prompts/e-prompt-01.md"
-  local prompt_auditor="${REPO_ROOT}/docs/ops/prompts/e-prompt-05.md"
+  local prompt_foreman="${REPO_ROOT}/docs/ops/prompts/e-prompt-05.md"
   local prompts_readme="${REPO_ROOT}/docs/ops/prompts/README.md"
-  local required_audit_guard='`--profile=auditor` is addendum-authorization mode and is never valid for audit verdict workflows.'
+  local required_audit_guard='`--profile=foreman` is addendum-authorization mode and is never valid for audit verdict workflows.'
   local required_audit_empty_input='If user text is empty and required attachments are present, proceed and emit only the final audit block.'
   local required_audit_output='Output only: Complete audit report.'
   local required_audit_output_first='First non-empty line must start with `**AUDIT —`.'
   local required_audit_no_citations='Do not emit citation tokens (`:contentReference[` or `oaicite`).'
   local required_audit_authority='If interpretation conflicts with receipt command outputs, treat command outputs and lint results as authoritative and mark the interpretation as non-blocking.'
   local required_audit_allowlist_authority='For allowlist interpretation, `tools/lint/integrity.sh` plus certify changed-file subset check are authoritative; raw `comm` output is informational.'
-  local required_auditor_guard='This stance is not used for audit PASS/FAIL verdicts.'
+  local required_foreman_guard='This stance is not used for audit PASS/FAIL verdicts.'
   local required_readme_audit='* `audit` profile is for PASS/FAIL audit verdicts only.'
-  local required_readme_auditor='* `auditor` profile is for addendum authorization only.'
+  local required_readme_foreman='* `foreman` profile is for addendum authorization only.'
 
   [[ -f "$prompt_audit" ]] || mark_failure "e-prompt-01.md missing for mode split checks"
-  [[ -f "$prompt_auditor" ]] || mark_failure "e-prompt-05.md missing for mode split checks"
+  [[ -f "$prompt_foreman" ]] || mark_failure "e-prompt-05.md missing for mode split checks"
   [[ -f "$prompts_readme" ]] || mark_failure "README.md missing for mode split checks"
 
   if [[ -f "$prompt_audit" ]] && ! grep -Fq -- "$required_audit_guard" "$prompt_audit"; then
@@ -212,7 +212,7 @@ check_audit_auditor_mode_split() {
     mark_failure "e-prompt-01.md missing audit allowlist-authority interpretation rule line"
   fi
 
-  if [[ -f "$prompt_auditor" ]] && ! grep -Fq -- "$required_auditor_guard" "$prompt_auditor"; then
+  if [[ -f "$prompt_foreman" ]] && ! grep -Fq -- "$required_foreman_guard" "$prompt_foreman"; then
     mark_failure "e-prompt-05.md missing addendum-authorization stance marker"
   fi
 
@@ -220,8 +220,8 @@ check_audit_auditor_mode_split() {
     mark_failure "README.md missing audit mode split line"
   fi
 
-  if [[ -f "$prompts_readme" ]] && ! grep -Fq -- "$required_readme_auditor" "$prompts_readme"; then
-    mark_failure "README.md missing auditor mode split line"
+  if [[ -f "$prompts_readme" ]] && ! grep -Fq -- "$required_readme_foreman" "$prompts_readme"; then
+    mark_failure "README.md missing foreman mode split line"
   fi
 }
 
@@ -506,7 +506,7 @@ collect_markdown_files
 load_current_closing_labels
 check_markdown_contractions
 check_jargon_blacklist
-check_audit_auditor_mode_split
+check_audit_foreman_mode_split
 check_closing_block_lead_words
 check_closing_block_conversation_starter_question
 check_closing_block_manifest_paths

@@ -151,6 +151,10 @@ track_bundle_outputs() {
   assert_file_exists "$manifest_path"
   assert_file_exists "$package_path"
 
+  if ! grep -Fq 'Stance template key: stance-' "${REPO_ROOT}/${artifact_path}"; then
+    fail "bundle artifact missing stance template key marker: ${artifact_path}"
+  fi
+
   queue_cleanup_path "$artifact_path"
   queue_cleanup_path "$manifest_path"
   queue_cleanup_path "$package_path"
@@ -173,10 +177,68 @@ track_bundle_outputs() {
   fi
 }
 
+expected_stance_template_for_profile() {
+  local profile="$1"
+  case "$profile" in
+    analyst|project)
+      printf 'stance-analyst'
+      ;;
+    architect)
+      printf 'stance-architect'
+      ;;
+    audit)
+      printf 'stance-auditor'
+      ;;
+    conform)
+      printf 'stance-conformist'
+      ;;
+    foreman)
+      printf 'stance-foreman'
+      ;;
+    *)
+      printf ''
+      ;;
+  esac
+}
+
+test_stance_template_renderer() {
+  local first_render=""
+  local second_render=""
+
+  run_capture "${REPO_ROOT}/ops/bin/manifest" render stance-analyst --out=-
+  if (( RUN_STATUS != 0 )); then
+    fail "manifest stance render failed (first run)"
+    echo "$RUN_OUTPUT" >&2
+    return
+  fi
+  first_render="$RUN_OUTPUT"
+
+  if printf '%s\n' "$first_render" | grep -Fq '{{@include:'; then
+    fail "manifest stance render left unresolved include directive"
+  fi
+  if ! printf '%s\n' "$first_render" | grep -Fq 'Follow constraints in `ops/lib/manifests/CONSTRAINTS.md` (Sections 1 & 2).'; then
+    fail "manifest stance render missing included shared rules"
+  fi
+
+  run_capture "${REPO_ROOT}/ops/bin/manifest" render stance-analyst --out=-
+  if (( RUN_STATUS != 0 )); then
+    fail "manifest stance render failed (second run)"
+    echo "$RUN_OUTPUT" >&2
+    return
+  fi
+  second_render="$RUN_OUTPUT"
+
+  if [[ "$first_render" != "$second_render" ]]; then
+    fail "manifest stance render is non-deterministic across repeated runs"
+  fi
+}
+
 test_valid_profiles() {
   local profile
   local resolved
-  for profile in analyst architect audit hygiene auto; do
+  local template_key
+  local expected_template_key
+  for profile in analyst architect audit conform auto; do
     run_capture "${REPO_ROOT}/ops/bin/bundle" --profile="$profile" --out=auto
     if (( RUN_STATUS != 0 )); then
       fail "bundle failed for profile=${profile}"
@@ -202,27 +264,36 @@ test_valid_profiles() {
         fail "profile=${profile} manifest resolved_profile mismatch: ${resolved}"
       fi
     fi
+
+    template_key="$(extract_manifest_value "$LAST_MANIFEST" "stance_template_key")"
+    expected_template_key="$(expected_stance_template_for_profile "$resolved")"
+    if [[ -z "$template_key" ]]; then
+      fail "profile=${profile} manifest missing prompt.stance_template_key"
+    elif [[ "$template_key" != "$expected_template_key" ]]; then
+      fail "profile=${profile} manifest stance_template_key mismatch: expected ${expected_template_key}, got ${template_key}"
+    fi
   done
 }
 
-test_auditor_invalid_paths() {
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=auditor --out=auto
+test_foreman_invalid_paths() {
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=foreman --out=auto
   if (( RUN_STATUS == 0 )); then
-    fail "auditor path without --intent should fail"
+    fail "foreman path without --intent should fail"
   fi
 
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=auditor --intent="bad format" --out=auto
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=foreman --intent="bad format" --out=auto
   if (( RUN_STATUS == 0 )); then
-    fail "auditor path with malformed --intent should fail"
+    fail "foreman path with malformed --intent should fail"
   fi
 }
 
-test_auditor_valid_path() {
+test_foreman_valid_path() {
   local decision_leaf
   local decision_id
   local intent
   local resolved
   local manifest_decision_id
+  local template_key
 
   decision_leaf="$(find "${REPO_ROOT}/archives/decisions" -maxdepth 1 -type f -name 'RoR-*.md' | sort | head -n 1)"
   if [[ -z "$decision_leaf" ]]; then
@@ -232,9 +303,9 @@ test_auditor_valid_path() {
   decision_id="$(basename "$decision_leaf" .md)"
   intent="ADDENDUM REQUIRED: ${decision_id} - bundle smoke gate test"
 
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=auditor --intent="$intent" --out=auto
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=foreman --intent="$intent" --out=auto
   if (( RUN_STATUS != 0 )); then
-    fail "auditor path with valid --intent failed"
+    fail "foreman path with valid --intent failed"
     echo "$RUN_OUTPUT" >&2
     return
   fi
@@ -243,16 +314,92 @@ test_auditor_valid_path() {
   [[ -n "$LAST_MANIFEST" ]] || return
 
   resolved="$(extract_manifest_value "$LAST_MANIFEST" "resolved_profile")"
-  if [[ "$resolved" != "auditor" ]]; then
-    fail "auditor manifest resolved_profile mismatch: ${resolved}"
+  if [[ "$resolved" != "foreman" ]]; then
+    fail "foreman manifest resolved_profile mismatch: ${resolved}"
   fi
 
   manifest_decision_id="$(extract_manifest_value "$LAST_MANIFEST" "decision_id")"
   if [[ "$manifest_decision_id" != "$decision_id" ]]; then
-    fail "auditor manifest decision_id mismatch: expected ${decision_id}, got ${manifest_decision_id}"
+    fail "foreman manifest decision_id mismatch: expected ${decision_id}, got ${manifest_decision_id}"
+  fi
+
+  template_key="$(extract_manifest_value "$LAST_MANIFEST" "stance_template_key")"
+  if [[ "$template_key" != "stance-foreman" ]]; then
+    fail "foreman manifest stance_template_key mismatch: expected stance-foreman, got ${template_key}"
   fi
 
   assert_manifest_has "$LAST_MANIFEST" '"decision_leaf_present": true'
+}
+
+test_legacy_auditor_alias() {
+  local decision_leaf
+  local decision_id
+  local intent
+  local resolved
+  local requested
+  local route_reason
+
+  decision_leaf="$(find "${REPO_ROOT}/archives/decisions" -maxdepth 1 -type f -name 'RoR-*.md' | sort | head -n 1)"
+  if [[ -z "$decision_leaf" ]]; then
+    fail "no decision leaves found under archives/decisions/"
+    return
+  fi
+  decision_id="$(basename "$decision_leaf" .md)"
+  intent="ADDENDUM REQUIRED: ${decision_id} - bundle smoke gate alias test"
+
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=auditor --intent="$intent" --out=auto
+  if (( RUN_STATUS != 0 )); then
+    fail "legacy auditor alias path with valid --intent failed"
+    echo "$RUN_OUTPUT" >&2
+    return
+  fi
+
+  track_bundle_outputs
+  [[ -n "$LAST_MANIFEST" ]] || return
+
+  resolved="$(extract_manifest_value "$LAST_MANIFEST" "resolved_profile")"
+  requested="$(extract_manifest_value "$LAST_MANIFEST" "requested_profile")"
+  route_reason="$(extract_manifest_value "$LAST_MANIFEST" "route_reason")"
+
+  if [[ "$resolved" != "foreman" ]]; then
+    fail "legacy auditor alias resolved_profile mismatch: expected foreman, got ${resolved}"
+  fi
+  if [[ "$requested" != "auditor" ]]; then
+    fail "legacy auditor alias requested_profile mismatch: expected auditor, got ${requested}"
+  fi
+  if [[ "$route_reason" != "explicit profile alias: auditor -> foreman" ]]; then
+    fail "legacy auditor alias route_reason mismatch: ${route_reason}"
+  fi
+}
+
+test_legacy_hygiene_alias() {
+  local resolved
+  local requested
+  local route_reason
+
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=hygiene --out=auto
+  if (( RUN_STATUS != 0 )); then
+    fail "legacy hygiene alias path failed"
+    echo "$RUN_OUTPUT" >&2
+    return
+  fi
+
+  track_bundle_outputs
+  [[ -n "$LAST_MANIFEST" ]] || return
+
+  resolved="$(extract_manifest_value "$LAST_MANIFEST" "resolved_profile")"
+  requested="$(extract_manifest_value "$LAST_MANIFEST" "requested_profile")"
+  route_reason="$(extract_manifest_value "$LAST_MANIFEST" "route_reason")"
+
+  if [[ "$resolved" != "conform" ]]; then
+    fail "legacy hygiene alias resolved_profile mismatch: expected conform, got ${resolved}"
+  fi
+  if [[ "$requested" != "hygiene" ]]; then
+    fail "legacy hygiene alias requested_profile mismatch: expected hygiene, got ${requested}"
+  fi
+  if [[ "$route_reason" != "explicit profile alias: hygiene -> conform" ]]; then
+    fail "legacy hygiene alias route_reason mismatch: ${route_reason}"
+  fi
 }
 
 test_manifest_fail_closed() {
@@ -283,9 +430,12 @@ test_manifest_fail_closed() {
 }
 
 test_manifest_fail_closed
+test_stance_template_renderer
 test_valid_profiles
-test_auditor_invalid_paths
-test_auditor_valid_path
+test_foreman_invalid_paths
+test_foreman_valid_path
+test_legacy_auditor_alias
+test_legacy_hygiene_alias
 
 if (( FAILURES > 0 )); then
   echo "FAIL: bundle smoke test detected ${FAILURES} issue(s)." >&2
