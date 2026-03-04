@@ -93,26 +93,6 @@ lint_plan_file() {
     if grep -Eq 'Slice Mode:[[:space:]]+multi([[:space:]]|$)' "$abs_path"; then
       plan_require_pattern "$abs_path" 'Execution Order:[[:space:]]+[^[:space:]]+' "Architect Handoff requires 'Execution Order:' when Slice Mode is multi (${rel_path})" || return 1
     fi
-
-    plan_require_pattern "$abs_path" '^##+[[:space:]]+DP Slot Source Map([[:space:]]*)$' "Architect-targeted PLAN requires 'DP Slot Source Map' heading (${rel_path})" || return 1
-
-    local required_keys=(
-      DP_ID
-      DP_TITLE
-      BASE_BRANCH
-      WORK_BRANCH
-      BASE_HEAD
-      FRESHNESS_STAMP
-      CBC_PREFLIGHT
-      DP_SCOPED_LOAD_ORDER
-      SAFETY_INVARIANTS
-      PLAN_STATE
-    )
-
-    local key
-    for key in "${required_keys[@]}"; do
-      plan_require_pattern "$abs_path" "${key}:[[:space:]]+[^[:space:]]+" "DP Slot Source Map missing key '${key}' with value (${rel_path})" || return 1
-    done
   fi
 
   echo "PLAN lint: PASS (${rel_path})"
@@ -155,48 +135,15 @@ EOF_TOKEN
 - Selected Option: RECOMMENDED
 - Slice Mode: single
 - Selected Slices: S1
-
-## DP Slot Source Map
-- DP_ID: From OPEN Freshness Gate values
-- DP_TITLE: From operator topic summary
-- BASE_BRANCH: main
-- WORK_BRANCH: work/example
-- BASE_HEAD: abc12345
-- FRESHNESS_STAMP: 2026-03-03
-- CBC_PREFLIGHT: Bundle tooling changes
-- DP_SCOPED_LOAD_ORDER: plan list in section 3.2.2
-- SAFETY_INVARIANTS: scope list in section 3.3
-- PLAN_STATE: from plan state section
 EOF_ARCH_OK
 
-  cat > "${test_dir}/architect-missing-slot-heading.md" <<'EOF_ARCH_NO_SLOT_HEADING'
+  cat > "${test_dir}/architect-missing-slices.md" <<'EOF_ARCH_MISSING_SLICES'
 # PLAN
 
 ## Architect Handoff
 - Selected Option: RECOMMENDED
 - Slice Mode: single
-- Selected Slices: S1
-EOF_ARCH_NO_SLOT_HEADING
-
-  cat > "${test_dir}/architect-missing-key.md" <<'EOF_ARCH_NO_KEY'
-# PLAN
-
-## Architect Handoff
-- Selected Option: RECOMMENDED
-- Slice Mode: single
-- Selected Slices: S1
-
-## DP Slot Source Map
-- DP_ID: source
-- DP_TITLE: source
-- BASE_BRANCH: main
-- WORK_BRANCH: work/example
-- BASE_HEAD: abc12345
-- FRESHNESS_STAMP: 2026-03-03
-- CBC_PREFLIGHT: text
-- DP_SCOPED_LOAD_ORDER: text
-- SAFETY_INVARIANTS: text
-EOF_ARCH_NO_KEY
+EOF_ARCH_MISSING_SLICES
 
   cat > "${test_dir}/architect-multi-missing-order.md" <<'EOF_ARCH_MULTI_NO_ORDER'
 # PLAN
@@ -205,18 +152,6 @@ EOF_ARCH_NO_KEY
 - Selected Option: RECOMMENDED
 - Slice Mode: multi
 - Selected Slices: S1,S2
-
-## DP Slot Source Map
-- DP_ID: source
-- DP_TITLE: source
-- BASE_BRANCH: main
-- WORK_BRANCH: work/example
-- BASE_HEAD: abc12345
-- FRESHNESS_STAMP: 2026-03-03
-- CBC_PREFLIGHT: text
-- DP_SCOPED_LOAD_ORDER: text
-- SAFETY_INVARIANTS: text
-- PLAN_STATE: text
 EOF_ARCH_MULTI_NO_ORDER
 
   if ! lint_plan_file "${test_dir}/valid.md" >/dev/null 2>&1; then
@@ -249,13 +184,8 @@ EOF_ARCH_MULTI_NO_ORDER
     failures=1
   fi
 
-  if lint_plan_file "${test_dir}/architect-missing-slot-heading.md" >/dev/null 2>&1; then
-    echo "FAIL: --test expected architect plan missing slot heading to fail" >&2
-    failures=1
-  fi
-
-  if lint_plan_file "${test_dir}/architect-missing-key.md" >/dev/null 2>&1; then
-    echo "FAIL: --test expected architect plan missing key to fail" >&2
+  if lint_plan_file "${test_dir}/architect-missing-slices.md" >/dev/null 2>&1; then
+    echo "FAIL: --test expected architect plan missing selected slices to fail" >&2
     failures=1
   fi
 

@@ -3,14 +3,12 @@
 
 ## Constitutional Anchor
 `storage/handoff/PLAN.md` is an operator-authored planning surface used to drive architect-mode DP drafting.
-It is not an execution gate by itself and does not replace DP freshness controls.
+It is not an execution gate by itself and does not replace DP execution controls.
 
 ## Operator Contract
 - Canonical template source: `ops/src/surfaces/plan.md.tpl`.
 - Minimal deterministic validation: `tools/lint/plan.sh`.
-- Architect-targeted plans require two structural sections:
-  - `## Architect Handoff`
-  - `## DP Slot Source Map`
+- Architect-targeted plans require `## Architect Handoff`.
 
 Required `Architect Handoff` fields:
 - `Selected Option:`
@@ -18,28 +16,14 @@ Required `Architect Handoff` fields:
 - `Selected Slices:`
 - `Execution Order:` (required when `Slice Mode=multi`)
 
-Required `DP Slot Source Map` keys:
-- `DP_ID`
-- `DP_TITLE`
-- `BASE_BRANCH`
-- `WORK_BRANCH`
-- `BASE_HEAD`
-- `FRESHNESS_STAMP`
-- `CBC_PREFLIGHT`
-- `DP_SCOPED_LOAD_ORDER`
-- `SAFETY_INVARIANTS`
-- `PLAN_STATE`
-
 ## Mechanics and Sequencing
 1. Analyst produces PLAN intent and optioning.
 2. Operator records explicit handoff selections in `Architect Handoff`.
-3. Operator provides DP slot-source mapping in `DP Slot Source Map`.
-4. Architect consumes attached bundle artifacts plus PLAN and drafts DP using `ops/src/surfaces/dp.md.tpl`.
-5. Freshness ownership remains in DP Section 3.1 at draft/execution time.
+3. Architect consumes attached bundle artifacts plus PLAN and drafts DP using `ops/src/surfaces/dp.md.tpl`.
+4. Execution-gate ownership remains in DP Section 3.1 at draft/execution time.
 
 ## Failure States and Drift Triggers
 - Missing `Architect Handoff` fields in architect-targeted plans.
-- Missing `DP Slot Source Map` heading or required keys.
 - Unresolved `{{TOKEN}}` placeholders.
 - Heading-only plans with no non-heading content.
 

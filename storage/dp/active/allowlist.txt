@@ -209,3 +209,6 @@ docs/ops/registry/test.md
 docs/ops/specs/tools/test/bundle.md
 storage/handoff/CLOSING-DP-OPS-0147.md
 archives/surfaces/TASK-DP-OPS-0147-*.md
+archives/surfaces/TASK-DP-OPS-0148-*.md
+tools/lint/response.sh
+docs/ops/specs/tools/lint/response.md

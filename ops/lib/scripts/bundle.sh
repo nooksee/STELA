@@ -131,8 +131,11 @@ bundle_dump_scope_for_profile() {
   esac
 }
 
-bundle_emit_prompt_stance() {
+bundle_emit_prompt_contract() {
   local prompt_abs="$1"
+  local normalized_tmp
+  normalized_tmp="$(mktemp)"
+
   awk '
     BEGIN {
       mode=0
@@ -162,7 +165,18 @@ bundle_emit_prompt_stance() {
       }
       print
     }
-  ' "$prompt_abs"
+  ' "$prompt_abs" > "$normalized_tmp"
+
+  if grep -Eq '^Rules:[[:space:]]*$' "$normalized_tmp"; then
+    awk '
+      /^Rules:[[:space:]]*$/ { emit=1 }
+      emit { print }
+    ' "$normalized_tmp"
+  else
+    cat "$normalized_tmp"
+  fi
+
+  rm -f "$normalized_tmp"
 }
 
 bundle_parse_auditor_intent() {
@@ -371,25 +385,28 @@ bundle_run() {
     echo "[PROMPT]"
     echo "- Canonical prompt path: ${prompt_rel}"
     echo
-    echo "[HANDOFF]"
-    echo "- ${topic_rel}: $([[ "$topic_present" == "1" ]] && echo present || echo missing)"
-    echo "- ${plan_rel}: $([[ "$plan_present" == "1" ]] && echo present || echo missing)"
-    if [[ "$requested_profile" == "auto" ]]; then
-      echo "- PLAN lint status: ${plan_lint_status}"
+    if [[ "$resolved_profile" != "audit" && "$resolved_profile" != "auditor" ]]; then
+      echo "[HANDOFF]"
+      echo "- ${topic_rel}: $([[ "$topic_present" == "1" ]] && echo present || echo missing)"
+      echo "- ${plan_rel}: $([[ "$plan_present" == "1" ]] && echo present || echo missing)"
+      if [[ "$requested_profile" == "auto" ]]; then
+        echo "- PLAN lint status: ${plan_lint_status}"
+      fi
+      echo
     fi
     if [[ "$resolved_profile" == "auditor" ]]; then
       echo "- Addendum decision id: ${decision_id}"
       echo "- Decision leaf present in dump: $([[ "$decision_leaf_present" == "1" ]] && echo true || echo false)"
+      echo
     fi
-    echo
     if [[ "$requested_profile" == "auto" ]]; then
       echo "[PLAN LINT OUTPUT]"
       printf '%s\n' "$plan_lint_output"
       echo
     fi
-    echo "===== PROMPT STANCE BEGIN ====="
-    bundle_emit_prompt_stance "$prompt_abs"
-    echo "===== PROMPT STANCE END ====="
+    echo "===== PROMPT CONTRACT BEGIN ====="
+    bundle_emit_prompt_contract "$prompt_abs"
+    echo "===== PROMPT CONTRACT END ====="
     echo "===== END STELA BUNDLE ====="
   } > "$out_abs"
 

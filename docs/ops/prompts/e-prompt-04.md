@@ -25,17 +25,7 @@ Steps:
      * `Selected Slices: <S1[,S2...]>`
      * `Execution Order: <required when multi>`
      * `Architect Constraints: <no new options; draft from selected fields only>`
-   * Required `DP Slot Source Map` fields:
-     * `DP_ID`
-     * `DP_TITLE`
-     * `BASE_BRANCH`
-     * `WORK_BRANCH`
-     * `BASE_HEAD`
-     * `FRESHNESS_STAMP`
-     * `CBC_PREFLIGHT`
-     * `DP_SCOPED_LOAD_ORDER`
-     * `SAFETY_INVARIANTS`
-     * `PLAN_STATE`
+   * DP Slot Source Map is optional planning metadata and must not block PLAN output.
 
 Operator query template:
 1. ANALYZE `<topic>`.
