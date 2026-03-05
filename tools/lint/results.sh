@@ -146,10 +146,18 @@ required_headings=(
 
 unresolved_artifact_marker_regex='<PORCELAIN_ARTIFACT>|<SESSION_ARTIFACT>|<DUMP_ARTIFACT>|<[^>]*ARTIFACT[^>]*>'
 forbidden_disposable_regex='Local artifacts|Disposable artifact policy|storage/handoff/OPEN-|storage/handoff/OPEN-PORCELAIN-|storage/handoff/\*|storage/dumps/dump-|storage/dumps/\*|OPEN-work-dp-ops-[0-9]+|OPEN-PORCELAIN-work-dp-ops-[0-9]+|dump-platform-work-dp-ops-[0-9]+'
+narrative_scaffold_lines=(
+  "State the preflight outcome: branch, Base HEAD, clean working tree, and preflight lint results."
+  "Describe each change made: what was modified, created, or removed, and why."
+  "Describe any anomalies, open items, or residue. State None. if all items are resolved."
+  "Decision Required: Yes|No"
+  "Decision Leaf: archives/decisions/... or None"
+)
 
 failures=0
 checked=0
 hash_parity_skips=0
+narrative_scaffold_skips=0
 
 for target in "${targets[@]}"; do
   if [[ ! -f "$target" ]]; then
@@ -191,6 +199,22 @@ for target in "${targets[@]}"; do
   done
 
   narrative_block="$(extract_field_block "$target" '^## Contractor Execution Narrative[[:space:]]*$' '')"
+  scaffold_line_detected=0
+  scaffold_line=""
+  for scaffold_line in "${narrative_scaffold_lines[@]}"; do
+    if grep -Fqx "$scaffold_line" <<< "$narrative_block"; then
+      scaffold_line_detected=1
+      break
+    fi
+  done
+  if (( scaffold_line_detected == 1 )); then
+    if (( explicit_target || inferred_target )); then
+      fail "${rel_target}: Contractor Execution Narrative contains untouched scaffold instruction prose"
+    else
+      narrative_scaffold_skips=$((narrative_scaffold_skips + 1))
+    fi
+  fi
+
   if ! grep -Eq '^Decision Required:' <<< "$narrative_block"; then
     fail "${rel_target}: Contractor Execution Narrative Decision Leaf subsection missing 'Decision Required:' line"
   fi
@@ -241,6 +265,9 @@ fi
 
 if (( hash_parity_skips > 0 )); then
   echo "NOTE: skipped Git Hash parity for ${hash_parity_skips} clean historical receipt(s); pass an explicit path to enforce."
+fi
+if (( narrative_scaffold_skips > 0 )); then
+  echo "NOTE: skipped scaffold-prose enforcement for ${narrative_scaffold_skips} historical receipt(s); pass an explicit path to enforce."
 fi
 
 echo "OK: RESULTS lint passed (${checked} file(s) checked)."

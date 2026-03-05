@@ -26,7 +26,7 @@ It records certification execution details, verification command output, contrac
   - Closing sidecar validation is certify-internal and remains a hard gate via `storage/handoff/CLOSING-DP-OPS-XXXX.md`.
 
 ## Contractor Execution Narrative
-The `## Contractor Execution Narrative` section is populated at certify time by `ops/bin/certify`. Certify writes a scaffold to a temp file, opens the configured editor (`$EDITOR` or `vi`), and requires the worker to fill in the narrative before proceeding. The narrative is validated for required subsections and absence of placeholder text before being rendered into RESULTS.
+The `## Contractor Execution Narrative` section is populated at certify time by `ops/bin/certify`. Certify writes a scaffold to a temp file and delegates capture to `ops/lib/scripts/editor.sh`: interactive editor mode by default, or non-interactive ingest via `--narrative-file=PATH`. The narrative is validated for required subsections, absence of placeholder tokens, and rejection of untouched scaffold prose before being rendered into RESULTS.
 
 Required subsections:
 - `### Preflight State`
@@ -45,6 +45,7 @@ The `### Decision Leaf` subsection must contain both:
 - Git hash mismatch between receipt content and `git rev-parse HEAD`.
 - Missing or placeholder Contractor Execution Narrative content.
 - Missing required narrative subsections or Decision Leaf field lines.
+- Untouched narrative scaffold prose accepted as final content.
 
 Enforcement linkage:
 - `tools/lint/results.sh` validates template hash, schema headings, narrative structure, and git hash parity.
@@ -53,7 +54,7 @@ Enforcement linkage:
 ## Mechanics and Sequencing
 1. Maintain a human-authored closing sidecar at `storage/handoff/CLOSING-DP-OPS-XXXX.md`.
 2. Run `ops/bin/certify --dp=DP-OPS-XXXX --out=auto`.
-3. Certifier prompts for contractor execution narrative and validates subsection structure.
+3. Certifier captures contractor execution narrative via editor helper and validates subsection structure/content.
 4. Certifier validates the closing sidecar, runs integrity and verification gates, captures outputs, then renders RESULTS from template slots.
 5. Certifier lints the generated RESULTS artifact and exits non-zero on any failure.
 
