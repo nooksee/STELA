@@ -68,8 +68,6 @@ fi
 
 status_summary="clean"
 porcelain_count=0
-porcelain_output=""
-porcelain_preview=""
 porcelain_path="storage/handoff/OPEN-PORCELAIN-${tag_prefix}${branch_safe}-${head_short}.txt"
 porcelain_saved="(suppressed: clean working tree)"
 porcelain_artifact_note="suppressed (clean working tree)"
@@ -84,12 +82,6 @@ if [[ -n "$porcelain_raw" ]]; then
   porcelain_saved="$porcelain_path"
   porcelain_artifact_note="emitted"
   printf "%s\n" "$porcelain_normalized" > "$porcelain_saved"
-
-  if (( porcelain_count <= 200 )); then
-    porcelain_output="$porcelain_normalized"
-  else
-    porcelain_preview="$(printf "%s\n" "$porcelain_normalized" | head -n 50)"
-  fi
 fi
 
 last_commit="$(git log -1 --oneline)"
@@ -195,21 +187,6 @@ Do not:
 - Porcelain saved: $porcelain_saved
 - Last commit: $last_commit
 EOF
-
-if [[ "$status_summary" == "dirty" ]]; then
-  if (( porcelain_count <= 200 )); then
-    cat <<EOF
-- Porcelain (git status --porcelain):
-$porcelain_output
-EOF
-  else
-    cat <<EOF
-- Porcelain preview (truncated to 50 lines):
-$porcelain_preview
-EOF
-  fi
-fi
-
   cat <<EOF
 
 [NEXT OPERATOR MOVES]

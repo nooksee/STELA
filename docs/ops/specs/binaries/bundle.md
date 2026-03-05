@@ -72,7 +72,7 @@ Foreman gate:
 
 Dump scope mapping by resolved profile:
 1. `analyst|architect|conform` -> `ops/bin/dump --scope=full`.
-2. `audit` -> `ops/bin/dump --scope=platform`.
+2. `audit` -> `ops/bin/dump --scope=core`.
 3. `foreman` -> `ops/bin/dump --scope=core`.
 4. `project` -> `ops/bin/dump --scope=project --project=<name>`.
 

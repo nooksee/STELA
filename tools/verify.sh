@@ -278,6 +278,12 @@ elif ! bash tools/test/bundle.sh; then
   fail "Bundle smoke test failed: tools/test/bundle.sh"
 fi
 
+if [[ ! -f "tools/test/open.sh" ]]; then
+  fail "Missing required test script: tools/test/open.sh"
+elif ! bash tools/test/open.sh; then
+  fail "OPEN de-dup test failed: tools/test/open.sh"
+fi
+
 if [[ ! -f "tools/lint/response.sh" ]]; then
   fail "Missing required lint script: tools/lint/response.sh"
 elif ! bash tools/lint/response.sh --test; then

@@ -6,7 +6,7 @@
 1.  **Start:** `./ops/bin/open` (Generates prompt + freshness gate).
 2.  **Draft:** `./ops/bin/draft` (Generates canonical DP block and updates `TASK.md`).
 3.  **Capture (CDD):** `./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto` (Serializes Contractor-visible state).
-    Note: Audit intake is bundle-first. Use `./ops/bin/bundle --profile=audit --out=auto` for audit review. Bundle dump scope is profile-mapped from `ops/lib/manifests/BUNDLE.md`; current audit mapping is `platform`.
+    Note: Audit intake is bundle-first. Use `./ops/bin/bundle --profile=audit --out=auto` for audit review. Bundle dump scope is profile-mapped from `ops/lib/manifests/BUNDLE.md`; current audit mapping is `core`.
 4.  **Dispatch:** Hand DP to Worker (See Section 5).
 5.  **Review:** Verify `RECEIPT` (Proofs) vs `TASK.md` requirements.
 6.  **Close:** Merge PR + Update ledgers as required by closeout policy.
@@ -323,6 +323,10 @@ Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, 
 OPEN wrapper marker contract:
 - Begin marker: `===== STELA OPEN PROMPT =====`
 - End marker: `===== END STELA OPEN PROMPT =====`
+OPEN de-dup contract:
+- OPEN includes porcelain summary fields and a pointer to OPEN-PORCELAIN when dirty.
+- OPEN does not inline full or preview porcelain payload blocks.
+- OPEN-PORCELAIN is the detailed porcelain payload artifact.
 
 ### DP Draft (Canonical Generator)
 ~~~bash
