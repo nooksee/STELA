@@ -1,4 +1,4 @@
-<!-- CCD: ff_target="operator-technical" ff_band="10-25" -->
+<!-- CCD: ff_target="operator-technical" ff_band="30-45" -->
 # Bundle Policy Manifest
 
 ## Parse Contract
@@ -15,6 +15,10 @@ foreman_profile=foreman
 foreman_intent_form=ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>
 profile_alias_legacy_auditor_to=foreman
 profile_alias_legacy_hygiene_to=conform
+profile_alias_legacy_auditor_deprecation_status=active
+profile_alias_legacy_auditor_remove_after_dp=DP-OPS-0156
+profile_alias_legacy_hygiene_deprecation_status=active
+profile_alias_legacy_hygiene_remove_after_dp=DP-OPS-0156
 handoff_omit_profiles=audit,foreman
 
 stance_template_analyst=stance-analyst
@@ -45,3 +49,5 @@ Canonical addendum authorization profile is `foreman`.
 Legacy `auditor` remains accepted as a compatibility alias and resolves to `foreman`.
 Legacy `hygiene` remains accepted as a compatibility alias and resolves to `conform`.
 Alias routing values are loaded from `profile_alias_legacy_auditor_to` and `profile_alias_legacy_hygiene_to` at runtime.
+Legacy `auditor` alias deprecation status is `active`; removal target is `DP-OPS-0156`.
+Legacy `hygiene` alias deprecation status is `active`; removal target is `DP-OPS-0156`.

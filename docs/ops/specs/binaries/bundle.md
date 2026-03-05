@@ -23,12 +23,21 @@ Policy source:
 4. Compatibility alias routing is resolved from manifest keys:
    - `profile_alias_legacy_auditor_to`
    - `profile_alias_legacy_hygiene_to`
+   - `profile_alias_legacy_auditor_deprecation_status`
+   - `profile_alias_legacy_auditor_remove_after_dp`
+   - `profile_alias_legacy_hygiene_deprecation_status`
+   - `profile_alias_legacy_hygiene_remove_after_dp`
 
 Profile intent split:
 1. `audit` is the audit-verdict intake profile.
 2. `foreman` is addendum-authorization intake profile.
 3. Legacy `auditor` resolves to `foreman`.
 4. `foreman` is not a substitute for `audit`.
+
+Compatibility alias deprecation window:
+1. Legacy alias acceptance remains active during the deprecation window.
+2. Each legacy alias must publish deprecation metadata in policy (`*_deprecation_status`, `*_remove_after_dp`).
+3. Bundle manifest output must include alias deprecation metadata whenever `profile_alias.applied` is true.
 
 Routing rules:
 1. Explicit supported profile selects that profile.
@@ -39,7 +48,7 @@ Artifact contract (written under `storage/handoff/`):
 1. Bundle text artifact (`.txt`) with embedded OPEN block, dump pointers, stance contract source marker, stance template key, and embedded stance contract excerpt.
 2. Bundle manifest (`.manifest.json`) with `bundle_version: "2"` and structured metadata:
    - profile routing metadata
-   - profile alias metadata (`applied`, `from`, `to`)
+   - profile alias metadata (`applied`, `from`, `to`, `deprecation_status`, `remove_after_dp`)
    - embedded OPEN metadata (`embedded`, `branch`, `head_short`, `trace_id`, `intent`)
    - dump pointers
    - topic/plan presence

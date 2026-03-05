@@ -19,6 +19,8 @@ declare -a BUNDLE_HANDOFF_OMIT_PROFILES=()
 declare -A BUNDLE_DUMP_SCOPE_BY_PROFILE=()
 declare -A BUNDLE_STANCE_TEMPLATE_BY_PROFILE=()
 declare -A BUNDLE_PROFILE_ALIAS_BY_INPUT=()
+declare -A BUNDLE_PROFILE_ALIAS_DEPRECATION_STATUS_BY_INPUT=()
+declare -A BUNDLE_PROFILE_ALIAS_REMOVE_AFTER_DP_BY_INPUT=()
 
 BUNDLE_AUTO_DEFAULT_PROFILE=""
 BUNDLE_AUTO_PLAN_PROFILE=""
@@ -125,6 +127,11 @@ bundle_load_policy() {
   local dump_scope
   local stance_key
   local omit_csv
+  local alias_name
+  local alias_status_key
+  local alias_remove_after_key
+  local alias_status
+  local alias_remove_after_dp
 
   [[ -f "$BUNDLE_POLICY_PATH" ]] || die "bundle policy missing: ${BUNDLE_POLICY_PATH#${REPO_ROOT}/}"
 
@@ -182,6 +189,29 @@ bundle_load_policy() {
   [[ -n "${BUNDLE_PROFILE_ALIAS_BY_INPUT[hygiene]}" ]] || die "bundle policy missing required key: profile_alias_legacy_hygiene_to (or legacy profile_alias_hygiene)"
   for profile in "${BUNDLE_PROFILE_ALIAS_BY_INPUT[@]}"; do
     bundle_profile_supported "$profile" || die "bundle policy alias target is unsupported: ${profile}"
+  done
+
+  BUNDLE_PROFILE_ALIAS_DEPRECATION_STATUS_BY_INPUT=()
+  BUNDLE_PROFILE_ALIAS_REMOVE_AFTER_DP_BY_INPUT=()
+  for alias_name in auditor hygiene; do
+    alias_status_key="profile_alias_legacy_${alias_name}_deprecation_status"
+    alias_remove_after_key="profile_alias_legacy_${alias_name}_remove_after_dp"
+    alias_status="$(bundle_policy_scalar "$alias_status_key")"
+    alias_remove_after_dp="$(bundle_policy_scalar "$alias_remove_after_key")"
+    [[ -n "$alias_status" ]] || die "bundle policy missing required key: ${alias_status_key}"
+    [[ -n "$alias_remove_after_dp" ]] || die "bundle policy missing required key: ${alias_remove_after_key}"
+    case "$alias_status" in
+      active|sunset)
+        ;;
+      *)
+        die "bundle policy has invalid alias deprecation status for ${alias_name}: ${alias_status}"
+        ;;
+    esac
+    if [[ ! "$alias_remove_after_dp" =~ ^DP-OPS-[0-9]{4}$ ]]; then
+      die "bundle policy has invalid alias removal target for ${alias_name}: ${alias_remove_after_dp}"
+    fi
+    BUNDLE_PROFILE_ALIAS_DEPRECATION_STATUS_BY_INPUT["$alias_name"]="$alias_status"
+    BUNDLE_PROFILE_ALIAS_REMOVE_AFTER_DP_BY_INPUT["$alias_name"]="$alias_remove_after_dp"
   done
 
   BUNDLE_DUMP_SCOPE_BY_PROFILE=()
@@ -334,6 +364,8 @@ bundle_run() {
   local intent_token=""
   local alias_profile_source=""
   local alias_profile_target=""
+  local alias_deprecation_status=""
+  local alias_remove_after_dp=""
   local alias_applied=0
 
   local arg
@@ -372,6 +404,10 @@ bundle_run() {
   if [[ -n "$alias_profile_target" ]]; then
     alias_profile_source="$requested_profile"
     requested_profile="$alias_profile_target"
+    alias_deprecation_status="${BUNDLE_PROFILE_ALIAS_DEPRECATION_STATUS_BY_INPUT[$alias_profile_source]:-}"
+    alias_remove_after_dp="${BUNDLE_PROFILE_ALIAS_REMOVE_AFTER_DP_BY_INPUT[$alias_profile_source]:-}"
+    [[ -n "$alias_deprecation_status" ]] || die "bundle policy missing alias deprecation status for: ${alias_profile_source}"
+    [[ -n "$alias_remove_after_dp" ]] || die "bundle policy missing alias removal target for: ${alias_profile_source}"
     alias_applied=1
   fi
 
@@ -600,10 +636,14 @@ bundle_run() {
     echo "    \"applied\": $(bundle_bool "$alias_applied"),"
     if (( alias_applied )); then
       echo "    \"from\": \"$(bundle_json_escape "$alias_profile_source")\","
-      echo "    \"to\": \"$(bundle_json_escape "$alias_profile_target")\""
+      echo "    \"to\": \"$(bundle_json_escape "$alias_profile_target")\","
+      echo "    \"deprecation_status\": \"$(bundle_json_escape "$alias_deprecation_status")\","
+      echo "    \"remove_after_dp\": \"$(bundle_json_escape "$alias_remove_after_dp")\""
     else
       echo "    \"from\": null,"
-      echo "    \"to\": null"
+      echo "    \"to\": null,"
+      echo "    \"deprecation_status\": null,"
+      echo "    \"remove_after_dp\": null"
     fi
     echo "  },"
     if [[ -n "$project_name" ]]; then

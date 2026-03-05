@@ -107,3 +107,39 @@ Target file: `ops/lib/manifests/BUNDLE.md`
 Assertion: file must include `Canonical addendum authorization profile is \`foreman\`.`
 Failure message: `BUNDLE.md missing canonical foreman mode split line`
 Invariant: runtime policy keeps foreman mode semantics explicit and enforceable.
+
+### Guard 11: Auditor alias deprecation status key line
+Target file: `ops/lib/manifests/BUNDLE.md`
+Assertion: file must include `profile_alias_legacy_auditor_deprecation_status=`
+Failure message: `BUNDLE.md missing auditor alias deprecation status key line`
+Invariant: compatibility alias policy is explicit and machine-checkable.
+
+### Guard 12: Auditor alias remove-after key line
+Target file: `ops/lib/manifests/BUNDLE.md`
+Assertion: file must include `profile_alias_legacy_auditor_remove_after_dp=`
+Failure message: `BUNDLE.md missing auditor alias remove-after key line`
+Invariant: compatibility alias policy includes a bounded removal target.
+
+### Guard 13: Hygiene alias deprecation status key line
+Target file: `ops/lib/manifests/BUNDLE.md`
+Assertion: file must include `profile_alias_legacy_hygiene_deprecation_status=`
+Failure message: `BUNDLE.md missing hygiene alias deprecation status key line`
+Invariant: compatibility alias policy is explicit and machine-checkable.
+
+### Guard 14: Hygiene alias remove-after key line
+Target file: `ops/lib/manifests/BUNDLE.md`
+Assertion: file must include `profile_alias_legacy_hygiene_remove_after_dp=`
+Failure message: `BUNDLE.md missing hygiene alias remove-after key line`
+Invariant: compatibility alias policy includes a bounded removal target.
+
+### Guard 15: Auditor alias deprecation-window compatibility note
+Target file: `ops/lib/manifests/BUNDLE.md`
+Assertion: file must include `Legacy \`auditor\` alias deprecation status is \`active\`; removal target is \`DP-OPS-0156\`.`
+Failure message: `BUNDLE.md missing auditor alias deprecation-window compatibility note`
+Invariant: human-readable policy text matches machine-enforced alias deprecation configuration.
+
+### Guard 16: Hygiene alias deprecation-window compatibility note
+Target file: `ops/lib/manifests/BUNDLE.md`
+Assertion: file must include `Legacy \`hygiene\` alias deprecation status is \`active\`; removal target is \`DP-OPS-0156\`.`
+Failure message: `BUNDLE.md missing hygiene alias deprecation-window compatibility note`
+Invariant: human-readable policy text matches machine-enforced alias deprecation configuration.

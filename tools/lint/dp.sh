@@ -20,7 +20,7 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="41124cab3cb74fe60549b689a8c260a28d43c646dcd4c0d508830b4b90335d99"
+CANONICAL_DP_TEMPLATE_SHA256="64219d4562dfa833029b6f41acf66d2febaf484fcfb3035d39486b6ba1eb55ff"
 CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/stances/addendum.md.tpl"
 CANONICAL_ADDENDUM_TEMPLATE_SHA256="42cb7586c6ed103e995730f1a8c34a1c7e0676b717c27dfb987950feeac7ec9e"
 TEMPLATE_RENDER_BIN="ops/bin/template"
