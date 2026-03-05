@@ -189,7 +189,7 @@ archives/surfaces/SoP-2026-03-03-*.md
 archives/surfaces/PoW-2026-03-03-*.md
 opt/_factory/agents/r-agent-07.md
 ops/src/stances/plan.md.tpl
-docs/ops/specs/surfaces/plan.md
+docs/ops/specs/stances/plan.md
 storage/handoff/CLOSING-DP-OPS-0146.md
 archives/surfaces/TASK-DP-OPS-0146-*.md
 archives/surfaces/TASK-DP-OPS-0146-9f0fdc6a.md
@@ -255,6 +255,8 @@ storage/handoff/CLOSING-DP-OPS-0158.md
 archives/surfaces/TASK-DP-OPS-0158-*.md
 storage/handoff/CLOSING-DP-OPS-0159.md
 archives/surfaces/TASK-DP-OPS-0159-*.md
+storage/handoff/CLOSING-DP-OPS-0160.md
+archives/surfaces/TASK-DP-OPS-0160-*.md
 tools/test/open.sh
 docs/ops/specs/tools/test/open.md
 ops/src/definitions/agent.md.tpl

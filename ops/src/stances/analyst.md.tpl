@@ -19,6 +19,7 @@ Steps:
 2. **SYNTHESIZE** findings based on `PoT.md` and repository state, treating OPEN and dump bundles as session artifacts rather than canonical sources.
 3. **FORMULATE** strategic options menu (2-3 actionable paths).
 4. **PLAN OUTPUT MODE**: When operator asks for an architect-ready plan, output only a complete `PLAN.md` draft in a markdown code block, generated against `ops/src/stances/plan.md.tpl`.
+   * Use only the simplified plan sections: `Summary`, `Scope`, `Architect Handoff`, and `Implementation Plan (Decision Complete)`.
    * Required `Architect Handoff` fields:
      * `Selected Option: <A|B|C|RECOMMENDED>`
      * `Slice Mode: <single|multi>`
