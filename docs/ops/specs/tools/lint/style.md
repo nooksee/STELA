@@ -143,3 +143,29 @@ Target file: `ops/lib/manifests/BUNDLE.md`
 Assertion: file must include `Legacy \`hygiene\` alias deprecation status is \`active\`; removal target is \`DP-OPS-0156\`.`
 Failure message: `BUNDLE.md missing hygiene alias deprecation-window compatibility note`
 Invariant: human-readable policy text matches machine-enforced alias deprecation configuration.
+
+## OPEN Marker Contract Guardrails
+
+### Guard 17: Canonical OPEN begin marker in `ops/bin/open`
+Target file: `ops/bin/open`
+Assertion: file must include `===== STELA OPEN PROMPT =====`
+Failure message: `ops/bin/open missing canonical OPEN begin marker`
+Invariant: OPEN envelope start marker is deterministic and canonical.
+
+### Guard 18: Canonical OPEN end marker in `ops/bin/open`
+Target file: `ops/bin/open`
+Assertion: file must include `===== END STELA OPEN PROMPT =====`
+Failure message: `ops/bin/open missing canonical OPEN end marker`
+Invariant: OPEN envelope end marker is deterministic and canonical.
+
+### Guard 19: Legacy OPEN begin marker removed from `ops/bin/open`
+Target file: `ops/bin/open`
+Assertion: file must not include `===== OPEN PROMPT =====`
+Failure message: `ops/bin/open still contains legacy OPEN begin marker`
+Invariant: legacy marker regression is blocked.
+
+### Guard 20: Legacy standalone OPEN title removed from `ops/bin/open`
+Target file: `ops/bin/open`
+Assertion: file must not include `Stela OPEN PROMPT`
+Failure message: `ops/bin/open still contains legacy standalone OPEN title line`
+Invariant: legacy header regression is blocked.

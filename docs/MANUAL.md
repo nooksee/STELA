@@ -320,6 +320,9 @@ Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, 
 # Auto-save convenience (Adds "OPEN saved: <path>" line)
 ./ops/bin/open --intent="..." --out=auto
 ~~~
+OPEN wrapper marker contract:
+- Begin marker: `===== STELA OPEN PROMPT =====`
+- End marker: `===== END STELA OPEN PROMPT =====`
 
 ### DP Draft (Canonical Generator)
 ~~~bash

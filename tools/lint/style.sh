@@ -262,6 +262,35 @@ check_audit_foreman_mode_split() {
   fi
 }
 
+check_open_marker_contract() {
+  local open_binary="${REPO_ROOT}/ops/bin/open"
+  local begin_marker='===== STELA OPEN PROMPT ====='
+  local end_marker='===== END STELA OPEN PROMPT ====='
+  local legacy_begin_marker='===== OPEN PROMPT ====='
+  local legacy_standalone_title='Stela OPEN PROMPT'
+
+  [[ -f "$open_binary" ]] || {
+    mark_failure "ops/bin/open missing for OPEN marker contract checks"
+    return 0
+  }
+
+  if ! grep -Fxq -- "$begin_marker" "$open_binary"; then
+    mark_failure "ops/bin/open missing canonical OPEN begin marker"
+  fi
+
+  if ! grep -Fxq -- "$end_marker" "$open_binary"; then
+    mark_failure "ops/bin/open missing canonical OPEN end marker"
+  fi
+
+  if grep -Fxq -- "$legacy_begin_marker" "$open_binary"; then
+    mark_failure "ops/bin/open still contains legacy OPEN begin marker"
+  fi
+
+  if grep -Fxq -- "$legacy_standalone_title" "$open_binary"; then
+    mark_failure "ops/bin/open still contains legacy standalone OPEN title line"
+  fi
+}
+
 
 check_closing_block_lead_words() {
   local handoff_dir="${REPO_ROOT}/storage/handoff"
@@ -544,6 +573,7 @@ load_current_closing_labels
 check_markdown_contractions
 check_jargon_blacklist
 check_audit_foreman_mode_split
+check_open_marker_contract
 check_closing_block_lead_words
 check_closing_block_conversation_starter_question
 check_closing_block_manifest_paths
