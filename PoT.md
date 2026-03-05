@@ -68,7 +68,6 @@ Hard constraints are: PoT.md, SoP.md, TASK.md, ops/lib/manifests/CONTEXT.md, doc
 - Operator (Human): Owns final decisions, approvals, and secrets. Performs all commits, pushes, and merges.
 - Integrator (Lead AI): Maintains governance, structural integrity, and auditing. Generates Dispatch Packets and detects system drift.
 - Contractor (Guest AI): Executes specific logic tasks and drafts implementation details within a defined scope.
-- Integrator (Auditor authority): After the Contractor completes work and before the Operator commits, the Integrator performs a mandatory post-work audit. The Integrator reviews the diff, the RESULTS receipt, and the closing sidecar against the DP scope definition. If the Integrator identifies that scope was exceeded, a boundary condition was not anticipated, or an authorization is needed for work already done or needed to complete, the Integrator produces an addendum recommendation as a fully rendered artifact using `ops/src/surfaces/addendum.md.tpl`. The Operator reviews and authorizes the addendum. The authorized addendum is handed to the Contractor as a received, finished document. The Contractor does not author addendum content; the Contractor executes against it.
 
 ### 4.2 Behavioral Logic Standard
 - Linguistic Precision: No contractions across any scope, including projects.
