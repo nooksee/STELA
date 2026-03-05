@@ -19,6 +19,7 @@ declare -a BUNDLE_HANDOFF_OMIT_PROFILES=()
 declare -A BUNDLE_PROMPT_PATH_BY_PROFILE=()
 declare -A BUNDLE_DUMP_SCOPE_BY_PROFILE=()
 declare -A BUNDLE_STANCE_TEMPLATE_BY_PROFILE=()
+declare -A BUNDLE_PROFILE_ALIAS_BY_INPUT=()
 
 BUNDLE_AUTO_DEFAULT_PROFILE=""
 BUNDLE_AUTO_PLAN_PROFILE=""
@@ -169,6 +170,21 @@ bundle_load_policy() {
     "$BUNDLE_AUDIT_PROFILE" \
     "$BUNDLE_FOREMAN_PROFILE"; do
     bundle_profile_supported "$profile" || die "bundle policy references unsupported profile: ${profile}"
+  done
+
+  BUNDLE_PROFILE_ALIAS_BY_INPUT=()
+  BUNDLE_PROFILE_ALIAS_BY_INPUT["auditor"]="$(bundle_policy_scalar profile_alias_legacy_auditor_to)"
+  BUNDLE_PROFILE_ALIAS_BY_INPUT["hygiene"]="$(bundle_policy_scalar profile_alias_legacy_hygiene_to)"
+  if [[ -z "${BUNDLE_PROFILE_ALIAS_BY_INPUT[auditor]}" ]]; then
+    BUNDLE_PROFILE_ALIAS_BY_INPUT["auditor"]="$(bundle_policy_scalar profile_alias_auditor)"
+  fi
+  if [[ -z "${BUNDLE_PROFILE_ALIAS_BY_INPUT[hygiene]}" ]]; then
+    BUNDLE_PROFILE_ALIAS_BY_INPUT["hygiene"]="$(bundle_policy_scalar profile_alias_hygiene)"
+  fi
+  [[ -n "${BUNDLE_PROFILE_ALIAS_BY_INPUT[auditor]}" ]] || die "bundle policy missing required key: profile_alias_legacy_auditor_to (or legacy profile_alias_auditor)"
+  [[ -n "${BUNDLE_PROFILE_ALIAS_BY_INPUT[hygiene]}" ]] || die "bundle policy missing required key: profile_alias_legacy_hygiene_to (or legacy profile_alias_hygiene)"
+  for profile in "${BUNDLE_PROFILE_ALIAS_BY_INPUT[@]}"; do
+    bundle_profile_supported "$profile" || die "bundle policy alias target is unsupported: ${profile}"
   done
 
   BUNDLE_PROMPT_PATH_BY_PROFILE=()
@@ -337,8 +353,9 @@ bundle_run() {
   local out_token="auto"
   local project_name=""
   local intent_token=""
-  local used_legacy_hygiene_alias=0
-  local used_legacy_auditor_alias=0
+  local alias_profile_source=""
+  local alias_profile_target=""
+  local alias_applied=0
 
   local arg
   for arg in "$@"; do
@@ -372,14 +389,11 @@ bundle_run() {
   bundle_load_policy
   requested_profile_input="$requested_profile"
 
-  if [[ "$requested_profile" == "hygiene" ]]; then
-    requested_profile="conform"
-    used_legacy_hygiene_alias=1
-  fi
-
-  if [[ "$requested_profile" == "auditor" ]]; then
-    requested_profile="$BUNDLE_FOREMAN_PROFILE"
-    used_legacy_auditor_alias=1
+  alias_profile_target="${BUNDLE_PROFILE_ALIAS_BY_INPUT[$requested_profile]:-}"
+  if [[ -n "$alias_profile_target" ]]; then
+    alias_profile_source="$requested_profile"
+    requested_profile="$alias_profile_target"
+    alias_applied=1
   fi
 
   if [[ "$requested_profile" != "auto" ]] && ! bundle_profile_supported "$requested_profile"; then
@@ -440,10 +454,8 @@ bundle_run() {
       plan_lint_output="(missing storage/handoff/PLAN.md)"
     fi
   fi
-  if (( used_legacy_auditor_alias )); then
-    route_reason="explicit profile alias: auditor -> ${BUNDLE_FOREMAN_PROFILE}"
-  elif (( used_legacy_hygiene_alias )); then
-    route_reason="explicit profile alias: hygiene -> conform"
+  if (( alias_applied )); then
+    route_reason="explicit profile alias: ${alias_profile_source} -> ${alias_profile_target}"
   fi
 
   local prompt_rel
@@ -539,6 +551,9 @@ bundle_run() {
     echo "Requested profile: ${requested_profile_input}"
     echo "Resolved profile: ${resolved_profile}"
     echo "Route reason: ${route_reason}"
+    if (( alias_applied )); then
+      echo "Profile alias: ${alias_profile_source} -> ${alias_profile_target}"
+    fi
     if [[ -n "$project_name" ]]; then
       echo "Project: ${project_name}"
     fi
@@ -606,6 +621,16 @@ bundle_run() {
     echo "  \"requested_profile\": \"$(bundle_json_escape "$requested_profile_input")\"," 
     echo "  \"resolved_profile\": \"$(bundle_json_escape "$resolved_profile")\"," 
     echo "  \"route_reason\": \"$(bundle_json_escape "$route_reason")\"," 
+    echo "  \"profile_alias\": {"
+    echo "    \"applied\": $(bundle_bool "$alias_applied"),"
+    if (( alias_applied )); then
+      echo "    \"from\": \"$(bundle_json_escape "$alias_profile_source")\","
+      echo "    \"to\": \"$(bundle_json_escape "$alias_profile_target")\""
+    else
+      echo "    \"from\": null,"
+      echo "    \"to\": null"
+    fi
+    echo "  },"
     if [[ -n "$project_name" ]]; then
       echo "  \"project\": \"$(bundle_json_escape "$project_name")\"," 
     else

@@ -370,6 +370,9 @@ test_legacy_auditor_alias() {
   if [[ "$route_reason" != "explicit profile alias: auditor -> foreman" ]]; then
     fail "legacy auditor alias route_reason mismatch: ${route_reason}"
   fi
+  assert_manifest_has "$LAST_MANIFEST" '"profile_alias": {'
+  assert_manifest_has "$LAST_MANIFEST" '"from": "auditor"'
+  assert_manifest_has "$LAST_MANIFEST" '"to": "foreman"'
 }
 
 test_legacy_hygiene_alias() {
@@ -400,6 +403,9 @@ test_legacy_hygiene_alias() {
   if [[ "$route_reason" != "explicit profile alias: hygiene -> conform" ]]; then
     fail "legacy hygiene alias route_reason mismatch: ${route_reason}"
   fi
+  assert_manifest_has "$LAST_MANIFEST" '"profile_alias": {'
+  assert_manifest_has "$LAST_MANIFEST" '"from": "hygiene"'
+  assert_manifest_has "$LAST_MANIFEST" '"to": "conform"'
 }
 
 test_manifest_fail_closed() {
