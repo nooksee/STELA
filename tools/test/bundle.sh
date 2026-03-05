@@ -112,6 +112,11 @@ policy_scalar() {
   awk -F'=' -v key="$key" '$1==key { print substr($0, index($0, "=") + 1); exit }' "${REPO_ROOT}/${BUNDLE_POLICY_REL}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'
 }
 
+expected_artifact_prefix_for_profile() {
+  local profile="$1"
+  policy_scalar "artifact_prefix_${profile}"
+}
+
 assert_file_exists() {
   local rel_path="$1"
   [[ -f "${REPO_ROOT}/${rel_path}" ]] || fail "expected file missing: ${rel_path}"
@@ -143,6 +148,13 @@ track_bundle_outputs() {
   local package_path
   local dump_payload_path
   local dump_manifest_path
+  local resolved_profile=""
+  local expected_prefix=""
+  local legacy_prefix=""
+  local legacy_emit_policy=""
+  local legacy_artifact_path=""
+  local legacy_manifest_path=""
+  local legacy_package_path=""
 
   LAST_ARTIFACT=""
   LAST_MANIFEST=""
@@ -166,13 +178,19 @@ track_bundle_outputs() {
   LAST_MANIFEST="$manifest_path"
   LAST_PACKAGE="$package_path"
 
-  assert_prefix "$artifact_path" "storage/handoff/BUNDLE-"
-  assert_prefix "$manifest_path" "storage/handoff/BUNDLE-"
-  assert_prefix "$package_path" "storage/handoff/BUNDLE-"
-
   assert_file_exists "$artifact_path"
   assert_file_exists "$manifest_path"
   assert_file_exists "$package_path"
+
+  resolved_profile="$(extract_manifest_value "$manifest_path" "resolved_profile")"
+  expected_prefix="$(expected_artifact_prefix_for_profile "$resolved_profile")"
+  if [[ -z "$expected_prefix" ]]; then
+    fail "policy missing artifact prefix for resolved profile: ${resolved_profile}"
+  else
+    assert_prefix "$artifact_path" "storage/handoff/${expected_prefix}-"
+    assert_prefix "$manifest_path" "storage/handoff/${expected_prefix}-"
+    assert_prefix "$package_path" "storage/handoff/${expected_prefix}-"
+  fi
 
   if ! grep -Fq 'Stance template key: stance-' "${REPO_ROOT}/${artifact_path}"; then
     fail "bundle artifact missing stance template key marker: ${artifact_path}"
@@ -197,6 +215,31 @@ track_bundle_outputs() {
     queue_cleanup_path "$dump_manifest_path"
   else
     fail "manifest ${manifest_path} missing dump manifest_path"
+  fi
+
+  legacy_prefix="$(policy_scalar compatibility_legacy_bundle_prefix)"
+  legacy_emit_policy="$(policy_scalar compatibility_emit_legacy_bundle_artifacts)"
+  if [[ "$legacy_emit_policy" == "true" && "$expected_prefix" != "$legacy_prefix" ]]; then
+    assert_manifest_has "$manifest_path" '"legacy_emitted": true'
+    legacy_artifact_path="$(extract_manifest_value "$manifest_path" "legacy_bundle_path")"
+    legacy_manifest_path="$(extract_manifest_value "$manifest_path" "legacy_manifest_path")"
+    legacy_package_path="$(extract_manifest_value "$manifest_path" "legacy_package_path")"
+
+    if [[ -z "$legacy_artifact_path" || -z "$legacy_manifest_path" || -z "$legacy_package_path" ]]; then
+      fail "manifest ${manifest_path} missing legacy artifact compatibility paths"
+    else
+      assert_prefix "$legacy_artifact_path" "storage/handoff/${legacy_prefix}-"
+      assert_prefix "$legacy_manifest_path" "storage/handoff/${legacy_prefix}-"
+      assert_prefix "$legacy_package_path" "storage/handoff/${legacy_prefix}-"
+      assert_file_exists "$legacy_artifact_path"
+      assert_file_exists "$legacy_manifest_path"
+      assert_file_exists "$legacy_package_path"
+      queue_cleanup_path "$legacy_artifact_path"
+      queue_cleanup_path "$legacy_manifest_path"
+      queue_cleanup_path "$legacy_package_path"
+    fi
+  else
+    assert_manifest_has "$manifest_path" '"legacy_emitted": false'
   fi
 }
 

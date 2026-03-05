@@ -15,12 +15,15 @@ The script provides `bundle_run` plus helpers for:
 3. Repo-relative path normalization and output confinement to `storage/handoff/`.
 4. Auto routing using PLAN presence and `tools/lint/plan.sh` status.
 5. Dump scope and stance template key resolution per resolved profile from policy mappings.
+   - Artifact naming prefix resolution per resolved profile from policy keys (`artifact_prefix_<profile>`).
+   - Compatibility legacy artifact emission controlled by `compatibility_emit_legacy_bundle_artifacts` and `compatibility_legacy_bundle_prefix`.
 6. Deterministic embedded OPEN block generation (no internal `ops/bin/open` invocation).
 7. Dump orchestration with explicit `.txt` output path under `storage/dumps/`.
 8. Foreman intent parsing and decision-leaf validation against dump payload.
 9. Bundle text rendering with embedded stance contract text rendered through `ops/bin/manifest` stance template keys.
 10. Manifest v2 emission and package `.tar` emission with manifest-aligned member list.
-11. Alias-route metadata emission in manifest (`profile_alias.applied`, `.from`, `.to`, `.deprecation_status`, `.remove_after_dp`) when compatibility aliases are used.
+11. Canonical profile-prefixed artifact output in `storage/handoff/` with optional legacy `BUNDLE-*` compatibility copies.
+12. Alias-route metadata emission in manifest (`profile_alias.applied`, `.from`, `.to`, `.deprecation_status`, `.remove_after_dp`) when compatibility aliases are used.
 
 Stance contract extraction and render rules:
 - Resolve profile stance template key from `ops/lib/manifests/BUNDLE.md`.

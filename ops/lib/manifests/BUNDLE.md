@@ -28,6 +28,15 @@ stance_template_project=stance-analyst
 stance_template_conform=stance-conformist
 stance_template_foreman=stance-foreman
 
+artifact_prefix_analyst=ANALYST
+artifact_prefix_architect=ARCHITECT
+artifact_prefix_audit=AUDIT
+artifact_prefix_project=PROJECT
+artifact_prefix_conform=CONFORM
+artifact_prefix_foreman=FOREMAN
+compatibility_legacy_bundle_prefix=BUNDLE
+compatibility_emit_legacy_bundle_artifacts=true
+
 dump_scope_analyst=full
 dump_scope_architect=full
 dump_scope_audit=platform
@@ -36,12 +45,12 @@ dump_scope_conform=full
 dump_scope_foreman=core
 
 ## Profile Attachment Contract
-- analyst: `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, query source
-- architect: `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, `storage/handoff/PLAN.md`
-- audit: `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, DP RESULTS receipt
-- foreman: `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`
-- project: `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`
-- conform: `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, draft DP input
+- analyst: `ANALYST-*.txt`, `ANALYST-*.manifest.json`, query source
+- architect: `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, `storage/handoff/PLAN.md`
+- audit: `AUDIT-*.txt`, `AUDIT-*.manifest.json`, DP RESULTS receipt
+- foreman: `FOREMAN-*.txt`, `FOREMAN-*.manifest.json`
+- project: `PROJECT-*.txt`, `PROJECT-*.manifest.json`
+- conform: `CONFORM-*.txt`, `CONFORM-*.manifest.json`, draft DP input
 
 ## Compatibility Notes
 Canonical audit verdict profile is `audit`.
@@ -51,3 +60,4 @@ Legacy `hygiene` remains accepted as a compatibility alias and resolves to `conf
 Alias routing values are loaded from `profile_alias_legacy_auditor_to` and `profile_alias_legacy_hygiene_to` at runtime.
 Legacy `auditor` alias deprecation status is `active`; removal target is `DP-OPS-0156`.
 Legacy `hygiene` alias deprecation status is `active`; removal target is `DP-OPS-0156`.
+Legacy `BUNDLE-*` artifact names remain compatibility outputs during migration and are controlled by `compatibility_emit_legacy_bundle_artifacts`.

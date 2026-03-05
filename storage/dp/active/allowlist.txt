@@ -246,7 +246,10 @@ storage/handoff/CLOSING-DP-OPS-0154.md
 archives/surfaces/TASK-DP-OPS-0154-*.md
 storage/handoff/CLOSING-DP-OPS-0155.md
 archives/surfaces/TASK-DP-OPS-0155-*.md
+storage/handoff/CLOSING-DP-OPS-0156.md
 archives/surfaces/TASK-DP-OPS-0156-*.md
+storage/handoff/CLOSING-DP-OPS-0157.md
+archives/surfaces/TASK-DP-OPS-0157-*.md
 ops/src/definitions/agent.md.tpl
 tools/lint/agent.sh
 docs/ops/specs/definitions/agents.md
