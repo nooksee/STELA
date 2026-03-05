@@ -17,13 +17,6 @@ profile_alias_legacy_auditor_to=foreman
 profile_alias_legacy_hygiene_to=conform
 handoff_omit_profiles=audit,foreman
 
-prompt_path_analyst=docs/ops/prompts/e-prompt-04.md
-prompt_path_architect=docs/ops/prompts/e-prompt-03.md
-prompt_path_audit=docs/ops/prompts/e-prompt-01.md
-prompt_path_project=docs/ops/prompts/e-prompt-04.md
-prompt_path_conform=docs/ops/prompts/e-prompt-02.md
-prompt_path_foreman=docs/ops/prompts/e-prompt-05.md
-
 stance_template_analyst=stance-analyst
 stance_template_architect=stance-architect
 stance_template_audit=stance-auditor
@@ -47,6 +40,7 @@ dump_scope_foreman=core
 - conform: `BUNDLE-*.txt`, `BUNDLE-*.manifest.json`, draft DP input
 
 ## Compatibility Notes
+Canonical audit verdict profile is `audit`.
 Canonical addendum authorization profile is `foreman`.
 Legacy `auditor` remains accepted as a compatibility alias and resolves to `foreman`.
 Legacy `hygiene` remains accepted as a compatibility alias and resolves to `conform`.

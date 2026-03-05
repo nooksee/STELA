@@ -367,9 +367,7 @@ is_wave2_hardened() {
     docs/ops/registry/skills.md|\
     docs/ops/registry/tools.md|\
     docs/ops/registry/projects.md|\
-    docs/ops/registry/prompts.md|\
-    docs/ops/registry/test.md|\
-    docs/ops/prompts/README.md)
+    docs/ops/registry/test.md)
       return 0
       ;;
   esac
@@ -377,7 +375,12 @@ is_wave2_hardened() {
 }
 
 declare -a MARKDOWN_FILES=()
-mapfile -t MARKDOWN_FILES < <(git ls-files '*.md')
+declare -a TRACKED_MARKDOWN_FILES=()
+mapfile -t TRACKED_MARKDOWN_FILES < <(git ls-files '*.md')
+for file in "${TRACKED_MARKDOWN_FILES[@]}"; do
+  [[ -f "$file" ]] || continue
+  MARKDOWN_FILES+=("$file")
+done
 
 for file in "${MARKDOWN_FILES[@]}"; do
   if is_wave0_exempt "$file"; then

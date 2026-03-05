@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/bin/bundle` is the deterministic transport primitive for workflow intake. It unifies OPEN freshness metadata, dump pointers, prompt contract text, and route metadata into one portable contract so operator handoffs do not depend on manual prompt copy or ad hoc artifact selection.
+`ops/bin/bundle` is the deterministic transport primitive for workflow intake. It unifies OPEN freshness metadata, dump pointers, stance contract text, and route metadata into one portable contract so operator handoffs do not depend on manual copy or ad hoc artifact selection.
 
 ## Mechanics and Sequencing
 Public interface:
@@ -19,7 +19,7 @@ Public interface:
 Policy source:
 1. Runtime contract is loaded from `ops/lib/manifests/BUNDLE.md`.
 2. Missing required policy keys or invalid values are fail-closed errors.
-3. Profile routing, prompt pointer mappings, dump scopes, and stance template render keys are resolved from this manifest.
+3. Profile routing, dump scopes, and stance template render keys are resolved from this manifest.
 4. Compatibility alias routing is resolved from manifest keys:
    - `profile_alias_legacy_auditor_to`
    - `profile_alias_legacy_hygiene_to`
@@ -36,14 +36,14 @@ Routing rules:
 3. Otherwise auto resolves to `auto_default_profile`.
 
 Artifact contract (written under `storage/handoff/`):
-1. Bundle text artifact (`.txt`) with embedded OPEN block, dump pointers, prompt pointer, stance template key, and embedded prompt contract excerpt.
+1. Bundle text artifact (`.txt`) with embedded OPEN block, dump pointers, stance contract source marker, stance template key, and embedded stance contract excerpt.
 2. Bundle manifest (`.manifest.json`) with `bundle_version: "2"` and structured metadata:
    - profile routing metadata
    - profile alias metadata (`applied`, `from`, `to`)
    - embedded OPEN metadata (`embedded`, `branch`, `head_short`, `trace_id`, `intent`)
    - dump pointers
    - topic/plan presence
-   - prompt template metadata (`stance_template_key`)
+   - stance template metadata (`stance_template_key`)
    - addendum metadata (`required`, `decision_id`, `decision_leaf_present`)
    - package metadata (`path`, `files`)
 3. Bundle package (`.tar`) containing bundle `.txt`, manifest, dump payload, dump manifest, and `TOPIC.md`/`PLAN.md` when present.

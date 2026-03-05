@@ -10,6 +10,7 @@ Rules:
 * Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
 * Require attached bundle manifest `resolved_profile=foreman`; if not, **STOP** and request a correct foreman bundle.
 * Legacy `--profile=auditor` remains accepted as a compatibility alias and resolves to `foreman`.
+* This stance is not used for audit PASS/FAIL verdicts.
 * Require `ADDENDUM REQUIRED:` intent in bundle OPEN metadata and a referenced decision leaf in dump payload.
 * The decision leaf in the dump is the addendum case. Do not request additional context.
 * Output the addendum only. No analysis preamble and no commentary.

@@ -25,4 +25,4 @@ Define the template-backed foreman stance body used for `foreman` profile bundle
 ## Related pointers
 - `ops/lib/manifests/BUNDLE.md`
 - `ops/lib/scripts/bundle.sh`
-- `docs/ops/prompts/e-prompt-05.md`
+- `ops/src/stances/foreman.md.tpl`

@@ -25,4 +25,4 @@ Define the template-backed Audit stance body used by bundle output contract rend
 ## Related pointers
 - `ops/lib/manifests/BUNDLE.md`
 - `ops/lib/scripts/bundle.sh`
-- `docs/ops/prompts/e-prompt-01.md`
+- `ops/src/stances/auditor.md.tpl`
