@@ -130,6 +130,8 @@ Target Files allowlist (hard gate):
 - bash tools/lint/task.sh
 - bash tools/lint/integrity.sh
 - bash tools/lint/style.sh
+- ./ops/bin/llms
+- bash tools/lint/integrity.sh
 - git diff --name-only
 - git diff --stat
 - comm -23 <(git diff --name-only | sort) <(sort storage/dp/active/allowlist.txt) || true
@@ -145,6 +147,7 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 - Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
 - Run prune hygiene: ./ops/bin/prune --scrub.
+- Refresh llms artifacts: `./ops/bin/llms`
 - Regenerate session artifacts: `./ops/bin/open --out=auto`
 - Capture updated Ops state: `./ops/bin/dump --scope=core --format=chatgpt --out=auto`
 - Ensure the next session begins with refreshed session artifacts and matching receipts.

@@ -89,6 +89,11 @@ extract_manifest_value() {
   sed -n -E "s/^[[:space:]]*\"${key}\":[[:space:]]*\"([^\"]*)\"[,]?[[:space:]]*$/\\1/p" "${REPO_ROOT}/${manifest_rel}" | head -n 1
 }
 
+policy_scalar() {
+  local key="$1"
+  awk -F'=' -v key="$key" '$1==key { print substr($0, index($0, "=") + 1); exit }' "${REPO_ROOT}/${BUNDLE_POLICY_REL}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'
+}
+
 assert_file_exists() {
   local rel_path="$1"
   [[ -f "${REPO_ROOT}/${rel_path}" ]] || fail "expected file missing: ${rel_path}"
@@ -338,6 +343,10 @@ test_legacy_auditor_alias() {
   local resolved
   local requested
   local route_reason
+  local expected_status
+  local expected_remove_after
+  local actual_status
+  local actual_remove_after
 
   decision_leaf="$(find "${REPO_ROOT}/archives/decisions" -maxdepth 1 -type f -name 'RoR-*.md' | sort | head -n 1)"
   if [[ -z "$decision_leaf" ]]; then
@@ -373,12 +382,27 @@ test_legacy_auditor_alias() {
   assert_manifest_has "$LAST_MANIFEST" '"profile_alias": {'
   assert_manifest_has "$LAST_MANIFEST" '"from": "auditor"'
   assert_manifest_has "$LAST_MANIFEST" '"to": "foreman"'
+
+  expected_status="$(policy_scalar profile_alias_legacy_auditor_deprecation_status)"
+  expected_remove_after="$(policy_scalar profile_alias_legacy_auditor_remove_after_dp)"
+  actual_status="$(extract_manifest_value "$LAST_MANIFEST" "deprecation_status")"
+  actual_remove_after="$(extract_manifest_value "$LAST_MANIFEST" "remove_after_dp")"
+  if [[ "$actual_status" != "$expected_status" ]]; then
+    fail "legacy auditor alias deprecation_status mismatch: expected ${expected_status}, got ${actual_status}"
+  fi
+  if [[ "$actual_remove_after" != "$expected_remove_after" ]]; then
+    fail "legacy auditor alias remove_after_dp mismatch: expected ${expected_remove_after}, got ${actual_remove_after}"
+  fi
 }
 
 test_legacy_hygiene_alias() {
   local resolved
   local requested
   local route_reason
+  local expected_status
+  local expected_remove_after
+  local actual_status
+  local actual_remove_after
 
   run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=hygiene --out=auto
   if (( RUN_STATUS != 0 )); then
@@ -406,6 +430,17 @@ test_legacy_hygiene_alias() {
   assert_manifest_has "$LAST_MANIFEST" '"profile_alias": {'
   assert_manifest_has "$LAST_MANIFEST" '"from": "hygiene"'
   assert_manifest_has "$LAST_MANIFEST" '"to": "conform"'
+
+  expected_status="$(policy_scalar profile_alias_legacy_hygiene_deprecation_status)"
+  expected_remove_after="$(policy_scalar profile_alias_legacy_hygiene_remove_after_dp)"
+  actual_status="$(extract_manifest_value "$LAST_MANIFEST" "deprecation_status")"
+  actual_remove_after="$(extract_manifest_value "$LAST_MANIFEST" "remove_after_dp")"
+  if [[ "$actual_status" != "$expected_status" ]]; then
+    fail "legacy hygiene alias deprecation_status mismatch: expected ${expected_status}, got ${actual_status}"
+  fi
+  if [[ "$actual_remove_after" != "$expected_remove_after" ]]; then
+    fail "legacy hygiene alias remove_after_dp mismatch: expected ${expected_remove_after}, got ${actual_remove_after}"
+  fi
 }
 
 test_manifest_fail_closed() {

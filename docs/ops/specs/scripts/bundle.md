@@ -10,6 +10,7 @@ The script provides `bundle_run` plus helpers for:
 1. Argument parsing and validation (`profile`, `out`, `project`, `intent`).
 2. Policy load from `ops/lib/manifests/BUNDLE.md` with required-key validation and fail-closed behavior.
    - Includes compatibility alias keys (`profile_alias_legacy_auditor_to`, `profile_alias_legacy_hygiene_to`) consumed at runtime.
+   - Includes required compatibility alias deprecation keys (`profile_alias_legacy_auditor_deprecation_status`, `profile_alias_legacy_auditor_remove_after_dp`, `profile_alias_legacy_hygiene_deprecation_status`, `profile_alias_legacy_hygiene_remove_after_dp`).
    - Runtime keeps one-cycle fallback support for old key names (`profile_alias_auditor`, `profile_alias_hygiene`) and fails closed if neither key set is present.
 3. Repo-relative path normalization and output confinement to `storage/handoff/`.
 4. Auto routing using PLAN presence and `tools/lint/plan.sh` status.
@@ -19,7 +20,7 @@ The script provides `bundle_run` plus helpers for:
 8. Foreman intent parsing and decision-leaf validation against dump payload.
 9. Bundle text rendering with embedded stance contract text rendered through `ops/bin/manifest` stance template keys.
 10. Manifest v2 emission and package `.tar` emission with manifest-aligned member list.
-11. Alias-route metadata emission in manifest (`profile_alias.applied`, `.from`, `.to`) when compatibility aliases are used.
+11. Alias-route metadata emission in manifest (`profile_alias.applied`, `.from`, `.to`, `.deprecation_status`, `.remove_after_dp`) when compatibility aliases are used.
 
 Stance contract extraction and render rules:
 - Resolve profile stance template key from `ops/lib/manifests/BUNDLE.md`.

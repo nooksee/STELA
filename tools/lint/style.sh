@@ -186,6 +186,12 @@ check_audit_foreman_mode_split() {
   local required_foreman_guard='This stance is not used for audit PASS/FAIL verdicts.'
   local required_manifest_audit='Canonical audit verdict profile is `audit`.'
   local required_manifest_foreman='Canonical addendum authorization profile is `foreman`.'
+  local required_manifest_alias_auditor_status_key='profile_alias_legacy_auditor_deprecation_status='
+  local required_manifest_alias_auditor_remove_key='profile_alias_legacy_auditor_remove_after_dp='
+  local required_manifest_alias_hygiene_status_key='profile_alias_legacy_hygiene_deprecation_status='
+  local required_manifest_alias_hygiene_remove_key='profile_alias_legacy_hygiene_remove_after_dp='
+  local required_manifest_alias_auditor_note='Legacy `auditor` alias deprecation status is `active`; removal target is `DP-OPS-0156`.'
+  local required_manifest_alias_hygiene_note='Legacy `hygiene` alias deprecation status is `active`; removal target is `DP-OPS-0156`.'
 
   [[ -f "$stance_auditor" ]] || mark_failure "auditor.md.tpl missing for mode split checks"
   [[ -f "$stance_foreman" ]] || mark_failure "foreman.md.tpl missing for mode split checks"
@@ -229,6 +235,30 @@ check_audit_foreman_mode_split() {
 
   if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_foreman" "$bundle_manifest"; then
     mark_failure "BUNDLE.md missing canonical foreman mode split line"
+  fi
+
+  if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_alias_auditor_status_key" "$bundle_manifest"; then
+    mark_failure "BUNDLE.md missing auditor alias deprecation status key line"
+  fi
+
+  if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_alias_auditor_remove_key" "$bundle_manifest"; then
+    mark_failure "BUNDLE.md missing auditor alias remove-after key line"
+  fi
+
+  if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_alias_hygiene_status_key" "$bundle_manifest"; then
+    mark_failure "BUNDLE.md missing hygiene alias deprecation status key line"
+  fi
+
+  if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_alias_hygiene_remove_key" "$bundle_manifest"; then
+    mark_failure "BUNDLE.md missing hygiene alias remove-after key line"
+  fi
+
+  if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_alias_auditor_note" "$bundle_manifest"; then
+    mark_failure "BUNDLE.md missing auditor alias deprecation-window compatibility note"
+  fi
+
+  if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_alias_hygiene_note" "$bundle_manifest"; then
+    mark_failure "BUNDLE.md missing hygiene alias deprecation-window compatibility note"
   fi
 }
 

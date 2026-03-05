@@ -36,6 +36,7 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 - Legacy alias `hygiene` must resolve to `conform` in manifest routing metadata.
 - Alias metadata must be emitted for compatibility routes:
   - `profile_alias.from` and `profile_alias.to` match requested and resolved values.
+  - `profile_alias.deprecation_status` and `profile_alias.remove_after_dp` match policy values in `ops/lib/manifests/BUNDLE.md`.
 
 ## Anecdotal Anchor
 This test is the bundle contract tripwire: if routing, naming, or intent guards regress, the failure is immediate and deterministic.

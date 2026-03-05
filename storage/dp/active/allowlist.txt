@@ -230,9 +230,6 @@ docs/ops/specs/stances/analyst.md
 docs/ops/specs/stances/architect.md
 docs/ops/specs/stances/auditor.md
 docs/ops/specs/stances/foreman.md
-docs/ops/prompts/README*.md
-docs/ops/prompts/e-prompt-0[1-6].md
-docs/ops/registry/prompts*.md
 storage/handoff/CLOSING-DP-OPS-0151.md
 archives/surfaces/TASK-DP-OPS-0151-*.md
 storage/handoff/CLOSING-DP-OPS-0152.md
@@ -247,3 +244,6 @@ ops/lib/scripts/editor.sh
 docs/ops/specs/scripts/editor.md
 storage/handoff/CLOSING-DP-OPS-0154.md
 archives/surfaces/TASK-DP-OPS-0154-*.md
+storage/handoff/CLOSING-DP-OPS-0155.md
+archives/surfaces/TASK-DP-OPS-0155-*.md
+archives/surfaces/TASK-DP-OPS-0156-*.md
