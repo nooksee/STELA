@@ -240,6 +240,8 @@ docs/ops/specs/stances/auditor.md
 docs/ops/specs/stances/foreman.md
 storage/handoff/CLOSING-DP-OPS-0151.md
 archives/surfaces/TASK-DP-OPS-0151-*.md
+storage/handoff/CLOSING-DP-OPS-0152.md
+archives/surfaces/TASK-DP-OPS-0152-*.md
 ops/src/stances/addendum.md.tpl
 docs/ops/specs/binaries/addendum.md
 ops/src/stances/contractor.md.tpl

@@ -13,6 +13,8 @@ project_profile=project
 audit_profile=audit
 foreman_profile=foreman
 foreman_intent_form=ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>
+profile_alias_legacy_auditor_to=foreman
+profile_alias_legacy_hygiene_to=conform
 handoff_omit_profiles=audit,foreman
 
 prompt_path_analyst=docs/ops/prompts/e-prompt-04.md
@@ -48,3 +50,4 @@ dump_scope_foreman=core
 Canonical addendum authorization profile is `foreman`.
 Legacy `auditor` remains accepted as a compatibility alias and resolves to `foreman`.
 Legacy `hygiene` remains accepted as a compatibility alias and resolves to `conform`.
+Alias routing values are loaded from `profile_alias_legacy_auditor_to` and `profile_alias_legacy_hygiene_to` at runtime.

@@ -20,6 +20,9 @@ Policy source:
 1. Runtime contract is loaded from `ops/lib/manifests/BUNDLE.md`.
 2. Missing required policy keys or invalid values are fail-closed errors.
 3. Profile routing, prompt pointer mappings, dump scopes, and stance template render keys are resolved from this manifest.
+4. Compatibility alias routing is resolved from manifest keys:
+   - `profile_alias_legacy_auditor_to`
+   - `profile_alias_legacy_hygiene_to`
 
 Profile intent split:
 1. `audit` is the audit-verdict intake profile.
@@ -36,6 +39,7 @@ Artifact contract (written under `storage/handoff/`):
 1. Bundle text artifact (`.txt`) with embedded OPEN block, dump pointers, prompt pointer, stance template key, and embedded prompt contract excerpt.
 2. Bundle manifest (`.manifest.json`) with `bundle_version: "2"` and structured metadata:
    - profile routing metadata
+   - profile alias metadata (`applied`, `from`, `to`)
    - embedded OPEN metadata (`embedded`, `branch`, `head_short`, `trace_id`, `intent`)
    - dump pointers
    - topic/plan presence
