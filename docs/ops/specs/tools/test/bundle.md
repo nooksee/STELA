@@ -29,7 +29,7 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 - Manifest must include `bundle_version: "2"`.
 - Non-`auto` profiles must preserve exact `resolved_profile` parity.
 - Manifest dump `scope` must match policy mapping from `ops/lib/manifests/BUNDLE.md` for the resolved profile.
-- Audit profile dump scope is `platform`.
+- Audit profile dump scope is `core`.
 - Compatibility legacy artifact outputs (`BUNDLE-*`) are asserted from manifest `artifact_naming` metadata when legacy emission is enabled by policy.
 - `auto` must resolve to a supported route (`analyst` or `architect`).
 - Foreman must fail without `--intent`.

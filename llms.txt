@@ -1,6 +1,6 @@
 # Stela llms.txt
-# HEAD: 731f7556
-# HEAD commit time: 2026-03-05T13:39:51-05:00
+# HEAD: c6d600d2
+# HEAD commit time: 2026-03-05T14:47:57-05:00
 # Refresh: ./ops/bin/llms
 # One Truth bundle index.
 

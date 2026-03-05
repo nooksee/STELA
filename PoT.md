@@ -19,7 +19,7 @@ Filing:
 - `archives/` = Cold (long-lived draft and ledger archives).
 
 ### 1.2 Axioms
-- Precedence: PoT is final authority; if conflict exists, stop and ask.
+- Precedence: PoT is final authority; if conflict exists, PoT prevails.
 - SSOT: one canonical file per domain; other mentions are pointers.
 - Reuse-first: search `ops/` for an existing template before creating a new artifact.
 - Drift: any divergence between canon and repository state, or duplication of canon outside SSOT, is a failure state that requires stop and correction.
@@ -45,11 +45,14 @@ Source of Truth Read-in Order:
 5. `docs/MAP.md`: The Terrain. Continuity map for navigating the repository context.
 
 ## 2. Enforcement
-Integrator plus Automation (linters, gates, and binaries).
-Mandate:
-- Stop work.
-- Reject PRs.
-- Kill processes.
+Executed by the Integrator and through automated subsystems, including linters, build gates, and binary validation
+
+Operational Mandate:
+- Immediate Cessation: Cease all active task processing.
+- PR Rejection: Automatically decline non-compliant pull requests.
+- Process Termination: Kill any executing processes that violate safety or state constraints.
+
+
 System Failure States (Drift Triggers):
 | Failure Type | Definition | System Response |
 | :---- | :---- | :---- |
@@ -70,17 +73,13 @@ Hard constraints are: PoT.md, SoP.md, TASK.md, ops/lib/manifests/CONTEXT.md, doc
 - Contractor (Guest AI): Executes specific logic tasks and drafts implementation details within a defined scope.
 
 ### 4.2 Behavioral Logic Standard
-- Linguistic Precision: No contractions across any scope, including projects.
-- Linguistic Precision: Quantitative reporting required for deviations from protocol.
-- Generation Mandate: Verification outputs must be generated, not pre-filled or assumed.
-- Generation Mandate: DP RESULTS receipts are generated artifacts produced by `ops/bin/certify`; manual fabrication is prohibited.
-- Linguistic Precision: Absolute literalism; seek clarification for ambiguity before proceeding.
-- Relatability Practice: Imagine the same way an operator explains a failure, picture a concrete branch state, and consider a direct recovery action.
-- Operational Directives: This rule is governed by PoT.md §1.2 Drift.
-- Operational Directives: This rule is governed by PoT.md §1.3 Canon Surfaces (`ops/lib/manifests/CONTEXT.md`).
-- Operational Directives: This rule is governed by PoT.md §1.2 Precedence.
-- Operational Directives: This rule is governed by PoT.md §1.2 SoP.
-- Operational Directives: Design Discipline: Before adding enforcement automation, document why structural prevention is not viable. Prefer prevention over detection. Full procedure: docs/DESIGN.md.
+- No contractions across any scope, including projects.
+- Quantitative reporting required for deviations from protocol.
+- Absolute literalism; seek clarification for ambiguity before proceeding.
+- Verification outputs must be generated, not pre-filled or assumed.
+- Receipts are generated artifacts produced by the system; manual fabrication is prohibited.
+- Imagine the same way an operator explains a failure, picture a concrete branch state, and consider a direct recovery action.
+- Prefer prevention over detection. Document why structural prevention is not viable.
 
 ### 4.4 Entry Points
 - llms.txt
@@ -137,13 +136,13 @@ When reporting, include:
 - Use clear commit messages.
 - Push the `work/*` branch, open a PR, wait for gates, then merge.
 
-### 6.2.2 Immutable DP Workflow
-- Run `./ops/bin/open` to establish freshness state.
-- Generate DP structure with `./ops/bin/draft`; do not hand-author structural boilerplate in `TASK.md`.
-- Edit only approved DP slot content after draft generation.
-- If canonical DP template hash or normalized structure hash fails in `tools/lint/dp.sh`, stop and repair before proceeding.
-- Maintain closing-sidecar input at `storage/handoff/CLOSING-DP-OPS-XXXX.md` during execution.
-- Run `./ops/bin/certify --dp=DP-OPS-XXXX --out=auto` to execute receipt commands and generate RESULTS.
+### 6.2.2 Immutable Dispatch Packet Workflow
+- Establish freshness state.
+- Generate dispatch packet structure; do not hand-author structural boilerplate.
+- Edit only approved dispatch packet slot content after draft generation.
+- If canonical dispatch packet template hash or normalized structure hash fails, stop and repair before proceeding.
+- Maintain closing-sidecar input during execution.
+- Execute receipt commands and generate RESULTS.
 
 ### 6.2.3 Branching Doctrine (SSoT)
 - Immutable Trunk: main is verified state; direct pushes are forbidden.
@@ -151,11 +150,7 @@ When reporting, include:
 - Naming Schema: work/<topic>-YYYY-MM-DD.
 - Drift Prevention: branches outside schema are trash and subject to pruning.
 
-### 6.3 Provenance
-- Record imported or adapted external code in `docs/UPSTREAMS.md` or the correct truth-layer document.
-- Include source, purpose, changes, and known risks or limits.
-
-### 6.4 Drafting Proposal Protocol
+### 6.3 Drafting Proposal Protocol
 - Integrator proposals: An Integrator shall propose a work branch name and Base HEAD when they are not yet provided.
 - Operator authority: The Operator creates branches and provides the final Base HEAD; Contractors do not create or switch branches.
 - Provisional marking: Any provisional value must be prefixed with `PROPOSED` during drafting and must be removed or replaced with finalized values before any worker runs a DP.
