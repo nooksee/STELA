@@ -269,3 +269,9 @@ opt/_factory/agents/r-agent-03.md
 opt/_factory/agents/r-agent-04.md
 opt/_factory/agents/r-agent-05.md
 opt/_factory/agents/r-agent-06.md
+ops/bin/draft
+docs/ops/specs/binaries/draft.md
+tools/test/editor.sh
+docs/ops/specs/tools/test/editor.md
+storage/handoff/CLOSING-DP-OPS-0161.md
+archives/surfaces/TASK-DP-OPS-0161-*.md
