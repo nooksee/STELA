@@ -81,6 +81,48 @@ extract_allowlist_pointer() {
   ' "$source_path"
 }
 
+extract_in_scope_block() {
+  local source_path="$1"
+  awk '
+    BEGIN { in_block=0 }
+    /^In scope:[[:space:]]*$/ { in_block=1; next }
+    in_block && /^Out of scope:[[:space:]]*$/ { exit }
+    in_block { print }
+  ' "$source_path"
+}
+
+extract_changelog_update_block() {
+  local source_path="$1"
+  awk '
+    BEGIN { in_changelog=0; in_update=0 }
+    /^### 3[.]4[.]3[[:space:]]+Changelog[[:space:]]*$/ { in_changelog=1; next }
+    in_changelog && /^### 3[.]4[.]4([[:space:]]|$)/ { exit }
+    in_changelog && /^UPDATE:[[:space:]]*$/ { in_update=1; next }
+    in_changelog && /^NEW:[[:space:]]*$/ { if (in_update) exit }
+    in_changelog && /^NO-CHANGE:[[:space:]]*$/ { if (in_update) exit }
+    in_changelog && in_update { print }
+  ' "$source_path"
+}
+
+is_pot_change_authorized() {
+  local source_path="$1"
+  local in_scope_block
+  local changelog_update_block
+  local pot_pattern='^[[:space:]]*-[[:space:]]*`?PoT[.]md`?([[:space:]]|[(]|$)'
+
+  in_scope_block="$(extract_in_scope_block "$source_path")"
+  if grep -Eq "$pot_pattern" <<< "$in_scope_block"; then
+    return 0
+  fi
+
+  changelog_update_block="$(extract_changelog_update_block "$source_path")"
+  if grep -Eq "$pot_pattern" <<< "$changelog_update_block"; then
+    return 0
+  fi
+
+  return 1
+}
+
 TASK_SOURCE_PATH="$(resolve_task_surface_path "${REPO_ROOT}/TASK.md")"
 
 pointer_line="$(extract_allowlist_pointer "$TASK_SOURCE_PATH")"
@@ -179,6 +221,19 @@ if [[ "${#unauthorized[@]}" -gt 0 ]]; then
     printf '%s\n' "${unauthorized[@]}" | sort
   } >&2
   exit 1
+fi
+
+if [[ -n "${observed[PoT.md]+set}" ]]; then
+  if ! is_pot_change_authorized "$TASK_SOURCE_PATH"; then
+    {
+      echo "FAIL: PoT.md changed without explicit governance-surface authorization in active DP."
+      echo "  Add '- PoT.md' under either:"
+      echo "  - In scope:"
+      echo "  - 3.4.3 Changelog UPDATE:"
+      echo "  Then re-run tools/lint/integrity.sh."
+    } >&2
+    exit 1
+  fi
 fi
 
 # CbC Design Discipline Preflight enforcement

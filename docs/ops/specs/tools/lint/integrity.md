@@ -15,6 +15,7 @@
 7. Extract the CbC Design Discipline Preflight slot content from the resolved TASK surface. Parse the first non-empty line after the two fixed boilerplate lines (`Required when...` and `For non-tooling DPs:`).
 8. Treat preflight as applicable when the first non-empty slot line does not begin with `Not applicable`. When no slot content is found, treat as not applicable.
 9. When preflight is applicable, check the allowlist for at least one exact entry or wildcard pattern matching `archives/decisions/*-cbc-*`. Emit hard failure when no such entry exists.
+10. When `PoT.md` is observed in changed paths, require explicit DP authorization in the resolved TASK surface by listing `PoT.md` as a bullet under either `In scope:` or `3.4.3 Changelog` `UPDATE:`. Emit hard failure when authorization is missing.
 
 ## CbC Preflight Enforcement Rule
 
@@ -39,5 +40,7 @@ DP-OPS-0074 recorded a session where absent runtime scope enforcement allowed an
 
 DP-OPS-0139 added the CbC preflight linkage rule after observing that tooling DPs could pass integrity checks without evidence of CbC discipline review. The new rule structurally requires a cbc decision leaf when the preflight is applicable, making the documentation-to-artifact loop mandatory rather than advisory.
 
+DP-OPS-0155 follow-on hardening added a governance-surface edit guard for `PoT.md` after repeated operator-facing regressions where constitutional text changed outside explicit packet scope. The rule is deliberately narrow: it does not block governance edits categorically, it requires explicit authorization in active DP scope/changelog.
+
 ## Integrity Filter Warnings
-Pointer extraction failures in TASK Section 3.3 are hard-stop conditions and terminate lint before path comparison starts. The script evaluates current local git state only; ignored files or external workspace mutations outside git visibility are not part of observed-path comparison. Broad wildcard entries reduce false alarms but can also mask accidental scope expansion if they are written too loosely. Absence of the CbC preflight section in TASK is treated as not applicable; the rule only fires when the section is present and the slot content does not begin with `Not applicable`.
+Pointer extraction failures in TASK Section 3.3 are hard-stop conditions and terminate lint before path comparison starts. The script evaluates current local git state only; ignored files or external workspace mutations outside git visibility are not part of observed-path comparison. Broad wildcard entries reduce false alarms but can also mask accidental scope expansion if they are written too loosely. Absence of the CbC preflight section in TASK is treated as not applicable; the rule only fires when the section is present and the slot content does not begin with `Not applicable`. `PoT.md` authorization checks rely on canonical headings (`In scope:` and `3.4.3 Changelog` `UPDATE:`); malformed packets can trigger false negatives and are expected to fail other packet lints.
