@@ -56,7 +56,9 @@ Artifact contract (written under `storage/handoff/`):
    - addendum metadata (`required`, `decision_id`, `decision_leaf_present`)
    - package metadata (`path`, `files`)
 3. Bundle package (`.tar`) containing bundle `.txt`, manifest, dump payload, dump manifest, and `TOPIC.md`/`PLAN.md` when present.
-4. Canonical bundle artifact names use `BUNDLE-` prefix; relabels such as `AUDIT-*`, `FOREMAN-*`, or `AUDITOR-*` are non-canonical.
+4. Canonical bundle artifact names use policy-defined profile prefixes (`artifact_prefix_<profile>` in `ops/lib/manifests/BUNDLE.md`), for example `AUDIT-*` and `FOREMAN-*`.
+5. Legacy `BUNDLE-*` artifacts are compatibility outputs during migration when `compatibility_emit_legacy_bundle_artifacts=true`.
+6. Manifest `artifact_naming` metadata records canonical and compatibility artifact paths plus `legacy_emitted` status.
 
 Text artifact profile conditional block:
 1. The `[HANDOFF]` block (`TOPIC.md` / `PLAN.md` presence) is emitted for non-audit profiles.

@@ -163,15 +163,15 @@ When reporting, include:
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-03-05-42198086.md
+archives/surfaces/PoW-2026-03-05-ae6f2b86.md
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-03-05-42198086.md
+archives/surfaces/SoP-2026-03-05-ae6f2b86.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0156-42198086.md
+archives/surfaces/TASK-DP-OPS-0157-ae6f2b86.md
 
 
 ## docs/MAP.md

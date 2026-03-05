@@ -25,11 +25,12 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 
 ## Invariants and failure modes
 - Valid profiles `analyst`, `architect`, `audit`, `conform`, `auto` must succeed.
-- Generated bundle artifact path must start with `storage/handoff/BUNDLE-`.
+- Generated canonical bundle artifact path must start with `storage/handoff/<artifact_prefix>-` where `<artifact_prefix>` is policy-mapped for the resolved profile.
 - Manifest must include `bundle_version: "2"`.
 - Non-`auto` profiles must preserve exact `resolved_profile` parity.
 - Manifest dump `scope` must match policy mapping from `ops/lib/manifests/BUNDLE.md` for the resolved profile.
 - Audit profile dump scope is `platform`.
+- Compatibility legacy artifact outputs (`BUNDLE-*`) are asserted from manifest `artifact_naming` metadata when legacy emission is enabled by policy.
 - `auto` must resolve to a supported route (`analyst` or `architect`).
 - Foreman must fail without `--intent`.
 - Foreman must fail for malformed `--intent`.

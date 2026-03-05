@@ -18,6 +18,7 @@ declare -a BUNDLE_SUPPORTED_PROFILES=()
 declare -a BUNDLE_HANDOFF_OMIT_PROFILES=()
 declare -A BUNDLE_DUMP_SCOPE_BY_PROFILE=()
 declare -A BUNDLE_STANCE_TEMPLATE_BY_PROFILE=()
+declare -A BUNDLE_ARTIFACT_PREFIX_BY_PROFILE=()
 declare -A BUNDLE_PROFILE_ALIAS_BY_INPUT=()
 declare -A BUNDLE_PROFILE_ALIAS_DEPRECATION_STATUS_BY_INPUT=()
 declare -A BUNDLE_PROFILE_ALIAS_REMOVE_AFTER_DP_BY_INPUT=()
@@ -28,6 +29,8 @@ BUNDLE_PROJECT_PROFILE=""
 BUNDLE_AUDIT_PROFILE=""
 BUNDLE_FOREMAN_PROFILE=""
 BUNDLE_FOREMAN_INTENT_FORM=""
+BUNDLE_COMPAT_LEGACY_PREFIX=""
+BUNDLE_COMPAT_EMIT_LEGACY=""
 
 bundle_usage() {
   cat <<'USAGE'
@@ -124,8 +127,10 @@ bundle_load_policy() {
   local profile
   local scope_key
   local stance_key_name
+  local prefix_key
   local dump_scope
   local stance_key
+  local artifact_prefix
   local omit_csv
   local alias_name
   local alias_status_key
@@ -142,6 +147,8 @@ bundle_load_policy() {
     auto_plan_profile \
     project_profile \
     audit_profile \
+    compatibility_legacy_bundle_prefix \
+    compatibility_emit_legacy_bundle_artifacts \
     handoff_omit_profiles; do
     if [[ -z "$(bundle_policy_scalar "$required_key")" ]]; then
       die "bundle policy missing required key: ${required_key}"
@@ -216,13 +223,17 @@ bundle_load_policy() {
 
   BUNDLE_DUMP_SCOPE_BY_PROFILE=()
   BUNDLE_STANCE_TEMPLATE_BY_PROFILE=()
+  BUNDLE_ARTIFACT_PREFIX_BY_PROFILE=()
   for profile in "${BUNDLE_SUPPORTED_PROFILES[@]}"; do
     scope_key="dump_scope_${profile}"
     stance_key_name="stance_template_${profile}"
+    prefix_key="artifact_prefix_${profile}"
     dump_scope="$(bundle_policy_scalar "$scope_key")"
     stance_key="$(bundle_policy_scalar "$stance_key_name")"
+    artifact_prefix="$(bundle_policy_scalar "$prefix_key")"
     [[ -n "$dump_scope" ]] || die "bundle policy missing required key: ${scope_key}"
     [[ -n "$stance_key" ]] || die "bundle policy missing required key: ${stance_key_name}"
+    [[ -n "$artifact_prefix" ]] || die "bundle policy missing required key: ${prefix_key}"
     case "$dump_scope" in
       full|core|platform|project)
         ;;
@@ -237,9 +248,26 @@ bundle_load_policy() {
         die "bundle policy has invalid stance template key for ${profile}: ${stance_key}"
         ;;
     esac
+    if [[ ! "$artifact_prefix" =~ ^[A-Z][A-Z0-9-]*$ ]]; then
+      die "bundle policy has invalid artifact prefix for ${profile}: ${artifact_prefix}"
+    fi
     BUNDLE_DUMP_SCOPE_BY_PROFILE["$profile"]="$dump_scope"
     BUNDLE_STANCE_TEMPLATE_BY_PROFILE["$profile"]="$stance_key"
+    BUNDLE_ARTIFACT_PREFIX_BY_PROFILE["$profile"]="$artifact_prefix"
   done
+
+  BUNDLE_COMPAT_LEGACY_PREFIX="$(bundle_policy_scalar compatibility_legacy_bundle_prefix)"
+  BUNDLE_COMPAT_EMIT_LEGACY="$(bundle_policy_scalar compatibility_emit_legacy_bundle_artifacts)"
+  if [[ ! "$BUNDLE_COMPAT_LEGACY_PREFIX" =~ ^[A-Z][A-Z0-9-]*$ ]]; then
+    die "bundle policy has invalid compatibility legacy prefix: ${BUNDLE_COMPAT_LEGACY_PREFIX}"
+  fi
+  case "$BUNDLE_COMPAT_EMIT_LEGACY" in
+    true|false)
+      ;;
+    *)
+      die "bundle policy has invalid compatibility flag compatibility_emit_legacy_bundle_artifacts: ${BUNDLE_COMPAT_EMIT_LEGACY}"
+      ;;
+  esac
 
   omit_csv="$(bundle_policy_scalar handoff_omit_profiles)"
   BUNDLE_HANDOFF_OMIT_PROFILES=()
@@ -260,11 +288,13 @@ bundle_resolve_output_path() {
 
   local out_rel=""
   if [[ "$out_token" == "auto" ]]; then
+    local prefix
+    prefix="$(bundle_artifact_prefix_for_profile "$resolved_profile")"
     local suffix=""
     if [[ -n "$project_name" ]]; then
       suffix="-${project_name}"
     fi
-    out_rel="storage/handoff/BUNDLE-${resolved_profile}${suffix}-${branch_safe}-${head_short}.txt"
+    out_rel="storage/handoff/${prefix}${suffix}-${branch_safe}-${head_short}.txt"
   else
     out_rel="$(bundle_to_rel_path "$out_token")"
   fi
@@ -288,6 +318,13 @@ bundle_stance_template_for_profile() {
   local mapped_key="${BUNDLE_STANCE_TEMPLATE_BY_PROFILE[$profile]:-}"
   [[ -n "$mapped_key" ]] || die "bundle policy missing stance template key for profile: ${profile}"
   printf '%s' "$mapped_key"
+}
+
+bundle_artifact_prefix_for_profile() {
+  local profile="$1"
+  local mapped_prefix="${BUNDLE_ARTIFACT_PREFIX_BY_PROFILE[$profile]:-}"
+  [[ -n "$mapped_prefix" ]] || die "bundle policy missing artifact prefix for profile: ${profile}"
+  printf '%s' "$mapped_prefix"
 }
 
 bundle_render_stance_contract_for_profile() {
@@ -483,6 +520,8 @@ bundle_run() {
   out_abs="$(bundle_resolve_output_path "$out_token" "$resolved_profile" "$branch_safe" "$head_short" "$project_name")"
   local out_rel
   out_rel="$(bundle_to_rel_path "$out_abs")"
+  local artifact_prefix
+  artifact_prefix="$(bundle_artifact_prefix_for_profile "$resolved_profile")"
 
   local manifest_abs=""
   if [[ "$out_abs" == *.* ]]; then
@@ -501,6 +540,23 @@ bundle_run() {
   fi
   local package_rel
   package_rel="$(bundle_to_rel_path "$package_abs")"
+
+  local compatibility_legacy_emitted=0
+  local compatibility_legacy_out_rel=""
+  local compatibility_legacy_manifest_rel=""
+  local compatibility_legacy_package_rel=""
+  if [[ "$out_token" == "auto" && "$BUNDLE_COMPAT_EMIT_LEGACY" == "true" ]]; then
+    local legacy_suffix=""
+    if [[ -n "$project_name" ]]; then
+      legacy_suffix="-${project_name}"
+    fi
+    compatibility_legacy_out_rel="storage/handoff/${BUNDLE_COMPAT_LEGACY_PREFIX}-${resolved_profile}${legacy_suffix}-${branch_safe}-${head_short}.txt"
+    compatibility_legacy_manifest_rel="${compatibility_legacy_out_rel%.*}.manifest.json"
+    compatibility_legacy_package_rel="${compatibility_legacy_out_rel%.*}.tar"
+    if [[ "$compatibility_legacy_out_rel" != "$out_rel" ]]; then
+      compatibility_legacy_emitted=1
+    fi
+  fi
 
   mkdir -p "$(dirname "$out_abs")"
   mkdir -p "${REPO_ROOT}/storage/dumps"
@@ -652,6 +708,23 @@ bundle_run() {
       echo "  \"project\": null," 
     fi
     echo "  \"bundle_path\": \"$(bundle_json_escape "$out_rel")\"," 
+    echo "  \"artifact_naming\": {"
+    echo "    \"canonical_prefix\": \"$(bundle_json_escape "$artifact_prefix")\","
+    echo "    \"canonical_bundle_path\": \"$(bundle_json_escape "$out_rel")\","
+    echo "    \"canonical_manifest_path\": \"$(bundle_json_escape "$manifest_rel")\","
+    echo "    \"canonical_package_path\": \"$(bundle_json_escape "$package_rel")\","
+    echo "    \"legacy_prefix\": \"$(bundle_json_escape "$BUNDLE_COMPAT_LEGACY_PREFIX")\","
+    if (( compatibility_legacy_emitted )); then
+      echo "    \"legacy_bundle_path\": \"$(bundle_json_escape "$compatibility_legacy_out_rel")\","
+      echo "    \"legacy_manifest_path\": \"$(bundle_json_escape "$compatibility_legacy_manifest_rel")\","
+      echo "    \"legacy_package_path\": \"$(bundle_json_escape "$compatibility_legacy_package_rel")\","
+    else
+      echo "    \"legacy_bundle_path\": null,"
+      echo "    \"legacy_manifest_path\": null,"
+      echo "    \"legacy_package_path\": null,"
+    fi
+    echo "    \"legacy_emitted\": $(bundle_bool "$compatibility_legacy_emitted")"
+    echo "  },"
     echo "  \"open\": {"
     echo "    \"embedded\": true,"
     echo "    \"branch\": \"$(bundle_json_escape "$branch")\"," 
@@ -703,7 +776,18 @@ bundle_run() {
 
   tar -cf "$package_abs" -C "$REPO_ROOT" "${package_files[@]}"
 
+  if (( compatibility_legacy_emitted )); then
+    cp "$out_abs" "${REPO_ROOT}/${compatibility_legacy_out_rel}"
+    cp "$manifest_abs" "${REPO_ROOT}/${compatibility_legacy_manifest_rel}"
+    cp "$package_abs" "${REPO_ROOT}/${compatibility_legacy_package_rel}"
+  fi
+
   echo "Bundle artifact: $(bundle_display_path "$out_rel")"
   echo "Bundle manifest: $(bundle_display_path "$manifest_rel")"
   echo "Bundle package: $(bundle_display_path "$package_rel")"
+  if (( compatibility_legacy_emitted )); then
+    echo "Legacy bundle artifact: $(bundle_display_path "$compatibility_legacy_out_rel")"
+    echo "Legacy bundle manifest: $(bundle_display_path "$compatibility_legacy_manifest_rel")"
+    echo "Legacy bundle package: $(bundle_display_path "$compatibility_legacy_package_rel")"
+  fi
 }
