@@ -6,9 +6,14 @@
 It is not an execution gate by itself and does not replace DP execution controls.
 
 ## Operator Contract
-- Canonical template source: `ops/src/surfaces/plan.md.tpl`.
+- Canonical template source: `ops/src/stances/plan.md.tpl`.
 - Minimal deterministic validation: `tools/lint/plan.sh`.
 - Architect-targeted plans require `## Architect Handoff`.
+- Canonical simplified sections:
+  - `## Summary`
+  - `## Scope`
+  - `## Architect Handoff`
+  - `## Implementation Plan (Decision Complete)`
 
 Required `Architect Handoff` fields:
 - `Selected Option:`
@@ -26,6 +31,7 @@ Required `Architect Handoff` fields:
 - Missing `Architect Handoff` fields in architect-targeted plans.
 - Unresolved `{{TOKEN}}` placeholders.
 - Heading-only plans with no non-heading content.
+- Route-critical section drift (missing one of the canonical simplified sections).
 
 ## Integrity Filter Warnings
 `tools/lint/plan.sh` is a deterministic safety floor, not a style rubric.

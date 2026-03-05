@@ -21,6 +21,10 @@ Architect-targeted checks (only when `Architect Handoff` heading is present):
 1. Require `Selected Option`, `Slice Mode`, and `Selected Slices` fields.
 2. Require `Execution Order` when `Slice Mode=multi`.
 
+Non-gating by design:
+1. PLAN advisory sections outside route-critical contract are intentionally not lint-enforced.
+2. Removed advisory headings from the simplified plan surface are not treated as failures.
+
 On pass, lint prints `PLAN lint: PASS (<path>)` and exits 0.
 On failure, lint prints `FAIL: ...` and exits non-zero.
 `--test` includes positive and negative fixtures for both baseline and architect-targeted checks.
