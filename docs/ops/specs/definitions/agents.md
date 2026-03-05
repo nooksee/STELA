@@ -28,6 +28,24 @@ Allowed head values:
   - Emit promotion leaf under `archives/definitions/`.
   - Rewrite `promotion:` to the new leaf path.
 
+## Canon Agent Body Contract
+Canon agent files under `opt/_factory/agents/` must contain:
+- `## Provenance`
+- `## Role`
+- `## Specialization`
+- `## Identity Contract` with:
+  - ``agent_id`` backticked and aligned to filename (`r-agent-XX` -> `R-AGENT-XX`)
+  - ``stance_id`` backticked and in canonical stance set (`analyst`, `architect`, `auditor`, `conformist`, `contractor`, `foreman`)
+- `## Capability Tags` with at least one backticked capability token bullet
+- `## Pointers` without legacy `JIT skills` sub-block
+- `## Skill Bindings` with explicit ``required_skills`` and ``optional_skills`` lists
+- `## Scope Boundary`
+
+Role-boundary split is strict:
+- agent files define identity, authority boundary, pointers, and skill binding
+- stance templates define output-envelope behavior and response formatting
+- agent files must not embed stance-envelope directives
+
 ## Leaf Schema
 Leaf front-matter keys are required:
 - `trace_id`

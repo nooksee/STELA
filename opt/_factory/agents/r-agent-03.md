@@ -13,6 +13,14 @@ Maintains documentation and codemap surfaces within the active DP scope.
 ## Specialization
 Documentation and codemap maintenance.
 
+## Identity Contract
+- `agent_id`: `R-AGENT-03`
+- `stance_id`: `contractor`
+
+## Capability Tags
+- `documentation-maintenance`
+- `codemap-maintenance`
+
 ## Pointers
 - Constitution: `PoT.md`
 - Governance/Jurisdiction: `docs/GOVERNANCE.md`
@@ -20,8 +28,12 @@ Documentation and codemap maintenance.
 - Continuity map: `docs/MAP.md`
 - Output contract: `TASK.md`
 - Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/agent.sh`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/factory.sh`, `tools/verify.sh`
-- JIT skills:
+
+## Skill Bindings
+- `required_skills`:
   - `opt/_factory/skills/s-learn-01.md`
+- `optional_skills`:
+  - (none)
 
 ## Scope Boundary
 Operate only within the active DP scope and defer to canon surfaces for governance and behavioral rules.

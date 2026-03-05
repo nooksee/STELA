@@ -13,6 +13,14 @@ Plans and integrates complex change sets within the active DP scope.
 ## Specialization
 Planning and integration for complex changes.
 
+## Identity Contract
+- `agent_id`: `R-AGENT-04`
+- `stance_id`: `auditor`
+
+## Capability Tags
+- `integration-planning`
+- `scope-composition`
+
 ## Pointers
 - Constitution: `PoT.md`
 - Governance/Jurisdiction: `docs/GOVERNANCE.md`
@@ -20,7 +28,11 @@ Planning and integration for complex changes.
 - Continuity map: `docs/MAP.md`
 - Output contract: `TASK.md`
 - Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/agent.sh`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/factory.sh`, `tools/verify.sh`
-- JIT skills:
+
+## Skill Bindings
+- `required_skills`:
+  - `opt/_factory/skills/s-learn-02.md`
+- `optional_skills`:
   - (none)
 
 ## Scope Boundary

@@ -49,6 +49,45 @@ extract_pointers_section() {
   ' "$path"
 }
 
+extract_section() {
+  local section="$1"
+  local path="$2"
+  awk -v section="$section" '
+    BEGIN { in_section=0 }
+    $0 == section { in_section=1; next }
+    in_section && /^## / { exit }
+    in_section { print }
+  ' "$path"
+}
+
+identity_value() {
+  local key="$1"
+  local path="$2"
+  local identity_section
+  identity_section="$(extract_section "## Identity Contract" "$path")"
+  printf '%s\n' "$identity_section" | awk -v key="$key" '
+    $0 ~ "^[[:space:]]*-[[:space:]]*`?" key "`?:[[:space:]]*`[^`]+`[[:space:]]*$" {
+      line = $0
+      sub(/^[[:space:]]*-[[:space:]]*`?[^` :]+`?:[[:space:]]*`/, "", line)
+      sub(/`[[:space:]]*$/, "", line)
+      print line
+      exit
+    }
+  '
+}
+
+stance_id_allowed() {
+  local stance_id="$1"
+  case "$stance_id" in
+    analyst|architect|auditor|conformist|contractor|foreman)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 section_has_content() {
   local section="$1"
   local path="$2"
@@ -141,7 +180,7 @@ if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
   for agent in "${AGENTS_DIR}"/*.md; do
     agent_name="$(basename "$agent")"
 
-    required_sections=("## Provenance" "## Role" "## Specialization" "## Pointers" "## Scope Boundary")
+    required_sections=("## Provenance" "## Role" "## Specialization" "## Identity Contract" "## Capability Tags" "## Pointers" "## Skill Bindings" "## Scope Boundary")
     for section in "${required_sections[@]}"; do
       section_count="$(grep -c "^${section}$" "$agent" || true)"
       if [[ "$section_count" -eq 0 ]]; then
@@ -164,6 +203,32 @@ if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
       fi
     done
 
+    declared_agent_id="$(trim "$(identity_value "agent_id" "$agent")")"
+    if [[ -z "$declared_agent_id" ]]; then
+      fail "Level 1: ${agent_name} missing Identity Contract field 'agent_id'"
+    else
+      expected_agent_id="$(basename "$agent" .md | tr '[:lower:]' '[:upper:]')"
+      if [[ "$declared_agent_id" != "$expected_agent_id" ]]; then
+        fail "Level 1: ${agent_name} agent_id '${declared_agent_id}' does not match expected '${expected_agent_id}'"
+      fi
+      if [[ -z "${registry_ids[$declared_agent_id]+set}" ]]; then
+        fail "Level 2: ${agent_name} agent_id '${declared_agent_id}' is not registered in ${AGENTS_REGISTRY}"
+      fi
+    fi
+
+    declared_stance_id="$(trim "$(identity_value "stance_id" "$agent")")"
+    if [[ -z "$declared_stance_id" ]]; then
+      fail "Level 1: ${agent_name} missing Identity Contract field 'stance_id'"
+    elif ! stance_id_allowed "$declared_stance_id"; then
+      fail "Level 1: ${agent_name} stance_id '${declared_stance_id}' is not an allowed canonical stance"
+    fi
+
+    capability_section="$(extract_section "## Capability Tags" "$agent")"
+    capability_count="$(printf '%s\n' "$capability_section" | grep -Ec '^[[:space:]]*-[[:space:]]*`[^`]+`[[:space:]]*$' || true)"
+    if [[ "$capability_count" -lt 1 ]]; then
+      fail "Level 1: ${agent_name} Capability Tags section must contain at least one backticked tag bullet"
+    fi
+
     pointers_section="$(extract_pointers_section "$agent")"
     toolchain_lines="$(printf '%s\n' "$pointers_section" | grep -E '^[[:space:]]*-[[:space:]]*Authorized toolchain:' || true)"
     toolchain_count="$(printf '%s\n' "$toolchain_lines" | sed '/^$/d' | wc -l | tr -d '[:space:]')"
@@ -180,6 +245,10 @@ if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
         fail "Level 1: ${agent_name} missing required pointer '${token}'"
       fi
     done
+
+    if grep -Eq '^[[:space:]]*-[[:space:]]*JIT skills:' <<< "$pointers_section"; then
+      fail "Level 1: ${agent_name} legacy 'JIT skills' pointer block is forbidden; use ## Skill Bindings"
+    fi
 
     mapfile -t pointer_tokens < <(printf '%s\n' "$pointers_section" | grep -oE '`[^`]+`' | sed -e 's/`//g' || true)
     for token in "${pointer_tokens[@]}"; do
@@ -216,6 +285,27 @@ if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
         fail "Level 5: ${agent_name} toolchain token '${tool}' is not an authorized repo-relative executable"
       fi
     done
+
+    skill_bindings_section="$(extract_section "## Skill Bindings" "$agent")"
+    if ! grep -Eq '^[[:space:]]*-[[:space:]]*`required_skills`:[[:space:]]*$' <<< "$skill_bindings_section"; then
+      fail "Level 1: ${agent_name} Skill Bindings section missing '`required_skills`' label"
+    fi
+    if ! grep -Eq '^[[:space:]]*-[[:space:]]*`optional_skills`:[[:space:]]*$' <<< "$skill_bindings_section"; then
+      fail "Level 1: ${agent_name} Skill Bindings section missing '`optional_skills`' label"
+    fi
+    required_skill_count="$(printf '%s\n' "$skill_bindings_section" | grep -Ec '^[[:space:]]*-[[:space:]]*`opt/_factory/skills/s-learn-[0-9]{2}[.]md`[[:space:]]*$' || true)"
+    if [[ "$required_skill_count" -lt 1 ]]; then
+      fail "Level 1: ${agent_name} Skill Bindings must include at least one required skill path"
+    fi
+    optional_skill_valid_count="$(printf '%s\n' "$skill_bindings_section" | grep -Ec '^[[:space:]]*-[[:space:]]*`opt/_factory/skills/s-learn-[0-9]{2}[.]md`[[:space:]]*$|^[[:space:]]*-[[:space:]]*[(]none[)]$' || true)"
+    if [[ "$optional_skill_valid_count" -lt 1 ]]; then
+      fail "Level 1: ${agent_name} Skill Bindings optional list must contain skill paths or '(none)'"
+    fi
+
+    envelope_pattern='Output only:|Emit exactly one fenced markdown code block|First non-empty line inside the code block'
+    if grep -nE "$envelope_pattern" "$agent" >/dev/null; then
+      fail "Level 4: ${agent_name} contains stance-envelope directives; role files must not embed output-envelope rules"
+    fi
 
     hazard_patterns=(
       'archives/definitions'
