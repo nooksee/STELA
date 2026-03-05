@@ -48,62 +48,62 @@ Rationale: The PR Description renders in the GitHub pull request interface, whic
 
 ## Audit-Foreman Mode Split Guardrails
 
-### Guard 1: Audit stance marker in `e-prompt-01`
-Target file: `docs/ops/prompts/e-prompt-01.md`
+### Guard 1: Audit stance marker in `auditor.md.tpl`
+Target file: `ops/src/stances/auditor.md.tpl`
 Assertion: file must include `` `--profile=foreman` is addendum-authorization mode and is never valid for audit verdict workflows. ``
-Failure message: `e-prompt-01.md missing audit-verdict stance marker`
-Invariant: audit verdict flow and foreman authorization flow remain separated by explicit prompt guidance.
+Failure message: `auditor.md.tpl missing audit-verdict stance marker`
+Invariant: audit verdict flow and foreman authorization flow remain separated by explicit stance guidance.
 
-### Guard 2: Audit code-block output contract line in `e-prompt-01`
-Target file: `docs/ops/prompts/e-prompt-01.md`
+### Guard 2: Audit attach-only line in `auditor.md.tpl`
+Target file: `ops/src/stances/auditor.md.tpl`
 Assertion: file must include `If user text is empty and required attachments are present, proceed and emit only the final audit block.`
-Failure message: `e-prompt-01.md missing empty-input attach-only rule line`
+Failure message: `auditor.md.tpl missing empty-input attach-only rule line`
 Invariant: attach-only audit intake proceeds deterministically without requiring user text.
 
-### Guard 3: Audit output contract line in `e-prompt-01`
-Target file: `docs/ops/prompts/e-prompt-01.md`
+### Guard 3: Audit output contract line in `auditor.md.tpl`
+Target file: `ops/src/stances/auditor.md.tpl`
 Assertion: file must include `Output only: Complete audit report.`
-Failure message: `e-prompt-01.md missing audit output contract line`
-Invariant: auditor output remains deterministic while avoiding renderer-specific code-block coupling.
+Failure message: `auditor.md.tpl missing audit output contract line`
+Invariant: auditor output remains deterministic.
 
-### Guard 4: Audit first-line marker in `e-prompt-01`
-Target file: `docs/ops/prompts/e-prompt-01.md`
-Assertion: file must include `First non-empty line must start with \`**AUDIT —\`.`
-Failure message: `e-prompt-01.md missing audit first-line marker output line`
-Invariant: auditor output has a stable entry marker for deterministic intake checks independent of markdown rendering wrappers.
+### Guard 4: Audit first-line marker in `auditor.md.tpl`
+Target file: `ops/src/stances/auditor.md.tpl`
+Assertion: file must include `First non-empty line must start with \`**AUDIT -\`.`
+Failure message: `auditor.md.tpl missing audit first-line marker output line`
+Invariant: auditor output has a stable entry marker for deterministic intake checks.
 
-### Guard 5: Audit no-citations line in `e-prompt-01`
-Target file: `docs/ops/prompts/e-prompt-01.md`
+### Guard 5: Audit no-citations line in `auditor.md.tpl`
+Target file: `ops/src/stances/auditor.md.tpl`
 Assertion: file must include `Do not emit citation tokens (\`:contentReference[\` or \`oaicite\`).`
-Failure message: `e-prompt-01.md missing audit no-citations output line`
-Invariant: auditor output avoids citation-token contamination and renderer artifacts.
+Failure message: `auditor.md.tpl missing audit no-citations output line`
+Invariant: auditor output avoids citation-token contamination.
 
-### Guard 6: Audit evidence-authority conflict rule in `e-prompt-01`
-Target file: `docs/ops/prompts/e-prompt-01.md`
+### Guard 6: Audit evidence-authority conflict rule in `auditor.md.tpl`
+Target file: `ops/src/stances/auditor.md.tpl`
 Assertion: file must include `If interpretation conflicts with receipt command outputs, treat command outputs and lint results as authoritative and mark the interpretation as non-blocking.`
-Failure message: `e-prompt-01.md missing audit evidence-authority conflict rule line`
+Failure message: `auditor.md.tpl missing audit evidence-authority conflict rule line`
 Invariant: audit output resolves interpretation conflicts to tool evidence instead of inventing blockers.
 
-### Guard 7: Audit allowlist-authority rule in `e-prompt-01`
-Target file: `docs/ops/prompts/e-prompt-01.md`
+### Guard 7: Audit allowlist-authority rule in `auditor.md.tpl`
+Target file: `ops/src/stances/auditor.md.tpl`
 Assertion: file must include `For allowlist interpretation, \`tools/lint/integrity.sh\` plus certify changed-file subset check are authoritative; raw \`comm\` output is informational.`
-Failure message: `e-prompt-01.md missing audit allowlist-authority interpretation rule line`
+Failure message: `auditor.md.tpl missing audit allowlist-authority interpretation rule line`
 Invariant: audit output does not misclassify raw comm output as a hard gate failure when authoritative checks pass.
 
-### Guard 8: Foreman stance marker in `e-prompt-05`
-Target file: `docs/ops/prompts/e-prompt-05.md`
+### Guard 8: Foreman stance marker in `foreman.md.tpl`
+Target file: `ops/src/stances/foreman.md.tpl`
 Assertion: file must include `This stance is not used for audit PASS/FAIL verdicts.`
-Failure message: `e-prompt-05.md missing addendum-authorization stance marker`
+Failure message: `foreman.md.tpl missing addendum-authorization stance marker`
 Invariant: foreman stance remains authorization-only and never drifts into verdict behavior.
 
-### Guard 9: Audit split line in prompts README
-Target file: `docs/ops/prompts/README.md`
-Assertion: file must include `* \`audit\` profile is for PASS/FAIL audit verdicts only.`
-Failure message: `README.md missing audit mode split line`
-Invariant: registry-level prompt guidance keeps audit mode semantics explicit and enforceable.
+### Guard 9: Canonical audit split line in bundle manifest
+Target file: `ops/lib/manifests/BUNDLE.md`
+Assertion: file must include `Canonical audit verdict profile is \`audit\`.`
+Failure message: `BUNDLE.md missing canonical audit mode split line`
+Invariant: runtime policy keeps audit mode semantics explicit and enforceable.
 
-### Guard 10: Foreman split line in prompts README
-Target file: `docs/ops/prompts/README.md`
-Assertion: file must include `* \`foreman\` profile is for addendum authorization only.`
-Failure message: `README.md missing foreman mode split line`
-Invariant: registry-level prompt guidance keeps foreman mode semantics explicit and enforceable.
+### Guard 10: Canonical foreman split line in bundle manifest
+Target file: `ops/lib/manifests/BUNDLE.md`
+Assertion: file must include `Canonical addendum authorization profile is \`foreman\`.`
+Failure message: `BUNDLE.md missing canonical foreman mode split line`
+Invariant: runtime policy keeps foreman mode semantics explicit and enforceable.

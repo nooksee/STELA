@@ -24,4 +24,4 @@ Define the template-backed Architect stance body used by bundle output contract 
 ## Related pointers
 - `ops/lib/manifests/BUNDLE.md`
 - `ops/lib/scripts/bundle.sh`
-- `docs/ops/prompts/e-prompt-03.md`
+- `ops/src/stances/architect.md.tpl`

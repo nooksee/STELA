@@ -456,7 +456,7 @@ ops/lib/scripts/task.sh promote archives/definitions/task-candidate-YYYY-MM-DD-<
 * `storage/dp/intake/` is staging-only and must not contain tracked `DP-*.md` packets in commits.
 
 **Operator Prompts:**
-* `docs/ops/prompts` — Operator prompt stances and usage.
+* `ops/src/stances` — Operator stance templates and usage.
 
 ### Attachment Contract Table
 

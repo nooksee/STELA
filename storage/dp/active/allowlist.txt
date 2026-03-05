@@ -109,8 +109,6 @@ archives/surfaces/TASK-DP-OPS-0135-5aca36a29.md
 storage/handoff/CLOSING-DP-OPS-0135-ADDENDUM-A.md
 archives/decisions/RoR-2026-02-27-001-decision-helper-0130.md
 ops/bin/open
-docs/ops/prompts/e-prompt-01.md
-docs/ops/prompts/e-prompt-03.md
 docs/ops/registry/lint.md
 docs/ops/specs/surfaces/task.md
 docs/ops/specs/tools/lint/dp.md
@@ -163,11 +161,7 @@ archives/surfaces/TASK-DP-OPS-0143-09c63c67.md
 storage/handoff/CLOSING-DP-OPS-0145.md
 ops/bin/meta
 docs/ops/README.md
-docs/ops/prompts/e-prompt-04.md
-docs/ops/prompts/e-prompt-06.md
-docs/ops/prompts/README.md
 docs/ops/registry/scripts.md
-docs/ops/registry/prompts.md
 docs/ops/registry/agents.md
 docs/ops/registry/skills.md
 docs/ops/registry/tasks.md
@@ -195,8 +189,6 @@ archives/surfaces/PoW-2026-03-03-*.md
 opt/_factory/agents/r-agent-07.md
 ops/src/stances/plan.md.tpl
 docs/ops/specs/surfaces/plan.md
-docs/ops/prompts/e-prompt-02.md
-docs/ops/prompts/e-prompt-05.md
 storage/handoff/CLOSING-DP-OPS-0146.md
 archives/surfaces/TASK-DP-OPS-0146-*.md
 archives/surfaces/TASK-DP-OPS-0146-9f0fdc6a.md
@@ -238,10 +230,15 @@ docs/ops/specs/stances/analyst.md
 docs/ops/specs/stances/architect.md
 docs/ops/specs/stances/auditor.md
 docs/ops/specs/stances/foreman.md
+docs/ops/prompts/README*.md
+docs/ops/prompts/e-prompt-0[1-6].md
+docs/ops/registry/prompts*.md
 storage/handoff/CLOSING-DP-OPS-0151.md
 archives/surfaces/TASK-DP-OPS-0151-*.md
 storage/handoff/CLOSING-DP-OPS-0152.md
 archives/surfaces/TASK-DP-OPS-0152-*.md
+storage/handoff/CLOSING-DP-OPS-0153.md
+archives/surfaces/TASK-DP-OPS-0153-*.md
 ops/src/stances/addendum.md.tpl
 docs/ops/specs/binaries/addendum.md
 ops/src/stances/contractor.md.tpl

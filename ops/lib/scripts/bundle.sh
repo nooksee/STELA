@@ -16,7 +16,6 @@ fi
 BUNDLE_POLICY_PATH="${REPO_ROOT}/ops/lib/manifests/BUNDLE.md"
 declare -a BUNDLE_SUPPORTED_PROFILES=()
 declare -a BUNDLE_HANDOFF_OMIT_PROFILES=()
-declare -A BUNDLE_PROMPT_PATH_BY_PROFILE=()
 declare -A BUNDLE_DUMP_SCOPE_BY_PROFILE=()
 declare -A BUNDLE_STANCE_TEMPLATE_BY_PROFILE=()
 declare -A BUNDLE_PROFILE_ALIAS_BY_INPUT=()
@@ -121,10 +120,8 @@ bundle_profile_handoff_omitted() {
 bundle_load_policy() {
   local required_key
   local profile
-  local prompt_key
   local scope_key
   local stance_key_name
-  local prompt_path
   local dump_scope
   local stance_key
   local omit_csv
@@ -187,17 +184,13 @@ bundle_load_policy() {
     bundle_profile_supported "$profile" || die "bundle policy alias target is unsupported: ${profile}"
   done
 
-  BUNDLE_PROMPT_PATH_BY_PROFILE=()
   BUNDLE_DUMP_SCOPE_BY_PROFILE=()
   BUNDLE_STANCE_TEMPLATE_BY_PROFILE=()
   for profile in "${BUNDLE_SUPPORTED_PROFILES[@]}"; do
-    prompt_key="prompt_path_${profile}"
     scope_key="dump_scope_${profile}"
     stance_key_name="stance_template_${profile}"
-    prompt_path="$(bundle_policy_scalar "$prompt_key")"
     dump_scope="$(bundle_policy_scalar "$scope_key")"
     stance_key="$(bundle_policy_scalar "$stance_key_name")"
-    [[ -n "$prompt_path" ]] || die "bundle policy missing required key: ${prompt_key}"
     [[ -n "$dump_scope" ]] || die "bundle policy missing required key: ${scope_key}"
     [[ -n "$stance_key" ]] || die "bundle policy missing required key: ${stance_key_name}"
     case "$dump_scope" in
@@ -214,7 +207,6 @@ bundle_load_policy() {
         die "bundle policy has invalid stance template key for ${profile}: ${stance_key}"
         ;;
     esac
-    BUNDLE_PROMPT_PATH_BY_PROFILE["$profile"]="$prompt_path"
     BUNDLE_DUMP_SCOPE_BY_PROFILE["$profile"]="$dump_scope"
     BUNDLE_STANCE_TEMPLATE_BY_PROFILE["$profile"]="$stance_key"
   done
@@ -254,13 +246,6 @@ bundle_resolve_output_path() {
   printf '%s' "${REPO_ROOT}/${out_rel}"
 }
 
-bundle_prompt_path_for_profile() {
-  local profile="$1"
-  local mapped_path="${BUNDLE_PROMPT_PATH_BY_PROFILE[$profile]:-}"
-  [[ -n "$mapped_path" ]] || die "bundle policy missing prompt path for profile: ${profile}"
-  printf '%s' "$mapped_path"
-}
-
 bundle_dump_scope_for_profile() {
   local profile="$1"
   local mapped_scope="${BUNDLE_DUMP_SCOPE_BY_PROFILE[$profile]:-}"
@@ -275,22 +260,16 @@ bundle_stance_template_for_profile() {
   printf '%s' "$mapped_key"
 }
 
-bundle_render_prompt_source_for_profile() {
+bundle_render_stance_contract_for_profile() {
   local profile="$1"
-  local fallback_prompt_abs="$2"
   local stance_key
   stance_key="$(bundle_stance_template_for_profile "$profile")"
 
-  if [[ -n "$stance_key" ]]; then
-    "${REPO_ROOT}/ops/bin/manifest" render "$stance_key" --out=-
-    return 0
-  fi
-
-  cat "$fallback_prompt_abs"
+  "${REPO_ROOT}/ops/bin/manifest" render "$stance_key" --out=-
 }
 
-bundle_emit_prompt_contract() {
-  local prompt_abs="$1"
+bundle_emit_stance_contract() {
+  local rendered_abs="$1"
   local normalized_tmp
   normalized_tmp="$(mktemp)"
 
@@ -323,7 +302,7 @@ bundle_emit_prompt_contract() {
       }
       print
     }
-  ' "$prompt_abs" > "$normalized_tmp"
+  ' "$rendered_abs" > "$normalized_tmp"
 
   if grep -Eq '^Rules:[[:space:]]*$' "$normalized_tmp"; then
     awk '
@@ -458,15 +437,11 @@ bundle_run() {
     route_reason="explicit profile alias: ${alias_profile_source} -> ${alias_profile_target}"
   fi
 
-  local prompt_rel
-  prompt_rel="$(bundle_prompt_path_for_profile "$resolved_profile")"
-  local prompt_abs="${REPO_ROOT}/${prompt_rel}"
-  [[ -f "$prompt_abs" ]] || die "prompt file missing: ${prompt_rel}"
   local stance_template_key
   stance_template_key="$(bundle_stance_template_for_profile "$resolved_profile")"
-  local rendered_prompt_tmp
-  rendered_prompt_tmp="$(mktemp)"
-  bundle_render_prompt_source_for_profile "$resolved_profile" "$prompt_abs" > "$rendered_prompt_tmp"
+  local rendered_stance_tmp
+  rendered_stance_tmp="$(mktemp)"
+  bundle_render_stance_contract_for_profile "$resolved_profile" > "$rendered_stance_tmp"
 
   local out_abs
   out_abs="$(bundle_resolve_output_path "$out_token" "$resolved_profile" "$branch_safe" "$head_short" "$project_name")"
@@ -570,8 +545,8 @@ bundle_run() {
     echo "- Payload path: ${dump_payload_rel}"
     echo "- Manifest path: ${dump_manifest_rel}"
     echo
-    echo "[PROMPT]"
-    echo "- Canonical prompt path: ${prompt_rel}"
+    echo "[STANCE]"
+    echo "- Contract source: ops/src/stances/*.md.tpl"
     echo "- Stance template key: ${stance_template_key}"
     echo
     if ! bundle_profile_handoff_omitted "$resolved_profile"; then
@@ -593,13 +568,13 @@ bundle_run() {
       printf '%s\n' "$plan_lint_output"
       echo
     fi
-    echo "===== PROMPT CONTRACT BEGIN ====="
-    bundle_emit_prompt_contract "$rendered_prompt_tmp"
-    echo "===== PROMPT CONTRACT END ====="
+    echo "===== STANCE CONTRACT BEGIN ====="
+    bundle_emit_stance_contract "$rendered_stance_tmp"
+    echo "===== STANCE CONTRACT END ====="
     echo "===== END STELA BUNDLE ====="
   } > "$out_abs"
 
-  rm -f "$rendered_prompt_tmp"
+  rm -f "$rendered_stance_tmp"
 
   local -a package_files=(
     "$out_rel"
@@ -649,8 +624,7 @@ bundle_run() {
     echo "    \"payload_path\": \"$(bundle_json_escape "$dump_payload_rel")\"," 
     echo "    \"manifest_path\": \"$(bundle_json_escape "$dump_manifest_rel")\""
     echo "  },"
-    echo "  \"prompt\": {"
-    echo "    \"path\": \"$(bundle_json_escape "$prompt_rel")\","
+    echo "  \"stance\": {"
     echo "    \"stance_template_key\": \"$(bundle_json_escape "$stance_template_key")\""
     echo "  },"
     echo "  \"topic\": {"

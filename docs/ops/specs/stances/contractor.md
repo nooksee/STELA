@@ -6,7 +6,7 @@ Define the template-backed Contractor stance for addendum authorization artifact
 
 ## Invocation
 - Render path: `ops/bin/manifest render stance-contractor --out=-` (future mapping).
-- Primary operator reference path: `docs/ops/prompts/e-prompt-06.md`.
+- Primary contract source path: `ops/src/stances/contractor.md.tpl`.
 
 ## Inputs
 - Template source: `ops/src/stances/contractor.md.tpl`
@@ -22,6 +22,6 @@ Define the template-backed Contractor stance for addendum authorization artifact
 - Render output is deterministic for identical repository state.
 
 ## Related pointers
-- `docs/ops/prompts/e-prompt-06.md`
+- `ops/src/stances/contractor.md.tpl`
 - `ops/src/stances/foreman.md.tpl`
 - `ops/src/stances/addendum.md.tpl`
