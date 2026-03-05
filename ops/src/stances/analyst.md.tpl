@@ -25,7 +25,6 @@ Steps:
      * `Selected Slices: <S1[,S2...]>`
      * `Execution Order: <required when multi>`
      * `Architect Constraints: <no new options; draft from selected fields only>`
-   * DP Slot Source Map is optional planning metadata and must not block PLAN output.
 
 Operator query template:
 1. ANALYZE `<topic>`.

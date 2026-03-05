@@ -11,14 +11,15 @@
 3. For each target file, distinguish certification format from legacy format and skip legacy only in non-explicit historical scan modes.
 4. Enforce required heading set and reject unresolved artifact placeholders or forbidden disposable-artifact references.
 5. Enforce presence of required Contractor Execution Narrative subsections (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`) and require both `Decision Required:` and `Decision Leaf:` field lines in the narrative section.
-6. Enforce `Git Hash` parity in explicit mode, and record historical parity skips in inferred/scan modes without blocking.
-7. Return non-zero when any certification-format receipt fails required checks.
+6. Reject untouched narrative scaffold prose in explicit-path mode; historical scan modes report scaffold findings without blocking.
+7. Enforce `Git Hash` parity in explicit mode, and record historical parity skips in inferred/scan modes without blocking.
+8. Return non-zero when any certification-format receipt fails required checks.
 
 ## Anecdotal Anchor
 During the DP-OPS-0069 certification cutover, the absence of a dedicated RESULTS lint path allowed structurally incomplete receipts to pass closeout and created an audit gap that required retroactive correction. This script formalizes that missing gate.
 
 ## Integrity Filter Warnings
-Mode behavior is intentionally different: explicit path mode applies strict hash parity, while inferred and `--all` modes tolerate historical parity drift and only report skips. Legacy receipts are ignored in broad historical scans unless explicitly targeted. Template hash constants must be revised in lockstep with sanctioned template changes. Narrative subheading and Decision Leaf field checks apply to the Contractor Execution Narrative section from `## Contractor Execution Narrative` through EOF; legacy trailing sections are tolerated.
+Mode behavior is intentionally different: explicit path mode applies strict hash parity and strict scaffold-prose rejection, while inferred and `--all` modes tolerate historical parity drift and historical scaffold residue as report-only skips. Legacy receipts are ignored in broad historical scans unless explicitly targeted. Template hash constants must be revised in lockstep with sanctioned template changes. Narrative subheading and Decision Leaf field checks apply to the Contractor Execution Narrative section from `## Contractor Execution Narrative` through EOF; legacy trailing sections are tolerated.
 
 ## Closing Sidecar Authority
 `ops/bin/certify` is the sole authority for closing sidecar validation in closeout. Closing sidecar schema remains SSOT in `ops/lib/manifests/CLOSING.md` (Section 1), but `tools/lint/results.sh` no longer parses or enforces sidecar labels inside RESULTS.
@@ -30,3 +31,9 @@ The lint requires the following within the RESULTS artifact:
 - `## Contractor Execution Narrative` heading present in required position.
 - Required subsections: `### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`.
 - The Decision Leaf subsection must contain both `Decision Required:` and `Decision Leaf:` field lines.
+- Untouched scaffold prose lines are rejected in explicit mode:
+  - `State the preflight outcome: branch, Base HEAD, clean working tree, and preflight lint results.`
+  - `Describe each change made: what was modified, created, or removed, and why.`
+  - `Describe any anomalies, open items, or residue. State None. if all items are resolved.`
+  - `Decision Required: Yes|No`
+  - `Decision Leaf: archives/decisions/... or None`
