@@ -28,6 +28,8 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 - Generated bundle artifact path must start with `storage/handoff/BUNDLE-`.
 - Manifest must include `bundle_version: "2"`.
 - Non-`auto` profiles must preserve exact `resolved_profile` parity.
+- Manifest dump `scope` must match policy mapping from `ops/lib/manifests/BUNDLE.md` for the resolved profile.
+- Audit profile dump scope is `platform`.
 - `auto` must resolve to a supported route (`analyst` or `architect`).
 - Foreman must fail without `--intent`.
 - Foreman must fail for malformed `--intent`.

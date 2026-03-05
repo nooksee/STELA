@@ -30,7 +30,7 @@ stance_template_foreman=stance-foreman
 
 dump_scope_analyst=full
 dump_scope_architect=full
-dump_scope_audit=core
+dump_scope_audit=platform
 dump_scope_project=project
 dump_scope_conform=full
 dump_scope_foreman=core

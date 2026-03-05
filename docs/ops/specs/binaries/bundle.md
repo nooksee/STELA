@@ -70,8 +70,9 @@ Foreman gate:
 
 Dump scope mapping by resolved profile:
 1. `analyst|architect|conform` -> `ops/bin/dump --scope=full`.
-2. `audit|foreman` -> `ops/bin/dump --scope=core`.
-3. `project` -> `ops/bin/dump --scope=project --project=<name>`.
+2. `audit` -> `ops/bin/dump --scope=platform`.
+3. `foreman` -> `ops/bin/dump --scope=core`.
+4. `project` -> `ops/bin/dump --scope=project --project=<name>`.
 
 Bundle runtime invokes dump with explicit `.txt` output path to suppress dump auto-compression side effects during bundle orchestration.
 

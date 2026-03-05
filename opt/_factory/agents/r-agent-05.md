@@ -13,6 +13,14 @@ Removes dead code and consolidates refactors within the active DP scope.
 ## Specialization
 Refactor and dead-code cleanup.
 
+## Identity Contract
+- `agent_id`: `R-AGENT-05`
+- `stance_id`: `contractor`
+
+## Capability Tags
+- `refactor-cleanup`
+- `dead-code-removal`
+
 ## Pointers
 - Constitution: `PoT.md`
 - Governance/Jurisdiction: `docs/GOVERNANCE.md`
@@ -20,9 +28,13 @@ Refactor and dead-code cleanup.
 - Continuity map: `docs/MAP.md`
 - Output contract: `TASK.md`
 - Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/agent.sh`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/factory.sh`, `tools/verify.sh`
-- JIT skills:
+
+## Skill Bindings
+- `required_skills`:
   - `opt/_factory/skills/s-learn-01.md`
   - `opt/_factory/skills/s-learn-04.md`
+- `optional_skills`:
+  - (none)
 
 ## Scope Boundary
 Identify and remove dead code or duplication while preserving behavior within the active DP scope.

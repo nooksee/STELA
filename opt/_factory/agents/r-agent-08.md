@@ -20,13 +20,25 @@ Coordinates bundle profile intent and artifact contract evolution.
 ## Specialization
 Bundle artifact coordination and routing governance.
 
+## Identity Contract
+- `agent_id`: `R-AGENT-08`
+- `stance_id`: `architect`
+
+## Capability Tags
+- `bundle-routing-governance`
+- `artifact-contract-control`
+
 ## Pointers
 - Constitution: `PoT.md`
 - Governance/Jurisdiction: `docs/GOVERNANCE.md`
 - Output contract: `TASK.md`
 - Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/factory.sh`, `tools/verify.sh`
-- JIT skills:
-- `opt/_factory/skills/s-learn-08.md`
+
+## Skill Bindings
+- `required_skills`:
+  - `opt/_factory/skills/s-learn-08.md`
+- `optional_skills`:
+  - (none)
 
 ## Constraints
 ## Section 1: Universal Template Rules
@@ -41,7 +53,7 @@ Bundle artifact coordination and routing governance.
 - Worker facing generated surfaces remain pointer first and exclude disposable artifacts
 
 ## Section 3: Definition-Specific Rules
-- `agent` `task` and `skill` templates inherit Section 1 rules
+- `agent`, `task`, and `skill` templates inherit Section 1 rules
 - Definitions keep canonical pointers and avoid constitutional prose duplication
 - Definition drafts remain compatible with harvest and promotion lint gates
 - Definitions preserve closeout and verification routing requirements

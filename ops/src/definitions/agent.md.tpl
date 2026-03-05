@@ -37,13 +37,24 @@ previous: {{PREVIOUS}}
 ## Specialization
 {{SPECIALIZATION}}
 
+## Identity Contract
+- `agent_id`: `R-AGENT-XX`
+- `stance_id`: `contractor`
+
+## Capability Tags
+- `capability-tag`
+
 ## Pointers
 - Constitution: `PoT.md`
 - Governance/Jurisdiction: `docs/GOVERNANCE.md`
 - Output contract: `TASK.md`
 - Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/factory.sh`, `tools/verify.sh`
-- JIT skills:
+
+## Skill Bindings
+- `required_skills`:
 {{SKILL_LINES}}
+- `optional_skills`:
+  - (none)
 
 ## Constraints
 {{@include:ops/lib/manifests/CONSTRAINTS.md#section-1}}

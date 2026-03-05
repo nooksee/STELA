@@ -224,7 +224,7 @@ bundle_load_policy() {
     [[ -n "$dump_scope" ]] || die "bundle policy missing required key: ${scope_key}"
     [[ -n "$stance_key" ]] || die "bundle policy missing required key: ${stance_key_name}"
     case "$dump_scope" in
-      full|core|project)
+      full|core|platform|project)
         ;;
       *)
         die "bundle policy has invalid dump scope for ${profile}: ${dump_scope}"

@@ -13,6 +13,14 @@ Reviews for security vulnerabilities within the active DP scope.
 ## Specialization
 Security review and vulnerability detection.
 
+## Identity Contract
+- `agent_id`: `R-AGENT-06`
+- `stance_id`: `contractor`
+
+## Capability Tags
+- `security-review`
+- `vulnerability-detection`
+
 ## Pointers
 - Constitution: `PoT.md`
 - Governance/Jurisdiction: `docs/GOVERNANCE.md`
@@ -20,10 +28,14 @@ Security review and vulnerability detection.
 - Continuity map: `docs/MAP.md`
 - Output contract: `TASK.md`
 - Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/agent.sh`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/factory.sh`, `tools/verify.sh`
-- JIT skills:
+
+## Skill Bindings
+- `required_skills`:
   - `opt/_factory/skills/s-learn-01.md`
   - `opt/_factory/skills/s-learn-04.md`
   - `opt/_factory/skills/s-learn-05.md`
+- `optional_skills`:
+  - (none)
 
 ## Scope Boundary
 Operate only within the active DP scope and defer to canon surfaces for governance and behavioral rules.

@@ -20,13 +20,25 @@ Validates factory candidate and promotion pointer workflows.
 ## Specialization
 Factory chain pointer remediation validation.
 
+## Identity Contract
+- `agent_id`: `R-AGENT-07`
+- `stance_id`: `conformist`
+
+## Capability Tags
+- `factory-pointer-validation`
+- `chain-integrity-checking`
+
 ## Pointers
 - Constitution: `PoT.md`
 - Governance/Jurisdiction: `docs/GOVERNANCE.md`
 - Output contract: `TASK.md`
 - Authorized toolchain: `ops/bin/open`, `ops/bin/dump`, `ops/bin/llms`, `tools/lint/context.sh`, `tools/lint/truth.sh`, `tools/lint/factory.sh`, `tools/verify.sh`
-- JIT skills:
-- `opt/_factory/skills/s-learn-06.md`
+
+## Skill Bindings
+- `required_skills`:
+  - `opt/_factory/skills/s-learn-06.md`
+- `optional_skills`:
+  - (none)
 
 ## Constraints
 ## Section 1: Universal Template Rules
@@ -56,7 +68,7 @@ Factory chain pointer remediation validation.
 - Definition templates (`agent`, `task`, `skill`) inherit Section 1 universal render rules.
 - Definitions must keep canon references pointer-first (`PoT.md`, governance pointers, TASK contract pointers).
 - Definitions must not duplicate constitutional prose; they reference canon instead.
-- Definition drafts must remain compatible with existing harvester/promotion lint gates.
+- Definition drafts must remain compatible with existing harvester and promotion lint gates.
 - Definitions must preserve closeout and verification routing expectations.
 
 ## Scope Boundary

@@ -89,6 +89,24 @@ extract_manifest_value() {
   sed -n -E "s/^[[:space:]]*\"${key}\":[[:space:]]*\"([^\"]*)\"[,]?[[:space:]]*$/\\1/p" "${REPO_ROOT}/${manifest_rel}" | head -n 1
 }
 
+assert_dump_scope_matches_profile() {
+  local manifest_rel="$1"
+  local profile="$2"
+  local expected_scope=""
+  local actual_scope=""
+
+  expected_scope="$(policy_scalar "dump_scope_${profile}")"
+  if [[ -z "$expected_scope" ]]; then
+    fail "policy missing dump scope key for profile=${profile}"
+    return
+  fi
+
+  actual_scope="$(extract_manifest_value "$manifest_rel" "scope")"
+  if [[ "$actual_scope" != "$expected_scope" ]]; then
+    fail "profile=${profile} manifest dump scope mismatch: expected ${expected_scope}, got ${actual_scope}"
+  fi
+}
+
 policy_scalar() {
   local key="$1"
   awk -F'=' -v key="$key" '$1==key { print substr($0, index($0, "=") + 1); exit }' "${REPO_ROOT}/${BUNDLE_POLICY_REL}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'
@@ -277,6 +295,8 @@ test_valid_profiles() {
     elif [[ "$template_key" != "$expected_template_key" ]]; then
       fail "profile=${profile} manifest stance_template_key mismatch: expected ${expected_template_key}, got ${template_key}"
     fi
+
+    assert_dump_scope_matches_profile "$LAST_MANIFEST" "$resolved"
   done
 }
 
@@ -333,6 +353,7 @@ test_foreman_valid_path() {
     fail "foreman manifest stance_template_key mismatch: expected stance-foreman, got ${template_key}"
   fi
 
+  assert_dump_scope_matches_profile "$LAST_MANIFEST" "foreman"
   assert_manifest_has "$LAST_MANIFEST" '"decision_leaf_present": true'
 }
 
@@ -379,6 +400,7 @@ test_legacy_auditor_alias() {
   if [[ "$route_reason" != "explicit profile alias: auditor -> foreman" ]]; then
     fail "legacy auditor alias route_reason mismatch: ${route_reason}"
   fi
+  assert_dump_scope_matches_profile "$LAST_MANIFEST" "$resolved"
   assert_manifest_has "$LAST_MANIFEST" '"profile_alias": {'
   assert_manifest_has "$LAST_MANIFEST" '"from": "auditor"'
   assert_manifest_has "$LAST_MANIFEST" '"to": "foreman"'
@@ -427,6 +449,7 @@ test_legacy_hygiene_alias() {
   if [[ "$route_reason" != "explicit profile alias: hygiene -> conform" ]]; then
     fail "legacy hygiene alias route_reason mismatch: ${route_reason}"
   fi
+  assert_dump_scope_matches_profile "$LAST_MANIFEST" "$resolved"
   assert_manifest_has "$LAST_MANIFEST" '"profile_alias": {'
   assert_manifest_has "$LAST_MANIFEST" '"from": "hygiene"'
   assert_manifest_has "$LAST_MANIFEST" '"to": "conform"'
