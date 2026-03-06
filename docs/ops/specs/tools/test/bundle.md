@@ -48,6 +48,14 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
   - `assembly.policy_manifest`
   - ATS IDs with exact parity
   - `validated_against` registry pointers to agents/skills/tasks registries.
+- ATS valid triplet must emit deterministic runtime pointer metadata and artifact:
+  - `assembly.pointer.emitted: true`
+  - `assembly.pointer.path` under `storage/handoff/`
+  - `assembly.pointer.format: json`
+  - emitted pointer file exists and path matches manifest.
+- Non-ATS runs must not emit runtime assembly pointer artifacts:
+  - `assembly.pointer.emitted: false`
+  - `assembly.pointer.path: null`.
 
 ## Anecdotal Anchor
 This test is the bundle contract tripwire: if routing, naming, or intent guards regress, the failure is immediate and deterministic.

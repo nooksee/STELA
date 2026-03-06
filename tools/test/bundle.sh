@@ -19,6 +19,9 @@ RUN_STATUS=0
 LAST_ARTIFACT=""
 LAST_MANIFEST=""
 LAST_PACKAGE=""
+LAST_ASSEMBLY_POINTER_EMITTED=""
+LAST_ASSEMBLY_POINTER_PATH=""
+LAST_ASSEMBLY_POINTER_FORMAT=""
 BUNDLE_POLICY_REL="ops/lib/manifests/BUNDLE.md"
 
 cleanup_generated() {
@@ -87,6 +90,77 @@ extract_manifest_value() {
   local manifest_rel="$1"
   local key="$2"
   sed -n -E "s/^[[:space:]]*\"${key}\":[[:space:]]*\"([^\"]*)\"[,]?[[:space:]]*$/\\1/p" "${REPO_ROOT}/${manifest_rel}" | head -n 1
+}
+
+extract_assembly_pointer_emitted() {
+  local manifest_rel="$1"
+  awk '
+    /"pointer"[[:space:]]*:[[:space:]]*{/ { in_pointer=1; depth=1; next }
+    in_pointer {
+      if (/{/) { depth++ }
+      if (/}/) {
+        depth--
+        if (depth <= 0) {
+          in_pointer=0
+          exit
+        }
+      }
+      if (/"emitted"[[:space:]]*:[[:space:]]*true/) {
+        print "true"
+        exit
+      }
+      if (/"emitted"[[:space:]]*:[[:space:]]*false/) {
+        print "false"
+        exit
+      }
+    }
+  ' "${REPO_ROOT}/${manifest_rel}" | head -n 1
+}
+
+extract_assembly_pointer_path() {
+  local manifest_rel="$1"
+  awk '
+    /"pointer"[[:space:]]*:[[:space:]]*{/ { in_pointer=1; depth=1; next }
+    in_pointer {
+      if (/{/) { depth++ }
+      if (/}/) {
+        depth--
+        if (depth <= 0) {
+          in_pointer=0
+          exit
+        }
+      }
+      if (/"path"[[:space:]]*:[[:space:]]*null/) {
+        print ""
+        exit
+      }
+      if (match($0, /"path"[[:space:]]*:[[:space:]]*"([^"]+)"/, parts)) {
+        print parts[1]
+        exit
+      }
+    }
+  ' "${REPO_ROOT}/${manifest_rel}" | head -n 1
+}
+
+extract_assembly_pointer_format() {
+  local manifest_rel="$1"
+  awk '
+    /"pointer"[[:space:]]*:[[:space:]]*{/ { in_pointer=1; depth=1; next }
+    in_pointer {
+      if (/{/) { depth++ }
+      if (/}/) {
+        depth--
+        if (depth <= 0) {
+          in_pointer=0
+          exit
+        }
+      }
+      if (match($0, /"format"[[:space:]]*:[[:space:]]*"([^"]+)"/, parts)) {
+        print parts[1]
+        exit
+      }
+    }
+  ' "${REPO_ROOT}/${manifest_rel}" | head -n 1
 }
 
 assert_dump_scope_matches_profile() {
@@ -169,10 +243,14 @@ track_bundle_outputs() {
   local legacy_artifact_path=""
   local legacy_manifest_path=""
   local legacy_package_path=""
+  local expected_pointer_candidate=""
 
   LAST_ARTIFACT=""
   LAST_MANIFEST=""
   LAST_PACKAGE=""
+  LAST_ASSEMBLY_POINTER_EMITTED=""
+  LAST_ASSEMBLY_POINTER_PATH=""
+  LAST_ASSEMBLY_POINTER_FORMAT=""
 
   artifact_path="$(parse_bundle_output_path "Bundle artifact")"
   manifest_path="$(parse_bundle_output_path "Bundle manifest")"
@@ -254,6 +332,35 @@ track_bundle_outputs() {
     fi
   else
     assert_manifest_has "$manifest_path" '"legacy_emitted": false'
+  fi
+
+  LAST_ASSEMBLY_POINTER_EMITTED="$(extract_assembly_pointer_emitted "$manifest_path")"
+  LAST_ASSEMBLY_POINTER_PATH="$(extract_assembly_pointer_path "$manifest_path")"
+  LAST_ASSEMBLY_POINTER_FORMAT="$(extract_assembly_pointer_format "$manifest_path")"
+  expected_pointer_candidate="${artifact_path%.txt}.assembly-pointer.json"
+
+  if [[ "$LAST_ASSEMBLY_POINTER_EMITTED" == "true" ]]; then
+    if [[ -z "$LAST_ASSEMBLY_POINTER_PATH" ]]; then
+      fail "manifest ${manifest_path} marks assembly pointer emitted=true but path is empty"
+    else
+      assert_prefix "$LAST_ASSEMBLY_POINTER_PATH" "storage/handoff/"
+      assert_file_exists "$LAST_ASSEMBLY_POINTER_PATH"
+      queue_cleanup_path "$LAST_ASSEMBLY_POINTER_PATH"
+      if [[ "$LAST_ASSEMBLY_POINTER_PATH" != "$expected_pointer_candidate" ]]; then
+        fail "assembly pointer path mismatch: expected ${expected_pointer_candidate}, got ${LAST_ASSEMBLY_POINTER_PATH}"
+      fi
+      assert_manifest_has "$manifest_path" "\"${LAST_ASSEMBLY_POINTER_PATH}\""
+    fi
+  elif [[ "$LAST_ASSEMBLY_POINTER_EMITTED" == "false" ]]; then
+    if [[ -n "$LAST_ASSEMBLY_POINTER_PATH" ]]; then
+      fail "manifest ${manifest_path} marks assembly pointer emitted=false but path is not null"
+    fi
+  else
+    fail "manifest ${manifest_path} missing assembly.pointer.emitted value"
+  fi
+
+  if [[ "$LAST_ASSEMBLY_POINTER_FORMAT" != "json" ]]; then
+    fail "manifest ${manifest_path} assembly.pointer.format mismatch: expected json, got ${LAST_ASSEMBLY_POINTER_FORMAT}"
   fi
 }
 
@@ -354,6 +461,9 @@ test_valid_profiles() {
     fi
 
     assert_dump_scope_matches_profile "$LAST_MANIFEST" "$resolved"
+    if [[ "$LAST_ASSEMBLY_POINTER_EMITTED" != "false" ]]; then
+      fail "profile=${profile} should not emit assembly pointer without ATS triplet"
+    fi
   done
 }
 
@@ -644,10 +754,18 @@ test_ats_valid_triplet() {
 
   assert_manifest_has "$LAST_MANIFEST" '"assembly": {'
   assert_manifest_has "$LAST_MANIFEST" '"applied": true'
+  assert_manifest_has "$LAST_MANIFEST" '"pointer": {'
+  assert_manifest_has "$LAST_MANIFEST" '"emitted": true'
   assert_manifest_has "$LAST_MANIFEST" "\"policy_manifest\": \"${policy_manifest_path}\""
   assert_manifest_has "$LAST_MANIFEST" "\"agents\": \"docs/ops/registry/agents.md\""
   assert_manifest_has "$LAST_MANIFEST" "\"skills\": \"docs/ops/registry/skills.md\""
   assert_manifest_has "$LAST_MANIFEST" "\"tasks\": \"docs/ops/registry/tasks.md\""
+  if [[ "$LAST_ASSEMBLY_POINTER_EMITTED" != "true" ]]; then
+    fail "ATS valid triplet should emit assembly pointer"
+  fi
+  if [[ -z "$LAST_ASSEMBLY_POINTER_PATH" ]]; then
+    fail "ATS valid triplet emitted pointer path is empty"
+  fi
 }
 
 test_manifest_fail_closed

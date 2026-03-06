@@ -30,6 +30,11 @@ The script provides `bundle_run` plus helpers for:
 13. Canonical profile-prefixed artifact output in `storage/handoff/` with optional legacy `BUNDLE-*` compatibility copies.
 14. Alias-route metadata emission in manifest (`profile_alias.applied`, `.from`, `.to`, `.deprecation_status`, `.remove_after_dp`) when compatibility aliases are used.
 15. Assembly metadata emission in manifest with ATS IDs, schema version, validation source pointers, and advisory-input status (`STELA.md`, `SCAFFOLD.md`).
+16. Deterministic runtime assembly pointer emission when ATS is applied:
+   - path derived from canonical bundle artifact path with policy suffix/format,
+   - manifest `assembly.pointer` metadata emitted (`emitted`, `path`, `format`),
+   - pointer artifact added to package members.
+17. No pointer emission when ATS is not applied (`assembly.pointer.emitted=false`, `path=null`).
 
 Stance contract extraction and render rules:
 - Resolve profile stance template key from `ops/lib/manifests/BUNDLE.md`.
