@@ -413,11 +413,18 @@ update_task() {
   local rendered_path="$1"
   local task_path="$REPO_ROOT/TASK.md"
   local source_path
+  local target_path
   local tmp_path
   local wrote_marker_path
 
   resolve_task_surface_source "$task_path"
   source_path="$TASK_SURFACE_CONTENT_PATH"
+  target_path="$task_path"
+  if [[ "$TASK_SURFACE_RESOLVED_PATH" != "$TASK_SURFACE_SOURCE_PATH" ]]; then
+    # Pointer-mode TASK: preserve TASK.md as a single-line pointer and update the resolved leaf.
+    source_path="$TASK_SURFACE_RESOLVED_PATH"
+    target_path="$TASK_SURFACE_RESOLVED_PATH"
+  fi
   tmp_path="$(mktemp)"
   wrote_marker_path="$(mktemp)"
 
@@ -466,7 +473,7 @@ update_task() {
 
   rm -f "$wrote_marker_path"
 
-  mv "$tmp_path" "$task_path"
+  mv "$tmp_path" "$target_path"
   cleanup_task_surface_context
   return 0
 }
