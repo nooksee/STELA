@@ -16,6 +16,10 @@ Define the template-backed Audit stance body used by bundle output contract rend
 ## Outputs
 - Rendered stance body text beginning at `Rules:`.
 - No unresolved include directives.
+- Output contract requires exactly one fenced markdown code block.
+- Output contract requires no text outside the fenced markdown code block.
+- First non-empty line inside the fenced body must start with `**AUDIT -`.
+- Citation tokens `:contentReference[` and `oaicite` are forbidden.
 
 ## Invariants and failure modes
 - Include expansion is strict and fail-closed.
