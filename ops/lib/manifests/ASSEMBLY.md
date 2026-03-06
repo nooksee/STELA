@@ -20,8 +20,13 @@ advisory_input_stela_path=STELA.md
 advisory_input_scaffold_path=SCAFFOLD.md
 advisory_inputs_mode=optional_non_gating
 advisory_minimum_clean_cycles=2
+runtime_pointer_emit_mode=emit_when_applied
+runtime_pointer_format=json
+runtime_pointer_suffix=assembly-pointer
 
 ## Contract Notes
 - ATS input is all-or-none at runtime: `agent_id`, `skill_id`, and `task_id` are required together.
 - Validation source is registry IDs in the configured registry paths.
 - `STELA.md` and `SCAFFOLD.md` are advisory-only in this phase; absence does not block bundle emission.
+- Runtime pointer artifact is emitted only when ATS is applied.
+- Pointer artifact is deterministic and pointer-first; it contains reference metadata only.

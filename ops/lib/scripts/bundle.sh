@@ -45,6 +45,9 @@ ASSEMBLY_ADVISORY_STELA_PATH=""
 ASSEMBLY_ADVISORY_SCAFFOLD_PATH=""
 ASSEMBLY_ADVISORY_MODE=""
 ASSEMBLY_ADVISORY_MINIMUM_CLEAN_CYCLES=""
+ASSEMBLY_RUNTIME_POINTER_EMIT_MODE=""
+ASSEMBLY_RUNTIME_POINTER_FORMAT=""
+ASSEMBLY_RUNTIME_POINTER_SUFFIX=""
 
 bundle_usage() {
   cat <<'USAGE'
@@ -325,7 +328,10 @@ bundle_load_assembly_policy() {
     advisory_input_stela_path \
     advisory_input_scaffold_path \
     advisory_inputs_mode \
-    advisory_minimum_clean_cycles; do
+    advisory_minimum_clean_cycles \
+    runtime_pointer_emit_mode \
+    runtime_pointer_format \
+    runtime_pointer_suffix; do
     if [[ -z "$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" "$required_key")" ]]; then
       die "assembly policy missing required key: ${required_key}"
     fi
@@ -343,6 +349,9 @@ bundle_load_assembly_policy() {
   ASSEMBLY_ADVISORY_SCAFFOLD_PATH="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" advisory_input_scaffold_path)"
   ASSEMBLY_ADVISORY_MODE="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" advisory_inputs_mode)"
   ASSEMBLY_ADVISORY_MINIMUM_CLEAN_CYCLES="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" advisory_minimum_clean_cycles)"
+  ASSEMBLY_RUNTIME_POINTER_EMIT_MODE="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" runtime_pointer_emit_mode)"
+  ASSEMBLY_RUNTIME_POINTER_FORMAT="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" runtime_pointer_format)"
+  ASSEMBLY_RUNTIME_POINTER_SUFFIX="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" runtime_pointer_suffix)"
 
   [[ "$ASSEMBLY_SCHEMA_VERSION" =~ ^[0-9]+$ ]] || die "assembly policy has invalid assembly_schema_version: ${ASSEMBLY_SCHEMA_VERSION}"
   [[ -n "$ASSEMBLY_REQUIRED_FIELDS" ]] || die "assembly policy required_fields is empty"
@@ -369,6 +378,26 @@ bundle_load_assembly_policy() {
   esac
   advisory_cycles="$ASSEMBLY_ADVISORY_MINIMUM_CLEAN_CYCLES"
   [[ "$advisory_cycles" =~ ^[0-9]+$ ]] || die "assembly policy has invalid advisory_minimum_clean_cycles: ${ASSEMBLY_ADVISORY_MINIMUM_CLEAN_CYCLES}"
+
+  case "$ASSEMBLY_RUNTIME_POINTER_EMIT_MODE" in
+    emit_when_applied|disabled)
+      ;;
+    *)
+      die "assembly policy has unsupported runtime_pointer_emit_mode: ${ASSEMBLY_RUNTIME_POINTER_EMIT_MODE}"
+      ;;
+  esac
+
+  case "$ASSEMBLY_RUNTIME_POINTER_FORMAT" in
+    json)
+      ;;
+    *)
+      die "assembly policy has unsupported runtime_pointer_format: ${ASSEMBLY_RUNTIME_POINTER_FORMAT}"
+      ;;
+  esac
+
+  if [[ ! "$ASSEMBLY_RUNTIME_POINTER_SUFFIX" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+    die "assembly policy has invalid runtime_pointer_suffix: ${ASSEMBLY_RUNTIME_POINTER_SUFFIX}"
+  fi
 }
 
 bundle_registry_has_id() {
@@ -391,6 +420,20 @@ bundle_registry_has_id() {
       exit 1
     }
   ' "${REPO_ROOT}/${registry_rel}"
+}
+
+bundle_runtime_pointer_rel_for_artifact() {
+  local artifact_rel="$1"
+  local suffix="$2"
+  local format="$3"
+  local pointer_rel=""
+
+  if [[ "$artifact_rel" == *.* ]]; then
+    pointer_rel="${artifact_rel%.*}.${suffix}.${format}"
+  else
+    pointer_rel="${artifact_rel}.${suffix}.${format}"
+  fi
+  printf '%s' "$pointer_rel"
 }
 
 bundle_resolve_output_path() {
@@ -524,6 +567,9 @@ bundle_run() {
   local assembly_applied=0
   local assembly_stela_present=0
   local assembly_scaffold_present=0
+  local assembly_pointer_emitted=0
+  local assembly_pointer_rel=""
+  local assembly_pointer_abs=""
 
   local arg
   for arg in "$@"; do
@@ -705,6 +751,12 @@ bundle_run() {
   local package_rel
   package_rel="$(bundle_to_rel_path "$package_abs")"
 
+  if (( assembly_applied )) && [[ "$ASSEMBLY_RUNTIME_POINTER_EMIT_MODE" == "emit_when_applied" ]]; then
+    assembly_pointer_emitted=1
+    assembly_pointer_rel="$(bundle_runtime_pointer_rel_for_artifact "$out_rel" "$ASSEMBLY_RUNTIME_POINTER_SUFFIX" "$ASSEMBLY_RUNTIME_POINTER_FORMAT")"
+    assembly_pointer_abs="${REPO_ROOT}/${assembly_pointer_rel}"
+  fi
+
   local compatibility_legacy_emitted=0
   local compatibility_legacy_out_rel=""
   local compatibility_legacy_manifest_rel=""
@@ -813,6 +865,9 @@ bundle_run() {
       echo "- skill_id: ${assembly_skill_id}"
       echo "- task_id: ${assembly_task_id}"
       echo "- validated against: ${ASSEMBLY_REGISTRY_AGENTS_PATH}, ${ASSEMBLY_REGISTRY_SKILLS_PATH}, ${ASSEMBLY_REGISTRY_TASKS_PATH}"
+      if (( assembly_pointer_emitted )); then
+        echo "- pointer path: ${assembly_pointer_rel}"
+      fi
     fi
     echo "- advisory mode: ${ASSEMBLY_ADVISORY_MODE}"
     echo "- advisory input stela present: $([[ "$assembly_stela_present" == "1" ]] && echo true || echo false)"
@@ -845,12 +900,45 @@ bundle_run() {
 
   rm -f "$rendered_stance_tmp"
 
+  if (( assembly_pointer_emitted )); then
+    {
+      echo "{"
+      echo "  \"pointer_version\": \"1\","
+      echo "  \"generated_at\": \"$(bundle_json_escape "$generated_at")\","
+      echo "  \"schema_version\": \"$(bundle_json_escape "$ASSEMBLY_SCHEMA_VERSION")\","
+      echo "  \"agent_id\": \"$(bundle_json_escape "$assembly_agent_id")\","
+      echo "  \"skill_id\": \"$(bundle_json_escape "$assembly_skill_id")\","
+      echo "  \"task_id\": \"$(bundle_json_escape "$assembly_task_id")\","
+      echo "  \"validated_against\": {"
+      echo "    \"agents\": \"$(bundle_json_escape "$ASSEMBLY_REGISTRY_AGENTS_PATH")\","
+      echo "    \"skills\": \"$(bundle_json_escape "$ASSEMBLY_REGISTRY_SKILLS_PATH")\","
+      echo "    \"tasks\": \"$(bundle_json_escape "$ASSEMBLY_REGISTRY_TASKS_PATH")\""
+      echo "  },"
+      echo "  \"advisory_inputs\": {"
+      echo "    \"mode\": \"$(bundle_json_escape "$ASSEMBLY_ADVISORY_MODE")\","
+      echo "    \"minimum_clean_cycles\": \"$(bundle_json_escape "$ASSEMBLY_ADVISORY_MINIMUM_CLEAN_CYCLES")\","
+      echo "    \"stela\": {"
+      echo "      \"path\": \"$(bundle_json_escape "$ASSEMBLY_ADVISORY_STELA_PATH")\","
+      echo "      \"present\": $(bundle_bool "$assembly_stela_present")"
+      echo "    },"
+      echo "    \"scaffold\": {"
+      echo "      \"path\": \"$(bundle_json_escape "$ASSEMBLY_ADVISORY_SCAFFOLD_PATH")\","
+      echo "      \"present\": $(bundle_bool "$assembly_scaffold_present")"
+      echo "    }"
+      echo "  }"
+      echo "}"
+    } > "$assembly_pointer_abs"
+  fi
+
   local -a package_files=(
     "$out_rel"
     "$manifest_rel"
     "$dump_payload_rel"
     "$dump_manifest_rel"
   )
+  if (( assembly_pointer_emitted )); then
+    package_files+=("$assembly_pointer_rel")
+  fi
   if (( topic_present )); then
     package_files+=("$topic_rel")
   fi
@@ -934,6 +1022,15 @@ bundle_run() {
     echo "      \"agents\": \"$(bundle_json_escape "$ASSEMBLY_REGISTRY_AGENTS_PATH")\","
     echo "      \"skills\": \"$(bundle_json_escape "$ASSEMBLY_REGISTRY_SKILLS_PATH")\","
     echo "      \"tasks\": \"$(bundle_json_escape "$ASSEMBLY_REGISTRY_TASKS_PATH")\""
+    echo "    },"
+    echo "    \"pointer\": {"
+    echo "      \"emitted\": $(bundle_bool "$assembly_pointer_emitted"),"
+    if (( assembly_pointer_emitted )); then
+      echo "      \"path\": \"$(bundle_json_escape "$assembly_pointer_rel")\","
+    else
+      echo "      \"path\": null,"
+    fi
+    echo "      \"format\": \"$(bundle_json_escape "$ASSEMBLY_RUNTIME_POINTER_FORMAT")\""
     echo "    },"
     echo "    \"advisory_inputs\": {"
     echo "      \"mode\": \"$(bundle_json_escape "$ASSEMBLY_ADVISORY_MODE")\","

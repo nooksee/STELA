@@ -511,6 +511,7 @@ ATS rules:
 - IDs must match assembly policy patterns and canonical registry IDs.
 - Validation fails before artifact emission on malformed or unknown IDs.
 - Runtime emits `assembly` metadata in bundle manifest when ATS is applied.
+- Runtime emits deterministic `assembly.pointer` metadata and pointer artifact when ATS is applied; non-ATS runs set `assembly.pointer.emitted=false` and emit no pointer artifact.
 - `STELA.md` and `SCAFFOLD.md` are advisory-only in this phase and are not gating inputs.
 
 **Disapproval Triggers (When to Reject):**

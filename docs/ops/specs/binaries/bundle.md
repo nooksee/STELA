@@ -72,7 +72,10 @@ Artifact contract (written under `storage/handoff/`):
    - `policy_manifest`
    - ATS IDs (`agent_id`, `skill_id`, `task_id`) when applied
    - `validated_against` registry pointers
+   - `pointer` metadata (`emitted`, `path`, `format`)
    - advisory-input status for `STELA.md` and `SCAFFOLD.md`
+8. When ATS is applied and assembly pointer policy is `emit_when_applied`, runtime emits a deterministic pointer artifact under `storage/handoff/`.
+9. When ATS is not applied, `assembly.pointer.emitted` is `false` and runtime emits no assembly pointer artifact.
 
 Text artifact profile conditional block:
 1. The `[HANDOFF]` block (`TOPIC.md` / `PLAN.md` presence) is emitted for non-audit profiles.
@@ -97,6 +100,7 @@ ATS validation gate:
 2. ATS IDs must match policy patterns from `ops/lib/manifests/ASSEMBLY.md`.
 3. ATS IDs must resolve in canonical registries (`agents`, `skills`, `tasks`) before artifact emission.
 4. `STELA.md` and `SCAFFOLD.md` remain advisory-only and non-gating in this phase.
+5. ATS success may emit a pointer artifact and must never inline full registry payloads into bundle text or manifest fields.
 
 ## Anecdotal Anchor
 DP-OPS-0146 hardened bundle intake after web-model architect runs looped on option menus and failed to map DP slots reliably from PLAN handoff context.
