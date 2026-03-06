@@ -284,6 +284,12 @@ elif ! bash tools/test/open.sh; then
   fail "OPEN de-dup test failed: tools/test/open.sh"
 fi
 
+if [[ ! -f "tools/test/editor.sh" ]]; then
+  fail "Missing required test script: tools/test/editor.sh"
+elif ! bash tools/test/editor.sh; then
+  fail "Editor scaffold test failed: tools/test/editor.sh"
+fi
+
 if [[ ! -f "tools/lint/response.sh" ]]; then
   fail "Missing required lint script: tools/lint/response.sh"
 elif ! bash tools/lint/response.sh --test; then

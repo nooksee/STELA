@@ -59,32 +59,13 @@ editor_invoke_command() {
 editor_capture_narrative_interactive() {
   local scaffold_path="$1"
   local explicit_editor_command="${2:-}"
-  local editor_command
-  editor_command="$(editor_resolve_command "$explicit_editor_command")"
-
-  echo ""
-  echo "CONTRACTOR EXECUTION NARRATIVE:"
-  echo "Edit the narrative scaffold now. Save and exit when complete."
-  echo "File: ${scaffold_path}"
-  echo ""
-  editor_invoke_command "$editor_command" "$scaffold_path"
+  editor_capture_scaffold_interactive "CONTRACTOR EXECUTION NARRATIVE" "$scaffold_path" "$explicit_editor_command"
 }
 
 editor_load_narrative_from_file() {
   local source_path="$1"
   local target_path="$2"
-  local resolved_source="$source_path"
-
-  [[ -n "$source_path" ]] || die "--narrative-file path is empty"
-  if [[ "$resolved_source" != /* ]]; then
-    resolved_source="${REPO_ROOT}/${resolved_source}"
-  fi
-  [[ -f "$resolved_source" ]] || die "narrative file missing: ${resolved_source#${REPO_ROOT}/}"
-
-  cp "$resolved_source" "$target_path"
-  if [[ -z "$(sed '/^[[:space:]]*$/d' "$target_path")" ]]; then
-    die "contractor narrative file is empty: ${resolved_source#${REPO_ROOT}/}"
-  fi
+  editor_load_scaffold_from_file "$source_path" "$target_path"
 }
 
 editor_validate_narrative_file() {
@@ -110,7 +91,7 @@ editor_validate_narrative_file() {
     "Decision Leaf: archives/decisions/... or None"
   )
   for scaffold_line in "${scaffold_lines[@]}"; do
-    if printf '%s\n' "$narrative_content" | grep -Fqx "$scaffold_line"; then
+    if printf '%s\n' "$narrative_content" | grep -Fqx -- "$scaffold_line"; then
       die "contractor narrative contains untouched scaffold line: ${scaffold_line}"
     fi
   done
@@ -130,5 +111,200 @@ editor_validate_narrative_file() {
   fi
   if printf '%s\n' "$narrative_content" | grep -Eq '^/|[[:space:]]/[A-Za-z]'; then
     die "contractor narrative contains absolute path; use repo-relative paths only"
+  fi
+}
+
+editor_capture_scaffold_interactive() {
+  local label="$1"
+  local scaffold_path="$2"
+  local explicit_editor_command="${3:-}"
+  local editor_command
+  editor_command="$(editor_resolve_command "$explicit_editor_command")"
+
+  echo ""
+  echo "${label}:"
+  echo "Edit the scaffold now. Save and exit when complete."
+  echo "File: ${scaffold_path}"
+  echo ""
+  editor_invoke_command "$editor_command" "$scaffold_path"
+}
+
+editor_load_scaffold_from_file() {
+  local source_path="$1"
+  local target_path="$2"
+  local resolved_source="$source_path"
+
+  [[ -n "$source_path" ]] || die "scaffold source path is empty"
+  if [[ "$resolved_source" != /* ]]; then
+    resolved_source="${REPO_ROOT}/${resolved_source}"
+  fi
+  [[ -f "$resolved_source" ]] || die "scaffold source file missing: ${resolved_source#${REPO_ROOT}/}"
+
+  cp "$resolved_source" "$target_path"
+  if [[ -z "$(sed '/^[[:space:]]*$/d' "$target_path")" ]]; then
+    die "scaffold source file is empty: ${resolved_source#${REPO_ROOT}/}"
+  fi
+}
+
+editor_write_plan_scaffold() {
+  local target_path="$1"
+  cat > "$target_path" <<'EOF'
+## Summary
+Write one to three lines stating the objective and expected outcome.
+
+## Scope
+List in-scope and out-of-scope boundaries as concise bullets.
+
+## Architect Handoff
+Selected Option: <A|B|C|RECOMMENDED>
+Slice Mode: <single|multi>
+Selected Slices: <S1[,S2...]>
+Execution Order: <required when Slice Mode=multi>
+Architect Constraints: <no new options; draft from selected fields only>
+
+## Implementation Plan (Decision Complete)
+List deterministic implementation steps for the selected slices only.
+EOF
+}
+
+editor_write_draft_slots_scaffold() {
+  local target_path="$1"
+  cat > "$target_path" <<'EOF'
+[DP_SCOPED_LOAD_ORDER]
+- List required context files in strict read order.
+
+[OBJECTIVE]
+- Describe target outcome in one to three lines.
+
+[IN_SCOPE]
+- Enumerate exact files and bounded change intent.
+
+[OUT_OF_SCOPE]
+- Enumerate explicit exclusions.
+
+[SAFETY_INVARIANTS]
+- List hard safety constraints and no-edit zones.
+
+[PLAN_STATE]
+- Capture current state and known baseline facts.
+
+[PLAN_REQUEST]
+- Translate selected slices into deterministic requests.
+
+[PLAN_CHANGELOG]
+- List UPDATE and NEW files only.
+
+[PLAN_PATCH]
+- Provide linear numbered patch steps with exact files.
+
+[RECEIPT_EXTRA]
+- List DP-specific receipt commands with literal paths.
+
+[CBC_PREFLIGHT]
+- State applicability and bounded CbC rationale.
+EOF
+}
+
+editor_validate_plan_scaffold_file() {
+  local plan_path="$1"
+  [[ -f "$plan_path" ]] || die "plan scaffold file missing: ${plan_path#${REPO_ROOT}/}"
+
+  local content
+  content="$(cat "$plan_path")"
+  [[ -n "$(printf '%s\n' "$content" | sed '/^[[:space:]]*$/d')" ]] || die "plan scaffold is empty"
+
+  if printf '%s\n' "$content" | grep -Eiq '\{\{|}}|\bTBD\b|\bTODO\b|PLACEHOLDER|ENTER_|REPLACE_|populate during execution|do not pre-fill'; then
+    die "plan scaffold contains placeholder text; replace instruction text before validating"
+  fi
+
+  local required_heading
+  for required_heading in '^## Summary$' '^## Scope$' '^## Architect Handoff$' '^## Implementation Plan \(Decision Complete\)$'; do
+    if ! printf '%s\n' "$content" | grep -Eq "$required_heading"; then
+      die "plan scaffold missing required heading (pattern: ${required_heading})"
+    fi
+  done
+
+  local untouched_line
+  local -a untouched_lines=(
+    "Write one to three lines stating the objective and expected outcome."
+    "List in-scope and out-of-scope boundaries as concise bullets."
+    "Execution Order: <required when Slice Mode=multi>"
+    "List deterministic implementation steps for the selected slices only."
+  )
+  for untouched_line in "${untouched_lines[@]}"; do
+    if printf '%s\n' "$content" | grep -Fqx -- "$untouched_line"; then
+      die "plan scaffold contains untouched scaffold line: ${untouched_line}"
+    fi
+  done
+
+  if ! printf '%s\n' "$content" | grep -Eq '^Selected Option:'; then
+    die "plan scaffold missing required Architect Handoff field: Selected Option"
+  fi
+  if ! printf '%s\n' "$content" | grep -Eq '^Slice Mode:'; then
+    die "plan scaffold missing required Architect Handoff field: Slice Mode"
+  fi
+  if ! printf '%s\n' "$content" | grep -Eq '^Selected Slices:'; then
+    die "plan scaffold missing required Architect Handoff field: Selected Slices"
+  fi
+
+  if printf '%s\n' "$content" | grep -Eq '^/|[[:space:]]/[A-Za-z]'; then
+    die "plan scaffold contains absolute path; use repo-relative paths only"
+  fi
+}
+
+editor_validate_draft_slots_scaffold_file() {
+  local slots_path="$1"
+  [[ -f "$slots_path" ]] || die "draft slots scaffold file missing: ${slots_path#${REPO_ROOT}/}"
+
+  local content
+  content="$(cat "$slots_path")"
+  [[ -n "$(printf '%s\n' "$content" | sed '/^[[:space:]]*$/d')" ]] || die "draft slots scaffold is empty"
+
+  if printf '%s\n' "$content" | grep -Eiq '\{\{|}}|\bTBD\b|\bTODO\b|PLACEHOLDER|ENTER_|REPLACE_|populate during execution|do not pre-fill'; then
+    die "draft slots scaffold contains placeholder text; replace instruction text before validating"
+  fi
+
+  local required_block
+  local -a required_blocks=(
+    "DP_SCOPED_LOAD_ORDER"
+    "OBJECTIVE"
+    "IN_SCOPE"
+    "OUT_OF_SCOPE"
+    "SAFETY_INVARIANTS"
+    "PLAN_STATE"
+    "PLAN_REQUEST"
+    "PLAN_CHANGELOG"
+    "PLAN_PATCH"
+    "RECEIPT_EXTRA"
+    "CBC_PREFLIGHT"
+  )
+  for required_block in "${required_blocks[@]}"; do
+    if ! printf '%s\n' "$content" | grep -Fqx "[${required_block}]"; then
+      die "draft slots scaffold missing required block: ${required_block}"
+    fi
+  done
+
+  local untouched_line
+  local -a untouched_lines=(
+    "- List required context files in strict read order."
+    "- Describe target outcome in one to three lines."
+    "- Enumerate exact files and bounded change intent."
+    "- Enumerate explicit exclusions."
+    "- List hard safety constraints and no-edit zones."
+    "- Capture current state and known baseline facts."
+    "- Translate selected slices into deterministic requests."
+    "- List UPDATE and NEW files only."
+    "- Provide linear numbered patch steps with exact files."
+    "- List DP-specific receipt commands with literal paths."
+    "- State applicability and bounded CbC rationale."
+  )
+  for untouched_line in "${untouched_lines[@]}"; do
+    if printf '%s\n' "$content" | grep -Fqx -- "$untouched_line"; then
+      die "draft slots scaffold contains untouched scaffold line: ${untouched_line}"
+    fi
+  done
+
+  if printf '%s\n' "$content" | grep -Eq '^/|[[:space:]]/[A-Za-z]'; then
+    die "draft slots scaffold contains absolute path; use repo-relative paths only"
   fi
 }

@@ -6,6 +6,8 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 TEMPLATE_BIN="${REPO_ROOT}/ops/bin/template"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR}/../lib/scripts/common.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/../lib/scripts/editor.sh"
 
 usage() {
   cat <<'USAGE'
@@ -34,6 +36,13 @@ Optional:
 - --base-branch=main                  (default: main)
 - --freshness-stamp=YYYY-MM-DD        (default: UTC today)
 - --slots-file=PATH                   sidecar with tagged sections (optional in base DP mode)
+- --emit-plan-scaffold=PATH           write plan scaffold template
+- --emit-dp-slots-scaffold=PATH       write DP slot scaffold template
+- --edit-scaffold                     open emitted scaffold in editor
+- --load-scaffold-file=PATH           copy scaffold content from file
+- --scaffold-editor=COMMAND           explicit editor command for --edit-scaffold
+- --validate-plan-scaffold=PATH       validate plan scaffold content
+- --validate-dp-slots-scaffold=PATH   validate DP slots scaffold content
 - --dp-load-order="..."
 - --objective="..."
 - --in-scope="..."
@@ -306,6 +315,25 @@ require_task_markers() {
   return 0
 }
 
+resolve_repo_path() {
+  local value="$1"
+  [[ -n "$value" ]] || die "path argument is empty"
+  if [[ "$value" == /* ]]; then
+    printf '%s' "$value"
+    return 0
+  fi
+  printf '%s/%s' "$REPO_ROOT" "$value"
+}
+
+rel_path_for_output() {
+  local value="$1"
+  if [[ "$value" == "$REPO_ROOT/"* ]]; then
+    printf '%s' "${value#${REPO_ROOT}/}"
+    return 0
+  fi
+  printf '%s' "$value"
+}
+
 render_dp() {
   local out_path="$1"
   [[ -x "$TEMPLATE_BIN" ]] || die "template binary missing or not executable: ${TEMPLATE_BIN}"
@@ -465,6 +493,14 @@ PLAN_PATCH=""
 RECEIPT_EXTRA=""
 CBC_PREFLIGHT=""
 
+EMIT_PLAN_SCAFFOLD=""
+EMIT_DP_SLOTS_SCAFFOLD=""
+EDIT_SCAFFOLD=0
+LOAD_SCAFFOLD_FILE=""
+SCAFFOLD_EDITOR=""
+VALIDATE_PLAN_SCAFFOLD=""
+VALIDATE_DP_SLOTS_SCAFFOLD=""
+
 for arg in "$@"; do
   case "$arg" in
     --id=*)
@@ -484,6 +520,27 @@ for arg in "$@"; do
       ;;
     --freshness-stamp=*)
       FRESHNESS_STAMP="${arg#--freshness-stamp=}"
+      ;;
+    --emit-plan-scaffold=*)
+      EMIT_PLAN_SCAFFOLD="${arg#--emit-plan-scaffold=}"
+      ;;
+    --emit-dp-slots-scaffold=*)
+      EMIT_DP_SLOTS_SCAFFOLD="${arg#--emit-dp-slots-scaffold=}"
+      ;;
+    --edit-scaffold)
+      EDIT_SCAFFOLD=1
+      ;;
+    --load-scaffold-file=*)
+      LOAD_SCAFFOLD_FILE="${arg#--load-scaffold-file=}"
+      ;;
+    --scaffold-editor=*)
+      SCAFFOLD_EDITOR="${arg#--scaffold-editor=}"
+      ;;
+    --validate-plan-scaffold=*)
+      VALIDATE_PLAN_SCAFFOLD="${arg#--validate-plan-scaffold=}"
+      ;;
+    --validate-dp-slots-scaffold=*)
+      VALIDATE_DP_SLOTS_SCAFFOLD="${arg#--validate-dp-slots-scaffold=}"
       ;;
     --slots-file=*)
       SLOTS_FILE="${arg#--slots-file=}"
@@ -540,6 +597,100 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+ASSIST_MODE=0
+if [[ -n "$EMIT_PLAN_SCAFFOLD" \
+  || -n "$EMIT_DP_SLOTS_SCAFFOLD" \
+  || "$EDIT_SCAFFOLD" == "1" \
+  || -n "$LOAD_SCAFFOLD_FILE" \
+  || -n "$SCAFFOLD_EDITOR" \
+  || -n "$VALIDATE_PLAN_SCAFFOLD" \
+  || -n "$VALIDATE_DP_SLOTS_SCAFFOLD" ]]; then
+  ASSIST_MODE=1
+fi
+
+if (( ASSIST_MODE )); then
+  if [[ -n "$ADDENDUM_LETTER" || -n "$BASE_DP_ID" ]]; then
+    die "scaffold assist mode cannot be combined with addendum generation flags"
+  fi
+  if [[ -n "$DP_ID" || -n "$DP_TITLE" || -n "$WORK_BRANCH" || -n "$BASE_HEAD" ]]; then
+    die "scaffold assist mode cannot be combined with base DP generation flags"
+  fi
+
+  if (( EDIT_SCAFFOLD )) && [[ -z "$EMIT_PLAN_SCAFFOLD" && -z "$EMIT_DP_SLOTS_SCAFFOLD" ]]; then
+    die "--edit-scaffold requires --emit-plan-scaffold or --emit-dp-slots-scaffold"
+  fi
+  if [[ -n "$LOAD_SCAFFOLD_FILE" && -z "$EMIT_PLAN_SCAFFOLD" && -z "$EMIT_DP_SLOTS_SCAFFOLD" ]]; then
+    die "--load-scaffold-file requires --emit-plan-scaffold or --emit-dp-slots-scaffold"
+  fi
+  if [[ -n "$SCAFFOLD_EDITOR" && "$EDIT_SCAFFOLD" != "1" ]]; then
+    die "--scaffold-editor requires --edit-scaffold"
+  fi
+
+  if (( EDIT_SCAFFOLD )) && [[ -n "$EMIT_PLAN_SCAFFOLD" && -n "$EMIT_DP_SLOTS_SCAFFOLD" ]]; then
+    die "--edit-scaffold supports one emitted scaffold target at a time"
+  fi
+  if [[ -n "$LOAD_SCAFFOLD_FILE" && -n "$EMIT_PLAN_SCAFFOLD" && -n "$EMIT_DP_SLOTS_SCAFFOLD" ]]; then
+    die "--load-scaffold-file supports one emitted scaffold target at a time"
+  fi
+
+  if [[ -n "$EMIT_PLAN_SCAFFOLD" ]]; then
+    emit_plan_path="$(resolve_repo_path "$EMIT_PLAN_SCAFFOLD")"
+    mkdir -p "$(dirname "$emit_plan_path")"
+    editor_write_plan_scaffold "$emit_plan_path"
+    echo "Wrote: $(rel_path_for_output "$emit_plan_path")"
+
+    if [[ -n "$LOAD_SCAFFOLD_FILE" ]]; then
+      editor_load_scaffold_from_file "$LOAD_SCAFFOLD_FILE" "$emit_plan_path"
+    fi
+    if (( EDIT_SCAFFOLD )); then
+      editor_capture_scaffold_interactive "PLAN SCAFFOLD" "$emit_plan_path" "$SCAFFOLD_EDITOR"
+    fi
+    if [[ -n "$LOAD_SCAFFOLD_FILE" || "$EDIT_SCAFFOLD" == "1" ]]; then
+      editor_validate_plan_scaffold_file "$emit_plan_path"
+      echo "PASS: draft: plan scaffold: $(rel_path_for_output "$emit_plan_path")"
+    fi
+  fi
+
+  if [[ -n "$EMIT_DP_SLOTS_SCAFFOLD" ]]; then
+    emit_slots_path="$(resolve_repo_path "$EMIT_DP_SLOTS_SCAFFOLD")"
+    mkdir -p "$(dirname "$emit_slots_path")"
+    editor_write_draft_slots_scaffold "$emit_slots_path"
+    echo "Wrote: $(rel_path_for_output "$emit_slots_path")"
+
+    if [[ -n "$LOAD_SCAFFOLD_FILE" ]]; then
+      editor_load_scaffold_from_file "$LOAD_SCAFFOLD_FILE" "$emit_slots_path"
+    fi
+    if (( EDIT_SCAFFOLD )); then
+      editor_capture_scaffold_interactive "DP SLOTS SCAFFOLD" "$emit_slots_path" "$SCAFFOLD_EDITOR"
+    fi
+    if [[ -n "$LOAD_SCAFFOLD_FILE" || "$EDIT_SCAFFOLD" == "1" ]]; then
+      editor_validate_draft_slots_scaffold_file "$emit_slots_path"
+      echo "PASS: draft: dp slots scaffold: $(rel_path_for_output "$emit_slots_path")"
+    fi
+  fi
+
+  if [[ -n "$VALIDATE_PLAN_SCAFFOLD" ]]; then
+    validate_plan_path="$(resolve_repo_path "$VALIDATE_PLAN_SCAFFOLD")"
+    editor_validate_plan_scaffold_file "$validate_plan_path"
+    echo "PASS: draft: plan scaffold validation: $(rel_path_for_output "$validate_plan_path")"
+  fi
+
+  if [[ -n "$VALIDATE_DP_SLOTS_SCAFFOLD" ]]; then
+    validate_slots_path="$(resolve_repo_path "$VALIDATE_DP_SLOTS_SCAFFOLD")"
+    editor_validate_draft_slots_scaffold_file "$validate_slots_path"
+    echo "PASS: draft: dp slots scaffold validation: $(rel_path_for_output "$validate_slots_path")"
+  fi
+
+  if [[ -z "$EMIT_PLAN_SCAFFOLD" \
+    && -z "$EMIT_DP_SLOTS_SCAFFOLD" \
+    && -z "$VALIDATE_PLAN_SCAFFOLD" \
+    && -z "$VALIDATE_DP_SLOTS_SCAFFOLD" ]]; then
+    die "scaffold assist mode requires emit or validate flags"
+  fi
+
+  exit 0
+fi
 
 if [[ -n "$ADDENDUM_LETTER" && -z "$BASE_DP_ID" ]]; then
   die "--addendum requires --base-dp"
