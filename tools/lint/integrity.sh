@@ -227,6 +227,7 @@ if [[ -n "${observed[PoT.md]+set}" ]]; then
   if ! is_pot_change_authorized "$TASK_SOURCE_PATH"; then
     {
       echo "FAIL: PoT.md changed without explicit governance-surface authorization in active DP."
+      echo "  task_source_path: ${TASK_SOURCE_PATH#${REPO_ROOT}/}"
       echo "  Add '- PoT.md' under either:"
       echo "  - In scope:"
       echo "  - 3.4.3 Changelog UPDATE:"

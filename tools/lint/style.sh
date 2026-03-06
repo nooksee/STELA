@@ -190,8 +190,8 @@ check_audit_foreman_mode_split() {
   local required_manifest_alias_auditor_remove_key='profile_alias_legacy_auditor_remove_after_dp='
   local required_manifest_alias_hygiene_status_key='profile_alias_legacy_hygiene_deprecation_status='
   local required_manifest_alias_hygiene_remove_key='profile_alias_legacy_hygiene_remove_after_dp='
-  local required_manifest_alias_auditor_note='Legacy `auditor` alias deprecation status is `active`; removal target is `DP-OPS-0156`.'
-  local required_manifest_alias_hygiene_note='Legacy `hygiene` alias deprecation status is `active`; removal target is `DP-OPS-0156`.'
+  local required_manifest_alias_auditor_note='Legacy `auditor` alias deprecation status is `sunset`; removal target is `DP-OPS-0165`.'
+  local required_manifest_alias_hygiene_note='Legacy `hygiene` alias deprecation status is `sunset`; removal target is `DP-OPS-0165`.'
 
   [[ -f "$stance_auditor" ]] || mark_failure "auditor.md.tpl missing for mode split checks"
   [[ -f "$stance_foreman" ]] || mark_failure "foreman.md.tpl missing for mode split checks"

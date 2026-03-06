@@ -15,7 +15,7 @@
 7. Extract the CbC Design Discipline Preflight slot content from the resolved TASK surface. Parse the first non-empty line after the two fixed boilerplate lines (`Required when...` and `For non-tooling DPs:`).
 8. Treat preflight as applicable when the first non-empty slot line does not begin with `Not applicable`. When no slot content is found, treat as not applicable.
 9. When preflight is applicable, check the allowlist for at least one exact entry or wildcard pattern matching `archives/decisions/*-cbc-*`. Emit hard failure when no such entry exists.
-10. When `PoT.md` is observed in changed paths, require explicit DP authorization in the resolved TASK surface by listing `PoT.md` as a bullet under either `In scope:` or `3.4.3 Changelog` `UPDATE:`. Emit hard failure when authorization is missing.
+10. When `PoT.md` is observed in changed paths, require explicit DP authorization in the resolved TASK surface by listing `PoT.md` as a bullet under either `In scope:` or `3.4.3 Changelog` `UPDATE:`. Emit hard failure when authorization is missing and include `task_source_path` for deterministic recovery.
 
 ## CbC Preflight Enforcement Rule
 

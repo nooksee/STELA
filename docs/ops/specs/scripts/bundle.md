@@ -11,7 +11,7 @@ The script provides `bundle_run` plus helpers for:
 2. Policy load from `ops/lib/manifests/BUNDLE.md` with required-key validation and fail-closed behavior.
    - Includes compatibility alias keys (`profile_alias_legacy_auditor_to`, `profile_alias_legacy_hygiene_to`) consumed at runtime.
    - Includes required compatibility alias deprecation keys (`profile_alias_legacy_auditor_deprecation_status`, `profile_alias_legacy_auditor_remove_after_dp`, `profile_alias_legacy_hygiene_deprecation_status`, `profile_alias_legacy_hygiene_remove_after_dp`).
-   - Runtime keeps one-cycle fallback support for old key names (`profile_alias_auditor`, `profile_alias_hygiene`) and fails closed if neither key set is present.
+   - Runtime reads canonical alias keys only and fails closed when either canonical key is missing.
 3. ATS policy load from the manifest-linked `ops/lib/manifests/ASSEMBLY.md` with required-key validation and fail-closed behavior.
 4. ATS validation for `agent_id`, `skill_id`, and `task_id`:
    - all-or-none flag set required,

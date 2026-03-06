@@ -23,7 +23,8 @@ Filing:
 - SSOT: one canonical file per domain; other mentions are pointers.
 - Reuse-first: search `ops/` for an existing template before creating a new artifact.
 - Drift: any divergence between canon and repository state, or duplication of canon outside SSOT, is a failure state that requires stop and correction.
-- Routing Closeout; failure is a system failure state.
+- Routing: closeout routing failure is a system failure state.
+- RoR: boundary and authorization decisions are recorded in `archives/decisions/RoR-*.md` and treated as authoritative decision leaves.
 - SoP: history ledger only; no permanent rules live there.
 - PoW: proof ledger only; execution evidence pointers live there.
 

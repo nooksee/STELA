@@ -132,16 +132,16 @@ Assertion: file must include `profile_alias_legacy_hygiene_remove_after_dp=`
 Failure message: `BUNDLE.md missing hygiene alias remove-after key line`
 Invariant: compatibility alias policy includes a bounded removal target.
 
-### Guard 15: Auditor alias deprecation-window compatibility note
+### Guard 15: Auditor alias sunset-window compatibility note
 Target file: `ops/lib/manifests/BUNDLE.md`
-Assertion: file must include `Legacy \`auditor\` alias deprecation status is \`active\`; removal target is \`DP-OPS-0156\`.`
-Failure message: `BUNDLE.md missing auditor alias deprecation-window compatibility note`
+Assertion: file must include `Legacy \`auditor\` alias deprecation status is \`sunset\`; removal target is \`DP-OPS-0165\`.`
+Failure message: `BUNDLE.md missing auditor alias sunset-window compatibility note`
 Invariant: human-readable policy text matches machine-enforced alias deprecation configuration.
 
-### Guard 16: Hygiene alias deprecation-window compatibility note
+### Guard 16: Hygiene alias sunset-window compatibility note
 Target file: `ops/lib/manifests/BUNDLE.md`
-Assertion: file must include `Legacy \`hygiene\` alias deprecation status is \`active\`; removal target is \`DP-OPS-0156\`.`
-Failure message: `BUNDLE.md missing hygiene alias deprecation-window compatibility note`
+Assertion: file must include `Legacy \`hygiene\` alias deprecation status is \`sunset\`; removal target is \`DP-OPS-0165\`.`
+Failure message: `BUNDLE.md missing hygiene alias sunset-window compatibility note`
 Invariant: human-readable policy text matches machine-enforced alias deprecation configuration.
 
 ## OPEN Marker Contract Guardrails

@@ -39,7 +39,7 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 - Legacy alias `hygiene` must resolve to `conform` in manifest routing metadata.
 - Alias metadata must be emitted for compatibility routes:
   - `profile_alias.from` and `profile_alias.to` match requested and resolved values.
-  - `profile_alias.deprecation_status` and `profile_alias.remove_after_dp` match policy values in `ops/lib/manifests/BUNDLE.md`.
+  - `profile_alias.deprecation_status` and `profile_alias.remove_after_dp` match policy sunset-window values in `ops/lib/manifests/BUNDLE.md`.
 - ATS partial argument sets must fail (`--agent-id`/`--skill-id`/`--task-id` are all-or-none).
 - ATS unknown IDs must fail with field-level errors (`unknown agent_id`, `unknown skill_id`, `unknown task_id`).
 - ATS valid triplet must pass and emit manifest assembly metadata:

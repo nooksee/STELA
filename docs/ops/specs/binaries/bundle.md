@@ -52,7 +52,7 @@ Profile intent split:
 4. `foreman` is not a substitute for `audit`.
 
 Compatibility alias deprecation window:
-1. Legacy alias acceptance remains active during the deprecation window.
+1. Legacy alias acceptance is in `sunset` status during the deprecation window.
 2. Each legacy alias must publish deprecation metadata in policy (`*_deprecation_status`, `*_remove_after_dp`).
 3. Bundle manifest output must include alias deprecation metadata whenever `profile_alias.applied` is true.
 
