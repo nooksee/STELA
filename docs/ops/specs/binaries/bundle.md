@@ -15,12 +15,19 @@ Public interface:
 2. `--out=auto|PATH`
 3. `--project=<name>` (required only for `project`)
 4. `--intent=<text>` (required for `foreman` and legacy alias `auditor`)
+5. `--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>` (optional ATS triplet; all-or-none)
 
 Policy source:
 1. Runtime contract is loaded from `ops/lib/manifests/BUNDLE.md`.
 2. Missing required policy keys or invalid values are fail-closed errors.
 3. Profile routing, dump scopes, and stance template render keys are resolved from this manifest.
-4. Compatibility alias routing is resolved from manifest keys:
+4. ATS schema linkage is resolved from `assembly_policy_manifest` in `ops/lib/manifests/BUNDLE.md`.
+5. Runtime ATS schema and validation rules are loaded from `ops/lib/manifests/ASSEMBLY.md`.
+6. ATS validation sources are canonical registry IDs in:
+   - `docs/ops/registry/agents.md`
+   - `docs/ops/registry/skills.md`
+   - `docs/ops/registry/tasks.md`
+7. Compatibility alias routing is resolved from manifest keys:
    - `profile_alias_legacy_auditor_to`
    - `profile_alias_legacy_hygiene_to`
    - `profile_alias_legacy_auditor_deprecation_status`
@@ -59,6 +66,13 @@ Artifact contract (written under `storage/handoff/`):
 4. Canonical bundle artifact names use policy-defined profile prefixes (`artifact_prefix_<profile>` in `ops/lib/manifests/BUNDLE.md`), for example `AUDIT-*` and `FOREMAN-*`.
 5. Legacy `BUNDLE-*` artifacts are compatibility outputs during migration when `compatibility_emit_legacy_bundle_artifacts=true`.
 6. Manifest `artifact_naming` metadata records canonical and compatibility artifact paths plus `legacy_emitted` status.
+7. Manifest includes `assembly` metadata block:
+   - `applied`
+   - `schema_version`
+   - `policy_manifest`
+   - ATS IDs (`agent_id`, `skill_id`, `task_id`) when applied
+   - `validated_against` registry pointers
+   - advisory-input status for `STELA.md` and `SCAFFOLD.md`
 
 Text artifact profile conditional block:
 1. The `[HANDOFF]` block (`TOPIC.md` / `PLAN.md` presence) is emitted for non-audit profiles.
@@ -77,6 +91,12 @@ Dump scope mapping by resolved profile:
 4. `project` -> `ops/bin/dump --scope=project --project=<name>`.
 
 Bundle runtime invokes dump with explicit `.txt` output path to suppress dump auto-compression side effects during bundle orchestration.
+
+ATS validation gate:
+1. ATS flags are all-or-none. Any partial ATS argument set fails before artifact emission.
+2. ATS IDs must match policy patterns from `ops/lib/manifests/ASSEMBLY.md`.
+3. ATS IDs must resolve in canonical registries (`agents`, `skills`, `tasks`) before artifact emission.
+4. `STELA.md` and `SCAFFOLD.md` remain advisory-only and non-gating in this phase.
 
 ## Anecdotal Anchor
 DP-OPS-0146 hardened bundle intake after web-model architect runs looped on option menus and failed to map DP slots reliably from PLAN handoff context.

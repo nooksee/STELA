@@ -14,6 +14,7 @@ if ! declare -F die >/dev/null 2>&1; then
 fi
 
 BUNDLE_POLICY_PATH="${REPO_ROOT}/ops/lib/manifests/BUNDLE.md"
+ASSEMBLY_POLICY_PATH=""
 declare -a BUNDLE_SUPPORTED_PROFILES=()
 declare -a BUNDLE_HANDOFF_OMIT_PROFILES=()
 declare -A BUNDLE_DUMP_SCOPE_BY_PROFILE=()
@@ -31,10 +32,23 @@ BUNDLE_FOREMAN_PROFILE=""
 BUNDLE_FOREMAN_INTENT_FORM=""
 BUNDLE_COMPAT_LEGACY_PREFIX=""
 BUNDLE_COMPAT_EMIT_LEGACY=""
+BUNDLE_ASSEMBLY_POLICY_MANIFEST=""
+ASSEMBLY_SCHEMA_VERSION=""
+ASSEMBLY_REQUIRED_FIELDS=""
+ASSEMBLY_REGISTRY_AGENTS_PATH=""
+ASSEMBLY_REGISTRY_SKILLS_PATH=""
+ASSEMBLY_REGISTRY_TASKS_PATH=""
+ASSEMBLY_AGENT_ID_PATTERN=""
+ASSEMBLY_SKILL_ID_PATTERN=""
+ASSEMBLY_TASK_ID_PATTERN=""
+ASSEMBLY_ADVISORY_STELA_PATH=""
+ASSEMBLY_ADVISORY_SCAFFOLD_PATH=""
+ASSEMBLY_ADVISORY_MODE=""
+ASSEMBLY_ADVISORY_MINIMUM_CLEAN_CYCLES=""
 
 bundle_usage() {
   cat <<'USAGE'
-Usage: ops/bin/bundle [--profile=auto|analyst|architect|audit|project|conform|hygiene|foreman|auditor] [--out=auto|PATH] [--project=<name>] [--intent=<text>]
+Usage: ops/bin/bundle [--profile=auto|analyst|architect|audit|project|conform|hygiene|foreman|auditor] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
 USAGE
 }
 
@@ -87,6 +101,14 @@ bundle_policy_scalar() {
   local key="$1"
   local value
   value="$(awk -F'=' -v key="$key" '$1==key { print substr($0, index($0, "=") + 1); exit }' "$BUNDLE_POLICY_PATH")"
+  trim "$value"
+}
+
+bundle_manifest_scalar() {
+  local manifest_path="$1"
+  local key="$2"
+  local value
+  value="$(awk -F'=' -v key="$key" '$1==key { print substr($0, index($0, "=") + 1); exit }' "$manifest_path")"
   trim "$value"
 }
 
@@ -149,6 +171,7 @@ bundle_load_policy() {
     audit_profile \
     compatibility_legacy_bundle_prefix \
     compatibility_emit_legacy_bundle_artifacts \
+    assembly_policy_manifest \
     handoff_omit_profiles; do
     if [[ -z "$(bundle_policy_scalar "$required_key")" ]]; then
       die "bundle policy missing required key: ${required_key}"
@@ -258,6 +281,10 @@ bundle_load_policy() {
 
   BUNDLE_COMPAT_LEGACY_PREFIX="$(bundle_policy_scalar compatibility_legacy_bundle_prefix)"
   BUNDLE_COMPAT_EMIT_LEGACY="$(bundle_policy_scalar compatibility_emit_legacy_bundle_artifacts)"
+  BUNDLE_ASSEMBLY_POLICY_MANIFEST="$(bundle_policy_scalar assembly_policy_manifest)"
+  [[ -n "$BUNDLE_ASSEMBLY_POLICY_MANIFEST" ]] || die "bundle policy missing required key: assembly_policy_manifest"
+  ASSEMBLY_POLICY_PATH="${REPO_ROOT}/$(bundle_to_rel_path "$BUNDLE_ASSEMBLY_POLICY_MANIFEST")"
+  [[ -f "$ASSEMBLY_POLICY_PATH" ]] || die "assembly policy missing: ${ASSEMBLY_POLICY_PATH#${REPO_ROOT}/}"
   if [[ ! "$BUNDLE_COMPAT_LEGACY_PREFIX" =~ ^[A-Z][A-Z0-9-]*$ ]]; then
     die "bundle policy has invalid compatibility legacy prefix: ${BUNDLE_COMPAT_LEGACY_PREFIX}"
   fi
@@ -277,6 +304,93 @@ bundle_load_policy() {
     bundle_profile_supported "$profile" || die "bundle policy handoff_omit_profiles references unsupported profile: ${profile}"
   done
 
+  bundle_load_assembly_policy
+}
+
+bundle_load_assembly_policy() {
+  local required_key
+  local advisory_cycles
+
+  [[ -f "$ASSEMBLY_POLICY_PATH" ]] || die "assembly policy missing: ${ASSEMBLY_POLICY_PATH#${REPO_ROOT}/}"
+
+  for required_key in \
+    assembly_schema_version \
+    required_fields \
+    registry_agents_path \
+    registry_skills_path \
+    registry_tasks_path \
+    agent_id_pattern \
+    skill_id_pattern \
+    task_id_pattern \
+    advisory_input_stela_path \
+    advisory_input_scaffold_path \
+    advisory_inputs_mode \
+    advisory_minimum_clean_cycles; do
+    if [[ -z "$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" "$required_key")" ]]; then
+      die "assembly policy missing required key: ${required_key}"
+    fi
+  done
+
+  ASSEMBLY_SCHEMA_VERSION="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" assembly_schema_version)"
+  ASSEMBLY_REQUIRED_FIELDS="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" required_fields)"
+  ASSEMBLY_REGISTRY_AGENTS_PATH="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" registry_agents_path)"
+  ASSEMBLY_REGISTRY_SKILLS_PATH="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" registry_skills_path)"
+  ASSEMBLY_REGISTRY_TASKS_PATH="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" registry_tasks_path)"
+  ASSEMBLY_AGENT_ID_PATTERN="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" agent_id_pattern)"
+  ASSEMBLY_SKILL_ID_PATTERN="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" skill_id_pattern)"
+  ASSEMBLY_TASK_ID_PATTERN="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" task_id_pattern)"
+  ASSEMBLY_ADVISORY_STELA_PATH="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" advisory_input_stela_path)"
+  ASSEMBLY_ADVISORY_SCAFFOLD_PATH="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" advisory_input_scaffold_path)"
+  ASSEMBLY_ADVISORY_MODE="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" advisory_inputs_mode)"
+  ASSEMBLY_ADVISORY_MINIMUM_CLEAN_CYCLES="$(bundle_manifest_scalar "$ASSEMBLY_POLICY_PATH" advisory_minimum_clean_cycles)"
+
+  [[ "$ASSEMBLY_SCHEMA_VERSION" =~ ^[0-9]+$ ]] || die "assembly policy has invalid assembly_schema_version: ${ASSEMBLY_SCHEMA_VERSION}"
+  [[ -n "$ASSEMBLY_REQUIRED_FIELDS" ]] || die "assembly policy required_fields is empty"
+
+  ASSEMBLY_REGISTRY_AGENTS_PATH="$(bundle_to_rel_path "$ASSEMBLY_REGISTRY_AGENTS_PATH")"
+  ASSEMBLY_REGISTRY_SKILLS_PATH="$(bundle_to_rel_path "$ASSEMBLY_REGISTRY_SKILLS_PATH")"
+  ASSEMBLY_REGISTRY_TASKS_PATH="$(bundle_to_rel_path "$ASSEMBLY_REGISTRY_TASKS_PATH")"
+  [[ -f "${REPO_ROOT}/${ASSEMBLY_REGISTRY_AGENTS_PATH}" ]] || die "assembly registry missing: ${ASSEMBLY_REGISTRY_AGENTS_PATH}"
+  [[ -f "${REPO_ROOT}/${ASSEMBLY_REGISTRY_SKILLS_PATH}" ]] || die "assembly registry missing: ${ASSEMBLY_REGISTRY_SKILLS_PATH}"
+  [[ -f "${REPO_ROOT}/${ASSEMBLY_REGISTRY_TASKS_PATH}" ]] || die "assembly registry missing: ${ASSEMBLY_REGISTRY_TASKS_PATH}"
+
+  [[ -n "$ASSEMBLY_AGENT_ID_PATTERN" ]] || die "assembly policy agent_id_pattern is empty"
+  [[ -n "$ASSEMBLY_SKILL_ID_PATTERN" ]] || die "assembly policy skill_id_pattern is empty"
+  [[ -n "$ASSEMBLY_TASK_ID_PATTERN" ]] || die "assembly policy task_id_pattern is empty"
+
+  ASSEMBLY_ADVISORY_STELA_PATH="$(bundle_to_rel_path "$ASSEMBLY_ADVISORY_STELA_PATH")"
+  ASSEMBLY_ADVISORY_SCAFFOLD_PATH="$(bundle_to_rel_path "$ASSEMBLY_ADVISORY_SCAFFOLD_PATH")"
+  case "$ASSEMBLY_ADVISORY_MODE" in
+    optional_non_gating)
+      ;;
+    *)
+      die "assembly policy has unsupported advisory_inputs_mode: ${ASSEMBLY_ADVISORY_MODE}"
+      ;;
+  esac
+  advisory_cycles="$ASSEMBLY_ADVISORY_MINIMUM_CLEAN_CYCLES"
+  [[ "$advisory_cycles" =~ ^[0-9]+$ ]] || die "assembly policy has invalid advisory_minimum_clean_cycles: ${ASSEMBLY_ADVISORY_MINIMUM_CLEAN_CYCLES}"
+}
+
+bundle_registry_has_id() {
+  local registry_rel="$1"
+  local expected_id="$2"
+  awk -F'|' -v expected_id="$expected_id" '
+    BEGIN { found=0 }
+    /^\|[[:space:]]*[^|]+[[:space:]]*\|/ {
+      id=$2
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", id)
+      if (id == expected_id) {
+        found=1
+        exit
+      }
+    }
+    END {
+      if (found == 1) {
+        exit 0
+      }
+      exit 1
+    }
+  ' "${REPO_ROOT}/${registry_rel}"
 }
 
 bundle_resolve_output_path() {
@@ -404,6 +518,12 @@ bundle_run() {
   local alias_deprecation_status=""
   local alias_remove_after_dp=""
   local alias_applied=0
+  local assembly_agent_id=""
+  local assembly_skill_id=""
+  local assembly_task_id=""
+  local assembly_applied=0
+  local assembly_stela_present=0
+  local assembly_scaffold_present=0
 
   local arg
   for arg in "$@"; do
@@ -423,6 +543,18 @@ bundle_run() {
       --intent=*)
         intent_token="${arg#--intent=}"
         [[ -n "$intent_token" ]] || die "--intent requires a value"
+        ;;
+      --agent-id=*)
+        assembly_agent_id="${arg#--agent-id=}"
+        [[ -n "$assembly_agent_id" ]] || die "--agent-id requires a value"
+        ;;
+      --skill-id=*)
+        assembly_skill_id="${arg#--skill-id=}"
+        [[ -n "$assembly_skill_id" ]] || die "--skill-id requires a value"
+        ;;
+      --task-id=*)
+        assembly_task_id="${arg#--task-id=}"
+        [[ -n "$assembly_task_id" ]] || die "--task-id requires a value"
         ;;
       -h|--help)
         bundle_usage
@@ -465,6 +597,38 @@ bundle_run() {
   if [[ -n "$project_name" && ! "$project_name" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]]; then
     die "project name must match ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"
   fi
+
+  if [[ -n "$assembly_agent_id" || -n "$assembly_skill_id" || -n "$assembly_task_id" ]]; then
+    if [[ -z "$assembly_agent_id" || -z "$assembly_skill_id" || -z "$assembly_task_id" ]]; then
+      die "assembly validation requires all ATS flags together: --agent-id, --skill-id, --task-id"
+    fi
+    assembly_applied=1
+  fi
+
+  if (( assembly_applied )); then
+    if [[ ! "$assembly_agent_id" =~ $ASSEMBLY_AGENT_ID_PATTERN ]]; then
+      die "assembly validation failed: agent_id '${assembly_agent_id}' does not match pattern '${ASSEMBLY_AGENT_ID_PATTERN}'"
+    fi
+    if [[ ! "$assembly_skill_id" =~ $ASSEMBLY_SKILL_ID_PATTERN ]]; then
+      die "assembly validation failed: skill_id '${assembly_skill_id}' does not match pattern '${ASSEMBLY_SKILL_ID_PATTERN}'"
+    fi
+    if [[ ! "$assembly_task_id" =~ $ASSEMBLY_TASK_ID_PATTERN ]]; then
+      die "assembly validation failed: task_id '${assembly_task_id}' does not match pattern '${ASSEMBLY_TASK_ID_PATTERN}'"
+    fi
+
+    if ! bundle_registry_has_id "$ASSEMBLY_REGISTRY_AGENTS_PATH" "$assembly_agent_id"; then
+      die "assembly validation failed: unknown agent_id '${assembly_agent_id}' in ${ASSEMBLY_REGISTRY_AGENTS_PATH}"
+    fi
+    if ! bundle_registry_has_id "$ASSEMBLY_REGISTRY_SKILLS_PATH" "$assembly_skill_id"; then
+      die "assembly validation failed: unknown skill_id '${assembly_skill_id}' in ${ASSEMBLY_REGISTRY_SKILLS_PATH}"
+    fi
+    if ! bundle_registry_has_id "$ASSEMBLY_REGISTRY_TASKS_PATH" "$assembly_task_id"; then
+      die "assembly validation failed: unknown task_id '${assembly_task_id}' in ${ASSEMBLY_REGISTRY_TASKS_PATH}"
+    fi
+  fi
+
+  [[ -f "${REPO_ROOT}/${ASSEMBLY_ADVISORY_STELA_PATH}" ]] && assembly_stela_present=1
+  [[ -f "${REPO_ROOT}/${ASSEMBLY_ADVISORY_SCAFFOLD_PATH}" ]] && assembly_scaffold_present=1
 
   local branch
   local head_short
@@ -641,6 +805,19 @@ bundle_run() {
     echo "- Contract source: ops/src/stances/*.md.tpl"
     echo "- Stance template key: ${stance_template_key}"
     echo
+    echo "[ASSEMBLY]"
+    echo "- Applied: $([[ "$assembly_applied" == "1" ]] && echo true || echo false)"
+    echo "- Schema version: ${ASSEMBLY_SCHEMA_VERSION}"
+    if (( assembly_applied )); then
+      echo "- agent_id: ${assembly_agent_id}"
+      echo "- skill_id: ${assembly_skill_id}"
+      echo "- task_id: ${assembly_task_id}"
+      echo "- validated against: ${ASSEMBLY_REGISTRY_AGENTS_PATH}, ${ASSEMBLY_REGISTRY_SKILLS_PATH}, ${ASSEMBLY_REGISTRY_TASKS_PATH}"
+    fi
+    echo "- advisory mode: ${ASSEMBLY_ADVISORY_MODE}"
+    echo "- advisory input stela present: $([[ "$assembly_stela_present" == "1" ]] && echo true || echo false)"
+    echo "- advisory input scaffold present: $([[ "$assembly_scaffold_present" == "1" ]] && echo true || echo false)"
+    echo
     if ! bundle_profile_handoff_omitted "$resolved_profile"; then
       echo "[HANDOFF]"
       echo "- ${topic_rel}: $([[ "$topic_present" == "1" ]] && echo present || echo missing)"
@@ -739,6 +916,37 @@ bundle_run() {
     echo "  },"
     echo "  \"stance\": {"
     echo "    \"stance_template_key\": \"$(bundle_json_escape "$stance_template_key")\""
+    echo "  },"
+    echo "  \"assembly\": {"
+    echo "    \"applied\": $(bundle_bool "$assembly_applied"),"
+    echo "    \"schema_version\": \"$(bundle_json_escape "$ASSEMBLY_SCHEMA_VERSION")\","
+    echo "    \"policy_manifest\": \"$(bundle_json_escape "$BUNDLE_ASSEMBLY_POLICY_MANIFEST")\","
+    if (( assembly_applied )); then
+      echo "    \"agent_id\": \"$(bundle_json_escape "$assembly_agent_id")\","
+      echo "    \"skill_id\": \"$(bundle_json_escape "$assembly_skill_id")\","
+      echo "    \"task_id\": \"$(bundle_json_escape "$assembly_task_id")\","
+    else
+      echo "    \"agent_id\": null,"
+      echo "    \"skill_id\": null,"
+      echo "    \"task_id\": null,"
+    fi
+    echo "    \"validated_against\": {"
+    echo "      \"agents\": \"$(bundle_json_escape "$ASSEMBLY_REGISTRY_AGENTS_PATH")\","
+    echo "      \"skills\": \"$(bundle_json_escape "$ASSEMBLY_REGISTRY_SKILLS_PATH")\","
+    echo "      \"tasks\": \"$(bundle_json_escape "$ASSEMBLY_REGISTRY_TASKS_PATH")\""
+    echo "    },"
+    echo "    \"advisory_inputs\": {"
+    echo "      \"mode\": \"$(bundle_json_escape "$ASSEMBLY_ADVISORY_MODE")\","
+    echo "      \"minimum_clean_cycles\": \"$(bundle_json_escape "$ASSEMBLY_ADVISORY_MINIMUM_CLEAN_CYCLES")\","
+    echo "      \"stela\": {"
+    echo "        \"path\": \"$(bundle_json_escape "$ASSEMBLY_ADVISORY_STELA_PATH")\","
+    echo "        \"present\": $(bundle_bool "$assembly_stela_present")"
+    echo "      },"
+    echo "      \"scaffold\": {"
+    echo "        \"path\": \"$(bundle_json_escape "$ASSEMBLY_ADVISORY_SCAFFOLD_PATH")\","
+    echo "        \"present\": $(bundle_bool "$assembly_scaffold_present")"
+    echo "      }"
+    echo "    }"
     echo "  },"
     echo "  \"topic\": {"
     echo "    \"path\": \"$(bundle_json_escape "$topic_rel")\"," 

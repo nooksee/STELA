@@ -142,6 +142,20 @@ assert_manifest_has() {
   fi
 }
 
+registry_first_id() {
+  local registry_rel="$1"
+  awk -F'|' '
+    /^\|[[:space:]]*[^|]+[[:space:]]*\|/ {
+      id=$2
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", id)
+      if (id != "" && id != "ID" && id !~ /^-+$/) {
+        print id
+        exit
+      }
+    }
+  ' "${REPO_ROOT}/${registry_rel}"
+}
+
 track_bundle_outputs() {
   local artifact_path
   local manifest_path
@@ -536,6 +550,106 @@ test_manifest_fail_closed() {
   rm -f "$backup_path"
 }
 
+test_ats_partial_flags_fail() {
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --agent-id=R-AGENT-01 --out=auto
+  if (( RUN_STATUS == 0 )); then
+    fail "ATS partial flags should fail"
+  fi
+  if ! printf '%s\n' "$RUN_OUTPUT" | grep -Fq 'assembly validation requires all ATS flags together'; then
+    fail "ATS partial flags failure message mismatch"
+  fi
+}
+
+test_ats_unknown_ids_fail() {
+  local known_agent_id
+  local known_skill_id
+  local known_task_id
+  known_agent_id="$(registry_first_id "docs/ops/registry/agents.md")"
+  known_skill_id="$(registry_first_id "docs/ops/registry/skills.md")"
+  known_task_id="$(registry_first_id "docs/ops/registry/tasks.md")"
+  if [[ -z "$known_agent_id" || -z "$known_skill_id" || -z "$known_task_id" ]]; then
+    fail "unable to resolve canonical ATS IDs from registries for negative tests"
+    return
+  fi
+
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --agent-id=R-AGENT-99 --skill-id="$known_skill_id" --task-id="$known_task_id" --out=auto
+  if (( RUN_STATUS == 0 )); then
+    fail "unknown agent_id should fail"
+  fi
+  if ! printf '%s\n' "$RUN_OUTPUT" | grep -Fq "unknown agent_id 'R-AGENT-99'"; then
+    fail "unknown agent_id failure message mismatch"
+  fi
+
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --agent-id="$known_agent_id" --skill-id=S-LEARN-99 --task-id="$known_task_id" --out=auto
+  if (( RUN_STATUS == 0 )); then
+    fail "unknown skill_id should fail"
+  fi
+  if ! printf '%s\n' "$RUN_OUTPUT" | grep -Fq "unknown skill_id 'S-LEARN-99'"; then
+    fail "unknown skill_id failure message mismatch"
+  fi
+
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --agent-id="$known_agent_id" --skill-id="$known_skill_id" --task-id=B-TASK-99 --out=auto
+  if (( RUN_STATUS == 0 )); then
+    fail "unknown task_id should fail"
+  fi
+  if ! printf '%s\n' "$RUN_OUTPUT" | grep -Fq "unknown task_id 'B-TASK-99'"; then
+    fail "unknown task_id failure message mismatch"
+  fi
+}
+
+test_ats_valid_triplet() {
+  local known_agent_id
+  local known_skill_id
+  local known_task_id
+  local manifest_agent_id
+  local manifest_skill_id
+  local manifest_task_id
+  local policy_manifest_path
+
+  known_agent_id="$(registry_first_id "docs/ops/registry/agents.md")"
+  known_skill_id="$(registry_first_id "docs/ops/registry/skills.md")"
+  known_task_id="$(registry_first_id "docs/ops/registry/tasks.md")"
+  if [[ -z "$known_agent_id" || -z "$known_skill_id" || -z "$known_task_id" ]]; then
+    fail "unable to resolve canonical ATS IDs from registries for positive test"
+    return
+  fi
+  policy_manifest_path="$(policy_scalar assembly_policy_manifest)"
+  if [[ -z "$policy_manifest_path" ]]; then
+    fail "bundle policy missing assembly_policy_manifest key"
+    return
+  fi
+
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --agent-id="$known_agent_id" --skill-id="$known_skill_id" --task-id="$known_task_id" --out=auto
+  if (( RUN_STATUS != 0 )); then
+    fail "valid ATS triplet path failed"
+    echo "$RUN_OUTPUT" >&2
+    return
+  fi
+
+  track_bundle_outputs
+  [[ -n "$LAST_MANIFEST" ]] || return
+
+  manifest_agent_id="$(extract_manifest_value "$LAST_MANIFEST" "agent_id")"
+  manifest_skill_id="$(extract_manifest_value "$LAST_MANIFEST" "skill_id")"
+  manifest_task_id="$(extract_manifest_value "$LAST_MANIFEST" "task_id")"
+  if [[ "$manifest_agent_id" != "$known_agent_id" ]]; then
+    fail "ATS manifest agent_id mismatch: expected ${known_agent_id}, got ${manifest_agent_id}"
+  fi
+  if [[ "$manifest_skill_id" != "$known_skill_id" ]]; then
+    fail "ATS manifest skill_id mismatch: expected ${known_skill_id}, got ${manifest_skill_id}"
+  fi
+  if [[ "$manifest_task_id" != "$known_task_id" ]]; then
+    fail "ATS manifest task_id mismatch: expected ${known_task_id}, got ${manifest_task_id}"
+  fi
+
+  assert_manifest_has "$LAST_MANIFEST" '"assembly": {'
+  assert_manifest_has "$LAST_MANIFEST" '"applied": true'
+  assert_manifest_has "$LAST_MANIFEST" "\"policy_manifest\": \"${policy_manifest_path}\""
+  assert_manifest_has "$LAST_MANIFEST" "\"agents\": \"docs/ops/registry/agents.md\""
+  assert_manifest_has "$LAST_MANIFEST" "\"skills\": \"docs/ops/registry/skills.md\""
+  assert_manifest_has "$LAST_MANIFEST" "\"tasks\": \"docs/ops/registry/tasks.md\""
+}
+
 test_manifest_fail_closed
 test_stance_template_renderer
 test_valid_profiles
@@ -543,6 +657,9 @@ test_foreman_invalid_paths
 test_foreman_valid_path
 test_legacy_auditor_alias
 test_legacy_hygiene_alias
+test_ats_partial_flags_fail
+test_ats_unknown_ids_fail
+test_ats_valid_triplet
 
 if (( FAILURES > 0 )); then
   echo "FAIL: bundle smoke test detected ${FAILURES} issue(s)." >&2

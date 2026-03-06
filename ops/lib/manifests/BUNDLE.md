@@ -4,6 +4,7 @@
 ## Parse Contract
 `ops/lib/scripts/bundle.sh` reads this file before profile routing. Missing required keys or invalid values are fail-closed errors.
 Stance contract bodies are rendered from `ops/src/stances/*.md.tpl` through `ops/bin/manifest` stance keys.
+ATS schema policy is loaded from `ops/lib/manifests/ASSEMBLY.md` through the key `assembly_policy_manifest`.
 
 bundle_manifest_version=1
 supported_profiles=analyst,architect,audit,project,conform,foreman
@@ -35,7 +36,8 @@ artifact_prefix_project=PROJECT
 artifact_prefix_conform=CONFORM
 artifact_prefix_foreman=FOREMAN
 compatibility_legacy_bundle_prefix=BUNDLE
-compatibility_emit_legacy_bundle_artifacts=true
+compatibility_emit_legacy_bundle_artifacts=false
+assembly_policy_manifest=ops/lib/manifests/ASSEMBLY.md
 
 dump_scope_analyst=full
 dump_scope_architect=full

@@ -269,3 +269,7 @@ opt/_factory/agents/r-agent-03.md
 opt/_factory/agents/r-agent-04.md
 opt/_factory/agents/r-agent-05.md
 opt/_factory/agents/r-agent-06.md
+ops/lib/manifests/ASSEMBLY.md
+docs/ops/specs/manifests/assembly.md
+storage/handoff/CLOSING-DP-OPS-0162.md
+archives/surfaces/TASK-DP-OPS-0162-*.md
