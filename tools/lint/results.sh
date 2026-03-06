@@ -20,6 +20,14 @@ trim() {
   printf '%s' "$value"
 }
 
+normalize_field_value() {
+  local value="$1"
+  value="$(trim "$value")"
+  value="${value#\`}"
+  value="${value%\`}"
+  printf '%s' "$value"
+}
+
 sha256_file() {
   local path="$1"
   if command -v sha256sum >/dev/null 2>&1; then
@@ -158,6 +166,7 @@ failures=0
 checked=0
 hash_parity_skips=0
 narrative_scaffold_skips=0
+decision_coherence_skips=0
 
 for target in "${targets[@]}"; do
   if [[ ! -f "$target" ]]; then
@@ -222,6 +231,35 @@ for target in "${targets[@]}"; do
     fail "${rel_target}: Contractor Execution Narrative Decision Leaf subsection missing 'Decision Leaf:' line"
   fi
 
+  decision_required_line="$(grep -E '^Decision Required:' <<< "$narrative_block" | head -n 1 || true)"
+  decision_leaf_line="$(grep -E '^Decision Leaf:' <<< "$narrative_block" | head -n 1 || true)"
+  decision_required_value="$(normalize_field_value "${decision_required_line#Decision Required:}")"
+  decision_leaf_value="$(normalize_field_value "${decision_leaf_line#Decision Leaf:}")"
+  decision_coherence_error=""
+  case "$decision_required_value" in
+    Yes)
+      if [[ ! "$decision_leaf_value" =~ ^archives/decisions/RoR-[A-Za-z0-9._-]+\.md$ ]]; then
+        decision_coherence_error="Decision Required is 'Yes' but Decision Leaf is not a valid RoR path"
+      fi
+      ;;
+    No)
+      if [[ "$decision_leaf_value" != "None" ]]; then
+        decision_coherence_error="Decision Required is 'No' but Decision Leaf is not 'None'"
+      fi
+      ;;
+    *)
+      decision_coherence_error="Decision Required value must be exactly 'Yes' or 'No'"
+      ;;
+  esac
+
+  if [[ -n "$decision_coherence_error" ]]; then
+    if (( explicit_target || inferred_target )); then
+      fail "${rel_target}: ${decision_coherence_error} (found Decision Required='${decision_required_value}', Decision Leaf='${decision_leaf_value}')"
+    else
+      decision_coherence_skips=$((decision_coherence_skips + 1))
+    fi
+  fi
+
   if grep -Eiq "$forbidden_disposable_regex" "$target"; then
     fail "${rel_target}: contains forbidden disposable-artifact references"
   fi
@@ -268,6 +306,9 @@ if (( hash_parity_skips > 0 )); then
 fi
 if (( narrative_scaffold_skips > 0 )); then
   echo "NOTE: skipped scaffold-prose enforcement for ${narrative_scaffold_skips} historical receipt(s); pass an explicit path to enforce."
+fi
+if (( decision_coherence_skips > 0 )); then
+  echo "NOTE: skipped Decision Required/Decision Leaf coherence enforcement for ${decision_coherence_skips} historical receipt(s); pass an explicit path to enforce."
 fi
 
 echo "OK: RESULTS lint passed (${checked} file(s) checked)."

@@ -16,10 +16,10 @@ foreman_profile=foreman
 foreman_intent_form=ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>
 profile_alias_legacy_auditor_to=foreman
 profile_alias_legacy_hygiene_to=conform
-profile_alias_legacy_auditor_deprecation_status=active
-profile_alias_legacy_auditor_remove_after_dp=DP-OPS-0156
-profile_alias_legacy_hygiene_deprecation_status=active
-profile_alias_legacy_hygiene_remove_after_dp=DP-OPS-0156
+profile_alias_legacy_auditor_deprecation_status=sunset
+profile_alias_legacy_auditor_remove_after_dp=DP-OPS-0165
+profile_alias_legacy_hygiene_deprecation_status=sunset
+profile_alias_legacy_hygiene_remove_after_dp=DP-OPS-0165
 handoff_omit_profiles=audit,foreman
 
 stance_template_analyst=stance-analyst
@@ -64,8 +64,8 @@ Canonical addendum authorization profile is `foreman`.
 Legacy `auditor` remains accepted as a compatibility alias and resolves to `foreman`.
 Legacy `hygiene` remains accepted as a compatibility alias and resolves to `conform`.
 Alias routing values are loaded from `profile_alias_legacy_auditor_to` and `profile_alias_legacy_hygiene_to` at runtime.
-Legacy `auditor` alias deprecation status is `active`; removal target is `DP-OPS-0156`.
-Legacy `hygiene` alias deprecation status is `active`; removal target is `DP-OPS-0156`.
+Legacy `auditor` alias deprecation status is `sunset`; removal target is `DP-OPS-0165`.
+Legacy `hygiene` alias deprecation status is `sunset`; removal target is `DP-OPS-0165`.
 Legacy `BUNDLE-*` artifact names remain compatibility outputs during migration and are controlled by `compatibility_emit_legacy_bundle_artifacts`.
 Canonical front door is `ops/bin/bundle`.
 `ops/bin/meta` remains a project-only compatibility shim (`frontdoor_meta_mode=project_shim`).

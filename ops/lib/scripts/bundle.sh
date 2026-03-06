@@ -212,14 +212,8 @@ bundle_load_policy() {
   BUNDLE_PROFILE_ALIAS_BY_INPUT=()
   BUNDLE_PROFILE_ALIAS_BY_INPUT["auditor"]="$(bundle_policy_scalar profile_alias_legacy_auditor_to)"
   BUNDLE_PROFILE_ALIAS_BY_INPUT["hygiene"]="$(bundle_policy_scalar profile_alias_legacy_hygiene_to)"
-  if [[ -z "${BUNDLE_PROFILE_ALIAS_BY_INPUT[auditor]}" ]]; then
-    BUNDLE_PROFILE_ALIAS_BY_INPUT["auditor"]="$(bundle_policy_scalar profile_alias_auditor)"
-  fi
-  if [[ -z "${BUNDLE_PROFILE_ALIAS_BY_INPUT[hygiene]}" ]]; then
-    BUNDLE_PROFILE_ALIAS_BY_INPUT["hygiene"]="$(bundle_policy_scalar profile_alias_hygiene)"
-  fi
-  [[ -n "${BUNDLE_PROFILE_ALIAS_BY_INPUT[auditor]}" ]] || die "bundle policy missing required key: profile_alias_legacy_auditor_to (or legacy profile_alias_auditor)"
-  [[ -n "${BUNDLE_PROFILE_ALIAS_BY_INPUT[hygiene]}" ]] || die "bundle policy missing required key: profile_alias_legacy_hygiene_to (or legacy profile_alias_hygiene)"
+  [[ -n "${BUNDLE_PROFILE_ALIAS_BY_INPUT[auditor]}" ]] || die "bundle policy missing required key: profile_alias_legacy_auditor_to"
+  [[ -n "${BUNDLE_PROFILE_ALIAS_BY_INPUT[hygiene]}" ]] || die "bundle policy missing required key: profile_alias_legacy_hygiene_to"
   for profile in "${BUNDLE_PROFILE_ALIAS_BY_INPUT[@]}"; do
     bundle_profile_supported "$profile" || die "bundle policy alias target is unsupported: ${profile}"
   done
