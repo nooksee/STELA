@@ -54,11 +54,15 @@ Operational Mandate:
 
 
 System Failure States (Drift Triggers):
-| Failure Type | Definition | System Response |
-| :---- | :---- | :---- |
-| **Canon Drift** | Divergence between `PoT.md` and repo state. | **STOP WORK.** Reject PR. |
-| **Dirty State** | Uncommitted changes in `main`. | **STOP WORK.** Worker complaint/halt. |
-| **Ambiguity** | Instructions capable of multiple interpretations. | **STOP WORK.** Request clarification. |
+- Canon Drift:
+  Divergence between `PoT.md` and repo state.
+  System response: **STOP WORK.** Reject PR.
+- Dirty State:
+  Uncommitted changes in `main`.
+  System response: **STOP WORK.** Worker complaint and halt.
+- Ambiguity:
+  Instructions capable of multiple interpretations.
+  System response: **STOP WORK.** Request clarification.
 
 ## 3. Jurisdiction
 Scope: `ops/`, `docs/`, `opt/`, `projects/`, `tools/`, `.github/`, and root governance surfaces.

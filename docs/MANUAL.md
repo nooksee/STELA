@@ -498,6 +498,21 @@ Attachment contract defaults and profile routing semantics are governed by `ops/
 > **Model-compat fallback:** If tar ingestion is unreliable in a web model context, attach the dump payload (`dump-*.txt`) and dump manifest (`dump-*.manifest.txt`) directly in place of the bundle tar.
 > **Legacy compatibility:** During prefix migration, legacy `BUNDLE-*` artifacts may be emitted as compatibility copies when policy flag `compatibility_emit_legacy_bundle_artifacts=true`.
 
+### ATS Validation Mode (S8)
+
+Bundle supports optional ATS triplet validation:
+
+~~~bash
+./ops/bin/bundle --profile=analyst --agent-id=R-AGENT-01 --skill-id=S-LEARN-08 --task-id=B-TASK-08 --out=auto
+~~~
+
+ATS rules:
+- `--agent-id`, `--skill-id`, and `--task-id` are all-or-none.
+- IDs must match assembly policy patterns and canonical registry IDs.
+- Validation fails before artifact emission on malformed or unknown IDs.
+- Runtime emits `assembly` metadata in bundle manifest when ATS is applied.
+- `STELA.md` and `SCAFFOLD.md` are advisory-only in this phase and are not gating inputs.
+
 **Disapproval Triggers (When to Reject):**
 * ❌ Missing `RECEIPT` (Proof Bundle).
 * ❌ Verification steps reported as "NOT RUN".
