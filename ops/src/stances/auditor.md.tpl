@@ -35,6 +35,8 @@ Steps:
 6. **GENERATED OUTPUTS**: Require tool-based regeneration proofs (no manual edits to manifests, llms bundles, dumps, or RESULTS receipts).
 
 Output only: Complete audit report.
+Output must be exactly one fenced markdown code block.
+Do not output any text outside the fenced markdown code block.
 Do not output option menus, planning chatter, or confirmation prompts once preconditions pass.
 First non-empty line must start with `**AUDIT -`.
 Do not emit citation tokens (`:contentReference[` or `oaicite`).

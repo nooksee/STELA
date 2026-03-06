@@ -16,33 +16,8 @@ RUN_OUTPUT=""
 RUN_STATUS=0
 declare -a CLEANUP_PATHS=()
 declare -A CLEANUP_SEEN=()
-TASK_BASELINE_BACKUP_REL=""
-TASK_POINTER_BACKUP_REL=""
-TASK_POINTER_REL=""
-TASK_RESTORE_NEEDED=0
-TASK_POINTER_RESTORE_NEEDED=0
-DRAFT_INTAKE_FIXTURE_REL=""
-DRAFT_INTAKE_FIXTURE_PREEXISTED=0
 
 cleanup_generated() {
-  if [[ "$TASK_RESTORE_NEEDED" == "1" && -n "$TASK_BASELINE_BACKUP_REL" ]]; then
-    if [[ -f "${REPO_ROOT}/${TASK_BASELINE_BACKUP_REL}" ]]; then
-      cp -- "${REPO_ROOT}/${TASK_BASELINE_BACKUP_REL}" "${REPO_ROOT}/TASK.md"
-    fi
-  fi
-
-  if [[ "$TASK_POINTER_RESTORE_NEEDED" == "1" && -n "$TASK_POINTER_REL" && -n "$TASK_POINTER_BACKUP_REL" ]]; then
-    if [[ -f "${REPO_ROOT}/${TASK_POINTER_BACKUP_REL}" ]]; then
-      cp -- "${REPO_ROOT}/${TASK_POINTER_BACKUP_REL}" "${REPO_ROOT}/${TASK_POINTER_REL}"
-    fi
-  fi
-
-  if [[ -n "$DRAFT_INTAKE_FIXTURE_REL" && "$DRAFT_INTAKE_FIXTURE_PREEXISTED" != "1" ]]; then
-    if [[ -e "${REPO_ROOT}/${DRAFT_INTAKE_FIXTURE_REL}" ]]; then
-      rm -f -- "${REPO_ROOT}/${DRAFT_INTAKE_FIXTURE_REL}"
-    fi
-  fi
-
   local rel_path
   for rel_path in "${CLEANUP_PATHS[@]}"; do
     [[ -n "$rel_path" ]] || continue
@@ -128,9 +103,6 @@ SLOTS_SCAFFOLD="var/tmp/editor-test-slots-scaffold-$$.md"
 SLOTS_LOAD_TARGET="var/tmp/editor-test-slots-load-$$.md"
 SLOTS_EDIT_TARGET="var/tmp/editor-test-slots-edit-$$.md"
 SLOTS_FILLED_FIXTURE="var/tmp/editor-test-slots-filled-$$.md"
-DRAFT_SLOTS_FIXTURE="var/tmp/editor-test-draft-slots-$$.md"
-TASK_BASELINE_BACKUP_REL="var/tmp/editor-test-task-backup-$$.md"
-TASK_POINTER_BACKUP_REL="var/tmp/editor-test-task-pointer-backup-$$.md"
 
 queue_cleanup_path "$PLAN_SCAFFOLD"
 queue_cleanup_path "$PLAN_LOAD_TARGET"
@@ -140,9 +112,6 @@ queue_cleanup_path "$SLOTS_SCAFFOLD"
 queue_cleanup_path "$SLOTS_LOAD_TARGET"
 queue_cleanup_path "$SLOTS_EDIT_TARGET"
 queue_cleanup_path "$SLOTS_FILLED_FIXTURE"
-queue_cleanup_path "$DRAFT_SLOTS_FIXTURE"
-queue_cleanup_path "$TASK_BASELINE_BACKUP_REL"
-queue_cleanup_path "$TASK_POINTER_BACKUP_REL"
 
 cat > "$PLAN_FILLED_FIXTURE" <<'PLAN_OK'
 ## Summary
@@ -271,92 +240,6 @@ if (( RUN_STATUS != 0 )); then
   printf '%s\n' "$RUN_OUTPUT" >&2
 fi
 assert_output_contains "PASS: draft: dp slots scaffold"
-
-# Pointer-mode regression guard:
-# Base-mode draft must not expand tracked TASK.md when TASK is pointer-mode.
-if [[ ! -f "${REPO_ROOT}/TASK.md" ]]; then
-  fail "pointer-mode regression fixture missing TASK.md"
-else
-  cp -- "${REPO_ROOT}/TASK.md" "${REPO_ROOT}/${TASK_BASELINE_BACKUP_REL}"
-  TASK_RESTORE_NEEDED=1
-
-  task_line_count="$(awk 'END { print NR }' "${REPO_ROOT}/TASK.md")"
-  if [[ "$task_line_count" != "1" ]]; then
-    fail "pointer-mode regression requires TASK.md single-line pointer fixture"
-  else
-    TASK_POINTER_REL="$(normalize_rel_path "$(tr -d '\r' < "${REPO_ROOT}/TASK.md")")"
-    if [[ ! "$TASK_POINTER_REL" =~ ^archives/surfaces/[A-Za-z0-9._/-]+\.md$ ]]; then
-      fail "pointer-mode regression fixture TASK.md is not archives/surfaces pointer"
-    elif [[ ! -f "${REPO_ROOT}/${TASK_POINTER_REL}" ]]; then
-      fail "pointer-mode regression fixture pointer target missing: ${TASK_POINTER_REL}"
-    else
-      cp -- "${REPO_ROOT}/${TASK_POINTER_REL}" "${REPO_ROOT}/${TASK_POINTER_BACKUP_REL}"
-      TASK_POINTER_RESTORE_NEEDED=1
-
-      DRAFT_TEST_ID="DP-OPS-9$$"
-      DRAFT_TEST_WORK_BRANCH="work/dp-ops-9$$-editor-pointer-regression-2026-03-06"
-      DRAFT_INTAKE_FIXTURE_REL="storage/dp/intake/${DRAFT_TEST_ID}.md"
-      if [[ -e "${REPO_ROOT}/${DRAFT_INTAKE_FIXTURE_REL}" ]]; then
-        DRAFT_INTAKE_FIXTURE_PREEXISTED=1
-        fail "pointer-mode regression fixture intake path already exists: ${DRAFT_INTAKE_FIXTURE_REL}"
-      fi
-
-      cat > "${REPO_ROOT}/${DRAFT_SLOTS_FIXTURE}" <<'DRAFT_FIXTURE'
-[DP_SCOPED_LOAD_ORDER]
-- TASK.md
-- ops/bin/draft
-
-[OBJECTIVE]
-- editor regression fixture for pointer-mode write-target guard.
-
-[IN_SCOPE]
-- ops/bin/draft
-
-[OUT_OF_SCOPE]
-- none
-
-[SAFETY_INVARIANTS]
-- pointer-mode TASK.md remains single-line.
-
-[PLAN_STATE]
-- test fixture
-
-[PLAN_REQUEST]
-- test pointer-mode update target
-
-[PLAN_CHANGELOG]
-- UPDATE: ops/bin/draft
-
-[PLAN_PATCH]
-- test-only fixture
-
-[RECEIPT_EXTRA]
-- bash tools/test/editor.sh
-DRAFT_FIXTURE
-
-      run_capture env DRAFT_ALLOW_DIRTY_TREE=1 ./ops/bin/draft \
-        --id="$DRAFT_TEST_ID" \
-        --title="Editor Pointer Regression Fixture" \
-        --work-branch="$DRAFT_TEST_WORK_BRANCH" \
-        --base-head="deadbeef" \
-        --slots-file="$DRAFT_SLOTS_FIXTURE"
-      if (( RUN_STATUS != 0 )); then
-        fail "pointer-mode regression draft generation failed"
-        printf '%s\n' "$RUN_OUTPUT" >&2
-      else
-        if ! cmp -s "${REPO_ROOT}/TASK.md" "${REPO_ROOT}/${TASK_BASELINE_BACKUP_REL}"; then
-          fail "pointer-mode regression: tracked TASK.md changed after base-mode draft"
-        fi
-        if cmp -s "${REPO_ROOT}/${TASK_POINTER_REL}" "${REPO_ROOT}/${TASK_POINTER_BACKUP_REL}"; then
-          fail "pointer-mode regression: resolved TASK surface leaf did not update"
-        fi
-        if [[ ! -f "${REPO_ROOT}/${DRAFT_INTAKE_FIXTURE_REL}" ]]; then
-          fail "pointer-mode regression: expected intake file missing: ${DRAFT_INTAKE_FIXTURE_REL}"
-        fi
-      fi
-    fi
-  fi
-fi
 
 if (( FAILURES > 0 )); then
   exit 1

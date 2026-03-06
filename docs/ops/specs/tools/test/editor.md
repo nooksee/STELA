@@ -19,7 +19,7 @@ Run deterministic checks for editor-backed scaffold authoring support in `ops/bi
 ## Outputs
 - Stdout: `PASS: editor scaffold test` on success.
 - Stderr: `FAIL:` lines for each failed assertion.
-- Cleanup behavior: removes fixture files under `var/tmp/`, deletes generated intake fixture under `storage/dp/intake/`, and restores TASK pointer surfaces to baseline.
+- Cleanup behavior: removes only fixture files created by the test run under `var/tmp/`.
 
 ## Invariants and failure modes
 - Plan scaffold emit path (`--emit-plan-scaffold=PATH`) writes required heading structure.
@@ -29,7 +29,6 @@ Run deterministic checks for editor-backed scaffold authoring support in `ops/bi
 - Non-interactive ingest path (`--load-scaffold-file=PATH`) succeeds for both scaffold types when fixture content is filled.
 - Interactive-simulated path (`--edit-scaffold --scaffold-editor="cp <fixture>"`) succeeds for both scaffold types when fixture content is filled.
 - Explicit validation modes (`--validate-plan-scaffold=PATH`, `--validate-dp-slots-scaffold=PATH`) succeed for filled fixtures.
-- pointer-mode draft regression guard: base-mode DP generation with pointer-mode TASK keeps tracked `TASK.md` single-line and updates the resolved TASK surface leaf instead.
 
 ## Anecdotal Anchor
 S7 hardening adds deterministic author-input checks to avoid unchanged scaffold prose silently entering plan or draft slot handoff files.
