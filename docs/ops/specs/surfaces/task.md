@@ -35,6 +35,7 @@ Think of `TASK.md` like the control desk card that shows which packet is active 
 - Standard generation flow is `./ops/bin/open` then `./ops/bin/draft`.
 - Manual edits after generation are limited to slot content only; structural heading/label edits are prohibited.
 - `tools/lint/dp.sh` enforces canonical template hash and normalized structure-hash parity.
+- pointer-first invariant: when `TASK.md` is single-line pointer-mode, generation tooling updates the resolved TASK surface leaf and does not expand tracked `TASK.md` into inline DP body text.
 
 ## §3.5.1 Mandatory Closing Sidecar Schema Contract
 
