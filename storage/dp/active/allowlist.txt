@@ -273,3 +273,9 @@ ops/lib/manifests/ASSEMBLY.md
 docs/ops/specs/manifests/assembly.md
 storage/handoff/CLOSING-DP-OPS-0162.md
 archives/surfaces/TASK-DP-OPS-0162-*.md
+ops/bin/draft
+docs/ops/specs/binaries/draft.md
+tools/test/editor.sh
+docs/ops/specs/tools/test/editor.md
+storage/handoff/CLOSING-DP-OPS-0161.md
+archives/surfaces/TASK-DP-OPS-0161-*.md

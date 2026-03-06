@@ -334,6 +334,23 @@ OPEN de-dup contract:
 ./ops/bin/draft --id=DP-OPS-0065 --title="Immutable workflow adoption" \
   --work-branch=work/dp-ops-0065-2026-02-14 --base-head=d3801c3a \
   --slots-file=storage/dp/intake/DP-OPS-0065.slots
+
+# Emit plan scaffold for analyst/architect authoring
+./ops/bin/draft --emit-plan-scaffold=var/tmp/plan-scaffold.md
+
+# Emit DP slots scaffold for sidecar authoring
+./ops/bin/draft --emit-dp-slots-scaffold=var/tmp/dp-slots-scaffold.md
+
+# Interactive scaffold edit (single target only)
+./ops/bin/draft --emit-plan-scaffold=var/tmp/plan-scaffold.md --edit-scaffold
+
+# Non-interactive scaffold ingest and validation
+./ops/bin/draft --emit-dp-slots-scaffold=var/tmp/dp-slots-scaffold.md \
+  --load-scaffold-file=var/tmp/dp-slots-filled.md
+
+# Explicit scaffold validation entrypoints
+./ops/bin/draft --validate-plan-scaffold=var/tmp/plan-scaffold.md
+./ops/bin/draft --validate-dp-slots-scaffold=var/tmp/dp-slots-scaffold.md
 ~~~
 
 ### Template Renderer
