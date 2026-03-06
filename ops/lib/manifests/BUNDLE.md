@@ -37,6 +37,10 @@ artifact_prefix_conform=CONFORM
 artifact_prefix_foreman=FOREMAN
 compatibility_legacy_bundle_prefix=BUNDLE
 compatibility_emit_legacy_bundle_artifacts=false
+frontdoor_canonical_binary=ops/bin/bundle
+frontdoor_meta_mode=project_shim
+frontdoor_meta_deprecation_status=not_scheduled
+frontdoor_meta_remove_after_dp=none
 assembly_policy_manifest=ops/lib/manifests/ASSEMBLY.md
 
 dump_scope_analyst=full
@@ -63,3 +67,6 @@ Alias routing values are loaded from `profile_alias_legacy_auditor_to` and `prof
 Legacy `auditor` alias deprecation status is `active`; removal target is `DP-OPS-0156`.
 Legacy `hygiene` alias deprecation status is `active`; removal target is `DP-OPS-0156`.
 Legacy `BUNDLE-*` artifact names remain compatibility outputs during migration and are controlled by `compatibility_emit_legacy_bundle_artifacts`.
+Canonical front door is `ops/bin/bundle`.
+`ops/bin/meta` remains a project-only compatibility shim (`frontdoor_meta_mode=project_shim`).
+Meta shim deprecation status is `not_scheduled`; removal target is `none`.

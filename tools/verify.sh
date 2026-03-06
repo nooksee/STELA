@@ -272,6 +272,17 @@ if [[ -d "projects" ]]; then
 fi
 
 # 5. Deterministic test suite checks
+if [[ ! -f "ops/lib/manifests/BUNDLE.md" ]]; then
+  fail "Missing required bundle policy manifest: ops/lib/manifests/BUNDLE.md"
+else
+  if ! grep -Fq "frontdoor_canonical_binary=ops/bin/bundle" "ops/lib/manifests/BUNDLE.md"; then
+    fail "Bundle policy missing canonical front-door declaration"
+  fi
+  if ! grep -Fq "frontdoor_meta_mode=project_shim" "ops/lib/manifests/BUNDLE.md"; then
+    fail "Bundle policy missing meta shim mode declaration"
+  fi
+fi
+
 if [[ ! -f "tools/test/bundle.sh" ]]; then
   fail "Missing required test script: tools/test/bundle.sh"
 elif ! bash tools/test/bundle.sh; then

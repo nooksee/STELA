@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+BUNDLE_POLICY_REL="ops/lib/manifests/BUNDLE.md"
 # shellcheck source=/dev/null
 source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 
@@ -11,8 +12,28 @@ if ! repo_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
 fi
 
 if [[ "$(pwd -P)" != "$REPO_ROOT" ]]; then
-  die "Run from repo root: $REPO_ROOT"
+  die "Run from repo root."
 fi
+
+policy_scalar() {
+  local key="$1"
+  awk -F'=' -v key="$key" '$1==key { print substr($0, index($0, "=") + 1); exit }' \
+    "${REPO_ROOT}/${BUNDLE_POLICY_REL}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'
+}
+
+require_policy_value() {
+  local key="$1"
+  local expected="$2"
+  local actual
+
+  actual="$(policy_scalar "$key")"
+  if [[ -z "$actual" ]]; then
+    die "bundle policy missing required key: ${key}"
+  fi
+  if [[ "$actual" != "$expected" ]]; then
+    die "bundle policy key ${key} must be '${expected}'"
+  fi
+}
 
 project_name="${1:-}"
 if [[ -z "$project_name" ]]; then
@@ -20,6 +41,19 @@ if [[ -z "$project_name" ]]; then
 fi
 if [[ $# -ne 1 ]]; then
   die "usage: ops/bin/meta <project-name>"
+fi
+if [[ ! "$project_name" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]]; then
+  die "project name must match ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"
+fi
+
+require_policy_value "frontdoor_canonical_binary" "ops/bin/bundle"
+require_policy_value "frontdoor_meta_mode" "project_shim"
+
+if [[ -z "$(policy_scalar "frontdoor_meta_deprecation_status")" ]]; then
+  die "bundle policy missing required key: frontdoor_meta_deprecation_status"
+fi
+if [[ -z "$(policy_scalar "frontdoor_meta_remove_after_dp")" ]]; then
+  die "bundle policy missing required key: frontdoor_meta_remove_after_dp"
 fi
 
 project_dir="$repo_root/projects/$project_name"
