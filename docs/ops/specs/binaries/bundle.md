@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/bin/bundle` is the deterministic transport primitive for workflow intake. It unifies OPEN freshness metadata, dump pointers, stance contract text, and route metadata into one portable contract so operator handoffs do not depend on manual copy or ad hoc artifact selection.
+`ops/bin/bundle` is the deterministic transport primitive and canonical front door for workflow intake. It unifies OPEN freshness metadata, dump pointers, stance contract text, and route metadata into one portable contract so operator handoffs do not depend on manual copy or ad hoc artifact selection.
 
 ## Mechanics and Sequencing
 Public interface:
@@ -34,6 +34,16 @@ Policy source:
    - `profile_alias_legacy_auditor_remove_after_dp`
    - `profile_alias_legacy_hygiene_deprecation_status`
    - `profile_alias_legacy_hygiene_remove_after_dp`
+8. Front-door policy is resolved from manifest keys:
+   - `frontdoor_canonical_binary`
+   - `frontdoor_meta_mode`
+   - `frontdoor_meta_deprecation_status`
+   - `frontdoor_meta_remove_after_dp`
+
+Front-door contract:
+1. Canonical front door is `ops/bin/bundle`.
+2. `ops/bin/meta` is a project-only compatibility shim and must not contain independent routing logic.
+3. `ops/bin/meta` delegates to `ops/bin/bundle --profile=project --project=<name> --out=auto` only.
 
 Profile intent split:
 1. `audit` is the audit-verdict intake profile.

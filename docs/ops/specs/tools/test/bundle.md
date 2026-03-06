@@ -56,6 +56,11 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 - Non-ATS runs must not emit runtime assembly pointer artifacts:
   - `assembly.pointer.emitted: false`
   - `assembly.pointer.path: null`.
+- Meta shim contract must pass deterministic checks:
+  - missing project argument fails with explicit error.
+  - unknown project slug fails with explicit error.
+  - valid project slug succeeds and emits project-profile bundle artifacts through delegated bundle execution.
+  - delegated manifest confirms `resolved_profile: project` and `project` field parity.
 
 ## Anecdotal Anchor
 This test is the bundle contract tripwire: if routing, naming, or intent guards regress, the failure is immediate and deterministic.

@@ -230,6 +230,13 @@ registry_first_id() {
   ' "${REPO_ROOT}/${registry_rel}"
 }
 
+latest_project_manifest() {
+  local latest=""
+  latest="$(ls -1t "${REPO_ROOT}/storage/handoff"/PROJECT-*.manifest.json 2>/dev/null | head -n 1 || true)"
+  [[ -n "$latest" ]] || return 1
+  normalize_rel_path "$latest"
+}
+
 track_bundle_outputs() {
   local artifact_path
   local manifest_path
@@ -768,6 +775,116 @@ test_ats_valid_triplet() {
   fi
 }
 
+test_meta_shim() {
+  local fixture_slug="stela"
+  local fixture_dir="${REPO_ROOT}/projects/${fixture_slug}"
+  local fixture_readme="${fixture_dir}/README.md"
+  local fixture_dir_created=0
+  local fixture_readme_created=0
+  local project_manifest=""
+  local project_artifact=""
+  local project_package=""
+  local project_name=""
+  local resolved_profile=""
+  local route_reason=""
+  local dump_payload=""
+  local dump_manifest=""
+
+  if [[ ! -d "$fixture_dir" ]]; then
+    mkdir -p "$fixture_dir"
+    fixture_dir_created=1
+  fi
+  if [[ ! -f "$fixture_readme" ]]; then
+    printf '# %s\n' "$fixture_slug" > "$fixture_readme"
+    fixture_readme_created=1
+  fi
+
+  run_capture "${REPO_ROOT}/ops/bin/meta"
+  if (( RUN_STATUS == 0 )); then
+    fail "meta without project argument should fail"
+  fi
+  if ! printf '%s\n' "$RUN_OUTPUT" | grep -Fq 'project name is required'; then
+    fail "meta missing-argument failure message mismatch"
+  fi
+
+  run_capture "${REPO_ROOT}/ops/bin/meta" does-not-exist
+  if (( RUN_STATUS == 0 )); then
+    fail "meta with missing project should fail"
+  fi
+  if ! printf '%s\n' "$RUN_OUTPUT" | grep -Fq 'project not found: projects/does-not-exist'; then
+    fail "meta missing-project failure message mismatch"
+  fi
+
+  run_capture "${REPO_ROOT}/ops/bin/meta" "$fixture_slug"
+  if (( RUN_STATUS != 0 )); then
+    fail "meta shim failed for valid project fixture"
+    echo "$RUN_OUTPUT" >&2
+  else
+    if ! printf '%s\n' "$RUN_OUTPUT" | grep -Fq "project context generated: ${fixture_slug}"; then
+      fail "meta success output missing completion line"
+    fi
+
+    project_manifest="$(latest_project_manifest || true)"
+    if [[ -z "$project_manifest" ]]; then
+      fail "meta run did not produce a PROJECT manifest"
+    else
+      assert_file_exists "$project_manifest"
+      queue_cleanup_path "$project_manifest"
+
+      resolved_profile="$(extract_manifest_value "$project_manifest" "resolved_profile")"
+      if [[ "$resolved_profile" != "project" ]]; then
+        fail "meta shim delegated run resolved_profile mismatch: expected project, got ${resolved_profile}"
+      fi
+
+      project_name="$(extract_manifest_value "$project_manifest" "project")"
+      if [[ "$project_name" != "$fixture_slug" ]]; then
+        fail "meta shim delegated run project field mismatch: expected ${fixture_slug}, got ${project_name}"
+      fi
+
+      route_reason="$(extract_manifest_value "$project_manifest" "route_reason")"
+      if [[ "$route_reason" != "explicit profile" ]]; then
+        fail "meta shim delegated run route_reason mismatch: ${route_reason}"
+      fi
+
+      project_artifact="$(extract_manifest_value "$project_manifest" "bundle_path")"
+      if [[ -z "$project_artifact" ]]; then
+        fail "meta delegated manifest missing bundle_path"
+      else
+        assert_prefix "$project_artifact" "storage/handoff/PROJECT-"
+        assert_file_exists "$project_artifact"
+        queue_cleanup_path "$project_artifact"
+        project_package="${project_artifact%.txt}.tar"
+        assert_file_exists "$project_package"
+        queue_cleanup_path "$project_package"
+      fi
+
+      dump_payload="$(extract_manifest_value "$project_manifest" "payload_path")"
+      dump_manifest="$(extract_manifest_value "$project_manifest" "manifest_path")"
+      if [[ -n "$dump_payload" ]]; then
+        assert_file_exists "$dump_payload"
+        queue_cleanup_path "$dump_payload"
+      else
+        fail "meta delegated manifest missing dump payload_path"
+      fi
+      if [[ -n "$dump_manifest" ]]; then
+        assert_file_exists "$dump_manifest"
+        queue_cleanup_path "$dump_manifest"
+      else
+        fail "meta delegated manifest missing dump manifest_path"
+      fi
+
+      assert_dump_scope_matches_profile "$project_manifest" "project"
+    fi
+  fi
+
+  if (( fixture_readme_created )); then
+    rm -f -- "$fixture_readme"
+  fi
+  if (( fixture_dir_created )); then
+    rmdir "$fixture_dir" 2>/dev/null || true
+  fi
+}
+
 test_manifest_fail_closed
 test_stance_template_renderer
 test_valid_profiles
@@ -778,6 +895,7 @@ test_legacy_hygiene_alias
 test_ats_partial_flags_fail
 test_ats_unknown_ids_fail
 test_ats_valid_triplet
+test_meta_shim
 
 if (( FAILURES > 0 )); then
   echo "FAIL: bundle smoke test detected ${FAILURES} issue(s)." >&2
