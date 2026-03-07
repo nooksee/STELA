@@ -14,7 +14,7 @@ emit_binary_leaf "lint-response" "start"
 
 usage() {
   cat <<'USAGE'
-Usage: bash tools/lint/response.sh [--mode=dp|audit|architect] [--test] [path|-]
+Usage: bash tools/lint/response.sh [--mode=dp|audit|architect|analyst] [--test] [path|-]
 Default input: stdin
 Example: bash tools/lint/response.sh --mode=audit var/tmp/response-audit-valid.md
 USAGE
@@ -198,6 +198,80 @@ check_architect_body_scope() {
   fi
 }
 
+check_analyst_body_scope() {
+  local body_path="$1"
+  local first_content_line
+  local analyst_start_regex='^(##[[:space:]]+)?1[.)][[:space:]]+Analysis[[:space:]]+and[[:space:]]+Discussion'
+  local hit=""
+  local line_number=""
+  local line_text=""
+
+  first_content_line="$(awk 'NF { print; exit }' "$body_path")"
+  if [[ -z "$first_content_line" ]]; then
+    response_fail "analyst body is empty"
+    return 1
+  fi
+
+  if [[ ! "$first_content_line" =~ $analyst_start_regex ]]; then
+    response_fail "analyst body must start with '1. Analysis and Discussion'"
+    return 1
+  fi
+
+  hit="$(awk '
+    $0 ~ /^(##[[:space:]]+)?2[.)][[:space:]]+Strategic[[:space:]]+Options/ { printf "%d\t%s\n", NR, $0; exit }
+  ' "$body_path")"
+  if [[ -z "$hit" ]]; then
+    response_fail "analyst body must include section '2. Strategic Options'"
+  fi
+
+  hit="$(awk '
+    tolower($0) ~ /recommendation[[:space:]]*:/ || tolower($0) ~ /recommended[[:space:]]+option/ { printf "%d\t%s\n", NR, $0; exit }
+  ' "$body_path")"
+  if [[ -z "$hit" ]]; then
+    response_fail "analyst body must include an explicit recommendation line"
+  fi
+
+  hit="$(awk '
+    $0 ~ /^\*\*AUDIT[[:space:]]+[-—]/ { printf "%d\t%s\n", NR, $0; exit }
+  ' "$body_path")"
+  if [[ -n "$hit" ]]; then
+    IFS=$'\t' read -r line_number line_text <<< "$hit"
+    response_fail "analyst body must not contain audit verdict marker at line ${line_number}: ${line_text}"
+  fi
+
+  hit="$(awk '
+    $0 ~ /^##[[:space:]]+Contractor Execution Narrative$/ { printf "%d\t%s\n", NR, $0; exit }
+  ' "$body_path")"
+  if [[ -n "$hit" ]]; then
+    IFS=$'\t' read -r line_number line_text <<< "$hit"
+    response_fail "analyst body must not contain contractor narrative section at line ${line_number}: ${line_text}"
+  fi
+
+  hit="$(awk '
+    $0 ~ /^###[[:space:]]+(Preflight State|Implemented Changes|Closeout Notes|Decision Leaf)$/ { printf "%d\t%s\n", NR, $0; exit }
+  ' "$body_path")"
+  if [[ -n "$hit" ]]; then
+    IFS=$'\t' read -r line_number line_text <<< "$hit"
+    response_fail "analyst body must not contain receipt narrative subheading at line ${line_number}: ${line_text}"
+  fi
+
+  hit="$(awk '
+    tolower($0) ~ /decision[[:space:]]+required:/ || tolower($0) ~ /decision[[:space:]]+leaf:/ { printf "%d\t%s\n", NR, $0; exit }
+  ' "$body_path")"
+  if [[ -n "$hit" ]]; then
+    IFS=$'\t' read -r line_number line_text <<< "$hit"
+    response_fail "analyst body must not contain audit/foreman decision fields at line ${line_number}: ${line_text}"
+  fi
+
+  hit="$(awk '
+    index(tolower($0), "section 3.4.5") || index(tolower($0), "receipt_extra") || index(tolower($0), "ops/src/surfaces/dp.md.tpl") || index(tolower($0), "emit exactly one fenced markdown code block") || index(tolower($0), "do not output option menus") { printf "%d\t%s\n", NR, $0; exit }
+  ' "$body_path")"
+  if [[ -n "$hit" ]]; then
+    IFS=$'\t' read -r line_number line_text <<< "$hit"
+    response_fail "analyst body must not contain role-policy overcompensation prose at line ${line_number}: ${line_text}"
+  fi
+}
+
 check_drift_tokens() {
   local body_path="$1"
   local hit=""
@@ -296,6 +370,9 @@ lint_response_file() {
     extract_single_fenced_block "$input_path" "$body_tmp"
     check_dp_body_start "$body_tmp"
     check_architect_body_scope "$body_tmp"
+  elif [[ "$response_mode" == "analyst" ]]; then
+    extract_single_fenced_block "$input_path" "$body_tmp"
+    check_analyst_body_scope "$body_tmp"
   elif [[ "$response_mode" == "audit" ]]; then
     extract_single_fenced_block "$input_path" "$body_tmp"
     check_audit_body_start "$body_tmp"
@@ -337,6 +414,11 @@ run_test() {
   local response_architect_valid
   local response_architect_audit_marker
   local response_architect_narrative
+  local response_analyst_valid
+  local response_analyst_audit_marker
+  local response_analyst_narrative
+  local response_analyst_policy
+  local response_analyst_missing_sections
   local failures_local=0
   local saved_mode="$response_mode"
 
@@ -358,6 +440,11 @@ run_test() {
   response_architect_valid="${test_dir}/response-architect-valid.md"
   response_architect_audit_marker="${test_dir}/response-architect-audit-marker.md"
   response_architect_narrative="${test_dir}/response-architect-narrative.md"
+  response_analyst_valid="${test_dir}/response-analyst-valid.md"
+  response_analyst_audit_marker="${test_dir}/response-analyst-audit-marker.md"
+  response_analyst_narrative="${test_dir}/response-analyst-narrative.md"
+  response_analyst_policy="${test_dir}/response-analyst-policy.md"
+  response_analyst_missing_sections="${test_dir}/response-analyst-missing-sections.md"
 
   response_mode="dp"
   response_skip_dp_delegate=1
@@ -538,6 +625,79 @@ EOF_ARCH_NARRATIVE
     failures_local=1
   fi
 
+  response_mode="analyst"
+
+  cat > "$response_analyst_valid" <<'EOF_ANALYST_VALID'
+```markdown
+1. Analysis and Discussion (The Why and What)
+- Current implementation is stable.
+
+2. Strategic Options (The How)
+- Option A
+  - Pros: deterministic validation path
+  - Cons: moderate implementation effort
+  - Risk: low regression risk
+Recommendation: Option A
+```
+EOF_ANALYST_VALID
+  if ! lint_response_file "$response_analyst_valid" >/dev/null 2>&1; then
+    echo "FAIL: --test expected analyst response with required sections to pass" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_analyst_audit_marker" <<'EOF_ANALYST_AUDIT'
+```markdown
+1. Analysis and Discussion (The Why and What)
+**AUDIT - DP-OPS-9999**
+
+2. Strategic Options (The How)
+Recommendation: Option A
+```
+EOF_ANALYST_AUDIT
+  if lint_response_file "$response_analyst_audit_marker" >/dev/null 2>&1; then
+    echo "FAIL: --test expected analyst response with audit marker to fail" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_analyst_narrative" <<'EOF_ANALYST_NARRATIVE'
+```markdown
+1. Analysis and Discussion (The Why and What)
+## Contractor Execution Narrative
+
+2. Strategic Options (The How)
+Recommendation: Option A
+```
+EOF_ANALYST_NARRATIVE
+  if lint_response_file "$response_analyst_narrative" >/dev/null 2>&1; then
+    echo "FAIL: --test expected analyst response with contractor narrative to fail" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_analyst_policy" <<'EOF_ANALYST_POLICY'
+```markdown
+1. Analysis and Discussion (The Why and What)
+Section 3.4.5 requires RECEIPT_EXTRA policy wording.
+
+2. Strategic Options (The How)
+Recommendation: Option A
+```
+EOF_ANALYST_POLICY
+  if lint_response_file "$response_analyst_policy" >/dev/null 2>&1; then
+    echo "FAIL: --test expected analyst response with policy-overcompensation prose to fail" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_analyst_missing_sections" <<'EOF_ANALYST_MISSING'
+```markdown
+1. Analysis and Discussion (The Why and What)
+Recommendation: Option A
+```
+EOF_ANALYST_MISSING
+  if lint_response_file "$response_analyst_missing_sections" >/dev/null 2>&1; then
+    echo "FAIL: --test expected analyst response missing strategic options to fail" >&2
+    failures_local=1
+  fi
+
   response_mode="$saved_mode"
   response_skip_dp_delegate=0
 
@@ -557,7 +717,7 @@ while (($# > 0)); do
       shift
       if (($# == 0)); then
         usage >&2
-        response_fail "--mode requires one of: dp audit architect"
+        response_fail "--mode requires one of: dp audit architect analyst"
         exit 1
       fi
       response_mode="$1"
@@ -588,10 +748,10 @@ while (($# > 0)); do
 done
 
 case "$response_mode" in
-  dp|audit|architect) ;;
+  dp|audit|architect|analyst) ;;
   *)
     usage >&2
-    response_fail "invalid mode: ${response_mode}. Use dp, audit, or architect."
+    response_fail "invalid mode: ${response_mode}. Use dp, audit, architect, or analyst."
     exit 1
     ;;
 esac
