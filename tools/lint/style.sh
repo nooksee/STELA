@@ -303,6 +303,42 @@ check_architect_mode_contract() {
   fi
 }
 
+check_analyst_mode_contract() {
+  local stance_analyst="${REPO_ROOT}/ops/src/stances/analyst.md.tpl"
+  local required_fence='For machine-ingest analyst mode: emit exactly one fenced markdown code block.'
+  local required_no_outside='For machine-ingest analyst mode: emit no text before or after the fenced code block.'
+  local required_first='For machine-ingest analyst mode: first non-empty line inside the fenced body must start with `1. Analysis and Discussion`.'
+  local required_sections='For machine-ingest analyst mode: include `2. Strategic Options` section and a `Recommendation:` line.'
+  local required_no_audit='For machine-ingest analyst mode: do not emit audit verdict markers or Contractor Execution Narrative sections.'
+  local required_no_policy='For machine-ingest analyst mode: do not emit policy/lint instruction prose (for example `Section 3.4.5`, `RECEIPT_EXTRA`, or template-path directives).'
+
+  [[ -f "$stance_analyst" ]] || mark_failure "analyst.md.tpl missing for mode contract checks"
+
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_fence" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing analyst fenced-output line"
+  fi
+
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_no_outside" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing analyst no-outside-text line"
+  fi
+
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_first" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing analyst first-line marker line"
+  fi
+
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_sections" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing analyst required-sections line"
+  fi
+
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_no_audit" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing analyst no-audit-or-narrative line"
+  fi
+
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_no_policy" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing analyst no-policy-overcompensation line"
+  fi
+}
+
 check_open_marker_contract() {
   local open_binary="${REPO_ROOT}/ops/bin/open"
   local begin_marker='===== STELA OPEN PROMPT ====='
@@ -615,6 +651,7 @@ check_markdown_contractions
 check_jargon_blacklist
 check_audit_foreman_mode_split
 check_architect_mode_contract
+check_analyst_mode_contract
 check_open_marker_contract
 check_closing_block_lead_words
 check_closing_block_conversation_starter_question
