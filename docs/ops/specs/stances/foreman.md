@@ -19,6 +19,9 @@ Define the template-backed foreman stance body used for `foreman` profile bundle
 - Output contract requires exactly one fenced markdown code block.
 - Output contract requires no text before or after the fenced code block.
 - First non-empty line inside the fenced body must start with `### Addendum`.
+- For machine-ingest foreman mode, output must include addendum headings `## A.1 Authorization` through `## A.5 Addendum Receipt (Proofs to collect) - MUST RUN`.
+- For machine-ingest foreman mode, output must reject audit verdict markers and Contractor Execution Narrative sections.
+- For machine-ingest foreman mode, if `Decision Required:` and `Decision Leaf:` lines appear, values must be coherent (`Yes` with `archives/decisions/RoR-*.md`, `No` with `None`).
 
 ## Invariants and failure modes
 - Include expansion is strict and fail-closed.
