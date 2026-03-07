@@ -339,6 +339,42 @@ check_analyst_mode_contract() {
   fi
 }
 
+check_foreman_mode_contract() {
+  local stance_foreman="${REPO_ROOT}/ops/src/stances/foreman.md.tpl"
+  local required_fence='For machine-ingest foreman mode: emit exactly one fenced markdown code block.'
+  local required_no_outside='For machine-ingest foreman mode: emit no text before or after the fenced code block.'
+  local required_first='For machine-ingest foreman mode: first non-empty line inside the fenced body must start with `### Addendum`.'
+  local required_sections='For machine-ingest foreman mode: include addendum headings `## A.1 Authorization` through `## A.5 Addendum Receipt (Proofs to collect) - MUST RUN`.'
+  local required_no_audit='For machine-ingest foreman mode: do not emit audit verdict markers or Contractor Execution Narrative sections.'
+  local required_decision='For machine-ingest foreman mode: if `Decision Required:` and `Decision Leaf:` lines are present, values must be coherent (`Yes` with `archives/decisions/RoR-*.md`, `No` with `None`).'
+
+  [[ -f "$stance_foreman" ]] || mark_failure "foreman.md.tpl missing for mode contract checks"
+
+  if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_fence" "$stance_foreman"; then
+    mark_failure "foreman.md.tpl missing foreman fenced-output line"
+  fi
+
+  if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_no_outside" "$stance_foreman"; then
+    mark_failure "foreman.md.tpl missing foreman no-outside-text line"
+  fi
+
+  if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_first" "$stance_foreman"; then
+    mark_failure "foreman.md.tpl missing foreman first-line marker line"
+  fi
+
+  if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_sections" "$stance_foreman"; then
+    mark_failure "foreman.md.tpl missing foreman required-sections line"
+  fi
+
+  if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_no_audit" "$stance_foreman"; then
+    mark_failure "foreman.md.tpl missing foreman no-audit-or-narrative line"
+  fi
+
+  if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_decision" "$stance_foreman"; then
+    mark_failure "foreman.md.tpl missing foreman decision-coherence line"
+  fi
+}
+
 check_open_marker_contract() {
   local open_binary="${REPO_ROOT}/ops/bin/open"
   local begin_marker='===== STELA OPEN PROMPT ====='
@@ -652,6 +688,7 @@ check_jargon_blacklist
 check_audit_foreman_mode_split
 check_architect_mode_contract
 check_analyst_mode_contract
+check_foreman_mode_contract
 check_open_marker_contract
 check_closing_block_lead_words
 check_closing_block_conversation_starter_question
