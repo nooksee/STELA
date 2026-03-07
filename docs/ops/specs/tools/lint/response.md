@@ -42,6 +42,7 @@ Exit behavior:
 - FAIL: text outside fence.
 - FAIL: multiple fenced blocks.
 - FAIL: drift token present.
+- FAIL: citation token drift markers (`[cite_start]`, `[cite:`, `[/cite]`).
 - FAIL: non-DP body start (`dp` mode).
 - FAIL: plain audit body without fenced block (`audit` mode).
 - FAIL: audit preface text outside fence (`audit` mode).

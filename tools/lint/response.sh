@@ -16,6 +16,7 @@ usage() {
   cat <<'USAGE'
 Usage: bash tools/lint/response.sh [--mode=dp|audit] [--test] [path|-]
 Default input: stdin
+Example: bash tools/lint/response.sh --mode=audit var/tmp/response-audit-valid.md
 USAGE
 }
 
@@ -261,7 +262,7 @@ lint_response_file() {
     extract_single_fenced_block "$input_path" "$body_tmp"
     check_dp_body_start "$body_tmp"
   elif [[ "$response_mode" == "audit" ]]; then
-    extract_audit_body "$input_path" "$body_tmp"
+    extract_single_fenced_block "$input_path" "$body_tmp"
     check_audit_body_start "$body_tmp"
   else
     response_fail "unsupported lint mode: ${response_mode}"
