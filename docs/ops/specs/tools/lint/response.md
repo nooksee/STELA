@@ -9,7 +9,8 @@
 Modes:
 1. `bash tools/lint/response.sh --mode=dp [path|-]` (default mode, default input is stdin).
 2. `bash tools/lint/response.sh --mode=audit [path|-]`.
-3. `bash tools/lint/response.sh --test` (runs deterministic fixtures for both modes).
+3. `bash tools/lint/response.sh --mode=architect [path|-]`.
+4. `bash tools/lint/response.sh --test` (runs deterministic fixtures for supported modes).
 
 Deterministic checks:
 1. In `dp` mode, input must contain exactly one fenced markdown code block.
@@ -29,7 +30,12 @@ Deterministic checks:
    - `reading documents`
    - `running command`
 8. In `dp` mode, on envelope pass, delegate body validation to `bash tools/lint/dp.sh`.
-9. In `audit` mode, envelope, marker, and drift checks are authoritative.
+9. In `architect` mode, envelope and DP-start checks are required, plus role-drift rejection:
+   - reject audit-verdict marker lines (`**AUDIT -`),
+   - reject `## Contractor Execution Narrative`,
+   - reject receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`).
+10. In `architect` mode, on envelope pass, delegate body validation to `bash tools/lint/dp.sh`.
+11. In `audit` mode, envelope, marker, and drift checks are authoritative.
 
 Exit behavior:
 - Pass: prints `OK: response lint passed (mode=<dp|audit>)`.
@@ -39,6 +45,7 @@ Exit behavior:
 - PASS: `tools/lint/dp.sh --test` succeeds (delegate health check).
 - PASS: single fenced block with valid DP envelope (`dp` mode; delegate skipped in self-test fixture for determinism).
 - PASS: single fenced block with `**AUDIT -` marker (`audit` mode).
+- PASS: single fenced block with valid DP body (`architect` mode).
 - FAIL: text outside fence.
 - FAIL: multiple fenced blocks.
 - FAIL: drift token present.
@@ -49,11 +56,13 @@ Exit behavior:
 - FAIL: missing audit marker (`audit` mode).
 - FAIL: audit meta chatter token (`audit` mode).
 - FAIL: audit citation token (`audit` mode).
+- FAIL: architect response containing audit marker (`architect` mode).
+- FAIL: architect response containing Contractor Execution Narrative sections (`architect` mode).
 - FAIL: trailing text outside fence.
 
 ## Anecdotal Anchor
 DP drafting regressions showed repeated model output drift where correct content was wrapped with extra commentary or non-canonical fragments. Envelope gating isolates that class of failure at ingress.
 
 ## Integrity Filter Warnings
-`response.sh` is an ingress contract gate. In `dp` mode, structural DP validation remains authoritative in `tools/lint/dp.sh`. In `audit` mode, strict single-fence envelope checks plus marker and drift checks are the hard floor.
+`response.sh` is an ingress contract gate. In `dp` and `architect` modes, structural DP validation remains authoritative in `tools/lint/dp.sh` after envelope checks. In `audit` mode, strict single-fence envelope checks plus marker and drift checks are the hard floor.
 UI-level "thinking" or progress text shown by model hosts is not part of the response payload contract; the payload contract applies to the emitted response body only.

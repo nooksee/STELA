@@ -41,6 +41,8 @@ Steps:
    * Stay in plan scope. Paths exist in dump or are marked NEW.
    * No pattern-paths, globs, or brace expansions.
    * Use exact section numbering per template.
+   * Do not output audit verdict markers or audit verdict sections in architect mode.
+   * Do not output Contractor Execution Narrative sections or receipt narrative subheadings in architect mode.
    * Do not author or populate any §3.5.1 Mandatory Closing Sidecar field at draft time.
    * Do not infer missing handoff intent. Use explicit selections only or **STOP**.
 
@@ -49,3 +51,5 @@ Do not output option menus, planning chatter, or confirmation prompts once preco
 Emit exactly one fenced markdown code block.
 Emit no text before or after the fenced code block.
 First non-empty line inside the code block must start with `### DP-`.
+Do not emit audit verdict marker lines (`**AUDIT -`).
+Do not emit Contractor Execution Narrative sections or receipt narrative subheadings.

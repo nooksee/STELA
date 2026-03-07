@@ -14,7 +14,7 @@ emit_binary_leaf "lint-response" "start"
 
 usage() {
   cat <<'USAGE'
-Usage: bash tools/lint/response.sh [--mode=dp|audit] [--test] [path|-]
+Usage: bash tools/lint/response.sh [--mode=dp|audit|architect] [--test] [path|-]
 Default input: stdin
 Example: bash tools/lint/response.sh --mode=audit var/tmp/response-audit-valid.md
 USAGE
@@ -167,6 +167,37 @@ check_audit_body_start() {
   fi
 }
 
+check_architect_body_scope() {
+  local body_path="$1"
+  local hit=""
+  local line_number=""
+  local line_text=""
+
+  hit="$(awk '
+    $0 ~ /^\*\*AUDIT[[:space:]]+[-—]/ { printf "%d\t%s\n", NR, $0; exit }
+  ' "$body_path")"
+  if [[ -n "$hit" ]]; then
+    IFS=$'\t' read -r line_number line_text <<< "$hit"
+    response_fail "architect body must not contain audit verdict marker at line ${line_number}: ${line_text}"
+  fi
+
+  hit="$(awk '
+    $0 ~ /^##[[:space:]]+Contractor Execution Narrative$/ { printf "%d\t%s\n", NR, $0; exit }
+  ' "$body_path")"
+  if [[ -n "$hit" ]]; then
+    IFS=$'\t' read -r line_number line_text <<< "$hit"
+    response_fail "architect body must not contain contractor narrative section at line ${line_number}: ${line_text}"
+  fi
+
+  hit="$(awk '
+    $0 ~ /^###[[:space:]]+(Preflight State|Implemented Changes|Closeout Notes|Decision Leaf)$/ { printf "%d\t%s\n", NR, $0; exit }
+  ' "$body_path")"
+  if [[ -n "$hit" ]]; then
+    IFS=$'\t' read -r line_number line_text <<< "$hit"
+    response_fail "architect body must not contain receipt narrative subheading at line ${line_number}: ${line_text}"
+  fi
+}
+
 check_drift_tokens() {
   local body_path="$1"
   local hit=""
@@ -261,6 +292,10 @@ lint_response_file() {
   if [[ "$response_mode" == "dp" ]]; then
     extract_single_fenced_block "$input_path" "$body_tmp"
     check_dp_body_start "$body_tmp"
+  elif [[ "$response_mode" == "architect" ]]; then
+    extract_single_fenced_block "$input_path" "$body_tmp"
+    check_dp_body_start "$body_tmp"
+    check_architect_body_scope "$body_tmp"
   elif [[ "$response_mode" == "audit" ]]; then
     extract_single_fenced_block "$input_path" "$body_tmp"
     check_audit_body_start "$body_tmp"
@@ -274,7 +309,7 @@ lint_response_file() {
     return 1
   fi
 
-  if [[ "$response_mode" == "dp" && "$response_skip_dp_delegate" != "1" ]]; then
+  if [[ ( "$response_mode" == "dp" || "$response_mode" == "architect" ) && "$response_skip_dp_delegate" != "1" ]]; then
     if ! bash tools/lint/dp.sh "$body_tmp"; then
       rm -f "$body_tmp"
       return 1
@@ -299,6 +334,9 @@ run_test() {
   local response_audit_not_marker
   local response_audit_meta
   local response_audit_cite
+  local response_architect_valid
+  local response_architect_audit_marker
+  local response_architect_narrative
   local failures_local=0
   local saved_mode="$response_mode"
 
@@ -317,6 +355,9 @@ run_test() {
   response_audit_not_marker="${test_dir}/response-audit-not-marker.md"
   response_audit_meta="${test_dir}/response-audit-meta.md"
   response_audit_cite="${test_dir}/response-audit-cite.md"
+  response_architect_valid="${test_dir}/response-architect-valid.md"
+  response_architect_audit_marker="${test_dir}/response-architect-audit-marker.md"
+  response_architect_narrative="${test_dir}/response-architect-narrative.md"
 
   response_mode="dp"
   response_skip_dp_delegate=1
@@ -464,6 +505,39 @@ EOF_VALID
     failures_local=1
   fi
 
+  response_mode="architect"
+
+  cp "$response_valid" "$response_architect_valid"
+  if ! lint_response_file "$response_architect_valid" >/dev/null 2>&1; then
+    echo "FAIL: --test expected architect response with DP body to pass" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_architect_audit_marker" <<'EOF_ARCH_AUDIT'
+```markdown
+### DP-OPS-9999: Architect Drift Fixture
+
+**AUDIT - DP-OPS-9999**
+```
+EOF_ARCH_AUDIT
+  if lint_response_file "$response_architect_audit_marker" >/dev/null 2>&1; then
+    echo "FAIL: --test expected architect response with audit marker to fail" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_architect_narrative" <<'EOF_ARCH_NARRATIVE'
+```markdown
+### DP-OPS-9999: Architect Drift Fixture
+
+## Contractor Execution Narrative
+### Preflight State
+```
+EOF_ARCH_NARRATIVE
+  if lint_response_file "$response_architect_narrative" >/dev/null 2>&1; then
+    echo "FAIL: --test expected architect response with contractor narrative to fail" >&2
+    failures_local=1
+  fi
+
   response_mode="$saved_mode"
   response_skip_dp_delegate=0
 
@@ -483,7 +557,7 @@ while (($# > 0)); do
       shift
       if (($# == 0)); then
         usage >&2
-        response_fail "--mode requires one of: dp audit"
+        response_fail "--mode requires one of: dp audit architect"
         exit 1
       fi
       response_mode="$1"
@@ -514,10 +588,10 @@ while (($# > 0)); do
 done
 
 case "$response_mode" in
-  dp|audit) ;;
+  dp|audit|architect) ;;
   *)
     usage >&2
-    response_fail "invalid mode: ${response_mode}. Use dp or audit."
+    response_fail "invalid mode: ${response_mode}. Use dp, audit, or architect."
     exit 1
     ;;
 esac
