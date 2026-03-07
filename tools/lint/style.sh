@@ -262,6 +262,47 @@ check_audit_foreman_mode_split() {
   fi
 }
 
+check_architect_mode_contract() {
+  local stance_architect="${REPO_ROOT}/ops/src/stances/architect.md.tpl"
+  local required_output='Output only: Full DP (starting at `### DP-...`) in one markdown code block.'
+  local required_fence='Emit exactly one fenced markdown code block.'
+  local required_no_outside='Emit no text before or after the fenced code block.'
+  local required_first='First non-empty line inside the code block must start with `### DP-`.'
+  local required_no_audit='Do not emit audit verdict marker lines (`**AUDIT -`).'
+  local required_no_narrative='Do not emit Contractor Execution Narrative sections or receipt narrative subheadings.'
+  local required_scope_only='Do not add, rewrite, or propose new options, phases, or slices in architect mode.'
+
+  [[ -f "$stance_architect" ]] || mark_failure "architect.md.tpl missing for mode contract checks"
+
+  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_output" "$stance_architect"; then
+    mark_failure "architect.md.tpl missing output contract line"
+  fi
+
+  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_fence" "$stance_architect"; then
+    mark_failure "architect.md.tpl missing fenced output line"
+  fi
+
+  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_no_outside" "$stance_architect"; then
+    mark_failure "architect.md.tpl missing no-outside-text line"
+  fi
+
+  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_first" "$stance_architect"; then
+    mark_failure "architect.md.tpl missing first-line marker line"
+  fi
+
+  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_no_audit" "$stance_architect"; then
+    mark_failure "architect.md.tpl missing no-audit-marker line"
+  fi
+
+  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_no_narrative" "$stance_architect"; then
+    mark_failure "architect.md.tpl missing no-receipt-narrative line"
+  fi
+
+  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_scope_only" "$stance_architect"; then
+    mark_failure "architect.md.tpl missing architect scope-only line"
+  fi
+}
+
 check_open_marker_contract() {
   local open_binary="${REPO_ROOT}/ops/bin/open"
   local begin_marker='===== STELA OPEN PROMPT ====='
@@ -573,6 +614,7 @@ load_current_closing_labels
 check_markdown_contractions
 check_jargon_blacklist
 check_audit_foreman_mode_split
+check_architect_mode_contract
 check_open_marker_contract
 check_closing_block_lead_words
 check_closing_block_conversation_starter_question
