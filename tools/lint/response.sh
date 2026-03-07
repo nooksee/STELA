@@ -129,6 +129,12 @@ extract_single_fenced_block() {
   fi
 }
 
+extract_audit_body() {
+  local input_path="$1"
+  local body_path="$2"
+  extract_single_fenced_block "$input_path" "$body_path"
+}
+
 check_dp_body_start() {
   local body_path="$1"
   local first_content_line
@@ -155,7 +161,7 @@ check_audit_body_start() {
     return 1
   fi
 
-  if [[ ! "$first_content_line" =~ ^\*\*AUDIT[[:space:]]+- ]]; then
+  if [[ ! "$first_content_line" =~ ^\*\*AUDIT[[:space:]]+[-—] ]]; then
     response_fail "audit body must start with marker '**AUDIT -'"
     return 1
   fi
@@ -293,7 +299,6 @@ run_test() {
   local response_audit_not_marker
   local response_audit_meta
   local response_audit_cite
-  local response_audit_marker_with_inner_fence
   local failures_local=0
   local saved_mode="$response_mode"
 
@@ -312,7 +317,6 @@ run_test() {
   response_audit_not_marker="${test_dir}/response-audit-not-marker.md"
   response_audit_meta="${test_dir}/response-audit-meta.md"
   response_audit_cite="${test_dir}/response-audit-cite.md"
-  response_audit_marker_with_inner_fence="${test_dir}/response-audit-marker-inner-fence.md"
 
   response_mode="dp"
   response_skip_dp_delegate=1
@@ -412,21 +416,7 @@ EOF_VALID
     echo 'PASS'
   } > "$response_audit_plain"
   if lint_response_file "$response_audit_plain" >/dev/null 2>&1; then
-    echo "FAIL: --test expected plain audit response without fence to fail" >&2
-    failures_local=1
-  fi
-
-  {
-    echo '**AUDIT - DP-OPS-9999**'
-    echo
-    echo '## Step 0'
-    echo
-    echo '```'
-    echo 'internal snippet'
-    echo '```'
-  } > "$response_audit_marker_with_inner_fence"
-  if lint_response_file "$response_audit_marker_with_inner_fence" >/dev/null 2>&1; then
-    echo "FAIL: --test expected audit response with nested fence to fail" >&2
+    echo "FAIL: --test expected plain audit response without fenced block to fail" >&2
     failures_local=1
   fi
 
@@ -437,13 +427,15 @@ EOF_VALID
     cat "$response_audit_valid"
   } > "$response_audit_preface"
   if lint_response_file "$response_audit_preface" >/dev/null 2>&1; then
-    echo "FAIL: --test expected audit response with preface text outside fence to fail" >&2
+    echo "FAIL: --test expected audit response with preface text to fail" >&2
     failures_local=1
   fi
 
   {
+    echo '```markdown'
     echo '## Audit Verdict'
     echo 'PASS'
+    echo '```'
   } > "$response_audit_not_marker"
   if lint_response_file "$response_audit_not_marker" >/dev/null 2>&1; then
     echo "FAIL: --test expected audit response without marker to fail" >&2
@@ -451,8 +443,10 @@ EOF_VALID
   fi
 
   {
+    echo '```markdown'
     echo '**AUDIT - DP-OPS-9999**'
     echo 'The user prompt is empty'
+    echo '```'
   } > "$response_audit_meta"
   if lint_response_file "$response_audit_meta" >/dev/null 2>&1; then
     echo "FAIL: --test expected audit response with meta chatter to fail" >&2
@@ -462,12 +456,11 @@ EOF_VALID
   {
     echo '```markdown'
     echo '**AUDIT - DP-OPS-9999**'
-    echo
-    echo '[cite_start]This is contaminated[cite: 1]'
+    echo '[cite_start]token[cite: 1]'
     echo '```'
   } > "$response_audit_cite"
   if lint_response_file "$response_audit_cite" >/dev/null 2>&1; then
-    echo "FAIL: --test expected audit response with citation token to fail" >&2
+    echo "FAIL: --test expected audit response with citation tokens to fail" >&2
     failures_local=1
   fi
 

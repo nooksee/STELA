@@ -230,6 +230,7 @@ ops/src/shared/stances.json
 docs/ops/specs/stances/analyst.md
 docs/ops/specs/stances/architect.md
 docs/ops/specs/stances/auditor.md
+docs/ops/specs/stances/conformist.md
 docs/ops/specs/stances/foreman.md
 storage/handoff/CLOSING-DP-OPS-0151.md
 archives/surfaces/TASK-DP-OPS-0151-*.md
@@ -285,5 +286,7 @@ storage/handoff/CLOSING-DP-OPS-0164.md
 archives/surfaces/TASK-DP-OPS-0164-*.md
 storage/handoff/CLOSING-DP-OPS-0165.md
 archives/surfaces/TASK-DP-OPS-0165-*.md
+storage/handoff/CLOSING-DP-OPS-0168.md
+archives/surfaces/TASK-DP-OPS-0168-*.md
 storage/handoff/CLOSING-DP-OPS-0167.md
 archives/surfaces/TASK-DP-OPS-0167-*.md

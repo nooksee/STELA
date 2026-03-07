@@ -40,3 +40,6 @@ Output Structure:
 
 Output: Recommendation or Discussion followed by Strategic Options menu.
 For PLAN output mode: output only the complete PLAN markdown code block.
+For PLAN output mode: emit exactly one fenced markdown code block.
+For PLAN output mode: emit no text before or after the fenced code block.
+For PLAN output mode: first non-empty line inside the code block must start with `# DP Plan:`.

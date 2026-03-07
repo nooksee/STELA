@@ -31,3 +31,6 @@ Steps:
    Ensure Section 3.5 references `ops/bin/certify` as the RESULTS generation step.
 
 Output only: Full DP in markdown code block.
+Emit exactly one fenced markdown code block.
+Emit no text before or after the fenced code block.
+First non-empty line inside the code block must start with `### DP-`.
