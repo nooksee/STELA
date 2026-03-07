@@ -1,23 +1,24 @@
 <!-- CCD: ff_target="operator-technical" ff_band="30-45" -->
-# Technical Specification: ops/src/stances/analyst.md.tpl
+# Technical Specification: ops/src/stances/conformist.md.tpl
 
 ## Purpose
-Define the template-backed Analyst stance body used by bundle output contract rendering.
+Define the template-backed conformist stance body used by bundle output contract rendering.
 
 ## Invocation
-- Render path: `ops/bin/manifest render stance-analyst --out=-`
+- Canonical render path: `ops/bin/manifest render stance-conformist --out=-`
+- Legacy alias: `ops/bin/manifest render stance-hygiene --out=-`
 - Runtime consumer: `ops/lib/scripts/bundle.sh`
 
 ## Inputs
-- Template source: `ops/src/stances/analyst.md.tpl`
+- Template source: `ops/src/stances/conformist.md.tpl`
 - Shared include source: `ops/src/shared/stances.json#stance_shared_rules`
 
 ## Outputs
 - Rendered stance body text beginning at `Rules:`.
 - No unresolved include directives.
-- PLAN output mode contract requires exactly one fenced markdown code block.
-- PLAN output mode contract requires no text before or after the fenced code block.
-- PLAN output mode first non-empty line inside the fenced body must start with `# DP Plan:`.
+- Output contract requires exactly one fenced markdown code block.
+- Output contract requires no text before or after the fenced code block.
+- First non-empty line inside the fenced body must start with `### DP-`.
 
 ## Invariants and failure modes
 - Include expansion is strict and fail-closed.
@@ -27,4 +28,4 @@ Define the template-backed Analyst stance body used by bundle output contract re
 ## Related pointers
 - `ops/lib/manifests/BUNDLE.md`
 - `ops/lib/scripts/bundle.sh`
-- `ops/src/stances/analyst.md.tpl`
+- `ops/src/stances/conformist.md.tpl`

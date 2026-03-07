@@ -25,7 +25,7 @@ Filing:
 - Reuse-first: search `ops/` for an existing template before creating a new artifact.
 - Drift: any divergence between canon and repository state, or duplication of canon outside SSOT, is a failure state that requires stop and correction.
 - Routing: closeout routing failure is a system failure state.
-- RoR: boundary and authorization decisions are recorded in `archives/decisions/RoR-*.md` and treated as authoritative decision leaves.
+- RoR: boundary, authorization, and structural decisions are codified; serves as a historical log for decisions and anomalies.
 - SoP: history ledger only; no permanent rules live there.
 - PoW: proof ledger only; execution evidence pointers live there.
 
@@ -163,15 +163,15 @@ When reporting, include:
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-03-06-05688fb1.md
+archives/surfaces/PoW-2026-03-06-19c8d0cd.md
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-03-06-05688fb1.md
+archives/surfaces/SoP-2026-03-06-19c8d0cd.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0165-05688fb1.md
+archives/surfaces/TASK-DP-OPS-0168-19c8d0cd.md
 
 
 ## docs/MAP.md

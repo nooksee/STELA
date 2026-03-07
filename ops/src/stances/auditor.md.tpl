@@ -36,5 +36,11 @@ Steps:
 
 Output only: Complete audit report.
 Do not output option menus, planning chatter, or confirmation prompts once preconditions pass.
+Emit exactly one fenced markdown code block and nothing outside it.
+First line must be ```markdown.
+First non-empty line inside the fenced block must start with `**AUDIT -`.
 First non-empty line must start with `**AUDIT -`.
+Last line must be ``` .
+Do not render markdown outside the fence; emit all report characters literally inside the fenced block.
 Do not emit citation tokens (`:contentReference[` or `oaicite`).
+Do not emit citation tokens (`[cite_start]`, `[cite:`, `[/cite]`, `:contentReference[`, or `oaicite`).

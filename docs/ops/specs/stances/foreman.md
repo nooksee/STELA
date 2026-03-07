@@ -16,6 +16,9 @@ Define the template-backed foreman stance body used for `foreman` profile bundle
 ## Outputs
 - Rendered stance body text beginning at `Rules:`.
 - No unresolved include directives.
+- Output contract requires exactly one fenced markdown code block.
+- Output contract requires no text before or after the fenced code block.
+- First non-empty line inside the fenced body must start with `### Addendum`.
 
 ## Invariants and failure modes
 - Include expansion is strict and fail-closed.

@@ -23,3 +23,6 @@ Steps:
 4. **SCAN**: `storage/dp/intake/` for existing addenda matching `<BASE_DP_ID>-ADDENDUM-[A-Z].md` and select first available letter from `A` through `Z`.
 
 Output only: Complete addendum (A.1-A.5) in a markdown code block.
+Emit exactly one fenced markdown code block.
+Emit no text before or after the fenced code block.
+First non-empty line inside the code block must start with `### Addendum`.
