@@ -375,6 +375,43 @@ check_foreman_mode_contract() {
   fi
 }
 
+
+check_conformist_mode_contract() {
+  local stance_conformist="${REPO_ROOT}/ops/src/stances/conformist.md.tpl"
+  local required_scope='* This stance is not used for audit PASS/FAIL verdicts or addendum authorization outputs.'
+  local required_fence='For machine-ingest conformist mode: emit exactly one fenced markdown code block.'
+  local required_no_outside='For machine-ingest conformist mode: emit no text before or after the fenced code block.'
+  local required_first='For machine-ingest conformist mode: first non-empty line inside the fenced body must start with `### DP-`.'
+  local required_no_audit='For machine-ingest conformist mode: do not emit audit verdict markers or Contractor Execution Narrative sections.'
+  local required_no_addendum='For machine-ingest conformist mode: do not emit addendum authorization headings or decision fields (`Decision Required:`, `Decision Leaf:`).'
+
+  [[ -f "$stance_conformist" ]] || mark_failure "conformist.md.tpl missing for mode contract checks"
+
+  if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_scope" "$stance_conformist"; then
+    mark_failure "conformist.md.tpl missing conformist scope-separation line"
+  fi
+
+  if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_fence" "$stance_conformist"; then
+    mark_failure "conformist.md.tpl missing conformist fenced-output line"
+  fi
+
+  if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_no_outside" "$stance_conformist"; then
+    mark_failure "conformist.md.tpl missing conformist no-outside-text line"
+  fi
+
+  if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_first" "$stance_conformist"; then
+    mark_failure "conformist.md.tpl missing conformist first-line marker line"
+  fi
+
+  if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_no_audit" "$stance_conformist"; then
+    mark_failure "conformist.md.tpl missing conformist no-audit-or-narrative line"
+  fi
+
+  if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_no_addendum" "$stance_conformist"; then
+    mark_failure "conformist.md.tpl missing conformist no-addendum-or-decision-fields line"
+  fi
+}
+
 check_open_marker_contract() {
   local open_binary="${REPO_ROOT}/ops/bin/open"
   local begin_marker='===== STELA OPEN PROMPT ====='
@@ -689,6 +726,7 @@ check_audit_foreman_mode_split
 check_architect_mode_contract
 check_analyst_mode_contract
 check_foreman_mode_contract
+check_conformist_mode_contract
 check_open_marker_contract
 check_closing_block_lead_words
 check_closing_block_conversation_starter_question
