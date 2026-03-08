@@ -52,7 +52,7 @@ dump_scope_foreman=core
 
 ## Profile Attachment Contract
 - analyst: `ANALYST-*.txt`, `ANALYST-*.manifest.json`, query source
-- architect: `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, `storage/handoff/PLAN.md`
+- architect: `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, `storage/handoff/PLAN.md`, optional `--slice=<ID>` with request metadata (`slice_id`, `slice_validated`, `plan_source`)
 - audit: `AUDIT-*.txt`, `AUDIT-*.manifest.json`, DP RESULTS receipt
 - foreman: `FOREMAN-*.txt`, `FOREMAN-*.manifest.json`
 - project: `PROJECT-*.txt`, `PROJECT-*.manifest.json`

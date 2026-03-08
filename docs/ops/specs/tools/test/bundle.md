@@ -25,11 +25,21 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 
 ## Invariants and failure modes
 - Valid profiles `analyst`, `architect`, `audit`, `conform`, `auto` must succeed.
+- Architect `--slice=T1` valid path must succeed.
+- Architect `--slice=UNKNOWN` must fail.
+- Architect `--slice=` (blank) must fail.
+- Non-architect `--slice` usage must fail.
+- Architect ad hoc run (no `--slice`) must succeed.
 - Generated canonical bundle artifact path must start with `storage/handoff/<artifact_prefix>-` where `<artifact_prefix>` is policy-mapped for the resolved profile.
 - Manifest must include `bundle_version: "2"`.
+- Architect manifest must include `request` metadata:
+  - `request.slice_id`
+  - `request.slice_validated`
+  - `request.plan_source`
 - Non-`auto` profiles must preserve exact `resolved_profile` parity.
 - Manifest dump `scope` must match policy mapping from `ops/lib/manifests/BUNDLE.md` for the resolved profile.
 - Audit profile dump scope is `core`.
+- Architect bundle text must include `[REQUEST]` block with slice metadata.
 - Compatibility legacy artifact outputs (`BUNDLE-*`) are asserted from manifest `artifact_naming` metadata when legacy emission is enabled by policy.
 - `auto` must resolve to a supported route (`analyst` or `architect`).
 - Foreman must fail without `--intent`.

@@ -51,7 +51,7 @@ ASSEMBLY_RUNTIME_POINTER_SUFFIX=""
 
 bundle_usage() {
   cat <<'USAGE'
-Usage: ops/bin/bundle [--profile=auto|analyst|architect|audit|project|conform|hygiene|foreman|auditor] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
+Usage: ops/bin/bundle [--profile=auto|analyst|architect|audit|project|conform|hygiene|foreman|auditor] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--slice=<ID>] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
 USAGE
 }
 
@@ -544,6 +544,45 @@ bundle_parse_foreman_intent() {
   return 1
 }
 
+bundle_extract_architect_selected_slices() {
+  local plan_path="$1"
+  awk '
+    BEGIN { in_handoff=0 }
+    /^##[[:space:]]+Architect Handoff([[:space:]]*)$/ { in_handoff=1; next }
+    in_handoff && /^##[[:space:]]+/ { exit }
+    in_handoff && /^Selected Slices:[[:space:]]*/ {
+      line=$0
+      sub(/^Selected Slices:[[:space:]]*/, "", line)
+      print line
+      exit
+    }
+  ' "$plan_path"
+}
+
+bundle_validate_architect_slice() {
+  local slice_id="$1"
+  local plan_path="$2"
+  local selected_slices=""
+  local slice_found=0
+  local candidate=""
+  local IFS="," 
+
+  [[ -f "$plan_path" ]] || die "--slice requires storage/handoff/PLAN.md (not present)"
+
+  selected_slices="$(bundle_extract_architect_selected_slices "$plan_path")"
+  [[ -n "$selected_slices" ]] || die "slice validation failed: Architect Handoff 'Selected Slices:' not found in storage/handoff/PLAN.md"
+
+  for candidate in $selected_slices; do
+    candidate="$(trim "$candidate")"
+    if [[ "$candidate" == "$slice_id" ]]; then
+      slice_found=1
+      break
+    fi
+  done
+
+  (( slice_found )) || die "unknown slice '${slice_id}' not in Architect Handoff Selected Slices (${selected_slices})"
+}
+
 bundle_run() {
   local requested_profile="auto"
   local requested_profile_input="auto"
@@ -564,6 +603,9 @@ bundle_run() {
   local assembly_pointer_emitted=0
   local assembly_pointer_rel=""
   local assembly_pointer_abs=""
+  local request_slice_id=""
+  local request_slice_validated=0
+  local request_plan_source=""
 
   local arg
   for arg in "$@"; do
@@ -583,6 +625,10 @@ bundle_run() {
       --intent=*)
         intent_token="${arg#--intent=}"
         [[ -n "$intent_token" ]] || die "--intent requires a value"
+        ;;
+      --slice=*)
+        request_slice_id="${arg#--slice=}"
+        [[ -n "$request_slice_id" ]] || die "--slice requires a non-empty value"
         ;;
       --agent-id=*)
         assembly_agent_id="${arg#--agent-id=}"
@@ -714,6 +760,16 @@ bundle_run() {
     route_reason="explicit profile alias: ${alias_profile_source} -> ${alias_profile_target}"
   fi
 
+  if [[ -n "$request_slice_id" && "$resolved_profile" != "architect" ]]; then
+    die "--slice is only valid with --profile=architect"
+  fi
+
+  if [[ "$resolved_profile" == "architect" && -n "$request_slice_id" ]]; then
+    bundle_validate_architect_slice "$request_slice_id" "${REPO_ROOT}/${plan_rel}"
+    request_slice_validated=1
+    request_plan_source="$plan_rel"
+  fi
+
   local stance_template_key
   stance_template_key="$(bundle_stance_template_for_profile "$resolved_profile")"
   local rendered_stance_tmp
@@ -776,6 +832,12 @@ bundle_run() {
     open_intent="$intent_token"
   elif [[ "$requested_profile" == "auto" ]]; then
     open_intent="Bundle profile (auto -> ${resolved_profile})"
+  elif [[ "$requested_profile_input" == "architect" ]]; then
+    if (( request_slice_validated )); then
+      open_intent="Architect profile: ${request_slice_id}"
+    else
+      open_intent="Architect profile: ad hoc"
+    fi
   else
     open_intent="Bundle profile: ${resolved_profile}"
   fi
@@ -867,6 +929,21 @@ bundle_run() {
     echo "- advisory input stela present: $([[ "$assembly_stela_present" == "1" ]] && echo true || echo false)"
     echo "- advisory input scaffold present: $([[ "$assembly_scaffold_present" == "1" ]] && echo true || echo false)"
     echo
+    if [[ "$resolved_profile" == "architect" ]]; then
+      echo "[REQUEST]"
+      if [[ -n "$request_slice_id" ]]; then
+        echo "- slice_id: ${request_slice_id}"
+      else
+        echo "- slice_id: (ad hoc)"
+      fi
+      echo "- slice_validated: $(bundle_bool "$request_slice_validated")"
+      if [[ -n "$request_plan_source" ]]; then
+        echo "- plan_source: ${request_plan_source}"
+      else
+        echo "- plan_source: (none)"
+      fi
+      echo
+    fi
     if ! bundle_profile_handoff_omitted "$resolved_profile"; then
       echo "[HANDOFF]"
       echo "- ${topic_rel}: $([[ "$topic_present" == "1" ]] && echo present || echo missing)"
@@ -1047,6 +1124,17 @@ bundle_run() {
     echo "    \"path\": \"$(bundle_json_escape "$plan_rel")\"," 
     echo "    \"present\": $(bundle_bool "$plan_present"),"
     echo "    \"lint_status\": \"$(bundle_json_escape "$plan_lint_status")\""
+    echo "  },"
+    echo "  \"request\": {"
+    if [[ "$resolved_profile" == "architect" && -n "$request_slice_id" ]]; then
+      echo "    \"slice_id\": \"$(bundle_json_escape "$request_slice_id")\"," 
+      echo "    \"slice_validated\": true,"
+      echo "    \"plan_source\": \"$(bundle_json_escape "$request_plan_source")\""
+    else
+      echo "    \"slice_id\": null,"
+      echo "    \"slice_validated\": false,"
+      echo "    \"plan_source\": null"
+    fi
     echo "  },"
     echo "  \"addendum\": {"
     echo "    \"required\": $(bundle_bool "$addendum_required"),"

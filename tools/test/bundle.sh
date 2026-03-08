@@ -92,6 +92,32 @@ extract_manifest_value() {
   sed -n -E "s/^[[:space:]]*\"${key}\":[[:space:]]*\"([^\"]*)\"[,]?[[:space:]]*$/\\1/p" "${REPO_ROOT}/${manifest_rel}" | head -n 1
 }
 
+extract_request_field() {
+  local manifest_rel="$1"
+  local field="$2"
+  awk -v field="$field" '
+    /"request"[[:space:]]*:[[:space:]]*{/ { in_req=1; depth=1; next }
+    in_req {
+      if (/{/) { depth++ }
+      if (/}/) {
+        depth--
+        if (depth <= 0) {
+          in_req=0
+          exit
+        }
+      }
+      if (match($0, "\"" field "\"[[:space:]]*:[[:space:]]*\"([^\"]*)\"", parts)) {
+        print parts[1]
+        exit
+      }
+      if (match($0, "\"" field "\"[[:space:]]*:[[:space:]]*(true|false|null)", parts)) {
+        print parts[1]
+        exit
+      }
+    }
+  ' "${REPO_ROOT}/${manifest_rel}" | head -n 1
+}
+
 extract_assembly_pointer_emitted() {
   local manifest_rel="$1"
   awk '
@@ -472,6 +498,108 @@ test_valid_profiles() {
       fail "profile=${profile} should not emit assembly pointer without ATS triplet"
     fi
   done
+}
+
+test_architect_slice_valid() {
+  local slice_id="T1"
+  local request_slice_id_val=""
+  local request_validated_val=""
+  local request_source_val=""
+
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=architect --slice="$slice_id" --out=auto
+  if (( RUN_STATUS != 0 )); then
+    fail "architect --slice=${slice_id} should succeed"
+    echo "$RUN_OUTPUT" >&2
+    return
+  fi
+
+  track_bundle_outputs
+  [[ -n "$LAST_MANIFEST" && -n "$LAST_ARTIFACT" ]] || return
+
+  if ! grep -Fq '[REQUEST]' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect bundle text missing [REQUEST] block for valid slice"
+  fi
+  if ! grep -Fq "slice_id: ${slice_id}" "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect bundle text missing valid slice_id marker"
+  fi
+  if ! grep -Fq 'slice_validated: true' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect bundle text missing slice_validated: true"
+  fi
+
+  request_slice_id_val="$(extract_request_field "$LAST_MANIFEST" "slice_id")"
+  request_validated_val="$(extract_request_field "$LAST_MANIFEST" "slice_validated")"
+  request_source_val="$(extract_request_field "$LAST_MANIFEST" "plan_source")"
+
+  if [[ "$request_slice_id_val" != "$slice_id" ]]; then
+    fail "architect request.slice_id mismatch: expected ${slice_id}, got ${request_slice_id_val}"
+  fi
+  if [[ "$request_validated_val" != "true" ]]; then
+    fail "architect request.slice_validated mismatch: expected true, got ${request_validated_val}"
+  fi
+  if [[ "$request_source_val" != "storage/handoff/PLAN.md" ]]; then
+    fail "architect request.plan_source mismatch: expected storage/handoff/PLAN.md, got ${request_source_val}"
+  fi
+}
+
+test_architect_slice_ad_hoc() {
+  local request_slice_id_val=""
+  local request_validated_val=""
+  local request_source_val=""
+
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=architect --out=auto
+  if (( RUN_STATUS != 0 )); then
+    fail "architect ad hoc run should succeed"
+    echo "$RUN_OUTPUT" >&2
+    return
+  fi
+
+  track_bundle_outputs
+  [[ -n "$LAST_MANIFEST" && -n "$LAST_ARTIFACT" ]] || return
+
+  if ! grep -Fq '[REQUEST]' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect bundle text missing [REQUEST] block for ad hoc run"
+  fi
+  if ! grep -Fq 'slice_id: (ad hoc)' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect ad hoc bundle text missing ad hoc slice marker"
+  fi
+  if ! grep -Fq 'slice_validated: false' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect ad hoc bundle text missing slice_validated: false"
+  fi
+
+  request_slice_id_val="$(extract_request_field "$LAST_MANIFEST" "slice_id")"
+  request_validated_val="$(extract_request_field "$LAST_MANIFEST" "slice_validated")"
+  request_source_val="$(extract_request_field "$LAST_MANIFEST" "plan_source")"
+
+  if [[ "$request_slice_id_val" != "null" ]]; then
+    fail "architect ad hoc request.slice_id mismatch: expected null, got ${request_slice_id_val}"
+  fi
+  if [[ "$request_validated_val" != "false" ]]; then
+    fail "architect ad hoc request.slice_validated mismatch: expected false, got ${request_validated_val}"
+  fi
+  if [[ "$request_source_val" != "null" ]]; then
+    fail "architect ad hoc request.plan_source mismatch: expected null, got ${request_source_val}"
+  fi
+}
+
+test_architect_slice_unknown_fails() {
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=architect --slice=UNKNOWN --out=auto
+  if (( RUN_STATUS == 0 )); then
+    fail "architect unknown --slice should fail"
+  fi
+}
+
+test_architect_slice_blank_fails() {
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=architect --slice= --out=auto
+  if (( RUN_STATUS == 0 )); then
+    fail "architect blank --slice should fail"
+  fi
+}
+
+test_architect_slice_non_architect_fails() {
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --slice=T1 --out=auto
+  if (( RUN_STATUS == 0 )); then
+    fail "--slice with non-architect profile should fail"
+  fi
 }
 
 test_foreman_invalid_paths() {
@@ -888,6 +1016,11 @@ test_meta_shim() {
 test_manifest_fail_closed
 test_stance_template_renderer
 test_valid_profiles
+test_architect_slice_valid
+test_architect_slice_ad_hoc
+test_architect_slice_unknown_fails
+test_architect_slice_blank_fails
+test_architect_slice_non_architect_fails
 test_foreman_invalid_paths
 test_foreman_valid_path
 test_legacy_auditor_alias
