@@ -300,3 +300,8 @@ storage/handoff/CLOSING-DP-OPS-0172.md
 archives/surfaces/TASK-DP-OPS-0172-*.md
 storage/handoff/CLOSING-DP-OPS-0173.md
 archives/surfaces/TASK-DP-OPS-0173-*.md
+docs/ops/registry/factory.md
+docs/ops/specs/tools/lint/factory.md
+tools/lint/factory.sh
+storage/handoff/CLOSING-DP-OPS-0174.md
+archives/surfaces/TASK-DP-OPS-0174-*.md
