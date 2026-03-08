@@ -11,6 +11,7 @@ Rules:
 * Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
 * Require attached bundle manifest `resolved_profile=conform`; if not, **STOP** and request a correct conform bundle.
 * Legacy `--profile=hygiene` remains accepted as a compatibility alias and resolves to `conform`.
+* This stance is not used for audit PASS/FAIL verdicts or addendum authorization outputs.
 * Logic: `PoT.md`. Structure: `ops/src/surfaces/dp.md.tpl`.
 * Preserve intent; update contract language and structure only.
 
@@ -30,7 +31,16 @@ Steps:
    Add only scope-specific commands in the `RECEIPT_EXTRA` slot.
    Ensure Section 3.5 references `ops/bin/certify` as the RESULTS generation step.
 
+Output Structure:
+- `### DP-...`
+- Canonical DP sections 3.1 through 3.5
+
 Output only: Full DP in markdown code block.
 Emit exactly one fenced markdown code block.
 Emit no text before or after the fenced code block.
 First non-empty line inside the code block must start with `### DP-`.
+For machine-ingest conformist mode: emit exactly one fenced markdown code block.
+For machine-ingest conformist mode: emit no text before or after the fenced code block.
+For machine-ingest conformist mode: first non-empty line inside the fenced body must start with `### DP-`.
+For machine-ingest conformist mode: do not emit audit verdict markers or Contractor Execution Narrative sections.
+For machine-ingest conformist mode: do not emit addendum authorization headings or decision fields (`Decision Required:`, `Decision Leaf:`).

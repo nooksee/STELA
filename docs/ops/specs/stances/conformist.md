@@ -19,11 +19,14 @@ Define the template-backed conformist stance body used by bundle output contract
 - Output contract requires exactly one fenced markdown code block.
 - Output contract requires no text before or after the fenced code block.
 - First non-empty line inside the fenced body must start with `### DP-`.
+- For machine-ingest conformist mode, reject audit verdict markers and Contractor Execution Narrative sections.
+- For machine-ingest conformist mode, reject addendum authorization headings and decision fields.
 
 ## Invariants and failure modes
 - Include expansion is strict and fail-closed.
 - Unresolved template tokens fail render in strict mode.
 - Render output is deterministic for identical repository state.
+- Conformist stance is not used for audit verdict workflows or addendum authorization workflows.
 
 ## Related pointers
 - `ops/lib/manifests/BUNDLE.md`

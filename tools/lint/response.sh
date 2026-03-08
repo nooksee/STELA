@@ -14,7 +14,7 @@ emit_binary_leaf "lint-response" "start"
 
 usage() {
   cat <<'USAGE'
-Usage: bash tools/lint/response.sh [--mode=dp|audit|architect|analyst|foreman] [--test] [path|-]
+Usage: bash tools/lint/response.sh [--mode=dp|audit|architect|analyst|foreman|conformist] [--test] [path|-]
 Default input: stdin
 Example: bash tools/lint/response.sh --mode=audit var/tmp/response-audit-valid.md
 USAGE
@@ -391,6 +391,66 @@ check_foreman_body_scope() {
   fi
 }
 
+
+check_conformist_body_scope() {
+  local body_path="$1"
+  local first_content_line
+  local hit=""
+  local line_number=""
+  local line_text=""
+
+  first_content_line="$(awk 'NF { print; exit }' "$body_path")"
+  if [[ -z "$first_content_line" ]]; then
+    response_fail "conformist body is empty"
+    return 1
+  fi
+
+  if [[ ! "$first_content_line" =~ ^###[[:space:]]+DP- ]]; then
+    response_fail "conformist body must start with heading format '### DP-...'"
+    return 1
+  fi
+
+  hit="$(awk '
+    $0 ~ /^\*\*AUDIT[[:space:]]+[-—]/ { printf "%d\t%s\n", NR, $0; exit }
+  ' "$body_path")"
+  if [[ -n "$hit" ]]; then
+    IFS=$'\t' read -r line_number line_text <<< "$hit"
+    response_fail "conformist body must not contain audit verdict marker at line ${line_number}: ${line_text}"
+  fi
+
+  hit="$(awk '
+    $0 ~ /^##[[:space:]]+Contractor Execution Narrative$/ { printf "%d\t%s\n", NR, $0; exit }
+  ' "$body_path")"
+  if [[ -n "$hit" ]]; then
+    IFS=$'\t' read -r line_number line_text <<< "$hit"
+    response_fail "conformist body must not contain contractor narrative section at line ${line_number}: ${line_text}"
+  fi
+
+  hit="$(awk '
+    $0 ~ /^###[[:space:]]+(Preflight State|Implemented Changes|Closeout Notes|Decision Leaf)$/ { printf "%d\t%s\n", NR, $0; exit }
+  ' "$body_path")"
+  if [[ -n "$hit" ]]; then
+    IFS=$'\t' read -r line_number line_text <<< "$hit"
+    response_fail "conformist body must not contain receipt narrative subheading at line ${line_number}: ${line_text}"
+  fi
+
+  hit="$(awk '
+    $0 ~ /^###[[:space:]]+Addendum/ || $0 ~ /^##[[:space:]]+A[.][1-5][[:space:]]/ { printf "%d\t%s\n", NR, $0; exit }
+  ' "$body_path")"
+  if [[ -n "$hit" ]]; then
+    IFS=$'\t' read -r line_number line_text <<< "$hit"
+    response_fail "conformist body must not contain addendum authorization sections at line ${line_number}: ${line_text}"
+  fi
+
+  hit="$(awk '
+    tolower($0) ~ /decision[[:space:]]+required:/ || tolower($0) ~ /decision[[:space:]]+leaf:/ { printf "%d\t%s\n", NR, $0; exit }
+  ' "$body_path")"
+  if [[ -n "$hit" ]]; then
+    IFS=$'\t' read -r line_number line_text <<< "$hit"
+    response_fail "conformist body must not contain decision fields at line ${line_number}: ${line_text}"
+  fi
+}
+
 check_drift_tokens() {
   local body_path="$1"
   local hit=""
@@ -495,6 +555,9 @@ lint_response_file() {
   elif [[ "$response_mode" == "foreman" ]]; then
     extract_single_fenced_block "$input_path" "$body_tmp"
     check_foreman_body_scope "$body_tmp"
+  elif [[ "$response_mode" == "conformist" ]]; then
+    extract_single_fenced_block "$input_path" "$body_tmp"
+    check_conformist_body_scope "$body_tmp"
   elif [[ "$response_mode" == "audit" ]]; then
     extract_single_fenced_block "$input_path" "$body_tmp"
     check_audit_body_start "$body_tmp"
@@ -508,7 +571,7 @@ lint_response_file() {
     return 1
   fi
 
-  if [[ ( "$response_mode" == "dp" || "$response_mode" == "architect" ) && "$response_skip_dp_delegate" != "1" ]]; then
+  if [[ ( "$response_mode" == "dp" || "$response_mode" == "architect" || "$response_mode" == "conformist" ) && "$response_skip_dp_delegate" != "1" ]]; then
     if ! bash tools/lint/dp.sh "$body_tmp"; then
       rm -f "$body_tmp"
       return 1
@@ -545,6 +608,10 @@ run_test() {
   local response_foreman_audit_marker
   local response_foreman_missing_sections
   local response_foreman_decision_incoherent
+  local response_conformist_valid
+  local response_conformist_audit_marker
+  local response_conformist_addendum_marker
+  local response_conformist_decision_fields
   local failures_local=0
   local saved_mode="$response_mode"
 
@@ -575,6 +642,10 @@ run_test() {
   response_foreman_audit_marker="${test_dir}/response-foreman-audit-marker.md"
   response_foreman_missing_sections="${test_dir}/response-foreman-missing-sections.md"
   response_foreman_decision_incoherent="${test_dir}/response-foreman-decision-incoherent.md"
+  response_conformist_valid="${test_dir}/response-conformist-valid.md"
+  response_conformist_audit_marker="${test_dir}/response-conformist-audit-marker.md"
+  response_conformist_addendum_marker="${test_dir}/response-conformist-addendum-marker.md"
+  response_conformist_decision_fields="${test_dir}/response-conformist-decision-fields.md"
 
   response_mode="dp"
   response_skip_dp_delegate=1
@@ -926,6 +997,49 @@ EOF_FOREMAN_DECISION
     failures_local=1
   fi
 
+
+  response_mode="conformist"
+
+  cp "$response_valid" "$response_conformist_valid"
+  if ! lint_response_file "$response_conformist_valid" >/dev/null 2>&1; then
+    echo "FAIL: --test expected conformist response with DP body to pass" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_conformist_audit_marker" <<'EOF_CONFORMIST_AUDIT'
+```markdown
+### DP-OPS-9999: Conformist Drift Fixture
+**AUDIT - DP-OPS-9999**
+```
+EOF_CONFORMIST_AUDIT
+  if lint_response_file "$response_conformist_audit_marker" >/dev/null 2>&1; then
+    echo "FAIL: --test expected conformist response with audit marker to fail" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_conformist_addendum_marker" <<'EOF_CONFORMIST_ADDENDUM'
+```markdown
+### DP-OPS-9999: Conformist Drift Fixture
+## A.1 Authorization
+```
+EOF_CONFORMIST_ADDENDUM
+  if lint_response_file "$response_conformist_addendum_marker" >/dev/null 2>&1; then
+    echo "FAIL: --test expected conformist response with addendum heading to fail" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_conformist_decision_fields" <<'EOF_CONFORMIST_DECISION'
+```markdown
+### DP-OPS-9999: Conformist Drift Fixture
+Decision Required: Yes
+Decision Leaf: archives/decisions/RoR-2026-03-07-test.md
+```
+EOF_CONFORMIST_DECISION
+  if lint_response_file "$response_conformist_decision_fields" >/dev/null 2>&1; then
+    echo "FAIL: --test expected conformist response with decision fields to fail" >&2
+    failures_local=1
+  fi
+
   response_mode="$saved_mode"
   response_skip_dp_delegate=0
 
@@ -945,7 +1059,7 @@ while (($# > 0)); do
       shift
       if (($# == 0)); then
         usage >&2
-        response_fail "--mode requires one of: dp audit architect analyst foreman"
+        response_fail "--mode requires one of: dp audit architect analyst foreman conformist"
         exit 1
       fi
       response_mode="$1"
@@ -976,10 +1090,10 @@ while (($# > 0)); do
 done
 
 case "$response_mode" in
-  dp|audit|architect|analyst|foreman) ;;
+  dp|audit|architect|analyst|foreman|conformist) ;;
   *)
     usage >&2
-    response_fail "invalid mode: ${response_mode}. Use dp, audit, architect, analyst, or foreman."
+    response_fail "invalid mode: ${response_mode}. Use dp, audit, architect, analyst, foreman, or conformist."
     exit 1
     ;;
 esac
