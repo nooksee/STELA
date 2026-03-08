@@ -23,6 +23,7 @@ SKILLS_HEAD="opt/_factory/SKILLS.md"
 AGENTS_REGISTRY="docs/ops/registry/agents.md"
 SKILLS_REGISTRY="docs/ops/registry/skills.md"
 TASKS_REGISTRY="docs/ops/registry/tasks.md"
+FACTORY_CENSUS_REGISTRY="docs/ops/registry/factory.md"
 
 failures=0
 
@@ -64,6 +65,30 @@ extract_section() {
     in_section { print }
   ' "$path"
 }
+
+extract_factory_matrix_rows() {
+  local path="$1"
+  awk -F'|' '
+    BEGIN { in_matrix=0 }
+    /^## Definition Matrix$/ { in_matrix=1; next }
+    /^## / { if (in_matrix) exit }
+    in_matrix && $0 ~ /^\|/ {
+      kind=$2
+      id=$3
+      row_path=$4
+      disposition=$5
+      reason=$6
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", kind)
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", id)
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", row_path)
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", disposition)
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", reason)
+      if (kind == "" || kind == "Kind" || kind ~ /^-+$/) next
+      print kind "\t" id "\t" row_path "\t" disposition "\t" reason
+    }
+  ' "$path"
+}
+
 
 validate_chain_head() {
   local head_path="$1"
@@ -185,6 +210,7 @@ require_file "$SKILLS_HEAD"
 require_file "$AGENTS_REGISTRY"
 require_file "$SKILLS_REGISTRY"
 require_file "$TASKS_REGISTRY"
+require_file "$FACTORY_CENSUS_REGISTRY"
 
 validate_chain_head \
   "$AGENTS_HEAD" \
@@ -222,6 +248,7 @@ echo "Stela Factory Verification"
 echo "Registry: docs/ops/registry/agents.md"
 echo "Registry: docs/ops/registry/skills.md"
 echo "Registry: docs/ops/registry/tasks.md"
+echo "Registry: docs/ops/registry/factory.md"
 echo "------------------------"
 
 mapfile -t agent_ids < <(awk -F'|' '
@@ -285,8 +312,92 @@ for path in "${task_paths[@]}"; do
   fi
 done
 
+declare -A census_id_map
+declare -A census_path_map
+
+while IFS=$'\t' read -r kind id row_path disposition reason; do
+  if [[ -z "$kind" || -z "$id" || -z "$row_path" || -z "$disposition" || -z "$reason" ]]; then
+    fail "Factory census row is incomplete in '${FACTORY_CENSUS_REGISTRY}'"
+    continue
+  fi
+
+  case "$kind" in
+    agent)
+      if [[ ! "$id" =~ ^R-AGENT-[0-9]{2}$ ]]; then
+        fail "Factory census agent id format invalid '${id}'"
+      fi
+      if [[ "$row_path" != "${FACTORY_DIR}/agents/"* ]]; then
+        fail "Factory census path '${row_path}' does not match kind '${kind}'"
+      fi
+      ;;
+    skill)
+      if [[ ! "$id" =~ ^S-LEARN-[0-9]{2}$ ]]; then
+        fail "Factory census skill id format invalid '${id}'"
+      fi
+      if [[ "$row_path" != "${FACTORY_DIR}/skills/"* ]]; then
+        fail "Factory census path '${row_path}' does not match kind '${kind}'"
+      fi
+      ;;
+    task)
+      if [[ ! "$id" =~ ^B-TASK-[0-9]{2}$ ]]; then
+        fail "Factory census task id format invalid '${id}'"
+      fi
+      if [[ "$row_path" != "${FACTORY_DIR}/tasks/"* ]]; then
+        fail "Factory census path '${row_path}' does not match kind '${kind}'"
+      fi
+      ;;
+    *)
+      fail "Factory census row has invalid kind '${kind}'"
+      ;;
+  esac
+
+  case "$disposition" in
+    keep)
+      if [[ ! "$reason" =~ ^K- ]]; then
+        fail "Factory census reason '${reason}' does not match disposition '${disposition}'"
+      fi
+      ;;
+    replace)
+      if [[ ! "$reason" =~ ^R- ]]; then
+        fail "Factory census reason '${reason}' does not match disposition '${disposition}'"
+      fi
+      ;;
+    remove)
+      if [[ ! "$reason" =~ ^X- ]]; then
+        fail "Factory census reason '${reason}' does not match disposition '${disposition}'"
+      fi
+      ;;
+    *)
+      fail "Factory census row has invalid disposition '${disposition}'"
+      ;;
+  esac
+
+  if [[ ! -f "$row_path" ]]; then
+    fail "Factory census path does not exist '${row_path}'"
+  fi
+
+  row_key="${kind}:${id}"
+  if [[ -n "${census_id_map[$row_key]+set}" ]]; then
+    fail "Factory census has duplicate id row '${row_key}'"
+  fi
+  census_id_map["$row_key"]=1
+
+  if [[ -n "${census_path_map[$row_path]+set}" ]]; then
+    fail "Factory census has duplicate path row '${row_path}'"
+  fi
+  census_path_map["$row_path"]=1
+done < <(extract_factory_matrix_rows "$FACTORY_CENSUS_REGISTRY")
+
+if [[ ${#census_path_map[@]} -eq 0 ]]; then
+  fail "Factory census matrix has no definition rows in '${FACTORY_CENSUS_REGISTRY}'"
+fi
+
+
 while IFS= read -r file; do
   rel_path="${file#${REPO_ROOT}/}"
+  if [[ -z "${census_path_map[$rel_path]+set}" ]]; then
+    fail "Factory census missing row for definition '${rel_path}'"
+  fi
   base_name="$(basename "$rel_path" .md)"
   if [[ -z "${agent_id_map[$base_name]+set}" ]]; then
     fail "Ghost Artifact: '${rel_path}' exists but is not registered in AGENTS.md"
@@ -295,6 +406,9 @@ done < <(find "${FACTORY_DIR}/agents" -type f -name "*.md")
 
 while IFS= read -r file; do
   rel_path="${file#${REPO_ROOT}/}"
+  if [[ -z "${census_path_map[$rel_path]+set}" ]]; then
+    fail "Factory census missing row for definition '${rel_path}'"
+  fi
   if [[ -z "${skill_path_map[$rel_path]+set}" ]]; then
     fail "Ghost Artifact: '${rel_path}' exists but is not registered in SKILLS.md"
   fi
@@ -309,10 +423,23 @@ fi
 
 while IFS= read -r file; do
   rel_path="${file#${REPO_ROOT}/}"
+  if [[ -z "${census_path_map[$rel_path]+set}" ]]; then
+    fail "Factory census missing row for definition '${rel_path}'"
+  fi
   if [[ -z "${task_path_map[$rel_path]+set}" ]]; then
     fail "Ghost Artifact: '${rel_path}' exists but is not registered in TASKS.md"
   fi
 done < <(find "${FACTORY_DIR}/tasks" -type f -name "*.md")
+
+mapfile -t runtime_factory_paths < <(rg -oN --no-heading -h 'opt/_factory/(agents|skills|tasks)/[A-Za-z0-9._-]+\.md' ops tools docs | sort -u)
+for runtime_path in "${runtime_factory_paths[@]}"; do
+  if [[ ! -f "$runtime_path" ]]; then
+    continue
+  fi
+  if [[ -z "${census_path_map[$runtime_path]+set}" ]]; then
+    fail "Factory census missing runtime reference row '${runtime_path}'"
+  fi
+done
 
 skills_dir="${FACTORY_DIR}/skills"
 if compgen -G "${skills_dir}/*.md" > /dev/null; then
