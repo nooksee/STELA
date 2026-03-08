@@ -7,7 +7,7 @@
 
 ## Mechanics and Sequencing
 The script provides `bundle_run` plus helpers for:
-1. Argument parsing and validation (`profile`, `out`, `project`, `intent`, ATS triplet flags).
+1. Argument parsing and validation (`profile`, `out`, `project`, `intent`, `slice`, ATS triplet flags).
 2. Policy load from `ops/lib/manifests/BUNDLE.md` with required-key validation and fail-closed behavior.
    - Includes compatibility alias keys (`profile_alias_legacy_auditor_to`, `profile_alias_legacy_hygiene_to`) consumed at runtime.
    - Includes required compatibility alias deprecation keys (`profile_alias_legacy_auditor_deprecation_status`, `profile_alias_legacy_auditor_remove_after_dp`, `profile_alias_legacy_hygiene_deprecation_status`, `profile_alias_legacy_hygiene_remove_after_dp`).
@@ -25,16 +25,25 @@ The script provides `bundle_run` plus helpers for:
 8. Deterministic embedded OPEN block generation (no internal `ops/bin/open` invocation).
 9. Dump orchestration with explicit `.txt` output path under `storage/dumps/`.
 10. Foreman intent parsing and decision-leaf validation against dump payload.
-11. Bundle text rendering with embedded stance contract text rendered through `ops/bin/manifest` stance template keys.
-12. Manifest v2 emission and package `.tar` emission with manifest-aligned member list.
-13. Canonical profile-prefixed artifact output in `storage/handoff/` with optional legacy `BUNDLE-*` compatibility copies.
-14. Alias-route metadata emission in manifest (`profile_alias.applied`, `.from`, `.to`, `.deprecation_status`, `.remove_after_dp`) when compatibility aliases are used.
-15. Assembly metadata emission in manifest with ATS IDs, schema version, validation source pointers, and advisory-input status (`STELA.md`, `SCAFFOLD.md`).
-16. Deterministic runtime assembly pointer emission when ATS is applied:
+11. Architect slice parsing and validation:
+   - `--slice=<ID>` accepted only for resolved profile `architect`.
+   - blank `--slice=` fails before artifact emission.
+   - architect slice IDs must match `Selected Slices` in `storage/handoff/PLAN.md` (`## Architect Handoff`).
+   - unknown architect slices fail before artifact emission.
+   - omitted `--slice` keeps architect in ad hoc mode.
+12. Architect request metadata emission:
+   - text artifact emits `[REQUEST]` block with `slice_id`, `slice_validated`, and `plan_source`.
+   - manifest emits `request` object with `request.slice_id`, `request.slice_validated`, and `request.plan_source`.
+13. Bundle text rendering with embedded stance contract text rendered through `ops/bin/manifest` stance template keys.
+14. Manifest v2 emission and package `.tar` emission with manifest-aligned member list.
+15. Canonical profile-prefixed artifact output in `storage/handoff/` with optional legacy `BUNDLE-*` compatibility copies.
+16. Alias-route metadata emission in manifest (`profile_alias.applied`, `.from`, `.to`, `.deprecation_status`, `.remove_after_dp`) when compatibility aliases are used.
+17. Assembly metadata emission in manifest with ATS IDs, schema version, validation source pointers, and advisory-input status (`STELA.md`, `SCAFFOLD.md`).
+18. Deterministic runtime assembly pointer emission when ATS is applied:
    - path derived from canonical bundle artifact path with policy suffix/format,
    - manifest `assembly.pointer` metadata emitted (`emitted`, `path`, `format`),
    - pointer artifact added to package members.
-17. No pointer emission when ATS is not applied (`assembly.pointer.emitted=false`, `path=null`).
+19. No pointer emission when ATS is not applied (`assembly.pointer.emitted=false`, `path=null`).
 
 Stance contract extraction and render rules:
 - Resolve profile stance template key from `ops/lib/manifests/BUNDLE.md`.

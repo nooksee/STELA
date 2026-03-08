@@ -16,6 +16,7 @@ Public interface:
 3. `--project=<name>` (required only for `project`)
 4. `--intent=<text>` (required for `foreman` and legacy alias `auditor`)
 5. `--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>` (optional ATS triplet; all-or-none)
+6. `--slice=<ID>` (optional; architect profile only)
 
 Policy source:
 1. Runtime contract is loaded from `ops/lib/manifests/BUNDLE.md`.
@@ -61,6 +62,13 @@ Routing rules:
 2. `--profile=auto` resolves to `auto_plan_profile` when `storage/handoff/PLAN.md` exists and `tools/lint/plan.sh` passes.
 3. Otherwise auto resolves to `auto_default_profile`.
 
+Architect slice gate:
+1. `--slice=<ID>` is accepted only when resolved profile is `architect`.
+2. Blank `--slice=` fails before artifact emission.
+3. Architect slice values are validated against `Selected Slices` in `storage/handoff/PLAN.md` under `## Architect Handoff`.
+4. Unknown architect slices fail before artifact emission.
+5. Omitting `--slice` keeps architect in ad hoc mode.
+
 Artifact contract (written under `storage/handoff/`):
 1. Bundle text artifact (`.txt`) with embedded OPEN block, dump pointers, stance contract source marker, stance template key, and embedded stance contract excerpt.
 2. Bundle manifest (`.manifest.json`) with `bundle_version: "2"` and structured metadata:
@@ -69,6 +77,7 @@ Artifact contract (written under `storage/handoff/`):
    - embedded OPEN metadata (`embedded`, `branch`, `head_short`, `trace_id`, `intent`)
    - dump pointers
    - topic/plan presence
+   - architect request metadata (`request.slice_id`, `request.slice_validated`, `request.plan_source`)
    - stance template metadata (`stance_template_key`)
    - addendum metadata (`required`, `decision_id`, `decision_leaf_present`)
    - package metadata (`path`, `files`)
@@ -90,6 +99,7 @@ Artifact contract (written under `storage/handoff/`):
 Text artifact profile conditional block:
 1. The `[HANDOFF]` block (`TOPIC.md` / `PLAN.md` presence) is emitted for non-audit profiles.
 2. For `audit` and `foreman` resolved profiles, the text artifact omits `[HANDOFF]` to avoid unrelated intake noise in audit flows.
+3. For `architect`, the text artifact emits a `[REQUEST]` block with slice metadata.
 
 Foreman gate:
 1. `--profile=foreman` requires `--intent`.
