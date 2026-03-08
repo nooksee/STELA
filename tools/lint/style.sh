@@ -172,6 +172,50 @@ check_jargon_blacklist() {
   done
 }
 
+check_shared_stance_contract() {
+  local shared_stances="${REPO_ROOT}/ops/src/shared/stances.json"
+  local required_version='"version": 2'
+  local required_stance_key='"stance_shared_rules"'
+  local required_fence_key='"single_fence_contract_rules"'
+  local required_non_audit_key='"non_audit_role_drift_rules"'
+  local required_fence_line='* Emit exactly one fenced markdown code block.'
+  local required_no_outside_line='* Emit no text before or after the fenced code block.'
+  local required_non_audit_line='* Do not emit audit verdict markers or Contractor Execution Narrative sections.'
+
+  [[ -f "$shared_stances" ]] || {
+    mark_failure "ops/src/shared/stances.json missing for cross-stance convergence checks"
+    return 0
+  }
+
+  if ! grep -Fq -- "$required_version" "$shared_stances"; then
+    mark_failure "ops/src/shared/stances.json missing version 2 marker"
+  fi
+
+  if ! grep -Fq -- "$required_stance_key" "$shared_stances"; then
+    mark_failure "ops/src/shared/stances.json missing stance_shared_rules key"
+  fi
+
+  if ! grep -Fq -- "$required_fence_key" "$shared_stances"; then
+    mark_failure "ops/src/shared/stances.json missing single_fence_contract_rules key"
+  fi
+
+  if ! grep -Fq -- "$required_non_audit_key" "$shared_stances"; then
+    mark_failure "ops/src/shared/stances.json missing non_audit_role_drift_rules key"
+  fi
+
+  if ! grep -Fq -- "$required_fence_line" "$shared_stances"; then
+    mark_failure "ops/src/shared/stances.json missing shared fence contract line"
+  fi
+
+  if ! grep -Fq -- "$required_no_outside_line" "$shared_stances"; then
+    mark_failure "ops/src/shared/stances.json missing shared no-outside-text line"
+  fi
+
+  if ! grep -Fq -- "$required_non_audit_line" "$shared_stances"; then
+    mark_failure "ops/src/shared/stances.json missing shared non-audit role-drift line"
+  fi
+}
+
 check_audit_foreman_mode_split() {
   local stance_auditor="${REPO_ROOT}/ops/src/stances/auditor.md.tpl"
   local stance_foreman="${REPO_ROOT}/ops/src/stances/foreman.md.tpl"
@@ -179,8 +223,9 @@ check_audit_foreman_mode_split() {
   local required_audit_guard='`--profile=foreman` is addendum-authorization mode and is never valid for audit verdict workflows.'
   local required_audit_empty_input='If user text is empty and required attachments are present, proceed and emit only the final audit block.'
   local required_audit_output='Output only: Complete audit report.'
-  local required_audit_output_first='First non-empty line must start with `**AUDIT -`.'
-  local required_audit_no_citations='Do not emit citation tokens (`:contentReference[` or `oaicite`).'
+  local required_audit_shared_fence_include='{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}'
+  local required_audit_output_first='First non-empty line inside the fenced block must start with `**AUDIT -`.'
+  local required_audit_no_citations='Do not emit citation tokens (`[cite_start]`, `[cite:`, `[/cite]`, `:contentReference[`, or `oaicite`).'
   local required_audit_authority='If interpretation conflicts with receipt command outputs, treat command outputs and lint results as authoritative and mark the interpretation as non-blocking.'
   local required_audit_allowlist_authority='For allowlist interpretation, `tools/lint/integrity.sh` plus certify changed-file subset check are authoritative; raw `comm` output is informational.'
   local required_foreman_guard='This stance is not used for audit PASS/FAIL verdicts.'
@@ -207,6 +252,10 @@ check_audit_foreman_mode_split() {
 
   if [[ -f "$stance_auditor" ]] && ! grep -Fq -- "$required_audit_output" "$stance_auditor"; then
     mark_failure "auditor.md.tpl missing audit output contract line"
+  fi
+
+  if [[ -f "$stance_auditor" ]] && ! grep -Fq -- "$required_audit_shared_fence_include" "$stance_auditor"; then
+    mark_failure "auditor.md.tpl missing shared fence include line"
   fi
 
   if [[ -f "$stance_auditor" ]] && ! grep -Fq -- "$required_audit_output_first" "$stance_auditor"; then
@@ -265,10 +314,9 @@ check_audit_foreman_mode_split() {
 check_architect_mode_contract() {
   local stance_architect="${REPO_ROOT}/ops/src/stances/architect.md.tpl"
   local required_output='Output only: Full DP (starting at `### DP-...`) in one markdown code block.'
-  local required_fence='Emit exactly one fenced markdown code block.'
-  local required_no_outside='Emit no text before or after the fenced code block.'
+  local required_shared_fence_include='{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}'
   local required_first='First non-empty line inside the code block must start with `### DP-`.'
-  local required_no_audit='Do not emit audit verdict marker lines (`**AUDIT -`).'
+  local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
   local required_no_narrative='Do not emit Contractor Execution Narrative sections or receipt narrative subheadings.'
   local required_scope_only='Do not add, rewrite, or propose new options, phases, or slices in architect mode.'
 
@@ -278,20 +326,16 @@ check_architect_mode_contract() {
     mark_failure "architect.md.tpl missing output contract line"
   fi
 
-  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_fence" "$stance_architect"; then
-    mark_failure "architect.md.tpl missing fenced output line"
-  fi
-
-  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_no_outside" "$stance_architect"; then
-    mark_failure "architect.md.tpl missing no-outside-text line"
+  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_shared_fence_include" "$stance_architect"; then
+    mark_failure "architect.md.tpl missing shared fence include line"
   fi
 
   if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_first" "$stance_architect"; then
     mark_failure "architect.md.tpl missing first-line marker line"
   fi
 
-  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_no_audit" "$stance_architect"; then
-    mark_failure "architect.md.tpl missing no-audit-marker line"
+  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_shared_non_audit_include" "$stance_architect"; then
+    mark_failure "architect.md.tpl missing shared non-audit include line"
   fi
 
   if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_no_narrative" "$stance_architect"; then
@@ -305,21 +349,18 @@ check_architect_mode_contract() {
 
 check_analyst_mode_contract() {
   local stance_analyst="${REPO_ROOT}/ops/src/stances/analyst.md.tpl"
-  local required_fence='For machine-ingest analyst mode: emit exactly one fenced markdown code block.'
-  local required_no_outside='For machine-ingest analyst mode: emit no text before or after the fenced code block.'
+  local required_shared_fence_include='{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}'
   local required_first='For machine-ingest analyst mode: first non-empty line inside the fenced body must start with `1. Analysis and Discussion`.'
   local required_sections='For machine-ingest analyst mode: include `2. Strategic Options` section and a `Recommendation:` line.'
-  local required_no_audit='For machine-ingest analyst mode: do not emit audit verdict markers or Contractor Execution Narrative sections.'
+  local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
   local required_no_policy='For machine-ingest analyst mode: do not emit policy/lint instruction prose (for example `Section 3.4.5`, `RECEIPT_EXTRA`, or template-path directives).'
+  local required_plan_output='For PLAN output mode: output only the complete PLAN markdown code block.'
+  local required_plan_first='For PLAN output mode: first non-empty line inside the code block must start with `# DP Plan:`.'
 
   [[ -f "$stance_analyst" ]] || mark_failure "analyst.md.tpl missing for mode contract checks"
 
-  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_fence" "$stance_analyst"; then
-    mark_failure "analyst.md.tpl missing analyst fenced-output line"
-  fi
-
-  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_no_outside" "$stance_analyst"; then
-    mark_failure "analyst.md.tpl missing analyst no-outside-text line"
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_shared_fence_include" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing shared fence include line"
   fi
 
   if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_first" "$stance_analyst"; then
@@ -330,32 +371,35 @@ check_analyst_mode_contract() {
     mark_failure "analyst.md.tpl missing analyst required-sections line"
   fi
 
-  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_no_audit" "$stance_analyst"; then
-    mark_failure "analyst.md.tpl missing analyst no-audit-or-narrative line"
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_shared_non_audit_include" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing shared non-audit include line"
   fi
 
   if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_no_policy" "$stance_analyst"; then
     mark_failure "analyst.md.tpl missing analyst no-policy-overcompensation line"
   fi
+
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_plan_output" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing PLAN output-only line"
+  fi
+
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_plan_first" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing PLAN first-line marker line"
+  fi
 }
 
 check_foreman_mode_contract() {
   local stance_foreman="${REPO_ROOT}/ops/src/stances/foreman.md.tpl"
-  local required_fence='For machine-ingest foreman mode: emit exactly one fenced markdown code block.'
-  local required_no_outside='For machine-ingest foreman mode: emit no text before or after the fenced code block.'
+  local required_shared_fence_include='{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}'
   local required_first='For machine-ingest foreman mode: first non-empty line inside the fenced body must start with `### Addendum`.'
   local required_sections='For machine-ingest foreman mode: include addendum headings `## A.1 Authorization` through `## A.5 Addendum Receipt (Proofs to collect) - MUST RUN`.'
-  local required_no_audit='For machine-ingest foreman mode: do not emit audit verdict markers or Contractor Execution Narrative sections.'
+  local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
   local required_decision='For machine-ingest foreman mode: if `Decision Required:` and `Decision Leaf:` lines are present, values must be coherent (`Yes` with `archives/decisions/RoR-*.md`, `No` with `None`).'
 
   [[ -f "$stance_foreman" ]] || mark_failure "foreman.md.tpl missing for mode contract checks"
 
-  if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_fence" "$stance_foreman"; then
-    mark_failure "foreman.md.tpl missing foreman fenced-output line"
-  fi
-
-  if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_no_outside" "$stance_foreman"; then
-    mark_failure "foreman.md.tpl missing foreman no-outside-text line"
+  if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_shared_fence_include" "$stance_foreman"; then
+    mark_failure "foreman.md.tpl missing shared fence include line"
   fi
 
   if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_first" "$stance_foreman"; then
@@ -366,8 +410,8 @@ check_foreman_mode_contract() {
     mark_failure "foreman.md.tpl missing foreman required-sections line"
   fi
 
-  if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_no_audit" "$stance_foreman"; then
-    mark_failure "foreman.md.tpl missing foreman no-audit-or-narrative line"
+  if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_shared_non_audit_include" "$stance_foreman"; then
+    mark_failure "foreman.md.tpl missing shared non-audit include line"
   fi
 
   if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_decision" "$stance_foreman"; then
@@ -379,10 +423,9 @@ check_foreman_mode_contract() {
 check_conformist_mode_contract() {
   local stance_conformist="${REPO_ROOT}/ops/src/stances/conformist.md.tpl"
   local required_scope='* This stance is not used for audit PASS/FAIL verdicts or addendum authorization outputs.'
-  local required_fence='For machine-ingest conformist mode: emit exactly one fenced markdown code block.'
-  local required_no_outside='For machine-ingest conformist mode: emit no text before or after the fenced code block.'
-  local required_first='For machine-ingest conformist mode: first non-empty line inside the fenced body must start with `### DP-`.'
-  local required_no_audit='For machine-ingest conformist mode: do not emit audit verdict markers or Contractor Execution Narrative sections.'
+  local required_shared_fence_include='{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}'
+  local required_first='First non-empty line inside the code block must start with `### DP-`.'
+  local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
   local required_no_addendum='For machine-ingest conformist mode: do not emit addendum authorization headings or decision fields (`Decision Required:`, `Decision Leaf:`).'
 
   [[ -f "$stance_conformist" ]] || mark_failure "conformist.md.tpl missing for mode contract checks"
@@ -391,27 +434,22 @@ check_conformist_mode_contract() {
     mark_failure "conformist.md.tpl missing conformist scope-separation line"
   fi
 
-  if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_fence" "$stance_conformist"; then
-    mark_failure "conformist.md.tpl missing conformist fenced-output line"
-  fi
-
-  if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_no_outside" "$stance_conformist"; then
-    mark_failure "conformist.md.tpl missing conformist no-outside-text line"
+  if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_shared_fence_include" "$stance_conformist"; then
+    mark_failure "conformist.md.tpl missing shared fence include line"
   fi
 
   if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_first" "$stance_conformist"; then
     mark_failure "conformist.md.tpl missing conformist first-line marker line"
   fi
 
-  if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_no_audit" "$stance_conformist"; then
-    mark_failure "conformist.md.tpl missing conformist no-audit-or-narrative line"
+  if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_shared_non_audit_include" "$stance_conformist"; then
+    mark_failure "conformist.md.tpl missing shared non-audit include line"
   fi
 
   if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_no_addendum" "$stance_conformist"; then
     mark_failure "conformist.md.tpl missing conformist no-addendum-or-decision-fields line"
   fi
 }
-
 check_open_marker_contract() {
   local open_binary="${REPO_ROOT}/ops/bin/open"
   local begin_marker='===== STELA OPEN PROMPT ====='
@@ -722,6 +760,7 @@ collect_markdown_files
 load_current_closing_labels
 check_markdown_contractions
 check_jargon_blacklist
+check_shared_stance_contract
 check_audit_foreman_mode_split
 check_architect_mode_contract
 check_analyst_mode_contract

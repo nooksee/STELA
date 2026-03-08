@@ -48,8 +48,7 @@ Steps:
 
 Output only: Full DP (starting at `### DP-...`) in one markdown code block.
 Do not output option menus, planning chatter, or confirmation prompts once preconditions pass.
-Emit exactly one fenced markdown code block.
-Emit no text before or after the fenced code block.
+{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}
 First non-empty line inside the code block must start with `### DP-`.
-Do not emit audit verdict marker lines (`**AUDIT -`).
+{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}
 Do not emit Contractor Execution Narrative sections or receipt narrative subheadings.

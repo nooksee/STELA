@@ -27,12 +27,9 @@ Output Structure:
 - `## A.1 Authorization` through `## A.5 Addendum Receipt (Proofs to collect) - MUST RUN`
 
 Output only: Complete addendum (A.1-A.5) in a markdown code block.
-Emit exactly one fenced markdown code block.
-Emit no text before or after the fenced code block.
+{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}
 First non-empty line inside the code block must start with `### Addendum`.
-For machine-ingest foreman mode: emit exactly one fenced markdown code block.
-For machine-ingest foreman mode: emit no text before or after the fenced code block.
 For machine-ingest foreman mode: first non-empty line inside the fenced body must start with `### Addendum`.
 For machine-ingest foreman mode: include addendum headings `## A.1 Authorization` through `## A.5 Addendum Receipt (Proofs to collect) - MUST RUN`.
-For machine-ingest foreman mode: do not emit audit verdict markers or Contractor Execution Narrative sections.
+{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}
 For machine-ingest foreman mode: if `Decision Required:` and `Decision Leaf:` lines are present, values must be coherent (`Yes` with `archives/decisions/RoR-*.md`, `No` with `None`).

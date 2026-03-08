@@ -17,6 +17,7 @@ usage() {
 Usage: bash tools/lint/response.sh [--mode=dp|audit|architect|analyst|foreman|conformist] [--test] [path|-]
 Default input: stdin
 Example: bash tools/lint/response.sh --mode=audit var/tmp/response-audit-valid.md
+Mode matrix freeze: architect|analyst|foreman|conformist remain explicit machine-ingest modes.
 USAGE
 }
 

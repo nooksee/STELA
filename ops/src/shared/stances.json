@@ -1,7 +1,14 @@
 {
-  "version": 1,
+  "version": 2,
   "stance_shared_rules": [
     "* Follow constraints in `ops/lib/manifests/CONSTRAINTS.md` (Sections 1 & 2).",
     "* Contractor constraints: ops/lib/manifests/CONTRACTOR.md"
+  ],
+  "single_fence_contract_rules": [
+    "* Emit exactly one fenced markdown code block.",
+    "* Emit no text before or after the fenced code block."
+  ],
+  "non_audit_role_drift_rules": [
+    "* Do not emit audit verdict markers or Contractor Execution Narrative sections."
   ]
 }
