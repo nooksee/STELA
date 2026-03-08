@@ -11,6 +11,8 @@ Define the template-backed Architect stance body used by bundle output contract 
 ## Inputs
 - Template source: `ops/src/stances/architect.md.tpl`
 - Shared include source: `ops/src/shared/stances.json#stance_shared_rules`
+- Shared include source: `ops/src/shared/stances.json#single_fence_contract_rules`
+- Shared include source: `ops/src/shared/stances.json#non_audit_role_drift_rules`
 
 ## Outputs
 - Rendered stance body text beginning at `Rules:`.
@@ -18,7 +20,6 @@ Define the template-backed Architect stance body used by bundle output contract 
 - Output contract requires exactly one fenced markdown code block.
 - Output contract requires no text before or after the fenced code block.
 - First non-empty line inside the fenced body must start with `### DP-`.
-- Output contract rejects audit-verdict marker lines (`**AUDIT -`).
 - Output contract rejects Contractor Execution Narrative sections and receipt narrative subheadings.
 
 ## Invariants and failure modes

@@ -11,15 +11,15 @@ Define the template-backed Analyst stance body used by bundle output contract re
 ## Inputs
 - Template source: `ops/src/stances/analyst.md.tpl`
 - Shared include source: `ops/src/shared/stances.json#stance_shared_rules`
+- Shared include source: `ops/src/shared/stances.json#single_fence_contract_rules`
+- Shared include source: `ops/src/shared/stances.json#non_audit_role_drift_rules`
 
 ## Outputs
 - Rendered stance body text beginning at `Rules:`.
 - No unresolved include directives.
-- Machine-ingest analyst mode contract requires exactly one fenced markdown code block.
-- Machine-ingest analyst mode contract requires no text before or after the fenced code block.
 - Machine-ingest analyst mode first non-empty line inside the fenced body must start with `1. Analysis and Discussion`.
 - Machine-ingest analyst mode requires `2. Strategic Options` and a `Recommendation:` line.
-- Machine-ingest analyst mode rejects audit markers, Contractor Execution Narrative sections, and policy-overcompensation prose.
+- Machine-ingest analyst mode rejects policy-overcompensation prose.
 - PLAN output mode contract requires exactly one fenced markdown code block.
 - PLAN output mode contract requires no text before or after the fenced code block.
 - PLAN output mode first non-empty line inside the fenced body must start with `# DP Plan:`.

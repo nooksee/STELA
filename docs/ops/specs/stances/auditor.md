@@ -12,6 +12,8 @@ Define the template-backed Audit stance body used by bundle output contract rend
 ## Inputs
 - Template source: `ops/src/stances/auditor.md.tpl`
 - Shared include source: `ops/src/shared/stances.json#stance_shared_rules`
+- Shared include source: `ops/src/shared/stances.json#single_fence_contract_rules`
+- TASK evidence source is dump payload context; direct TASK attachment wording is not required.
 
 ## Outputs
 - Rendered stance body text beginning at `Rules:`.

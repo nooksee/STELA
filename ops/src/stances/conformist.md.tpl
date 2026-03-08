@@ -36,11 +36,7 @@ Output Structure:
 - Canonical DP sections 3.1 through 3.5
 
 Output only: Full DP in markdown code block.
-Emit exactly one fenced markdown code block.
-Emit no text before or after the fenced code block.
+{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}
 First non-empty line inside the code block must start with `### DP-`.
-For machine-ingest conformist mode: emit exactly one fenced markdown code block.
-For machine-ingest conformist mode: emit no text before or after the fenced code block.
-For machine-ingest conformist mode: first non-empty line inside the fenced body must start with `### DP-`.
-For machine-ingest conformist mode: do not emit audit verdict markers or Contractor Execution Narrative sections.
+{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}
 For machine-ingest conformist mode: do not emit addendum authorization headings or decision fields (`Decision Required:`, `Decision Leaf:`).

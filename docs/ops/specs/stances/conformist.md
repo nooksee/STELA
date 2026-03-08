@@ -12,14 +12,13 @@ Define the template-backed conformist stance body used by bundle output contract
 ## Inputs
 - Template source: `ops/src/stances/conformist.md.tpl`
 - Shared include source: `ops/src/shared/stances.json#stance_shared_rules`
+- Shared include source: `ops/src/shared/stances.json#single_fence_contract_rules`
+- Shared include source: `ops/src/shared/stances.json#non_audit_role_drift_rules`
 
 ## Outputs
 - Rendered stance body text beginning at `Rules:`.
 - No unresolved include directives.
-- Output contract requires exactly one fenced markdown code block.
-- Output contract requires no text before or after the fenced code block.
 - First non-empty line inside the fenced body must start with `### DP-`.
-- For machine-ingest conformist mode, reject audit verdict markers and Contractor Execution Narrative sections.
 - For machine-ingest conformist mode, reject addendum authorization headings and decision fields.
 
 ## Invariants and failure modes
