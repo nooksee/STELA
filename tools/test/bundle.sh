@@ -72,6 +72,26 @@ queue_cleanup_path() {
   fi
 }
 
+ensure_architect_plan_fixture() {
+  local plan_rel="storage/handoff/PLAN.md"
+  local plan_abs="${REPO_ROOT}/${plan_rel}"
+
+  if [[ -f "$plan_abs" ]]; then
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$plan_abs")"
+  cat > "$plan_abs" <<'EOF'
+## Architect Handoff
+Selected Option: A
+Slice Mode: multi
+Selected Slices: T1
+Execution Order: T1
+Architect Constraints: test fixture
+EOF
+  queue_cleanup_path "$plan_rel"
+}
+
 run_capture() {
   RUN_OUTPUT=""
   RUN_STATUS=0
@@ -502,6 +522,8 @@ test_valid_profiles() {
 
 test_architect_slice_valid() {
   local slice_id="T1"
+
+  ensure_architect_plan_fixture
   local request_slice_id_val=""
   local request_validated_val=""
   local request_source_val=""
@@ -582,6 +604,7 @@ test_architect_slice_ad_hoc() {
 }
 
 test_architect_slice_unknown_fails() {
+  ensure_architect_plan_fixture
   run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=architect --slice=UNKNOWN --out=auto
   if (( RUN_STATUS == 0 )); then
     fail "architect unknown --slice should fail"
