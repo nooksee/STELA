@@ -24,11 +24,31 @@
 2. **Real provisional marker (FAIL):** a fixture line contains an unfinalized branch-style value such as `PROPOSED-work/...`, which must fail.
 3. **Prose-only `PROPOSED` (PASS):** a fixture line contains the word `PROPOSED` as feature-description prose without a provisional-marker form, which must pass.
 
+### Closeout and Coherence Fixtures (`--test`)
+`dp.sh --test` must include deterministic fixtures for contract-shape hardening:
+
+1. **Non-canonical closeout phrase (FAIL):** inject `- Route to contractor ...` into §3.5 and require failure.
+2. **Work-branch coherence mismatch (FAIL):** heading id and `Required Work Branch` id fragment disagree and must fail.
+3. **Closing-sidecar coherence mismatch (FAIL):** heading id and §3.5.1 `CLOSING-DP-OPS-XXXX.md` id fragment disagree and must fail.
+
 ### Freshness Stamp and Receipt Command Substitution Checks
 `lint_payload()` runs two certify-compatibility checks immediately after `check_dump_selection_scope()`:
 
 1. `check_freshness_stamp_format()`: extracts `Freshness Stamp`, trims and dequotes it, skips blank or placeholder values (handled by existing required-field checks), and fails unless the value matches `^[0-9]{4}-[0-9]{2}-[0-9]{2}$`.
 2. `check_receipt_command_substitution()`: extracts Section `3.4.5`, scans receipt command bullet lines, and fails on any command line containing the `$(` token because certify replay requires literal commands.
+
+### Packet Coherence and Closeout Shape Checks
+`lint_payload()` runs two deterministic contract checks after freshness and receipt-command checks:
+
+1. `check_dp_packet_coherence()`:
+   - derives heading packet id from the first `### DP-...:` line,
+   - requires `Required Work Branch` to include the lowercase packet-id fragment (for example `DP-OPS-0176` -> `dp-ops-0176`),
+   - requires a canonical closing-sidecar path token in §3.5.1 (`storage/handoff/CLOSING-DP-OPS-XXXX.md`),
+   - fails when heading id and closing-sidecar id disagree.
+2. `check_closeout_section_shape()`:
+   - extracts §3.5 body content (between `## 3.5` and `### 3.5.1`),
+   - fails when §3.5 is empty,
+   - fails on non-canonical role-routing shortcut phrases such as `Route to ...`, `Hand off to ...`, `Pass to ...`, or `Send to ...`.
 
 ## Foreign Citation Contamination Guard
 
