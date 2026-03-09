@@ -20,9 +20,9 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="64219d4562dfa833029b6f41acf66d2febaf484fcfb3035d39486b6ba1eb55ff"
+CANONICAL_DP_TEMPLATE_SHA256="f453956fa7a6aa8211dd7493b66bdf8b944959c9161ea38078ce44c235fb5aaf"
 CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/stances/addendum.md.tpl"
-CANONICAL_ADDENDUM_TEMPLATE_SHA256="42cb7586c6ed103e995730f1a8c34a1c7e0676b717c27dfb987950feeac7ec9e"
+CANONICAL_ADDENDUM_TEMPLATE_SHA256="715db3fae0598a85a0fa490c16f590dd08e6d6f02fa9b18224ce48625612f624"
 TEMPLATE_RENDER_BIN="ops/bin/template"
 ALLOWLIST_POINTER_PATH_DEFAULT="storage/dp/active/allowlist.txt"
 
@@ -1106,12 +1106,36 @@ check_foreign_citation_contamination() {
   return 0
 }
 
+check_include_metadata_leakage() {
+  local path="$1"
+  local hit
+  local line_number
+  local line_text
+
+  hit="$(awk '
+    $0 ~ /^[[:space:]]*<!-- CCD:/ || $0 ~ /^[[:space:]]*---[[:space:]]*$/ {
+      printf "%d\t%s\n", NR, $0
+      exit
+    }
+  ' "$path")"
+
+  if [[ -n "$hit" ]]; then
+    IFS=$'\t' read -r line_number line_text <<< "$hit"
+    fail "dp: include metadata leakage: line ${line_number}: ${line_text}"
+    return 1
+  fi
+
+  echo "PASS: dp: include metadata leakage: no leaked include metadata detected"
+  return 0
+}
+
 lint_payload() {
   local path="$1"
   failures=0
 
   check_proposed_token_scan "$path"
   check_foreign_citation_contamination "$path"
+  check_include_metadata_leakage "$path"
   check_template_hash_preflight
   check_structure_hash "$path"
   check_required_fields "$path"
@@ -1277,6 +1301,8 @@ run_test() {
   local tmp_proposed_marker_bad
   local tmp_proposed_prose_ok
   local tmp_contamination_bad
+  local tmp_ccd_bad
+  local tmp_frontmatter_bad
 
   failures=0
   check_template_hash_preflight
@@ -1502,6 +1528,26 @@ TESTRESULTS
     echo "FAIL: --test expected direct contamination scan clean pass" >&2
     exit 1
   fi
+
+  tmp_ccd_bad="$(mktemp)"
+  cp "$tmp_valid" "$tmp_ccd_bad"
+  printf '%s\n' '<!-- CCD: ff_target="test" ff_band="10-20" -->' >> "$tmp_ccd_bad"
+  if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_ccd_bad" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad" "$tmp_ccd_bad"
+    echo "FAIL: --test expected CCD metadata leakage failure" >&2
+    exit 1
+  fi
+  rm -f "$tmp_ccd_bad"
+
+  tmp_frontmatter_bad="$(mktemp)"
+  cp "$tmp_valid" "$tmp_frontmatter_bad"
+  printf '%s\n' '---' >> "$tmp_frontmatter_bad"
+  if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_frontmatter_bad" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad" "$tmp_frontmatter_bad"
+    echo "FAIL: --test expected frontmatter delimiter leakage failure" >&2
+    exit 1
+  fi
+  rm -f "$tmp_frontmatter_bad"
 
   tmp_receipt_missing_bad="$(mktemp)"
   cp "$tmp_valid" "$tmp_receipt_missing_bad"
