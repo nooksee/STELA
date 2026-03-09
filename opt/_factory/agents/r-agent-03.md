@@ -15,7 +15,8 @@ Documentation and codemap maintenance.
 
 ## Identity Contract
 - `agent_id`: `R-AGENT-03`
-- `stance_id`: `contractor`
+- `runtime_role`: `conformist`
+- `stance_id`: `conformist`
 
 ## Capability Tags
 - `documentation-maintenance`

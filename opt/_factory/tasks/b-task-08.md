@@ -6,53 +6,35 @@
 - **Branch:** work/dp-ops-0145-bundle-primitive-2026-03-03
 - **HEAD:** 8c0a088bf0bafaa429950eb7dfad9f9ab27d348a
 - **Objective:** Govern bundle artifact contract and profile routing expectations.
-- **Friction Context:**
-  - Hot Zone: None
-  - High Churn: None
-- **Diff Stat:**
-```text
-(no changes)
-```
 
 ## Orchestration
-- **Primary Agent:** R-AGENT-01
-- **Supporting Agents:** (none)
+- **Primary Agent:** R-AGENT-08 (bundle-coordinator)
+- **Supporting Agents:** R-AGENT-01 (architect)
+
+## Objective Contract
+- `task_id`: `B-TASK-08`
+- `objective`: `Bundle Orchestration`
+- `inputs`: `active DP scope, assigned agent set, and required tools`
+- `outputs`: `bounded change set, receipt evidence, and closeout-ready status`
+- `invariants`: `stop on failing gates, no out-of-scope edits, closeout follows TASK Section 3.5`
 
 ## Pointers
 - **Constitution:** `PoT.md`
 - **Governance:** `docs/GOVERNANCE.md`
 - **Contract:** `TASK.md`
 - **Registry:** `docs/ops/registry/tasks.md`
-- **Toolchain:** Not provided
-- **JIT Skills:** (none)
-- **Reference Docs:** Not provided
-
-## Constraints
-## Section 1: Universal Template Rules
-- Template source uses `tpl` files with optional YAML frontmatter
-- Canon frontmatter keys: `template_type` `template_id` `template_version` `requires_slots` `includes`
-- Renderer strips frontmatter before output write
-- Slot token form `\{\{TOKEN\}\}` with uppercase alphanumeric underscore
-- Include forms `\{\{@include:path\}\}` and `\{\{@include:path#section\}\}`
-- Include resolution is strict: missing file fail missing section fail circular graph fail
-- Strict mode default: every required slot value present and no unresolved token
-- Non strict mode allowed only for lint and normalization workflows
-- Worker facing generated surfaces remain pointer first and exclude disposable artifacts
-
-## Section 3: Definition-Specific Rules
-- `agent` `task` and `skill` templates inherit Section 1 rules
-- Definitions keep canonical pointers and avoid constitutional prose duplication
-- Definition drafts remain compatible with harvest and promotion lint gates
-- Definitions preserve closeout and verification routing requirements
+- **Toolchain:** `bash tools/test/bundle.sh`, `bash tools/verify.sh`, `bash tools/lint/style.sh`
+- **JIT Skills:** `opt/_factory/skills/s-learn-08.md`
+- **Reference Docs:** `docs/MANUAL.md`, `docs/ops/specs/binaries/bundle.md`, `docs/ops/specs/scripts/bundle.md`
 
 ## Execution Logic
-1. Pre-flight: Not provided.
-2. Execution: Not provided.
-3. Verification: Not provided.
-4. Correction: Not provided.
-5. Closeout: Complete Closeout per `TASK.md` Section 3.5.
+1. Run bundle-related gates required by the active DP.
+2. Run `bash tools/verify.sh` and stop if it fails.
+3. Run `bash tools/lint/style.sh` when docs/spec surfaces are modified and stop if it fails.
+4. Record deterministic command outcomes in RESULTS.
+5. Complete Closeout per `TASK.md` Section 3.5.
 
 ## Scope Boundary
-- **Allowed:** Execute only allowlisted DP changes and complete Closeout per `TASK.md` Section 3.5.
-- **Forbidden:** Do not modify out-of-scope files or skip required verification.
+- **Allowed:** Execute bundle-contract tasks within active DP scope and perform Closeout duties per `TASK.md` Section 3.5.
+- **Forbidden:** Do not bypass failing bundle gates or expand into unrelated slices.
 - **Stop Conditions:** Stop on missing required inputs, lint failures, or scope expansion.

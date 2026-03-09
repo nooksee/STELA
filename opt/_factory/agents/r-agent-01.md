@@ -15,7 +15,8 @@ Architecture planning and system design.
 
 ## Identity Contract
 - `agent_id`: `R-AGENT-01`
-- `stance_id`: `architect`
+- `runtime_role`: `foreman`
+- `stance_id`: `foreman`
 
 ## Capability Tags
 - `architecture-planning`

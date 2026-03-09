@@ -2,12 +2,11 @@
 # Definition Specification: Agents Chain
 
 ## Purpose
-Define the canonical behavior for the agent definition chain rooted at `opt/_factory/AGENTS.md`.
-This specification is authoritative for candidate and promotion pointer heads, emission flow, and registry linkage.
-Think of the pointer head like a route card that tells every operator which candidate and promotion leaves are current.
+Define canonical behavior for the agent definition chain rooted at `opt/_factory/AGENTS.md`.
+This specification is authoritative for head pointers, registry linkage, and F2 identity/boundary contract requirements.
 
 ## Head Contract
-`opt/_factory/AGENTS.md` is a four-line pointer head with this exact key order:
+`opt/_factory/AGENTS.md` is a four-line pointer head in exact order:
 1. `candidate:` latest candidate leaf pointer, or origin sentinel.
 2. `promotion:` latest promotion leaf pointer, or origin sentinel.
 3. `spec:` this specification path.
@@ -28,26 +27,29 @@ Allowed head values:
   - Emit promotion leaf under `archives/definitions/`.
   - Rewrite `promotion:` to the new leaf path.
 
-## Canon Agent Body Contract
+## Canon Agent Body Contract (F2 Baseline)
 Canon agent files under `opt/_factory/agents/` must contain:
 - `## Provenance`
 - `## Role`
 - `## Specialization`
-- `## Identity Contract` with:
-  - ``agent_id`` backticked and aligned to filename (`r-agent-XX` -> `R-AGENT-XX`)
-  - ``stance_id`` backticked and in canonical stance set (`analyst`, `architect`, `auditor`, `conformist`, `contractor`, `foreman`)
-- `## Capability Tags` with at least one backticked capability token bullet
-- `## Pointers` without legacy `JIT skills` sub-block
-- `## Skill Bindings` with explicit ``required_skills`` and ``optional_skills`` lists
+- `## Identity Contract` with required backticked fields:
+  - `agent_id` (must match filename form `r-agent-XX` -> `R-AGENT-XX`)
+  - `runtime_role` (must be one of `foreman`, `auditor`, `conformist`)
+  - `stance_id` (must be one of `foreman`, `auditor`, `conformist`)
+- `## Capability Tags` with at least one backticked capability token bullet.
+- `## Pointers`
+- `## Skill Bindings` with explicit `required_skills` and `optional_skills` lists.
 - `## Scope Boundary`
 
 Role-boundary split is strict:
-- agent files define identity, authority boundary, pointers, and skill binding
-- stance templates define output-envelope behavior and response formatting
-- agent files must not embed stance-envelope directives
+- agent files define identity, authority boundary, pointers, and skill binding.
+- skill files define method contract.
+- task files define objective contract.
+- stance templates define output-envelope behavior.
+- stance prose must not be duplicated in agent leaves.
 
 ## Leaf Schema
-Leaf front-matter keys are required:
+Leaf frontmatter keys are required:
 - `trace_id`
 - `packet_id`
 - `created_at`
@@ -56,10 +58,3 @@ Leaf front-matter keys are required:
 `previous` semantics:
 - When prior head is an origin sentinel ending with `-(origin)`, emit `previous: (none)`.
 - Otherwise emit the prior head pointer path.
-
-## Operator Workflow
-- Use `ops/lib/scripts/agent.sh harvest-check` for Pattern Density signal review.
-- Use `ops/lib/scripts/agent.sh harvest` for candidate emission.
-- Review candidate content before promotion.
-- Use `ops/lib/scripts/agent.sh promote` to finalize canonical agent and advance promotion head.
-- Use `ops/lib/scripts/agent.sh check` for boundary and context hazard checks.

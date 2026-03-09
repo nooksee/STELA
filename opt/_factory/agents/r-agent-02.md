@@ -15,7 +15,8 @@ Code review for quality, security, and maintainability.
 
 ## Identity Contract
 - `agent_id`: `R-AGENT-02`
-- `stance_id`: `contractor`
+- `runtime_role`: `auditor`
+- `stance_id`: `auditor`
 
 ## Capability Tags
 - `code-review`

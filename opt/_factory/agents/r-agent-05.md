@@ -15,7 +15,8 @@ Refactor and dead-code cleanup.
 
 ## Identity Contract
 - `agent_id`: `R-AGENT-05`
-- `stance_id`: `contractor`
+- `runtime_role`: `conformist`
+- `stance_id`: `conformist`
 
 ## Capability Tags
 - `refactor-cleanup`

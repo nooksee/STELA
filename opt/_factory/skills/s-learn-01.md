@@ -11,6 +11,13 @@
 ## Scope
 Production payload work only. Not platform maintenance.
 
+## Method Contract
+- `skill_id`: `S-LEARN-01`
+- `method`: `pointer-first method execution`
+- `inputs`: `active DP scope and canon pointers`
+- `outputs`: `bounded execution steps and verification evidence for RESULTS`
+- `invariants`: `no out-of-scope edits, no disposable artifact dependence, fail closed on missing inputs`
+
 ## Invocation Guidance
 Use when a DP explicitly requests a verification loop or when payload verification gates are required.
 

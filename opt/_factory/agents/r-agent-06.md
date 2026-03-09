@@ -15,7 +15,8 @@ Security review and vulnerability detection.
 
 ## Identity Contract
 - `agent_id`: `R-AGENT-06`
-- `stance_id`: `contractor`
+- `runtime_role`: `auditor`
+- `stance_id`: `auditor`
 
 ## Capability Tags
 - `security-review`

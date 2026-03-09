@@ -2,12 +2,11 @@
 # Definition Specification: Tasks Chain
 
 ## Purpose
-Define the canonical behavior for the task definition chain rooted at `opt/_factory/TASKS.md`.
-This specification governs candidate and promotion pointer heads, emission requirements, and task registry alignment.
-Think of the pointer head like a run queue marker that keeps the latest candidate and promotion leaves in one predictable spot.
+Define canonical behavior for the task definition chain rooted at `opt/_factory/TASKS.md`.
+This specification governs pointer heads, promotion/candidate lifecycle, and F2 objective-contract normalization.
 
 ## Head Contract
-`opt/_factory/TASKS.md` is a four-line pointer head with this exact key order:
+`opt/_factory/TASKS.md` is a four-line pointer head in exact key order:
 1. `candidate:` latest candidate leaf pointer, or origin sentinel.
 2. `promotion:` latest promotion leaf pointer, or origin sentinel.
 3. `spec:` this specification path.
@@ -17,30 +16,36 @@ Allowed head values:
 - Origin sentinel: `archives/definitions/task-candidate-(origin)` and `archives/definitions/task-promotion-(origin)`.
 - Reachable leaf path: `archives/definitions/task-candidate-YYYY-MM-DD-<suffix>.md` or `archives/definitions/task-promotion-YYYY-MM-DD-<suffix>.md`.
 
-## Doctrine
-- Provenance is required for every task candidate and promotion leaf.
-- Reuse-first: reference existing scripts and registries instead of duplicating logic.
-- Orchestration-only: tasks coordinate agents, skills, and tools.
-- Execution logic ends with explicit closeout routing to `TASK.md`.
-
 ## Lifecycle
-- Candidate emission (`ops/lib/scripts/task.sh harvest`):
-  - Render candidate content from `ops/src/definitions/task.md.tpl`.
-  - Emit a schema-stamped leaf under `archives/definitions/`.
-  - Rewrite `candidate:` to the new leaf path.
-- Promotion emission (`ops/lib/scripts/task.sh promote`):
-  - Promote canon task file under `opt/_factory/tasks/`.
-  - Upsert `docs/ops/registry/tasks.md`.
-  - Emit promotion leaf under `archives/definitions/`.
-  - Rewrite `promotion:` to the new leaf path.
+- Candidate emission (`ops/lib/scripts/task.sh harvest`): render template, emit leaf, advance `candidate:`.
+- Promotion emission (`ops/lib/scripts/task.sh promote`): promote canon task, update registry, emit leaf, advance `promotion:`.
+
+## Canon Task Body Contract (F2 Baseline)
+Canon task files under `opt/_factory/tasks/` must contain:
+- `## Provenance`
+- `## Orchestration`
+- `## Objective Contract` with required backticked fields:
+  - `task_id`
+  - `objective`
+  - `inputs`
+  - `outputs`
+  - `invariants`
+- `## Pointers`
+- `## Execution Logic`
+- `## Scope Boundary`
+
+Task contract intent:
+- task files define objective contract and deterministic execution routing.
+- closeout routing references `TASK.md` Section 3.5.
+- task files do not define stance-envelope behavior.
 
 ## Leaf Schema
-Leaf front-matter keys are required:
+Leaf frontmatter keys are required:
 - `trace_id`
 - `packet_id`
 - `created_at`
 - `previous`
 
 `previous` semantics:
-- When prior head is an origin sentinel ending with `-(origin)`, emit `previous: (none)`.
-- Otherwise emit the prior head pointer path.
+- origin sentinel -> `previous: (none)`
+- otherwise prior head pointer path.

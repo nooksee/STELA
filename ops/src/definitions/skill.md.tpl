@@ -30,20 +30,29 @@ previous: {{PREVIOUS}}
 ## Scope
 Production payload work only. Not platform maintenance.
 
-## Constraints
-{{@include:ops/lib/manifests/CONSTRAINTS.md#section-1}}
+## Method Contract
+- `skill_id`: `S-LEARN-XX`
+- `method`: `pointer-first method execution`
+- `inputs`: `active DP scope`, `canon pointers`, `required toolchain`
+- `outputs`: `bounded execution steps`, `verification evidence for RESULTS`
+- `invariants`: `no out-of-scope edits`, `no disposable artifact dependence`, `fail closed on missing inputs`
 
-{{@include:ops/lib/manifests/CONSTRAINTS.md#section-3}}
-
-## Invocation guidance
+## Invocation Guidance
 Use this skill when {{CONTEXT}}. Apply the solution: {{SOLUTION}}.
+
+## Pointers
+- Constitution: `PoT.md`
+- Governance: `docs/GOVERNANCE.md`
+- Contract: `TASK.md`
+- Registry: `docs/ops/registry/skills.md`
+- Reference docs: `docs/MANUAL.md`
 
 ## Drift preventers
 - Stop if the DP scope is platform maintenance or if the DP does not explicitly request this skill.
 - Anti-hallucination: use repository files as SSOT and stop if required inputs are missing.
-- Negative check: do not add Skills to ops/lib/manifests/CONTEXT.md.
+- Negative check: do not add skills to `ops/lib/manifests/CONTEXT.md`.
 
 ## Procedure
-1) Review the context and desired outcome.
-2) Apply the solution steps captured in this skill.
-3) Verify results and record required evidence in RESULTS.
+- Review context and desired outcome.
+- Apply the solution steps captured in this skill.
+- Verify results and record required evidence in RESULTS.

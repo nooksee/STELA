@@ -27,7 +27,14 @@ previous: {{PREVIOUS}}
 
 ## Orchestration
 - **Primary Agent:** Not provided
-- **Supporting Agents:** Not provided
+- **Supporting Agents:** (none)
+
+## Objective Contract
+- `task_id`: `B-TASK-XX`
+- `objective`: `Not provided`
+- `inputs`: `active DP scope`, `assigned agent set`, `required tools and pointers`
+- `outputs`: `implemented bounded change set`, `receipt evidence`, `closeout-ready status`
+- `invariants`: `stop on failing gates`, `no out-of-scope edits`, `closeout follows TASK Section 3.5`
 
 ## Pointers
 - **Constitution:** `PoT.md`
@@ -36,19 +43,14 @@ previous: {{PREVIOUS}}
 - **Registry:** `docs/ops/registry/tasks.md`
 - **Toolchain:** Not provided
 - **JIT Skills:** (none)
-- **Reference Docs:** Not provided
-
-## Constraints
-{{@include:ops/lib/manifests/CONSTRAINTS.md#section-1}}
-
-{{@include:ops/lib/manifests/CONSTRAINTS.md#section-3}}
+- **Reference Docs:** `docs/MANUAL.md`
 
 ## Execution Logic
 1. Pre-flight: Not provided.
 2. Execution: Not provided.
 3. Verification: Not provided.
 4. Correction: Not provided.
-5. Closeout: Complete Closeout per `TASK.md` Section 4.
+5. Closeout: Complete Closeout per `TASK.md` Section 3.5.
 
 ## Scope Boundary
 - **Allowed:** Not provided.

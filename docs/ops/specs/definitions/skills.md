@@ -2,12 +2,11 @@
 # Definition Specification: Skills Chain
 
 ## Purpose
-Define the canonical behavior for the skill definition chain rooted at `opt/_factory/SKILLS.md`.
-This specification governs candidate and promotion pointer heads, leaf schema requirements, and skill registry linkage.
-Think of the pointer head like a dispatch board that keeps the active candidate and promotion leaves visible to every reviewer.
+Define canonical behavior for the skill definition chain rooted at `opt/_factory/SKILLS.md`.
+This specification governs pointer heads, leaf schema requirements, and F2 method-contract normalization.
 
 ## Head Contract
-`opt/_factory/SKILLS.md` is a four-line pointer head with this exact key order:
+`opt/_factory/SKILLS.md` is a four-line pointer head with exact key order:
 1. `candidate:` latest candidate leaf pointer, or origin sentinel.
 2. `promotion:` latest promotion leaf pointer, or origin sentinel.
 3. `spec:` this specification path.
@@ -18,27 +17,35 @@ Allowed head values:
 - Reachable leaf path: `archives/definitions/skill-candidate-YYYY-MM-DD-<suffix>.md` or `archives/definitions/skill-promotion-YYYY-MM-DD-<suffix>.md`.
 
 ## Lifecycle
-- Candidate emission (`ops/lib/scripts/skill.sh harvest`):
-  - Render candidate content from `ops/src/definitions/skill.md.tpl`.
-  - Emit a schema-stamped leaf under `archives/definitions/`.
-  - Rewrite `candidate:` to the new leaf path.
-- Promotion emission (`ops/lib/scripts/skill.sh promote`):
-  - Promote canon skill file under `opt/_factory/skills/`.
-  - Update `docs/ops/registry/skills.md`.
-  - Emit promotion leaf under `archives/definitions/`.
-  - Rewrite `promotion:` to the new leaf path.
+- Candidate emission (`ops/lib/scripts/skill.sh harvest`): render template, emit leaf, advance `candidate:`.
+- Promotion emission (`ops/lib/scripts/skill.sh promote`): promote canon skill, update registry, emit leaf, advance `promotion:`.
+
+## Canon Skill Body Contract (F2 Baseline)
+Canon skill files under `opt/_factory/skills/` must contain:
+- `## Provenance`
+- `## Scope`
+- `## Method Contract` with required backticked fields:
+  - `skill_id`
+  - `method`
+  - `inputs`
+  - `outputs`
+  - `invariants`
+- `## Invocation Guidance`
+- `## Pointers`
+- `## Guardrails` or `## Drift preventers`
+
+Skill contract intent:
+- skill files define method and execution constraints.
+- skill files must not embed stance-envelope directives.
+- skill files remain pointer-first and deterministic.
 
 ## Leaf Schema
-Leaf front-matter keys are required:
+Leaf frontmatter keys are required:
 - `trace_id`
 - `packet_id`
 - `created_at`
 - `previous`
 
 `previous` semantics:
-- When prior head is an origin sentinel ending with `-(origin)`, emit `previous: (none)`.
-- Otherwise emit the prior head pointer path.
-
-## Guardrails
-- Skills remain on-demand and must not be added to `ops/lib/manifests/CONTEXT.md`.
-- Candidate and promotion emissions retain template-rendered body content below schema front-matter.
+- origin sentinel -> `previous: (none)`
+- otherwise prior head pointer path.
