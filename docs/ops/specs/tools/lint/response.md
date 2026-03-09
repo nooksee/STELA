@@ -35,7 +35,7 @@ Deterministic checks:
    - reject audit-verdict marker lines (`**AUDIT -`),
    - reject `## Contractor Execution Narrative`,
    - reject receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`).
-8. In `architect` mode, reject ask-back fallback prompt text that substitutes clarification dialogue for DP emission (for example lines containing "Tell me the outcome you want from these files...").
+8. In `architect` mode, reject ask-back fallback prompt text that substitutes clarification dialogue for DP emission, including observed variants such as "Tell me the outcome you want...", "Tell me what you want done with them...", "review, summarize, draft the DP", and "inspect specific files, or trace a bug".
 9. In `analyst` mode, extracted body must start with `1. Analysis and Discussion` (markdown heading prefix optional).
 10. In `analyst` mode, extracted body must include `2. Strategic Options` and an explicit recommendation line.
 11. In `analyst` mode, reject role-drift markers:
@@ -92,6 +92,11 @@ Exit behavior:
 - FAIL: architect response containing audit marker (`architect` mode).
 - FAIL: architect response containing Contractor Execution Narrative sections (`architect` mode).
 - FAIL: architect response containing ask-back fallback prompt text (`architect` mode).
+- FAIL: architect response containing observed ask-back fallback variant (`architect` mode).
+- PASS: architect response with delegate enabled against a canonical rendered DP body.
+- FAIL: architect delegate-on response with malformed `3.4.5` receipt shape.
+- FAIL: architect delegate-on response with `3.5.1` closing-sidecar DP-id mismatch.
+
 - FAIL: analyst response containing audit marker (`analyst` mode).
 - FAIL: analyst response containing Contractor Execution Narrative sections (`analyst` mode).
 - FAIL: analyst response containing policy-overcompensation prose (`analyst` mode).

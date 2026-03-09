@@ -21,7 +21,8 @@ Define the template-backed Architect stance body used by bundle output contract 
 - Output contract requires no text before or after the fenced code block.
 - First non-empty line inside the fenced body must start with `### DP-`.
 - Output contract rejects Contractor Execution Narrative sections and receipt narrative subheadings.
-- Output contract rejects ask-back fallback prompt text after preconditions pass (for example "Tell me the outcome you want from these files...").
+- Output contract rejects ask-back fallback prompt text after preconditions pass (for example "Tell me the outcome you want..." and "Tell me what you want done with them...").
+- Architect ingress lint delegates fenced DP bodies to `tools/lint/dp.sh`; canonical body rules (including `3.4.5` receipt shape and `3.5.1` closing-sidecar coherence) remain mandatory.
 
 ## Invariants and failure modes
 - Include expansion is strict and fail-closed.

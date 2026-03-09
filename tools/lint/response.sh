@@ -220,6 +220,11 @@ check_architect_no_fallback_prompt() {
       if (index(lower, "for example, a summary, a specific slice analysis")) { printf "%d\t%s\n", NR, $0; exit }
       if (index(lower, "or the architect dp draft")) { printf "%d\t%s\n", NR, $0; exit }
       if (index(lower, "i have the repo dump, architect bundle")) { printf "%d\t%s\n", NR, $0; exit }
+      if (index(lower, "i\x27ve got the repo dump, architect bundle, and plan file loaded")) { printf "%d\t%s\n", NR, $0; exit }
+      if (index(lower, "ive got the repo dump, architect bundle, and plan file loaded")) { printf "%d\t%s\n", NR, $0; exit }
+      if (index(lower, "tell me what you want done with them")) { printf "%d\t%s\n", NR, $0; exit }
+      if (index(lower, "review, summarize, draft the dp")) { printf "%d\t%s\n", NR, $0; exit }
+      if (index(lower, "inspect specific files, or trace a bug")) { printf "%d\t%s\n", NR, $0; exit }
     }
   ' "$body_path")"
   if [[ -n "$hit" ]]; then
@@ -624,6 +629,14 @@ run_test() {
   local response_architect_audit_marker
   local response_architect_narrative
   local response_architect_ask_back
+  local response_architect_ask_back_variant
+  local response_architect_delegate_valid
+  local response_architect_receipt_shape_drift
+  local response_architect_sidecar_mismatch
+  local response_architect_delegate_slots
+  local response_architect_delegate_payload
+  local response_architect_delegate_drift_payload
+  local response_architect_delegate_sidecar_payload
   local response_analyst_valid
   local response_analyst_audit_marker
   local response_analyst_narrative
@@ -659,6 +672,14 @@ run_test() {
   response_architect_audit_marker="${test_dir}/response-architect-audit-marker.md"
   response_architect_narrative="${test_dir}/response-architect-narrative.md"
   response_architect_ask_back="${test_dir}/response-architect-ask-back.md"
+  response_architect_ask_back_variant="${test_dir}/response-architect-ask-back-variant.md"
+  response_architect_delegate_valid="${test_dir}/response-architect-delegate-valid.md"
+  response_architect_receipt_shape_drift="${test_dir}/response-architect-receipt-shape-drift.md"
+  response_architect_sidecar_mismatch="${test_dir}/response-architect-sidecar-mismatch.md"
+  response_architect_delegate_slots="${test_dir}/response-architect-delegate-slots.md"
+  response_architect_delegate_payload="${test_dir}/response-architect-delegate-payload.md"
+  response_architect_delegate_drift_payload="${test_dir}/response-architect-delegate-drift-payload.md"
+  response_architect_delegate_sidecar_payload="${test_dir}/response-architect-delegate-sidecar-payload.md"
   response_analyst_valid="${test_dir}/response-analyst-valid.md"
   response_analyst_audit_marker="${test_dir}/response-analyst-audit-marker.md"
   response_analyst_narrative="${test_dir}/response-analyst-narrative.md"
@@ -863,6 +884,116 @@ EOF_ARCH_ASK_BACK
   if lint_response_file "$response_architect_ask_back" >/dev/null 2>&1; then
     echo "FAIL: --test expected architect response with ask-back fallback prompt to fail" >&2
     failures_local=1
+  fi
+
+  cat > "$response_architect_ask_back_variant" <<'EOF_ARCH_ASK_BACK_VARIANT'
+```markdown
+### DP-OPS-9999: Architect Drift Fixture
+
+Ive got the repo dump, architect bundle, and PLAN file loaded.
+Tell me what you want done with them-review, summarize, draft the DP, inspect specific files, or trace a bug.
+```
+EOF_ARCH_ASK_BACK_VARIANT
+  if lint_response_file "$response_architect_ask_back_variant" >/dev/null 2>&1; then
+    echo "FAIL: --test expected architect response with ask-back variant prompt to fail" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_architect_delegate_slots" <<'EOF_ARCH_DELEGATE_SLOTS'
+[DP_ID]
+DP-OPS-9999
+
+[DP_TITLE]
+Response Architect Delegate Fixture
+
+[BASE_BRANCH]
+main
+
+[WORK_BRANCH]
+work/dp-ops-9999-response-architect-delegate-fixture-2026-03-09
+
+[BASE_HEAD]
+ac852bb9
+
+[FRESHNESS_STAMP]
+2026-03-09
+
+[DP_SCOPED_LOAD_ORDER]
+- PoT.md
+- TASK.md
+
+[OBJECTIVE]
+Keep architect response delegate fixture deterministic.
+
+[IN_SCOPE]
+- Validate architect delegate positive and negative fixture paths.
+
+[OUT_OF_SCOPE]
+- Runtime transport behavior changes.
+
+[SAFETY_INVARIANTS]
+- Deterministic fixtures only.
+
+[PLAN_STATE]
+- Fixture-only state for architect response lint tests.
+
+[PLAN_REQUEST]
+1. Generate canonical DP body for architect delegate tests.
+
+[PLAN_CHANGELOG]
+UPDATE:
+- tools/lint/response.sh
+
+[PLAN_PATCH]
+1. Render canonical body and wrap in a fenced architect response fixture.
+
+[RECEIPT_EXTRA]
+- bash tools/lint/response.sh --test
+
+[CBC_PREFLIGHT]
+Applicable. Deterministic fixture checks only.
+EOF_ARCH_DELEGATE_SLOTS
+
+  if ! ./ops/bin/manifest render dp --slots-file="$response_architect_delegate_slots" --out="$response_architect_delegate_payload" >/dev/null 2>&1; then
+    echo "FAIL: --test expected canonical architect delegate fixture render to pass" >&2
+    failures_local=1
+  else
+    {
+      echo '```markdown'
+      cat "$response_architect_delegate_payload"
+      printf '\n```\n'
+    } > "$response_architect_delegate_valid"
+
+    response_skip_dp_delegate=0
+    if ! lint_response_file "$response_architect_delegate_valid" >/dev/null 2>&1; then
+      echo "FAIL: --test expected architect delegate-on canonical fixture to pass" >&2
+      failures_local=1
+    fi
+
+    cp "$response_architect_delegate_payload" "$response_architect_delegate_drift_payload"
+    sed -i 's/^### 3\.4\.5 Receipt (Proofs to collect) - MUST RUN$/### 3.4.5 Receipt/' "$response_architect_delegate_drift_payload"
+    {
+      echo '```markdown'
+      cat "$response_architect_delegate_drift_payload"
+      printf '\n```\n'
+    } > "$response_architect_receipt_shape_drift"
+    if lint_response_file "$response_architect_receipt_shape_drift" >/dev/null 2>&1; then
+      echo "FAIL: --test expected architect delegate fixture with 3.4.5 drift to fail" >&2
+      failures_local=1
+    fi
+
+    cp "$response_architect_delegate_payload" "$response_architect_delegate_sidecar_payload"
+    sed -i 's/CLOSING-DP-OPS-9999\.md/CLOSING-DP-OPS-9998.md/g' "$response_architect_delegate_sidecar_payload"
+    {
+      echo '```markdown'
+      cat "$response_architect_delegate_sidecar_payload"
+      printf '\n```\n'
+    } > "$response_architect_sidecar_mismatch"
+    if lint_response_file "$response_architect_sidecar_mismatch" >/dev/null 2>&1; then
+      echo "FAIL: --test expected architect delegate fixture with sidecar mismatch to fail" >&2
+      failures_local=1
+    fi
+    response_skip_dp_delegate=1
   fi
 
   response_mode="analyst"
