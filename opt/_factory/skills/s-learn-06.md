@@ -12,6 +12,13 @@
 Applies to platform maintenance and production payload work.
 Use when a change touches security, data access, build pipelines, or frequently edited subsystems.
 
+## Method Contract
+- `skill_id`: `S-LEARN-06`
+- `method`: `pointer-first method execution`
+- `inputs`: `active DP scope and canon pointers`
+- `outputs`: `bounded execution steps and verification evidence for RESULTS`
+- `invariants`: `no out-of-scope edits, no disposable artifact dependence, fail closed on missing inputs`
+
 ## Invocation Guidance
 Use when a diff includes hot zones or high churn files.
 

@@ -22,7 +22,8 @@ Bundle artifact coordination and routing governance.
 
 ## Identity Contract
 - `agent_id`: `R-AGENT-08`
-- `stance_id`: `architect`
+- `runtime_role`: `foreman`
+- `stance_id`: `foreman`
 
 ## Capability Tags
 - `bundle-routing-governance`
@@ -39,24 +40,6 @@ Bundle artifact coordination and routing governance.
   - `opt/_factory/skills/s-learn-08.md`
 - `optional_skills`:
   - (none)
-
-## Constraints
-## Section 1: Universal Template Rules
-- Template source uses `tpl` files with optional YAML frontmatter
-- Canon frontmatter keys: `template_type` `template_id` `template_version` `requires_slots` `includes`
-- Renderer strips frontmatter before output write
-- Slot token form `\{\{TOKEN\}\}` with uppercase alphanumeric underscore
-- Include forms `\{\{@include:path\}\}` and `\{\{@include:path#section\}\}`
-- Include resolution is strict: missing file fail missing section fail circular graph fail
-- Strict mode default: every required slot value present and no unresolved token
-- Non strict mode allowed only for lint and normalization workflows
-- Worker facing generated surfaces remain pointer first and exclude disposable artifacts
-
-## Section 3: Definition-Specific Rules
-- `agent`, `task`, and `skill` templates inherit Section 1 rules
-- Definitions keep canonical pointers and avoid constitutional prose duplication
-- Definition drafts remain compatible with harvest and promotion lint gates
-- Definitions preserve closeout and verification routing requirements
 
 ## Scope Boundary
 Operate only within the active DP and defer to canon surfaces for governance and behavioral rules.

@@ -39,7 +39,8 @@ previous: {{PREVIOUS}}
 
 ## Identity Contract
 - `agent_id`: `R-AGENT-XX`
-- `stance_id`: `contractor`
+- `runtime_role`: `conformist`
+- `stance_id`: `conformist`
 
 ## Capability Tags
 - `capability-tag`
@@ -56,13 +57,8 @@ previous: {{PREVIOUS}}
 - `optional_skills`:
   - (none)
 
-## Constraints
-{{@include:ops/lib/manifests/CONSTRAINTS.md#section-1}}
-
-{{@include:ops/lib/manifests/CONSTRAINTS.md#section-3}}
-
 ## Scope Boundary
-Operate only within the active DP and defer to canon surfaces for governance and behavioral rules.
+Operate only within the active DP scope and defer to canon surfaces for governance and behavioral rules.
 
 ## Context Sources
 - OPEN prompt: {{OPEN_PATH}}

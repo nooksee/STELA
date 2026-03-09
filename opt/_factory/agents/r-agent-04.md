@@ -15,7 +15,8 @@ Planning and integration for complex changes.
 
 ## Identity Contract
 - `agent_id`: `R-AGENT-04`
-- `stance_id`: `auditor`
+- `runtime_role`: `foreman`
+- `stance_id`: `foreman`
 
 ## Capability Tags
 - `integration-planning`

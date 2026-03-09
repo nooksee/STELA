@@ -11,6 +11,13 @@
 - **Primary Agent:** R-AGENT-04 (integrator)
 - **Supporting Agents:** R-AGENT-02 (code-reviewer), R-AGENT-06 (security-reviewer)
 
+## Objective Contract
+- `task_id`: `B-TASK-03`
+- `objective`: `Integrate Command`
+- `inputs`: `active DP scope, assigned agent set, and required tools`
+- `outputs`: `bounded change set, receipt evidence, and closeout-ready status`
+- `invariants`: `stop on failing gates, no out-of-scope edits, closeout follows TASK Section 3.5`
+
 ## Pointers
 - **Constitution:** `PoT.md`
 - **Governance:** `docs/GOVERNANCE.md`

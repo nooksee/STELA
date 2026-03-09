@@ -1065,7 +1065,7 @@ run_surface_emission_step() {
 
   append_command_log_entry \
     "$cmd_id" \
-    "internal: phase-2 surface leaf emission and HEAD pointer rewrite" \
+    "internal: surface leaf emission and HEAD pointer rewrite" \
     "$started_at" \
     "$finished_at" \
     "$duration_seconds" \

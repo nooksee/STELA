@@ -11,6 +11,13 @@
 - **Primary Agent:** R-AGENT-02 (code-reviewer)
 - **Supporting Agents:** (none)
 
+## Objective Contract
+- `task_id`: `B-TASK-02`
+- `objective`: `Verification Command`
+- `inputs`: `active DP scope, assigned agent set, and required tools`
+- `outputs`: `bounded change set, receipt evidence, and closeout-ready status`
+- `invariants`: `stop on failing gates, no out-of-scope edits, closeout follows TASK Section 3.5`
+
 ## Pointers
 - **Constitution:** `PoT.md`
 - **Governance:** `docs/GOVERNANCE.md`

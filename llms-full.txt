@@ -164,7 +164,7 @@ When reporting, include:
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-03-09-d70db199.md
+archives/surfaces/PoW-2026-03-09-320a1470.md
 
 
 ## README.md
@@ -181,11 +181,11 @@ Use [docs/MANUAL.md](docs/MANUAL.md) for command workflow and closeout routing.
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-03-09-d70db199.md
+archives/surfaces/SoP-2026-03-09-320a1470.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0179-d70db199.md
+archives/surfaces/TASK-DP-OPS-0180-320a1470.md
 
 
 ## docs/INDEX.md
@@ -278,25 +278,35 @@ No projects discovered.
 ## opt/_factory/INDEX.md
 # Factory Index (Navigation)
 
-This index is navigation only. Registries in `docs/ops/registry/` are the single source of truth for agents, skills, tasks, and projects.
+This index is navigation-only. Canon registries in `docs/ops/registry/` are the source of truth for active definitions.
+
+## Contract Baseline
+- Agents carry identity and boundary contract fields.
+- Skills carry method contract fields.
+- Tasks carry objective contract fields.
+- Stance behavior is referenced through `stance_id`; stance prose is not duplicated in agent leaves.
+
+## Runtime Role Naming Map
+- `foreman` -> planning and integration authority paths.
+- `auditor` -> review and risk-assessment paths.
+- `conformist` -> implementation and standards-conformance paths.
 
 ## Canon Surfaces
-- `PoT.md` — Policy of Truth and jurisdiction.
-- `docs/GOVERNANCE.md` — Governance and drift rules.
-- `SoP.md` — State of Play ledger.
-- `TASK.md` — Dispatch Packet contract and work log.
-
-## Operator Interfaces
-- `docs/MANUAL.md` — Operator console.
-- `docs/MAP.md` — Continuity map.
-- `docs/INDEX.md` — Docs root index.
-- `docs/ops/README.md` — Ops subsystem overview.
-- `docs/CONTEXT.md` — Context rehydration guide.
+- `PoT.md` — policy and jurisdiction.
+- `docs/MANUAL.md` — operator mechanics.
+- `docs/MAP.md` — continuity map.
+- `TASK.md` — active dispatch contract.
 
 ## Registries
-- `docs/ops/registry/agents.md` — Canon agent registry.
-- `docs/ops/registry/skills.md` — Canon skill registry.
-- `docs/ops/registry/tasks.md` — Canon task registry.
-- `docs/ops/registry/projects.md` — Canon project registry.
+- `docs/ops/registry/factory.md` — definition census and disposition matrix.
+- `docs/ops/registry/agents.md` — agent identity registry.
+- `docs/ops/registry/skills.md` — skill method registry.
+- `docs/ops/registry/tasks.md` — task objective registry.
+
+## Specs
+- `docs/ops/specs/definitions/agents.md`
+- `docs/ops/specs/definitions/skills.md`
+- `docs/ops/specs/definitions/tasks.md`
+- `docs/ops/specs/tools/lint/factory.md`
 
 

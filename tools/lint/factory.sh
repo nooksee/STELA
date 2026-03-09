@@ -488,6 +488,119 @@ if compgen -G "${skills_dir}/*.md" > /dev/null; then
   done
 fi
 
+# baseline: enforce runtime-role naming contract on agent identities.
+if compgen -G "${FACTORY_DIR}/agents/*.md" > /dev/null; then
+  for agent in "${FACTORY_DIR}/agents"/*.md; do
+    agent_name="$(basename "$agent")"
+    identity_section="$(extract_section "## Identity Contract" "$agent")"
+
+    runtime_role="$(printf '%s\n' "$identity_section" | awk '/^[[:space:]]*-[[:space:]]*`runtime_role`:[[:space:]]*`[^`]+`[[:space:]]*$/ { line=$0; sub(/^[[:space:]]*-[[:space:]]*`runtime_role`:[[:space:]]*`/, "", line); sub(/`[[:space:]]*$/, "", line); print line; exit }')"
+    runtime_role="$(trim "$runtime_role")"
+    if [[ -z "$runtime_role" ]]; then
+      fail "${agent_name} missing Identity Contract field 'runtime_role'"
+    fi
+
+    stance_id="$(printf '%s\n' "$identity_section" | awk '/^[[:space:]]*-[[:space:]]*`stance_id`:[[:space:]]*`[^`]+`[[:space:]]*$/ { line=$0; sub(/^[[:space:]]*-[[:space:]]*`stance_id`:[[:space:]]*`/, "", line); sub(/`[[:space:]]*$/, "", line); print line; exit }')"
+    stance_id="$(trim "$stance_id")"
+    if [[ -z "$stance_id" ]]; then
+      fail "${agent_name} missing Identity Contract field 'stance_id'"
+    fi
+
+    case "$runtime_role" in
+      foreman|auditor|conformist) ;;
+      *) fail "${agent_name} runtime_role '${runtime_role}' is not in allowed set {foreman,auditor,conformist}" ;;
+    esac
+
+    case "$stance_id" in
+      foreman|auditor|conformist) ;;
+      *) fail "${agent_name} stance_id '${stance_id}' is not in allowed set {foreman,auditor,conformist}" ;;
+    esac
+  done
+fi
+
+# baseline: enforce skill method contract fields.
+if compgen -G "${FACTORY_DIR}/skills/*.md" > /dev/null; then
+  for skill in "${FACTORY_DIR}/skills"/*.md; do
+    skill_name="$(basename "$skill")"
+    skill_id_expected="$(basename "$skill" .md | tr '[:lower:]' '[:upper:]')"
+
+    method_count="$(grep -c '^## Method Contract$' "$skill" || true)"
+    if [[ "$method_count" -eq 0 ]]; then
+      fail "${skill_name} missing required section '## Method Contract'"
+      continue
+    fi
+    if [[ "$method_count" -gt 1 ]]; then
+      fail "${skill_name} has duplicate section '## Method Contract'"
+    fi
+
+    method_section="$(extract_section "## Method Contract" "$skill")"
+    if [[ -z "$(printf '%s\n' "$method_section" | sed '/^[[:space:]]*$/d')" ]]; then
+      fail "${skill_name} section '## Method Contract' is empty"
+      continue
+    fi
+
+    for key in skill_id method inputs outputs invariants; do
+      value="$(printf '%s\n' "$method_section" | awk -v key="$key" '
+        $0 ~ "^[[:space:]]*-[[:space:]]*`" key "`:[[:space:]]*`[^`]*`[[:space:]]*$" {
+          line=$0
+          sub("^[[:space:]]*-[[:space:]]*`" key "`:[[:space:]]*`", "", line)
+          sub("`[[:space:]]*$", "", line)
+          print line
+          exit
+        }
+      ')"
+      value="$(trim "$value")"
+      if [[ -z "$value" || "$value" == "Not provided" ]]; then
+        fail "${skill_name} Method Contract field '${key}' is missing or empty"
+      fi
+      if [[ "$key" == "skill_id" && "$value" != "$skill_id_expected" ]]; then
+        fail "${skill_name} Method Contract skill_id '${value}' does not match expected '${skill_id_expected}'"
+      fi
+    done
+  done
+fi
+
+# baseline: enforce task objective contract fields.
+if compgen -G "${FACTORY_DIR}/tasks/*.md" > /dev/null; then
+  for task in "${FACTORY_DIR}/tasks"/*.md; do
+    task_name="$(basename "$task")"
+    task_id_expected="$(basename "$task" .md | tr '[:lower:]' '[:upper:]')"
+
+    objective_count="$(grep -c '^## Objective Contract$' "$task" || true)"
+    if [[ "$objective_count" -eq 0 ]]; then
+      fail "${task_name} missing required section '## Objective Contract'"
+      continue
+    fi
+    if [[ "$objective_count" -gt 1 ]]; then
+      fail "${task_name} has duplicate section '## Objective Contract'"
+    fi
+
+    objective_section="$(extract_section "## Objective Contract" "$task")"
+    if [[ -z "$(printf '%s\n' "$objective_section" | sed '/^[[:space:]]*$/d')" ]]; then
+      fail "${task_name} section '## Objective Contract' is empty"
+      continue
+    fi
+
+    for key in task_id objective inputs outputs invariants; do
+      value="$(printf '%s\n' "$objective_section" | awk -v key="$key" '
+        $0 ~ "^[[:space:]]*-[[:space:]]*`" key "`:[[:space:]]*`[^`]*`[[:space:]]*$" {
+          line=$0
+          sub("^[[:space:]]*-[[:space:]]*`" key "`:[[:space:]]*`", "", line)
+          sub("`[[:space:]]*$", "", line)
+          print line
+          exit
+        }
+      ')"
+      value="$(trim "$value")"
+      if [[ -z "$value" || "$value" == "Not provided" ]]; then
+        fail "${task_name} Objective Contract field '${key}' is missing or empty"
+      fi
+      if [[ "$key" == "task_id" && "$value" != "$task_id_expected" ]]; then
+        fail "${task_name} Objective Contract task_id '${value}' does not match expected '${task_id_expected}'"
+      fi
+    done
+  done
+fi
 duplicate_patterns=(
   "git status --porcelain"
   "npm run lint"
