@@ -16,6 +16,8 @@
 8. Enforce allowlist pointer integrity: exactly one pointer entry, canonical pointer path match, allowlist file existence, entry normalization, runtime-prefix restrictions, wildcard policy constraints, and repository reachability checks.
 9. For RESULTS paths, delegate validation to `tools/lint/results.sh` and propagate its exit code. RESULTS schema enforcement is sourced from the canonical template plus narrative field checks.
 10. In `--test` mode, execute fixture-driven negative and positive checks that exercise template-hash drift, structure mismatch, allowlist-pointer mismatch, allowlist-file invalidity, narrowed `PROPOSED` provisional-marker detection, foreign citation contamination detection, and delegated RESULTS validation coverage (valid fixture and deterministic invalid fixture).
+11. Enforce mandatory receipt-command shape in `3.4.5`: verify canonical mandatory command lines are present and fail deterministically when missing.
+12. Enforce closing-sidecar non-prepopulation in `3.5.1`: reject architect payloads that provide non-empty values for canonical sidecar fields.
 
 ### PROPOSED Provisional-Marker Scan Fixtures (`--test`)
 `dp.sh --test` must cover all three `PROPOSED` scan outcome classes introduced by DP-OPS-0112 addendum ADD-DP-OPS-0112-001:
@@ -30,6 +32,13 @@
 1. **Non-canonical closeout phrase (FAIL):** inject `- Route to contractor ...` into §3.5 and require failure.
 2. **Work-branch coherence mismatch (FAIL):** heading id and `Required Work Branch` id fragment disagree and must fail.
 3. **Closing-sidecar coherence mismatch (FAIL):** heading id and §3.5.1 `CLOSING-DP-OPS-XXXX.md` id fragment disagree and must fail.
+
+### Mandatory Receipt Command Shape and Sidecar Pre-population Fixtures (`--test`)
+`dp.sh --test` must include deterministic fixtures for residual T1.1 hardening:
+
+1. **Missing mandatory receipt command (FAIL):** a `3.4.5` fixture omits a canonical mandatory command and must fail.
+2. **Pre-populated `3.5.1` sidecar field (FAIL):** a fixture sets `Commit Message: <value>` and must fail.
+3. **Canonical pass path (PASS):** canonical fixture with full mandatory command set and blank sidecar fields must pass both checks.
 
 ### Freshness Stamp and Receipt Command Substitution Checks
 `lint_payload()` runs two certify-compatibility checks immediately after `check_dump_selection_scope()`:
