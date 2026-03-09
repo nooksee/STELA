@@ -21,6 +21,7 @@ Define the template-backed Architect stance body used by bundle output contract 
 - Output contract requires no text before or after the fenced code block.
 - First non-empty line inside the fenced body must start with `### DP-`.
 - Output contract rejects Contractor Execution Narrative sections and receipt narrative subheadings.
+- Output contract rejects ask-back fallback prompt text after preconditions pass (for example "Tell me the outcome you want from these files...").
 
 ## Invariants and failure modes
 - Include expansion is strict and fail-closed.

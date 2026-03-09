@@ -45,9 +45,11 @@ Steps:
    * Do not output Contractor Execution Narrative sections or receipt narrative subheadings in architect mode.
    * Do not author or populate any §3.5.1 Mandatory Closing Sidecar field at draft time.
    * Do not infer missing handoff intent. Use explicit selections only or **STOP**.
+   * Once preconditions and handoff validation pass, emit the full DP immediately; do not ask for desired outcome or offer summary/slice-analysis fallback prompts.
 
 Output only: Full DP (starting at `### DP-...`) in one markdown code block.
 Do not output option menus, planning chatter, or confirmation prompts once preconditions pass.
+Do not emit ask-back fallback text such as "Tell me the outcome you want from these files...".
 {{@include:ops/src/shared/stances.json#single_fence_contract_rules}}
 First non-empty line inside the code block must start with `### DP-`.
 {{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}

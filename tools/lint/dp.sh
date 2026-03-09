@@ -750,6 +750,71 @@ check_receipt_command_substitution() {
   done <<< "$receipt_block"
 }
 
+check_closeout_section_shape() {
+  local path="$1"
+  local closeout_block
+  local compact_block
+  local line
+  local lowered
+
+  closeout_block="$(awk '
+    BEGIN { in_closeout=0 }
+    /^##[[:space:]]*3[.]5([.]|[[:space:]])/ { in_closeout=1; next }
+    in_closeout && /^### 3[.]5[.]1([.]|[[:space:]])/ { exit }
+    in_closeout && /^##[[:space:]]*[0-9]+[.]/ { exit }
+    in_closeout { print }
+  ' "$path")"
+
+  compact_block="$(printf '%s\n' "$closeout_block" | sed '/^[[:space:]]*$/d')"
+  if [[ -z "$compact_block" ]]; then
+    fail "§3.5 Closeout section is empty or missing"
+    return
+  fi
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    lowered="$(printf '%s' "$line" | tr '[:upper:]' '[:lower:]')"
+    if [[ "$lowered" =~ route[[:space:]]+to[[:space:]]+[a-z] \
+      || "$lowered" =~ hand[[:space:]]*off[[:space:]]+to \
+      || "$lowered" =~ pass[[:space:]]+to[[:space:]]+[a-z] \
+      || "$lowered" =~ send[[:space:]]+to[[:space:]]+[a-z] ]]; then
+      fail "§3.5 contains non-canonical closeout routing phrase: ${line}"
+      return
+    fi
+  done <<< "$closeout_block"
+}
+
+check_dp_packet_coherence() {
+  local path="$1"
+  local heading
+  local dp_id
+  local expected_fragment
+  local work_branch
+  local sidecar_path
+  local sidecar_dp_id
+
+  heading="$(grep -m1 -E '^### DP-' "$path" || true)"
+  [[ -n "$heading" ]] || return
+  dp_id="$(printf '%s' "$heading" | sed -E 's/^###[[:space:]]*(DP-[^:]+):.*$/\1/')"
+  [[ "$dp_id" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]] || return
+
+  expected_fragment="$(printf '%s' "$dp_id" | tr '[:upper:]' '[:lower:]')"
+  work_branch="$(trim "$(strip_backticks "$(extract_field_value "Required Work Branch" "$path")")")"
+  if [[ -n "$work_branch" && "$work_branch" != *"${expected_fragment}"* ]]; then
+    fail "Required Work Branch must include '${expected_fragment}' to match heading id '${dp_id}'"
+  fi
+
+  sidecar_path="$(grep -m1 -Eo 'storage/handoff/CLOSING-DP-[A-Z]+-[0-9]{4,}(-ADDENDUM-[A-Z]+)?\.md' "$path" || true)"
+  if [[ -z "$sidecar_path" ]]; then
+    fail "missing canonical closing-sidecar path in §3.5.1 (expected storage/handoff/CLOSING-${dp_id}.md)"
+    return
+  fi
+
+  sidecar_dp_id="$(printf '%s' "$sidecar_path" | sed -E 's#^storage/handoff/CLOSING-(DP-[A-Z]+-[0-9]{4,})(-ADDENDUM-[A-Z]+)?\.md$#\1#')"
+  if [[ "$sidecar_dp_id" != "$dp_id" ]]; then
+    fail "closing-sidecar DP id mismatch: heading uses '${dp_id}' but §3.5.1 uses '${sidecar_dp_id}'"
+  fi
+}
+
 check_allowlist_pointer_integrity() {
   local path="$1"
   local allowlist_block
@@ -973,7 +1038,9 @@ lint_payload() {
   check_allowlist_pointer_integrity "$path"
   check_dump_selection_scope "$path"
   check_freshness_stamp_format "$path"
+  check_dp_packet_coherence "$path"
   check_receipt_command_substitution "$path"
+  check_closeout_section_shape "$path"
 
   if (( failures )); then
     return 1
@@ -1172,6 +1239,37 @@ run_test() {
     echo "FAIL: --test expected DP structure hash mismatch failure" >&2
     exit 1
   fi
+
+  tmp_closeout_bad="$(mktemp)"
+  awk '
+    /^### 3\.5\.1/ && !inserted {
+      print "- Route to contractor for certification"
+      inserted=1
+    }
+    { print }
+  ' "$tmp_valid" > "$tmp_closeout_bad"
+  if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_closeout_bad" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad" "$tmp_closeout_bad"
+    echo "FAIL: --test expected non-canonical closeout routing phrase failure" >&2
+    exit 1
+  fi
+  rm -f "$tmp_closeout_bad"
+
+  tmp_coherence_bad="$(mktemp)"
+  cp "$tmp_valid" "$tmp_coherence_bad"
+  sed -i 's#^Required Work Branch: .*#Required Work Branch: work/dp-ops-9999-2026-02-14#' "$tmp_coherence_bad"
+  if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_coherence_bad" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad" "$tmp_coherence_bad"
+    echo "FAIL: --test expected packet-coherence work-branch mismatch failure" >&2
+    exit 1
+  fi
+  sed -i 's#storage/handoff/CLOSING-DP-OPS-0000.md#storage/handoff/CLOSING-DP-OPS-9999.md#g' "$tmp_coherence_bad"
+  if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_coherence_bad" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad" "$tmp_coherence_bad"
+    echo "FAIL: --test expected packet-coherence sidecar mismatch failure" >&2
+    exit 1
+  fi
+  rm -f "$tmp_coherence_bad"
 
   cp "$tmp_valid" "$tmp_pointer_bad"
   sed -i "s#^- ${tmp_allowlist_valid}\$#- storage/dp/active/not-canonical.txt#" "$tmp_pointer_bad"
