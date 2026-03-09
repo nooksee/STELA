@@ -783,6 +783,86 @@ check_closeout_section_shape() {
   done <<< "$closeout_block"
 }
 
+check_mandatory_receipt_commands() {
+  local path="$1"
+  local receipt_block
+
+  receipt_block="$(extract_block "$path" '^### 3[.]4[.]5' '^## 3[.]5([.]|[[:space:]])')"
+  if [[ -z "$receipt_block" ]]; then
+    return 0
+  fi
+
+  local -a mandatory_commands=(
+    "bash tools/lint/dp.sh TASK.md"
+    "bash tools/lint/task.sh"
+    "bash tools/lint/integrity.sh"
+    "bash tools/lint/style.sh"
+    "./ops/bin/llms"
+    "git diff --name-only"
+    "git diff --stat"
+    "comm -23 <(git diff --name-only | sort) <(sort storage/dp/active/allowlist.txt) || true"
+    "comm -23 <(git ls-files --others --exclude-standard | sort) <(sort storage/dp/active/allowlist.txt) || true"
+    "./ops/bin/open"
+  )
+
+  local cmd
+  for cmd in "${mandatory_commands[@]}"; do
+    if ! printf '%s\n' "$receipt_block" | grep -Fq -- "- ${cmd}"; then
+      fail "§3.4.5 mandatory receipt command missing: ${cmd}"
+    fi
+  done
+
+  local integrity_count
+  integrity_count="$(printf '%s\n' "$receipt_block" | grep -Fxc -- '- bash tools/lint/integrity.sh' || true)"
+  if (( integrity_count < 2 )); then
+    fail "§3.4.5 mandatory receipt command missing required second occurrence: bash tools/lint/integrity.sh"
+  fi
+}
+
+check_sidecar_not_prepopulated() {
+  local path="$1"
+  local sidecar_block
+
+  sidecar_block="$(awk '
+    BEGIN { in_sidecar=0 }
+    /^### 3[.]5[.]1([.]|[[:space:]])/ { in_sidecar=1; next }
+    in_sidecar && /^##[[:space:]]*[0-9]+[.]/ { exit }
+    in_sidecar { print }
+  ' "$path")"
+
+  if [[ -z "$sidecar_block" ]]; then
+    return 0
+  fi
+
+  local -a sidecar_labels=(
+    "Commit Message"
+    "Create Pull Request (Title)"
+    "Create Pull Request (Description)"
+    "Confirm Merge (Commit Message)"
+    "Confirm Merge (Extended Description)"
+    "Confirm Merge (Add a Comment)"
+  )
+
+  local lbl
+  local field_value
+  for lbl in "${sidecar_labels[@]}"; do
+    field_value="$(printf '%s\n' "$sidecar_block" | awk -v label="$lbl" '
+      {
+        line=$0
+        gsub(/^[[:space:]]*-[[:space:]]*/, "", line)
+        if (index(line, label ":") == 1) {
+          sub("^" label ":[[:space:]]*", "", line)
+          print line
+          exit
+        }
+      }
+    ')"
+    field_value="$(trim "$field_value")"
+    if [[ -n "$field_value" ]]; then
+      fail "§3.5.1 closing-sidecar field pre-populated by architect (must be left blank): ${lbl}"
+    fi
+  done
+}
 check_dp_packet_coherence() {
   local path="$1"
   local heading
@@ -1041,6 +1121,8 @@ lint_payload() {
   check_dp_packet_coherence "$path"
   check_receipt_command_substitution "$path"
   check_closeout_section_shape "$path"
+  check_mandatory_receipt_commands "$path"
+  check_sidecar_not_prepopulated "$path"
 
   if (( failures )); then
     return 1
@@ -1418,6 +1500,35 @@ TESTRESULTS
   if (( failures )); then
     rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected direct contamination scan clean pass" >&2
+    exit 1
+  fi
+
+  tmp_receipt_missing_bad="$(mktemp)"
+  cp "$tmp_valid" "$tmp_receipt_missing_bad"
+  sed -i '/^- bash tools\/lint\/integrity\.sh$/d' "$tmp_receipt_missing_bad"
+  if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_receipt_missing_bad" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad" "$tmp_receipt_missing_bad"
+    echo "FAIL: --test expected missing mandatory receipt command failure" >&2
+    exit 1
+  fi
+  rm -f "$tmp_receipt_missing_bad"
+
+  tmp_sidecar_prepop_bad="$(mktemp)"
+  cp "$tmp_valid" "$tmp_sidecar_prepop_bad"
+  sed -i 's/^- Commit Message$/- Commit Message: feat: prefilled/' "$tmp_sidecar_prepop_bad"
+  if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_sidecar_prepop_bad" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad" "$tmp_sidecar_prepop_bad"
+    echo "FAIL: --test expected sidecar pre-population failure" >&2
+    exit 1
+  fi
+  rm -f "$tmp_sidecar_prepop_bad"
+
+  failures=0
+  check_mandatory_receipt_commands "$tmp_valid"
+  check_sidecar_not_prepopulated "$tmp_valid"
+  if (( failures )); then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+    echo "FAIL: --test expected canonical pass through mandatory receipt and sidecar checks" >&2
     exit 1
   fi
 
