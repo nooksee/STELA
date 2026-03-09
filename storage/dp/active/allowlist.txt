@@ -313,3 +313,5 @@ storage/handoff/CLOSING-DP-OPS-0177.md
 archives/surfaces/TASK-DP-OPS-0177-*.md
 storage/handoff/CLOSING-DP-OPS-0178.md
 archives/surfaces/TASK-DP-OPS-0178-*.md
+storage/handoff/CLOSING-DP-OPS-0179.md
+archives/surfaces/TASK-DP-OPS-0179-*.md

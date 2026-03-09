@@ -22,7 +22,7 @@ requires_slots:
   - CBC_PREFLIGHT
 includes:
   - ops/lib/manifests/CONSTRAINTS.md#section-1
-  - ops/lib/manifests/CONTRACTOR.md
+  - ops/lib/manifests/CONTRACTOR.md#rules
 ff_target: operator-technical
 ff_band: "30-40"
 ---
@@ -85,7 +85,7 @@ Notes:
 - DP writer must not attach or cite disposable artifacts.
 - DP writer must not embed pasted bundles.
 
-{{@include:ops/lib/manifests/CONTRACTOR.md}}
+{{@include:ops/lib/manifests/CONTRACTOR.md#rules}}
 
 ### 3.2.2 DP-scoped load order (per DP)
 {{DP_SCOPED_LOAD_ORDER}}

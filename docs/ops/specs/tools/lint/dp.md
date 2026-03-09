@@ -18,6 +18,7 @@
 10. In `--test` mode, execute fixture-driven negative and positive checks that exercise template-hash drift, structure mismatch, allowlist-pointer mismatch, allowlist-file invalidity, narrowed `PROPOSED` provisional-marker detection, foreign citation contamination detection, and delegated RESULTS validation coverage (valid fixture and deterministic invalid fixture).
 11. Enforce mandatory receipt-command shape in `3.4.5`: verify canonical mandatory command lines are present and fail deterministically when missing.
 12. Enforce closing-sidecar non-prepopulation in `3.5.1`: reject architect payloads that provide non-empty values for canonical sidecar fields.
+13. Enforce include-metadata leakage guard in DP payload bodies: fail on first line containing `<!-- CCD:` or a raw frontmatter delimiter line `---`.
 
 ### PROPOSED Provisional-Marker Scan Fixtures (`--test`)
 `dp.sh --test` must cover all three `PROPOSED` scan outcome classes introduced by DP-OPS-0112 addendum ADD-DP-OPS-0112-001:
@@ -39,6 +40,13 @@
 1. **Missing mandatory receipt command (FAIL):** a `3.4.5` fixture omits a canonical mandatory command and must fail.
 2. **Pre-populated `3.5.1` sidecar field (FAIL):** a fixture sets `Commit Message: <value>` and must fail.
 3. **Canonical pass path (PASS):** canonical fixture with full mandatory command set and blank sidecar fields must pass both checks.
+
+### Include Metadata Leakage Fixtures (`--test`)
+`dp.sh --test` must include deterministic leakage fixtures for T1.2 include-boundary hygiene:
+
+1. **CCD header leakage (FAIL):** appending `<!-- CCD: ... -->` to a canonical fixture must fail full `lint_path` invocation.
+2. **Frontmatter delimiter leakage (FAIL):** appending raw delimiter line `---` to a canonical fixture must fail full `lint_path` invocation.
+3. **Canonical clean payload (PASS):** canonical fixture with no leaked metadata must pass contamination and include-metadata checks.
 
 ### Freshness Stamp and Receipt Command Substitution Checks
 `lint_payload()` runs two certify-compatibility checks immediately after `check_dump_selection_scope()`:
