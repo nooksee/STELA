@@ -2,7 +2,7 @@
 
 This index is navigation-only. Canon registries in `docs/ops/registry/` are the source of truth for active definitions.
 
-## Contract Baseline (F2)
+## Contract Baseline
 - Agents carry identity and boundary contract fields.
 - Skills carry method contract fields.
 - Tasks carry objective contract fields.

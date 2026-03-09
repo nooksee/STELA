@@ -3,7 +3,7 @@
 
 ## Purpose
 Define canonical behavior for the skill definition chain rooted at `opt/_factory/SKILLS.md`.
-This specification governs pointer heads, leaf schema requirements, and F2 method-contract normalization.
+This specification governs pointer heads, leaf schema requirements, and method-contract normalization.
 
 ## Head Contract
 `opt/_factory/SKILLS.md` is a four-line pointer head with exact key order:
@@ -20,7 +20,7 @@ Allowed head values:
 - Candidate emission (`ops/lib/scripts/skill.sh harvest`): render template, emit leaf, advance `candidate:`.
 - Promotion emission (`ops/lib/scripts/skill.sh promote`): promote canon skill, update registry, emit leaf, advance `promotion:`.
 
-## Canon Skill Body Contract (F2 Baseline)
+## Canon Skill Body Contract Baseline
 Canon skill files under `opt/_factory/skills/` must contain:
 - `## Provenance`
 - `## Scope`

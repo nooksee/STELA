@@ -3,7 +3,7 @@
 
 ## Purpose
 Define canonical behavior for the agent definition chain rooted at `opt/_factory/AGENTS.md`.
-This specification is authoritative for head pointers, registry linkage, and F2 identity/boundary contract requirements.
+This specification is authoritative for head pointers, registry linkage, and identity/boundary contract requirements.
 
 ## Head Contract
 `opt/_factory/AGENTS.md` is a four-line pointer head in exact order:
@@ -27,7 +27,7 @@ Allowed head values:
   - Emit promotion leaf under `archives/definitions/`.
   - Rewrite `promotion:` to the new leaf path.
 
-## Canon Agent Body Contract (F2 Baseline)
+## Canon Agent Body Contract Baseline
 Canon agent files under `opt/_factory/agents/` must contain:
 - `## Provenance`
 - `## Role`

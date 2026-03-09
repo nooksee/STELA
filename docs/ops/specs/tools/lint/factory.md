@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`tools/lint/factory.sh` preserves factory definition integrity by enforcing synchronized heads, registries, and definition leaves. F2 extends this with baseline schema checks so every active agent/skill/task leaf carries deterministic contract fields.
+`tools/lint/factory.sh` preserves factory definition integrity by enforcing synchronized heads, registries, and definition leaves. Extended with baseline schema checks so every active agent/skill/task leaf carries deterministic contract fields.
 
 ## Mechanics and Sequencing
 1. Resolve repository root, emit telemetry, and require all factory heads, registries, and census registry.
@@ -22,7 +22,7 @@
 8. Enforce census coverage:
    - every definition leaf under `opt/_factory/{agents,skills,tasks}/*.md` has a census row
    - every direct runtime reference under `ops/`, `tools/`, and `docs/` to `opt/_factory/(agents|skills|tasks)/*.md` resolves to a census row
-9. Enforce F2 baseline contract checks:
+9. Enforce Baseline contract checks:
    - agent `## Identity Contract` must include `agent_id`, `runtime_role`, `stance_id`
    - allowed runtime-role and stance values are exactly `{foreman, auditor, conformist}`
    - skill `## Method Contract` must include `skill_id`, `method`, `inputs`, `outputs`, `invariants`
@@ -34,4 +34,4 @@
     - duplicate verification-pattern checks in tasks that already invoke `S-LEARN-01`
 
 ## Integrity Filter Warnings
-The script depends on delegated outputs from `tools/lint/agent.sh` and `tools/lint/task.sh`; a failure in either script blocks factory lint even when head files are locally valid. Census validation and F2 contract checks are fail-closed and deterministic.
+The script depends on delegated outputs from `tools/lint/agent.sh` and `tools/lint/task.sh`; a failure in either script blocks factory lint even when head files are locally valid. Census validation and baseline contract checks are fail-closed and deterministic.

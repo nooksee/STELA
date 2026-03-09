@@ -3,7 +3,7 @@
 
 ## Purpose
 Define canonical behavior for the task definition chain rooted at `opt/_factory/TASKS.md`.
-This specification governs pointer heads, promotion/candidate lifecycle, and F2 objective-contract normalization.
+This specification governs pointer heads, promotion/candidate lifecycle, and objective-contract normalization.
 
 ## Head Contract
 `opt/_factory/TASKS.md` is a four-line pointer head in exact key order:
@@ -20,7 +20,7 @@ Allowed head values:
 - Candidate emission (`ops/lib/scripts/task.sh harvest`): render template, emit leaf, advance `candidate:`.
 - Promotion emission (`ops/lib/scripts/task.sh promote`): promote canon task, update registry, emit leaf, advance `promotion:`.
 
-## Canon Task Body Contract (F2 Baseline)
+## Canon Task Body Contract Baseline
 Canon task files under `opt/_factory/tasks/` must contain:
 - `## Provenance`
 - `## Orchestration`

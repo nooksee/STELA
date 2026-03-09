@@ -10,7 +10,7 @@ This registry classifies each definition as `keep`, `replace`, or `remove` with 
 - `conformist`: implementation and standards-conformance paths.
 
 ## Reason Codes
-- `K-ACTIVE-CONTRACT`: active definition is registry-bound and satisfies the F2 baseline contract.
+- `K-ACTIVE-CONTRACT`: active definition is registry-bound and satisfies the baseline contract.
 - `R-SCHEMA-NORMALIZE`: active definition remains in service but requires follow-on schema normalization.
 - `X-UNUSED-LEGACY`: definition has no live runtime path and is eligible for retirement after replacement coverage is proven.
 
@@ -50,6 +50,6 @@ This registry classifies each definition as `keep`, `replace`, or `remove` with 
 | task | B-TASK-08 | opt/_factory/tasks/b-task-08.md | keep | K-ACTIVE-CONTRACT | 0/0/2 | 0/0/2 | 1/1 |
 
 ## Scope Notes
-- F2 normalizes active definition contracts without removing definitions.
-- Follow-on F3 and F4 work can refine testing-only definitions and retirement gates.
+- Normalizes active definition contracts without removing definitions.
+- Follow-on work can refine testing-only definitions and retirement gates.
 - Any runtime reference to `opt/_factory/agents/*.md`, `opt/_factory/skills/*.md`, or `opt/_factory/tasks/*.md` must resolve to a matrix row above.

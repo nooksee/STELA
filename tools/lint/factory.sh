@@ -488,7 +488,7 @@ if compgen -G "${skills_dir}/*.md" > /dev/null; then
   done
 fi
 
-# F2 baseline: enforce runtime-role naming contract on agent identities.
+# baseline: enforce runtime-role naming contract on agent identities.
 if compgen -G "${FACTORY_DIR}/agents/*.md" > /dev/null; then
   for agent in "${FACTORY_DIR}/agents"/*.md; do
     agent_name="$(basename "$agent")"
@@ -518,7 +518,7 @@ if compgen -G "${FACTORY_DIR}/agents/*.md" > /dev/null; then
   done
 fi
 
-# F2 baseline: enforce skill method contract fields.
+# baseline: enforce skill method contract fields.
 if compgen -G "${FACTORY_DIR}/skills/*.md" > /dev/null; then
   for skill in "${FACTORY_DIR}/skills"/*.md; do
     skill_name="$(basename "$skill")"
@@ -560,7 +560,7 @@ if compgen -G "${FACTORY_DIR}/skills/*.md" > /dev/null; then
   done
 fi
 
-# F2 baseline: enforce task objective contract fields.
+# baseline: enforce task objective contract fields.
 if compgen -G "${FACTORY_DIR}/tasks/*.md" > /dev/null; then
   for task in "${FACTORY_DIR}/tasks"/*.md; do
     task_name="$(basename "$task")"

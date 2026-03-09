@@ -8,8 +8,8 @@
 ## Mechanics and Sequencing
 The binary parses render target and option flags, resolves template paths for `agent`, `task`, or `skill`, optionally loads slot blocks from a slots file, applies `--slot` overrides, parses template frontmatter (`requires_slots`, `includes`), resolves includes, and renders deterministic output.
 
-## F2 Contract Alignment
-Rendered definitions are expected to satisfy the F2 baseline:
+## Contract Alignment
+Rendered definitions are expected to satisfy the baseline:
 - agents: identity contract with runtime-role naming and stance binding,
 - skills: method contract fields,
 - tasks: objective contract fields.

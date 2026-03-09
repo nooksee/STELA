@@ -13,8 +13,8 @@
 5. `slugify`, placeholder checks, and task field readers normalize identifiers and reject unresolved placeholders before render.
 6. `render_definition_template` maps template paths to renderer keys (`agent`, `task`, `skill`), writes slot tokens, calls `ops/bin/template render`, and aborts on render failure.
 
-## F2 Contract Baseline Interaction
-Factory lifecycle helpers are schema-agnostic at render time. F2 baseline conformance is enforced post-render by `tools/lint/factory.sh` and reflected in definition specs/registries.
+## Contract Baseline Interaction
+Factory lifecycle helpers are schema-agnostic at render time. Baseline conformance is enforced post-render by `tools/lint/factory.sh` and reflected in definition specs/registries.
 
 ## Integrity Filter Warnings
 - `FACTORY_HEAD_FILE`, `REPO_ROOT`, and `TEMPLATE_BIN` must be initialized by caller; missing values hard-fail.
