@@ -32,6 +32,9 @@
     - skill pointer-token reachability
     - numbered-list rejection in skills
     - duplicate verification-pattern checks in tasks that already invoke `S-LEARN-01`
+11. Apply anti-drift retirement gates:
+    - Remove-disposition on-disk check: for each census row with disposition=remove, fail if the file still exists at the recorded path.
+    - Retired-ID anti-reappearance check: parse the ## Retired Definitions table from docs/ops/registry/factory.md; for each retired row, fail if a file exists at the former path.
 
 ## Integrity Filter Warnings
 The script depends on delegated outputs from `tools/lint/agent.sh` and `tools/lint/task.sh`; a failure in either script blocks factory lint even when head files are locally valid. Census validation and baseline contract checks are fail-closed and deterministic.

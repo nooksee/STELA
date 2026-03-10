@@ -56,3 +56,9 @@ This registry classifies each definition as `keep`, `replace`, or `remove` with 
 - Normalizes active definition contracts without removing definitions.
 - Follow-on work can refine testing-only definitions and retirement gates.
 - Any runtime reference to `opt/_factory/agents/*.md`, `opt/_factory/skills/*.md`, or `opt/_factory/tasks/*.md` must resolve to a matrix row above.
+
+## Retired Definitions
+Permanently retired definition IDs. Any re-creation of a path listed here without explicit addendum authorization is a hard lint gate failure.
+
+| Kind | ID | Former Path | Retired In | Reason |
+| --- | --- | --- | --- | --- |
