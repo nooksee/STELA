@@ -17,7 +17,7 @@ This registry classifies each definition as `keep`, `replace`, or `remove` with 
 ## Disposition Summary
 | Disposition | Count |
 | --- | ---: |
-| keep | 24 |
+| keep | 27 |
 | replace | 0 |
 | remove | 0 |
 
@@ -32,6 +32,7 @@ This registry classifies each definition as `keep`, `replace`, or `remove` with 
 | agent | R-AGENT-06 | opt/_factory/agents/r-agent-06.md | keep | K-ACTIVE-CONTRACT | 0/0/0 | 0/0/1 | 1/0 |
 | agent | R-AGENT-07 | opt/_factory/agents/r-agent-07.md | keep | K-ACTIVE-CONTRACT | 0/0/0 | 0/0/1 | 1/0 |
 | agent | R-AGENT-08 | opt/_factory/agents/r-agent-08.md | keep | K-ACTIVE-CONTRACT | 0/0/0 | 0/0/1 | 1/0 |
+| agent | R-AGENT-09 | opt/_factory/agents/r-agent-09.md | keep | K-ACTIVE-CONTRACT | 0/0/0 | 1/1/2 | 1/0 |
 | skill | S-LEARN-01 | opt/_factory/skills/s-learn-01.md | keep | K-ACTIVE-CONTRACT | 0/0/1 | 1/2/2 | 1/1 |
 | skill | S-LEARN-02 | opt/_factory/skills/s-learn-02.md | keep | K-ACTIVE-CONTRACT | 0/0/1 | 1/0/1 | 1/1 |
 | skill | S-LEARN-03 | opt/_factory/skills/s-learn-03.md | keep | K-ACTIVE-CONTRACT | 0/0/1 | 0/0/1 | 1/1 |
@@ -40,6 +41,7 @@ This registry classifies each definition as `keep`, `replace`, or `remove` with 
 | skill | S-LEARN-06 | opt/_factory/skills/s-learn-06.md | keep | K-ACTIVE-CONTRACT | 0/0/1 | 0/0/1 | 1/1 |
 | skill | S-LEARN-07 | opt/_factory/skills/s-learn-07.md | keep | K-ACTIVE-CONTRACT | 0/0/1 | 0/0/1 | 1/1 |
 | skill | S-LEARN-08 | opt/_factory/skills/s-learn-08.md | keep | K-ACTIVE-CONTRACT | 0/0/1 | 0/0/2 | 1/1 |
+| skill | S-LEARN-09 | opt/_factory/skills/s-learn-09.md | keep | K-ACTIVE-CONTRACT | 0/0/1 | 0/1/2 | 1/1 |
 | task | B-TASK-01 | opt/_factory/tasks/b-task-01.md | keep | K-ACTIVE-CONTRACT | 0/0/1 | 0/0/3 | 1/1 |
 | task | B-TASK-02 | opt/_factory/tasks/b-task-02.md | keep | K-ACTIVE-CONTRACT | 0/0/1 | 0/0/1 | 1/1 |
 | task | B-TASK-03 | opt/_factory/tasks/b-task-03.md | keep | K-ACTIVE-CONTRACT | 0/0/1 | 0/0/1 | 1/1 |
@@ -48,6 +50,7 @@ This registry classifies each definition as `keep`, `replace`, or `remove` with 
 | task | B-TASK-06 | opt/_factory/tasks/b-task-06.md | keep | K-ACTIVE-CONTRACT | 0/0/1 | 0/0/1 | 1/1 |
 | task | B-TASK-07 | opt/_factory/tasks/b-task-07.md | keep | K-ACTIVE-CONTRACT | 0/0/1 | 0/0/1 | 1/1 |
 | task | B-TASK-08 | opt/_factory/tasks/b-task-08.md | keep | K-ACTIVE-CONTRACT | 0/0/2 | 0/0/2 | 1/1 |
+| task | B-TASK-09 | opt/_factory/tasks/b-task-09.md | keep | K-ACTIVE-CONTRACT | 0/1/2 | 0/1/2 | 1/1 |
 
 ## Scope Notes
 - Normalizes active definition contracts without removing definitions.

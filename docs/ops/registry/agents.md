@@ -8,6 +8,7 @@ This table is the canonical roster for agent identity, runtime role naming, stan
 
 | ID | Name | Runtime Role | Stance ID | Provenance (DP) | Specialization |
 | --- | --- | --- | --- | --- | --- |
+| R-AGENT-09 | factory-testing-gatekeeper | conformist | conformist | DP-OPS-0181 | Factory ATS triplet smoke validation and execution-gate enforcement |
 | R-AGENT-08 | bundle-coordinator | foreman | foreman | DP-OPS-0145 | Bundle artifact coordination and routing governance |
 | R-AGENT-07 | factory-chain-agent-test | conformist | conformist | DP-OPS-0074 | Factory chain pointer remediation validation |
 | R-AGENT-01 | architect | foreman | foreman | DP-OPS-0042 | Architecture planning and system design |

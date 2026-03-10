@@ -29,4 +29,5 @@ This index is navigation-only. Canon registries in `docs/ops/registry/` are the 
 - `docs/ops/specs/definitions/agents.md`
 - `docs/ops/specs/definitions/skills.md`
 - `docs/ops/specs/definitions/tasks.md`
+- `docs/ops/specs/tools/test/factory.md`
 - `docs/ops/specs/tools/lint/factory.md`
