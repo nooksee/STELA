@@ -345,3 +345,5 @@ tools/test/factory.sh
 docs/ops/specs/tools/test/factory.md
 storage/handoff/CLOSING-DP-OPS-0181.md
 archives/surfaces/TASK-DP-OPS-0181-*.md
+storage/handoff/CLOSING-DP-OPS-0182.md
+archives/surfaces/TASK-DP-OPS-0182-*.md

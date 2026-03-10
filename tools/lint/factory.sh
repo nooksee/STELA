@@ -392,6 +392,24 @@ if [[ ${#census_path_map[@]} -eq 0 ]]; then
   fail "Factory census matrix has no definition rows in '${FACTORY_CENSUS_REGISTRY}'"
 fi
 
+while IFS=$'\t' read -r kind id row_path disposition reason; do
+  [[ "$disposition" == "remove" ]] || continue
+  if [[ -f "$row_path" ]]; then
+    fail "Retired leaf on disk: '${row_path}' has disposition=remove in census but file still exists"
+  fi
+done < <(extract_factory_matrix_rows "$FACTORY_CENSUS_REGISTRY")
+
+while IFS='|' read -r ret_kind ret_id ret_path ret_dp ret_reason; do
+  ret_kind="${ret_kind//[[:space:]]/}"
+  ret_path="${ret_path//[[:space:]]/}"
+  case "$ret_kind" in
+    Kind|---|"") continue ;;
+  esac
+  [[ -n "$ret_path" ]] || continue
+  if [[ -f "$ret_path" ]]; then
+    fail "Ghost reappearance: retired definition '${ret_path}' (ID: ${ret_id}) exists on disk; addendum authorization required"
+  fi
+done < <(awk '/^## Retired Definitions/{f=1;next} f && /^\|/{print}' "$FACTORY_CENSUS_REGISTRY")
 
 while IFS= read -r file; do
   rel_path="${file#${REPO_ROOT}/}"
