@@ -289,6 +289,12 @@ elif ! bash tools/test/bundle.sh; then
   fail "Bundle smoke test failed: tools/test/bundle.sh"
 fi
 
+if [[ ! -f "tools/test/factory.sh" ]]; then
+  fail "Missing required test script: tools/test/factory.sh"
+elif ! bash tools/test/factory.sh; then
+  fail "Factory smoke test failed: tools/test/factory.sh"
+fi
+
 if [[ ! -f "tools/test/open.sh" ]]; then
   fail "Missing required test script: tools/test/open.sh"
 elif ! bash tools/test/open.sh; then

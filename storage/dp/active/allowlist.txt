@@ -338,3 +338,10 @@ docs/ops/specs/definitions/skills.md
 docs/ops/specs/definitions/tasks.md
 docs/ops/specs/binaries/factory.md
 docs/ops/specs/scripts/factory.md
+opt/_factory/agents/r-agent-09.md
+opt/_factory/skills/s-learn-09.md
+opt/_factory/tasks/b-task-09.md
+tools/test/factory.sh
+docs/ops/specs/tools/test/factory.md
+storage/handoff/CLOSING-DP-OPS-0181.md
+archives/surfaces/TASK-DP-OPS-0181-*.md
