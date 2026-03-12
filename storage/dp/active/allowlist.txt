@@ -367,4 +367,3 @@ ops/src/runbook/gpt.yaml
 ops/src/runbook/claude.yaml
 ops/src/runbook/gemini.yaml
 ops/src/runbook/execution-decision.yaml
-ops/src/docs/runbook.md.tpl
