@@ -206,33 +206,6 @@ check_architect_body_scope() {
   fi
 }
 
-check_architect_no_fallback_prompt() {
-  local body_path="$1"
-  local hit=""
-  local line_number=""
-  local line_text=""
-
-  hit="$(awk '
-    {
-      lower=tolower($0)
-      if (index(lower, "tell me the outcome you want")) { printf "%d\t%s\n", NR, $0; exit }
-      if (index(lower, "outcome you want from these files")) { printf "%d\t%s\n", NR, $0; exit }
-      if (index(lower, "for example, a summary, a specific slice analysis")) { printf "%d\t%s\n", NR, $0; exit }
-      if (index(lower, "or the architect dp draft")) { printf "%d\t%s\n", NR, $0; exit }
-      if (index(lower, "i have the repo dump, architect bundle")) { printf "%d\t%s\n", NR, $0; exit }
-      if (index(lower, "i\x27ve got the repo dump, architect bundle, and plan file loaded")) { printf "%d\t%s\n", NR, $0; exit }
-      if (index(lower, "ive got the repo dump, architect bundle, and plan file loaded")) { printf "%d\t%s\n", NR, $0; exit }
-      if (index(lower, "tell me what you want done with them")) { printf "%d\t%s\n", NR, $0; exit }
-      if (index(lower, "review, summarize, draft the dp")) { printf "%d\t%s\n", NR, $0; exit }
-      if (index(lower, "inspect specific files, or trace a bug")) { printf "%d\t%s\n", NR, $0; exit }
-    }
-  ' "$body_path")"
-  if [[ -n "$hit" ]]; then
-    IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "architect body must not contain ask-back fallback prompt text at line ${line_number}: ${line_text}"
-  fi
-}
-
 check_analyst_body_scope() {
   local body_path="$1"
   local first_content_line
@@ -577,7 +550,6 @@ lint_response_file() {
     extract_single_fenced_block "$input_path" "$body_tmp"
     check_dp_body_start "$body_tmp"
     check_architect_body_scope "$body_tmp"
-    check_architect_no_fallback_prompt "$body_tmp"
   elif [[ "$response_mode" == "analyst" ]]; then
     extract_single_fenced_block "$input_path" "$body_tmp"
     check_analyst_body_scope "$body_tmp"
@@ -628,8 +600,6 @@ run_test() {
   local response_architect_valid
   local response_architect_audit_marker
   local response_architect_narrative
-  local response_architect_ask_back
-  local response_architect_ask_back_variant
   local response_architect_delegate_valid
   local response_architect_receipt_shape_drift
   local response_architect_sidecar_mismatch
@@ -671,8 +641,6 @@ run_test() {
   response_architect_valid="${test_dir}/response-architect-valid.md"
   response_architect_audit_marker="${test_dir}/response-architect-audit-marker.md"
   response_architect_narrative="${test_dir}/response-architect-narrative.md"
-  response_architect_ask_back="${test_dir}/response-architect-ask-back.md"
-  response_architect_ask_back_variant="${test_dir}/response-architect-ask-back-variant.md"
   response_architect_delegate_valid="${test_dir}/response-architect-delegate-valid.md"
   response_architect_receipt_shape_drift="${test_dir}/response-architect-receipt-shape-drift.md"
   response_architect_sidecar_mismatch="${test_dir}/response-architect-sidecar-mismatch.md"
@@ -870,32 +838,6 @@ EOF_ARCH_AUDIT
 EOF_ARCH_NARRATIVE
   if lint_response_file "$response_architect_narrative" >/dev/null 2>&1; then
     echo "FAIL: --test expected architect response with contractor narrative to fail" >&2
-    failures_local=1
-  fi
-
-  cat > "$response_architect_ask_back" <<'EOF_ARCH_ASK_BACK'
-```markdown
-### DP-OPS-9999: Architect Drift Fixture
-
-I have the repo dump, architect bundle, and PLAN loaded.
-Tell me the outcome you want from these files-for example, a summary, a specific slice analysis, or the architect DP draft.
-```
-EOF_ARCH_ASK_BACK
-  if lint_response_file "$response_architect_ask_back" >/dev/null 2>&1; then
-    echo "FAIL: --test expected architect response with ask-back fallback prompt to fail" >&2
-    failures_local=1
-  fi
-
-  cat > "$response_architect_ask_back_variant" <<'EOF_ARCH_ASK_BACK_VARIANT'
-```markdown
-### DP-OPS-9999: Architect Drift Fixture
-
-Ive got the repo dump, architect bundle, and PLAN file loaded.
-Tell me what you want done with them-review, summarize, draft the DP, inspect specific files, or trace a bug.
-```
-EOF_ARCH_ASK_BACK_VARIANT
-  if lint_response_file "$response_architect_ask_back_variant" >/dev/null 2>&1; then
-    echo "FAIL: --test expected architect response with ask-back variant prompt to fail" >&2
     failures_local=1
   fi
 

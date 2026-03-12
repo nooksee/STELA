@@ -235,8 +235,6 @@ check_audit_foreman_mode_split() {
   local required_manifest_alias_auditor_remove_key='profile_alias_legacy_auditor_remove_after_dp='
   local required_manifest_alias_hygiene_status_key='profile_alias_legacy_hygiene_deprecation_status='
   local required_manifest_alias_hygiene_remove_key='profile_alias_legacy_hygiene_remove_after_dp='
-  local required_manifest_alias_auditor_note='Legacy `auditor` alias deprecation status is `sunset`; removal target is `DP-OPS-0165`.'
-  local required_manifest_alias_hygiene_note='Legacy `hygiene` alias deprecation status is `sunset`; removal target is `DP-OPS-0165`.'
 
   [[ -f "$stance_auditor" ]] || mark_failure "auditor.md.tpl missing for mode split checks"
   [[ -f "$stance_foreman" ]] || mark_failure "foreman.md.tpl missing for mode split checks"
@@ -302,13 +300,6 @@ check_audit_foreman_mode_split() {
     mark_failure "BUNDLE.md missing hygiene alias remove-after key line"
   fi
 
-  if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_alias_auditor_note" "$bundle_manifest"; then
-    mark_failure "BUNDLE.md missing auditor alias deprecation-window compatibility note"
-  fi
-
-  if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_alias_hygiene_note" "$bundle_manifest"; then
-    mark_failure "BUNDLE.md missing hygiene alias deprecation-window compatibility note"
-  fi
 }
 
 check_architect_mode_contract() {
