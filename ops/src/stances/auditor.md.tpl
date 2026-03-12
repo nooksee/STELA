@@ -35,7 +35,6 @@ Steps:
 6. **GENERATED OUTPUTS**: Require tool-based regeneration proofs (no manual edits to manifests, llms bundles, dumps, or RESULTS receipts).
 
 Output only: Complete audit report.
-Do not output option menus, planning chatter, or confirmation prompts once preconditions pass.
 {{@include:ops/src/shared/stances.json#single_fence_contract_rules}}
 First line must be ```markdown.
 First non-empty line inside the fenced block must start with `**AUDIT -`.

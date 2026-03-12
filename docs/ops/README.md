@@ -7,6 +7,7 @@ Under the Filing Doctrine, `ops/` is Run: executable logic, manifests, and autom
 
 ## 1. Architecture
 The Ops Kernel is the executable layer that turns governance into action. It owns binaries, shared scripts, and manifests that drive platform behavior. Runtime logic belongs in `ops/` and `tools/` with pointer-first documentation in `docs/ops/`.
+Operator-deployed external runtime adapters live under `ops/src/runbook/`; they are operational deployment assets, not constitutional canon or repo-executed binaries.
 
 ## 2. Core Subsystems
 Context Bundler (`ops/bin/llms`) compiles canonical and supporting surfaces into session bundles while enforcing context hazard exclusion rules.
@@ -16,7 +17,7 @@ Workflow Bundler (`ops/bin/bundle`) emits deterministic handoff artifacts that b
 ## 3. Registries
 The authoritative operational registries live in `docs/ops/registry/`.
 
-- `docs/ops/registry/prompts.md`
+- `docs/ops/registry/runbook.md`
 - `docs/ops/registry/binaries.md`
 - `docs/ops/registry/lint.md`
 - `docs/ops/registry/test.md`
@@ -28,12 +29,13 @@ The authoritative operational registries live in `docs/ops/registry/`.
 Technical specifications are pointer-first and grouped by executable surface.
 
 - Binary specs: `docs/ops/specs/binaries/`
+- Runbook specs: `docs/ops/specs/runbook/`
 - Tool specs: `docs/ops/specs/tools/`
 - Script specs: `docs/ops/specs/scripts/`
 - Hook specs: `docs/ops/specs/hooks/`
 
 ## 5. Interface Contract
-The Ops Kernel is the executable companion to docs. Documentation explains and justifies; ops runs. New operational capability must ship as executable logic with a registry entry and spec pointer.
+The Ops Kernel is the executable companion to docs. Documentation explains and justifies; ops runs. New operational capability must ship as executable logic with a registry entry and spec pointer. External runtime adapters are the exception: they are operator-deployed runbook assets, must still carry a registry entry and spec pointer, and must not redefine repo correctness.
 
 ## 6. Help and Discovery
 Use `./ops/bin/help <term>` to locate operational guidance. `./ops/bin/help` prioritizes specs and registry surfaces under `docs/ops/`.

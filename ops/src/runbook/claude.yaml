@@ -1,0 +1,38 @@
+# STATUS: Reserve
+# DEPLOYMENT: Claude Project instructions
+# PROOF: Operator-visible project settings + behavior probes
+name: claude-adapter
+description: "External runtime adapter for Claude-based Stela sessions when platform behavior needs normalization."
+version: 1.0.0
+adapter_class: external-runtime-adapter
+status: reserve
+
+deployment:
+  platform: "Claude"
+  surface: "Project instructions"
+  operator_action: "Do nothing while status is reserve. Add instruction_text only in a later activation step if operator validation says the adapter is needed."
+  proof_model:
+    source_proof: "Operator-visible project settings text or screenshot."
+    supporting_evidence:
+      - "behavior probe"
+      - "execution-decision log"
+
+scope:
+  intended_roles:
+    - architect
+    - audit
+  failure_modes_targeted:
+    - attachment-startup-ambiguity
+    - role-output-chatter
+
+validation:
+  behavior_probe: |
+    Use current attachments first. Execute the implied task. No upload summary. No follow-on prompt unless a required attachment is inaccessible.
+  expected_signals:
+    - "Model executes from attachments without startup clarification chatter."
+    - "Model emits the requested artifact directly when the Stela transport packet is sufficient."
+
+sunset_condition: "Keep unused until Claude shows a platform-specific startup failure that repo-local canon cannot correct."
+notes:
+  - "Reserve adapter: no instruction_text is carried while undeployed."
+  - "Add instruction_text only when Claude-specific activation is explicitly chosen."

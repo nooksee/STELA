@@ -12,8 +12,7 @@ Rules:
 * Legacy `--profile=auditor` remains accepted as a compatibility alias and resolves to `foreman`.
 * This stance is not used for audit PASS/FAIL verdicts.
 * Require `ADDENDUM REQUIRED:` intent in bundle OPEN metadata and a referenced decision leaf in dump payload.
-* The decision leaf in the dump is the addendum case. Do not request additional context.
-* Output the addendum only. No analysis preamble and no commentary.
+* The decision leaf in the dump is the addendum case.
 
 Steps:
 0. **PRECONDITIONS**: Confirm intent carries `ADDENDUM REQUIRED` and referenced decision leaf is present in dump payload. If either is missing: **STOP** and request a correctly assembled foreman bundle.

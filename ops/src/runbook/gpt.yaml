@@ -1,0 +1,44 @@
+# STATUS: Active
+# DEPLOYMENT: ChatGPT Project instructions
+# PROOF: Operator-visible project settings + behavior probes
+name: gpt-adapter
+description: "External runtime adapter for ChatGPT-based Stela sessions."
+version: 1.0.0
+adapter_class: external-runtime-adapter
+status: active
+
+deployment:
+  platform: "ChatGPT"
+  surface: "Project instructions"
+  operator_action: "Paste instruction_text into the active ChatGPT project settings."
+  proof_model:
+    source_proof: "Operator-visible project settings text or screenshot."
+    supporting_evidence:
+      - "behavior probe"
+      - "execution-decision log"
+
+scope:
+  intended_roles:
+    - architect
+    - audit
+  failure_modes_targeted:
+    - attachment-startup-fallback
+    - ask-back
+    - upload-summary-chatter
+
+instruction_text: |
+  PRIORITY DIRECTIVE: Verify and use current-turn attachments first; execute the implied task immediately; never ask-back or summarize uploads; only request re-upload after an explicit file-access failure check.
+
+validation:
+  behavior_probe: |
+    Use current attachments first. Execute now. No ask-back. Re-upload only on verified access failure.
+  expected_signals:
+    - "Model begins task from current-turn attachments without upload-summary chatter."
+    - "Model does not ask what to do with uploaded files when task intent is already implied by the bundle."
+    - "Model treats re-upload as a verified file-access failure path, not a startup default."
+
+sunset_condition: "Retire when ChatGPT attachment-first execution is stable for two consecutive validation rounds without adapter assistance."
+notes:
+  - "This adapter is an external deployment artifact, not constitutional canon."
+  - "Repo correctness remains defined by Stela canon, lints, manifests, and receipts."
+  - "Self-report is diagnostic only and is not part of adapter proof."

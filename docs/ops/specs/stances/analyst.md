@@ -19,7 +19,6 @@ Define the template-backed Analyst stance body used by bundle output contract re
 - No unresolved include directives.
 - Machine-ingest analyst mode first non-empty line inside the fenced body must start with `1. Analysis and Discussion`.
 - Machine-ingest analyst mode requires `2. Strategic Options` and a `Recommendation:` line.
-- Machine-ingest analyst mode rejects policy-overcompensation prose.
 - PLAN output mode contract requires exactly one fenced markdown code block.
 - PLAN output mode contract requires no text before or after the fenced code block.
 - PLAN output mode first non-empty line inside the fenced body must start with `# DP Plan:`.
