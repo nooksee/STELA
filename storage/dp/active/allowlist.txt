@@ -348,6 +348,7 @@ archives/surfaces/TASK-DP-OPS-0181-*.md
 storage/handoff/CLOSING-DP-OPS-0182.md
 archives/surfaces/TASK-DP-OPS-0182-*.md
 archives/surfaces/TASK-DP-OPS-0184-*.md
+archives/surfaces/TASK-DP-OPS-0185-*.md
 RoR.md
 archives/decisions/RoR-2026-03-12-001-cbc-0184.md
 ops/src/stances/analyst.md.tpl
