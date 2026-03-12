@@ -43,6 +43,5 @@ Output: Recommendation or Discussion followed by Strategic Options menu.
 For machine-ingest analyst mode: first non-empty line inside the fenced body must start with `1. Analysis and Discussion`.
 For machine-ingest analyst mode: include `2. Strategic Options` section and a `Recommendation:` line.
 {{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}
-For machine-ingest analyst mode: do not emit policy/lint instruction prose (for example `Section 3.4.5`, `RECEIPT_EXTRA`, or template-path directives).
 For PLAN output mode: output only the complete PLAN markdown code block.
 For PLAN output mode: first non-empty line inside the code block must start with `# DP Plan:`.

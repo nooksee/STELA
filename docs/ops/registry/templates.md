@@ -20,7 +20,6 @@ FF% field documentation: `docs/ops/specs/binaries/template.md`.
 | TPL-11 | ops/src/surfaces/task.md.tpl | machine-dense | 15–25% | manifest |
 | TPL-12 | ops/src/docs/readme.md.tpl | discovery | 55–70% | docs |
 | TPL-13 | ops/src/docs/adr.md.tpl | governance-narrative | 55–70% | docs |
-| TPL-14 | ops/src/docs/runbook.md.tpl | operator-technical | 25–40% | docs |
 | TPL-15 | ops/src/docs/microdoc.md.tpl | machine-dense | 5–15% | docs |
 | TPL-16 | ops/src/docs/changelog.md.tpl | discovery | 30–45% | docs |
 | TPL-17 | ops/src/docs/consumer.md.tpl | operator-technical | 25–40% | docs |

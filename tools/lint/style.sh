@@ -353,7 +353,6 @@ check_analyst_mode_contract() {
   local required_first='For machine-ingest analyst mode: first non-empty line inside the fenced body must start with `1. Analysis and Discussion`.'
   local required_sections='For machine-ingest analyst mode: include `2. Strategic Options` section and a `Recommendation:` line.'
   local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
-  local required_no_policy='For machine-ingest analyst mode: do not emit policy/lint instruction prose (for example `Section 3.4.5`, `RECEIPT_EXTRA`, or template-path directives).'
   local required_plan_output='For PLAN output mode: output only the complete PLAN markdown code block.'
   local required_plan_first='For PLAN output mode: first non-empty line inside the code block must start with `# DP Plan:`.'
 
@@ -373,10 +372,6 @@ check_analyst_mode_contract() {
 
   if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_shared_non_audit_include" "$stance_analyst"; then
     mark_failure "analyst.md.tpl missing shared non-audit include line"
-  fi
-
-  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_no_policy" "$stance_analyst"; then
-    mark_failure "analyst.md.tpl missing analyst no-policy-overcompensation line"
   fi
 
   if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_plan_output" "$stance_analyst"; then
