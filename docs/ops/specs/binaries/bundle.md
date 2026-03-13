@@ -7,14 +7,13 @@
 
 ## Mechanics and Sequencing
 Public interface:
-1. `--profile=auto|analyst|architect|audit|project|conform|hygiene|foreman|auditor`
+1. `--profile=auto|analyst|architect|audit|project|conform|hygiene|foreman`
    - Canonical conformance profile is `conform`.
    - Legacy `hygiene` is accepted as a compatibility alias to `conform`.
    - Canonical addendum authorization profile is `foreman`.
-   - Legacy `auditor` is accepted as a compatibility alias to `foreman`.
 2. `--out=auto|PATH`
 3. `--project=<name>` (required only for `project`)
-4. `--intent=<text>` (required for `foreman` and legacy alias `auditor`)
+4. `--intent=<text>` (required for `foreman`)
 5. `--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>` (optional ATS triplet; all-or-none)
 6. `--slice=<ID>` (optional; architect profile only)
 
@@ -29,10 +28,7 @@ Policy source:
    - `docs/ops/registry/skills.md`
    - `docs/ops/registry/tasks.md`
 7. Compatibility alias routing is resolved from manifest keys:
-   - `profile_alias_legacy_auditor_to`
    - `profile_alias_legacy_hygiene_to`
-   - `profile_alias_legacy_auditor_deprecation_status`
-   - `profile_alias_legacy_auditor_remove_after_dp`
    - `profile_alias_legacy_hygiene_deprecation_status`
    - `profile_alias_legacy_hygiene_remove_after_dp`
 8. Front-door policy is resolved from manifest keys:
@@ -49,8 +45,7 @@ Front-door contract:
 Profile intent split:
 1. `audit` is the audit-verdict intake profile.
 2. `foreman` is addendum-authorization intake profile.
-3. Legacy `auditor` resolves to `foreman`.
-4. `foreman` is not a substitute for `audit`.
+3. `foreman` is not a substitute for `audit`.
 
 Compatibility alias deprecation window:
 1. Legacy alias acceptance is in `sunset` status during the deprecation window.
@@ -103,9 +98,8 @@ Text artifact profile conditional block:
 
 Foreman gate:
 1. `--profile=foreman` requires `--intent`.
-2. `--profile=auditor` (legacy alias) also requires `--intent`.
-3. Intent format must be `ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>`.
-4. Bundle runtime verifies `<DECISION_ID>` exists in dump payload; missing decision leaf is a hard failure.
+2. Intent format must be `ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>`.
+3. Bundle runtime verifies `<DECISION_ID>` exists in dump payload; missing decision leaf is a hard failure.
 
 Dump scope mapping by resolved profile:
 1. `analyst|architect|conform` -> `ops/bin/dump --scope=full`.

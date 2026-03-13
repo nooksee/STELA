@@ -682,66 +682,6 @@ test_foreman_valid_path() {
   assert_manifest_has "$LAST_MANIFEST" '"decision_leaf_present": true'
 }
 
-test_legacy_auditor_alias() {
-  local decision_leaf
-  local decision_id
-  local intent
-  local resolved
-  local requested
-  local route_reason
-  local expected_status
-  local expected_remove_after
-  local actual_status
-  local actual_remove_after
-
-  decision_leaf="$(find "${REPO_ROOT}/archives/decisions" -maxdepth 1 -type f -name 'RoR-*.md' | sort | head -n 1)"
-  if [[ -z "$decision_leaf" ]]; then
-    fail "no decision leaves found under archives/decisions/"
-    return
-  fi
-  decision_id="$(basename "$decision_leaf" .md)"
-  intent="ADDENDUM REQUIRED: ${decision_id} - bundle smoke gate alias test"
-
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=auditor --intent="$intent" --out=auto
-  if (( RUN_STATUS != 0 )); then
-    fail "legacy auditor alias path with valid --intent failed"
-    echo "$RUN_OUTPUT" >&2
-    return
-  fi
-
-  track_bundle_outputs
-  [[ -n "$LAST_MANIFEST" ]] || return
-
-  resolved="$(extract_manifest_value "$LAST_MANIFEST" "resolved_profile")"
-  requested="$(extract_manifest_value "$LAST_MANIFEST" "requested_profile")"
-  route_reason="$(extract_manifest_value "$LAST_MANIFEST" "route_reason")"
-
-  if [[ "$resolved" != "foreman" ]]; then
-    fail "legacy auditor alias resolved_profile mismatch: expected foreman, got ${resolved}"
-  fi
-  if [[ "$requested" != "auditor" ]]; then
-    fail "legacy auditor alias requested_profile mismatch: expected auditor, got ${requested}"
-  fi
-  if [[ "$route_reason" != "explicit profile alias: auditor -> foreman" ]]; then
-    fail "legacy auditor alias route_reason mismatch: ${route_reason}"
-  fi
-  assert_dump_scope_matches_profile "$LAST_MANIFEST" "$resolved"
-  assert_manifest_has "$LAST_MANIFEST" '"profile_alias": {'
-  assert_manifest_has "$LAST_MANIFEST" '"from": "auditor"'
-  assert_manifest_has "$LAST_MANIFEST" '"to": "foreman"'
-
-  expected_status="$(policy_scalar profile_alias_legacy_auditor_deprecation_status)"
-  expected_remove_after="$(policy_scalar profile_alias_legacy_auditor_remove_after_dp)"
-  actual_status="$(extract_manifest_value "$LAST_MANIFEST" "deprecation_status")"
-  actual_remove_after="$(extract_manifest_value "$LAST_MANIFEST" "remove_after_dp")"
-  if [[ "$actual_status" != "$expected_status" ]]; then
-    fail "legacy auditor alias deprecation_status mismatch: expected ${expected_status}, got ${actual_status}"
-  fi
-  if [[ "$actual_remove_after" != "$expected_remove_after" ]]; then
-    fail "legacy auditor alias remove_after_dp mismatch: expected ${expected_remove_after}, got ${actual_remove_after}"
-  fi
-}
-
 test_legacy_hygiene_alias() {
   local resolved
   local requested
@@ -1046,7 +986,6 @@ test_architect_slice_blank_fails
 test_architect_slice_non_architect_fails
 test_foreman_invalid_paths
 test_foreman_valid_path
-test_legacy_auditor_alias
 test_legacy_hygiene_alias
 test_ats_partial_flags_fail
 test_ats_unknown_ids_fail

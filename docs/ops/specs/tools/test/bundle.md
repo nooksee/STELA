@@ -45,7 +45,6 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 - Foreman must fail without `--intent`.
 - Foreman must fail for malformed `--intent`.
 - Foreman must pass for `ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>` and record matching `decision_id` with `decision_leaf_present: true`.
-- Legacy alias `auditor` must resolve to `foreman` in manifest routing metadata.
 - Legacy alias `hygiene` must resolve to `conform` in manifest routing metadata.
 - Alias metadata must be emitted for compatibility routes:
   - `profile_alias.from` and `profile_alias.to` match requested and resolved values.
