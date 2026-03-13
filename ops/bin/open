@@ -14,7 +14,7 @@ tag=""
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/open [--format=chatgpt|gemini] [--intent="..."] [--dp="DP-XXXX / YYYY-MM-DD"] [--out=auto] [--tag=token]
+Usage: ops/bin/open [--format=chatgpt] [--intent="..."] [--dp="DP-XXXX / YYYY-MM-DD"] [--out=auto] [--tag=token]
 USAGE
 }
 
@@ -28,7 +28,7 @@ generate_trace_id() {
 
 for arg in "$@"; do
   case "$arg" in
-    --format=chatgpt|--format=gemini)
+    --format=chatgpt)
       format="${arg#--format=}"
       ;;
     --intent=*)
@@ -115,11 +115,7 @@ if (( ${#missing[@]} > 0 )); then
   exit 1
 fi
 
-if [[ "$format" == "gemini" ]]; then
-  mode_line="Mode: reviewer stance. Prioritize risks, regressions, and missing tests."
-else
-  mode_line="Mode: collaborator stance. Follow repo canon and request missing context."
-fi
+mode_line="Mode: collaborator stance. Follow repo canon and request missing context."
 
 emit() {
   if [[ -n "$open_out_path" ]]; then
@@ -175,7 +171,7 @@ Do not:
 - ops/lib/manifests/CONTEXT.md
 
 [DUMP]
-- If you need full repo context, run: ./ops/bin/dump --scope=core --format=chatgpt (or gemini).
+- If you need full repo context, run: ./ops/bin/dump --scope=core --format=chatgpt.
 - For a file output: ./ops/bin/dump --scope=core --format=chatgpt --out=auto
 - If factory content is intentionally in scope: ./ops/bin/dump --scope=platform --format=chatgpt --out=auto
 - For factory-only inspection: ./ops/bin/dump --scope=factory --format=chatgpt --out=auto

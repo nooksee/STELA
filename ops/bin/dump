@@ -30,7 +30,7 @@ ALLOWLIST_BASELINE_PATH="${REPO_ROOT}/var/tmp/baseline-storage-dp-active-allowli
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/dump [--scope=core|platform|full|factory|project] [--project=<slug>] [--format=chatgpt|gemini|claude]
+Usage: ops/bin/dump [--scope=core|platform|full|factory|project] [--project=<slug>] [--format=chatgpt|claude]
                    [--max-lines=n] [--out=path|auto] [--compress=tar.xz] [--bundle]
                    [--include-binary=meta|raw|base64]
                    [--include-dir=DIR] [--exclude-dir=DIR] [--ignore-file=GLOB]
@@ -62,7 +62,7 @@ for arg in "$@"; do
         die "--target requires a value"
       fi
       ;;
-    --format=chatgpt|--format=gemini|--format=claude)
+    --format=chatgpt|--format=claude)
       format="${arg#--format=}"
       ;;
     --max-lines=*)
@@ -244,7 +244,6 @@ fi
 format_label="$format"
 case "$format" in
   chatgpt) format_label="ChatGPT" ;;
-  gemini) format_label="Gemini" ;;
   claude) format_label="Claude" ;;
 esac
 
