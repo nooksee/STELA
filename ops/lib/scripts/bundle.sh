@@ -51,7 +51,7 @@ ASSEMBLY_RUNTIME_POINTER_SUFFIX=""
 
 bundle_usage() {
   cat <<'USAGE'
-Usage: ops/bin/bundle [--profile=auto|analyst|architect|audit|project|conform|hygiene|foreman|auditor] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--slice=<ID>] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
+Usage: ops/bin/bundle [--profile=auto|analyst|architect|audit|project|conform|hygiene|foreman] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--slice=<ID>] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
 USAGE
 }
 
@@ -190,13 +190,7 @@ bundle_load_policy() {
   BUNDLE_PROJECT_PROFILE="$(bundle_policy_scalar project_profile)"
   BUNDLE_AUDIT_PROFILE="$(bundle_policy_scalar audit_profile)"
   BUNDLE_FOREMAN_PROFILE="$(bundle_policy_scalar foreman_profile)"
-  if [[ -z "$BUNDLE_FOREMAN_PROFILE" ]]; then
-    BUNDLE_FOREMAN_PROFILE="$(bundle_policy_scalar auditor_profile)"
-  fi
   BUNDLE_FOREMAN_INTENT_FORM="$(bundle_policy_scalar foreman_intent_form)"
-  if [[ -z "$BUNDLE_FOREMAN_INTENT_FORM" ]]; then
-    BUNDLE_FOREMAN_INTENT_FORM="$(bundle_policy_scalar auditor_intent_form)"
-  fi
   [[ -n "$BUNDLE_FOREMAN_PROFILE" ]] || die "bundle policy missing required key: foreman_profile"
   [[ -n "$BUNDLE_FOREMAN_INTENT_FORM" ]] || die "bundle policy missing required key: foreman_intent_form"
 
@@ -210,9 +204,7 @@ bundle_load_policy() {
   done
 
   BUNDLE_PROFILE_ALIAS_BY_INPUT=()
-  BUNDLE_PROFILE_ALIAS_BY_INPUT["auditor"]="$(bundle_policy_scalar profile_alias_legacy_auditor_to)"
   BUNDLE_PROFILE_ALIAS_BY_INPUT["hygiene"]="$(bundle_policy_scalar profile_alias_legacy_hygiene_to)"
-  [[ -n "${BUNDLE_PROFILE_ALIAS_BY_INPUT[auditor]}" ]] || die "bundle policy missing required key: profile_alias_legacy_auditor_to"
   [[ -n "${BUNDLE_PROFILE_ALIAS_BY_INPUT[hygiene]}" ]] || die "bundle policy missing required key: profile_alias_legacy_hygiene_to"
   for profile in "${BUNDLE_PROFILE_ALIAS_BY_INPUT[@]}"; do
     bundle_profile_supported "$profile" || die "bundle policy alias target is unsupported: ${profile}"
@@ -220,7 +212,7 @@ bundle_load_policy() {
 
   BUNDLE_PROFILE_ALIAS_DEPRECATION_STATUS_BY_INPUT=()
   BUNDLE_PROFILE_ALIAS_REMOVE_AFTER_DP_BY_INPUT=()
-  for alias_name in auditor hygiene; do
+  for alias_name in hygiene; do
     alias_status_key="profile_alias_legacy_${alias_name}_deprecation_status"
     alias_remove_after_key="profile_alias_legacy_${alias_name}_remove_after_dp"
     alias_status="$(bundle_policy_scalar "$alias_status_key")"

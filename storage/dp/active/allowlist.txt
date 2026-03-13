@@ -370,3 +370,16 @@ ops/src/runbook/gemini.yaml
 ops/src/runbook/execution-decision.yaml
 storage/handoff/CLOSING-DP-OPS-0186.md
 archives/surfaces/TASK-DP-OPS-0186-*.md
+storage/handoff/CLOSING-DP-OPS-0187.md
+archives/surfaces/TASK-DP-OPS-0187-*.md
+ops/lib/manifests/BUNDLE.md
+ops/lib/scripts/bundle.sh
+docs/ops/specs/binaries/bundle.md
+docs/ops/specs/scripts/bundle.md
+docs/ops/specs/tools/lint/style.md
+docs/ops/specs/tools/test/bundle.md
+docs/ops/registry/binaries.md
+docs/ops/registry/lint.md
+docs/ops/registry/test.md
+docs/MANUAL.md
+tools/test/bundle.sh

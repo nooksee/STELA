@@ -497,7 +497,7 @@ Attachment contract defaults and profile routing semantics are governed by `ops/
 
 > **Model-compat fallback:** If tar ingestion is unreliable in a web model context, attach the dump payload (`dump-*.txt`) and dump manifest (`dump-*.manifest.txt`) directly in place of the bundle tar.
 > **Legacy compatibility:** During prefix migration, legacy `BUNDLE-*` artifacts may be emitted as compatibility copies when policy flag `compatibility_emit_legacy_bundle_artifacts=true`.
-> **Alias sunset window:** Legacy profile aliases `auditor` and `hygiene` remain compatibility routes in `sunset` status with removal target `DP-OPS-0165`.
+> **Alias sunset window:** Legacy profile alias `hygiene` remains a compatibility route in `sunset` status with removal target `DP-OPS-0165`.
 > **front-door contract:** `./ops/bin/bundle` is canonical. `./ops/bin/meta <project-name>` remains a project-only compatibility shim that delegates to `bundle --profile=project`.
 
 ### ATS Validation Mode (S8)
