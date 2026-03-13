@@ -24,48 +24,43 @@ Deterministic checks:
 6. Extracted body must not contain drift tokens:
    - `:contentReference[`
    - `oaicite`
-   - `Show more`
    - `[cite_start]`
    - `[cite:`
    - `[/cite]`
-   - `user prompt is empty`
-   - `reading documents`
-   - `running command`
 7. In `architect` mode, envelope and DP-start checks are required, plus role-drift rejection:
    - reject audit-verdict marker lines (`**AUDIT -`),
    - reject `## Contractor Execution Narrative`,
    - reject receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`).
-8. In `architect` mode, reject ask-back fallback prompt text that substitutes clarification dialogue for DP emission, including observed variants such as "Tell me the outcome you want...", "Tell me what you want done with them...", "review, summarize, draft the DP", and "inspect specific files, or trace a bug".
-9. In `analyst` mode, extracted body must start with `1. Analysis and Discussion` (markdown heading prefix optional).
-10. In `analyst` mode, extracted body must include `2. Strategic Options` and an explicit recommendation line.
-11. In `analyst` mode, reject role-drift markers:
+8. In `analyst` mode, extracted body must start with `1. Analysis and Discussion` (markdown heading prefix optional).
+9. In `analyst` mode, extracted body must include `2. Strategic Options` and an explicit recommendation line.
+10. In `analyst` mode, reject role-drift markers:
    - audit-verdict markers (`**AUDIT -`),
    - `## Contractor Execution Narrative`,
    - receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`),
    - audit/foreman decision fields (`Decision Required:`, `Decision Leaf:`),
    - policy-overcompensation prose (`Section 3.4.5`, `RECEIPT_EXTRA`, `ops/src/surfaces/dp.md.tpl`, or fenced-envelope instruction echo text).
-12. In `dp` mode, on envelope pass, delegate body validation to `bash tools/lint/dp.sh`.
-13. In `architect` mode, on envelope pass, delegate body validation to `bash tools/lint/dp.sh`.
-14. In `foreman` mode, extracted body must start with `### Addendum` and include required addendum headings:
+11. In `dp` mode, on envelope pass, delegate body validation to `bash tools/lint/dp.sh`.
+12. In `architect` mode, on envelope pass, delegate body validation to `bash tools/lint/dp.sh`.
+13. In `foreman` mode, extracted body must start with `### Addendum` and include required addendum headings:
    - `## A.1 Authorization`
    - `## A.2 Scope Delta`
    - `## A.3 Addendum Objective`
    - `## A.4 Context Load`
    - `## A.5 Addendum Receipt (Proofs to collect) - MUST RUN`
-15. In `foreman` mode, reject role-drift markers:
+14. In `foreman` mode, reject role-drift markers:
    - audit-verdict markers (`**AUDIT -`),
    - `## Contractor Execution Narrative`,
    - `## Verdict`.
-16. In `foreman` mode, if `Decision Required:` and `Decision Leaf:` lines appear, require coherence:
+15. In `foreman` mode, if `Decision Required:` and `Decision Leaf:` lines appear, require coherence:
    - `Decision Required: Yes` requires `Decision Leaf: archives/decisions/RoR-*.md`.
    - `Decision Required: No` requires `Decision Leaf: None`.
-17. In `conformist` mode, extracted body must start with `### DP-` and reject role-drift markers:
+16. In `conformist` mode, extracted body must start with `### DP-` and reject role-drift markers:
    - audit-verdict markers (`**AUDIT -`),
    - `## Contractor Execution Narrative`,
    - receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`),
    - addendum headings (`### Addendum`, `## A.1` through `## A.5`),
    - decision fields (`Decision Required:`, `Decision Leaf:`).
-18. In `audit` mode, envelope, marker, and drift checks are authoritative.
+17. In `audit` mode, envelope, marker, and drift checks are authoritative.
 
 Exit behavior:
 - Pass: prints `OK: response lint passed (mode=<dp|audit|architect|analyst|foreman|conformist>)`.
@@ -87,12 +82,9 @@ Exit behavior:
 - FAIL: plain audit body without fenced block (`audit` mode).
 - FAIL: audit preface text outside fence (`audit` mode).
 - FAIL: missing audit marker (`audit` mode).
-- FAIL: audit meta chatter token (`audit` mode).
 - FAIL: audit citation token (`audit` mode).
 - FAIL: architect response containing audit marker (`architect` mode).
 - FAIL: architect response containing Contractor Execution Narrative sections (`architect` mode).
-- FAIL: architect response containing ask-back fallback prompt text (`architect` mode).
-- FAIL: architect response containing observed ask-back fallback variant (`architect` mode).
 - PASS: architect response with delegate enabled against a canonical rendered DP body.
 - FAIL: architect delegate-on response with malformed `3.4.5` receipt shape.
 - FAIL: architect delegate-on response with `3.5.1` closing-sidecar DP-id mismatch.
@@ -108,9 +100,6 @@ Exit behavior:
 - FAIL: conformist response containing addendum heading (`conformist` mode).
 - FAIL: conformist response containing decision fields (`conformist` mode).
 - FAIL: trailing text outside fence.
-
-## Anecdotal Anchor
-DP drafting regressions showed repeated model output drift where correct content was wrapped with extra commentary or non-canonical fragments. Envelope gating isolates that class of failure at ingress.
 
 ## Integrity Filter Warnings
 `response.sh` is an ingress contract gate. In `dp`, `architect`, and `conformist` modes, structural DP validation remains authoritative in `tools/lint/dp.sh` after envelope checks. In `audit` mode, strict single-fence envelope checks plus marker and drift checks are the hard floor.

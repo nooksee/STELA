@@ -122,8 +122,5 @@ ATS validation gate:
 4. `STELA.md` and `SCAFFOLD.md` remain advisory-only and non-gating in this phase.
 5. ATS success may emit a pointer artifact and must never inline full registry payloads into bundle text or manifest fields.
 
-## Anecdotal Anchor
-DP-OPS-0146 hardened bundle intake after web-model architect runs looped on option menus and failed to map DP slots reliably from PLAN handoff context.
-
 ## Integrity Filter Warnings
 Bundle enforces output paths under `storage/handoff/`. Project profile rejects missing or invalid slugs. PLAN lint remains a deterministic safety floor; it validates structure, not plan quality. Policy parse errors in `ops/lib/manifests/BUNDLE.md` are fail-closed. Bundle runtime must remain deterministic and must not parse factory markdown governance files at runtime.

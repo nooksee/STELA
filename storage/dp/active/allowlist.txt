@@ -368,3 +368,5 @@ ops/src/runbook/gpt.yaml
 ops/src/runbook/claude.yaml
 ops/src/runbook/gemini.yaml
 ops/src/runbook/execution-decision.yaml
+storage/handoff/CLOSING-DP-OPS-0186.md
+archives/surfaces/TASK-DP-OPS-0186-*.md
