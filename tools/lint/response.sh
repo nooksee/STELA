@@ -209,10 +209,10 @@ check_architect_body_scope() {
 check_analyst_body_scope() {
   local body_path="$1"
   local first_content_line
-  local analyst_start_regex='^(##[[:space:]]+)?1[.)][[:space:]]+Analysis[[:space:]]+and[[:space:]]+Discussion'
   local hit=""
   local line_number=""
   local line_text=""
+  local plan_lint_output=""
 
   first_content_line="$(awk 'NF { print; exit }' "$body_path")"
   if [[ -z "$first_content_line" ]]; then
@@ -220,23 +220,9 @@ check_analyst_body_scope() {
     return 1
   fi
 
-  if [[ ! "$first_content_line" =~ $analyst_start_regex ]]; then
-    response_fail "analyst body must start with '1. Analysis and Discussion'"
+  if [[ ! "$first_content_line" =~ ^#[[:space:]]+DP[[:space:]]+Plan: ]]; then
+    response_fail "analyst body must start with '# DP Plan:'"
     return 1
-  fi
-
-  hit="$(awk '
-    $0 ~ /^(##[[:space:]]+)?2[.)][[:space:]]+Strategic[[:space:]]+Options/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -z "$hit" ]]; then
-    response_fail "analyst body must include section '2. Strategic Options'"
-  fi
-
-  hit="$(awk '
-    tolower($0) ~ /recommendation[[:space:]]*:/ || tolower($0) ~ /recommended[[:space:]]+option/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -z "$hit" ]]; then
-    response_fail "analyst body must include an explicit recommendation line"
   fi
 
   hit="$(awk '
@@ -277,6 +263,11 @@ check_analyst_body_scope() {
   if [[ -n "$hit" ]]; then
     IFS=$'\t' read -r line_number line_text <<< "$hit"
     response_fail "analyst body must not contain role-policy overcompensation prose at line ${line_number}: ${line_text}"
+  fi
+
+  if ! plan_lint_output="$(bash tools/lint/plan.sh "$body_path" 2>&1)"; then
+    response_fail "analyst body must satisfy PLAN contract: $(printf '%s\n' "$plan_lint_output" | tail -n 1)"
+    return 1
   fi
 }
 
@@ -534,7 +525,8 @@ check_drift_tokens() {
 lint_response_file() {
   local input_path="$1"
   local body_tmp
-  body_tmp="$(mktemp)"
+  mkdir -p "${REPO_ROOT}/var/tmp"
+  body_tmp="$(mktemp "${REPO_ROOT}/var/tmp/lint-response-body.XXXXXX")"
   failures=0
 
   if [[ ! -f "$input_path" ]]; then
@@ -611,7 +603,7 @@ run_test() {
   local response_analyst_audit_marker
   local response_analyst_narrative
   local response_analyst_policy
-  local response_analyst_missing_sections
+  local response_analyst_missing_plan
   local response_foreman_valid
   local response_foreman_audit_marker
   local response_foreman_missing_sections
@@ -652,7 +644,7 @@ run_test() {
   response_analyst_audit_marker="${test_dir}/response-analyst-audit-marker.md"
   response_analyst_narrative="${test_dir}/response-analyst-narrative.md"
   response_analyst_policy="${test_dir}/response-analyst-policy.md"
-  response_analyst_missing_sections="${test_dir}/response-analyst-missing-sections.md"
+  response_analyst_missing_plan="${test_dir}/response-analyst-missing-plan.md"
   response_foreman_valid="${test_dir}/response-foreman-valid.md"
   response_foreman_audit_marker="${test_dir}/response-foreman-audit-marker.md"
   response_foreman_missing_sections="${test_dir}/response-foreman-missing-sections.md"
@@ -942,29 +934,32 @@ EOF_ARCH_DELEGATE_SLOTS
 
   cat > "$response_analyst_valid" <<'EOF_ANALYST_VALID'
 ```markdown
-1. Analysis and Discussion (The Why and What)
-- Current implementation is stable.
+# DP Plan: Analyst Fixture
 
-2. Strategic Options (The How)
-- Option A
-  - Pros: deterministic validation path
-  - Cons: moderate implementation effort
-  - Risk: low regression risk
-Recommendation: Option A
+## Summary
+Analyst output is rendered as a plan surface.
+
+## Scope
+Produce a deterministic plan draft from the attached topic.
+
+## Architect Handoff
+Selected Option: RECOMMENDED
+Slice Mode: single
+Selected Slices: A1
+
+## Implementation Plan (Decision Complete)
+1. Keep the output plan-shaped and machine-ingestible.
 ```
 EOF_ANALYST_VALID
   if ! lint_response_file "$response_analyst_valid" >/dev/null 2>&1; then
-    echo "FAIL: --test expected analyst response with required sections to pass" >&2
+    echo "FAIL: --test expected analyst plan-shaped response to pass" >&2
     failures_local=1
   fi
 
   cat > "$response_analyst_audit_marker" <<'EOF_ANALYST_AUDIT'
 ```markdown
-1. Analysis and Discussion (The Why and What)
+# DP Plan: Analyst Fixture
 **AUDIT - DP-OPS-9999**
-
-2. Strategic Options (The How)
-Recommendation: Option A
 ```
 EOF_ANALYST_AUDIT
   if lint_response_file "$response_analyst_audit_marker" >/dev/null 2>&1; then
@@ -974,11 +969,8 @@ EOF_ANALYST_AUDIT
 
   cat > "$response_analyst_narrative" <<'EOF_ANALYST_NARRATIVE'
 ```markdown
-1. Analysis and Discussion (The Why and What)
+# DP Plan: Analyst Fixture
 ## Contractor Execution Narrative
-
-2. Strategic Options (The How)
-Recommendation: Option A
 ```
 EOF_ANALYST_NARRATIVE
   if lint_response_file "$response_analyst_narrative" >/dev/null 2>&1; then
@@ -988,11 +980,8 @@ EOF_ANALYST_NARRATIVE
 
   cat > "$response_analyst_policy" <<'EOF_ANALYST_POLICY'
 ```markdown
-1. Analysis and Discussion (The Why and What)
+# DP Plan: Analyst Fixture
 Section 3.4.5 requires RECEIPT_EXTRA policy wording.
-
-2. Strategic Options (The How)
-Recommendation: Option A
 ```
 EOF_ANALYST_POLICY
   if lint_response_file "$response_analyst_policy" >/dev/null 2>&1; then
@@ -1000,14 +989,13 @@ EOF_ANALYST_POLICY
     failures_local=1
   fi
 
-  cat > "$response_analyst_missing_sections" <<'EOF_ANALYST_MISSING'
+  cat > "$response_analyst_missing_plan" <<'EOF_ANALYST_MISSING'
 ```markdown
-1. Analysis and Discussion (The Why and What)
-Recommendation: Option A
+# DP Plan: Analyst Fixture
 ```
 EOF_ANALYST_MISSING
-  if lint_response_file "$response_analyst_missing_sections" >/dev/null 2>&1; then
-    echo "FAIL: --test expected analyst response missing strategic options to fail" >&2
+  if lint_response_file "$response_analyst_missing_plan" >/dev/null 2>&1; then
+    echo "FAIL: --test expected analyst response missing PLAN body content to fail" >&2
     failures_local=1
   fi
 

@@ -9,16 +9,16 @@ Rules:
 {{@include:ops/src/shared/stances.json#stance_shared_rules}}
 * Generate analyst intake with `./ops/bin/bundle --profile=analyst --out=auto` (or `--profile=auto` for route-gated intake).
 * Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
-* Require one operator query source before analysis: either attached `storage/handoff/TOPIC.md` or an inline `ANALYZE/SYNTHESIZE/FORMULATE` query in the message.
+* Require attached `storage/handoff/TOPIC.md` as the analyst input source.
+* Treat `storage/handoff/TOPIC.md` as the active analyst query and produce `PLAN.md` only.
 * Logic: `PoT.md`. Reference: `docs/MAP.md` and `SoP.md`.
-* Structure output to facilitate rapid decision-making.
+* Structure output for direct operator handoff.
 
 Steps:
-0. **PRECONDITIONS**: If neither `storage/handoff/TOPIC.md` nor an inline operator query is provided: **STOP** and request a query source.
-1. **ANALYZE** operator query using attached context.
-2. **SYNTHESIZE** findings based on `PoT.md` and repository state, treating OPEN and dump bundles as session artifacts rather than canonical sources.
-3. **FORMULATE** strategic options menu (2-3 actionable paths).
-4. **PLAN OUTPUT MODE**: When operator asks for an architect-ready plan, output only a complete `PLAN.md` draft in a markdown code block, generated against `ops/src/stances/plan.md.tpl`.
+0. **PRECONDITIONS**: If attached `storage/handoff/TOPIC.md` is missing: **STOP** and report the missing topic artifact.
+1. Read the attached topic against attached bundle context only.
+2. Draft one complete `PLAN.md` output from that topic.
+3. Output only a complete `PLAN.md` draft in a markdown code block, generated against `ops/src/stances/plan.md.tpl`.
    * Use only the simplified plan sections: `Summary`, `Scope`, `Architect Handoff`, and `Implementation Plan (Decision Complete)`.
    * Required `Architect Handoff` fields:
      * `Selected Option: <A|B|C|RECOMMENDED>`
@@ -27,21 +27,9 @@ Steps:
      * `Execution Order: <required when multi>`
      * `Architect Constraints: <no new options; draft from selected fields only>`
 
-Operator query template:
-1. ANALYZE `<topic>`.
-2. SYNTHESIZE `<aspect>`.
-3. FORMULATE `<solutions>`.
-
-Output Structure:
-1. Analysis and Discussion (The Why and What)
-2. Strategic Options (The How):
-   * 2-3 distinct paths with Pros, Cons, Risk
-   * Include Recommendation or Proposal
-
-Output: Recommendation or Discussion followed by Strategic Options menu.
 {{@include:ops/src/shared/stances.json#single_fence_contract_rules}}
-For machine-ingest analyst mode: first non-empty line inside the fenced body must start with `1. Analysis and Discussion`.
-For machine-ingest analyst mode: include `2. Strategic Options` section and a `Recommendation:` line.
+For machine-ingest analyst mode: output only the complete PLAN markdown code block.
+For machine-ingest analyst mode: first non-empty line inside the code block must start with `# DP Plan:`.
+For machine-ingest analyst mode: require attached `storage/handoff/TOPIC.md`; do not use inline query fallback.
 {{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}
-For PLAN output mode: output only the complete PLAN markdown code block.
-For PLAN output mode: first non-empty line inside the code block must start with `# DP Plan:`.
+For machine-ingest analyst mode: do not emit discussion/option menus or recommendation lines.

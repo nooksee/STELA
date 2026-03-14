@@ -331,11 +331,11 @@ check_architect_mode_contract() {
 check_analyst_mode_contract() {
   local stance_analyst="${REPO_ROOT}/ops/src/stances/analyst.md.tpl"
   local required_shared_fence_include='{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}'
-  local required_first='For machine-ingest analyst mode: first non-empty line inside the fenced body must start with `1. Analysis and Discussion`.'
-  local required_sections='For machine-ingest analyst mode: include `2. Strategic Options` section and a `Recommendation:` line.'
+  local required_output='For machine-ingest analyst mode: output only the complete PLAN markdown code block.'
+  local required_first='For machine-ingest analyst mode: first non-empty line inside the code block must start with `# DP Plan:`.'
+  local required_topic='For machine-ingest analyst mode: require attached `storage/handoff/TOPIC.md`; do not use inline query fallback.'
   local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
-  local required_plan_output='For PLAN output mode: output only the complete PLAN markdown code block.'
-  local required_plan_first='For PLAN output mode: first non-empty line inside the code block must start with `# DP Plan:`.'
+  local required_no_memo='For machine-ingest analyst mode: do not emit discussion/option menus or recommendation lines.'
 
   [[ -f "$stance_analyst" ]] || mark_failure "analyst.md.tpl missing for mode contract checks"
 
@@ -343,24 +343,24 @@ check_analyst_mode_contract() {
     mark_failure "analyst.md.tpl missing shared fence include line"
   fi
 
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_output" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing analyst output-only line"
+  fi
+
   if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_first" "$stance_analyst"; then
     mark_failure "analyst.md.tpl missing analyst first-line marker line"
   fi
 
-  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_sections" "$stance_analyst"; then
-    mark_failure "analyst.md.tpl missing analyst required-sections line"
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_topic" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing analyst topic-source line"
   fi
 
   if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_shared_non_audit_include" "$stance_analyst"; then
     mark_failure "analyst.md.tpl missing shared non-audit include line"
   fi
 
-  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_plan_output" "$stance_analyst"; then
-    mark_failure "analyst.md.tpl missing PLAN output-only line"
-  fi
-
-  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_plan_first" "$stance_analyst"; then
-    mark_failure "analyst.md.tpl missing PLAN first-line marker line"
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_no_memo" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing analyst no-memo line"
   fi
 }
 

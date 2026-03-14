@@ -87,11 +87,15 @@ Artifact contract (written under `storage/handoff/`):
    - embedded OPEN metadata (`embedded`, `branch`, `head_short`, `trace_id`, `intent`)
    - dump pointers
    - topic/plan presence
-   - architect request metadata (`request.slice_id`, `request.slice_validated`, `request.plan_source`, `request.packet_id`, `request.closing_sidecar`, `request.title_suffix`)
+   - profile-specific request metadata:
+     - analyst: `request.topic_source`, `request.output_surface`
+     - architect: `request.slice_id`, `request.slice_validated`, `request.plan_source`, `request.packet_id`, `request.closing_sidecar`, `request.title_suffix`
    - stance template metadata (`stance_template_key`)
    - addendum metadata (`required`, `decision_id`, `decision_leaf_present`)
    - package metadata (`path`, `files`)
-3. Bundle package (`.tar`) containing bundle `.txt`, manifest, dump payload, dump manifest, and `TOPIC.md`/`PLAN.md` when present.
+3. Bundle package (`.tar`) containing bundle `.txt`, manifest, dump payload, dump manifest, and profile-specific handoff members.
+   - analyst includes `TOPIC.md` only
+   - architect may include `PLAN.md`
 4. Canonical bundle artifact names use policy-defined profile prefixes (`artifact_prefix_<profile>` in `ops/lib/manifests/BUNDLE.md`), for example `AUDIT-*` and `FOREMAN-*`.
 5. Legacy `BUNDLE-*` artifacts are compatibility outputs during migration when `compatibility_emit_legacy_bundle_artifacts=true`.
 6. Manifest `artifact_naming` metadata records canonical and compatibility artifact paths plus `legacy_emitted` status.
@@ -107,10 +111,11 @@ Artifact contract (written under `storage/handoff/`):
 9. When ATS is not applied, `assembly.pointer.emitted` is `false` and runtime emits no assembly pointer artifact.
 
 Text artifact profile conditional block:
-1. The `[HANDOFF]` block (`TOPIC.md` / `PLAN.md` presence) is emitted for non-audit profiles.
+1. The `[HANDOFF]` block is emitted for non-audit profiles.
 2. For `audit` and `foreman` resolved profiles, the text artifact omits `[HANDOFF]` to avoid unrelated intake noise in audit flows.
-3. For `architect`, the text artifact emits a `[REQUEST]` block with slice metadata and packet identity metadata.
-4. For validated architect slice runs, the text artifact also emits `[ACTIVE SLICE PROJECTION]`.
+3. For `analyst`, the text artifact emits `[REQUEST]` with `topic_source` and `output_surface`, and `[HANDOFF]` reports `TOPIC.md` only.
+4. For `architect`, the text artifact emits a `[REQUEST]` block with slice metadata and packet identity metadata.
+5. For validated architect slice runs, the text artifact also emits `[ACTIVE SLICE PROJECTION]`.
 
 Foreman gate:
 1. `--profile=foreman` requires `--intent`.

@@ -39,9 +39,14 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
   - `request.packet_id`
   - `request.closing_sidecar`
   - `request.title_suffix`
+- Analyst manifest must include `request.topic_source` and `request.output_surface`.
 - Non-`auto` profiles must preserve exact `resolved_profile` parity.
 - Manifest dump `scope` must match policy mapping from `ops/lib/manifests/BUNDLE.md` for the resolved profile.
 - Audit profile dump scope is `core`.
+- Analyst requires `storage/handoff/TOPIC.md`; bundle must fail closed when it is missing.
+- Analyst bundle text must include `[REQUEST]` with `topic_source` and `output_surface`.
+- Analyst bundle text `[HANDOFF]` must report `TOPIC.md` only.
+- Analyst package must include `storage/handoff/TOPIC.md` and omit `storage/handoff/PLAN.md`.
 - Architect bundle text must include `[REQUEST]` block with slice and packet metadata.
 - Validated architect slice output must include `[ACTIVE SLICE PROJECTION]` with active-slice handoff data only.
 - Architect ad hoc output must not emit `[ACTIVE SLICE PROJECTION]`.

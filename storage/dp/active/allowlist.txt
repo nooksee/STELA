@@ -398,5 +398,7 @@ docs/ops/specs/tools/lint/dp.md
 tools/lint/response.sh
 storage/handoff/CLOSING-DP-OPS-0190.md
 archives/surfaces/TASK-DP-OPS-0190-*.md
+storage/handoff/CLOSING-DP-OPS-0191.md
+archives/surfaces/TASK-DP-OPS-0191-*.md
 docs/ops/specs/runbook/gemini.md*
 ops/src/runbook/gemini.yaml*

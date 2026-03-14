@@ -488,7 +488,7 @@ Attachment contract defaults and profile routing semantics are governed by `ops/
 
 | Profile | Bundle Command | Required Attachments | Notes |
 | --- | --- | --- | --- |
-| `analyst` | `./ops/bin/bundle --profile=analyst --out=auto` | `ANALYST-*.txt`, `ANALYST-*.manifest.json`, query source (`storage/handoff/TOPIC.md` or inline `ANALYZE/SYNTHESIZE/FORMULATE`) | Attach `ANALYST-*.tar` when the model session reliably ingests tar artifacts. |
+| `analyst` | `./ops/bin/bundle --profile=analyst --out=auto` | `ANALYST-*.txt`, `ANALYST-*.manifest.json`, `storage/handoff/TOPIC.md` | Analyst reads `TOPIC.md` and emits `PLAN.md`; attach `ANALYST-*.tar` when the model session reliably ingests tar artifacts. |
 | `architect` | `./ops/bin/bundle --profile=architect --out=auto` | `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, `storage/handoff/PLAN.md` | PLAN-driven drafting requires Architect Handoff fields in PLAN. |
 | `audit` | `./ops/bin/bundle --profile=audit --out=auto` | `AUDIT-*.txt`, `AUDIT-*.manifest.json`, DP RESULTS receipt | Audit stance is PASS/FAIL verdict only. |
 | `foreman` | `./ops/bin/bundle --profile=foreman --intent="ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>" --out=auto` | `FOREMAN-*.txt`, `FOREMAN-*.manifest.json` | Addendum authorization intake only; not used for PASS/FAIL verdicts. |
