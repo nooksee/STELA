@@ -74,6 +74,21 @@ queue_cleanup_path() {
   fi
 }
 
+ensure_analyst_topic_fixture() {
+  local topic_rel="storage/handoff/TOPIC.md"
+  local topic_abs="${REPO_ROOT}/${topic_rel}"
+
+  if [[ -f "$topic_abs" ]]; then
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$topic_abs")"
+  cat > "$topic_abs" <<'EOF'
+Factory ATS smoke topic fixture.
+EOF
+  queue_cleanup_path "$topic_rel"
+}
+
 parse_bundle_output_path() {
   local label="$1"
   printf '%s\n' "$RUN_OUTPUT" | sed -n "s/^${label}:[[:space:]]*//p" | tail -n 1
@@ -123,9 +138,13 @@ extract_pointer_path() {
   ' "${REPO_ROOT}/${manifest_rel}" | head -n 1
 }
 
+ensure_analyst_topic_fixture
+
 run_capture ./ops/bin/bundle --profile=auto --agent-id=R-AGENT-09 --skill-id=S-LEARN-09 --task-id=B-TASK-09 --out=auto
 if (( RUN_STATUS != 0 )); then
   fail "factory ATS smoke bundle invocation failed: ${RUN_OUTPUT}"
+  echo "FAILED: ${FAILURES} issue(s) detected." >&2
+  exit 1
 fi
 
 artifact_rel="$(normalize_rel_path "$(parse_bundle_output_path "Bundle artifact")")"

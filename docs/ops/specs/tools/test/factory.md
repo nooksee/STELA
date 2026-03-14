@@ -17,6 +17,7 @@ Run deterministic smoke checks for factory ATS triplet execution using canon tes
 - `opt/_factory/agents/r-agent-09.md`
 - `opt/_factory/skills/s-learn-09.md`
 - `opt/_factory/tasks/b-task-09.md`
+- transient `storage/handoff/TOPIC.md` fixture when the resolved auto profile requires analyst input
 - bundle-generated artifacts under `storage/handoff/` and `storage/dumps/`
 
 ## Outputs
@@ -26,7 +27,9 @@ Run deterministic smoke checks for factory ATS triplet execution using canon tes
 
 ## Invariants and failure modes
 - `./ops/bin/bundle --profile=auto --agent-id=R-AGENT-09 --skill-id=S-LEARN-09 --task-id=B-TASK-09 --out=auto` must succeed.
+- When auto resolves to analyst, the test provisions a disposable `storage/handoff/TOPIC.md` fixture before bundle invocation.
 - Bundle output must include non-empty artifact/manifest/package paths.
+- Bundle invocation failure is terminal for the smoke test; path-parsing assertions must not run on failed output.
 - Emitted artifact, manifest, package, dump payload, dump manifest, and assembly pointer files must exist.
 - Manifest must include ATS assembly assertions:
   - `assembly.applied: true`
