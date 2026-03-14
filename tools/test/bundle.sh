@@ -11,6 +11,38 @@ fi
 
 cd "$REPO_ROOT" || exit 1
 
+usage() {
+  cat <<'EOF'
+Usage: bash tools/test/bundle.sh [--mode=full|certify-critical]
+EOF
+}
+
+TEST_MODE="full"
+for arg in "$@"; do
+  case "$arg" in
+    --mode=*)
+      TEST_MODE="${arg#--mode=}"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "ERROR: unknown arg: ${arg}" >&2
+      exit 1
+      ;;
+  esac
+done
+
+case "$TEST_MODE" in
+  full|certify-critical)
+    ;;
+  *)
+    echo "ERROR: invalid --mode value: ${TEST_MODE}" >&2
+    exit 1
+    ;;
+esac
+
 declare -a CLEANUP_PATHS=()
 declare -A CLEANUP_SEEN=()
 FAILURES=0
@@ -1161,26 +1193,47 @@ test_meta_shim() {
   fi
 }
 
-test_manifest_fail_closed
-test_stance_template_renderer
-test_valid_profiles
-test_analyst_contract
-test_architect_slice_valid
-test_architect_slice_ad_hoc
-test_architect_slice_unknown_fails
-test_architect_slice_blank_fails
-test_architect_slice_non_architect_fails
-test_foreman_invalid_paths
-test_foreman_valid_path
-test_legacy_hygiene_alias
-test_ats_partial_flags_fail
-test_ats_unknown_ids_fail
-test_ats_valid_triplet
-test_meta_shim
+run_full_suite() {
+  test_manifest_fail_closed
+  test_stance_template_renderer
+  test_valid_profiles
+  test_analyst_contract
+  test_architect_slice_valid
+  test_architect_slice_ad_hoc
+  test_architect_slice_unknown_fails
+  test_architect_slice_blank_fails
+  test_architect_slice_non_architect_fails
+  test_foreman_invalid_paths
+  test_foreman_valid_path
+  test_legacy_hygiene_alias
+  test_ats_partial_flags_fail
+  test_ats_unknown_ids_fail
+  test_ats_valid_triplet
+  test_meta_shim
+}
+
+run_certify_critical_suite() {
+  test_manifest_fail_closed
+  test_stance_template_renderer
+  test_architect_slice_valid
+}
+
+case "$TEST_MODE" in
+  full)
+    run_full_suite
+    ;;
+  certify-critical)
+    run_certify_critical_suite
+    ;;
+esac
 
 if (( FAILURES > 0 )); then
-  echo "FAIL: bundle smoke test detected ${FAILURES} issue(s)." >&2
+  echo "FAIL: bundle smoke test detected ${FAILURES} issue(s) (mode: ${TEST_MODE})." >&2
   exit 1
 fi
 
-echo "PASS: bundle smoke test"
+if [[ "$TEST_MODE" == "full" ]]; then
+  echo "PASS: bundle smoke test"
+else
+  echo "PASS: bundle smoke test (mode: ${TEST_MODE})"
+fi

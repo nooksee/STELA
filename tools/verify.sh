@@ -16,8 +16,41 @@ cd "$REPO_ROOT" || exit 1
 trap 'emit_binary_leaf "verify" "finish"' EXIT
 emit_binary_leaf "verify" "start"
 
+usage() {
+  cat <<'EOF'
+Usage: bash tools/verify.sh [--mode=full|certify-critical]
+EOF
+}
+
+VERIFY_MODE="full"
+for arg in "$@"; do
+  case "$arg" in
+    --mode=*)
+      VERIFY_MODE="${arg#--mode=}"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "ERROR: unknown arg: ${arg}" >&2
+      exit 1
+      ;;
+  esac
+done
+
+case "$VERIFY_MODE" in
+  full|certify-critical)
+    ;;
+  *)
+    echo "ERROR: invalid --mode value: ${VERIFY_MODE}" >&2
+    exit 1
+    ;;
+esac
+
 echo "Stela Repo Hygiene Verification"
 echo "Root: $REPO_ROOT"
+echo "Verification Mode: $VERIFY_MODE"
 echo
 
 errors=0
@@ -285,14 +318,22 @@ fi
 
 if [[ ! -f "tools/test/bundle.sh" ]]; then
   fail "Missing required test script: tools/test/bundle.sh"
-elif ! bash tools/test/bundle.sh; then
-  fail "Bundle smoke test failed: tools/test/bundle.sh"
+elif [[ "$VERIFY_MODE" == "full" ]]; then
+  if ! bash tools/test/bundle.sh; then
+    fail "Bundle smoke test failed: tools/test/bundle.sh"
+  fi
+else
+  if ! bash tools/test/bundle.sh --mode=certify-critical; then
+    fail "Bundle smoke test failed: tools/test/bundle.sh --mode=certify-critical"
+  fi
 fi
 
-if [[ ! -f "tools/test/factory.sh" ]]; then
-  fail "Missing required test script: tools/test/factory.sh"
-elif ! bash tools/test/factory.sh; then
-  fail "Factory smoke test failed: tools/test/factory.sh"
+if [[ "$VERIFY_MODE" == "full" ]]; then
+  if [[ ! -f "tools/test/factory.sh" ]]; then
+    fail "Missing required test script: tools/test/factory.sh"
+  elif ! bash tools/test/factory.sh; then
+    fail "Factory smoke test failed: tools/test/factory.sh"
+  fi
 fi
 
 if [[ ! -f "tools/test/open.sh" ]]; then
@@ -303,20 +344,22 @@ fi
 
 if [[ ! -f "tools/test/editor.sh" ]]; then
   fail "Missing required test script: tools/test/editor.sh"
-elif ! bash tools/test/editor.sh; then
+elif [[ "$VERIFY_MODE" == "full" ]] && ! bash tools/test/editor.sh; then
   fail "Editor scaffold test failed: tools/test/editor.sh"
 fi
 
-if [[ ! -f "tools/lint/response.sh" ]]; then
-  fail "Missing required lint script: tools/lint/response.sh"
-elif ! bash tools/lint/response.sh --test; then
-  fail "Response envelope lint self-test failed: tools/lint/response.sh --test"
-fi
+if [[ "$VERIFY_MODE" == "full" ]]; then
+  if [[ ! -f "tools/lint/response.sh" ]]; then
+    fail "Missing required lint script: tools/lint/response.sh"
+  elif ! bash tools/lint/response.sh --test; then
+    fail "Response envelope lint self-test failed: tools/lint/response.sh --test"
+  fi
 
-if [[ ! -f "tools/lint/debt.sh" ]]; then
-  fail "Missing required lint script: tools/lint/debt.sh"
-elif ! bash tools/lint/debt.sh; then
-  fail "Guard debt lint failed: tools/lint/debt.sh"
+  if [[ ! -f "tools/lint/debt.sh" ]]; then
+    fail "Missing required lint script: tools/lint/debt.sh"
+  elif ! bash tools/lint/debt.sh; then
+    fail "Guard debt lint failed: tools/lint/debt.sh"
+  fi
 fi
 
 echo

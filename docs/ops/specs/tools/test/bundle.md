@@ -7,6 +7,7 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 
 ## Invocation
 - Command: `bash tools/test/bundle.sh`
+- Alternate bounded command: `bash tools/test/bundle.sh --mode=certify-critical`
 - Required flags: none.
 - Positional arguments: none.
 - Expected exit behavior:
@@ -80,6 +81,11 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
   - unknown project slug fails with explicit error.
   - valid project slug succeeds and emits project-profile bundle artifacts through delegated bundle execution.
   - delegated manifest confirms `resolved_profile: project` and `project` field parity.
+- `--mode=certify-critical` is a bounded closeout-safety subset. It must run:
+  - manifest fail-closed assertions,
+  - stance template render determinism,
+  - architect validated-slice bundle generation.
+- `--mode=certify-critical` must not run the full analyst/profile/ATS/meta matrix.
 
 ## Anecdotal Anchor
 This test is the bundle contract tripwire: if routing, naming, or intent guards regress, the failure is immediate and deterministic.

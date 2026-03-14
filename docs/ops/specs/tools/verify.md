@@ -19,9 +19,19 @@
    - Fail non-markdown files in `docs/` and `opt/`.
    - Fail loose markdown in `ops/` outside allowed subtrees.
 5. Emit warnings (not hard failures) for unexpected `storage/` clutter and missing project `README.md` files.
+6. Run deterministic smoke and lint gates by mode:
+   - `--mode=full` (default): `tools/test/bundle.sh`, `tools/test/factory.sh`, `tools/test/open.sh`, `tools/test/editor.sh`, `tools/lint/response.sh --test`, and `tools/lint/debt.sh`.
+   - `--mode=certify-critical`: `tools/test/bundle.sh --mode=certify-critical` and `tools/test/open.sh`.
+
+## Invocation modes
+- `bash tools/verify.sh`
+- `bash tools/verify.sh --mode=full`
+- `bash tools/verify.sh --mode=certify-critical`
+
+`certify-critical` is a bounded closeout-safety path for `ops/bin/certify`. It preserves the cheap structural and closeout-critical smoke checks while avoiding the heaviest repo-wide bundle/factory/debt replay cost. Narrative scaffold validation already occurs in certify preflight, so editor smoke remains full-mode only. Full verify remains the SSOT hygiene pass outside certify.
 
 ## Anecdotal Anchor
 The gate formalizes a recurring startup-failure class where missing required runtime subdirectories or placeholders broke binary workflows before task execution began. Once `tools/verify.sh` became a required pre-work check, those structural defects were caught before dispatch.
 
 ## Integrity Filter Warnings
-The script mixes hard failures and warnings by design; warning-only findings still indicate hygiene drift that can become blocking later. Intake packet enforcement inspects tracked files, so untracked staging artifacts are outside that specific guard. Factory reachability checks validate candidate and promotion pointers, not full semantic validity of downstream definition content.
+The script mixes hard failures and warnings by design; warning-only findings still indicate hygiene drift that can become blocking later. Intake packet enforcement inspects tracked files, so untracked staging artifacts are outside that specific guard. Factory reachability checks validate candidate and promotion pointers, not full semantic validity of downstream definition content. `--mode=certify-critical` is intentionally narrower than full verify and must not be treated as a substitute for the full hygiene pass outside certify.

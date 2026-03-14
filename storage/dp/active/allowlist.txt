@@ -379,6 +379,7 @@ docs/ops/specs/tools/test/bundle.md
 docs/ops/registry/binaries.md
 docs/ops/registry/lint.md
 docs/ops/registry/test.md
+docs/ops/specs/tools/verify.md
 docs/MANUAL.md
 tools/test/bundle.sh
 ops/bin/open
@@ -400,5 +401,7 @@ storage/handoff/CLOSING-DP-OPS-0190.md
 archives/surfaces/TASK-DP-OPS-0190-*.md
 storage/handoff/CLOSING-DP-OPS-0191.md
 archives/surfaces/TASK-DP-OPS-0191-*.md
+storage/handoff/CLOSING-DP-OPS-0192.md
+archives/surfaces/TASK-DP-OPS-0192-*.md
 docs/ops/specs/runbook/gemini.md*
 ops/src/runbook/gemini.yaml*

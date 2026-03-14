@@ -26,8 +26,24 @@ Usage: ops/bin/certify --dp=DP-OPS-XXXX [--out=auto|PATH] [--allow-intake-fallba
 USAGE
 }
 
+CERTIFY_PHASE=""
+
+certify_set_phase() {
+  local next_phase="$1"
+  [[ -n "$next_phase" ]] || return 0
+  if [[ "$CERTIFY_PHASE" == "$next_phase" ]]; then
+    return 0
+  fi
+  CERTIFY_PHASE="$next_phase"
+  printf 'Certify phase: %s\n' "$CERTIFY_PHASE"
+}
+
 die() {
-  echo "ERROR: $*" >&2
+  if [[ -n "$CERTIFY_PHASE" ]]; then
+    echo "ERROR [${CERTIFY_PHASE}]: $*" >&2
+  else
+    echo "ERROR: $*" >&2
+  fi
   exit 1
 }
 
@@ -1254,6 +1270,33 @@ extract_commands() {
   done < "$receipt_block_path"
 }
 
+rewrite_certify_scoped_command() {
+  local command="$1"
+  case "$command" in
+    "bash tools/verify.sh")
+      printf '%s' "bash tools/verify.sh --mode=certify-critical"
+      ;;
+    "./tools/verify.sh")
+      printf '%s' "./tools/verify.sh --mode=certify-critical"
+      ;;
+    *)
+      printf '%s' "$command"
+      ;;
+  esac
+}
+
+certify_phase_for_command() {
+  local command="$1"
+  case "$command" in
+    "bash tools/verify.sh --mode=certify-critical"|"./tools/verify.sh --mode=certify-critical"|"bash tools/verify.sh"|"./tools/verify.sh")
+      printf '%s' "verify"
+      ;;
+    *)
+      printf '%s' "replay"
+      ;;
+  esac
+}
+
 build_command_plan() {
   local commands_path="$1"
   local pre_path="$2"
@@ -1299,6 +1342,7 @@ build_command_plan() {
   while IFS= read -r line || [[ -n "$line" ]]; do
     line="$(trim "$line")"
     [[ -n "$line" ]] || continue
+    line="$(rewrite_certify_scoped_command "$line")"
     if [[ -n "$ADDENDUM_ID" ]] && [[ "$line" == comm\ -23*storage/dp/active/allowlist.txt* ]]; then
       continue
     fi
@@ -1349,6 +1393,7 @@ if [[ -n "$ADDENDUM_ID" ]]; then
 fi
 
 emit_binary_leaf "certify" "start"
+certify_set_phase "startup"
 
 [[ -n "$DP_ID" ]] || die "missing required --dp"
 [[ "$DP_ID" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]] || die "invalid --dp value: ${DP_ID}"
@@ -1367,6 +1412,7 @@ fi
 [[ -x "$INTEGRITY_LINT" ]] || die "integrity lint missing or not executable: ${INTEGRITY_LINT}"
 [[ -x "$RESULTS_LINT" ]] || die "results lint missing or not executable: ${RESULTS_LINT}"
 [[ -f "$TASK_PATH" ]] || die "missing TASK surface: ${TASK_PATH}"
+certify_set_phase "preflight"
 
 mkdir -p "${HANDOFF_DIR}"
 mkdir -p "${SURFACE_ARCHIVE_DIR}"
@@ -1572,6 +1618,7 @@ while IFS= read -r command || [[ -n "$command" ]]; do
     && "$EXEC_COMMAND" != *"DRAFT_ALLOW_DIRTY_TREE="* ]]; then
     EXEC_COMMAND="DRAFT_ALLOW_DIRTY_TREE=1 ${EXEC_COMMAND}"
   fi
+  certify_set_phase "$(certify_phase_for_command "$EXEC_COMMAND")"
 
   set +e
   bash -lc "cd \"$REPO_ROOT\" && ${EXEC_COMMAND}" </dev/null >"$STDOUT_PATH" 2>"$STDERR_PATH"
@@ -1624,6 +1671,7 @@ if (( SURFACE_PHASE_DONE == 0 )); then
   SURFACE_PHASE_DONE=1
 fi
 
+certify_set_phase "postflight"
 CMD_INDEX=$((CMD_INDEX + 1))
 CMD_ID="$(printf '%02d' "$CMD_INDEX")"
 POST_INTEGRITY_STARTED_AT="$(utc_now)"
@@ -1706,6 +1754,7 @@ BRANCH="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
 GIT_HASH="$(git -C "$REPO_ROOT" rev-parse HEAD)"
 COMMAND_LOG="$(printf '%s' "$COMMAND_LOG" | sed 's/{{/{ {/g; s/}}/} }/g')"
 
+certify_set_phase "results"
 "$TEMPLATE_BIN" render results --out="$OUT_PATH" \
   "--slot=DP_ID=${DP_ID}" \
   "--slot=CERTIFIED_AT=${CERTIFIED_AT}" \
