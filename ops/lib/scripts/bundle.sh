@@ -964,6 +964,10 @@ bundle_run() {
     route_reason="explicit profile alias: ${alias_profile_source} -> ${alias_profile_target}"
   fi
 
+  if [[ "$resolved_profile" == "analyst" && "$topic_present" != "1" ]]; then
+    die "analyst requires storage/handoff/TOPIC.md"
+  fi
+
   if [[ -n "$request_slice_id" && "$resolved_profile" != "architect" ]]; then
     die "--slice is only valid with --profile=architect"
   fi
@@ -1176,12 +1180,19 @@ bundle_run() {
       bundle_emit_architect_slice_projection "${REPO_ROOT}/${plan_rel}" "$request_slice_id" "$request_packet_id" "$request_closing_sidecar" "$request_title_suffix"
     fi
     echo
+  elif [[ "$resolved_profile" == "analyst" ]]; then
+      echo "[REQUEST]"
+      echo "- topic_source: ${topic_rel}"
+      echo "- output_surface: ${plan_rel}"
+      echo
   fi
     if ! bundle_profile_handoff_omitted "$resolved_profile"; then
       echo "[HANDOFF]"
       echo "- ${topic_rel}: $([[ "$topic_present" == "1" ]] && echo present || echo missing)"
-      echo "- ${plan_rel}: $([[ "$plan_present" == "1" ]] && echo present || echo missing)"
-      if [[ "$requested_profile" == "auto" ]]; then
+      if [[ "$resolved_profile" != "analyst" ]]; then
+        echo "- ${plan_rel}: $([[ "$plan_present" == "1" ]] && echo present || echo missing)"
+      fi
+      if [[ "$requested_profile" == "auto" && "$resolved_profile" != "analyst" ]]; then
         echo "- PLAN lint status: ${plan_lint_status}"
       fi
       echo
@@ -1191,7 +1202,7 @@ bundle_run() {
       echo "- Decision leaf present in dump: $([[ "$decision_leaf_present" == "1" ]] && echo true || echo false)"
       echo
     fi
-    if [[ "$requested_profile" == "auto" ]]; then
+    if [[ "$requested_profile" == "auto" && "$resolved_profile" != "analyst" ]]; then
       echo "[PLAN LINT OUTPUT]"
       printf '%s\n' "$plan_lint_output"
       echo
@@ -1246,7 +1257,7 @@ bundle_run() {
   if (( topic_present )); then
     package_files+=("$topic_rel")
   fi
-  if (( plan_present )); then
+  if (( plan_present )) && [[ "$resolved_profile" != "analyst" ]]; then
     package_files+=("$plan_rel")
   fi
 
@@ -1353,11 +1364,13 @@ bundle_run() {
     echo "    \"path\": \"$(bundle_json_escape "$topic_rel")\"," 
     echo "    \"present\": $(bundle_bool "$topic_present")"
     echo "  },"
-    echo "  \"plan\": {"
-    echo "    \"path\": \"$(bundle_json_escape "$plan_rel")\"," 
-    echo "    \"present\": $(bundle_bool "$plan_present"),"
-    echo "    \"lint_status\": \"$(bundle_json_escape "$plan_lint_status")\""
-    echo "  },"
+    if [[ "$resolved_profile" != "analyst" ]]; then
+      echo "  \"plan\": {"
+      echo "    \"path\": \"$(bundle_json_escape "$plan_rel")\"," 
+      echo "    \"present\": $(bundle_bool "$plan_present"),"
+      echo "    \"lint_status\": \"$(bundle_json_escape "$plan_lint_status")\""
+      echo "  },"
+    fi
     echo "  \"request\": {"
     if [[ "$resolved_profile" == "architect" && -n "$request_slice_id" ]]; then
       echo "    \"slice_id\": \"$(bundle_json_escape "$request_slice_id")\"," 
@@ -1366,17 +1379,30 @@ bundle_run() {
       echo "    \"packet_id\": \"$(bundle_json_escape "$request_packet_id")\","
       echo "    \"closing_sidecar\": \"$(bundle_json_escape "$request_closing_sidecar")\","
       if [[ -n "$request_title_suffix" ]]; then
-        echo "    \"title_suffix\": \"$(bundle_json_escape "$request_title_suffix")\""
+        echo "    \"title_suffix\": \"$(bundle_json_escape "$request_title_suffix")\","
       else
-        echo "    \"title_suffix\": null"
+        echo "    \"title_suffix\": null,"
       fi
+      echo "    \"topic_source\": null,"
+      echo "    \"output_surface\": null"
+    elif [[ "$resolved_profile" == "analyst" ]]; then
+      echo "    \"slice_id\": null,"
+      echo "    \"slice_validated\": false,"
+      echo "    \"plan_source\": null,"
+      echo "    \"packet_id\": null,"
+      echo "    \"closing_sidecar\": null,"
+      echo "    \"title_suffix\": null,"
+      echo "    \"topic_source\": \"$(bundle_json_escape "$topic_rel")\","
+      echo "    \"output_surface\": \"$(bundle_json_escape "$plan_rel")\""
     else
       echo "    \"slice_id\": null,"
       echo "    \"slice_validated\": false,"
       echo "    \"plan_source\": null,"
       echo "    \"packet_id\": null,"
       echo "    \"closing_sidecar\": null,"
-      echo "    \"title_suffix\": null"
+      echo "    \"title_suffix\": null,"
+      echo "    \"topic_source\": null,"
+      echo "    \"output_surface\": null"
     fi
     echo "  },"
     echo "  \"addendum\": {"

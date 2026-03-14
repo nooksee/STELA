@@ -23,6 +23,18 @@ LAST_ASSEMBLY_POINTER_EMITTED=""
 LAST_ASSEMBLY_POINTER_PATH=""
 LAST_ASSEMBLY_POINTER_FORMAT=""
 BUNDLE_POLICY_REL="ops/lib/manifests/BUNDLE.md"
+ARCHITECT_PLAN_BACKUP=""
+ARCHITECT_PLAN_RESTORE=0
+
+restore_fixture_overrides() {
+  local plan_rel="storage/handoff/PLAN.md"
+  local plan_abs="${REPO_ROOT}/${plan_rel}"
+
+  if (( ARCHITECT_PLAN_RESTORE )) && [[ -n "$ARCHITECT_PLAN_BACKUP" && -f "$ARCHITECT_PLAN_BACKUP" ]]; then
+    cp "$ARCHITECT_PLAN_BACKUP" "$plan_abs"
+    rm -f "$ARCHITECT_PLAN_BACKUP"
+  fi
+}
 
 cleanup_generated() {
   local rel_path
@@ -34,7 +46,7 @@ cleanup_generated() {
   done
 }
 
-trap 'cleanup_generated; emit_binary_leaf "test-bundle" "finish"' EXIT
+trap 'restore_fixture_overrides; cleanup_generated; emit_binary_leaf "test-bundle" "finish"' EXIT
 emit_binary_leaf "test-bundle" "start"
 
 fail() {
@@ -76,8 +88,15 @@ ensure_architect_plan_fixture() {
   local plan_rel="storage/handoff/PLAN.md"
   local plan_abs="${REPO_ROOT}/${plan_rel}"
 
-  if [[ -f "$plan_abs" ]]; then
+  if [[ -f "$plan_abs" ]] && grep -Eq '^##+[[:space:]]+Architect Handoff([[:space:]]*)$' "$plan_abs" && grep -Eq 'Selected Slices:[[:space:]]+[^[:space:]]+' "$plan_abs"; then
     return 0
+  fi
+
+  if [[ -f "$plan_abs" && "$ARCHITECT_PLAN_RESTORE" -eq 0 ]]; then
+    mkdir -p "${REPO_ROOT}/var/tmp"
+    ARCHITECT_PLAN_BACKUP="$(mktemp "${REPO_ROOT}/var/tmp/bundle-plan-backup.XXXXXX")"
+    cp "$plan_abs" "$ARCHITECT_PLAN_BACKUP"
+    ARCHITECT_PLAN_RESTORE=1
   fi
 
   mkdir -p "$(dirname "$plan_abs")"
@@ -101,7 +120,24 @@ Scope:
 Acceptance gate:
 - test fixture acceptance gate
 EOF
-  queue_cleanup_path "$plan_rel"
+  if (( ! ARCHITECT_PLAN_RESTORE )); then
+    queue_cleanup_path "$plan_rel"
+  fi
+}
+
+ensure_analyst_topic_fixture() {
+  local topic_rel="storage/handoff/TOPIC.md"
+  local topic_abs="${REPO_ROOT}/${topic_rel}"
+
+  if [[ -f "$topic_abs" ]]; then
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$topic_abs")"
+  cat > "$topic_abs" <<'EOF'
+Topic fixture for analyst bundle smoke tests.
+EOF
+  queue_cleanup_path "$topic_rel"
 }
 
 run_capture() {
@@ -490,6 +526,8 @@ test_valid_profiles() {
   local resolved
   local template_key
   local expected_template_key
+
+  ensure_analyst_topic_fixture
   for profile in analyst architect audit conform auto; do
     run_capture "${REPO_ROOT}/ops/bin/bundle" --profile="$profile" --out=auto
     if (( RUN_STATUS != 0 )); then
@@ -530,6 +568,80 @@ test_valid_profiles() {
       fail "profile=${profile} should not emit assembly pointer without ATS triplet"
     fi
   done
+}
+
+test_analyst_contract() {
+  local request_topic_source=""
+  local request_output_surface=""
+  local package_listing=""
+  local topic_path=""
+  local backup_path=""
+
+  ensure_analyst_topic_fixture
+
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --out=auto
+  if (( RUN_STATUS != 0 )); then
+    fail "analyst contract path failed"
+    echo "$RUN_OUTPUT" >&2
+    return
+  fi
+
+  track_bundle_outputs
+  [[ -n "$LAST_MANIFEST" ]] || return
+
+  request_topic_source="$(extract_request_field "$LAST_MANIFEST" "topic_source")"
+  request_output_surface="$(extract_request_field "$LAST_MANIFEST" "output_surface")"
+  if [[ "$request_topic_source" != "storage/handoff/TOPIC.md" ]]; then
+    fail "analyst request.topic_source mismatch: expected storage/handoff/TOPIC.md, got ${request_topic_source}"
+  fi
+  if [[ "$request_output_surface" != "storage/handoff/PLAN.md" ]]; then
+    fail "analyst request.output_surface mismatch: expected storage/handoff/PLAN.md, got ${request_output_surface}"
+  fi
+
+  if ! grep -Fq '[REQUEST]' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "analyst bundle text missing [REQUEST] block"
+  fi
+  if ! grep -Fq -- '- topic_source: storage/handoff/TOPIC.md' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "analyst bundle text missing topic_source line"
+  fi
+  if ! grep -Fq -- '- output_surface: storage/handoff/PLAN.md' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "analyst bundle text missing output_surface line"
+  fi
+  if ! grep -Fq -- '- storage/handoff/TOPIC.md: present' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "analyst bundle text missing TOPIC handoff line"
+  fi
+  if grep -Fq -- '- storage/handoff/PLAN.md:' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "analyst bundle text should not advertise PLAN.md as handoff input"
+  fi
+
+  if grep -Fq '"plan": {' "${REPO_ROOT}/${LAST_MANIFEST}"; then
+    fail "analyst manifest should not emit top-level plan input metadata"
+  fi
+
+  package_listing="$(tar -tf "${REPO_ROOT}/${LAST_PACKAGE}")"
+  if ! printf '%s\n' "$package_listing" | grep -Fxq 'storage/handoff/TOPIC.md'; then
+    fail "analyst package missing storage/handoff/TOPIC.md"
+  fi
+  if printf '%s\n' "$package_listing" | grep -Fxq 'storage/handoff/PLAN.md'; then
+    fail "analyst package should not include storage/handoff/PLAN.md"
+  fi
+
+  topic_path="${REPO_ROOT}/storage/handoff/TOPIC.md"
+  backup_path="$(mktemp "${REPO_ROOT}/var/tmp/analyst-topic-backup.XXXXXX")"
+  cp "$topic_path" "$backup_path"
+  rm -f "$topic_path"
+
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --out=auto
+
+  cp "$backup_path" "$topic_path"
+  rm -f "$backup_path"
+
+  if (( RUN_STATUS == 0 )); then
+    fail "analyst bundle should fail closed when TOPIC.md is missing"
+  fi
+  if ! printf '%s\n' "$RUN_OUTPUT" | grep -Fq 'analyst requires storage/handoff/TOPIC.md'; then
+    fail "analyst missing-topic failure message mismatch"
+  fi
 }
 
 test_architect_slice_valid() {
@@ -828,6 +940,7 @@ test_manifest_fail_closed() {
 }
 
 test_ats_partial_flags_fail() {
+  ensure_analyst_topic_fixture
   run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --agent-id=R-AGENT-01 --out=auto
   if (( RUN_STATUS == 0 )); then
     fail "ATS partial flags should fail"
@@ -841,6 +954,7 @@ test_ats_unknown_ids_fail() {
   local known_agent_id
   local known_skill_id
   local known_task_id
+  ensure_analyst_topic_fixture
   known_agent_id="$(registry_first_id "docs/ops/registry/agents.md")"
   known_skill_id="$(registry_first_id "docs/ops/registry/skills.md")"
   known_task_id="$(registry_first_id "docs/ops/registry/tasks.md")"
@@ -882,6 +996,8 @@ test_ats_valid_triplet() {
   local manifest_skill_id
   local manifest_task_id
   local policy_manifest_path
+
+  ensure_analyst_topic_fixture
 
   known_agent_id="$(registry_first_id "docs/ops/registry/agents.md")"
   known_skill_id="$(registry_first_id "docs/ops/registry/skills.md")"
@@ -1048,6 +1164,7 @@ test_meta_shim() {
 test_manifest_fail_closed
 test_stance_template_renderer
 test_valid_profiles
+test_analyst_contract
 test_architect_slice_valid
 test_architect_slice_ad_hoc
 test_architect_slice_unknown_fails

@@ -48,6 +48,10 @@ The script provides `bundle_run` plus helpers for:
    - manifest `assembly.pointer` metadata emitted (`emitted`, `path`, `format`),
    - pointer artifact added to package members.
 20. No pointer emission when ATS is not applied (`assembly.pointer.emitted=false`, `path=null`).
+21. Analyst handoff and request emission:
+   - fail closed when `storage/handoff/TOPIC.md` is absent,
+   - emit analyst `[REQUEST]` metadata `topic_source` and `output_surface`,
+   - omit `storage/handoff/PLAN.md` from analyst package members and analyst handoff reporting.
 
 Stance contract extraction and render rules:
 - Resolve profile stance template key from `ops/lib/manifests/BUNDLE.md`.
@@ -57,7 +61,9 @@ Stance contract extraction and render rules:
 - Otherwise emit the stripped stance body as-is.
 
 Text artifact profile conditional rule:
-- Emit `[HANDOFF]` (`TOPIC.md` / `PLAN.md` presence) only when resolved profile is not `audit` and not `foreman`.
+- Emit `[HANDOFF]` only when resolved profile is not `audit` and not `foreman`.
+- For `analyst`, `[HANDOFF]` reports `TOPIC.md` presence only and `[REQUEST]` reports `topic_source` plus `output_surface`.
+- For non-analyst non-audit non-foreman profiles, `[HANDOFF]` reports `TOPIC.md` / `PLAN.md` presence.
 
 ## Anecdotal Anchor
 DP-OPS-0145 introduced bundle as a transport primitive. DP-OPS-0146 hardened it for attach-only architect workflows and addendum authorization flows by eliminating OPEN artifact dependence and adding deterministic package metadata.

@@ -31,8 +31,8 @@ Deterministic checks:
    - reject audit-verdict marker lines (`**AUDIT -`),
    - reject `## Contractor Execution Narrative`,
    - reject receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`).
-8. In `analyst` mode, extracted body must start with `1. Analysis and Discussion` (markdown heading prefix optional).
-9. In `analyst` mode, extracted body must include `2. Strategic Options` and an explicit recommendation line.
+8. In `analyst` mode, extracted body must start with `# DP Plan:`.
+9. In `analyst` mode, extracted body must satisfy `bash tools/lint/plan.sh <extracted-body>`.
 10. In `analyst` mode, reject role-drift markers:
    - audit-verdict markers (`**AUDIT -`),
    - `## Contractor Execution Narrative`,
@@ -71,7 +71,7 @@ Exit behavior:
 - PASS: single fenced block with valid DP envelope (`dp` mode; delegate skipped in self-test fixture for determinism).
 - PASS: single fenced block with `**AUDIT -` marker (`audit` mode).
 - PASS: single fenced block with valid DP body (`architect` mode).
-- PASS: single fenced block with analyst sections and recommendation (`analyst` mode).
+- PASS: single fenced block with valid `PLAN` body (`analyst` mode).
 - PASS: single fenced block with addendum headings (`foreman` mode).
 - PASS: single fenced block with valid DP heading and no drift markers (`conformist` mode).
 - FAIL: text outside fence.
@@ -92,7 +92,7 @@ Exit behavior:
 - FAIL: analyst response containing audit marker (`analyst` mode).
 - FAIL: analyst response containing Contractor Execution Narrative sections (`analyst` mode).
 - FAIL: analyst response containing policy-overcompensation prose (`analyst` mode).
-- FAIL: analyst response missing required strategic-options section (`analyst` mode).
+- FAIL: analyst response missing required PLAN body content (`analyst` mode).
 - FAIL: foreman response containing audit marker (`foreman` mode).
 - FAIL: foreman response missing required addendum headings (`foreman` mode).
 - FAIL: foreman response with incoherent decision fields (`foreman` mode).

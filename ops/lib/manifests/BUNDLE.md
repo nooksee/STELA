@@ -50,12 +50,18 @@ dump_scope_conform=full
 dump_scope_foreman=core
 
 ## Profile Attachment Contract
-- analyst: `ANALYST-*.txt`, `ANALYST-*.manifest.json`, query source
+- analyst: `ANALYST-*.txt`, `ANALYST-*.manifest.json`, `storage/handoff/TOPIC.md`
 - architect: `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, `storage/handoff/PLAN.md`, optional `--slice=<ID>` with request metadata (`slice_id`, `slice_validated`, `plan_source`, `packet_id`, `closing_sidecar`, `title_suffix`)
 - audit: `AUDIT-*.txt`, `AUDIT-*.manifest.json`, DP RESULTS receipt
 - foreman: `FOREMAN-*.txt`, `FOREMAN-*.manifest.json`
 - project: `PROJECT-*.txt`, `PROJECT-*.manifest.json`
 - conform: `CONFORM-*.txt`, `CONFORM-*.manifest.json`, draft DP input
+
+## Analyst Transport Contract
+- Analyst requires `storage/handoff/TOPIC.md` as input and fails closed when it is absent.
+- Analyst emits request metadata `topic_source=storage/handoff/TOPIC.md` and `output_surface=storage/handoff/PLAN.md`.
+- Analyst package members include `storage/handoff/TOPIC.md` and omit `storage/handoff/PLAN.md`.
+- Analyst `PLAN.md` is output only and is never transported as analyst input context.
 
 ## Architect Transport Contract
 - Architect packet identity is transport-defined when an explicit validated slice is present.
