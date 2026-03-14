@@ -20,6 +20,7 @@ Define the template-backed Architect stance body used by bundle output contract 
 - Output contract requires exactly one fenced markdown code block.
 - Output contract requires no text before or after the fenced code block.
 - First non-empty line inside the fenced body must start with `### DP-`.
+- Architect drafts express `Required Work Branch` in the canonical proposal form (`PROPOSED/work/...`) and do not add branch-state narration or replacement instructions.
 - Output contract rejects Contractor Execution Narrative sections and receipt narrative subheadings.
 - Architect ingress lint delegates fenced DP bodies to `tools/lint/dp.sh`; canonical body rules (including `3.4.5` receipt shape and `3.5.1` closing-sidecar coherence) remain mandatory.
 

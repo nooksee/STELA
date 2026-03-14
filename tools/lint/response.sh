@@ -676,7 +676,7 @@ run_test() {
 
 ## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Required Work Branch: work/dp-ops-9999-response-envelope-self-test-2026-03-04
+Required Work Branch: PROPOSED/work/dp-ops-9999-response-envelope-self-test-2026-03-04
 Base HEAD: 00000000
 Freshness Stamp: 2026-03-04
 ```
@@ -851,8 +851,8 @@ Response Architect Delegate Fixture
 [BASE_BRANCH]
 main
 
-[WORK_BRANCH]
-work/dp-ops-9999-response-architect-delegate-fixture-2026-03-09
+[PROPOSED_WORK_BRANCH]
+PROPOSED/work/dp-ops-9999-response-architect-delegate-fixture-2026-03-09
 
 [BASE_HEAD]
 ac852bb9

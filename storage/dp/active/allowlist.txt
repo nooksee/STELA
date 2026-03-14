@@ -388,5 +388,15 @@ storage/handoff/CLOSING-DP-OPS-0188.md
 archives/surfaces/TASK-DP-OPS-0188-*.md
 storage/handoff/CLOSING-DP-OPS-0189.md
 archives/surfaces/TASK-DP-OPS-0189-*.md
+ops/bin/draft
+ops/src/stances/architect.md.tpl
+docs/ops/specs/stances/architect.md
+ops/src/surfaces/dp.md.tpl
+docs/MANUAL.md
+tools/lint/dp.sh
+docs/ops/specs/tools/lint/dp.md
+tools/lint/response.sh
+storage/handoff/CLOSING-DP-OPS-0190.md
+archives/surfaces/TASK-DP-OPS-0190-*.md
 docs/ops/specs/runbook/gemini.md*
 ops/src/runbook/gemini.yaml*
