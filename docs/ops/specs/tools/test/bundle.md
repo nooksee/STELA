@@ -36,10 +36,15 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
   - `request.slice_id`
   - `request.slice_validated`
   - `request.plan_source`
+  - `request.packet_id`
+  - `request.closing_sidecar`
+  - `request.title_suffix`
 - Non-`auto` profiles must preserve exact `resolved_profile` parity.
 - Manifest dump `scope` must match policy mapping from `ops/lib/manifests/BUNDLE.md` for the resolved profile.
 - Audit profile dump scope is `core`.
-- Architect bundle text must include `[REQUEST]` block with slice metadata.
+- Architect bundle text must include `[REQUEST]` block with slice and packet metadata.
+- Validated architect slice output must include `[ACTIVE SLICE PROJECTION]` with active-slice handoff data only.
+- Architect ad hoc output must not emit `[ACTIVE SLICE PROJECTION]`.
 - Compatibility legacy artifact outputs (`BUNDLE-*`) are asserted from manifest `artifact_naming` metadata when legacy emission is enabled by policy.
 - `auto` must resolve to a supported route (`analyst` or `architect`).
 - Foreman must fail without `--intent`.

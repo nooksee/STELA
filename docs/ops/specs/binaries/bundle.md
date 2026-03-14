@@ -62,7 +62,22 @@ Architect slice gate:
 2. Blank `--slice=` fails before artifact emission.
 3. Architect slice values are validated against `Selected Slices` in `storage/handoff/PLAN.md` under `## Architect Handoff`.
 4. Unknown architect slices fail before artifact emission.
-5. Omitting `--slice` keeps architect in ad hoc mode.
+5. Omitting `--slice` keeps architect in ad hoc mode unless `## Architect Handoff` explicitly opts into safe auto-bind with one unambiguous selected slice.
+
+Architect transport metadata:
+1. When architect slice validation succeeds, transport derives packet identity from `architect_packet_id_seed`, `architect_packet_id_seed_slice`, and `Execution Order` in `storage/handoff/PLAN.md`.
+2. `closing_sidecar` is derived as `storage/handoff/CLOSING-<packet_id>.md`.
+3. `title_suffix` is derived from the selected slice heading text in `storage/handoff/PLAN.md`.
+4. Architect text artifacts emit a stripped `[ACTIVE SLICE PROJECTION]` block limited to:
+   - `Selected Option`
+   - selected slice id
+   - `Execution Order`
+   - slice `Objective`
+   - slice `Scope`
+   - slice `Acceptance gate`
+   - slice `Receipt contract` when present
+   - `Architect Constraints`
+   - transport-defined `packet_id`, `closing_sidecar`, and `title_suffix`
 
 Artifact contract (written under `storage/handoff/`):
 1. Bundle text artifact (`.txt`) with embedded OPEN block, dump pointers, stance contract source marker, stance template key, and embedded stance contract excerpt.
@@ -72,7 +87,7 @@ Artifact contract (written under `storage/handoff/`):
    - embedded OPEN metadata (`embedded`, `branch`, `head_short`, `trace_id`, `intent`)
    - dump pointers
    - topic/plan presence
-   - architect request metadata (`request.slice_id`, `request.slice_validated`, `request.plan_source`)
+   - architect request metadata (`request.slice_id`, `request.slice_validated`, `request.plan_source`, `request.packet_id`, `request.closing_sidecar`, `request.title_suffix`)
    - stance template metadata (`stance_template_key`)
    - addendum metadata (`required`, `decision_id`, `decision_leaf_present`)
    - package metadata (`path`, `files`)
@@ -94,7 +109,8 @@ Artifact contract (written under `storage/handoff/`):
 Text artifact profile conditional block:
 1. The `[HANDOFF]` block (`TOPIC.md` / `PLAN.md` presence) is emitted for non-audit profiles.
 2. For `audit` and `foreman` resolved profiles, the text artifact omits `[HANDOFF]` to avoid unrelated intake noise in audit flows.
-3. For `architect`, the text artifact emits a `[REQUEST]` block with slice metadata.
+3. For `architect`, the text artifact emits a `[REQUEST]` block with slice metadata and packet identity metadata.
+4. For validated architect slice runs, the text artifact also emits `[ACTIVE SLICE PROJECTION]`.
 
 Foreman gate:
 1. `--profile=foreman` requires `--intent`.

@@ -30,20 +30,24 @@ The script provides `bundle_run` plus helpers for:
    - blank `--slice=` fails before artifact emission.
    - architect slice IDs must match `Selected Slices` in `storage/handoff/PLAN.md` (`## Architect Handoff`).
    - unknown architect slices fail before artifact emission.
-   - omitted `--slice` keeps architect in ad hoc mode.
+   - omitted `--slice` keeps architect in ad hoc mode unless the Architect Handoff explicitly enables safe auto-bind with one unambiguous selected slice.
 12. Architect request metadata emission:
-   - text artifact emits `[REQUEST]` block with `slice_id`, `slice_validated`, and `plan_source`.
-   - manifest emits `request` object with `request.slice_id`, `request.slice_validated`, and `request.plan_source`.
-13. Bundle text rendering with embedded stance contract text rendered through `ops/bin/manifest` stance template keys.
-14. Manifest v2 emission and package `.tar` emission with manifest-aligned member list.
-15. Canonical profile-prefixed artifact output in `storage/handoff/` with optional legacy `BUNDLE-*` compatibility copies.
-16. Alias-route metadata emission in manifest (`profile_alias.applied`, `.from`, `.to`, `.deprecation_status`, `.remove_after_dp`) when compatibility aliases are used.
-17. Assembly metadata emission in manifest with ATS IDs, schema version, validation source pointers, and advisory-input status (`STELA.md`, `SCAFFOLD.md`).
-18. Deterministic runtime assembly pointer emission when ATS is applied:
+   - text artifact emits `[REQUEST]` block with `slice_id`, `slice_validated`, `plan_source`, `packet_id`, `closing_sidecar`, and `title_suffix`.
+   - manifest emits `request` object with `request.slice_id`, `request.slice_validated`, `request.plan_source`, `request.packet_id`, `request.closing_sidecar`, and `request.title_suffix`.
+   - packet identity comes from bundle policy seed (`architect_packet_id_seed`, `architect_packet_id_seed_slice`) plus `Execution Order` in `storage/handoff/PLAN.md`, never from archive or TASK inference.
+13. Architect active-slice projection emission:
+   - validated architect slice runs emit `[ACTIVE SLICE PROJECTION]` in the text artifact,
+   - projection is built only from active-slice handoff data (`Selected Option`, `Execution Order`, selected slice field blocks, `Architect Constraints`) plus transport-defined packet identity.
+14. Bundle text rendering with embedded stance contract text rendered through `ops/bin/manifest` stance template keys.
+15. Manifest v2 emission and package `.tar` emission with manifest-aligned member list.
+16. Canonical profile-prefixed artifact output in `storage/handoff/` with optional legacy `BUNDLE-*` compatibility copies.
+17. Alias-route metadata emission in manifest (`profile_alias.applied`, `.from`, `.to`, `.deprecation_status`, `.remove_after_dp`) when compatibility aliases are used.
+18. Assembly metadata emission in manifest with ATS IDs, schema version, validation source pointers, and advisory-input status (`STELA.md`, `SCAFFOLD.md`).
+19. Deterministic runtime assembly pointer emission when ATS is applied:
    - path derived from canonical bundle artifact path with policy suffix/format,
    - manifest `assembly.pointer` metadata emitted (`emitted`, `path`, `format`),
    - pointer artifact added to package members.
-19. No pointer emission when ATS is not applied (`assembly.pointer.emitted=false`, `path=null`).
+20. No pointer emission when ATS is not applied (`assembly.pointer.emitted=false`, `path=null`).
 
 Stance contract extraction and render rules:
 - Resolve profile stance template key from `ops/lib/manifests/BUNDLE.md`.

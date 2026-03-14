@@ -386,5 +386,7 @@ ops/bin/dump
 ops/lib/manifests/OPS.md
 storage/handoff/CLOSING-DP-OPS-0188.md
 archives/surfaces/TASK-DP-OPS-0188-*.md
+storage/handoff/CLOSING-DP-OPS-0189.md
+archives/surfaces/TASK-DP-OPS-0189-*.md
 docs/ops/specs/runbook/gemini.md*
 ops/src/runbook/gemini.yaml*
