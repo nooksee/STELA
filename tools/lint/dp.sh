@@ -20,7 +20,7 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="f453956fa7a6aa8211dd7493b66bdf8b944959c9161ea38078ce44c235fb5aaf"
+CANONICAL_DP_TEMPLATE_SHA256="4af892a0c0d5b4c3f872fed6cfb36f56a293057abf7ed97ea12fceadbe1c6249"
 CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/stances/addendum.md.tpl"
 CANONICAL_ADDENDUM_TEMPLATE_SHA256="715db3fae0598a85a0fa490c16f590dd08e6d6f02fa9b18224ce48625612f624"
 TEMPLATE_RENDER_BIN="ops/bin/template"
@@ -498,7 +498,7 @@ normalize_dp_structure() {
         next
       }
       if ($0 ~ /^Required Work Branch:[[:space:]]*/) {
-        print "Required Work Branch: {{WORK_BRANCH}}"
+        print "Required Work Branch: {{PROPOSED_WORK_BRANCH}}"
         next
       }
       if ($0 ~ /^Base HEAD:[[:space:]]*/) {
@@ -1070,16 +1070,18 @@ check_proposed_token_scan() {
       candidate="$(trim "${candidate#*:}")"
     fi
 
-    # Match only structural provisional value forms, not prose mentions of the
-    # feature name. We evaluate a normalized value candidate (line-start, bullet
-    # value, or field value after ':').
+    # Match only disallowed structural provisional value forms, not prose
+    # mentions of the feature name and not the canonical proposal-form branch
+    # value used by the DP template (`PROPOSED/work/...`). We evaluate a
+    # normalized value candidate (line-start, bullet value, or field value
+    # after ':').
     if [[ "$candidate" =~ ^PROPOSED-[A-Za-z0-9/._-]+$ ]] || [[ "$candidate" =~ ^PROPOSED[[:space:]] ]]; then
       echo "PROPOSED token at line ${lineno}: ${line}" >&2
       found=1
     fi
   done < "$path"
   if (( found )); then
-    fail "PROPOSED token found — finalize intake packet before dispatch"
+    fail "disallowed PROPOSED provisional-marker form found in DP payload"
   fi
 }
 
@@ -1239,7 +1241,7 @@ render_fixture_from_template() {
     line="${line//'{{DP_ID}}'/DP-OPS-0000}"
     line="${line//'{{DP_TITLE}}'/Fixture structure-hash lint coverage}"
     line="${line//'{{BASE_BRANCH}}'/main}"
-    line="${line//'{{WORK_BRANCH}}'/work/dp-ops-0000-2026-02-14}"
+    line="${line//'{{PROPOSED_WORK_BRANCH}}'/PROPOSED/work/dp-ops-0000-2026-02-14}"
     line="${line//'{{BASE_HEAD}}'/d3801c3a}"
     line="${line//'{{FRESHNESS_STAMP}}'/2026-02-14}"
 
@@ -1471,7 +1473,7 @@ TESTRESULTS
     exit 1
   fi
 
-  # Real provisional branch marker must fail.
+  # Disallowed provisional-marker form must fail.
   cp "$tmp_valid" "$tmp_proposed_marker_bad"
   sed -i 's#^Required Work Branch: .*#Required Work Branch: PROPOSED-work/dp-ops-0000-2026-02-14#' "$tmp_proposed_marker_bad"
   failures=0

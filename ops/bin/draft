@@ -336,7 +336,12 @@ rel_path_for_output() {
 
 render_dp() {
   local out_path="$1"
+  local proposed_work_branch="$WORK_BRANCH"
   [[ -x "$TEMPLATE_BIN" ]] || die "template binary missing or not executable: ${TEMPLATE_BIN}"
+
+  if [[ "$proposed_work_branch" != PROPOSED/* ]]; then
+    proposed_work_branch="PROPOSED/${proposed_work_branch}"
+  fi
 
   local -a cmd=(
     "$TEMPLATE_BIN" render dp
@@ -344,7 +349,7 @@ render_dp() {
     "--slot=DP_ID=${DP_ID}"
     "--slot=DP_TITLE=${DP_TITLE}"
     "--slot=BASE_BRANCH=${BASE_BRANCH}"
-    "--slot=WORK_BRANCH=${WORK_BRANCH}"
+    "--slot=PROPOSED_WORK_BRANCH=${proposed_work_branch}"
     "--slot=BASE_HEAD=${BASE_HEAD}"
     "--slot=FRESHNESS_STAMP=${FRESHNESS_STAMP}"
     "--slot=DP_SCOPED_LOAD_ORDER=${DP_SCOPED_LOAD_ORDER}"

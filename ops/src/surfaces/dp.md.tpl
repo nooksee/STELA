@@ -6,7 +6,7 @@ requires_slots:
   - DP_ID
   - DP_TITLE
   - BASE_BRANCH
-  - WORK_BRANCH
+  - PROPOSED_WORK_BRANCH
   - BASE_HEAD
   - FRESHNESS_STAMP
   - DP_SCOPED_LOAD_ORDER
@@ -30,7 +30,7 @@ ff_band: "30-40"
 
 ## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: {{BASE_BRANCH}}
-Required Work Branch: {{WORK_BRANCH}}
+Required Work Branch: {{PROPOSED_WORK_BRANCH}}
 Base HEAD: {{BASE_HEAD}}
 Freshness Stamp: {{FRESHNESS_STAMP}}
 Note: FRESHNESS_STAMP must be YYYY-MM-DD format only. No trace tokens, no timestamps, no other text. Certify rejects all other forms. dp.sh enforces at lint time.

@@ -8,7 +8,7 @@
 ## Mechanics and Sequencing
 1. Resolve repository root, emit telemetry, and enforce canonical template hash parity for `ops/src/surfaces/dp.md.tpl`.
 2. Resolve input mode (`--test`, explicit path, stdin, or default `TASK.md`), including TASK pointer-head resolution and DP block extraction when the source is a TASK surface. Explicit addendum intake artifacts (`DP-OPS-XXXX-ADDENDUM-A.md`) dispatch to `lint_addendum_intake()` instead of DP structure hashing.
-3. For DP payloads, run a provisional-marker `PROPOSED` scan as the first `lint_payload()` check before template-hash verification and structural validation. The scan normalizes each line to a candidate value (trimmed line, bullet value, or field value suffix after `:`), reports each matching line number and full offending line to stderr, and exits non-zero only when the candidate matches a provisional-marker form (`^PROPOSED-[A-Za-z0-9/._-]+$`) or begins with a bare provisional prefix (`^PROPOSED `). The scan must not fail when the word `PROPOSED` appears only as prose that describes the feature.
+3. For DP payloads, run a provisional-marker `PROPOSED` scan as the first `lint_payload()` check before template-hash verification and structural validation. The scan normalizes each line to a candidate value (trimmed line, bullet value, or field value suffix after `:`), reports each matching line number and full offending line to stderr, and exits non-zero only when the candidate matches a disallowed provisional-marker form (`^PROPOSED-[A-Za-z0-9/._-]+$`) or begins with a bare provisional prefix (`^PROPOSED `). The canonical DP template now renders `Required Work Branch` from the proposal-specific slot `{{PROPOSED_WORK_BRANCH}}`, which produces the allowed proposal-form branch value `PROPOSED/work/...`; that slot form is not rejected by this scan. The scan must not fail when the word `PROPOSED` appears only as prose that describes the feature.
 4. Run foreign citation contamination scan against DP body text. Reject the first line containing `:contentReference[` with a deterministic line-number failure.
 5. Render canonical DP in non-strict mode, normalize both canonical and payload structures, hash both normalized forms, and fail on mismatch.
 6. Validate required fields and section blocks, including heading ID/title shape, base branch metadata, scoped load-order content, plan slots, and receipt slot non-placeholder content.
@@ -24,7 +24,7 @@
 `dp.sh --test` must cover all three `PROPOSED` scan outcome classes introduced by DP-OPS-0112 addendum ADD-DP-OPS-0112-001:
 
 1. **Clean fixture (PASS):** no provisional-marker forms are present.
-2. **Real provisional marker (FAIL):** a fixture line contains an unfinalized branch-style value such as `PROPOSED-work/...`, which must fail.
+2. **Disallowed provisional-marker form (FAIL):** a fixture line contains an unfinalized branch-style value such as `PROPOSED-work/...`, which must fail.
 3. **Prose-only `PROPOSED` (PASS):** a fixture line contains the word `PROPOSED` as feature-description prose without a provisional-marker form, which must pass.
 
 ### Closeout and Coherence Fixtures (`--test`)
@@ -60,6 +60,7 @@
 1. `check_dp_packet_coherence()`:
    - derives heading packet id from the first `### DP-...:` line,
    - requires `Required Work Branch` to include the lowercase packet-id fragment (for example `DP-OPS-0176` -> `dp-ops-0176`),
+   - preserves the canonical proposal-slot rendering in the branch field (`PROPOSED/work/...`) while still enforcing packet-id fragment coherence,
    - requires a canonical closing-sidecar path token in §3.5.1 (`storage/handoff/CLOSING-DP-OPS-XXXX.md`),
    - fails when heading id and closing-sidecar id disagree.
 2. `check_closeout_section_shape()`:
