@@ -30,6 +30,8 @@ BUNDLE_PROJECT_PROFILE=""
 BUNDLE_AUDIT_PROFILE=""
 BUNDLE_FOREMAN_PROFILE=""
 BUNDLE_FOREMAN_INTENT_FORM=""
+BUNDLE_ARCHITECT_PACKET_ID_SEED=""
+BUNDLE_ARCHITECT_PACKET_ID_SEED_SLICE=""
 BUNDLE_COMPAT_LEGACY_PREFIX=""
 BUNDLE_COMPAT_EMIT_LEGACY=""
 BUNDLE_ASSEMBLY_POLICY_MANIFEST=""
@@ -172,6 +174,8 @@ bundle_load_policy() {
     auto_plan_profile \
     project_profile \
     audit_profile \
+    architect_packet_id_seed \
+    architect_packet_id_seed_slice \
     compatibility_legacy_bundle_prefix \
     compatibility_emit_legacy_bundle_artifacts \
     assembly_policy_manifest \
@@ -191,8 +195,12 @@ bundle_load_policy() {
   BUNDLE_AUDIT_PROFILE="$(bundle_policy_scalar audit_profile)"
   BUNDLE_FOREMAN_PROFILE="$(bundle_policy_scalar foreman_profile)"
   BUNDLE_FOREMAN_INTENT_FORM="$(bundle_policy_scalar foreman_intent_form)"
+  BUNDLE_ARCHITECT_PACKET_ID_SEED="$(bundle_policy_scalar architect_packet_id_seed)"
+  BUNDLE_ARCHITECT_PACKET_ID_SEED_SLICE="$(bundle_policy_scalar architect_packet_id_seed_slice)"
   [[ -n "$BUNDLE_FOREMAN_PROFILE" ]] || die "bundle policy missing required key: foreman_profile"
   [[ -n "$BUNDLE_FOREMAN_INTENT_FORM" ]] || die "bundle policy missing required key: foreman_intent_form"
+  [[ "$BUNDLE_ARCHITECT_PACKET_ID_SEED" =~ ^DP-OPS-[0-9]{4}$ ]] || die "bundle policy has invalid architect_packet_id_seed: ${BUNDLE_ARCHITECT_PACKET_ID_SEED}"
+  [[ -n "$BUNDLE_ARCHITECT_PACKET_ID_SEED_SLICE" ]] || die "bundle policy missing required key: architect_packet_id_seed_slice"
 
   for profile in \
     "$BUNDLE_AUTO_DEFAULT_PROFILE" \
@@ -551,6 +559,207 @@ bundle_extract_architect_selected_slices() {
   ' "$plan_path"
 }
 
+bundle_extract_architect_handoff_scalar() {
+  local plan_path="$1"
+  local label="$2"
+  awk -v label="$label" '
+    BEGIN { in_handoff=0 }
+    /^##[[:space:]]+Architect Handoff([[:space:]]*)$/ { in_handoff=1; next }
+    in_handoff && /^##[[:space:]]+/ { exit }
+    in_handoff && index($0, label ":") == 1 {
+      line=$0
+      sub("^" label ":[[:space:]]*", "", line)
+      print line
+      exit
+    }
+  ' "$plan_path"
+}
+
+bundle_extract_architect_handoff_block() {
+  local plan_path="$1"
+  local label="$2"
+  awk -v label="$label" '
+    BEGIN { in_handoff=0; capture=0 }
+    /^##[[:space:]]+Architect Handoff([[:space:]]*)$/ { in_handoff=1; next }
+    in_handoff && /^##[[:space:]]+/ { exit }
+    in_handoff && $0 == label ":" { capture=1; next }
+    capture && /^[A-Za-z][A-Za-z0-9 .()\/-]*:$/ { exit }
+    capture { print }
+  ' "$plan_path"
+}
+
+bundle_extract_architect_slice_title() {
+  local plan_path="$1"
+  local slice_id="$2"
+  awk -v prefix="### " -v slice="$slice_id" '
+    index($0, prefix slice " - ") == 1 {
+      print substr($0, length(prefix slice " - ") + 1)
+      exit
+    }
+  ' "$plan_path"
+}
+
+bundle_extract_architect_slice_field() {
+  local plan_path="$1"
+  local slice_id="$2"
+  local field="$3"
+  awk -v prefix="### " -v slice="$slice_id" -v field="$field" '
+    BEGIN { in_slice=0; capture=0 }
+    index($0, prefix slice " - ") == 1 { in_slice=1; capture=0; next }
+    in_slice && /^### / { exit }
+    in_slice && /^## / { exit }
+    in_slice && $0 == field ":" { capture=1; next }
+    capture && /^[A-Za-z][A-Za-z0-9 .()\/-]*:$/ { exit }
+    capture { print }
+  ' "$plan_path"
+}
+
+bundle_extract_architect_execution_order() {
+  local plan_path="$1"
+  bundle_extract_architect_handoff_scalar "$plan_path" "Execution Order"
+}
+
+bundle_packet_id_increment() {
+  local seed="$1"
+  local offset="$2"
+  local prefix=""
+  local numeric=""
+  local next_value=0
+
+  [[ "$offset" =~ ^-?[0-9]+$ ]] || die "invalid packet offset: ${offset}"
+  if [[ "$seed" =~ ^(.+)([0-9]{4})$ ]]; then
+    prefix="${BASH_REMATCH[1]}"
+    numeric="${BASH_REMATCH[2]}"
+  else
+    die "invalid architect packet id seed: ${seed}"
+  fi
+
+  next_value=$((10#${numeric} + offset))
+  (( next_value >= 0 )) || die "architect packet id underflow from seed ${seed} offset ${offset}"
+  printf '%s%04d' "$prefix" "$next_value"
+}
+
+bundle_resolve_architect_packet_id() {
+  local slice_id="$1"
+  local plan_path="$2"
+  local execution_order=""
+  local order_csv=""
+  local candidate=""
+  local seed_index=-1
+  local slice_index=-1
+  local index=0
+
+  execution_order="$(bundle_extract_architect_execution_order "$plan_path")"
+  [[ -n "$execution_order" ]] || die "architect packet id resolution failed: Execution Order not found in storage/handoff/PLAN.md"
+  order_csv="$(printf '%s' "$execution_order" | sed 's/[[:space:]]*->[[:space:]]*/,/g')"
+
+  while IFS= read -r candidate; do
+    [[ -n "$candidate" ]] || continue
+    if [[ "$candidate" == "$BUNDLE_ARCHITECT_PACKET_ID_SEED_SLICE" ]]; then
+      seed_index="$index"
+    fi
+    if [[ "$candidate" == "$slice_id" ]]; then
+      slice_index="$index"
+    fi
+    index=$((index + 1))
+  done < <(bundle_parse_csv_lines "$order_csv")
+
+  (( seed_index >= 0 )) || die "architect packet id seed slice '${BUNDLE_ARCHITECT_PACKET_ID_SEED_SLICE}' missing from Execution Order"
+  (( slice_index >= 0 )) || die "architect packet id resolution failed: slice '${slice_id}' missing from Execution Order"
+  (( slice_index >= seed_index )) || die "architect packet id resolution failed: slice '${slice_id}' precedes seed slice '${BUNDLE_ARCHITECT_PACKET_ID_SEED_SLICE}'"
+
+  bundle_packet_id_increment "$BUNDLE_ARCHITECT_PACKET_ID_SEED" "$((slice_index - seed_index))"
+}
+
+bundle_resolve_architect_implicit_slice() {
+  local plan_path="$1"
+  local omitted_mode=""
+  local selected_slices=""
+  local candidate=""
+  local selected_count=0
+  local selected_slice=""
+
+  omitted_mode="$(bundle_extract_architect_handoff_scalar "$plan_path" "Omitted Slice Mode")"
+  [[ "$omitted_mode" == "auto-bind" ]] || return 1
+
+  selected_slices="$(bundle_extract_architect_selected_slices "$plan_path")"
+  [[ -n "$selected_slices" ]] || die "architect omitted-slice auto-bind failed: Selected Slices not found in storage/handoff/PLAN.md"
+
+  while IFS= read -r candidate; do
+    [[ -n "$candidate" ]] || continue
+    selected_slice="$candidate"
+    selected_count=$((selected_count + 1))
+  done < <(bundle_parse_csv_lines "$selected_slices")
+
+  (( selected_count == 1 )) || die "architect omitted-slice auto-bind failed: Selected Slices must contain exactly one slice"
+  printf '%s' "$selected_slice"
+}
+
+bundle_emit_prefixed_block() {
+  local prefix="$1"
+  local content="$2"
+  local line=""
+  while IFS= read -r line; do
+    printf '%s%s\n' "$prefix" "$line"
+  done <<< "$content"
+}
+
+bundle_emit_architect_slice_projection() {
+  local plan_path="$1"
+  local slice_id="$2"
+  local packet_id="$3"
+  local closing_sidecar="$4"
+  local title_suffix="$5"
+  local selected_option=""
+  local execution_order=""
+  local objective=""
+  local scope=""
+  local acceptance_gate=""
+  local receipt_contract=""
+  local architect_constraints=""
+
+  selected_option="$(bundle_extract_architect_handoff_scalar "$plan_path" "Selected Option")"
+  execution_order="$(bundle_extract_architect_execution_order "$plan_path")"
+  objective="$(bundle_extract_architect_slice_field "$plan_path" "$slice_id" "Objective")"
+  scope="$(bundle_extract_architect_slice_field "$plan_path" "$slice_id" "Scope")"
+  acceptance_gate="$(bundle_extract_architect_slice_field "$plan_path" "$slice_id" "Acceptance gate")"
+  receipt_contract="$(bundle_extract_architect_slice_field "$plan_path" "$slice_id" "Receipt contract")"
+  architect_constraints="$(bundle_extract_architect_handoff_block "$plan_path" "Architect Constraints")"
+
+  echo "[ACTIVE SLICE PROJECTION]"
+  echo "- selected_option: ${selected_option:-"(none)"}"
+  echo "- selected_slice: ${slice_id}"
+  echo "- execution_order: ${execution_order:-"(none)"}"
+  echo "- packet_id: ${packet_id}"
+  echo "- closing_sidecar: ${closing_sidecar}"
+  if [[ -n "$title_suffix" ]]; then
+    echo "- title_suffix: ${title_suffix}"
+  else
+    echo "- title_suffix: (none)"
+  fi
+  if [[ -n "$objective" ]]; then
+    echo "- objective:"
+    bundle_emit_prefixed_block "  " "$objective"
+  fi
+  if [[ -n "$scope" ]]; then
+    echo "- scope:"
+    bundle_emit_prefixed_block "  " "$scope"
+  fi
+  if [[ -n "$acceptance_gate" ]]; then
+    echo "- acceptance_gate:"
+    bundle_emit_prefixed_block "  " "$acceptance_gate"
+  fi
+  if [[ -n "$receipt_contract" ]]; then
+    echo "- receipt_contract:"
+    bundle_emit_prefixed_block "  " "$receipt_contract"
+  fi
+  if [[ -n "$architect_constraints" ]]; then
+    echo "- architect_constraints:"
+    bundle_emit_prefixed_block "  " "$architect_constraints"
+  fi
+  echo
+}
+
 bundle_validate_architect_slice() {
   local slice_id="$1"
   local plan_path="$2"
@@ -598,6 +807,9 @@ bundle_run() {
   local request_slice_id=""
   local request_slice_validated=0
   local request_plan_source=""
+  local request_packet_id=""
+  local request_closing_sidecar=""
+  local request_title_suffix=""
 
   local arg
   for arg in "$@"; do
@@ -756,10 +968,20 @@ bundle_run() {
     die "--slice is only valid with --profile=architect"
   fi
 
+  if [[ "$resolved_profile" == "architect" && -z "$request_slice_id" ]] && (( plan_present )); then
+    local implicit_slice=""
+    if implicit_slice="$(bundle_resolve_architect_implicit_slice "${REPO_ROOT}/${plan_rel}")"; then
+      request_slice_id="$implicit_slice"
+    fi
+  fi
+
   if [[ "$resolved_profile" == "architect" && -n "$request_slice_id" ]]; then
     bundle_validate_architect_slice "$request_slice_id" "${REPO_ROOT}/${plan_rel}"
     request_slice_validated=1
     request_plan_source="$plan_rel"
+    request_packet_id="$(bundle_resolve_architect_packet_id "$request_slice_id" "${REPO_ROOT}/${plan_rel}")"
+    request_closing_sidecar="storage/handoff/CLOSING-${request_packet_id}.md"
+    request_title_suffix="$(bundle_extract_architect_slice_title "${REPO_ROOT}/${plan_rel}" "$request_slice_id")"
   fi
 
   local stance_template_key
@@ -923,19 +1145,38 @@ bundle_run() {
     echo
     if [[ "$resolved_profile" == "architect" ]]; then
       echo "[REQUEST]"
-      if [[ -n "$request_slice_id" ]]; then
-        echo "- slice_id: ${request_slice_id}"
-      else
-        echo "- slice_id: (ad hoc)"
-      fi
-      echo "- slice_validated: $(bundle_bool "$request_slice_validated")"
-      if [[ -n "$request_plan_source" ]]; then
-        echo "- plan_source: ${request_plan_source}"
-      else
-        echo "- plan_source: (none)"
-      fi
-      echo
+    if [[ -n "$request_slice_id" ]]; then
+      echo "- slice_id: ${request_slice_id}"
+    else
+      echo "- slice_id: (ad hoc)"
     fi
+    echo "- slice_validated: $(bundle_bool "$request_slice_validated")"
+    if [[ -n "$request_plan_source" ]]; then
+      echo "- plan_source: ${request_plan_source}"
+    else
+      echo "- plan_source: (none)"
+    fi
+    if [[ -n "$request_packet_id" ]]; then
+      echo "- packet_id: ${request_packet_id}"
+    else
+      echo "- packet_id: (none)"
+    fi
+    if [[ -n "$request_closing_sidecar" ]]; then
+      echo "- closing_sidecar: ${request_closing_sidecar}"
+    else
+      echo "- closing_sidecar: (none)"
+    fi
+    if [[ -n "$request_title_suffix" ]]; then
+      echo "- title_suffix: ${request_title_suffix}"
+    else
+      echo "- title_suffix: (none)"
+    fi
+    echo
+    if (( request_slice_validated )); then
+      bundle_emit_architect_slice_projection "${REPO_ROOT}/${plan_rel}" "$request_slice_id" "$request_packet_id" "$request_closing_sidecar" "$request_title_suffix"
+    fi
+    echo
+  fi
     if ! bundle_profile_handoff_omitted "$resolved_profile"; then
       echo "[HANDOFF]"
       echo "- ${topic_rel}: $([[ "$topic_present" == "1" ]] && echo present || echo missing)"
@@ -1121,11 +1362,21 @@ bundle_run() {
     if [[ "$resolved_profile" == "architect" && -n "$request_slice_id" ]]; then
       echo "    \"slice_id\": \"$(bundle_json_escape "$request_slice_id")\"," 
       echo "    \"slice_validated\": true,"
-      echo "    \"plan_source\": \"$(bundle_json_escape "$request_plan_source")\""
+      echo "    \"plan_source\": \"$(bundle_json_escape "$request_plan_source")\","
+      echo "    \"packet_id\": \"$(bundle_json_escape "$request_packet_id")\","
+      echo "    \"closing_sidecar\": \"$(bundle_json_escape "$request_closing_sidecar")\","
+      if [[ -n "$request_title_suffix" ]]; then
+        echo "    \"title_suffix\": \"$(bundle_json_escape "$request_title_suffix")\""
+      else
+        echo "    \"title_suffix\": null"
+      fi
     else
       echo "    \"slice_id\": null,"
       echo "    \"slice_validated\": false,"
-      echo "    \"plan_source\": null"
+      echo "    \"plan_source\": null,"
+      echo "    \"packet_id\": null,"
+      echo "    \"closing_sidecar\": null,"
+      echo "    \"title_suffix\": null"
     fi
     echo "  },"
     echo "  \"addendum\": {"

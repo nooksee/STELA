@@ -83,11 +83,23 @@ ensure_architect_plan_fixture() {
   mkdir -p "$(dirname "$plan_abs")"
   cat > "$plan_abs" <<'EOF'
 ## Architect Handoff
-Selected Option: A
+Selected Option: A (Dispatch Reliability Corridor)
 Slice Mode: multi
 Selected Slices: T1
 Execution Order: T1
-Architect Constraints: test fixture
+Architect Constraints:
+- test fixture architect constraint
+
+## Pending Slice Definitions
+### T1 - Architect Transport Slice Intent
+Objective:
+- test fixture objective
+
+Scope:
+- test fixture scope
+
+Acceptance gate:
+- test fixture acceptance gate
 EOF
   queue_cleanup_path "$plan_rel"
 }
@@ -527,6 +539,9 @@ test_architect_slice_valid() {
   local request_slice_id_val=""
   local request_validated_val=""
   local request_source_val=""
+  local request_packet_id_val=""
+  local request_sidecar_val=""
+  local request_title_suffix_val=""
 
   run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=architect --slice="$slice_id" --out=auto
   if (( RUN_STATUS != 0 )); then
@@ -547,10 +562,31 @@ test_architect_slice_valid() {
   if ! grep -Fq 'slice_validated: true' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
     fail "architect bundle text missing slice_validated: true"
   fi
+  if ! grep -Fq 'packet_id: DP-OPS-0189' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect bundle text missing packet_id: DP-OPS-0189"
+  fi
+  if ! grep -Fq 'closing_sidecar: storage/handoff/CLOSING-DP-OPS-0189.md' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect bundle text missing closing sidecar marker"
+  fi
+  if ! grep -Fq 'title_suffix: Architect Transport Slice Intent' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect bundle text missing title_suffix marker"
+  fi
+  if ! grep -Fq '[ACTIVE SLICE PROJECTION]' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect bundle text missing [ACTIVE SLICE PROJECTION] block"
+  fi
+  if ! grep -Fq 'selected_option: A (Dispatch Reliability Corridor)' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect projection missing selected option"
+  fi
+  if ! grep -Fq 'execution_order: T1 -> T1.1 -> T1.2' "${REPO_ROOT}/${LAST_ARTIFACT}" && ! grep -Fq 'execution_order: T1' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect projection missing execution order"
+  fi
 
   request_slice_id_val="$(extract_request_field "$LAST_MANIFEST" "slice_id")"
   request_validated_val="$(extract_request_field "$LAST_MANIFEST" "slice_validated")"
   request_source_val="$(extract_request_field "$LAST_MANIFEST" "plan_source")"
+  request_packet_id_val="$(extract_request_field "$LAST_MANIFEST" "packet_id")"
+  request_sidecar_val="$(extract_request_field "$LAST_MANIFEST" "closing_sidecar")"
+  request_title_suffix_val="$(extract_request_field "$LAST_MANIFEST" "title_suffix")"
 
   if [[ "$request_slice_id_val" != "$slice_id" ]]; then
     fail "architect request.slice_id mismatch: expected ${slice_id}, got ${request_slice_id_val}"
@@ -561,12 +597,24 @@ test_architect_slice_valid() {
   if [[ "$request_source_val" != "storage/handoff/PLAN.md" ]]; then
     fail "architect request.plan_source mismatch: expected storage/handoff/PLAN.md, got ${request_source_val}"
   fi
+  if [[ "$request_packet_id_val" != "DP-OPS-0189" ]]; then
+    fail "architect request.packet_id mismatch: expected DP-OPS-0189, got ${request_packet_id_val}"
+  fi
+  if [[ "$request_sidecar_val" != "storage/handoff/CLOSING-DP-OPS-0189.md" ]]; then
+    fail "architect request.closing_sidecar mismatch: expected storage/handoff/CLOSING-DP-OPS-0189.md, got ${request_sidecar_val}"
+  fi
+  if [[ "$request_title_suffix_val" != "Architect Transport Slice Intent" ]]; then
+    fail "architect request.title_suffix mismatch: expected Architect Transport Slice Intent, got ${request_title_suffix_val}"
+  fi
 }
 
 test_architect_slice_ad_hoc() {
   local request_slice_id_val=""
   local request_validated_val=""
   local request_source_val=""
+  local request_packet_id_val=""
+  local request_sidecar_val=""
+  local request_title_suffix_val=""
 
   run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=architect --out=auto
   if (( RUN_STATUS != 0 )); then
@@ -587,10 +635,22 @@ test_architect_slice_ad_hoc() {
   if ! grep -Fq 'slice_validated: false' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
     fail "architect ad hoc bundle text missing slice_validated: false"
   fi
+  if ! grep -Fq 'packet_id: (none)' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect ad hoc bundle text missing packet_id: (none)"
+  fi
+  if ! grep -Fq 'closing_sidecar: (none)' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect ad hoc bundle text missing closing_sidecar: (none)"
+  fi
+  if grep -Fq '[ACTIVE SLICE PROJECTION]' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect ad hoc bundle text should not emit [ACTIVE SLICE PROJECTION]"
+  fi
 
   request_slice_id_val="$(extract_request_field "$LAST_MANIFEST" "slice_id")"
   request_validated_val="$(extract_request_field "$LAST_MANIFEST" "slice_validated")"
   request_source_val="$(extract_request_field "$LAST_MANIFEST" "plan_source")"
+  request_packet_id_val="$(extract_request_field "$LAST_MANIFEST" "packet_id")"
+  request_sidecar_val="$(extract_request_field "$LAST_MANIFEST" "closing_sidecar")"
+  request_title_suffix_val="$(extract_request_field "$LAST_MANIFEST" "title_suffix")"
 
   if [[ "$request_slice_id_val" != "null" ]]; then
     fail "architect ad hoc request.slice_id mismatch: expected null, got ${request_slice_id_val}"
@@ -600,6 +660,15 @@ test_architect_slice_ad_hoc() {
   fi
   if [[ "$request_source_val" != "null" ]]; then
     fail "architect ad hoc request.plan_source mismatch: expected null, got ${request_source_val}"
+  fi
+  if [[ "$request_packet_id_val" != "null" ]]; then
+    fail "architect ad hoc request.packet_id mismatch: expected null, got ${request_packet_id_val}"
+  fi
+  if [[ "$request_sidecar_val" != "null" ]]; then
+    fail "architect ad hoc request.closing_sidecar mismatch: expected null, got ${request_sidecar_val}"
+  fi
+  if [[ "$request_title_suffix_val" != "null" ]]; then
+    fail "architect ad hoc request.title_suffix mismatch: expected null, got ${request_title_suffix_val}"
   fi
 }
 
