@@ -416,3 +416,14 @@ docs/ops/specs/runbook/gemini.md*
 ops/src/runbook/gemini.yaml*
 storage/handoff/CLOSING-DP-OPS-0193.md
 archives/surfaces/TASK-DP-OPS-0193-*.md
+ops/bin/certify
+ops/bin/prune
+ops/bin/trace
+ops/lib/manifests/PRUNE.md
+tools/verify.sh
+docs/ops/specs/binaries/certify.md
+docs/ops/specs/binaries/prune.md
+docs/ops/specs/binaries/trace.md
+docs/ops/specs/tools/verify.md
+storage/handoff/CLOSING-DP-OPS-0196.md
+archives/surfaces/TASK-DP-OPS-0196-*.md
