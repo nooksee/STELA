@@ -405,3 +405,5 @@ storage/handoff/CLOSING-DP-OPS-0192.md
 archives/surfaces/TASK-DP-OPS-0192-*.md
 docs/ops/specs/runbook/gemini.md*
 ops/src/runbook/gemini.yaml*
+storage/handoff/CLOSING-DP-OPS-0193.md
+archives/surfaces/TASK-DP-OPS-0193-*.md

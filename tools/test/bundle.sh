@@ -608,6 +608,8 @@ test_analyst_contract() {
   local package_listing=""
   local topic_path=""
   local backup_path=""
+  local dump_payload_path=""
+  local dump_manifest_path=""
 
   ensure_analyst_topic_fixture
 
@@ -648,6 +650,19 @@ test_analyst_contract() {
 
   if grep -Fq '"plan": {' "${REPO_ROOT}/${LAST_MANIFEST}"; then
     fail "analyst manifest should not emit top-level plan input metadata"
+  fi
+
+  dump_payload_path="$(extract_manifest_value "$LAST_MANIFEST" "payload_path")"
+  dump_manifest_path="$(extract_manifest_value "$LAST_MANIFEST" "manifest_path")"
+  if [[ -z "$dump_payload_path" ]]; then
+    fail "analyst manifest missing dump payload_path"
+  elif ! grep -Fq '<<< FILE BEGIN: storage/handoff/TOPIC.md' "${REPO_ROOT}/${dump_payload_path}"; then
+    fail "analyst dump payload missing storage/handoff/TOPIC.md file block"
+  fi
+  if [[ -z "$dump_manifest_path" ]]; then
+    fail "analyst manifest missing dump manifest_path"
+  elif ! grep -Fq 'Include files (explicit): storage/handoff/TOPIC.md' "${REPO_ROOT}/${dump_manifest_path}"; then
+    fail "analyst dump manifest missing explicit TOPIC include provenance"
   fi
 
   package_listing="$(tar -tf "${REPO_ROOT}/${LAST_PACKAGE}")"

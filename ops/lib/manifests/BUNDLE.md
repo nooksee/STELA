@@ -60,6 +60,7 @@ dump_scope_foreman=core
 ## Analyst Transport Contract
 - Analyst requires `storage/handoff/TOPIC.md` as input and fails closed when it is absent.
 - Analyst emits request metadata `topic_source=storage/handoff/TOPIC.md` and `output_surface=storage/handoff/PLAN.md`.
+- Analyst invokes the full dump with explicit `storage/handoff/TOPIC.md` inclusion so the dump payload contains the topic artifact as a file block.
 - Analyst package members include `storage/handoff/TOPIC.md` and omit `storage/handoff/PLAN.md`.
 - Analyst `PLAN.md` is output only and is never transported as analyst input context.
 

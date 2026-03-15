@@ -1074,12 +1074,18 @@ bundle_run() {
   local dump_scope
   dump_scope="$(bundle_dump_scope_for_profile "$resolved_profile")"
   local dump_payload_target_rel="storage/dumps/dump-${dump_scope}-${branch_safe}-${head_short}.txt"
+  local -a dump_args=("${REPO_ROOT}/ops/bin/dump" "--scope=${dump_scope}" "--format=chatgpt" "--out=${dump_payload_target_rel}")
+
+  if [[ "$resolved_profile" == "analyst" ]]; then
+    dump_args+=("--include-file=${topic_rel}")
+  fi
 
   local dump_output
   if [[ "$dump_scope" == "project" ]]; then
-    dump_output="$(${REPO_ROOT}/ops/bin/dump --scope=project --project="$project_name" --format=chatgpt --out="$dump_payload_target_rel")"
+    dump_args+=("--project=${project_name}")
+    dump_output="$("${dump_args[@]}")"
   else
-    dump_output="$(${REPO_ROOT}/ops/bin/dump --scope="$dump_scope" --format=chatgpt --out="$dump_payload_target_rel")"
+    dump_output="$("${dump_args[@]}")"
   fi
 
   local dump_payload_rel

@@ -94,7 +94,7 @@ Artifact contract (written under `storage/handoff/`):
    - addendum metadata (`required`, `decision_id`, `decision_leaf_present`)
    - package metadata (`path`, `files`)
 3. Bundle package (`.tar`) containing bundle `.txt`, manifest, dump payload, dump manifest, and profile-specific handoff members.
-   - analyst includes `TOPIC.md` only
+   - analyst includes `TOPIC.md` only and analyst dump payload embeds `storage/handoff/TOPIC.md`
    - architect may include `PLAN.md`
 4. Canonical bundle artifact names use policy-defined profile prefixes (`artifact_prefix_<profile>` in `ops/lib/manifests/BUNDLE.md`), for example `AUDIT-*` and `FOREMAN-*`.
 5. Legacy `BUNDLE-*` artifacts are compatibility outputs during migration when `compatibility_emit_legacy_bundle_artifacts=true`.
@@ -124,6 +124,7 @@ Foreman gate:
 
 Dump scope mapping by resolved profile:
 1. `analyst|architect|conform` -> `ops/bin/dump --scope=full`.
+   - analyst adds explicit `--include-file=storage/handoff/TOPIC.md`
 2. `audit` -> `ops/bin/dump --scope=core`.
 3. `foreman` -> `ops/bin/dump --scope=core`.
 4. `project` -> `ops/bin/dump --scope=project --project=<name>`.

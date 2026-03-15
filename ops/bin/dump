@@ -41,7 +41,7 @@ Usage: ops/bin/dump [--scope=core|platform|full|factory|project] [--project=<slu
 Notes:
 - Scopes and refiners are resolved by ops/lib/scripts/traverse.sh.
 - --project is required when --scope=project.
-- --selection=scope preserves traverse-based selection behavior.
+- --selection=scope preserves traverse-based selection behavior and may add explicit include-file entries.
 USAGE
 }
 
@@ -442,6 +442,13 @@ if [[ "$selection_mode" == "scope" ]]; then
     [[ -n "$filepath" ]] || continue
     files+=("$filepath")
   done < <("${SCRIPT_DIR}/../lib/scripts/traverse.sh" "${traverse_args[@]}")
+
+  for include_path in "${include_files[@]}"; do
+    add_selected_file "$include_path"
+  done
+  for include_list_path in "${include_file_lists[@]}"; do
+    load_include_file_list "$include_list_path"
+  done
 else
   canonical_baseline_files=(
     "PoT.md"
@@ -705,6 +712,16 @@ emit_dump() {
   else
     echo "Ignore globs (refiner): (none)"
   fi
+  if (( ${#include_files[@]} > 0 )); then
+    echo "Include files (explicit): ${include_files[*]}"
+  else
+    echo "Include files (explicit): (none)"
+  fi
+  if (( ${#include_file_lists[@]} > 0 )); then
+    echo "Include file lists (explicit): ${include_file_lists[*]}"
+  else
+    echo "Include file lists (explicit): (none)"
+  fi
   echo "Binary handling: $include_binary"
   echo "Max lines (text): $max_lines"
   cat <<'ORIENTATION'
@@ -776,6 +793,12 @@ emit_manifest() {
     fi
     if (( ${#ignore_patterns[@]} > 0 )); then
       echo "Ignore globs (refiner): ${ignore_patterns[*]}"
+    fi
+    if (( ${#include_files[@]} > 0 )); then
+      echo "Include files (explicit): ${include_files[*]}"
+    fi
+    if (( ${#include_file_lists[@]} > 0 )); then
+      echo "Include file lists (explicit): ${include_file_lists[*]}"
     fi
     echo "Dump payload: $(display_path "$payload")"
     if [[ -n "$output" ]]; then
