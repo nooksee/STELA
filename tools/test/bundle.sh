@@ -735,6 +735,15 @@ test_analyst_contract() {
   if ! grep -Fq -- '- storage/handoff/TOPIC.md: present' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
     fail "analyst bundle text missing TOPIC handoff line"
   fi
+  if ! grep -Fq 'Default analyst behavior is discussion mode.' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "analyst bundle text missing discussion-mode default line"
+  fi
+  if ! grep -Fq 'For default analyst mode: include one `Recommendation:` line naming the preferred option.' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "analyst bundle text missing recommendation contract line"
+  fi
+  if ! grep -Fq 'For explicit plan-output mode: output only the complete PLAN markdown code block.' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "analyst bundle text missing explicit plan-output line"
+  fi
   if grep -Fq -- '- storage/handoff/PLAN.md:' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
     fail "analyst bundle text should not advertise PLAN.md as handoff input"
   fi
