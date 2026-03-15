@@ -67,7 +67,7 @@ Root-level surface changes that are not valid entries in `Confirm Merge (Extende
 1. Verify
 Run:
 ~~~bash
-./tools/verify.sh
+./tools/verify.sh --mode=full
 ./tools/lint/truth.sh
 ./tools/lint/style.sh
 ./tools/lint/ff.sh
@@ -106,6 +106,8 @@ Run:
 ./ops/bin/certify --dp=DP-OPS-XXXX --out=auto
 bash tools/lint/results.sh storage/handoff/DP-OPS-XXXX-RESULTS.md
 ~~~
+`ops/bin/certify` now fails in explicit phases: `preflight`, `replay`, `verify`, `postflight`, and `results`. Cheap closeout defects such as malformed closing sidecar content, malformed narrative scaffolds, missing trace / OPEN prerequisites, or obviously stale receipt-command shapes must fail in `preflight` before long replay begins. Certify emits `Certify phase: <phase>` on phase changes and phase-tags hard-fail output as `ERROR [<phase>]`.
+When certify replays a plain `bash tools/verify.sh` receipt line, it rewrites that invocation to `bash tools/verify.sh --mode=certify-critical` inside the certify loop. The bounded certify-critical mode preserves closeout-safety bundle/open smoke checks while leaving full repo verify coverage available through standalone `./tools/verify.sh --mode=full`. Narrative scaffold validation stays in certify preflight, so editor smoke remains full-verify only.
 `ops/bin/certify` runs integrity checks, executes the Section 3.4.5 verification command list, renders the RESULTS receipt from template, and runs `tools/lint/results.sh` as a hard gate.
 Note: certify resolves the target DP from the TASK head leaf by default. Ensure the TASK head leaf is structurally valid and contains the live current DP block before running certify. If the TASK head leaf is absent or invalid, certify falls back to the intake packet; this fallback is a recovery path only.
 `tools/lint/results.sh` enforces the RESULTS schema through `## Contractor Execution Narrative` and required Decision Leaf lines. Closing sidecar schema validation remains `ops/bin/certify` authority against `ops/lib/manifests/CLOSING.md` (Section 1).
