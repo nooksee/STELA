@@ -51,6 +51,7 @@ The script provides `bundle_run` plus helpers for:
 21. Analyst handoff and request emission:
    - fail closed when `storage/handoff/TOPIC.md` is absent,
    - emit analyst `[REQUEST]` metadata `topic_source` and `output_surface`,
+   - invoke analyst full dump with explicit `--include-file=storage/handoff/TOPIC.md`,
    - omit `storage/handoff/PLAN.md` from analyst package members and analyst handoff reporting.
 
 Stance contract extraction and render rules:
@@ -62,7 +63,7 @@ Stance contract extraction and render rules:
 
 Text artifact profile conditional rule:
 - Emit `[HANDOFF]` only when resolved profile is not `audit` and not `foreman`.
-- For `analyst`, `[HANDOFF]` reports `TOPIC.md` presence only and `[REQUEST]` reports `topic_source` plus `output_surface`.
+- For `analyst`, `[HANDOFF]` reports `TOPIC.md` presence only, `[REQUEST]` reports `topic_source` plus `output_surface`, and the dump payload embeds `storage/handoff/TOPIC.md` as an explicit include.
 - For non-analyst non-audit non-foreman profiles, `[HANDOFF]` reports `TOPIC.md` / `PLAN.md` presence.
 
 ## Anecdotal Anchor

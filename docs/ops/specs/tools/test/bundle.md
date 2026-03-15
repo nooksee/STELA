@@ -47,6 +47,8 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 - Analyst requires `storage/handoff/TOPIC.md`; bundle must fail closed when it is missing.
 - Analyst bundle text must include `[REQUEST]` with `topic_source` and `output_surface`.
 - Analyst bundle text `[HANDOFF]` must report `TOPIC.md` only.
+- Analyst dump payload must contain `<<< FILE BEGIN: storage/handoff/TOPIC.md`.
+- Analyst dump manifest must record explicit include provenance for `storage/handoff/TOPIC.md`.
 - Analyst package must include `storage/handoff/TOPIC.md` and omit `storage/handoff/PLAN.md`.
 - Architect bundle text must include `[REQUEST]` block with slice and packet metadata.
 - Validated architect slice output must include `[ACTIVE SLICE PROJECTION]` with active-slice handoff data only.
