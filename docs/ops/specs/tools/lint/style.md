@@ -14,7 +14,8 @@
 6a. Check that the Confirm Merge (Add a Comment) field value ends with `?`; emit failure with filename when it does not.
 6b. Check that every non-blank line in the Confirm Merge (Extended Description) field value matches a path pattern (two or more consecutive non-path tokens on a single line is a prose failure); emit failure with filename and line number for each detected prose line.
 6c. Check that the PR Description field value contains at least one markdown construct — a heading beginning with `##`, a list item beginning with `-`, `*`, or a digit followed by `.`, or a bold span (`**`); emit failure with filename when none is found.
-7. Aggregate failures and exit non-zero when any check reports an error.
+7. Check that `ops/src/stances/analyst.md.tpl` contains the exact machine-ingest analyst contract lines that forbid unsupported repo-operating detail, keep broad topics generic, and constrain required-field inference to the smallest reasonable step.
+8. Aggregate failures and exit non-zero when any check reports an error.
 
 ## Anecdotal Anchor
 DP-OPS-0082 introduced spec-surface enforcement and anti-jargon checks after repeated review churn on docs that passed operational gates but still carried ambiguous structure or promotional language. Later packets used this gate to block malformed spec edits before certification.
@@ -151,3 +152,23 @@ Target file: `ops/bin/open`
 Assertion: file must not include `Stela OPEN PROMPT`
 Failure message: `ops/bin/open still contains legacy standalone OPEN title line`
 Invariant: legacy header regression is blocked.
+
+## Analyst Mode Contract Guardrails
+
+### Guard 21: Analyst no-unsupported-operating-detail line
+Target file: `ops/src/stances/analyst.md.tpl`
+Assertion: file must include `For machine-ingest analyst mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.`
+Failure message: `analyst.md.tpl missing analyst no-unsupported-operating-detail line`
+Invariant: broad analyst topics do not silently expand into unsupported repo-operating detail.
+
+### Guard 22: Analyst broad-topic genericity line
+Target file: `ops/src/stances/analyst.md.tpl`
+Assertion: file must include `For machine-ingest analyst mode: when the topic is broad, keep the plan generic and high-level rather than converting it into specific operating claims.`
+Failure message: `analyst.md.tpl missing analyst broad-topic-genericity line`
+Invariant: topic-driven analyst planning stays high-level when attached evidence is thin.
+
+### Guard 23: Analyst smallest-inference line
+Target file: `ops/src/stances/analyst.md.tpl`
+Assertion: file must include `For machine-ingest analyst mode: when required handoff fields force inference, make the smallest reasonable inference and avoid supporting detail that reads as established repository fact.`
+Failure message: `analyst.md.tpl missing analyst smallest-inference line`
+Invariant: required analyst handoff inference stays minimal and does not masquerade as established repository fact.

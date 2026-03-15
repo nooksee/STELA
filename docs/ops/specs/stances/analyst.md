@@ -21,6 +21,9 @@ Define the template-backed Analyst stance body used by bundle output contract re
 - Machine-ingest analyst mode outputs exactly one fenced markdown code block.
 - Machine-ingest analyst mode emits only a complete `PLAN.md` draft.
 - Machine-ingest analyst mode first non-empty line inside the fenced body must start with `# DP Plan:`.
+- Machine-ingest analyst mode must not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.
+- Machine-ingest analyst mode keeps broad topics generic and high-level rather than converting them into specific operating claims.
+- Machine-ingest analyst mode uses the smallest reasonable inference for required handoff fields and does not let inference read as established repository fact.
 - Machine-ingest analyst mode must not emit discussion/option menus or recommendation lines.
 
 ## Invariants and failure modes

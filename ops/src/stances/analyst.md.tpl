@@ -31,5 +31,8 @@ Steps:
 For machine-ingest analyst mode: output only the complete PLAN markdown code block.
 For machine-ingest analyst mode: first non-empty line inside the code block must start with `# DP Plan:`.
 For machine-ingest analyst mode: require attached `storage/handoff/TOPIC.md`; do not use inline query fallback.
+For machine-ingest analyst mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.
+For machine-ingest analyst mode: when the topic is broad, keep the plan generic and high-level rather than converting it into specific operating claims.
+For machine-ingest analyst mode: when required handoff fields force inference, make the smallest reasonable inference and avoid supporting detail that reads as established repository fact.
 {{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}
 For machine-ingest analyst mode: do not emit discussion/option menus or recommendation lines.

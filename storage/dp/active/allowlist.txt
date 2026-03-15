@@ -219,6 +219,8 @@ archives/surfaces/TASK-DP-OPS-0149-*.md
 ops/lib/manifests/BUNDLE.md
 storage/handoff/CLOSING-DP-OPS-0194.md
 archives/surfaces/TASK-DP-OPS-0194-*.md
+storage/handoff/CLOSING-DP-OPS-0195.md
+archives/surfaces/TASK-DP-OPS-0195-*.md
 docs/ops/specs/binaries/bundle.md
 docs/ops/specs/scripts/bundle.md
 docs/ops/specs/tools/test/bundle.md

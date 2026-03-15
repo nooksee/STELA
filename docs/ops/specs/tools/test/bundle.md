@@ -95,6 +95,7 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
   - manifest fail-closed assertions,
   - stance template render determinism,
   - architect validated-slice bundle generation.
+- Architect slice smoke must install its own deterministic `storage/handoff/PLAN.md` fixture and must not depend on whatever live handoff `PLAN.md` currently contains.
 - `--mode=certify-critical` must not run the full analyst/profile/ATS/meta matrix.
 
 ## Anecdotal Anchor
