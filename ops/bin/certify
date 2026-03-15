@@ -27,6 +27,10 @@ USAGE
 }
 
 CERTIFY_PHASE=""
+CERTIFY_PHASE_STARTED_EPOCH=""
+CERTIFY_RUN_STARTED_EPOCH="$(date +%s)"
+declare -A CERTIFY_PHASE_DURATION_SECONDS=()
+declare -a CERTIFY_COMMAND_TIMINGS=()
 
 certify_set_phase() {
   local next_phase="$1"
@@ -34,8 +38,49 @@ certify_set_phase() {
   if [[ "$CERTIFY_PHASE" == "$next_phase" ]]; then
     return 0
   fi
+  local now_epoch
+  now_epoch="$(date +%s)"
+  if [[ -n "$CERTIFY_PHASE" && -n "$CERTIFY_PHASE_STARTED_EPOCH" ]]; then
+    CERTIFY_PHASE_DURATION_SECONDS["$CERTIFY_PHASE"]=$(( ${CERTIFY_PHASE_DURATION_SECONDS["$CERTIFY_PHASE"]:-0} + now_epoch - CERTIFY_PHASE_STARTED_EPOCH ))
+  fi
   CERTIFY_PHASE="$next_phase"
+  CERTIFY_PHASE_STARTED_EPOCH="$now_epoch"
   printf 'Certify phase: %s\n' "$CERTIFY_PHASE"
+}
+
+certify_finalize_phase_timing() {
+  local now_epoch
+  now_epoch="$(date +%s)"
+  if [[ -n "$CERTIFY_PHASE" && -n "$CERTIFY_PHASE_STARTED_EPOCH" ]]; then
+    CERTIFY_PHASE_DURATION_SECONDS["$CERTIFY_PHASE"]=$(( ${CERTIFY_PHASE_DURATION_SECONDS["$CERTIFY_PHASE"]:-0} + now_epoch - CERTIFY_PHASE_STARTED_EPOCH ))
+    CERTIFY_PHASE_STARTED_EPOCH="$now_epoch"
+  fi
+}
+
+build_phase_summary_output() {
+  local phase duration_seconds
+  for phase in startup preflight replay verify postflight results; do
+    duration_seconds="${CERTIFY_PHASE_DURATION_SECONDS[$phase]:-0}"
+    printf 'CERTIFY-PHASE: name=%s duration_seconds=%s\n' "$phase" "$duration_seconds"
+  done
+}
+
+build_long_pole_summary_output() {
+  local -a rows=()
+  local row rank cmd_id phase duration_seconds command
+  if (( ${#CERTIFY_COMMAND_TIMINGS[@]} == 0 )); then
+    printf 'CERTIFY-LONG-POLE: none\n'
+    return 0
+  fi
+
+  mapfile -t rows < <(printf '%s\n' "${CERTIFY_COMMAND_TIMINGS[@]}" | sort -t $'\t' -k3,3nr -k1,1 | head -n 5)
+  rank=0
+  for row in "${rows[@]}"; do
+    IFS=$'\t' read -r cmd_id phase duration_seconds command <<< "$row"
+    rank=$((rank + 1))
+    printf 'CERTIFY-LONG-POLE: rank=%s phase=%s command_id=%s duration_seconds=%s command=%s\n' \
+      "$rank" "$phase" "$cmd_id" "$duration_seconds" "$command"
+  done
 }
 
 die() {
@@ -907,6 +952,9 @@ emit_telemetry_leaf() {
   local branch="$5"
   local git_hash="$6"
   local dp_source="$7"
+  local total_duration_seconds="$8"
+  local phase_summary="$9"
+  local long_pole_summary="${10}"
 
   mkdir -p "$LOGS_DIR"
 
@@ -941,6 +989,11 @@ previous: ${previous}
 - branch: ${branch}
 - git_hash: ${git_hash}
 - dp_source: ${dp_source}
+- total_duration_seconds: ${total_duration_seconds}
+## Phase Summary
+${phase_summary}
+## Long Pole Summary
+${long_pole_summary}
 - head_pointer: logs/certify.telemetry.head
 EOF
 
@@ -1053,6 +1106,7 @@ append_command_log_entry() {
   COMMAND_LOG+="- Exit Code: ${exit_code}"$'\n'
   COMMAND_LOG+=$'\n#### STDOUT\n~~~text\n'"${stdout_body}"$'\n~~~\n'
   COMMAND_LOG+=$'\n#### STDERR\n~~~text\n'"${stderr_body}"$'\n~~~\n\n'
+  CERTIFY_COMMAND_TIMINGS+=("${cmd_id}"$'\t'"${CERTIFY_PHASE:-unknown}"$'\t'"${duration_seconds}"$'\t'"${sanitized_command}")
 }
 
 run_surface_emission_step() {
@@ -1896,6 +1950,16 @@ assert_no_disposable_refs "$OUT_PATH" "${OUT_PATH#${REPO_ROOT}/}"
 bash "$RESULTS_LINT" "$OUT_PATH"
 DP_PACKET_MOVE_OUTPUT="$(move_dp_packet_to_processed "$DP_ID" "$ADDENDUM_ID")"
 
+certify_finalize_phase_timing
+CERTIFY_TOTAL_DURATION_SECONDS=$(( $(date +%s) - CERTIFY_RUN_STARTED_EPOCH ))
+CERTIFY_PHASE_SUMMARY_OUTPUT="$(build_phase_summary_output)"
+CERTIFY_LONG_POLE_SUMMARY_OUTPUT="$(build_long_pole_summary_output)"
+
+echo "Certify phase summary:"
+printf '%s\n' "$CERTIFY_PHASE_SUMMARY_OUTPUT"
+echo "Certify long-pole summary:"
+printf '%s\n' "$CERTIFY_LONG_POLE_SUMMARY_OUTPUT"
+
 TELEMETRY_PACKET_ID="${DP_ID}"
 if [[ -n "$ADDENDUM_ID" ]]; then
   TELEMETRY_PACKET_ID="${DP_ID}-ADDENDUM-${ADDENDUM_ID}"
@@ -1909,7 +1973,10 @@ TELEMETRY_LEAF="$(
     "${OUT_PATH#${REPO_ROOT}/}" \
     "$BRANCH" \
     "$GIT_HASH" \
-    "$DP_SOURCE"
+    "$DP_SOURCE" \
+    "$CERTIFY_TOTAL_DURATION_SECONDS" \
+    "$CERTIFY_PHASE_SUMMARY_OUTPUT" \
+    "$CERTIFY_LONG_POLE_SUMMARY_OUTPUT"
 )"
 
 echo "DP source: ${DP_SOURCE}"

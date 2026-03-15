@@ -32,15 +32,20 @@ POLICY_QUARANTINE_PATH=""
 
 declare -a CRITICAL_PATTERNS=()
 declare -a DENYLIST_PATTERNS=()
+declare -a STORAGE_REPORT_CLASS_NAMES=()
+declare -A STORAGE_REPORT_CLASS_PATTERNS=()
+declare -A STORAGE_REPORT_CLASS_TIERS=()
+declare -A STORAGE_REPORT_CLASS_WEIGHTS=()
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/prune [--target=sop|pow|both] [--phase=report|apply] [--approve=TOKEN]
+Usage: ops/bin/prune [--target=sop|pow|both|storage] [--phase=report|apply] [--approve=TOKEN]
                     [--dry-run] [--scrub] [--quarantine] [--quarantine-path=PATH]
 
 Notes:
 - report phase is non-mutating and is the default from policy.
 - apply phase requires --approve token that matches PRUNE policy.
+- storage target is report-only in this slice.
 USAGE
 }
 
@@ -157,6 +162,55 @@ load_prune_policy() {
 
   (( ${#CRITICAL_PATTERNS[@]} > 0 )) || die "PRUNE.md missing critical patterns"
   (( ${#DENYLIST_PATTERNS[@]} > 0 )) || die "PRUNE.md missing denylist patterns"
+  load_storage_report_classes
+}
+
+load_storage_report_classes() {
+  STORAGE_REPORT_CLASS_NAMES=()
+  STORAGE_REPORT_CLASS_PATTERNS=()
+  STORAGE_REPORT_CLASS_TIERS=()
+  STORAGE_REPORT_CLASS_WEIGHTS=()
+
+  while IFS= read -r raw_line; do
+    [[ -n "$raw_line" ]] || continue
+    local class_name="" pattern="" tier="" weight="" field field_key field_value
+    IFS='|' read -ra fields <<< "$raw_line"
+    for field in "${fields[@]}"; do
+      field_key="${field%%=*}"
+      field_value="${field#*=}"
+      field_key="$(trim "$field_key")"
+      field_value="$(trim "$field_value")"
+      case "$field_key" in
+        class) class_name="$field_value" ;;
+        pattern) pattern="$field_value" ;;
+        tier) tier="$field_value" ;;
+        weight) weight="$field_value" ;;
+      esac
+    done
+
+    [[ -n "$class_name" ]] || die "PRUNE.md storage report class missing class field"
+    [[ -n "$pattern" ]] || die "PRUNE.md storage report class missing pattern field (${class_name})"
+    [[ "$tier" == "critical" || "$tier" == "operational" || "$tier" == "historical" ]] || die "PRUNE.md storage report class has invalid tier (${class_name})"
+    require_int "storage_report_weight:${class_name}" "$weight"
+
+    STORAGE_REPORT_CLASS_NAMES+=("$class_name")
+    STORAGE_REPORT_CLASS_PATTERNS["$class_name"]="$pattern"
+    STORAGE_REPORT_CLASS_TIERS["$class_name"]="$tier"
+    STORAGE_REPORT_CLASS_WEIGHTS["$class_name"]="$weight"
+  done < <(
+    awk '
+      $0 == "## Storage Report Classes" { in_section=1; next }
+      in_section && /^## / { exit }
+      in_section {
+        line=$0
+        sub(/^[[:space:]]+/, "", line)
+        sub(/[[:space:]]+$/, "", line)
+        if (line != "" && line !~ /^#/) {
+          print line
+        }
+      }
+    ' "$POLICY_PATH"
+  )
 }
 
 path_matches_any_pattern() {
@@ -239,6 +293,60 @@ emit_candidate_report() {
   echo "SUMMARY: target=${target_key} tier=${tier} keep_count=${keep_count} bytes_total=${total_bytes} action=${action}"
 }
 
+emit_storage_report() {
+  local class_name="" pattern="" tier="" weight="" tier_weight=""
+  local class_count=0 protected_count=0 bytes_total=0 weighted_bytes=0
+  local total_count=0 total_protected=0 total_bytes=0 total_weighted_bytes=0
+  local rel_path="" file_bytes=0 matched_class=""
+  declare -A class_counts=()
+  declare -A class_protected_counts=()
+  declare -A class_bytes=()
+
+  if [[ "$PHASE" == "apply" && "$DRY_RUN" -eq 0 ]]; then
+    guard_fail "SAFETY VIOLATION: storage target is report-only in this slice."
+  fi
+
+  while IFS=$'\t' read -r rel_path file_bytes; do
+    [[ -n "$rel_path" ]] || continue
+    matched_class=""
+    for class_name in "${STORAGE_REPORT_CLASS_NAMES[@]}"; do
+      pattern="${STORAGE_REPORT_CLASS_PATTERNS[$class_name]}"
+      if [[ "$rel_path" == $pattern ]]; then
+        matched_class="$class_name"
+        break
+      fi
+    done
+    [[ -n "$matched_class" ]] || continue
+
+    if path_matches_any_pattern "$rel_path" "${CRITICAL_PATTERNS[@]}" || path_matches_any_pattern "$rel_path" "${DENYLIST_PATTERNS[@]}"; then
+      class_protected_counts["$matched_class"]=$(( ${class_protected_counts["$matched_class"]:-0} + 1 ))
+      continue
+    fi
+
+    class_counts["$matched_class"]=$(( ${class_counts["$matched_class"]:-0} + 1 ))
+    class_bytes["$matched_class"]=$(( ${class_bytes["$matched_class"]:-0} + file_bytes ))
+  done < <(find logs storage/dumps storage/handoff -maxdepth 1 -type f -printf '%p\t%s\n' 2>/dev/null)
+
+  for class_name in "${STORAGE_REPORT_CLASS_NAMES[@]}"; do
+    pattern="${STORAGE_REPORT_CLASS_PATTERNS[$class_name]}"
+    tier="${STORAGE_REPORT_CLASS_TIERS[$class_name]}"
+    weight="${STORAGE_REPORT_CLASS_WEIGHTS[$class_name]}"
+    tier_weight="$(weight_for_tier "$tier")"
+    class_count="${class_counts[$class_name]:-0}"
+    protected_count="${class_protected_counts[$class_name]:-0}"
+    bytes_total="${class_bytes[$class_name]:-0}"
+    weighted_bytes=$((bytes_total * weight * tier_weight))
+    total_count=$((total_count + class_count))
+    total_protected=$((total_protected + protected_count))
+    total_bytes=$((total_bytes + bytes_total))
+    total_weighted_bytes=$((total_weighted_bytes + weighted_bytes))
+
+    echo "REPORT: target=storage class=${class_name} tier=${tier} tier_weight=${tier_weight} class_weight=${weight} pattern=${pattern} count=${class_count} protected=${protected_count} bytes_total=${bytes_total} weighted_bytes=${weighted_bytes}"
+  done
+
+  echo "SUMMARY: target=storage action=report-only class_count=${#STORAGE_REPORT_CLASS_NAMES[@]} count_total=${total_count} protected_total=${total_protected} bytes_total=${total_bytes} weighted_bytes_total=${total_weighted_bytes}"
+}
+
 run_target() {
   local target_key="$1"
   local ledger_file="$2"
@@ -304,7 +412,7 @@ run_target() {
 
 for arg in "$@"; do
   case "$arg" in
-    --target=sop|--target=pow|--target=both)
+    --target=sop|--target=pow|--target=both|--target=storage)
       TARGET="${arg#--target=}"
       ;;
     --dry-run)
@@ -336,7 +444,7 @@ for arg in "$@"; do
   esac
 done
 
-[[ "$TARGET" == "sop" || "$TARGET" == "pow" || "$TARGET" == "both" ]] || die "--target must be one of: sop, pow, both"
+[[ "$TARGET" == "sop" || "$TARGET" == "pow" || "$TARGET" == "both" || "$TARGET" == "storage" ]] || die "--target must be one of: sop, pow, both, storage"
 
 SOP_PATH="$(resolve_surface_leaf "${SOP_PATH}")"
 POW_PATH="$(resolve_surface_leaf "${POW_PATH}")"
@@ -364,6 +472,9 @@ if [[ "$TARGET" == "sop" || "$TARGET" == "both" ]]; then
 fi
 if [[ "$TARGET" == "pow" || "$TARGET" == "both" ]]; then
   run_target "pow" "$POW_PATH" "PoW" "PoW"
+fi
+if [[ "$TARGET" == "storage" ]]; then
+  emit_storage_report
 fi
 
 if (( SCRUB )); then

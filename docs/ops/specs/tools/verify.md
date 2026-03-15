@@ -22,6 +22,9 @@
 6. Run deterministic smoke and lint gates by mode:
    - `--mode=full` (default): `tools/test/bundle.sh`, `tools/test/factory.sh`, `tools/test/open.sh`, `tools/test/editor.sh`, `tools/lint/response.sh --test`, and `tools/lint/debt.sh`.
    - `--mode=certify-critical`: `tools/test/bundle.sh --mode=certify-critical` and `tools/test/open.sh`.
+7. Emit stable lane telemetry to stdout for every executed smoke/lint lane:
+   - `VERIFY-LANE: name=<lane> scope=<certify-critical|full-only> status=<pass|fail|missing> duration_seconds=<N> detail=<command-or-path>`
+   - Final recap lines use the same data as `VERIFY-LANE-SUMMARY: ...`
 
 ## Invocation modes
 - `bash tools/verify.sh`
@@ -35,3 +38,4 @@ The gate formalizes a recurring startup-failure class where missing required run
 
 ## Integrity Filter Warnings
 The script mixes hard failures and warnings by design; warning-only findings still indicate hygiene drift that can become blocking later. Intake packet enforcement inspects tracked files, so untracked staging artifacts are outside that specific guard. Factory reachability checks validate candidate and promotion pointers, not full semantic validity of downstream definition content. `--mode=certify-critical` is intentionally narrower than full verify and must not be treated as a substitute for the full hygiene pass outside certify.
+Lane summaries report only executed smoke/lint lanes, not the earlier in-process structural checks.

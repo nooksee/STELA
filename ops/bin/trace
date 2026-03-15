@@ -119,7 +119,7 @@ render_rows() {
 
   case "$format" in
     table)
-      printf 'caller\tlabel\tstamp\ttrace_digest\tpath\n'
+      printf 'caller\tlabel\tstamp\ttrace_digest\tduration_seconds\tpath\n'
       if (( ${#ROW_BUFFER[@]} > 0 )); then
         for row in "${ROW_BUFFER[@]}"; do
           printf '%s\n' "$row"
@@ -127,17 +127,18 @@ render_rows() {
       fi
       ;;
     md)
-      printf '| caller | label | stamp | trace_digest | path |\n'
-      printf '| --- | --- | --- | --- | --- |\n'
+      printf '| caller | label | stamp | trace_digest | duration_seconds | path |\n'
+      printf '| --- | --- | --- | --- | --- | --- |\n'
       if (( ${#ROW_BUFFER[@]} > 0 )); then
         for row in "${ROW_BUFFER[@]}"; do
-          local caller label stamp digest path
-          IFS=$'\t' read -r caller label stamp digest path <<< "$row"
-          printf '| %s | %s | %s | %s | %s |\n' \
+          local caller label stamp digest duration_seconds path
+          IFS=$'\t' read -r caller label stamp digest duration_seconds path <<< "$row"
+          printf '| %s | %s | %s | %s | %s | %s |\n' \
             "$(md_escape "$caller")" \
             "$(md_escape "$label")" \
             "$(md_escape "$stamp")" \
             "$(md_escape "$digest")" \
+            "$(md_escape "$duration_seconds")" \
             "$(md_escape "$path")"
         done
       fi
@@ -148,18 +149,19 @@ render_rows() {
         local index=0
         local total="${#ROW_BUFFER[@]}"
         for row in "${ROW_BUFFER[@]}"; do
-          local caller label stamp digest path
-          IFS=$'\t' read -r caller label stamp digest path <<< "$row"
+          local caller label stamp digest duration_seconds path
+          IFS=$'\t' read -r caller label stamp digest duration_seconds path <<< "$row"
           index=$((index + 1))
           local comma=""
           if (( index < total )); then
             comma=","
           fi
-          printf '  {"caller":"%s","label":"%s","stamp":"%s","trace_digest":"%s","path":"%s"}%s\n' \
+          printf '  {"caller":"%s","label":"%s","stamp":"%s","trace_digest":"%s","duration_seconds":"%s","path":"%s"}%s\n' \
             "$(json_escape "$caller")" \
             "$(json_escape "$label")" \
             "$(json_escape "$stamp")" \
             "$(json_escape "$digest")" \
+            "$(json_escape "$duration_seconds")" \
             "$(json_escape "$path")" \
             "$comma"
         done
@@ -411,11 +413,213 @@ infer_caller_label() {
   fi
 }
 
+read_leaf_body_scalar() {
+  local file="$1"
+  local key="$2"
+  awk -v key="$key" '
+    {
+      line=$0
+      gsub(/\r$/, "", line)
+      prefix="- " key ": "
+      if (index(line, prefix) == 1) {
+        value=substr(line, length(prefix) + 1)
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+        print value
+        exit
+      }
+    }
+  ' "$file" | head -n 1
+}
+
+resolve_row_duration() {
+  local caller="$1"
+  local label="$2"
+  local stamp="$3"
+  local digest="$4"
+  local file="$5"
+
+  local explicit_duration=""
+  if [[ "$caller" == "certify" && "$label" != "start" && "$label" != "finish" ]]; then
+    explicit_duration="$(read_leaf_body_scalar "$file" "total_duration_seconds")"
+    if [[ "$explicit_duration" =~ ^[0-9]+$ ]]; then
+      printf '%s' "$explicit_duration"
+      return 0
+    fi
+  fi
+
+  if [[ "$label" == "finish" ]]; then
+    local finish_epoch
+    finish_epoch="$(stamp_to_epoch "$stamp" || true)"
+    if [[ -n "$finish_epoch" ]]; then
+      local start_file=""
+      local start_stamp=""
+      local start_epoch=""
+      local latest_start_stamp=""
+      shopt -s nullglob
+      for start_file in logs/"${caller}"-start-*-"${digest}".md; do
+        parse_leaf_filename "$start_file" || continue
+        start_stamp="$LEAF_STAMP"
+        if [[ "$start_stamp" > "$stamp" ]]; then
+          continue
+        fi
+        if [[ -z "$latest_start_stamp" || "$start_stamp" > "$latest_start_stamp" ]]; then
+          latest_start_stamp="$start_stamp"
+        fi
+      done
+      shopt -u nullglob
+      if [[ -n "$latest_start_stamp" ]]; then
+        start_epoch="$(stamp_to_epoch "$latest_start_stamp" || true)"
+        if [[ -n "$start_epoch" && "$finish_epoch" -ge "$start_epoch" ]]; then
+          printf '%s' $((finish_epoch - start_epoch))
+          return 0
+        fi
+      fi
+    fi
+  fi
+
+  printf '%s' "$UNKNOWN_VALUE"
+}
+
+build_recent_rows() {
+  local limit="$1"
+  local -a recent_files=()
+  local file=""
+
+  ROW_BUFFER=()
+  if [[ ! -d logs ]]; then
+    return 0
+  fi
+
+  mapfile -t recent_files < <(
+    find logs -maxdepth 1 -type f -name '*.md' -printf '%f\t%p\n' |
+      awk -F $'\t' '
+        match($1, /-([0-9]{8}T[0-9]{6}Z)-[^-]+\.md$/, captures) {
+          print captures[1] "\t" $2
+        }
+      ' |
+      LC_ALL=C sort -t $'\t' -k1,1r -k2,2 |
+      head -n "$limit" |
+      cut -f2-
+  )
+
+  for file in "${recent_files[@]}"; do
+    parse_leaf_filename "$file" || continue
+    FM_TRACE_ID=""
+    FM_CALLER=""
+    FM_LABEL=""
+    FM_CREATED_AT=""
+    FM_PREVIOUS=""
+    infer_caller_label "$LEAF_PREFIX" "$FM_CALLER" "$FM_LABEL"
+    ROW_BUFFER+=("${RES_CALLER}"$'\t'"${RES_LABEL}"$'\t'"${LEAF_STAMP}"$'\t'"${LEAF_DIGEST}"$'\t'"$(resolve_row_duration "$RES_CALLER" "$RES_LABEL" "$LEAF_STAMP" "$LEAF_DIGEST" "$file")"$'\t'"${file}")
+  done
+}
+
+build_caller_rows() {
+  local caller_slug="$1"
+  local -a raw_rows=()
+  declare -A latest_start_epoch_by_key=()
+  local file=""
+
+  ROW_BUFFER=()
+  shopt -s nullglob
+  for file in logs/"${caller_slug}"-*.md; do
+    parse_leaf_filename "$file" || continue
+    FM_TRACE_ID=""
+    FM_CALLER=""
+    FM_LABEL=""
+    FM_CREATED_AT=""
+    FM_PREVIOUS=""
+    infer_caller_label "$LEAF_PREFIX" "$FM_CALLER" "$FM_LABEL"
+    [[ "$RES_CALLER" == "$caller_slug" ]] || continue
+
+    local row_key="${RES_CALLER}"$'\t'"${LEAF_DIGEST}"
+    local leaf_epoch=""
+    leaf_epoch="$(stamp_to_epoch "$LEAF_STAMP" || true)"
+    if [[ "$RES_LABEL" == "start" && -n "$leaf_epoch" ]]; then
+      local existing_start="${latest_start_epoch_by_key[$row_key]-}"
+      if [[ -z "$existing_start" || "$leaf_epoch" -gt "$existing_start" ]]; then
+        latest_start_epoch_by_key["$row_key"]="$leaf_epoch"
+      fi
+    fi
+
+    raw_rows+=("${RES_CALLER}"$'\t'"${RES_LABEL}"$'\t'"${LEAF_STAMP}"$'\t'"${LEAF_DIGEST}"$'\t'"${file}")
+  done
+  shopt -u nullglob
+
+  local raw_row caller label stamp digest duration_seconds row_key finish_epoch start_epoch
+  for raw_row in "${raw_rows[@]}"; do
+    IFS=$'\t' read -r caller label stamp digest file <<< "$raw_row"
+    duration_seconds="$UNKNOWN_VALUE"
+    if [[ "$label" == "finish" ]]; then
+      row_key="${caller}"$'\t'"${digest}"
+      start_epoch="${latest_start_epoch_by_key[$row_key]-}"
+      finish_epoch="$(stamp_to_epoch "$stamp" || true)"
+      if [[ -n "$start_epoch" && -n "$finish_epoch" && "$finish_epoch" -ge "$start_epoch" ]]; then
+        duration_seconds=$((finish_epoch - start_epoch))
+      fi
+    elif [[ "$caller" == "certify" && "$label" != "start" && "$label" != "finish" ]]; then
+      duration_seconds="$(resolve_row_duration "$caller" "$label" "$stamp" "$digest" "$file")"
+    fi
+    ROW_BUFFER+=("${caller}"$'\t'"${label}"$'\t'"${stamp}"$'\t'"${digest}"$'\t'"${duration_seconds}"$'\t'"${file}")
+  done
+}
+
+build_trace_rows() {
+  local digest="$1"
+  local trace_id="$2"
+  local -a raw_rows=()
+  declare -A latest_start_epoch_by_key=()
+  local file=""
+
+  ROW_BUFFER=()
+  shopt -s nullglob
+  for file in logs/*-"${digest}".md; do
+    parse_leaf_filename "$file" || continue
+    read_frontmatter_fields "$file"
+    infer_caller_label "$LEAF_PREFIX" "$FM_CALLER" "$FM_LABEL"
+    if [[ -n "$trace_id" && -n "$FM_TRACE_ID" && "$FM_TRACE_ID" != "$trace_id" ]]; then
+      continue
+    fi
+
+    local row_key="${RES_CALLER}"$'\t'"${LEAF_DIGEST}"
+    local leaf_epoch=""
+    leaf_epoch="$(stamp_to_epoch "$LEAF_STAMP" || true)"
+    if [[ "$RES_LABEL" == "start" && -n "$leaf_epoch" ]]; then
+      local existing_start="${latest_start_epoch_by_key[$row_key]-}"
+      if [[ -z "$existing_start" || "$leaf_epoch" -gt "$existing_start" ]]; then
+        latest_start_epoch_by_key["$row_key"]="$leaf_epoch"
+      fi
+    fi
+
+    raw_rows+=("${RES_CALLER}"$'\t'"${RES_LABEL}"$'\t'"${LEAF_STAMP}"$'\t'"${LEAF_DIGEST}"$'\t'"${file}")
+  done
+  shopt -u nullglob
+
+  local raw_row caller label stamp row_digest duration_seconds row_key finish_epoch start_epoch
+  for raw_row in "${raw_rows[@]}"; do
+    IFS=$'\t' read -r caller label stamp row_digest file <<< "$raw_row"
+    duration_seconds="$UNKNOWN_VALUE"
+    if [[ "$label" == "finish" ]]; then
+      row_key="${caller}"$'\t'"${row_digest}"
+      start_epoch="${latest_start_epoch_by_key[$row_key]-}"
+      finish_epoch="$(stamp_to_epoch "$stamp" || true)"
+      if [[ -n "$start_epoch" && -n "$finish_epoch" && "$finish_epoch" -ge "$start_epoch" ]]; then
+        duration_seconds=$((finish_epoch - start_epoch))
+      fi
+    elif [[ "$caller" == "certify" && "$label" != "start" && "$label" != "finish" ]]; then
+      duration_seconds="$(resolve_row_duration "$caller" "$label" "$stamp" "$row_digest" "$file")"
+    fi
+    ROW_BUFFER+=("${caller}"$'\t'"${label}"$'\t'"${stamp}"$'\t'"${row_digest}"$'\t'"${duration_seconds}"$'\t'"${file}")
+  done
+}
+
 build_leaf_rows() {
   local filter_caller="$1"
   local filter_digest="$2"
   local filter_trace_id="$3"
   local read_frontmatter="$4"
+  local -a raw_rows=()
+  declare -A latest_start_epoch_by_key=()
 
   ROW_BUFFER=()
 
@@ -450,8 +654,35 @@ build_leaf_rows() {
       continue
     fi
 
-    ROW_BUFFER+=("${RES_CALLER}"$'\t'"${RES_LABEL}"$'\t'"${LEAF_STAMP}"$'\t'"${LEAF_DIGEST}"$'\t'"${file}")
+    local row_key="${RES_CALLER}"$'\t'"${LEAF_DIGEST}"
+    local leaf_epoch=""
+    leaf_epoch="$(stamp_to_epoch "$LEAF_STAMP" || true)"
+    if [[ "$RES_LABEL" == "start" && -n "$leaf_epoch" ]]; then
+      local existing_start="${latest_start_epoch_by_key[$row_key]-}"
+      if [[ -z "$existing_start" || "$leaf_epoch" -gt "$existing_start" ]]; then
+        latest_start_epoch_by_key["$row_key"]="$leaf_epoch"
+      fi
+    fi
+
+    raw_rows+=("${RES_CALLER}"$'\t'"${RES_LABEL}"$'\t'"${LEAF_STAMP}"$'\t'"${LEAF_DIGEST}"$'\t'"${file}")
   done < <(find logs -maxdepth 1 -type f -name '*.md' -print)
+
+  local raw_row caller label stamp digest file duration_seconds row_key finish_epoch start_epoch
+  for raw_row in "${raw_rows[@]}"; do
+    IFS=$'\t' read -r caller label stamp digest file <<< "$raw_row"
+    duration_seconds="$UNKNOWN_VALUE"
+    if [[ "$label" == "finish" ]]; then
+      row_key="${caller}"$'\t'"${digest}"
+      start_epoch="${latest_start_epoch_by_key[$row_key]-}"
+      finish_epoch="$(stamp_to_epoch "$stamp" || true)"
+      if [[ -n "$start_epoch" && -n "$finish_epoch" && "$finish_epoch" -ge "$start_epoch" ]]; then
+        duration_seconds=$((finish_epoch - start_epoch))
+      fi
+    elif [[ "$caller" == "certify" && "$label" != "start" && "$label" != "finish" ]]; then
+      duration_seconds="$(resolve_row_duration "$caller" "$label" "$stamp" "$digest" "$file")"
+    fi
+    ROW_BUFFER+=("${caller}"$'\t'"${label}"$'\t'"${stamp}"$'\t'"${digest}"$'\t'"${duration_seconds}"$'\t'"${file}")
+  done
 }
 
 sort_rows_by_stamp_desc() {
@@ -459,7 +690,7 @@ sort_rows_by_stamp_desc() {
     return 0
   fi
 
-  mapfile -t ROW_BUFFER < <(printf '%s\n' "${ROW_BUFFER[@]}" | sort -t $'\t' -k3,3r -k5,5)
+  mapfile -t ROW_BUFFER < <(printf '%s\n' "${ROW_BUFFER[@]}" | sort -t $'\t' -k3,3r -k6,6)
 }
 
 limit_rows() {
@@ -495,9 +726,7 @@ cmd_recent() {
   done
 
   load_heads
-  build_leaf_rows "" "" "" "0"
-  sort_rows_by_stamp_desc
-  limit_rows "$limit"
+  build_recent_rows "$limit"
   render_rows "$format"
 }
 
@@ -535,8 +764,8 @@ cmd_callers() {
 
   local row=""
   for row in "${ROW_BUFFER[@]}"; do
-    local parsed_caller parsed_label parsed_stamp parsed_digest parsed_path
-    IFS=$'\t' read -r parsed_caller parsed_label parsed_stamp parsed_digest parsed_path <<< "$row"
+    local parsed_caller parsed_label parsed_stamp parsed_digest parsed_duration parsed_path
+    IFS=$'\t' read -r parsed_caller parsed_label parsed_stamp parsed_digest parsed_duration parsed_path <<< "$row"
     caller_set["$parsed_caller"]=1
   done
 
@@ -550,7 +779,7 @@ cmd_callers() {
     local pointer="${HEAD_POINTERS[$caller]-}"
     local pointer_display
     pointer_display="$(resolve_head_value_for_callers "$pointer")"
-    ROW_BUFFER+=("${caller}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${pointer_display}")
+    ROW_BUFFER+=("${caller}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${pointer_display}")
   done
 
   render_rows "$format"
@@ -595,7 +824,7 @@ cmd_by_caller() {
   [[ -n "$caller_slug" ]] || die "by-caller resolved empty caller slug from input: ${caller_input}"
 
   load_heads
-  build_leaf_rows "$caller_slug" "" "" "0"
+  build_caller_rows "$caller_slug"
   sort_rows_by_stamp_desc
   limit_rows "$limit"
   render_rows "$format"
@@ -634,7 +863,7 @@ cmd_by_trace() {
   digest="$(short_hash "$trace_id")"
 
   load_heads
-  build_leaf_rows "" "$digest" "$trace_id" "1"
+  build_trace_rows "$digest" "$trace_id"
   sort_rows_by_stamp_desc
   render_rows "$format"
 }
@@ -672,7 +901,7 @@ cmd_heads() {
     local pointer_raw="${HEAD_POINTERS[$caller]-}"
     local pointer_display
     pointer_display="$(resolve_head_value_for_heads "$pointer_raw")"
-    ROW_BUFFER+=("${caller}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${pointer_display}")
+    ROW_BUFFER+=("${caller}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${UNKNOWN_VALUE}"$'\t'"${pointer_display}")
   done
 
   render_rows "$format"

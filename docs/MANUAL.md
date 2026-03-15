@@ -107,7 +107,13 @@ Run:
 bash tools/lint/results.sh storage/handoff/DP-OPS-XXXX-RESULTS.md
 ~~~
 `ops/bin/certify` now fails in explicit phases: `preflight`, `replay`, `verify`, `postflight`, and `results`. Cheap closeout defects such as malformed closing sidecar content, malformed narrative scaffolds, missing trace / OPEN prerequisites, or obviously stale receipt-command shapes must fail in `preflight` before long replay begins. Certify emits `Certify phase: <phase>` on phase changes and phase-tags hard-fail output as `ERROR [<phase>]`.
+At the end of a run, certify also emits stable timing summaries:
+- `CERTIFY-PHASE: name=<phase> duration_seconds=<N>`
+- `CERTIFY-LONG-POLE: rank=<N> phase=<phase> command_id=<id> duration_seconds=<N> command=<sanitized-command>`
 When certify replays a plain `bash tools/verify.sh` receipt line, it rewrites that invocation to `bash tools/verify.sh --mode=certify-critical` inside the certify loop. The bounded certify-critical mode preserves closeout-safety bundle/open smoke checks while leaving full repo verify coverage available through standalone `./tools/verify.sh --mode=full`. Narrative scaffold validation stays in certify preflight, so editor smoke remains full-verify only.
+`tools/verify.sh` emits stable lane lines for each executed smoke/lint lane:
+- `VERIFY-LANE: name=<lane> scope=<certify-critical|full-only> status=<pass|fail|missing> duration_seconds=<N> detail=<command-or-path>`
+- `VERIFY-LANE-SUMMARY: ...`
 `ops/bin/certify` runs integrity checks, executes the Section 3.4.5 verification command list, renders the RESULTS receipt from template, and runs `tools/lint/results.sh` as a hard gate.
 Note: certify resolves the target DP from the TASK head leaf by default. Ensure the TASK head leaf is structurally valid and contains the live current DP block before running certify. If the TASK head leaf is absent or invalid, certify falls back to the intake packet; this fallback is a recovery path only.
 `tools/lint/results.sh` enforces the RESULTS schema through `## Contractor Execution Narrative` and required Decision Leaf lines. Closing sidecar schema validation remains `ops/bin/certify` authority against `ops/lib/manifests/CLOSING.md` (Section 1).
@@ -588,7 +594,7 @@ Telemetry callers write leaves at `logs/<caller>-<label>-<stamp>-<trace-digest>.
 # Caller list with current head pointer values
 ./ops/bin/trace callers
 
-# Recent telemetry leaves (default table output)
+# Recent telemetry leaves (default table output includes duration_seconds when known)
 ./ops/bin/trace recent --limit=30
 
 # Recent leaves in markdown or JSON
@@ -597,6 +603,9 @@ Telemetry callers write leaves at `logs/<caller>-<label>-<stamp>-<trace-digest>.
 
 # Filter by caller slug
 ./ops/bin/trace by-caller open --limit=10
+./ops/bin/trace by-caller verify --limit=10
+./ops/bin/trace by-caller certify --limit=10
+./ops/bin/trace by-caller prune --limit=10
 
 # Filter by trace identifier (digest computed internally)
 ./ops/bin/trace by-trace stela-20260227T202038Z-6dd41793
@@ -614,6 +623,15 @@ bash tools/lint/leaf.sh --health
 `trace health` reports gap findings but exits zero and is safe to run at any
 time. `bash tools/lint/leaf.sh --health` exits non-zero when gaps are found and
 is suitable for CI or pre-closeout manual gates.
+
+### Prune Pressure Report
+~~~bash
+./ops/bin/prune --target=storage --phase=report --dry-run
+~~~
+
+`--target=storage` is report-only. It emits weighted pressure rows for disposable
+runtime artifact classes under `logs/`, `storage/dumps/`, and generated bundle
+artifacts under `storage/handoff/` while skipping live protected proof surfaces.
 
 Legacy shell pipelines remain available as secondary reference:
 

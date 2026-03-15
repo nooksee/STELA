@@ -34,3 +34,16 @@ pattern=storage/dp/active/*
 pattern=TASK.md
 pattern=SoP.md
 pattern=PoW.md
+
+## Storage Report Classes
+class=telemetry-leaves|pattern=logs/*.md|tier=historical|weight=1
+class=telemetry-heads|pattern=logs/*.telemetry.head|tier=operational|weight=1
+class=dump-payloads|pattern=storage/dumps/dump-*.txt|tier=historical|weight=3
+class=dump-manifests|pattern=storage/dumps/dump-*.manifest.txt|tier=historical|weight=2
+class=analyst-bundles|pattern=storage/handoff/ANALYST-*|tier=historical|weight=2
+class=architect-bundles|pattern=storage/handoff/ARCHITECT-*|tier=historical|weight=2
+class=audit-bundles|pattern=storage/handoff/AUDIT-*|tier=historical|weight=2
+class=conform-bundles|pattern=storage/handoff/CONFORM-*|tier=historical|weight=2
+class=foreman-bundles|pattern=storage/handoff/FOREMAN-*|tier=historical|weight=2
+class=project-bundles|pattern=storage/handoff/PROJECT-*|tier=historical|weight=2
+class=legacy-bundles|pattern=storage/handoff/BUNDLE-*|tier=historical|weight=2

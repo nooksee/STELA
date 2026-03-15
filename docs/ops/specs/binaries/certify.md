@@ -15,6 +15,14 @@
 6. `results`: capture diff outputs, render RESULTS via `ops/bin/template render results` with the `CONTRACTOR_NARRATIVE` slot populated from the collected narrative, append `dump_manifest` in Scope Verification alongside the allowlist pointer (`none` when no dump command was present in the DP receipt section; value is disposable-reference sanitized before RESULTS render), lint RESULTS, verify structural headings and hash parity, move intake DP to processed storage when present, emit telemetry leaf output, and print receipt paths.
 
 Certify emits `Certify phase: <phase>` when the active phase changes, and all hard-fail exits are tagged as `ERROR [<phase>]` so closeout failures are phase-local without requiring transcript archaeology.
+At completion, certify also emits two stable summary blocks to stdout:
+- `CERTIFY-PHASE: name=<phase> duration_seconds=<N>`
+- `CERTIFY-LONG-POLE: rank=<N> phase=<phase> command_id=<id> duration_seconds=<N> command=<sanitized-command>`
+
+The certify telemetry leaf includes:
+- `total_duration_seconds`
+- the phase summary block
+- the long-pole summary block
 
 ### Contractor Execution Narrative Capture
 At certify start, after integrity initialization and before command execution, certify writes a scaffold block to `${TMP_DIR}/narrative.md` with the following subsection structure:
@@ -42,6 +50,7 @@ The DP-OPS-0074 enforcement-model gap exposed ambiguity between permissive recei
 ## Integrity Filter Warnings
 Certification stops on unknown arguments, packet mismatch against work-branch naming, missing closing sidecar, empty closing sidecar, missing DP block in TASK when intake fallback is not explicitly authorized, malformed allowlist pointers, unsupported command substitution or glob tokens in receipt commands, integrity lint failure, any verification command failure, invalid Freshness Stamp format, missing trace identity, pointer resolution failure, unresolved template tokens in RESULTS, results lint failure, or changed files outside the allowlist. The binary sanitizes disposable artifact references in command logs, but it does not permit disposable artifact references inside DP or RESULTS surfaces. Contractor narrative validation stops certification when the narrative contains placeholder text or untouched scaffold prose, is missing required subsections, or is missing required Decision Leaf field lines. Preflight failures must stop before replay; replay must not be used to discover malformed sidecar, malformed narrative, or missing trace prerequisites.
 In addendum mode, the binary additionally stops on: `--addendum` present without `--dp`; `--addendum` value that is not a single uppercase letter; missing addendum intake artifact with no fallback; or addendum SCOPE_DELTA entries containing glob or brace expansion tokens.
+Phase and long-pole summaries are observational only. They do not alter replay order, command selection, or pass/fail semantics.
 
 ## Rerun Path
 

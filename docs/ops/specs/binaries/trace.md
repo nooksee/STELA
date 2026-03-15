@@ -20,11 +20,14 @@ Defaults and options:
 Subcommands:
 - `recent --limit=N`: scans `logs/*.md` for telemetry leaves matching
   `logs/<caller>-<label>-<stamp>-<trace-digest>.md`, sorts by stamp descending,
-  and returns the latest N rows.
+  and returns the latest N rows. When a leaf body provides `total_duration_seconds`
+  or when a `finish` leaf has a matching `start` leaf for the same caller and trace
+  digest, the row includes `duration_seconds`.
 - `callers`: discovers callers from `logs/*.telemetry.head` and leaf filenames,
   and reports caller plus current head pointer value when present.
 - `by-caller <name> --limit=N`: normalizes `<name>` with telemetry slug rules
-  (lowercase alphanumeric with hyphens) and returns the latest N rows for that caller.
+  (lowercase alphanumeric with hyphens) and returns the latest N rows for that caller
+  with the same `duration_seconds` behavior as `recent`.
 - `by-trace <trace_id>`: computes the digest with telemetry `short_hash(trace_id)`,
   filters leaves by digest suffix, and validates candidates with YAML
   frontmatter `trace_id` when present.
@@ -49,13 +52,14 @@ Frontmatter handling:
   fail listing operations.
 
 Output columns:
-- `caller`, `label`, `stamp`, `trace_digest`, `path`
+- `caller`, `label`, `stamp`, `trace_digest`, `duration_seconds`, `path`
 
 CLI examples:
 ~~~bash
 ./ops/bin/trace heads
 ./ops/bin/trace callers
 ./ops/bin/trace recent --limit=10
+./ops/bin/trace by-caller verify --limit=10
 ./ops/bin/trace by-caller open --limit=10
 ./ops/bin/trace by-trace stela-20260227T202038Z-6dd41793
 ./ops/bin/trace health

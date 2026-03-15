@@ -55,6 +55,7 @@ echo
 
 errors=0
 warnings=0
+declare -a VERIFY_LANE_ROWS=()
 
 fail() {
   echo "FAIL: $1" >&2
@@ -64,6 +65,51 @@ fail() {
 warn() {
   echo "WARN: $1" >&2
   warnings=$((warnings+1))
+}
+
+record_verify_lane() {
+  local lane="$1"
+  local scope="$2"
+  local status="$3"
+  local duration_seconds="$4"
+  local detail="$5"
+  VERIFY_LANE_ROWS+=("${lane}"$'\t'"${scope}"$'\t'"${status}"$'\t'"${duration_seconds}"$'\t'"${detail}")
+  printf 'VERIFY-LANE: name=%s scope=%s status=%s duration_seconds=%s detail=%s\n' \
+    "$lane" "$scope" "$status" "$duration_seconds" "$detail"
+}
+
+run_verify_lane() {
+  local lane="$1"
+  local scope="$2"
+  local detail="$3"
+  shift 3
+
+  local start_epoch finish_epoch duration_seconds exit_code status
+  start_epoch="$(date +%s)"
+  set +e
+  "$@"
+  exit_code=$?
+  set -e
+  finish_epoch="$(date +%s)"
+  duration_seconds=$((finish_epoch - start_epoch))
+  if [[ "$exit_code" -eq 0 ]]; then
+    status="pass"
+  else
+    status="fail"
+  fi
+  record_verify_lane "$lane" "$scope" "$status" "$duration_seconds" "$detail"
+  return "$exit_code"
+}
+
+emit_verify_lane_summary() {
+  local row lane scope status duration_seconds detail
+  echo
+  echo "Verify lane summary:"
+  for row in "${VERIFY_LANE_ROWS[@]}"; do
+    IFS=$'\t' read -r lane scope status duration_seconds detail <<< "$row"
+    printf 'VERIFY-LANE-SUMMARY: name=%s scope=%s status=%s duration_seconds=%s detail=%s\n' \
+      "$lane" "$scope" "$status" "$duration_seconds" "$detail"
+  done
 }
 
 read_factory_head_value() {
@@ -317,51 +363,59 @@ else
 fi
 
 if [[ ! -f "tools/test/bundle.sh" ]]; then
+  record_verify_lane "bundle-smoke" "certify-critical" "missing" "0" "tools/test/bundle.sh"
   fail "Missing required test script: tools/test/bundle.sh"
 elif [[ "$VERIFY_MODE" == "full" ]]; then
-  if ! bash tools/test/bundle.sh; then
+  if ! run_verify_lane "bundle-smoke" "certify-critical" "bash tools/test/bundle.sh" bash tools/test/bundle.sh; then
     fail "Bundle smoke test failed: tools/test/bundle.sh"
   fi
 else
-  if ! bash tools/test/bundle.sh --mode=certify-critical; then
+  if ! run_verify_lane "bundle-smoke" "certify-critical" "bash tools/test/bundle.sh --mode=certify-critical" bash tools/test/bundle.sh --mode=certify-critical; then
     fail "Bundle smoke test failed: tools/test/bundle.sh --mode=certify-critical"
   fi
 fi
 
 if [[ "$VERIFY_MODE" == "full" ]]; then
   if [[ ! -f "tools/test/factory.sh" ]]; then
+    record_verify_lane "factory-smoke" "full-only" "missing" "0" "tools/test/factory.sh"
     fail "Missing required test script: tools/test/factory.sh"
-  elif ! bash tools/test/factory.sh; then
+  elif ! run_verify_lane "factory-smoke" "full-only" "bash tools/test/factory.sh" bash tools/test/factory.sh; then
     fail "Factory smoke test failed: tools/test/factory.sh"
   fi
 fi
 
 if [[ ! -f "tools/test/open.sh" ]]; then
+  record_verify_lane "open-dedup" "certify-critical" "missing" "0" "tools/test/open.sh"
   fail "Missing required test script: tools/test/open.sh"
-elif ! bash tools/test/open.sh; then
+elif ! run_verify_lane "open-dedup" "certify-critical" "bash tools/test/open.sh" bash tools/test/open.sh; then
   fail "OPEN de-dup test failed: tools/test/open.sh"
 fi
 
 if [[ ! -f "tools/test/editor.sh" ]]; then
+  record_verify_lane "editor-scaffold" "full-only" "missing" "0" "tools/test/editor.sh"
   fail "Missing required test script: tools/test/editor.sh"
-elif [[ "$VERIFY_MODE" == "full" ]] && ! bash tools/test/editor.sh; then
+elif [[ "$VERIFY_MODE" == "full" ]] && ! run_verify_lane "editor-scaffold" "full-only" "bash tools/test/editor.sh" bash tools/test/editor.sh; then
   fail "Editor scaffold test failed: tools/test/editor.sh"
 fi
 
 if [[ "$VERIFY_MODE" == "full" ]]; then
   if [[ ! -f "tools/lint/response.sh" ]]; then
+    record_verify_lane "response-self-test" "full-only" "missing" "0" "tools/lint/response.sh --test"
     fail "Missing required lint script: tools/lint/response.sh"
-  elif ! bash tools/lint/response.sh --test; then
+  elif ! run_verify_lane "response-self-test" "full-only" "bash tools/lint/response.sh --test" bash tools/lint/response.sh --test; then
     fail "Response envelope lint self-test failed: tools/lint/response.sh --test"
   fi
 
   if [[ ! -f "tools/lint/debt.sh" ]]; then
+    record_verify_lane "guard-debt-lint" "full-only" "missing" "0" "tools/lint/debt.sh"
     fail "Missing required lint script: tools/lint/debt.sh"
-  elif ! bash tools/lint/debt.sh; then
+  elif ! run_verify_lane "guard-debt-lint" "full-only" "bash tools/lint/debt.sh" bash tools/lint/debt.sh; then
     fail "Guard debt lint failed: tools/lint/debt.sh"
   fi
 fi
 
+echo
+emit_verify_lane_summary
 echo
 if [[ $errors -eq 0 ]]; then
   if [[ $warnings -eq 0 ]]; then
