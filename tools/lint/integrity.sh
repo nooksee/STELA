@@ -71,6 +71,59 @@ resolve_task_surface_path() {
   die "TASK is single-line but not a valid archives/surfaces pointer: ${pointer_path}"
 }
 
+current_generated_surface_pointer() {
+  local surface_path="$1"
+  local surface_name
+  surface_name="$(basename "$surface_path")"
+  local pointer_regex=""
+
+  case "$surface_name" in
+    PoW.md)
+      pointer_regex='^archives/surfaces/PoW-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{7,}\.md$'
+      ;;
+    SoP.md)
+      pointer_regex='^archives/surfaces/SoP-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{7,}\.md$'
+      ;;
+    TASK.md)
+      pointer_regex='^archives/surfaces/TASK-DP-[A-Z]+-[0-9]{4,}(-ADDENDUM-[A-Z])?-[0-9a-f]{7,}\.md$'
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  [[ -f "$surface_path" ]] || return 1
+  local line_count
+  line_count="$(awk 'END { print NR }' "$surface_path")"
+  [[ "$line_count" == "1" ]] || return 1
+
+  local pointer_path
+  pointer_path="$(trim "$(cat "$surface_path")")"
+  pointer_path="$(normalize_path "$pointer_path")"
+  [[ "$pointer_path" =~ $pointer_regex ]] || return 1
+  [[ -f "${REPO_ROOT}/${pointer_path}" ]] || return 1
+  printf '%s' "$pointer_path"
+}
+
+path_is_generated_surface_owned() {
+  local path="$1"
+  local normalized
+  normalized="$(normalize_path "$path")"
+
+  local surface_rel pointer_rel
+  for surface_rel in PoW.md SoP.md TASK.md; do
+    pointer_rel="$(current_generated_surface_pointer "${REPO_ROOT}/${surface_rel}" || true)"
+    if [[ -z "$pointer_rel" ]]; then
+      continue
+    fi
+    if [[ "$normalized" == "$surface_rel" || "$normalized" == "$pointer_rel" ]]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
 extract_allowlist_pointer() {
   local source_path="$1"
   awk '
@@ -193,6 +246,9 @@ done
 
 path_is_allowlisted() {
   local path="$1"
+  if path_is_generated_surface_owned "$path"; then
+    return 0
+  fi
   if [[ -n "${allowlisted[$path]+set}" ]]; then
     return 0
   fi

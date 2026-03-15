@@ -82,23 +82,20 @@ Keep `storage/handoff/CLOSING-DP-OPS-XXXX.md` populated throughout execution.
 2. Generate Results
 #### Pre-Certify Allowlist Declaration (required when DP scope includes closeout)
 
-Before invoking `ops/bin/certify`, confirm that the following three paths are present
-in `storage/dp/active/allowlist.txt`:
-
-- PoW.md
-- SoP.md
-- TASK.md
-
-Then run `./ops/bin/allowlist` as a required pre-certify dry-run. This helper
+Before invoking `ops/bin/certify`, run `./ops/bin/allowlist` as a required pre-certify dry-run. This helper
 reproduces the RESULTS allowlist subset checks for tracked-changed and untracked
 paths and prints ready-to-paste allowlist lines for any missing entries.
 
-Rationale: `ops/bin/certify` rewrites the current heads of these three canon surfaces
-to single-line archive pointers during closeout. These mutations are tracked by git
-and must be allowlist-covered before certify runs. Certify invokes
-`tools/lint/integrity.sh` internally; if any changed file is outside the allowlist,
-integrity.sh will hard-fail. Discovering this gap at runtime is a preventable
-protocol error.
+Rationale: `ops/bin/certify` now structurally owns its exact current-run generated
+surface set:
+- `PoW.md`
+- `SoP.md`
+- `TASK.md`
+- the three active `archives/surfaces/...` leaves it emits
+
+Those exact current-run generated paths no longer require packet-specific allowlist
+entries. All other touched tracked files still require normal allowlist coverage
+before certify runs.
 
 Run:
 ~~~bash
@@ -110,11 +107,14 @@ bash tools/lint/results.sh storage/handoff/DP-OPS-XXXX-RESULTS.md
 At the end of a run, certify also emits stable timing summaries:
 - `CERTIFY-PHASE: name=<phase> duration_seconds=<N>`
 - `CERTIFY-LONG-POLE: rank=<N> phase=<phase> command_id=<id> duration_seconds=<N> command=<sanitized-command>`
+Before replay, certify also prints the exact current-run generated-surface ownership set so the operator can see which paths are structurally certify-owned.
 When certify replays a plain `bash tools/verify.sh` receipt line, it rewrites that invocation to `bash tools/verify.sh --mode=certify-critical` inside the certify loop. The bounded certify-critical mode preserves closeout-safety bundle/open smoke checks while leaving full repo verify coverage available through standalone `./tools/verify.sh --mode=full`. Narrative scaffold validation stays in certify preflight, so editor smoke remains full-verify only.
 `tools/verify.sh` emits stable lane lines for each executed smoke/lint lane:
 - `VERIFY-LANE: name=<lane> scope=<certify-critical|full-only> status=<pass|fail|missing> duration_seconds=<N> detail=<command-or-path>`
 - `VERIFY-LANE-SUMMARY: ...`
+It also emits `VERIFY-LANE-ORDER: mode=<mode> order=<comma-separated-lanes>` before lane execution so the active fail-fast lane order is visible.
 `ops/bin/certify` runs integrity checks, executes the Section 3.4.5 verification command list, renders the RESULTS receipt from template, and runs `tools/lint/results.sh` as a hard gate.
+After surface emission, certify verifies that the active TASK leaf is packet-consistent and runs `./ops/bin/prune --target=dump --phase=report --dry-run` so closeout always captures dump-visible pressure. The prune report is observational receipt evidence only; it does not authorize canonical archive deletion.
 Note: certify resolves the target DP from the TASK head leaf by default. Ensure the TASK head leaf is structurally valid and contains the live current DP block before running certify. If the TASK head leaf is absent or invalid, certify falls back to the intake packet; this fallback is a recovery path only.
 `tools/lint/results.sh` enforces the RESULTS schema through `## Contractor Execution Narrative` and required Decision Leaf lines. Closing sidecar schema validation remains `ops/bin/certify` authority against `ops/lib/manifests/CLOSING.md` (Section 1).
 `ops/bin/certify` also emits schema-stamped surface leaves for PoW/SoP/TASK under `archives/surfaces/` and rewrites `PoW.md`, `SoP.md`, and `TASK.md` to single-line HEAD pointers to those leaves.

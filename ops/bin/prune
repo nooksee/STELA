@@ -36,16 +36,28 @@ declare -a STORAGE_REPORT_CLASS_NAMES=()
 declare -A STORAGE_REPORT_CLASS_PATTERNS=()
 declare -A STORAGE_REPORT_CLASS_TIERS=()
 declare -A STORAGE_REPORT_CLASS_WEIGHTS=()
+declare -a DUMP_REPORT_CLASS_NAMES=()
+declare -A DUMP_REPORT_CLASS_PATTERNS=()
+declare -A DUMP_REPORT_CLASS_TIERS=()
+declare -A DUMP_REPORT_CLASS_WEIGHTS=()
+declare -A DUMP_REPORT_CLASS_RETENTION=()
+declare -A DUMP_REPORT_CLASS_APPLY=()
+declare -a REPO_REPORT_CLASS_NAMES=()
+declare -A REPO_REPORT_CLASS_PATTERNS=()
+declare -A REPO_REPORT_CLASS_TIERS=()
+declare -A REPO_REPORT_CLASS_WEIGHTS=()
+declare -A REPO_REPORT_CLASS_RETENTION=()
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/prune [--target=sop|pow|both|storage] [--phase=report|apply] [--approve=TOKEN]
+Usage: ops/bin/prune [--target=sop|pow|both|storage|dump] [--phase=report|apply] [--approve=TOKEN]
                     [--dry-run] [--scrub] [--quarantine] [--quarantine-path=PATH]
 
 Notes:
 - report phase is non-mutating and is the default from policy.
 - apply phase requires --approve token that matches PRUNE policy.
 - storage target is report-only in this slice.
+- dump target reports dump-visible pressure and allows bounded apply only for dump-visible disposable classes.
 USAGE
 }
 
@@ -163,17 +175,64 @@ load_prune_policy() {
   (( ${#CRITICAL_PATTERNS[@]} > 0 )) || die "PRUNE.md missing critical patterns"
   (( ${#DENYLIST_PATTERNS[@]} > 0 )) || die "PRUNE.md missing denylist patterns"
   load_storage_report_classes
+  load_dump_report_classes
+  load_repo_report_classes
 }
 
-load_storage_report_classes() {
-  STORAGE_REPORT_CLASS_NAMES=()
-  STORAGE_REPORT_CLASS_PATTERNS=()
-  STORAGE_REPORT_CLASS_TIERS=()
-  STORAGE_REPORT_CLASS_WEIGHTS=()
+collect_policy_class_rows() {
+  local section_heading="$1"
+  awk -v section="$section_heading" '
+    $0 == section { in_section=1; next }
+    in_section && /^## / { exit }
+    in_section {
+      line=$0
+      sub(/^[[:space:]]+/, "", line)
+      sub(/[[:space:]]+$/, "", line)
+      if (line != "" && line !~ /^#/) {
+        print line
+      }
+    }
+  ' "$POLICY_PATH"
+}
+
+load_policy_report_classes() {
+  local section_heading="$1"
+  local names_name="$2"
+  local patterns_name="$3"
+  local tiers_name="$4"
+  local weights_name="$5"
+  local retention_name="${6:-}"
+  local apply_name="${7:-}"
+
+  local -n names_ref="$names_name"
+  local -n patterns_ref="$patterns_name"
+  local -n tiers_ref="$tiers_name"
+  local -n weights_ref="$weights_name"
+  local use_retention=0
+  local use_apply=0
+  if [[ -n "$retention_name" ]]; then
+    use_retention=1
+    local -n retention_ref="$retention_name"
+  fi
+  if [[ -n "$apply_name" ]]; then
+    use_apply=1
+    local -n apply_ref="$apply_name"
+  fi
+
+  names_ref=()
+  patterns_ref=()
+  tiers_ref=()
+  weights_ref=()
+  if (( use_retention )); then
+    retention_ref=()
+  fi
+  if (( use_apply )); then
+    apply_ref=()
+  fi
 
   while IFS= read -r raw_line; do
     [[ -n "$raw_line" ]] || continue
-    local class_name="" pattern="" tier="" weight="" field field_key field_value
+    local class_name="" pattern="" tier="" weight="" retention="" apply="" field field_key field_value
     IFS='|' read -ra fields <<< "$raw_line"
     for field in "${fields[@]}"; do
       field_key="${field%%=*}"
@@ -185,32 +244,63 @@ load_storage_report_classes() {
         pattern) pattern="$field_value" ;;
         tier) tier="$field_value" ;;
         weight) weight="$field_value" ;;
+        retention) retention="$field_value" ;;
+        apply) apply="$field_value" ;;
       esac
     done
 
-    [[ -n "$class_name" ]] || die "PRUNE.md storage report class missing class field"
-    [[ -n "$pattern" ]] || die "PRUNE.md storage report class missing pattern field (${class_name})"
-    [[ "$tier" == "critical" || "$tier" == "operational" || "$tier" == "historical" ]] || die "PRUNE.md storage report class has invalid tier (${class_name})"
-    require_int "storage_report_weight:${class_name}" "$weight"
+    [[ -n "$class_name" ]] || die "PRUNE.md class missing class field in ${section_heading}"
+    [[ -n "$pattern" ]] || die "PRUNE.md class missing pattern field (${class_name})"
+    [[ "$tier" == "critical" || "$tier" == "operational" || "$tier" == "historical" ]] || die "PRUNE.md class has invalid tier (${class_name})"
+    require_int "${section_heading}:${class_name}:weight" "$weight"
+    if (( use_retention )); then
+      [[ "$retention" == "canonical" || "$retention" == "disposable" ]] || die "PRUNE.md class has invalid retention (${class_name})"
+    fi
+    if (( use_apply )); then
+      [[ "$apply" == "0" || "$apply" == "1" ]] || die "PRUNE.md class has invalid apply flag (${class_name})"
+    fi
 
-    STORAGE_REPORT_CLASS_NAMES+=("$class_name")
-    STORAGE_REPORT_CLASS_PATTERNS["$class_name"]="$pattern"
-    STORAGE_REPORT_CLASS_TIERS["$class_name"]="$tier"
-    STORAGE_REPORT_CLASS_WEIGHTS["$class_name"]="$weight"
-  done < <(
-    awk '
-      $0 == "## Storage Report Classes" { in_section=1; next }
-      in_section && /^## / { exit }
-      in_section {
-        line=$0
-        sub(/^[[:space:]]+/, "", line)
-        sub(/[[:space:]]+$/, "", line)
-        if (line != "" && line !~ /^#/) {
-          print line
-        }
-      }
-    ' "$POLICY_PATH"
-  )
+    names_ref+=("$class_name")
+    patterns_ref["$class_name"]="$pattern"
+    tiers_ref["$class_name"]="$tier"
+    weights_ref["$class_name"]="$weight"
+    if (( use_retention )); then
+      retention_ref["$class_name"]="$retention"
+    fi
+    if (( use_apply )); then
+      apply_ref["$class_name"]="$apply"
+    fi
+  done < <(collect_policy_class_rows "$section_heading")
+}
+
+load_storage_report_classes() {
+  load_policy_report_classes \
+    "## Storage Report Classes" \
+    STORAGE_REPORT_CLASS_NAMES \
+    STORAGE_REPORT_CLASS_PATTERNS \
+    STORAGE_REPORT_CLASS_TIERS \
+    STORAGE_REPORT_CLASS_WEIGHTS
+}
+
+load_dump_report_classes() {
+  load_policy_report_classes \
+    "## Dump Report Classes" \
+    DUMP_REPORT_CLASS_NAMES \
+    DUMP_REPORT_CLASS_PATTERNS \
+    DUMP_REPORT_CLASS_TIERS \
+    DUMP_REPORT_CLASS_WEIGHTS \
+    DUMP_REPORT_CLASS_RETENTION \
+    DUMP_REPORT_CLASS_APPLY
+}
+
+load_repo_report_classes() {
+  load_policy_report_classes \
+    "## Repo Pressure Classes" \
+    REPO_REPORT_CLASS_NAMES \
+    REPO_REPORT_CLASS_PATTERNS \
+    REPO_REPORT_CLASS_TIERS \
+    REPO_REPORT_CLASS_WEIGHTS \
+    REPO_REPORT_CLASS_RETENTION
 }
 
 path_matches_any_pattern() {
@@ -347,6 +437,168 @@ emit_storage_report() {
   echo "SUMMARY: target=storage action=report-only class_count=${#STORAGE_REPORT_CLASS_NAMES[@]} count_total=${total_count} protected_total=${total_protected} bytes_total=${total_bytes} weighted_bytes_total=${total_weighted_bytes}"
 }
 
+dump_inventory_stream() {
+  [[ -d "${REPO_ROOT}/archives" ]] && find "${REPO_ROOT}/archives" -type f -printf 'archives/%P\t%s\n' 2>/dev/null
+  [[ -d "${REPO_ROOT}/docs" ]] && find "${REPO_ROOT}/docs" -type f -printf 'docs/%P\t%s\n' 2>/dev/null
+  [[ -d "${REPO_ROOT}/ops" ]] && find "${REPO_ROOT}/ops" -type f -printf 'ops/%P\t%s\n' 2>/dev/null
+  [[ -d "${REPO_ROOT}/tools" ]] && find "${REPO_ROOT}/tools" -type f -printf 'tools/%P\t%s\n' 2>/dev/null
+  [[ -d "${REPO_ROOT}/opt" ]] && find "${REPO_ROOT}/opt" -type f -printf 'opt/%P\t%s\n' 2>/dev/null
+  [[ -d "${REPO_ROOT}/storage/handoff" ]] && find "${REPO_ROOT}/storage/handoff" -maxdepth 1 -type f \
+    \( -name 'TOPIC.md' -o -name 'PLAN.md' -o -name '*-RESULTS.md' -o -name 'CLOSING-DP-OPS-*.md' \) \
+    -printf 'storage/handoff/%P\t%s\n' 2>/dev/null
+}
+
+repo_pressure_inventory_stream() {
+  [[ -d "${REPO_ROOT}/archives" ]] && find "${REPO_ROOT}/archives" -type f -printf 'archives/%P\t%s\n' 2>/dev/null
+  [[ -d "${REPO_ROOT}/logs" ]] && find "${REPO_ROOT}/logs" -type f -printf 'logs/%P\t%s\n' 2>/dev/null
+  [[ -d "${REPO_ROOT}/storage" ]] && find "${REPO_ROOT}/storage" -type f -printf 'storage/%P\t%s\n' 2>/dev/null
+}
+
+emit_policy_report_from_inventory() {
+  local target_label="$1"
+  local inventory_fn="$2"
+  local names_name="$3"
+  local patterns_name="$4"
+  local tiers_name="$5"
+  local weights_name="$6"
+  local retention_name="${7:-}"
+
+  local -n names_ref="$names_name"
+  local -n patterns_ref="$patterns_name"
+  local -n tiers_ref="$tiers_name"
+  local -n weights_ref="$weights_name"
+  local use_retention=0
+  if [[ -n "$retention_name" ]]; then
+    use_retention=1
+    local -n retention_ref="$retention_name"
+  fi
+
+  local class_name="" pattern="" tier="" weight="" tier_weight="" retention="n/a"
+  local class_count=0 protected_count=0 bytes_total=0 weighted_bytes=0
+  local total_count=0 total_protected=0 total_bytes=0 total_weighted_bytes=0
+  local rel_path="" file_bytes=0 matched_class=""
+  declare -A class_counts=()
+  declare -A class_protected_counts=()
+  declare -A class_bytes=()
+  declare -A class_top_paths=()
+  declare -A class_top_bytes=()
+
+  while IFS=$'\t' read -r rel_path file_bytes; do
+    [[ -n "$rel_path" ]] || continue
+    matched_class=""
+    for class_name in "${names_ref[@]}"; do
+      pattern="${patterns_ref[$class_name]}"
+      if [[ "$rel_path" == $pattern ]]; then
+        matched_class="$class_name"
+        break
+      fi
+    done
+    [[ -n "$matched_class" ]] || continue
+
+    class_counts["$matched_class"]=$(( ${class_counts["$matched_class"]:-0} + 1 ))
+    class_bytes["$matched_class"]=$(( ${class_bytes["$matched_class"]:-0} + file_bytes ))
+    if (( file_bytes > ${class_top_bytes["$matched_class"]:-0} )); then
+      class_top_bytes["$matched_class"]="$file_bytes"
+      class_top_paths["$matched_class"]="$rel_path"
+    fi
+
+    if path_matches_any_pattern "$rel_path" "${CRITICAL_PATTERNS[@]}" || path_matches_any_pattern "$rel_path" "${DENYLIST_PATTERNS[@]}"; then
+      class_protected_counts["$matched_class"]=$(( ${class_protected_counts["$matched_class"]:-0} + 1 ))
+    fi
+  done < <("$inventory_fn")
+
+  for class_name in "${names_ref[@]}"; do
+    pattern="${patterns_ref[$class_name]}"
+    tier="${tiers_ref[$class_name]}"
+    weight="${weights_ref[$class_name]}"
+    if (( use_retention )); then
+      retention="${retention_ref[$class_name]}"
+    else
+      retention="n/a"
+    fi
+    tier_weight="$(weight_for_tier "$tier")"
+    class_count="${class_counts[$class_name]:-0}"
+    protected_count="${class_protected_counts[$class_name]:-0}"
+    bytes_total="${class_bytes[$class_name]:-0}"
+    weighted_bytes=$((bytes_total * weight * tier_weight))
+    total_count=$((total_count + class_count))
+    total_protected=$((total_protected + protected_count))
+    total_bytes=$((total_bytes + bytes_total))
+    total_weighted_bytes=$((total_weighted_bytes + weighted_bytes))
+
+    echo "REPORT: target=${target_label} class=${class_name} tier=${tier} tier_weight=${tier_weight} class_weight=${weight} retention=${retention} pattern=${pattern} count=${class_count} protected=${protected_count} bytes_total=${bytes_total} weighted_bytes=${weighted_bytes} top_path=${class_top_paths[$class_name]:-(none)} top_bytes=${class_top_bytes[$class_name]:-0}"
+  done
+
+  echo "SUMMARY: target=${target_label} action=report class_count=${#names_ref[@]} count_total=${total_count} protected_total=${total_protected} bytes_total=${total_bytes} weighted_bytes_total=${total_weighted_bytes}"
+}
+
+emit_dump_report() {
+  emit_policy_report_from_inventory \
+    "dump" \
+    dump_inventory_stream \
+    DUMP_REPORT_CLASS_NAMES \
+    DUMP_REPORT_CLASS_PATTERNS \
+    DUMP_REPORT_CLASS_TIERS \
+    DUMP_REPORT_CLASS_WEIGHTS \
+    DUMP_REPORT_CLASS_RETENTION
+
+  emit_policy_report_from_inventory \
+    "repo-context" \
+    repo_pressure_inventory_stream \
+    REPO_REPORT_CLASS_NAMES \
+    REPO_REPORT_CLASS_PATTERNS \
+    REPO_REPORT_CLASS_TIERS \
+    REPO_REPORT_CLASS_WEIGHTS \
+    REPO_REPORT_CLASS_RETENTION
+}
+
+path_matches_class_map() {
+  local rel_path="$1"
+  local names_name="$2"
+  local patterns_name="$3"
+  local -n names_ref="$names_name"
+  local -n patterns_ref="$patterns_name"
+  local class_name=""
+  for class_name in "${names_ref[@]}"; do
+    if [[ "$rel_path" == ${patterns_ref[$class_name]} ]]; then
+      printf '%s' "$class_name"
+      return 0
+    fi
+  done
+  return 1
+}
+
+apply_dump_prune() {
+  local action="would_remove"
+  if [[ "$PHASE" == "apply" && "$DRY_RUN" -eq 0 ]]; then
+    action="did_remove"
+  fi
+
+  local class_name="" rel_path="" file_bytes=0 removed_count=0 removed_bytes=0
+  while IFS=$'\t' read -r rel_path file_bytes; do
+    [[ -n "$rel_path" ]] || continue
+    class_name="$(path_matches_class_map "$rel_path" DUMP_REPORT_CLASS_NAMES DUMP_REPORT_CLASS_PATTERNS || true)"
+    [[ -n "$class_name" ]] || continue
+    [[ "${DUMP_REPORT_CLASS_RETENTION[$class_name]:-canonical}" == "disposable" ]] || continue
+    [[ "${DUMP_REPORT_CLASS_APPLY[$class_name]:-0}" == "1" ]] || continue
+    if path_matches_any_pattern "$rel_path" "${CRITICAL_PATTERNS[@]}" || path_matches_any_pattern "$rel_path" "${DENYLIST_PATTERNS[@]}"; then
+      continue
+    fi
+    if git -C "${REPO_ROOT}" ls-files --error-unmatch -- "${rel_path}" >/dev/null 2>&1; then
+      continue
+    fi
+
+    echo "APPLY: target=dump class=${class_name} action=${action} path=${rel_path} bytes=${file_bytes}"
+    removed_count=$((removed_count + 1))
+    removed_bytes=$((removed_bytes + file_bytes))
+    if [[ "$PHASE" == "apply" && "$DRY_RUN" -eq 0 ]]; then
+      rm -f -- "${REPO_ROOT}/${rel_path}"
+    fi
+  done < <(dump_inventory_stream)
+
+  echo "SUMMARY: target=dump action=${action} removed_count=${removed_count} removed_bytes=${removed_bytes}"
+}
+
 run_target() {
   local target_key="$1"
   local ledger_file="$2"
@@ -412,7 +664,7 @@ run_target() {
 
 for arg in "$@"; do
   case "$arg" in
-    --target=sop|--target=pow|--target=both|--target=storage)
+    --target=sop|--target=pow|--target=both|--target=storage|--target=dump)
       TARGET="${arg#--target=}"
       ;;
     --dry-run)
@@ -444,7 +696,7 @@ for arg in "$@"; do
   esac
 done
 
-[[ "$TARGET" == "sop" || "$TARGET" == "pow" || "$TARGET" == "both" || "$TARGET" == "storage" ]] || die "--target must be one of: sop, pow, both, storage"
+[[ "$TARGET" == "sop" || "$TARGET" == "pow" || "$TARGET" == "both" || "$TARGET" == "storage" || "$TARGET" == "dump" ]] || die "--target must be one of: sop, pow, both, storage, dump"
 
 SOP_PATH="$(resolve_surface_leaf "${SOP_PATH}")"
 POW_PATH="$(resolve_surface_leaf "${POW_PATH}")"
@@ -475,6 +727,10 @@ if [[ "$TARGET" == "pow" || "$TARGET" == "both" ]]; then
 fi
 if [[ "$TARGET" == "storage" ]]; then
   emit_storage_report
+fi
+if [[ "$TARGET" == "dump" ]]; then
+  emit_dump_report
+  apply_dump_prune
 fi
 
 if (( SCRUB )); then
