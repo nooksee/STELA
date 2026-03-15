@@ -49,6 +49,20 @@ dump_scope_project=project
 dump_scope_conform=full
 dump_scope_foreman=core
 
+## History-Tier Routing Contract
+- Bundle does not serialize cold archive policy itself. It routes a history profile into `ops/bin/dump`, and `ops/bin/dump` resolves tiered archive serialization from `ops/lib/manifests/HISTORY.md`.
+- Current routing is profile-name aligned:
+  - analyst -> `--history-profile=analyst`
+  - architect -> `--history-profile=architect`
+  - audit -> `--history-profile=audit`
+  - project -> `--history-profile=project`
+  - conform -> `--history-profile=conform`
+  - foreman -> `--history-profile=foreman`
+- Scope and history profile are independent:
+  - analyst and architect still use `--scope=full`
+  - audit and foreman still use `--scope=core`
+  - history-tier compaction happens inside dump serialization, not traverse selection
+
 ## Profile Attachment Contract
 - analyst: `ANALYST-*.txt`, `ANALYST-*.manifest.json`, transport-managed `storage/handoff/TOPIC.md`
 - architect: `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, transport-managed `storage/handoff/PLAN.md`, optional `--slice=<ID>` with request metadata (`slice_id`, `slice_validated`, `plan_source`, `packet_id`, `closing_sidecar`, `title_suffix`)

@@ -20,10 +20,11 @@ The script provides `bundle_run` plus helpers for:
 5. Repo-relative path normalization and output confinement to `storage/handoff/`.
 6. Auto routing using PLAN presence and `tools/lint/plan.sh` status.
 7. Dump scope and stance template key resolution per resolved profile from policy mappings.
+   - dump history profile is passed as the resolved profile name and is enforced inside `ops/bin/dump` via `ops/lib/manifests/HISTORY.md`
    - Artifact naming prefix resolution per resolved profile from policy keys (`artifact_prefix_<profile>`).
    - Compatibility legacy artifact emission controlled by `compatibility_emit_legacy_bundle_artifacts` and `compatibility_legacy_bundle_prefix`.
 8. Deterministic embedded OPEN block generation (no internal `ops/bin/open` invocation).
-9. Dump orchestration with explicit `.txt` output path under `storage/dumps/`.
+9. Dump orchestration with explicit `.txt` output path under `storage/dumps/` and explicit `--history-profile=<resolved-profile>`.
 10. Foreman intent parsing and decision-leaf validation against dump payload.
 11. Architect slice parsing and validation:
    - `--slice=<ID>` accepted only for resolved profile `architect`.

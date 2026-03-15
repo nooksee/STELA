@@ -15,6 +15,7 @@ max_lines=0
 target=""
 selection_mode="scope"
 from_dp=""
+history_profile_arg=""
 
 # Optional refiners (apply after scope selection)
 include_dirs=()
@@ -27,12 +28,14 @@ forbidden_prefixes=()
 # Retained output metadata knob for compatibility.
 include_binary="meta"
 ALLOWLIST_BASELINE_PATH="${REPO_ROOT}/var/tmp/baseline-storage-dp-active-allowlist.txt"
+HISTORY_POLICY_PATH="${REPO_ROOT}/ops/lib/manifests/HISTORY.md"
 
 usage() {
   cat <<'USAGE'
 Usage: ops/bin/dump [--scope=core|platform|full|factory|project] [--project=<slug>] [--format=chatgpt|claude]
                    [--max-lines=n] [--out=path|auto] [--compress=tar.xz] [--bundle]
                    [--include-binary=meta|raw|base64]
+                   [--history-profile=PROFILE]
                    [--include-dir=DIR] [--exclude-dir=DIR] [--ignore-file=GLOB]
                    [--selection=scope|dp|dp+allowlist] [--from-dp=PATH|auto]
                    [--include-file=PATH] [--include-file-list=FILE]
@@ -92,6 +95,10 @@ for arg in "$@"; do
       ;;
     --include-binary=meta|--include-binary=raw|--include-binary=base64)
       include_binary="${arg#--include-binary=}"
+      ;;
+    --history-profile=*)
+      history_profile_arg="${arg#--history-profile=}"
+      [[ -n "$history_profile_arg" ]] || die "--history-profile requires a value"
       ;;
     --include-dir=*)
       d="$(normalize_path_token "${arg#--include-dir=}")"
@@ -217,7 +224,7 @@ if (( ${#missing[@]} > 0 )); then
   die "expected directories missing. Run from repo root: ${missing[*]}"
 fi
 
-trap 'emit_binary_leaf "dump" "finish"' EXIT
+trap 'emit_binary_leaf "dump" "finish"; rm -f "${history_summary_tmp:-}" "${history_class_index_tmp:-}"' EXIT
 emit_binary_leaf "dump" "start"
 
 mkdir -p "$repo_root/storage/handoff"
@@ -413,9 +420,331 @@ load_include_file_list() {
     if [[ "$raw_line" == \#* ]]; then
       continue
     fi
+    explicit_include_file_set["$(normalize_path_token "$raw_line")"]=1
     add_selected_file "$raw_line"
   done < "$resolved_list_path"
 }
+
+history_policy_scalar() {
+  local key="$1"
+  local value
+  value="$(awk -F'=' -v key="$key" '$1==key { print substr($0, index($0, "=") + 1); exit }' "$HISTORY_POLICY_PATH")"
+  trim "$value"
+}
+
+history_policy_rows() {
+  local section_heading="$1"
+  awk -v section="$section_heading" '
+    $0 == section { in_section=1; next }
+    in_section && /^## / { exit }
+    in_section {
+      line=$0
+      sub(/^[[:space:]]+/, "", line)
+      sub(/[[:space:]]+$/, "", line)
+      if (line != "" && line !~ /^#/) {
+        print line
+      }
+    }
+  ' "$HISTORY_POLICY_PATH"
+}
+
+declare -A history_recent_count_by_profile=()
+declare -A history_checkpoint_interval_by_profile=()
+declare -A history_cold_mode_by_profile=()
+declare -A history_class_pattern=()
+declare -A history_class_family=()
+declare -A history_class_kind=()
+declare -A history_file_mode=()
+declare -A history_file_class=()
+declare -A history_file_tier=()
+declare -A history_file_reason=()
+declare -A history_file_rank=()
+declare -A history_file_bytes=()
+declare -A history_class_full_count=()
+declare -A history_class_metadata_count=()
+declare -A active_history_pointer_targets=()
+declare -A explicit_include_file_set=()
+history_profile=""
+history_metadata_only_count=0
+history_full_body_count=0
+history_plan_enabled=0
+history_summary_tmp=""
+history_class_index_tmp=""
+
+load_history_profiles() {
+  local raw_line=""
+  while IFS= read -r raw_line; do
+    [[ -n "$raw_line" ]] || continue
+    local profile_name="" recent_count="" checkpoint_interval="" cold_mode=""
+    local field="" field_key="" field_value=""
+    IFS='|' read -ra fields <<< "$raw_line"
+    for field in "${fields[@]}"; do
+      field_key="${field%%=*}"
+      field_value="${field#*=}"
+      field_key="$(trim "$field_key")"
+      field_value="$(trim "$field_value")"
+      case "$field_key" in
+        profile) profile_name="$field_value" ;;
+        recent_count) recent_count="$field_value" ;;
+        checkpoint_interval) checkpoint_interval="$field_value" ;;
+        cold_mode) cold_mode="$field_value" ;;
+      esac
+    done
+    [[ -n "$profile_name" ]] || die "HISTORY.md profile row missing profile name"
+    [[ "$recent_count" =~ ^[0-9]+$ ]] || die "HISTORY.md invalid recent_count for profile ${profile_name}"
+    [[ "$checkpoint_interval" =~ ^[0-9]+$ ]] || die "HISTORY.md invalid checkpoint_interval for profile ${profile_name}"
+    [[ "$cold_mode" == "metadata-only" ]] || die "HISTORY.md invalid cold_mode for profile ${profile_name}"
+    history_recent_count_by_profile["$profile_name"]="$recent_count"
+    history_checkpoint_interval_by_profile["$profile_name"]="$checkpoint_interval"
+    history_cold_mode_by_profile["$profile_name"]="$cold_mode"
+  done < <(history_policy_rows "## History Profiles")
+}
+
+load_history_classes() {
+  local raw_line=""
+  while IFS= read -r raw_line; do
+    [[ -n "$raw_line" ]] || continue
+    local class_name="" pattern="" family="" kind=""
+    local field="" field_key="" field_value=""
+    IFS='|' read -ra fields <<< "$raw_line"
+    for field in "${fields[@]}"; do
+      field_key="${field%%=*}"
+      field_value="${field#*=}"
+      field_key="$(trim "$field_key")"
+      field_value="$(trim "$field_value")"
+      case "$field_key" in
+        class) class_name="$field_value" ;;
+        pattern) pattern="$field_value" ;;
+        family) family="$field_value" ;;
+        kind) kind="$field_value" ;;
+      esac
+    done
+    [[ -n "$class_name" ]] || die "HISTORY.md serialization class missing class"
+    [[ -n "$pattern" ]] || die "HISTORY.md serialization class missing pattern (${class_name})"
+    [[ -n "$family" ]] || die "HISTORY.md serialization class missing family (${class_name})"
+    [[ -n "$kind" ]] || die "HISTORY.md serialization class missing kind (${class_name})"
+    history_class_pattern["$class_name"]="$pattern"
+    history_class_family["$class_name"]="$family"
+    history_class_kind["$class_name"]="$kind"
+  done < <(history_policy_rows "## Archive Serialization Classes")
+}
+
+resolve_default_history_profile() {
+  local scope_key="default_history_profile_${scope}"
+  local profile_name
+  profile_name="$(history_policy_scalar "$scope_key")"
+  [[ -n "$profile_name" ]] || die "HISTORY.md missing default history profile for scope ${scope}"
+  printf '%s' "$profile_name"
+}
+
+load_history_policy() {
+  [[ -f "$HISTORY_POLICY_PATH" ]] || die "history policy missing: ${HISTORY_POLICY_PATH#${REPO_ROOT}/}"
+  [[ "$(history_policy_scalar history_manifest_version)" == "1" ]] || die "invalid history_manifest_version in HISTORY.md"
+  load_history_profiles
+  load_history_classes
+}
+
+history_class_for_path() {
+  local rel_path="$1"
+  local class_name=""
+  for class_name in "${!history_class_pattern[@]}"; do
+    if [[ "$rel_path" == ${history_class_pattern[$class_name]} ]]; then
+      printf '%s' "$class_name"
+      return 0
+    fi
+  done
+  return 1
+}
+
+register_active_history_pointer_target() {
+  local surface_rel="$1"
+  local surface_abs="${REPO_ROOT}/${surface_rel}"
+  [[ -f "$surface_abs" ]] || return 0
+  local line_count
+  line_count="$(awk 'END { print NR }' "$surface_abs")"
+  if [[ "$line_count" != "1" ]]; then
+    return 0
+  fi
+  local pointer_path
+  pointer_path="$(trim "$(normalize_path_token "$(cat "$surface_abs")")")"
+  if [[ "$pointer_path" =~ ^archives/surfaces/[A-Za-z0-9._/-]+\.md$ ]]; then
+    active_history_pointer_targets["$pointer_path"]=1
+  fi
+}
+
+include_active_history_pointer_targets() {
+  register_active_history_pointer_target "PoW.md"
+  register_active_history_pointer_target "SoP.md"
+  register_active_history_pointer_target "TASK.md"
+
+  local pointer_path=""
+  while IFS= read -r pointer_path; do
+    [[ -n "$pointer_path" ]] || continue
+    add_selected_file "$pointer_path"
+  done < <(printf '%s\n' "${!active_history_pointer_targets[@]}" | sort)
+}
+
+history_bytes_for_path() {
+  local rel_path="$1"
+  if [[ -f "${REPO_ROOT}/${rel_path}" ]]; then
+    stat -c%s "${REPO_ROOT}/${rel_path}"
+    return 0
+  fi
+  git cat-file -s "HEAD:${rel_path}"
+}
+
+history_emit_metadata_lines() {
+  local rel_path="$1"
+  local source_path="${REPO_ROOT}/${rel_path}"
+  [[ -f "$source_path" ]] || return 0
+  awk '
+    BEGIN {
+      in_frontmatter=0
+      frontmatter_seen=0
+      heading=""
+      summary=""
+    }
+    NR == 1 && $0 == "---" {
+      in_frontmatter=1
+      frontmatter_seen=1
+      next
+    }
+    in_frontmatter && $0 == "---" {
+      in_frontmatter=0
+      next
+    }
+    in_frontmatter && /^(trace_id|packet_id|created_at|previous):[[:space:]]*/ {
+      key=$1
+      sub(/:$/, "", key)
+      value=$0
+      sub(/^[^:]+:[[:space:]]*/, "", value)
+      print key ": " value
+      next
+    }
+    !in_frontmatter && heading == "" && /^#+[[:space:]]+/ {
+      heading=$0
+      print "heading: " heading
+      next
+    }
+    !in_frontmatter && summary == "" && $0 !~ /^[[:space:]]*$/ {
+      summary=$0
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", summary)
+      print "summary: " summary
+      exit
+    }
+  ' "$source_path"
+}
+
+build_history_serialization_plan() {
+  local class_name="" rel_path="" rank=0 recent_count=0 checkpoint_interval=0
+  local mode="" reason="" bytes=0
+
+  history_metadata_only_count=0
+  history_full_body_count=0
+  history_plan_enabled=0
+  history_summary_tmp="$(mktemp)"
+  history_class_index_tmp="$(mktemp)"
+  : > "$history_summary_tmp"
+  : > "$history_class_index_tmp"
+
+  register_active_history_pointer_target "PoW.md"
+  register_active_history_pointer_target "SoP.md"
+  register_active_history_pointer_target "TASK.md"
+
+  recent_count="${history_recent_count_by_profile[$history_profile]:-}"
+  checkpoint_interval="${history_checkpoint_interval_by_profile[$history_profile]:-}"
+  [[ -n "$recent_count" ]] || die "history profile not loaded: ${history_profile}"
+  [[ -n "$checkpoint_interval" ]] || die "history profile checkpoint interval missing: ${history_profile}"
+
+  for rel_path in "${files[@]}"; do
+    class_name="$(history_class_for_path "$rel_path" || true)"
+    if [[ -n "$class_name" ]]; then
+      printf '%s\t%s\n' "$class_name" "$rel_path" >> "$history_class_index_tmp"
+    fi
+  done
+
+  while IFS= read -r class_name; do
+    [[ -n "$class_name" ]] || continue
+    rank=0
+    while IFS= read -r rel_path; do
+      [[ -n "$rel_path" ]] || continue
+      rank=$((rank + 1))
+      bytes="$(history_bytes_for_path "$rel_path")"
+      mode="full"
+      reason="recent"
+      if [[ -n "${explicit_include_file_set[$rel_path]+set}" ]]; then
+        mode="full"
+        reason="explicit-include"
+      elif [[ -n "${active_history_pointer_targets[$rel_path]+set}" ]]; then
+        mode="full"
+        reason="active-pointer"
+      elif (( rank <= recent_count )); then
+        mode="full"
+        reason="recent"
+      elif (( checkpoint_interval > 0 && ((rank - recent_count - 1) % checkpoint_interval == 0) )); then
+        mode="full"
+        reason="checkpoint"
+      else
+        mode="metadata-only"
+        reason="cold"
+      fi
+
+      history_plan_enabled=1
+      history_file_mode["$rel_path"]="$mode"
+      history_file_class["$rel_path"]="$class_name"
+      history_file_tier["$rel_path"]="$reason"
+      history_file_reason["$rel_path"]="$reason"
+      history_file_rank["$rel_path"]="$rank"
+      history_file_bytes["$rel_path"]="$bytes"
+      if [[ "$mode" == "metadata-only" ]]; then
+        history_metadata_only_count=$((history_metadata_only_count + 1))
+        history_class_metadata_count["$class_name"]=$(( ${history_class_metadata_count["$class_name"]:-0} + 1 ))
+      else
+        history_full_body_count=$((history_full_body_count + 1))
+        history_class_full_count["$class_name"]=$(( ${history_class_full_count["$class_name"]:-0} + 1 ))
+      fi
+    done < <(awk -F'\t' -v class_name="$class_name" '$1 == class_name { print $2 }' "$history_class_index_tmp" | sort -r)
+  done < <(printf '%s\n' "${!history_class_pattern[@]}" | sort)
+
+  {
+    echo "History profile: ${history_profile}"
+    echo "History cold mode: ${history_cold_mode_by_profile[$history_profile]}"
+    echo "History recent count: ${recent_count}"
+    echo "History checkpoint interval: ${checkpoint_interval}"
+    echo "History full-body archive entries: ${history_full_body_count}"
+    echo "History metadata-only archive entries: ${history_metadata_only_count}"
+  } >> "$history_summary_tmp"
+}
+
+emit_history_metadata_only_block() {
+  local rel_path="$1"
+  local class_name="${history_file_class[$rel_path]}"
+  local reason="${history_file_reason[$rel_path]}"
+  local rank="${history_file_rank[$rel_path]}"
+  local bytes="${history_file_bytes[$rel_path]}"
+
+  cat <<EOF
+[history metadata-only]
+history_profile: ${history_profile}
+history_class: ${class_name}
+history_family: ${history_class_family[$class_name]}
+history_kind: ${history_class_kind[$class_name]}
+history_tier: ${reason}
+rank_in_class: ${rank}
+file_bytes: ${bytes}
+full_body_omitted: true
+full_body_reinclude: --include-file=${rel_path}
+EOF
+  history_emit_metadata_lines "$rel_path"
+}
+
+load_history_policy
+if [[ -n "$history_profile_arg" ]]; then
+  history_profile="$history_profile_arg"
+else
+  history_profile="$(resolve_default_history_profile)"
+fi
+[[ -n "${history_recent_count_by_profile[$history_profile]:-}" ]] || die "unknown history profile: ${history_profile}"
 
 files=()
 rejected_files=()
@@ -444,6 +773,7 @@ if [[ "$selection_mode" == "scope" ]]; then
   done < <("${SCRIPT_DIR}/../lib/scripts/traverse.sh" "${traverse_args[@]}")
 
   for include_path in "${include_files[@]}"; do
+    explicit_include_file_set["$(normalize_path_token "$include_path")"]=1
     add_selected_file "$include_path"
   done
   for include_list_path in "${include_file_lists[@]}"; do
@@ -502,6 +832,7 @@ else
 
   if [[ "$selection_mode" == "dp+allowlist" ]]; then
     for include_path in "${include_files[@]}"; do
+      explicit_include_file_set["$(normalize_path_token "$include_path")"]=1
       add_selected_file "$include_path"
     done
     for include_list_path in "${include_file_lists[@]}"; do
@@ -516,6 +847,9 @@ if (( ${#files[@]} == 0 )); then
   fi
   die "No files selected for --selection=${selection_mode}"
 fi
+
+include_active_history_pointer_targets
+build_history_serialization_plan
 
 output_target=""
 archive_path=""
@@ -646,6 +980,10 @@ is_file_truncated() {
   local path="$1"
   local lines
 
+  if [[ "${history_file_mode[$path]:-full}" == "metadata-only" ]]; then
+    return 1
+  fi
+
   if ! content_exists "$path"; then
     return 1
   fi
@@ -690,6 +1028,8 @@ emit_dump() {
   echo "Files included: $files_count"
   echo "Binary files: $binary_files"
   echo "Truncated text files: $truncated_files"
+  echo "History profile: $history_profile"
+  echo "History metadata-only archive entries: $history_metadata_only_count"
   case "$scope" in
     core)     echo "Excluded dirs (scope): projects/ opt/_factory/" ;;
     platform) echo "Excluded dirs (scope): projects/" ;;
@@ -721,6 +1061,9 @@ emit_dump() {
     echo "Include file lists (explicit): ${include_file_lists[*]}"
   else
     echo "Include file lists (explicit): (none)"
+  fi
+  if [[ -n "$history_summary_tmp" && -f "$history_summary_tmp" ]]; then
+    cat "$history_summary_tmp"
   fi
   echo "Binary handling: $include_binary"
   echo "Max lines (text): $max_lines"
@@ -759,7 +1102,11 @@ ORIENTATION
   echo "[FILE CONTENTS]"
   for path in "${files[@]}"; do
     echo "<<< FILE BEGIN: $path"
-    emit_file_contents "$path" "$suppress_pipe_errors" "$max_lines"
+    if [[ "${history_file_mode[$path]:-full}" == "metadata-only" ]]; then
+      emit_history_metadata_only_block "$path"
+    else
+      emit_file_contents "$path" "$suppress_pipe_errors" "$max_lines"
+    fi
     echo ">>> FILE END: $path"
     echo ""
   done
@@ -779,6 +1126,7 @@ emit_manifest() {
     echo "Branch: $branch"
     echo "HEAD: $head_short"
     echo "Scope: $scope"
+    echo "History profile: $history_profile"
     if [[ "$scope" == "project" ]]; then
       echo "Target: $target"
     fi
@@ -800,6 +1148,12 @@ emit_manifest() {
     if (( ${#include_file_lists[@]} > 0 )); then
       echo "Include file lists (explicit): ${include_file_lists[*]}"
     fi
+    echo "History metadata-only archive entries: ${history_metadata_only_count}"
+    echo "History full-body archive entries: ${history_full_body_count}"
+    echo "History class summary:"
+    for class_name in $(printf '%s\n' "${!history_class_pattern[@]}" | sort); do
+      echo "- class=${class_name} full_body=${history_class_full_count[$class_name]:-0} metadata_only=${history_class_metadata_count[$class_name]:-0}"
+    done
     echo "Dump payload: $(display_path "$payload")"
     if [[ -n "$output" ]]; then
       echo "Output target: $(display_path "$output")"

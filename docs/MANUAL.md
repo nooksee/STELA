@@ -115,10 +115,11 @@ When certify replays a plain `bash tools/verify.sh` receipt line, it rewrites th
 It also emits `VERIFY-LANE-ORDER: mode=<mode> order=<comma-separated-lanes>` before lane execution so the active fail-fast lane order is visible.
 `ops/bin/certify` runs integrity checks, executes the Section 3.4.5 verification command list, renders the RESULTS receipt from template, and runs `tools/lint/results.sh` as a hard gate.
 After surface emission, certify verifies that the active TASK leaf is packet-consistent and runs `./ops/bin/prune --target=dump --phase=report --dry-run` so closeout always captures dump-visible pressure. The prune report is observational receipt evidence only; it does not authorize canonical archive deletion.
-Note: certify resolves the target DP from the TASK head leaf by default. Ensure the TASK head leaf is structurally valid and contains the live current DP block before running certify. If the TASK head leaf is absent or invalid, certify falls back to the intake packet; this fallback is a recovery path only.
+Note: certify resolves the target DP from the TASK head leaf by default. Ensure the TASK head leaf is structurally valid and contains the live current DP block before running certify. If `TASK.md` is pointer-only and `--allow-intake-fallback` is explicitly enabled while the matching intake packet is present, certify may prefer the intake packet as the live rerun source instead of reusing a stale packet body embedded in the current TASK leaf. This fallback remains a recovery path only.
 `tools/lint/results.sh` enforces the RESULTS schema through `## Contractor Execution Narrative` and required Decision Leaf lines. Closing sidecar schema validation remains `ops/bin/certify` authority against `ops/lib/manifests/CLOSING.md` (Section 1).
 `ops/bin/certify` also emits schema-stamped surface leaves for PoW/SoP/TASK under `archives/surfaces/` and rewrites `PoW.md`, `SoP.md`, and `TASK.md` to single-line HEAD pointers to those leaves.
 If `TASK.md` does not contain the target DP block, certify now fails unless `--allow-intake-fallback` is explicitly provided.
+Default dump and bundle payloads now route archive serialization through `ops/lib/manifests/HISTORY.md`. Cold archive history remains visible by default as explicit metadata-only blocks with exact re-include instructions rather than literal full-body emission in every dump.
 `bash tools/lint/results.sh` without arguments targets the active branch packet receipt when resolvable; use `--all` only for full historical receipt scans.
 Manual RESULTS fabrication is prohibited.
 
@@ -152,7 +153,7 @@ ls storage/dp/processed/
 
 4. Run certify:
 ~~~bash
-./ops/bin/certify --dp=DP-OPS-XXXX --out=auto
+./ops/bin/certify --dp=DP-OPS-XXXX --allow-intake-fallback --out=auto
 ~~~
 
 On success, certify moves `storage/dp/intake/DP-OPS-XXXX.md` to

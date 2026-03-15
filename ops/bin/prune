@@ -10,6 +10,7 @@ SOP_PATH="${REPO_ROOT}/SoP.md"
 POW_PATH="${REPO_ROOT}/PoW.md"
 RESUME_DIR="${REPO_ROOT}/var/tmp"
 POLICY_PATH="${REPO_ROOT}/ops/lib/manifests/PRUNE.md"
+HISTORY_POLICY_PATH="${REPO_ROOT}/ops/lib/manifests/HISTORY.md"
 TARGET="sop"
 DRY_RUN=0
 SCRUB=0
@@ -146,6 +147,7 @@ require_int() {
 
 load_prune_policy() {
   [[ -f "$POLICY_PATH" ]] || die "prune policy missing: ${POLICY_PATH#${REPO_ROOT}/}"
+  [[ -f "$HISTORY_POLICY_PATH" ]] || die "history policy missing: ${HISTORY_POLICY_PATH#${REPO_ROOT}/}"
 
   POLICY_DEFAULT_PHASE="$(policy_scalar default_phase)"
   POLICY_APPLY_TOKEN="$(policy_scalar apply_token)"
@@ -180,7 +182,8 @@ load_prune_policy() {
 }
 
 collect_policy_class_rows() {
-  local section_heading="$1"
+  local policy_path="$1"
+  local section_heading="$2"
   awk -v section="$section_heading" '
     $0 == section { in_section=1; next }
     in_section && /^## / { exit }
@@ -192,17 +195,18 @@ collect_policy_class_rows() {
         print line
       }
     }
-  ' "$POLICY_PATH"
+  ' "$policy_path"
 }
 
 load_policy_report_classes() {
-  local section_heading="$1"
-  local names_name="$2"
-  local patterns_name="$3"
-  local tiers_name="$4"
-  local weights_name="$5"
-  local retention_name="${6:-}"
-  local apply_name="${7:-}"
+  local policy_path="$1"
+  local section_heading="$2"
+  local names_name="$3"
+  local patterns_name="$4"
+  local tiers_name="$5"
+  local weights_name="$6"
+  local retention_name="${7:-}"
+  local apply_name="${8:-}"
 
   local -n names_ref="$names_name"
   local -n patterns_ref="$patterns_name"
@@ -270,11 +274,12 @@ load_policy_report_classes() {
     if (( use_apply )); then
       apply_ref["$class_name"]="$apply"
     fi
-  done < <(collect_policy_class_rows "$section_heading")
+  done < <(collect_policy_class_rows "$policy_path" "$section_heading")
 }
 
 load_storage_report_classes() {
   load_policy_report_classes \
+    "$POLICY_PATH" \
     "## Storage Report Classes" \
     STORAGE_REPORT_CLASS_NAMES \
     STORAGE_REPORT_CLASS_PATTERNS \
@@ -284,6 +289,7 @@ load_storage_report_classes() {
 
 load_dump_report_classes() {
   load_policy_report_classes \
+    "$HISTORY_POLICY_PATH" \
     "## Dump Report Classes" \
     DUMP_REPORT_CLASS_NAMES \
     DUMP_REPORT_CLASS_PATTERNS \
@@ -295,6 +301,7 @@ load_dump_report_classes() {
 
 load_repo_report_classes() {
   load_policy_report_classes \
+    "$HISTORY_POLICY_PATH" \
     "## Repo Pressure Classes" \
     REPO_REPORT_CLASS_NAMES \
     REPO_REPORT_CLASS_PATTERNS \

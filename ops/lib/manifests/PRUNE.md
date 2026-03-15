@@ -48,20 +48,11 @@ class=foreman-bundles|pattern=storage/handoff/FOREMAN-*|tier=historical|weight=2
 class=project-bundles|pattern=storage/handoff/PROJECT-*|tier=historical|weight=2
 class=legacy-bundles|pattern=storage/handoff/BUNDLE-*|tier=historical|weight=2
 
-## Dump Report Classes
-class=archive-surfaces|pattern=archives/surfaces/*.md|tier=historical|weight=3|retention=canonical|apply=0
-class=archive-manifests|pattern=archives/manifests/*.md|tier=historical|weight=2|retention=canonical|apply=0
-class=docs-tree|pattern=docs/*|tier=operational|weight=1|retention=canonical|apply=0
-class=ops-tree|pattern=ops/*|tier=operational|weight=1|retention=canonical|apply=0
-class=tools-tree|pattern=tools/*|tier=operational|weight=1|retention=canonical|apply=0
-class=opt-tree|pattern=opt/*|tier=operational|weight=1|retention=canonical|apply=0
-class=analyst-topic-input|pattern=storage/handoff/TOPIC.md|tier=operational|weight=1|retention=disposable|apply=1
-class=architect-plan-input|pattern=storage/handoff/PLAN.md|tier=operational|weight=1|retention=disposable|apply=1
-class=audit-results-input|pattern=storage/handoff/*-RESULTS.md|tier=operational|weight=1|retention=disposable|apply=0
-class=audit-closing-input|pattern=storage/handoff/CLOSING-DP-OPS-*.md|tier=operational|weight=1|retention=disposable|apply=0
-
-## Repo Pressure Classes
-class=archives-tree|pattern=archives/*|tier=historical|weight=2|retention=canonical
-class=logs-tree|pattern=logs/*|tier=historical|weight=1|retention=disposable
-class=storage-dumps|pattern=storage/dumps/*|tier=historical|weight=2|retention=disposable
-class=storage-handoff|pattern=storage/handoff/*|tier=operational|weight=1|retention=disposable
+## Shared History Policy
+- Dump-visible report classes and repo-pressure classes are loaded from `ops/lib/manifests/HISTORY.md`.
+- `ops/bin/prune` reads `HISTORY.md` directly for:
+  - dump-visible class names and weights
+  - repo-context class names and weights
+  - canonical vs disposable retention status
+  - bounded `apply=1` authorization for dump-visible disposable classes
+- This keeps dump serialization, bundle routing, and prune pressure reporting on one shared archive/history policy surface.
