@@ -426,4 +426,6 @@ docs/ops/specs/binaries/prune.md
 docs/ops/specs/binaries/trace.md
 docs/ops/specs/tools/verify.md
 storage/handoff/CLOSING-DP-OPS-0196.md
+storage/handoff/CLOSING-DP-OPS-0197.md
 archives/surfaces/TASK-DP-OPS-0196-*.md
+archives/surfaces/TASK-DP-OPS-0197-*.md

@@ -19,12 +19,19 @@ Define the template-backed Analyst stance body used by bundle output contract re
 - No unresolved include directives.
 - Machine-ingest analyst mode requires attached `storage/handoff/TOPIC.md` and has no inline-query fallback.
 - Machine-ingest analyst mode outputs exactly one fenced markdown code block.
-- Machine-ingest analyst mode emits only a complete `PLAN.md` draft.
-- Machine-ingest analyst mode first non-empty line inside the fenced body must start with `# DP Plan:`.
+- Default analyst behavior is discussion mode and writes analyst output to `PLAN.md`.
+- Explicit plan-output mode is available only when the attached topic explicitly asks for a plan, DP plan, architect handoff, or plan-only output.
+- Default analyst mode first non-empty line inside the fenced body must start with `1. Analysis and Discussion`.
+- Default analyst mode includes `2. Strategic Options` and one `Recommendation:` line.
+- Default analyst mode targets exactly three options when the topic is actionable enough to support them.
+- Default analyst mode ends with `Questions / Conversation:` when clarification, tradeoff choice, or confirmation would help.
+- Explicit plan-output mode emits only a complete `PLAN.md` draft.
+- Explicit plan-output mode first non-empty line inside the fenced body must start with `# DP Plan:`.
 - Machine-ingest analyst mode must not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.
-- Machine-ingest analyst mode keeps broad topics generic and high-level rather than converting them into specific operating claims.
-- Machine-ingest analyst mode uses the smallest reasonable inference for required handoff fields and does not let inference read as established repository fact.
-- Machine-ingest analyst mode must not emit discussion/option menus or recommendation lines.
+- Machine-ingest analyst mode keeps repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.
+- Explicit plan-output mode uses the smallest reasonable inference for required handoff fields and does not let inference read as established repository fact.
+- Default analyst mode treats weak or ambiguous topics conservatively, states assumptions, and asks concise follow-up questions instead of forcing a plan-only artifact.
+- Default analyst mode stops truthfully and asks for clarification when topic text is nonsensical or non-actionable.
 
 ## Invariants and failure modes
 - Include expansion is strict and fail-closed.
