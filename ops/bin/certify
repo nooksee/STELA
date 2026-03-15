@@ -818,8 +818,8 @@ emit_surface_leaves_phase() {
   local packet_id="$2"
   local freshness_stamp="$3"
   local git_short_hash="$4"
-  local task_replacement_dp_path="${5:-}"
   local created_at="$5"
+  local task_replacement_dp_path="${6:-}"
 
   [[ "$freshness_stamp" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || die "invalid Freshness Stamp format in DP payload: ${freshness_stamp}"
   [[ "$git_short_hash" =~ ^[0-9a-f]{7,}$ ]] || die "invalid short hash for surface leaf naming: ${git_short_hash}"
@@ -1223,7 +1223,7 @@ run_surface_emission_step() {
   local created_at
   created_at="$(utc_now)"
   local stdout_body
-  stdout_body="$(emit_surface_leaves_phase "$trace_id" "$packet_id" "$freshness_stamp" "$git_short_hash" "$task_replacement_dp_path")"
+  stdout_body="$(emit_surface_leaves_phase "$trace_id" "$packet_id" "$freshness_stamp" "$git_short_hash" "$created_at" "$task_replacement_dp_path")"
   local finished_at
   finished_at="$(utc_now)"
   local finish_epoch
