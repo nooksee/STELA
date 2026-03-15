@@ -430,3 +430,12 @@ storage/handoff/CLOSING-DP-OPS-0197.md
 storage/handoff/CLOSING-DP-OPS-0198.md
 archives/surfaces/TASK-DP-OPS-0196-*.md
 archives/surfaces/TASK-DP-OPS-0197-*.md
+ops/lib/manifests/HISTORY.md
+docs/ops/specs/manifests/history.md
+ops/lib/manifests/BUNDLE.md
+docs/ops/specs/binaries/dump.md
+docs/ops/specs/binaries/bundle.md
+docs/ops/specs/scripts/bundle.md
+docs/ops/specs/tools/test/bundle.md
+tools/test/bundle.sh
+storage/handoff/CLOSING-DP-OPS-0199.md

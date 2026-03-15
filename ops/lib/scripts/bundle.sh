@@ -1145,8 +1145,9 @@ bundle_run() {
 
   local dump_scope
   dump_scope="$(bundle_dump_scope_for_profile "$resolved_profile")"
+  local dump_history_profile="$resolved_profile"
   local dump_payload_target_rel="storage/dumps/dump-${dump_scope}-${branch_safe}-${head_short}.txt"
-  local -a dump_args=("${REPO_ROOT}/ops/bin/dump" "--scope=${dump_scope}" "--format=chatgpt" "--out=${dump_payload_target_rel}")
+  local -a dump_args=("${REPO_ROOT}/ops/bin/dump" "--scope=${dump_scope}" "--history-profile=${dump_history_profile}" "--format=chatgpt" "--out=${dump_payload_target_rel}")
 
   local profile_disposable_output=""
   profile_disposable_output="$(bundle_collect_profile_disposable_inputs "$resolved_profile" "$topic_rel" "$plan_rel")"
@@ -1209,6 +1210,7 @@ bundle_run() {
     echo
     echo "[DUMP]"
     echo "- Scope: ${dump_scope}"
+    echo "- History profile: ${dump_history_profile}"
     echo "- Payload path: ${dump_payload_rel}"
     echo "- Manifest path: ${dump_manifest_rel}"
     echo
@@ -1396,6 +1398,7 @@ bundle_run() {
     echo "  },"
     echo "  \"dump\": {"
     echo "    \"scope\": \"$(bundle_json_escape "$dump_scope")\"," 
+    echo "    \"history_profile\": \"$(bundle_json_escape "$dump_history_profile")\"," 
     echo "    \"payload_path\": \"$(bundle_json_escape "$dump_payload_rel")\"," 
     echo "    \"manifest_path\": \"$(bundle_json_escape "$dump_manifest_rel")\""
     echo "  },"

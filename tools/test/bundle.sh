@@ -135,6 +135,26 @@ queue_cleanup_path() {
   fi
 }
 
+resolve_current_task_surface_rel() {
+  local task_rel="TASK.md"
+  local task_abs="${REPO_ROOT}/${task_rel}"
+  local first_line=""
+
+  [[ -f "$task_abs" ]] || {
+    fail "TASK.md missing while resolving current task surface"
+    return 1
+  }
+
+  first_line="$(sed -n '1p' "$task_abs")"
+  first_line="$(trim "$first_line")"
+  if [[ -n "$first_line" && -f "${REPO_ROOT}/${first_line}" ]]; then
+    printf '%s' "$first_line"
+    return 0
+  fi
+
+  printf '%s' "$task_rel"
+}
+
 ensure_architect_plan_fixture() {
   local plan_rel="storage/handoff/PLAN.md"
   local plan_abs="${REPO_ROOT}/${plan_rel}"
@@ -758,11 +778,18 @@ test_analyst_contract() {
     fail "analyst manifest missing dump payload_path"
   elif ! grep -Fq '<<< FILE BEGIN: storage/handoff/TOPIC.md' "${REPO_ROOT}/${dump_payload_path}"; then
     fail "analyst dump payload missing storage/handoff/TOPIC.md file block"
+  elif ! grep -Fq '[history metadata-only]' "${REPO_ROOT}/${dump_payload_path}"; then
+    fail "analyst dump payload missing metadata-only cold history entries"
   fi
   if [[ -z "$dump_manifest_path" ]]; then
     fail "analyst manifest missing dump manifest_path"
   elif ! grep -Fq 'Include files (explicit): storage/handoff/TOPIC.md' "${REPO_ROOT}/${dump_manifest_path}"; then
     fail "analyst dump manifest missing explicit TOPIC include provenance"
+  elif ! grep -Fq 'History profile: analyst' "${REPO_ROOT}/${dump_manifest_path}"; then
+    fail "analyst dump manifest missing history profile"
+  fi
+  if [[ "$(extract_manifest_value "$LAST_MANIFEST" "history_profile")" != "analyst" ]]; then
+    fail "analyst bundle manifest dump.history_profile mismatch"
   fi
 
   package_listing="$(tar -tf "${REPO_ROOT}/${LAST_PACKAGE}")"
@@ -886,6 +913,11 @@ test_architect_slice_valid() {
     fail "architect manifest missing dump manifest_path"
   elif ! grep -Fq 'Include files (explicit): storage/handoff/PLAN.md' "${REPO_ROOT}/${dump_manifest_path}"; then
     fail "architect dump manifest missing explicit PLAN include provenance"
+  elif ! grep -Fq 'History profile: architect' "${REPO_ROOT}/${dump_manifest_path}"; then
+    fail "architect dump manifest missing history profile"
+  fi
+  if [[ "$(extract_manifest_value "$LAST_MANIFEST" "history_profile")" != "architect" ]]; then
+    fail "architect bundle manifest dump.history_profile mismatch"
   fi
 
   package_listing="$(tar -tf "${REPO_ROOT}/${LAST_PACKAGE}")"
@@ -968,6 +1000,7 @@ test_audit_contract() {
   local dump_manifest_path=""
   local audit_results_rel=""
   local audit_closing_rel=""
+  local audit_task_surface_rel=""
 
   ensure_audit_receipt_fixture
   [[ -n "$AUDIT_EXPECTED_PACKET_ID" ]] || {
@@ -976,6 +1009,7 @@ test_audit_contract() {
   }
   audit_results_rel="storage/handoff/${AUDIT_EXPECTED_PACKET_ID}-RESULTS.md"
   audit_closing_rel="storage/handoff/CLOSING-${AUDIT_EXPECTED_PACKET_ID}.md"
+  audit_task_surface_rel="$(resolve_current_task_surface_rel)"
 
   run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=audit --out=auto
   if (( RUN_STATUS != 0 )); then
@@ -1002,11 +1036,19 @@ test_audit_contract() {
     if ! grep -Fq "<<< FILE BEGIN: ${audit_closing_rel}" "${REPO_ROOT}/${dump_payload_path}"; then
       fail "audit dump payload missing current closing sidecar file block"
     fi
+    if ! grep -Fq "<<< FILE BEGIN: ${audit_task_surface_rel}" "${REPO_ROOT}/${dump_payload_path}"; then
+      fail "audit dump payload missing current TASK leaf file block"
+    fi
   fi
   if [[ -z "$dump_manifest_path" ]]; then
     fail "audit manifest missing dump manifest_path"
   elif ! grep -Fq "Include files (explicit): ${audit_results_rel} ${audit_closing_rel}" "${REPO_ROOT}/${dump_manifest_path}"; then
     fail "audit dump manifest missing explicit RESULTS/CLOSING include provenance"
+  elif ! grep -Fq 'History profile: audit' "${REPO_ROOT}/${dump_manifest_path}"; then
+    fail "audit dump manifest missing history profile"
+  fi
+  if [[ "$(extract_manifest_value "$LAST_MANIFEST" "history_profile")" != "audit" ]]; then
+    fail "audit bundle manifest dump.history_profile mismatch"
   fi
 
   package_listing="$(tar -tf "${REPO_ROOT}/${LAST_PACKAGE}")"

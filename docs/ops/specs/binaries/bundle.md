@@ -134,6 +134,14 @@ Dump scope mapping by resolved profile:
 3. `foreman` -> `ops/bin/dump --scope=core`.
 4. `project` -> `ops/bin/dump --scope=project --project=<name>`.
 
+History-tier routing:
+1. Bundle passes the resolved profile name into dump as `--history-profile=<profile>`.
+2. `ops/bin/dump` resolves tiered archive serialization from `ops/lib/manifests/HISTORY.md`.
+3. Scope and history depth remain separate concerns:
+   - analyst and architect stay on `--scope=full`
+   - audit and foreman stay on `--scope=core`
+   - cold archive compaction happens in dump serialization, not traversal selection
+
 Disposable transport rule:
 1. Disposable inputs are profile-scoped exact file paths only.
 2. Current live set is:
@@ -142,7 +150,7 @@ Disposable transport rule:
    - audit current `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md`
 3. Future additions must be exact-file policy wiring plus matching smoke-test proof.
 
-Bundle runtime invokes dump with explicit `.txt` output path to suppress dump auto-compression side effects during bundle orchestration.
+Bundle runtime invokes dump with explicit `.txt` output path and explicit `--history-profile=<resolved-profile>` to suppress dump auto-compression side effects during bundle orchestration while keeping history depth deterministic.
 
 ATS validation gate:
 1. ATS flags are all-or-none. Any partial ATS argument set fails before artifact emission.

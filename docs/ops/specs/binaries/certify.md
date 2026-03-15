@@ -24,6 +24,7 @@ Before replay begins, certify computes the exact certify-owned generated surface
 
 These paths are structurally owned by certify for the active run and therefore do not require packet-specific allowlist additions. Unrelated changed paths remain subject to the normal allowlist gate.
 For base DP runs, certify materializes the archived `TASK` leaf body from the current active DP block before writing the new pointer head so prior-packet body text cannot be carried forward by an old TASK pointer target.
+When `--allow-intake-fallback` is explicitly enabled and `TASK.md` is a pointer-only head while the matching intake packet is present, certify prefers the intake packet as the active DP source for rerun recovery instead of reusing a stale packet body embedded in the current TASK leaf.
 
 Certify emits `Certify phase: <phase>` when the active phase changes, and all hard-fail exits are tagged as `ERROR [<phase>]` so closeout failures are phase-local without requiring transcript archaeology.
 At completion, certify also emits two stable summary blocks to stdout:
@@ -82,7 +83,7 @@ The restore procedure is:
    `storage/dp/intake/DP-OPS-XXXX.md`.
 2. Move the processed copy to `var/tmp/DP-OPS-XXXX.pre-rerun-processed.md` to
    eliminate intake/processed coexistence.
-3. Invoke certify normally: `./ops/bin/certify --dp=DP-OPS-XXXX --out=auto`.
+3. Invoke certify with fallback enabled so the restored intake packet is used as the active rerun source when TASK is pointer-only: `./ops/bin/certify --dp=DP-OPS-XXXX --allow-intake-fallback --out=auto`.
 
 The coexistence prohibition is a hard constraint: certify artifact path resolution is
 indeterminate when the same packet exists in both `storage/dp/intake/` and

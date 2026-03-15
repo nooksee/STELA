@@ -1676,19 +1676,10 @@ if [[ -n "$ADDENDUM_ID" ]]; then
   fi
 else
   TASK_SOURCE_PATH="$(resolve_task_source_path)"
-  extract_dp_block_from_task "$DP_ID" "$TASK_SOURCE_PATH" "$DP_BLOCK_PATH"
+  task_line_count="$(awk 'END { print NR }' "$TASK_PATH")"
+  FALLBACK_DP_PATH="${DP_INTAKE_DIR}/${DP_ID}.md"
 
-  DP_SOURCE="TASK.md"
-  if [[ ! -s "$DP_BLOCK_PATH" ]]; then
-    if [[ "$ALLOW_INTAKE_FALLBACK" != "1" ]]; then
-      task_line_count="$(awk 'END { print NR }' "$TASK_PATH")"
-      if [[ "$task_line_count" == "1" ]]; then
-        ALLOW_INTAKE_FALLBACK=1
-        echo "DP section '${DP_ID}' not found in TASK.md; auto-enabling intake fallback because TASK.md is pointer-only."
-      else
-        die "DP section '${DP_ID}' not found in TASK.md; intake fallback is disabled (pass --allow-intake-fallback to override)"
-      fi
-    fi
+  if [[ "$ALLOW_INTAKE_FALLBACK" == "1" && "$task_line_count" == "1" && -f "$FALLBACK_DP_PATH" ]]; then
     mapfile -t intake_packets < <(find "$DP_INTAKE_DIR" -maxdepth 1 -type f -name 'DP-*.md' -printf '%f\n' | sort)
     intake_packet=""
     for intake_packet in "${intake_packets[@]}"; do
@@ -1696,10 +1687,32 @@ else
         die "intake fallback blocked: non-target packet present in intake (${intake_packet})"
       fi
     done
-    FALLBACK_DP_PATH="${DP_INTAKE_DIR}/${DP_ID}.md"
-    [[ -f "$FALLBACK_DP_PATH" ]] || die "DP section '${DP_ID}' not found in TASK.md and fallback intake is missing: ${FALLBACK_DP_PATH#${REPO_ROOT}/}"
     cp "$FALLBACK_DP_PATH" "$DP_BLOCK_PATH"
     DP_SOURCE="${FALLBACK_DP_PATH#${REPO_ROOT}/}"
+  else
+    extract_dp_block_from_task "$DP_ID" "$TASK_SOURCE_PATH" "$DP_BLOCK_PATH"
+
+    DP_SOURCE="TASK.md"
+    if [[ ! -s "$DP_BLOCK_PATH" ]]; then
+      if [[ "$ALLOW_INTAKE_FALLBACK" != "1" ]]; then
+        if [[ "$task_line_count" == "1" ]]; then
+          ALLOW_INTAKE_FALLBACK=1
+          echo "DP section '${DP_ID}' not found in TASK.md; auto-enabling intake fallback because TASK.md is pointer-only."
+        else
+          die "DP section '${DP_ID}' not found in TASK.md; intake fallback is disabled (pass --allow-intake-fallback to override)"
+        fi
+      fi
+      mapfile -t intake_packets < <(find "$DP_INTAKE_DIR" -maxdepth 1 -type f -name 'DP-*.md' -printf '%f\n' | sort)
+      intake_packet=""
+      for intake_packet in "${intake_packets[@]}"; do
+        if [[ "$intake_packet" != "${DP_ID}.md" ]]; then
+          die "intake fallback blocked: non-target packet present in intake (${intake_packet})"
+        fi
+      done
+      [[ -f "$FALLBACK_DP_PATH" ]] || die "DP section '${DP_ID}' not found in TASK.md and fallback intake is missing: ${FALLBACK_DP_PATH#${REPO_ROOT}/}"
+      cp "$FALLBACK_DP_PATH" "$DP_BLOCK_PATH"
+      DP_SOURCE="${FALLBACK_DP_PATH#${REPO_ROOT}/}"
+    fi
   fi
 fi
 

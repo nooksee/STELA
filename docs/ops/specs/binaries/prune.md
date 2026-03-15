@@ -6,7 +6,7 @@
 `ops/bin/prune` exists to enforce retention hygiene without destroying proof artifacts required for audit reconstruction. The binary is a safety-critical actor: it must fail closed on policy parse errors, keep critical evidence outside delete eligibility, and preserve deterministic behavior so the same inputs produce the same candidate decisions. It also provides closeout-time visibility into which classes are inflating default dump context.
 
 ## Mechanics and Sequencing
-The binary parses target selection (`sop`, `pow`, `both`, `storage`, or `dump`), phase mode (`report` or `apply`), optional dry-run and scrub flags, then loads `ops/lib/manifests/PRUNE.md` before any candidate processing. Policy load is fail-closed: missing required keys or malformed values stop execution.
+The binary parses target selection (`sop`, `pow`, `both`, `storage`, or `dump`), phase mode (`report` or `apply`), optional dry-run and scrub flags, then loads `ops/lib/manifests/PRUNE.md` plus shared history class policy from `ops/lib/manifests/HISTORY.md` before any candidate processing. Policy load is fail-closed: missing required keys or malformed values stop execution.
 
 After policy load, `ops/bin/prune` resolves pointer-first `SoP.md` and `PoW.md` heads to concrete surface leaves and executes `results_guard` before prune operations. The guard inspects tracked handoff RESULTS and CLOSING artifacts and enforces clean staged and unstaged state for those paths before any deletion path executes; untracked runtime handoff files are ignored.
 
@@ -29,7 +29,7 @@ For `--target=dump`, the binary emits two coordinated reports:
 - `target=dump` covers files that materially affect default dump context.
 - `target=repo-context` covers broader working-tree pressure for operator visibility without widening automatic action.
 
-`target=dump` rows are policy-classed under `## Dump Report Classes` and report:
+`target=dump` rows are classed from `ops/lib/manifests/HISTORY.md` (`## Dump Report Classes`) and report:
 - class name
 - pattern
 - tier
@@ -42,9 +42,9 @@ For `--target=dump`, the binary emits two coordinated reports:
 - weighted bytes
 - top contributing path and bytes
 
-`target=repo-context` rows are policy-classed under `## Repo Pressure Classes` and report the same metric shape except for apply eligibility.
+`target=repo-context` rows are classed from `ops/lib/manifests/HISTORY.md` (`## Repo Pressure Classes`) and report the same metric shape except for apply eligibility.
 
-`--target=dump --phase=apply` is intentionally narrow. It may act only on classes marked `retention=disposable` and `apply=1` in `PRUNE.md`, and it must still skip anything covered by critical or denylist protections. Canonical dump-visible bulk remains report-only in this slice.
+`--target=dump --phase=apply` is intentionally narrow. It may act only on classes marked `retention=disposable` and `apply=1` in `HISTORY.md`, and it must still skip anything covered by critical or denylist protections. Canonical dump-visible bulk remains report-only in this slice.
 
 Execution is two-phase for ledger targets:
 - `report` (default): non-mutating output only (`would_remove`, bytes estimate, tier, reason, score).

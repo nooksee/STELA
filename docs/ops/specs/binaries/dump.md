@@ -25,6 +25,7 @@ The following named scopes define traversal boundaries for audit clarity and ope
 - `--selection=dp+allowlist` (scalar): same as `dp`, plus explicit additions from `--include-file` and `--include-file-list`.
 
 New selection flags and interactions:
+- `--history-profile=PROFILE` (scalar, default scope-mapped): selects a history-tier profile from `ops/lib/manifests/HISTORY.md`.
 - `--from-dp=PATH|auto` (scalar, default unset): when set, parse DP-scoped load-order files from section `3.2.2`. `auto` resolves the active DP through `TASK.md` (pointer-aware) and uses that packet as the source.
 - `--include-file=PATH` (accumulator): adds explicit candidate files; applied in `scope` after traversal and in `dp+allowlist`.
 - `--include-file-list=FILE` (accumulator): reads candidate paths line-by-line from each file; blank lines and `#` comment lines are ignored; applied in `scope` after traversal and in `dp+allowlist`.
@@ -43,7 +44,16 @@ For qualifying DP selection runs (`--selection=dp` or `--selection=dp+allowlist`
 - `files_rejected_count`
 - `files_rejected` (list entries with path and rejection reason)
 
-After selection, the binary emits a dump header with branch and hash metadata, writes index entries for selected files, records any explicit include-file / include-file-list refiners, and emits per-file content blocks from `HEAD` state through `git show`. When an explicitly included file exists in the working tree but is not tracked in `HEAD`, the current working-tree content is emitted. Optional truncation limits are applied per file when `--max-lines` is set. It writes payload and manifest artifacts under `storage/dumps`, optionally packs payload and manifest into a tarball, and prints artifact paths when `--out` is used.
+After selection, the binary resolves a history profile from `ops/lib/manifests/HISTORY.md`, writes index entries for the selected file set, records any explicit include-file / include-file-list refiners, and emits one block per selected file. For archive classes defined in `HISTORY.md`, serialization is tiered:
+- recent bodies: full body
+- checkpoint bodies: full body
+- cold bodies: explicit metadata-only blocks
+
+Active pointer targets for `PoW.md`, `SoP.md`, and `TASK.md` are force-selected when their pointed leaf files exist. This applies even when the pointed archive leaf is currently untracked in the working tree, so audit and collaborator dumps can inspect the live active leaf body instead of only the one-line head pointer.
+
+Metadata-only blocks are not silent omissions. They must state that the full body was omitted, preserve the exact file path, disclose the history class and tier, emit a re-include instruction using `--include-file=<path>`, and surface available identity fields such as `trace_id`, `packet_id`, `created_at`, `previous`, or first heading text. Explicit `--include-file` and `--include-file-list` entries override cold-body omission for those exact paths.
+
+Non-history files still emit full content from tracked state through `git show` or the current working tree when explicitly included and untracked. Optional truncation limits are applied per full-body text file when `--max-lines` is set. The binary writes payload and manifest artifacts under `storage/dumps`, optionally packs payload and manifest into a tarball, and prints artifact paths when `--out` is used.
 
 ### Factory-Only Audit Recipe and Guardrail Examples
 
@@ -66,4 +76,4 @@ Do not use:
 During immutable workflow adoption, one identified risk was that untracked local artifacts could reshape the narrative of what governed a packet execution, and another was oversharing platform context to Contractors when a bounded packet context was sufficient. The CDD/APD split addresses both concerns: CDD defaults toward bounded Contractor visibility, while APD preserves optional expanded audit evidence only when explicitly required by scope. `ops/bin/dump` reduces those risks by grounding dump payloads in tracked repository state and explicit selection or traversal rules.
 
 ## Integrity Filter Warnings
-`ops/bin/dump` fails on invalid argument combinations, unknown `--selection` values, missing project target for project scope, non-root invocation, missing required canon surfaces, missing traversal output, missing `tar` when archive output is requested, `--include-file-list` values that point to missing files, and `--from-dp=auto` when no active DP can be resolved from `TASK.md`. By design, untracked local files are not serialized into payload content unless they are explicitly included by caller intent.
+`ops/bin/dump` fails on invalid argument combinations, unknown `--selection` values, unknown `--history-profile` values, missing project target for project scope, non-root invocation, missing required canon surfaces, missing traversal output, missing `tar` when archive output is requested, `--include-file-list` values that point to missing files, and `--from-dp=auto` when no active DP can be resolved from `TASK.md`. By design, untracked local files are not serialized into payload content unless they are explicitly included by caller intent.

@@ -51,17 +51,22 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 - Analyst bundle text must advertise a `Recommendation:` line in default analyst mode.
 - Analyst bundle text must advertise explicit plan-output mode separately from default discussion mode.
 - Analyst dump payload must contain `<<< FILE BEGIN: storage/handoff/TOPIC.md`.
+- Analyst dump manifest must report `History profile: analyst`.
+- Analyst dump payload must contain explicit `[history metadata-only]` blocks for cold archive history.
 - Analyst dump manifest must record explicit include provenance for `storage/handoff/TOPIC.md`.
 - Analyst package must include `storage/handoff/TOPIC.md` and omit `storage/handoff/PLAN.md`.
 - Architect bundle text must include `[REQUEST]` block with slice and packet metadata.
 - Architect bundle text `[HANDOFF]` must report `PLAN.md` only when present.
 - Architect dump payload must contain `<<< FILE BEGIN: storage/handoff/PLAN.md` when `PLAN.md` is present.
+- Architect dump manifest must report `History profile: architect`.
 - Architect dump manifest must record explicit include provenance for `storage/handoff/PLAN.md` when present.
 - Architect package must include `storage/handoff/PLAN.md` when present and must not include `storage/handoff/TOPIC.md` unless architect transport explicitly requires it in a future DP.
 - Validated architect slice output must include `[ACTIVE SLICE PROJECTION]` with active-slice handoff data only.
 - Architect ad hoc output must not emit `[ACTIVE SLICE PROJECTION]`.
 - Audit requires current `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md`; bundle must fail closed when either is missing or current DP resolution is unavailable.
 - Audit dump payload must contain file blocks for the current `RESULTS` and `CLOSING` files.
+- Audit dump payload must contain the current active TASK leaf file block resolved through `TASK.md`, not only the one-line `TASK.md` pointer.
+- Audit dump manifest must report `History profile: audit`.
 - Audit dump manifest must record explicit include provenance for the current `RESULTS` and `CLOSING` files.
 - Audit package must include the current `RESULTS` and `CLOSING` files and omit unrelated disposable inputs such as `TOPIC.md` and `PLAN.md`.
 - Compatibility legacy artifact outputs (`BUNDLE-*`) are asserted from manifest `artifact_naming` metadata when legacy emission is enabled by policy.
