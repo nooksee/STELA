@@ -31,6 +31,8 @@ CERTIFY_PHASE_STARTED_EPOCH=""
 CERTIFY_RUN_STARTED_EPOCH="$(date +%s)"
 declare -A CERTIFY_PHASE_DURATION_SECONDS=()
 declare -a CERTIFY_COMMAND_TIMINGS=()
+declare -A CERTIFY_GENERATED_PATHS=()
+declare -a CERTIFY_GENERATED_PATH_ORDER=()
 
 certify_set_phase() {
   local next_phase="$1"
@@ -80,6 +82,49 @@ build_long_pole_summary_output() {
     rank=$((rank + 1))
     printf 'CERTIFY-LONG-POLE: rank=%s phase=%s command_id=%s duration_seconds=%s command=%s\n' \
       "$rank" "$phase" "$cmd_id" "$duration_seconds" "$command"
+  done
+}
+
+register_certify_generated_path() {
+  local path="$1"
+  local normalized
+  normalized="$(normalize_path "$path")"
+  [[ -n "$normalized" ]] || return 0
+  if [[ -z "${CERTIFY_GENERATED_PATHS[$normalized]+set}" ]]; then
+    CERTIFY_GENERATED_PATHS["$normalized"]=1
+    CERTIFY_GENERATED_PATH_ORDER+=("$normalized")
+  fi
+}
+
+path_is_certify_generated() {
+  local path="$1"
+  local normalized
+  normalized="$(normalize_path "$path")"
+  [[ -n "$normalized" ]] || return 1
+  [[ -n "${CERTIFY_GENERATED_PATHS[$normalized]+set}" ]]
+}
+
+register_certify_generated_surface_paths() {
+  local packet_id="$1"
+  local freshness_stamp="$2"
+  local git_short_hash="$3"
+
+  CERTIFY_GENERATED_PATHS=()
+  CERTIFY_GENERATED_PATH_ORDER=()
+
+  register_certify_generated_path "PoW.md"
+  register_certify_generated_path "SoP.md"
+  register_certify_generated_path "TASK.md"
+  register_certify_generated_path "archives/surfaces/PoW-${freshness_stamp}-${git_short_hash}.md"
+  register_certify_generated_path "archives/surfaces/SoP-${freshness_stamp}-${git_short_hash}.md"
+  register_certify_generated_path "archives/surfaces/TASK-${packet_id}-${git_short_hash}.md"
+}
+
+build_generated_surface_policy_output() {
+  local path
+  echo "Generated surface ownership policy:"
+  for path in "${CERTIFY_GENERATED_PATH_ORDER[@]}"; do
+    printf -- "- %s\n" "$path"
   done
 }
 
@@ -206,6 +251,9 @@ extract_addendum_scope_delta() {
 
 allowlist_contains_path() {
   local path="$1"
+  if path_is_certify_generated "$path"; then
+    return 0
+  fi
   if [[ -n "${ALLOWLIST_ENTRIES[$path]+set}" ]]; then
     return 0
   fi
@@ -299,6 +347,51 @@ extract_markdown_body_for_snapshot() {
       }
     }
   ' "$source_path"
+}
+
+render_task_snapshot_body() {
+  local source_path="$1"
+  local replacement_dp_path="$2"
+  local out_path="$3"
+  local source_body_tmp="${TMP_DIR}/task-snapshot-source.body"
+  local wrote_marker_path="${TMP_DIR}/task-snapshot-replaced.marker"
+
+  if ! extract_markdown_body_for_snapshot "$source_path" > "$source_body_tmp"; then
+    die "failed to extract TASK snapshot body from ${source_path#${REPO_ROOT}/}"
+  fi
+
+  rm -f "$wrote_marker_path"
+  awk -v replacement="$replacement_dp_path" -v wrote_marker="$wrote_marker_path" '
+    BEGIN {
+      in_section=0
+      wrote=0
+      skip_rest=0
+    }
+    /^##[[:space:]]*3[.][[:space:]]*Current Dispatch Packet \(DP\)[[:space:]]*$/ {
+      in_section=1
+      print
+      next
+    }
+    in_section && /^### DP-/ && wrote==0 {
+      while ((getline line < replacement) > 0) {
+        print line
+      }
+      close(replacement)
+      wrote=1
+      print "1" > wrote_marker
+      skip_rest=1
+      next
+    }
+    skip_rest && /^##[[:space:]]*[0-9]+[.][[:space:]]/ && $0 !~ /^##[[:space:]]*3[.]/ {
+      skip_rest=0
+    }
+    skip_rest { next }
+    { print }
+  ' "$source_body_tmp" > "$out_path"
+
+  if [[ ! -s "$wrote_marker_path" ]]; then
+    die "failed to locate active DP heading inside TASK section 3 while materializing TASK snapshot"
+  fi
 }
 
 extract_dp_field_value() {
@@ -662,6 +755,7 @@ emit_surface_leaf_and_pointer() {
   local trace_id="$3"
   local packet_id="$4"
   local created_at="$5"
+  local task_replacement_dp_path="${6:-}"
   local surface_rel_path="${surface_abs_path#${REPO_ROOT}/}"
 
   [[ -f "$surface_abs_path" ]] || die "surface missing: ${surface_rel_path}"
@@ -699,7 +793,9 @@ emit_surface_leaf_and_pointer() {
   fi
 
   local body_tmp="${TMP_DIR}/snapshot-${surface_rel_path##*/}.body"
-  if ! extract_markdown_body_for_snapshot "$source_path" > "$body_tmp"; then
+  if [[ "$surface_rel_path" == "TASK.md" && -n "$task_replacement_dp_path" ]]; then
+    render_task_snapshot_body "$source_path" "$task_replacement_dp_path" "$body_tmp"
+  elif ! extract_markdown_body_for_snapshot "$source_path" > "$body_tmp"; then
     die "failed to extract snapshot body from ${source_path#${REPO_ROOT}/}"
   fi
 
@@ -723,6 +819,7 @@ emit_surface_leaves_phase() {
   local freshness_stamp="$3"
   local git_short_hash="$4"
   local created_at="$5"
+  local task_replacement_dp_path="${6:-}"
 
   [[ "$freshness_stamp" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || die "invalid Freshness Stamp format in DP payload: ${freshness_stamp}"
   [[ "$git_short_hash" =~ ^[0-9a-f]{7,}$ ]] || die "invalid short hash for surface leaf naming: ${git_short_hash}"
@@ -733,7 +830,7 @@ emit_surface_leaves_phase() {
 
   emit_surface_leaf_and_pointer "$POW_SURFACE_PATH" "$pow_leaf_rel" "$trace_id" "$packet_id" "$created_at"
   emit_surface_leaf_and_pointer "$SOP_SURFACE_PATH" "$sop_leaf_rel" "$trace_id" "$packet_id" "$created_at"
-  emit_surface_leaf_and_pointer "$TASK_SURFACE_PATH" "$task_leaf_rel" "$trace_id" "$packet_id" "$created_at"
+  emit_surface_leaf_and_pointer "$TASK_SURFACE_PATH" "$task_leaf_rel" "$trace_id" "$packet_id" "$created_at" "$task_replacement_dp_path"
 
   cat <<EOF
 Phase 2 surface leaves emitted:
@@ -1114,6 +1211,7 @@ run_surface_emission_step() {
   local packet_id="$2"
   local freshness_stamp="$3"
   local git_short_hash="$4"
+  local task_replacement_dp_path="${5:-}"
 
   CMD_INDEX=$((CMD_INDEX + 1))
   local cmd_id
@@ -1125,7 +1223,7 @@ run_surface_emission_step() {
   local created_at
   created_at="$(utc_now)"
   local stdout_body
-  stdout_body="$(emit_surface_leaves_phase "$trace_id" "$packet_id" "$freshness_stamp" "$git_short_hash" "$created_at")"
+  stdout_body="$(emit_surface_leaves_phase "$trace_id" "$packet_id" "$freshness_stamp" "$git_short_hash" "$created_at" "$task_replacement_dp_path")"
   local finished_at
   finished_at="$(utc_now)"
   local finish_epoch
@@ -1142,6 +1240,71 @@ run_surface_emission_step() {
     "0" \
     "$stdout_body" \
     "(empty)"
+}
+
+verify_active_task_leaf_packet_consistency() {
+  local task_source_path
+  task_source_path="$(resolve_task_source_path)"
+
+  local pointer_path
+  pointer_path="$(normalize_path "$(cat "$TASK_SURFACE_PATH")")"
+  [[ -n "$pointer_path" ]] || die "TASK.md pointer is empty after surface emission"
+
+  local leaf_packet_id
+  leaf_packet_id="$(awk '
+    BEGIN { in_frontmatter=0 }
+    NR == 1 && $0 == "---" { in_frontmatter=1; next }
+    in_frontmatter && $0 == "---" { exit }
+    in_frontmatter && /^packet_id:[[:space:]]*/ {
+      sub(/^packet_id:[[:space:]]*/, "", $0)
+      print
+      exit
+    }
+  ' "$task_source_path")"
+  leaf_packet_id="$(trim "$leaf_packet_id")"
+  [[ -n "$leaf_packet_id" ]] || die "TASK leaf missing packet_id frontmatter: ${task_source_path#${REPO_ROOT}/}"
+
+  local body_packet_id
+  body_packet_id="$(awk '
+    /^### DP-[A-Z]+-[0-9]{4,}:[[:space:]]+/ {
+      value=$0
+      sub(/^### /, "", value)
+      sub(/:.*/, "", value)
+      print value
+      exit
+    }
+  ' "$task_source_path")"
+  body_packet_id="$(trim "$body_packet_id")"
+  [[ -n "$body_packet_id" ]] || die "TASK leaf missing active DP heading in body: ${task_source_path#${REPO_ROOT}/}"
+
+  if [[ "$leaf_packet_id" != "$body_packet_id" ]]; then
+    die "TASK leaf packet/body mismatch: frontmatter=${leaf_packet_id} body=${body_packet_id} path=${pointer_path}"
+  fi
+
+  local branch_name
+  branch_name="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
+  local required_work_branch
+  required_work_branch="$(awk '
+    /^Required Work Branch:[[:space:]]*/ {
+      sub(/^Required Work Branch:[[:space:]]*/, "", $0)
+      print
+      exit
+    }
+  ' "$task_source_path")"
+  required_work_branch="$(trim "$required_work_branch")"
+  [[ -n "$required_work_branch" ]] || die "TASK leaf missing Required Work Branch line: ${task_source_path#${REPO_ROOT}/}"
+
+  if [[ "$required_work_branch" != "$branch_name" ]]; then
+    die "TASK leaf branch/body mismatch: required_work_branch=${required_work_branch} current_branch=${branch_name} path=${pointer_path}"
+  fi
+
+  cat <<EOF
+TASK packet-consistency check: PASS
+- task_pointer: ${pointer_path}
+- frontmatter_packet_id: ${leaf_packet_id}
+- body_packet_id: ${body_packet_id}
+- required_work_branch: ${required_work_branch}
+EOF
 }
 
 extract_dp_block_from_task() {
@@ -1637,6 +1800,10 @@ CMD_INDEX=0
 SURFACE_PHASE_DONE=0
 VERIFICATION_COMMAND_COUNT=0
 GIT_SHORT_HASH="$(git -C "$REPO_ROOT" rev-parse --short HEAD)"
+register_certify_generated_surface_paths "$DP_ID" "$FRESHNESS_STAMP" "$GIT_SHORT_HASH"
+GENERATED_SURFACE_POLICY_OUTPUT="$(build_generated_surface_policy_output)"
+printf '%s\n' "$GENERATED_SURFACE_POLICY_OUTPUT"
+INTEGRITY_OUTPUT+=$'\n\n'"${GENERATED_SURFACE_POLICY_OUTPUT}"
 
 CMD_INDEX=$((CMD_INDEX + 1))
 CMD_ID="$(printf '%02d' "$CMD_INDEX")"
@@ -1715,13 +1882,21 @@ while IFS= read -r command || [[ -n "$command" ]]; do
 
   VERIFICATION_COMMAND_COUNT=$((VERIFICATION_COMMAND_COUNT + 1))
   if (( SURFACE_PHASE_DONE == 0 && VERIFICATION_COMMAND_COUNT >= 3 )); then
-    run_surface_emission_step "$TRACE_ID" "$DP_ID" "$FRESHNESS_STAMP" "$GIT_SHORT_HASH"
+    if [[ -z "$ADDENDUM_ID" ]]; then
+      run_surface_emission_step "$TRACE_ID" "$DP_ID" "$FRESHNESS_STAMP" "$GIT_SHORT_HASH" "$DP_BLOCK_PATH"
+    else
+      run_surface_emission_step "$TRACE_ID" "$DP_ID" "$FRESHNESS_STAMP" "$GIT_SHORT_HASH"
+    fi
     SURFACE_PHASE_DONE=1
   fi
 done < "$FINAL_COMMANDS_PATH"
 
 if (( SURFACE_PHASE_DONE == 0 )); then
-  run_surface_emission_step "$TRACE_ID" "$DP_ID" "$FRESHNESS_STAMP" "$GIT_SHORT_HASH"
+  if [[ -z "$ADDENDUM_ID" ]]; then
+    run_surface_emission_step "$TRACE_ID" "$DP_ID" "$FRESHNESS_STAMP" "$GIT_SHORT_HASH" "$DP_BLOCK_PATH"
+  else
+    run_surface_emission_step "$TRACE_ID" "$DP_ID" "$FRESHNESS_STAMP" "$GIT_SHORT_HASH"
+  fi
   SURFACE_PHASE_DONE=1
 fi
 
@@ -1755,6 +1930,33 @@ if [[ "$POST_INTEGRITY_EXIT_CODE" -ne 0 ]]; then
   die "post-command integrity gate failed"
 fi
 
+if [[ -z "$ADDENDUM_ID" ]]; then
+  CMD_INDEX=$((CMD_INDEX + 1))
+  CMD_ID="$(printf '%02d' "$CMD_INDEX")"
+  TASK_CONSISTENCY_STARTED_AT="$(utc_now)"
+  TASK_CONSISTENCY_START_EPOCH="$(date +%s)"
+  set +e
+  TASK_CONSISTENCY_STDOUT="$(verify_active_task_leaf_packet_consistency)"
+  TASK_CONSISTENCY_EXIT_CODE=$?
+  set -e
+  TASK_CONSISTENCY_FINISHED_AT="$(utc_now)"
+  TASK_CONSISTENCY_FINISH_EPOCH="$(date +%s)"
+  TASK_CONSISTENCY_DURATION_SECONDS=$((TASK_CONSISTENCY_FINISH_EPOCH - TASK_CONSISTENCY_START_EPOCH))
+  append_command_log_entry \
+    "$CMD_ID" \
+    "internal: verify active TASK leaf packet consistency" \
+    "$TASK_CONSISTENCY_STARTED_AT" \
+    "$TASK_CONSISTENCY_FINISHED_AT" \
+    "$TASK_CONSISTENCY_DURATION_SECONDS" \
+    "$TASK_CONSISTENCY_EXIT_CODE" \
+    "$TASK_CONSISTENCY_STDOUT" \
+    "(empty)"
+  if [[ "$TASK_CONSISTENCY_EXIT_CODE" -ne 0 ]]; then
+    printf '%s' "$COMMAND_LOG" >&2
+    die "active TASK packet-consistency check failed"
+  fi
+fi
+
 CMD_INDEX=$((CMD_INDEX + 1))
 CMD_ID="$(printf '%02d' "$CMD_INDEX")"
 ALLOWLIST_CHECK_STARTED_AT="$(utc_now)"
@@ -1780,6 +1982,35 @@ if [[ "$ALLOWLIST_CHECK_EXIT_CODE" -ne 0 ]]; then
   die "changed-file subset check failed"
 fi
 
+CMD_INDEX=$((CMD_INDEX + 1))
+CMD_ID="$(printf '%02d' "$CMD_INDEX")"
+PRUNE_REPORT_STARTED_AT="$(utc_now)"
+PRUNE_REPORT_START_EPOCH="$(date +%s)"
+PRUNE_REPORT_STDOUT_PATH="${TMP_DIR}/post-prune-report.stdout"
+PRUNE_REPORT_STDERR_PATH="${TMP_DIR}/post-prune-report.stderr"
+set +e
+bash -lc "cd \"$REPO_ROOT\" && ./ops/bin/prune --target=dump --phase=report --dry-run" </dev/null >"$PRUNE_REPORT_STDOUT_PATH" 2>"$PRUNE_REPORT_STDERR_PATH"
+PRUNE_REPORT_EXIT_CODE=$?
+set -e
+PRUNE_REPORT_FINISHED_AT="$(utc_now)"
+PRUNE_REPORT_FINISH_EPOCH="$(date +%s)"
+PRUNE_REPORT_DURATION_SECONDS=$((PRUNE_REPORT_FINISH_EPOCH - PRUNE_REPORT_START_EPOCH))
+PRUNE_REPORT_STDOUT="$(cat "$PRUNE_REPORT_STDOUT_PATH")"
+PRUNE_REPORT_STDERR="$(cat "$PRUNE_REPORT_STDERR_PATH")"
+append_command_log_entry \
+  "$CMD_ID" \
+  "./ops/bin/prune --target=dump --phase=report --dry-run" \
+  "$PRUNE_REPORT_STARTED_AT" \
+  "$PRUNE_REPORT_FINISHED_AT" \
+  "$PRUNE_REPORT_DURATION_SECONDS" \
+  "$PRUNE_REPORT_EXIT_CODE" \
+  "$PRUNE_REPORT_STDOUT" \
+  "$PRUNE_REPORT_STDERR"
+if [[ "$PRUNE_REPORT_EXIT_CODE" -ne 0 ]]; then
+  printf '%s' "$COMMAND_LOG" >&2
+  die "dump-visible prune report failed"
+fi
+
 POST_INTEGRITY_STDOUT_SANITIZED="$(printf '%s' "$POST_INTEGRITY_STDOUT" | sanitize_disposable_refs)"
 POST_INTEGRITY_STDERR_SANITIZED="$(printf '%s' "$POST_INTEGRITY_STDERR" | sanitize_disposable_refs)"
 INTEGRITY_OUTPUT+=$'\n\nPost-command integrity recheck:\n'
@@ -1791,6 +2022,20 @@ fi
 if [[ -n "$(trim "$POST_INTEGRITY_STDERR_SANITIZED")" ]]; then
   INTEGRITY_OUTPUT+=$'\nPost-command integrity stderr:\n'
   INTEGRITY_OUTPUT+="${POST_INTEGRITY_STDERR_SANITIZED}"
+fi
+if [[ -z "$ADDENDUM_ID" && -n "$(trim "${TASK_CONSISTENCY_STDOUT:-}")" ]]; then
+  INTEGRITY_OUTPUT+=$'\n\nActive TASK packet-consistency recheck:\n'
+  INTEGRITY_OUTPUT+="${TASK_CONSISTENCY_STDOUT}"
+fi
+if [[ -n "$(trim "$PRUNE_REPORT_STDOUT")" ]]; then
+  PRUNE_REPORT_STDOUT_SANITIZED="$(printf '%s' "$PRUNE_REPORT_STDOUT" | sanitize_disposable_refs)"
+  INTEGRITY_OUTPUT+=$'\n\nDump-visible prune pressure report:\n'
+  INTEGRITY_OUTPUT+="${PRUNE_REPORT_STDOUT_SANITIZED}"
+fi
+if [[ -n "$(trim "$PRUNE_REPORT_STDERR")" ]]; then
+  PRUNE_REPORT_STDERR_SANITIZED="$(printf '%s' "$PRUNE_REPORT_STDERR" | sanitize_disposable_refs)"
+  INTEGRITY_OUTPUT+=$'\nDump-visible prune stderr:\n'
+  INTEGRITY_OUTPUT+="${PRUNE_REPORT_STDERR_SANITIZED}"
 fi
 
 DIFF_NAME_ONLY="$(git -C "$REPO_ROOT" diff --name-only HEAD)"

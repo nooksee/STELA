@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/bin/certify` exists to enforce PoT Section 4.2 Generation Mandate at closeout time. The binary prevents a failure mode where receipt evidence is hand-assembled, scope checks are skipped, or proof surfaces diverge from recorded execution. It protects equilibrium maintenance by requiring deterministic receipt command execution, allowlist subset enforcement, and pointer-first surface emission for `PoW.md`, `SoP.md`, and `TASK.md`.
+`ops/bin/certify` exists to enforce PoT Section 4.2 Generation Mandate at closeout time. The binary prevents a failure mode where receipt evidence is hand-assembled, scope checks are skipped, or proof surfaces diverge from recorded execution. It protects equilibrium maintenance by requiring deterministic receipt command execution, allowlist subset enforcement, structurally owned pointer-first surface emission for `PoW.md`, `SoP.md`, and `TASK.md`, and packet-consistent TASK archival.
 
 ## Mechanics and Sequencing
 `ops/bin/certify` now runs in explicit phases:
@@ -11,8 +11,19 @@
 2. `preflight`: validate the non-empty closing sidecar at `storage/handoff/CLOSING-<DP>.md`; resolve the active TASK source and DP block; enforce required DP section headings; extract the allowlist pointer and receipt commands; prepend and de-duplicate mandatory DP preflight commands; validate trace / OPEN prerequisites; run the negative closing-validator self-check; run the pre-command integrity gate; and write, ingest, and validate the Contractor Execution Narrative scaffold before any long replay begins.
 3. `replay`: execute the assembled receipt command plan in order. Certify rewrites any plain `bash tools/verify.sh` receipt line to `bash tools/verify.sh --mode=certify-critical` so the certify-critical replay path remains bounded without weakening the full standalone verify command outside certify. During verification command execution, certify tracks dump invocations and resolves the latest dump manifest pointer. For addendum draft verification commands (`ops/bin/draft --addendum=... --base-dp=...`), certify prepends `DRAFT_ALLOW_DIRTY_TREE=1` at execution time so the command can be replayed inside an intentionally dirty closeout session without relaxing `ops/bin/draft` global clean-tree enforcement.
 4. `verify`: nested phase label used when the replayed command is `tools/verify.sh --mode=certify-critical`; failures in that command report as verify-phase failures instead of generic replay failures.
-5. `postflight`: run post-command integrity and changed-file subset checks against the allowlist after replay completes.
+5. `postflight`: run post-command integrity, active TASK packet-consistency verification, changed-file subset checks against the allowlist, and a dump-visible prune pressure report after replay completes.
 6. `results`: capture diff outputs, render RESULTS via `ops/bin/template render results` with the `CONTRACTOR_NARRATIVE` slot populated from the collected narrative, append `dump_manifest` in Scope Verification alongside the allowlist pointer (`none` when no dump command was present in the DP receipt section; value is disposable-reference sanitized before RESULTS render), lint RESULTS, verify structural headings and hash parity, move intake DP to processed storage when present, emit telemetry leaf output, and print receipt paths.
+
+Before replay begins, certify computes the exact certify-owned generated surface set for the current packet:
+- `PoW.md`
+- `SoP.md`
+- `TASK.md`
+- `archives/surfaces/PoW-<freshness>-<short-hash>.md`
+- `archives/surfaces/SoP-<freshness>-<short-hash>.md`
+- `archives/surfaces/TASK-<packet-id>-<short-hash>.md`
+
+These paths are structurally owned by certify for the active run and therefore do not require packet-specific allowlist additions. Unrelated changed paths remain subject to the normal allowlist gate.
+For base DP runs, certify materializes the archived `TASK` leaf body from the current active DP block before writing the new pointer head so prior-packet body text cannot be carried forward by an old TASK pointer target.
 
 Certify emits `Certify phase: <phase>` when the active phase changes, and all hard-fail exits are tagged as `ERROR [<phase>]` so closeout failures are phase-local without requiring transcript archaeology.
 At completion, certify also emits two stable summary blocks to stdout:
@@ -23,6 +34,12 @@ The certify telemetry leaf includes:
 - `total_duration_seconds`
 - the phase summary block
 - the long-pole summary block
+
+After surface emission, certify verifies that the active `TASK` pointer target is packet-consistent:
+- frontmatter `packet_id` must equal the first `### DP-...` body heading
+- the body `Required Work Branch:` must equal the current work branch
+
+This postflight check is fail-closed and is recorded in the command log.
 
 ### Contractor Execution Narrative Capture
 At certify start, after integrity initialization and before command execution, certify writes a scaffold block to `${TMP_DIR}/narrative.md` with the following subsection structure:
@@ -50,6 +67,8 @@ The DP-OPS-0074 enforcement-model gap exposed ambiguity between permissive recei
 ## Integrity Filter Warnings
 Certification stops on unknown arguments, packet mismatch against work-branch naming, missing closing sidecar, empty closing sidecar, missing DP block in TASK when intake fallback is not explicitly authorized, malformed allowlist pointers, unsupported command substitution or glob tokens in receipt commands, integrity lint failure, any verification command failure, invalid Freshness Stamp format, missing trace identity, pointer resolution failure, unresolved template tokens in RESULTS, results lint failure, or changed files outside the allowlist. The binary sanitizes disposable artifact references in command logs, but it does not permit disposable artifact references inside DP or RESULTS surfaces. Contractor narrative validation stops certification when the narrative contains placeholder text or untouched scaffold prose, is missing required subsections, or is missing required Decision Leaf field lines. Preflight failures must stop before replay; replay must not be used to discover malformed sidecar, malformed narrative, or missing trace prerequisites.
 In addendum mode, the binary additionally stops on: `--addendum` present without `--dp`; `--addendum` value that is not a single uppercase letter; missing addendum intake artifact with no fallback; or addendum SCOPE_DELTA entries containing glob or brace expansion tokens.
+Certify also runs `./ops/bin/prune --target=dump --phase=report --dry-run` during postflight and appends the report to receipt evidence. This is observational closeout intelligence only; it does not authorize deletion of canonical dump-visible history.
+
 Phase and long-pole summaries are observational only. They do not alter replay order, command selection, or pass/fail semantics.
 
 ## Rerun Path

@@ -19,19 +19,21 @@
    - Fail non-markdown files in `docs/` and `opt/`.
    - Fail loose markdown in `ops/` outside allowed subtrees.
 5. Emit warnings (not hard failures) for unexpected `storage/` clutter and missing project `README.md` files.
-6. Run deterministic smoke and lint gates by mode:
-   - `--mode=full` (default): `tools/test/bundle.sh`, `tools/test/factory.sh`, `tools/test/open.sh`, `tools/test/editor.sh`, `tools/lint/response.sh --test`, and `tools/lint/debt.sh`.
-   - `--mode=certify-critical`: `tools/test/bundle.sh --mode=certify-critical` and `tools/test/open.sh`.
+6. Run deterministic smoke and lint gates by mode in a fixed fail-fast order:
+   - `--mode=full` (default): `tools/test/open.sh`, `tools/test/editor.sh`, `tools/lint/debt.sh`, `tools/test/factory.sh`, `tools/lint/response.sh --test`, then `tools/test/bundle.sh`.
+   - `--mode=certify-critical`: `tools/test/open.sh`, then `tools/test/bundle.sh --mode=certify-critical`.
 7. Emit stable lane telemetry to stdout for every executed smoke/lint lane:
    - `VERIFY-LANE: name=<lane> scope=<certify-critical|full-only> status=<pass|fail|missing> duration_seconds=<N> detail=<command-or-path>`
    - Final recap lines use the same data as `VERIFY-LANE-SUMMARY: ...`
+8. Emit one stable lane-order line before lane execution:
+   - `VERIFY-LANE-ORDER: mode=<mode> order=<comma-separated-lanes>`
 
 ## Invocation modes
 - `bash tools/verify.sh`
 - `bash tools/verify.sh --mode=full`
 - `bash tools/verify.sh --mode=certify-critical`
 
-`certify-critical` is a bounded closeout-safety path for `ops/bin/certify`. It preserves the cheap structural and closeout-critical smoke checks while avoiding the heaviest repo-wide bundle/factory/debt replay cost. Narrative scaffold validation already occurs in certify preflight, so editor smoke remains full-mode only. Full verify remains the SSOT hygiene pass outside certify.
+`certify-critical` is a bounded closeout-safety path for `ops/bin/certify`. It preserves the cheap structural and closeout-critical smoke checks while avoiding the heaviest repo-wide bundle/factory/debt replay cost. Narrative scaffold validation already occurs in certify preflight, so editor smoke remains full-mode only. Full verify remains the SSOT hygiene pass outside certify. The lane order is part of the contract: cheap deterministic failures should surface before the expensive bundle matrix.
 
 ## Anecdotal Anchor
 The gate formalizes a recurring startup-failure class where missing required runtime subdirectories or placeholders broke binary workflows before task execution began. Once `tools/verify.sh` became a required pre-work check, those structural defects were caught before dispatch.

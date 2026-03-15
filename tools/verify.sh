@@ -51,6 +51,11 @@ esac
 echo "Stela Repo Hygiene Verification"
 echo "Root: $REPO_ROOT"
 echo "Verification Mode: $VERIFY_MODE"
+if [[ "$VERIFY_MODE" == "full" ]]; then
+  echo "VERIFY-LANE-ORDER: mode=full order=open-dedup,editor-scaffold,guard-debt-lint,factory-smoke,response-self-test,bundle-smoke"
+else
+  echo "VERIFY-LANE-ORDER: mode=certify-critical order=open-dedup,bundle-smoke"
+fi
 echo
 
 errors=0
@@ -362,28 +367,6 @@ else
   fi
 fi
 
-if [[ ! -f "tools/test/bundle.sh" ]]; then
-  record_verify_lane "bundle-smoke" "certify-critical" "missing" "0" "tools/test/bundle.sh"
-  fail "Missing required test script: tools/test/bundle.sh"
-elif [[ "$VERIFY_MODE" == "full" ]]; then
-  if ! run_verify_lane "bundle-smoke" "certify-critical" "bash tools/test/bundle.sh" bash tools/test/bundle.sh; then
-    fail "Bundle smoke test failed: tools/test/bundle.sh"
-  fi
-else
-  if ! run_verify_lane "bundle-smoke" "certify-critical" "bash tools/test/bundle.sh --mode=certify-critical" bash tools/test/bundle.sh --mode=certify-critical; then
-    fail "Bundle smoke test failed: tools/test/bundle.sh --mode=certify-critical"
-  fi
-fi
-
-if [[ "$VERIFY_MODE" == "full" ]]; then
-  if [[ ! -f "tools/test/factory.sh" ]]; then
-    record_verify_lane "factory-smoke" "full-only" "missing" "0" "tools/test/factory.sh"
-    fail "Missing required test script: tools/test/factory.sh"
-  elif ! run_verify_lane "factory-smoke" "full-only" "bash tools/test/factory.sh" bash tools/test/factory.sh; then
-    fail "Factory smoke test failed: tools/test/factory.sh"
-  fi
-fi
-
 if [[ ! -f "tools/test/open.sh" ]]; then
   record_verify_lane "open-dedup" "certify-critical" "missing" "0" "tools/test/open.sh"
   fail "Missing required test script: tools/test/open.sh"
@@ -399,18 +382,38 @@ elif [[ "$VERIFY_MODE" == "full" ]] && ! run_verify_lane "editor-scaffold" "full
 fi
 
 if [[ "$VERIFY_MODE" == "full" ]]; then
+  if [[ ! -f "tools/lint/debt.sh" ]]; then
+    record_verify_lane "guard-debt-lint" "full-only" "missing" "0" "tools/lint/debt.sh"
+    fail "Missing required lint script: tools/lint/debt.sh"
+  elif ! run_verify_lane "guard-debt-lint" "full-only" "bash tools/lint/debt.sh" bash tools/lint/debt.sh; then
+    fail "Guard debt lint failed: tools/lint/debt.sh"
+  fi
+
+  if [[ ! -f "tools/test/factory.sh" ]]; then
+    record_verify_lane "factory-smoke" "full-only" "missing" "0" "tools/test/factory.sh"
+    fail "Missing required test script: tools/test/factory.sh"
+  elif ! run_verify_lane "factory-smoke" "full-only" "bash tools/test/factory.sh" bash tools/test/factory.sh; then
+    fail "Factory smoke test failed: tools/test/factory.sh"
+  fi
+
   if [[ ! -f "tools/lint/response.sh" ]]; then
     record_verify_lane "response-self-test" "full-only" "missing" "0" "tools/lint/response.sh --test"
     fail "Missing required lint script: tools/lint/response.sh"
   elif ! run_verify_lane "response-self-test" "full-only" "bash tools/lint/response.sh --test" bash tools/lint/response.sh --test; then
     fail "Response envelope lint self-test failed: tools/lint/response.sh --test"
   fi
+fi
 
-  if [[ ! -f "tools/lint/debt.sh" ]]; then
-    record_verify_lane "guard-debt-lint" "full-only" "missing" "0" "tools/lint/debt.sh"
-    fail "Missing required lint script: tools/lint/debt.sh"
-  elif ! run_verify_lane "guard-debt-lint" "full-only" "bash tools/lint/debt.sh" bash tools/lint/debt.sh; then
-    fail "Guard debt lint failed: tools/lint/debt.sh"
+if [[ ! -f "tools/test/bundle.sh" ]]; then
+  record_verify_lane "bundle-smoke" "certify-critical" "missing" "0" "tools/test/bundle.sh"
+  fail "Missing required test script: tools/test/bundle.sh"
+elif [[ "$VERIFY_MODE" == "full" ]]; then
+  if ! run_verify_lane "bundle-smoke" "certify-critical" "bash tools/test/bundle.sh" bash tools/test/bundle.sh; then
+    fail "Bundle smoke test failed: tools/test/bundle.sh"
+  fi
+else
+  if ! run_verify_lane "bundle-smoke" "certify-critical" "bash tools/test/bundle.sh --mode=certify-critical" bash tools/test/bundle.sh --mode=certify-critical; then
+    fail "Bundle smoke test failed: tools/test/bundle.sh --mode=certify-critical"
   fi
 fi
 
