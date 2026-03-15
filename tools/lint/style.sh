@@ -334,6 +334,9 @@ check_analyst_mode_contract() {
   local required_output='For machine-ingest analyst mode: output only the complete PLAN markdown code block.'
   local required_first='For machine-ingest analyst mode: first non-empty line inside the code block must start with `# DP Plan:`.'
   local required_topic='For machine-ingest analyst mode: require attached `storage/handoff/TOPIC.md`; do not use inline query fallback.'
+  local required_no_operating_detail='For machine-ingest analyst mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.'
+  local required_generic_broad_topic='For machine-ingest analyst mode: when the topic is broad, keep the plan generic and high-level rather than converting it into specific operating claims.'
+  local required_smallest_inference='For machine-ingest analyst mode: when required handoff fields force inference, make the smallest reasonable inference and avoid supporting detail that reads as established repository fact.'
   local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
   local required_no_memo='For machine-ingest analyst mode: do not emit discussion/option menus or recommendation lines.'
 
@@ -353,6 +356,18 @@ check_analyst_mode_contract() {
 
   if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_topic" "$stance_analyst"; then
     mark_failure "analyst.md.tpl missing analyst topic-source line"
+  fi
+
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_no_operating_detail" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing analyst no-unsupported-operating-detail line"
+  fi
+
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_generic_broad_topic" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing analyst broad-topic-genericity line"
+  fi
+
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_smallest_inference" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing analyst smallest-inference line"
   fi
 
   if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_shared_non_audit_include" "$stance_analyst"; then

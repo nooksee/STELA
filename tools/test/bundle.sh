@@ -139,11 +139,7 @@ ensure_architect_plan_fixture() {
   local plan_rel="storage/handoff/PLAN.md"
   local plan_abs="${REPO_ROOT}/${plan_rel}"
 
-  if [[ -f "$plan_abs" ]] && grep -Eq '^##+[[:space:]]+Architect Handoff([[:space:]]*)$' "$plan_abs" && grep -Eq 'Selected Slices:[[:space:]]+[^[:space:]]+' "$plan_abs"; then
-    return 0
-  fi
-
-  if [[ -f "$plan_abs" && "$ARCHITECT_PLAN_RESTORE" -eq 0 ]]; then
+  if (( ARCHITECT_PLAN_RESTORE == 0 )) && [[ -f "$plan_abs" ]]; then
     mkdir -p "${REPO_ROOT}/var/tmp"
     ARCHITECT_PLAN_BACKUP="$(mktemp "${REPO_ROOT}/var/tmp/bundle-plan-backup.XXXXXX")"
     cp "$plan_abs" "$ARCHITECT_PLAN_BACKUP"
