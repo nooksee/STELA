@@ -784,6 +784,81 @@ bundle_validate_architect_slice() {
   (( slice_found )) || die "unknown slice '${slice_id}' not in Architect Handoff Selected Slices (${selected_slices})"
 }
 
+bundle_resolve_task_surface_rel() {
+  local task_rel="TASK.md"
+  local task_abs="${REPO_ROOT}/${task_rel}"
+  local first_line=""
+
+  [[ -f "$task_abs" ]] || die "TASK.md missing"
+
+  first_line="$(sed -n '1p' "$task_abs")"
+  first_line="$(trim "$first_line")"
+  if [[ -n "$first_line" && -f "${REPO_ROOT}/${first_line}" ]]; then
+    printf '%s' "$first_line"
+    return 0
+  fi
+
+  printf '%s' "$task_rel"
+}
+
+bundle_extract_task_packet_id() {
+  local task_path="$1"
+  awk '
+    /^packet_id:[[:space:]]*/ {
+      line=$0
+      sub(/^packet_id:[[:space:]]*/, "", line)
+      print line
+      exit
+    }
+    /^###[[:space:]]*DP-[^:]+:/ {
+      line=$0
+      sub(/^###[[:space:]]*/, "", line)
+      sub(/:.*/, "", line)
+      print line
+      exit
+    }
+  ' "$task_path"
+}
+
+bundle_resolve_audit_packet_id() {
+  local task_surface_rel=""
+  local packet_id=""
+
+  task_surface_rel="$(bundle_resolve_task_surface_rel)"
+  packet_id="$(bundle_extract_task_packet_id "${REPO_ROOT}/${task_surface_rel}")"
+  [[ "$packet_id" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]] || die "audit requires TASK current surface to resolve a certified packet id"
+  printf '%s' "$packet_id"
+}
+
+bundle_collect_profile_disposable_inputs() {
+  local profile="$1"
+  local topic_rel="$2"
+  local plan_rel="$3"
+  local audit_packet_id=""
+  local results_rel=""
+  local closing_rel=""
+
+  case "$profile" in
+    analyst)
+      [[ -f "${REPO_ROOT}/${topic_rel}" ]] || die "analyst requires ${topic_rel}"
+      printf '%s\n' "$topic_rel"
+      ;;
+    architect)
+      if [[ -f "${REPO_ROOT}/${plan_rel}" ]]; then
+        printf '%s\n' "$plan_rel"
+      fi
+      ;;
+    audit)
+      audit_packet_id="$(bundle_resolve_audit_packet_id)"
+      results_rel="storage/handoff/${audit_packet_id}-RESULTS.md"
+      closing_rel="storage/handoff/CLOSING-${audit_packet_id}.md"
+      [[ -f "${REPO_ROOT}/${results_rel}" ]] || die "audit requires ${results_rel}"
+      [[ -f "${REPO_ROOT}/${closing_rel}" ]] || die "audit requires ${closing_rel}"
+      printf '%s\n%s\n' "$results_rel" "$closing_rel"
+      ;;
+  esac
+}
+
 bundle_run() {
   local requested_profile="auto"
   local requested_profile_input="auto"
@@ -933,6 +1008,7 @@ bundle_run() {
   local plan_rel="storage/handoff/PLAN.md"
   local topic_present=0
   local plan_present=0
+  local -a profile_disposable_files=()
 
   [[ -f "${REPO_ROOT}/${topic_rel}" ]] && topic_present=1
   [[ -f "${REPO_ROOT}/${plan_rel}" ]] && plan_present=1
@@ -962,10 +1038,6 @@ bundle_run() {
   fi
   if (( alias_applied )); then
     route_reason="explicit profile alias: ${alias_profile_source} -> ${alias_profile_target}"
-  fi
-
-  if [[ "$resolved_profile" == "analyst" && "$topic_present" != "1" ]]; then
-    die "analyst requires storage/handoff/TOPIC.md"
   fi
 
   if [[ -n "$request_slice_id" && "$resolved_profile" != "architect" ]]; then
@@ -1076,9 +1148,16 @@ bundle_run() {
   local dump_payload_target_rel="storage/dumps/dump-${dump_scope}-${branch_safe}-${head_short}.txt"
   local -a dump_args=("${REPO_ROOT}/ops/bin/dump" "--scope=${dump_scope}" "--format=chatgpt" "--out=${dump_payload_target_rel}")
 
-  if [[ "$resolved_profile" == "analyst" ]]; then
-    dump_args+=("--include-file=${topic_rel}")
+  local profile_disposable_output=""
+  profile_disposable_output="$(bundle_collect_profile_disposable_inputs "$resolved_profile" "$topic_rel" "$plan_rel")"
+  if [[ -n "$profile_disposable_output" ]]; then
+    mapfile -t profile_disposable_files < <(printf '%s\n' "$profile_disposable_output")
   fi
+  local disposable_rel=""
+  for disposable_rel in "${profile_disposable_files[@]}"; do
+    [[ -n "$disposable_rel" ]] || continue
+    dump_args+=("--include-file=${disposable_rel}")
+  done
 
   local dump_output
   if [[ "$dump_scope" == "project" ]]; then
@@ -1192,12 +1271,11 @@ bundle_run() {
       echo "- output_surface: ${plan_rel}"
       echo
   fi
-    if ! bundle_profile_handoff_omitted "$resolved_profile"; then
+    if ! bundle_profile_handoff_omitted "$resolved_profile" && { (( ${#profile_disposable_files[@]} > 0 )) || [[ "$requested_profile" == "auto" && "$resolved_profile" != "analyst" ]]; }; then
       echo "[HANDOFF]"
-      echo "- ${topic_rel}: $([[ "$topic_present" == "1" ]] && echo present || echo missing)"
-      if [[ "$resolved_profile" != "analyst" ]]; then
-        echo "- ${plan_rel}: $([[ "$plan_present" == "1" ]] && echo present || echo missing)"
-      fi
+      for disposable_rel in "${profile_disposable_files[@]}"; do
+        echo "- ${disposable_rel}: present"
+      done
       if [[ "$requested_profile" == "auto" && "$resolved_profile" != "analyst" ]]; then
         echo "- PLAN lint status: ${plan_lint_status}"
       fi
@@ -1260,12 +1338,10 @@ bundle_run() {
   if (( assembly_pointer_emitted )); then
     package_files+=("$assembly_pointer_rel")
   fi
-  if (( topic_present )); then
-    package_files+=("$topic_rel")
-  fi
-  if (( plan_present )) && [[ "$resolved_profile" != "analyst" ]]; then
-    package_files+=("$plan_rel")
-  fi
+  for disposable_rel in "${profile_disposable_files[@]}"; do
+    [[ -n "$disposable_rel" ]] || continue
+    package_files+=("$disposable_rel")
+  done
 
   {
     echo "{"

@@ -95,7 +95,8 @@ Artifact contract (written under `storage/handoff/`):
    - package metadata (`path`, `files`)
 3. Bundle package (`.tar`) containing bundle `.txt`, manifest, dump payload, dump manifest, and profile-specific handoff members.
    - analyst includes `TOPIC.md` only and analyst dump payload embeds `storage/handoff/TOPIC.md`
-   - architect may include `PLAN.md`
+   - architect includes `PLAN.md` when present and architect dump payload embeds `storage/handoff/PLAN.md`
+   - audit includes current `RESULTS` and `CLOSING` files and audit dump payload embeds both
 4. Canonical bundle artifact names use policy-defined profile prefixes (`artifact_prefix_<profile>` in `ops/lib/manifests/BUNDLE.md`), for example `AUDIT-*` and `FOREMAN-*`.
 5. Legacy `BUNDLE-*` artifacts are compatibility outputs during migration when `compatibility_emit_legacy_bundle_artifacts=true`.
 6. Manifest `artifact_naming` metadata records canonical and compatibility artifact paths plus `legacy_emitted` status.
@@ -114,8 +115,9 @@ Text artifact profile conditional block:
 1. The `[HANDOFF]` block is emitted for non-audit profiles.
 2. For `audit` and `foreman` resolved profiles, the text artifact omits `[HANDOFF]` to avoid unrelated intake noise in audit flows.
 3. For `analyst`, the text artifact emits `[REQUEST]` with `topic_source` and `output_surface`, and `[HANDOFF]` reports `TOPIC.md` only.
-4. For `architect`, the text artifact emits a `[REQUEST]` block with slice metadata and packet identity metadata.
-5. For validated architect slice runs, the text artifact also emits `[ACTIVE SLICE PROJECTION]`.
+4. For `architect`, the text artifact emits a `[REQUEST]` block with slice metadata and packet identity metadata, and `[HANDOFF]` reports `PLAN.md` only when present.
+5. Profiles without disposable input files emit no `[HANDOFF]` block.
+6. For validated architect slice runs, the text artifact also emits `[ACTIVE SLICE PROJECTION]`.
 
 Foreman gate:
 1. `--profile=foreman` requires `--intent`.
@@ -125,9 +127,20 @@ Foreman gate:
 Dump scope mapping by resolved profile:
 1. `analyst|architect|conform` -> `ops/bin/dump --scope=full`.
    - analyst adds explicit `--include-file=storage/handoff/TOPIC.md`
+   - architect adds explicit `--include-file=storage/handoff/PLAN.md` when present
 2. `audit` -> `ops/bin/dump --scope=core`.
+   - audit adds explicit `--include-file=storage/handoff/<DP_ID>-RESULTS.md`
+   - audit adds explicit `--include-file=storage/handoff/CLOSING-<DP_ID>.md`
 3. `foreman` -> `ops/bin/dump --scope=core`.
 4. `project` -> `ops/bin/dump --scope=project --project=<name>`.
+
+Disposable transport rule:
+1. Disposable inputs are profile-scoped exact file paths only.
+2. Current live set is:
+   - analyst `storage/handoff/TOPIC.md`
+   - architect `storage/handoff/PLAN.md`
+   - audit current `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md`
+3. Future additions must be exact-file policy wiring plus matching smoke-test proof.
 
 Bundle runtime invokes dump with explicit `.txt` output path to suppress dump auto-compression side effects during bundle orchestration.
 

@@ -53,6 +53,20 @@ The script provides `bundle_run` plus helpers for:
    - emit analyst `[REQUEST]` metadata `topic_source` and `output_surface`,
    - invoke analyst full dump with explicit `--include-file=storage/handoff/TOPIC.md`,
    - omit `storage/handoff/PLAN.md` from analyst package members and analyst handoff reporting.
+22. Profile-scoped disposable input transport:
+   - resolve outgoing disposable inputs as exact file paths only,
+   - add those files to dump explicit includes,
+   - add those files to package members,
+   - never widen to directory sweeps or generic `storage/` capture.
+23. Architect disposable transport:
+   - include `storage/handoff/PLAN.md` when present,
+   - emit architect `[HANDOFF]` for `PLAN.md` only,
+   - preserve existing architect request metadata and active-slice projection behavior.
+24. Audit disposable transport:
+   - resolve current packet id from the current TASK surface,
+   - require current `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md`,
+   - invoke audit core dump with explicit include for those two files,
+   - include those two files in audit package members.
 
 Stance contract extraction and render rules:
 - Resolve profile stance template key from `ops/lib/manifests/BUNDLE.md`.
@@ -64,7 +78,8 @@ Stance contract extraction and render rules:
 Text artifact profile conditional rule:
 - Emit `[HANDOFF]` only when resolved profile is not `audit` and not `foreman`.
 - For `analyst`, `[HANDOFF]` reports `TOPIC.md` presence only, `[REQUEST]` reports `topic_source` plus `output_surface`, and the dump payload embeds `storage/handoff/TOPIC.md` as an explicit include.
-- For non-analyst non-audit non-foreman profiles, `[HANDOFF]` reports `TOPIC.md` / `PLAN.md` presence.
+- For `architect`, `[HANDOFF]` reports `PLAN.md` presence only when present.
+- Profiles without disposable inputs emit no `[HANDOFF]` block.
 
 ## Anecdotal Anchor
 DP-OPS-0145 introduced bundle as a transport primitive. DP-OPS-0146 hardened it for attach-only architect workflows and addendum authorization flows by eliminating OPEN artifact dependence and adding deterministic package metadata.

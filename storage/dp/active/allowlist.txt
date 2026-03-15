@@ -217,6 +217,13 @@ docs/ops/specs/binaries/hygiene.md
 storage/handoff/CLOSING-DP-OPS-0149.md
 archives/surfaces/TASK-DP-OPS-0149-*.md
 ops/lib/manifests/BUNDLE.md
+storage/handoff/CLOSING-DP-OPS-0194.md
+archives/surfaces/TASK-DP-OPS-0194-*.md
+docs/ops/specs/binaries/bundle.md
+docs/ops/specs/scripts/bundle.md
+docs/ops/specs/tools/test/bundle.md
+ops/lib/scripts/bundle.sh
+tools/test/bundle.sh
 storage/handoff/CLOSING-DP-OPS-0150.md
 archives/surfaces/TASK-DP-OPS-0150-*.md
 ops/bin/manifest
