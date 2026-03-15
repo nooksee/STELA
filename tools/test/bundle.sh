@@ -239,7 +239,9 @@ ensure_audit_receipt_fixture() {
   fi
 
   branch="$(git rev-parse --abbrev-ref HEAD)"
-  AUDIT_FIXTURE_TASK_REL="var/tmp/bundle-audit-task-fixture.md"
+  # Keep the synthetic TASK pointer in archives/surfaces so dump's active-pointer
+  # inclusion path sees the same shape in clean CI checkouts.
+  AUDIT_FIXTURE_TASK_REL="archives/surfaces/TASK-DP-OPS-9999-fixture.md"
   AUDIT_FIXTURE_RESULTS_REL="storage/handoff/DP-OPS-9999-RESULTS.md"
   AUDIT_FIXTURE_CLOSING_REL="storage/handoff/CLOSING-DP-OPS-9999.md"
   AUDIT_EXPECTED_PACKET_ID="DP-OPS-9999"
