@@ -57,15 +57,32 @@ LAST_ASSEMBLY_POINTER_FORMAT=""
 BUNDLE_POLICY_REL="ops/lib/manifests/BUNDLE.md"
 ARCHITECT_PLAN_BACKUP=""
 ARCHITECT_PLAN_RESTORE=0
+AUDIT_TASK_BACKUP=""
+AUDIT_TASK_RESTORE=0
+AUDIT_FIXTURE_TASK_REL=""
+AUDIT_FIXTURE_RESULTS_REL=""
+AUDIT_FIXTURE_CLOSING_REL=""
+AUDIT_EXPECTED_PACKET_ID=""
 
 restore_fixture_overrides() {
   local plan_rel="storage/handoff/PLAN.md"
   local plan_abs="${REPO_ROOT}/${plan_rel}"
+  local task_rel="TASK.md"
+  local task_abs="${REPO_ROOT}/${task_rel}"
 
   if (( ARCHITECT_PLAN_RESTORE )) && [[ -n "$ARCHITECT_PLAN_BACKUP" && -f "$ARCHITECT_PLAN_BACKUP" ]]; then
     cp "$ARCHITECT_PLAN_BACKUP" "$plan_abs"
     rm -f "$ARCHITECT_PLAN_BACKUP"
   fi
+
+  if (( AUDIT_TASK_RESTORE )) && [[ -n "$AUDIT_TASK_BACKUP" && -f "$AUDIT_TASK_BACKUP" ]]; then
+    cp "$AUDIT_TASK_BACKUP" "$task_abs"
+    rm -f "$AUDIT_TASK_BACKUP"
+  fi
+
+  [[ -n "$AUDIT_FIXTURE_TASK_REL" ]] && rm -f -- "${REPO_ROOT}/${AUDIT_FIXTURE_TASK_REL}"
+
+  return 0
 }
 
 cleanup_generated() {
@@ -76,6 +93,8 @@ cleanup_generated() {
       rm -f -- "${REPO_ROOT}/${rel_path}"
     fi
   done
+
+  return 0
 }
 
 trap 'restore_fixture_overrides; cleanup_generated; emit_binary_leaf "test-bundle" "finish"' EXIT
@@ -170,6 +189,81 @@ ensure_analyst_topic_fixture() {
 Topic fixture for analyst bundle smoke tests.
 EOF
   queue_cleanup_path "$topic_rel"
+}
+
+ensure_audit_receipt_fixture() {
+  local task_rel="TASK.md"
+  local task_abs="${REPO_ROOT}/${task_rel}"
+  local branch=""
+  local current_results_rel=""
+  local current_closing_rel=""
+
+  if [[ -f "$task_abs" ]]; then
+    local current_pointer=""
+    local current_packet_id=""
+    current_pointer="$(sed -n '1p' "$task_abs" | sed 's/\r$//')"
+    if [[ -n "$current_pointer" && -f "${REPO_ROOT}/${current_pointer}" ]]; then
+      current_packet_id="$(awk '/^packet_id:[[:space:]]*/ { sub(/^packet_id:[[:space:]]*/, "", $0); print; exit }' "${REPO_ROOT}/${current_pointer}")"
+      current_results_rel="storage/handoff/${current_packet_id}-RESULTS.md"
+      current_closing_rel="storage/handoff/CLOSING-${current_packet_id}.md"
+      if [[ "$current_packet_id" =~ ^DP-[A-Z]+-[0-9]{4,}$ \
+        && -f "${REPO_ROOT}/${current_results_rel}" \
+        && -f "${REPO_ROOT}/${current_closing_rel}" ]]; then
+        AUDIT_EXPECTED_PACKET_ID="$current_packet_id"
+        return 0
+      fi
+    fi
+  fi
+
+  if (( AUDIT_TASK_RESTORE == 0 )) && [[ -f "$task_abs" ]]; then
+    mkdir -p "${REPO_ROOT}/var/tmp"
+    AUDIT_TASK_BACKUP="$(mktemp "${REPO_ROOT}/var/tmp/bundle-task-backup.XXXXXX")"
+    cp "$task_abs" "$AUDIT_TASK_BACKUP"
+    AUDIT_TASK_RESTORE=1
+  fi
+
+  branch="$(git rev-parse --abbrev-ref HEAD)"
+  AUDIT_FIXTURE_TASK_REL="var/tmp/bundle-audit-task-fixture.md"
+  AUDIT_FIXTURE_RESULTS_REL="storage/handoff/DP-OPS-9999-RESULTS.md"
+  AUDIT_FIXTURE_CLOSING_REL="storage/handoff/CLOSING-DP-OPS-9999.md"
+  AUDIT_EXPECTED_PACKET_ID="DP-OPS-9999"
+
+  mkdir -p "${REPO_ROOT}/var/tmp" "${REPO_ROOT}/storage/handoff"
+  cat > "${REPO_ROOT}/${AUDIT_FIXTURE_TASK_REL}" <<'EOF'
+---
+packet_id: DP-OPS-9999
+---
+EOF
+  printf '%s\n' "${AUDIT_FIXTURE_TASK_REL}" > "$task_abs"
+  cat > "${REPO_ROOT}/${AUDIT_FIXTURE_RESULTS_REL}" <<EOF
+# DP-OPS-9999 RESULTS
+
+## Certification Metadata
+- DP ID: DP-OPS-9999
+- Branch: ${branch}
+EOF
+  cat > "${REPO_ROOT}/${AUDIT_FIXTURE_CLOSING_REL}" <<'EOF'
+Commit Message
+Bundle audit fixture
+
+Create Pull Request (Title)
+DP-OPS-9999 TEST: bundle audit fixture
+
+Create Pull Request (Description)
+Fixture only.
+
+Confirm Merge (Commit Message)
+Bundle audit fixture
+
+Confirm Merge (Extended Description)
+Fixture only.
+
+Confirm Merge (Add a Comment)
+Fixture only.
+EOF
+
+  queue_cleanup_path "$AUDIT_FIXTURE_RESULTS_REL"
+  queue_cleanup_path "$AUDIT_FIXTURE_CLOSING_REL"
 }
 
 run_capture() {
@@ -560,6 +654,7 @@ test_valid_profiles() {
   local expected_template_key
 
   ensure_analyst_topic_fixture
+  ensure_audit_receipt_fixture
   for profile in analyst architect audit conform auto; do
     run_capture "${REPO_ROOT}/ops/bin/bundle" --profile="$profile" --out=auto
     if (( RUN_STATUS != 0 )); then
@@ -701,6 +796,9 @@ test_architect_slice_valid() {
   local request_packet_id_val=""
   local request_sidecar_val=""
   local request_title_suffix_val=""
+  local package_listing=""
+  local dump_payload_path=""
+  local dump_manifest_path=""
 
   run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=architect --slice="$slice_id" --out=auto
   if (( RUN_STATUS != 0 )); then
@@ -729,6 +827,12 @@ test_architect_slice_valid() {
   fi
   if ! grep -Fq 'title_suffix: Architect Transport Slice Intent' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
     fail "architect bundle text missing title_suffix marker"
+  fi
+  if ! grep -Fq -- '- storage/handoff/PLAN.md: present' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect bundle text missing PLAN handoff line"
+  fi
+  if grep -Fq -- '- storage/handoff/TOPIC.md:' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect bundle text should not advertise TOPIC.md as disposable input"
   fi
   if ! grep -Fq '[ACTIVE SLICE PROJECTION]' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
     fail "architect bundle text missing [ACTIVE SLICE PROJECTION] block"
@@ -765,6 +869,27 @@ test_architect_slice_valid() {
   if [[ "$request_title_suffix_val" != "Architect Transport Slice Intent" ]]; then
     fail "architect request.title_suffix mismatch: expected Architect Transport Slice Intent, got ${request_title_suffix_val}"
   fi
+
+  dump_payload_path="$(extract_manifest_value "$LAST_MANIFEST" "payload_path")"
+  dump_manifest_path="$(extract_manifest_value "$LAST_MANIFEST" "manifest_path")"
+  if [[ -z "$dump_payload_path" ]]; then
+    fail "architect manifest missing dump payload_path"
+  elif ! grep -Fq '<<< FILE BEGIN: storage/handoff/PLAN.md' "${REPO_ROOT}/${dump_payload_path}"; then
+    fail "architect dump payload missing storage/handoff/PLAN.md file block"
+  fi
+  if [[ -z "$dump_manifest_path" ]]; then
+    fail "architect manifest missing dump manifest_path"
+  elif ! grep -Fq 'Include files (explicit): storage/handoff/PLAN.md' "${REPO_ROOT}/${dump_manifest_path}"; then
+    fail "architect dump manifest missing explicit PLAN include provenance"
+  fi
+
+  package_listing="$(tar -tf "${REPO_ROOT}/${LAST_PACKAGE}")"
+  if ! printf '%s\n' "$package_listing" | grep -Fxq 'storage/handoff/PLAN.md'; then
+    fail "architect package missing storage/handoff/PLAN.md"
+  fi
+  if printf '%s\n' "$package_listing" | grep -Fxq 'storage/handoff/TOPIC.md'; then
+    fail "architect package should not include storage/handoff/TOPIC.md"
+  fi
 }
 
 test_architect_slice_ad_hoc() {
@@ -775,6 +900,7 @@ test_architect_slice_ad_hoc() {
   local request_sidecar_val=""
   local request_title_suffix_val=""
 
+  ensure_architect_plan_fixture
   run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=architect --out=auto
   if (( RUN_STATUS != 0 )); then
     fail "architect ad hoc run should succeed"
@@ -828,6 +954,68 @@ test_architect_slice_ad_hoc() {
   fi
   if [[ "$request_title_suffix_val" != "null" ]]; then
     fail "architect ad hoc request.title_suffix mismatch: expected null, got ${request_title_suffix_val}"
+  fi
+}
+
+test_audit_contract() {
+  local package_listing=""
+  local dump_payload_path=""
+  local dump_manifest_path=""
+  local audit_results_rel=""
+  local audit_closing_rel=""
+
+  ensure_audit_receipt_fixture
+  [[ -n "$AUDIT_EXPECTED_PACKET_ID" ]] || {
+    fail "audit contract expected packet id did not resolve"
+    return
+  }
+  audit_results_rel="storage/handoff/${AUDIT_EXPECTED_PACKET_ID}-RESULTS.md"
+  audit_closing_rel="storage/handoff/CLOSING-${AUDIT_EXPECTED_PACKET_ID}.md"
+
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=audit --out=auto
+  if (( RUN_STATUS != 0 )); then
+    fail "audit contract path failed"
+    echo "$RUN_OUTPUT" >&2
+    return
+  fi
+
+  track_bundle_outputs
+  [[ -n "$LAST_MANIFEST" && -n "$LAST_ARTIFACT" ]] || return
+
+  if grep -Fq '[HANDOFF]' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "audit bundle text should not emit [HANDOFF]"
+  fi
+
+  dump_payload_path="$(extract_manifest_value "$LAST_MANIFEST" "payload_path")"
+  dump_manifest_path="$(extract_manifest_value "$LAST_MANIFEST" "manifest_path")"
+  if [[ -z "$dump_payload_path" ]]; then
+    fail "audit manifest missing dump payload_path"
+  else
+    if ! grep -Fq "<<< FILE BEGIN: ${audit_results_rel}" "${REPO_ROOT}/${dump_payload_path}"; then
+      fail "audit dump payload missing current RESULTS file block"
+    fi
+    if ! grep -Fq "<<< FILE BEGIN: ${audit_closing_rel}" "${REPO_ROOT}/${dump_payload_path}"; then
+      fail "audit dump payload missing current closing sidecar file block"
+    fi
+  fi
+  if [[ -z "$dump_manifest_path" ]]; then
+    fail "audit manifest missing dump manifest_path"
+  elif ! grep -Fq "Include files (explicit): ${audit_results_rel} ${audit_closing_rel}" "${REPO_ROOT}/${dump_manifest_path}"; then
+    fail "audit dump manifest missing explicit RESULTS/CLOSING include provenance"
+  fi
+
+  package_listing="$(tar -tf "${REPO_ROOT}/${LAST_PACKAGE}")"
+  if ! printf '%s\n' "$package_listing" | grep -Fxq "$audit_results_rel"; then
+    fail "audit package missing current RESULTS file"
+  fi
+  if ! printf '%s\n' "$package_listing" | grep -Fxq "$audit_closing_rel"; then
+    fail "audit package missing current closing sidecar"
+  fi
+  if printf '%s\n' "$package_listing" | grep -Fxq 'storage/handoff/TOPIC.md'; then
+    fail "audit package should not include storage/handoff/TOPIC.md"
+  fi
+  if printf '%s\n' "$package_listing" | grep -Fxq 'storage/handoff/PLAN.md'; then
+    fail "audit package should not include storage/handoff/PLAN.md"
   fi
 }
 
@@ -1215,6 +1403,7 @@ run_full_suite() {
   test_analyst_contract
   test_architect_slice_valid
   test_architect_slice_ad_hoc
+  test_audit_contract
   test_architect_slice_unknown_fails
   test_architect_slice_blank_fails
   test_architect_slice_non_architect_fails

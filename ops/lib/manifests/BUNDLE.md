@@ -50,12 +50,20 @@ dump_scope_conform=full
 dump_scope_foreman=core
 
 ## Profile Attachment Contract
-- analyst: `ANALYST-*.txt`, `ANALYST-*.manifest.json`, `storage/handoff/TOPIC.md`
-- architect: `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, `storage/handoff/PLAN.md`, optional `--slice=<ID>` with request metadata (`slice_id`, `slice_validated`, `plan_source`, `packet_id`, `closing_sidecar`, `title_suffix`)
-- audit: `AUDIT-*.txt`, `AUDIT-*.manifest.json`, DP RESULTS receipt
+- analyst: `ANALYST-*.txt`, `ANALYST-*.manifest.json`, transport-managed `storage/handoff/TOPIC.md`
+- architect: `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, transport-managed `storage/handoff/PLAN.md`, optional `--slice=<ID>` with request metadata (`slice_id`, `slice_validated`, `plan_source`, `packet_id`, `closing_sidecar`, `title_suffix`)
+- audit: `AUDIT-*.txt`, `AUDIT-*.manifest.json`, transport-managed current DP `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md`
 - foreman: `FOREMAN-*.txt`, `FOREMAN-*.manifest.json`
 - project: `PROJECT-*.txt`, `PROJECT-*.manifest.json`
 - conform: `CONFORM-*.txt`, `CONFORM-*.manifest.json`, draft DP input
+
+## Disposable Transport Contract
+- Disposable transport is profile-scoped exact-file wiring only. No directory sweeps, globs, or generic `storage/` capture are allowed.
+- Current live disposable inputs are:
+  - analyst: `storage/handoff/TOPIC.md`
+  - architect: `storage/handoff/PLAN.md`
+  - audit: current `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md`
+- Future disposable additions must be exact file paths added deliberately in runtime wiring, specs, and smoke tests.
 
 ## Analyst Transport Contract
 - Analyst requires `storage/handoff/TOPIC.md` as input and fails closed when it is absent.
@@ -66,6 +74,8 @@ dump_scope_foreman=core
 
 ## Architect Transport Contract
 - Architect packet identity is transport-defined when an explicit validated slice is present.
+- Architect invokes the full dump with explicit `storage/handoff/PLAN.md` inclusion when that file is present.
+- Architect package members include `storage/handoff/PLAN.md` when present.
 - `architect_packet_id_seed` defines the first dispatch-corridor packet id.
 - `architect_packet_id_seed_slice` defines the slice bound to that seed.
 - Runtime derives later architect packet ids by offset within `Execution Order` in `storage/handoff/PLAN.md`.
@@ -82,6 +92,12 @@ dump_scope_foreman=core
   - slice `Receipt contract` when present
   - `Architect Constraints`
   - transport-defined `packet_id`, `closing_sidecar`, and `title_suffix`
+
+## Audit Transport Contract
+- Audit resolves the current certified packet id from the current TASK surface.
+- Audit requires `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md` for that current packet and fails closed when either file is missing.
+- Audit invokes the core dump with explicit inclusion of those two files so the dump payload contains them as file blocks.
+- Audit package members include the resolved current `RESULTS` and `CLOSING` files.
 
 ## Compatibility Notes
 Canonical audit verdict profile is `audit`.
