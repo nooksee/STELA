@@ -285,7 +285,13 @@ EOF
 
 ## Certification Metadata
 - DP ID: DP-OPS-9999
+- Certified At (UTC): 2026-03-16T00:00:00Z
 - Branch: ${branch}
+
+## Scope Verification
+- Target Files allowlist pointer: storage/dp/active/allowlist.txt
+- dp_source: ${AUDIT_FIXTURE_PACKET_REL}
+- dump_manifest: none
 EOF
   cat > "${REPO_ROOT}/${AUDIT_FIXTURE_CLOSING_REL}" <<'EOF'
 Commit Message
