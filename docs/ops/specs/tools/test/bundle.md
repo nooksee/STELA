@@ -104,6 +104,9 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
   - stance template render determinism,
   - architect validated-slice bundle generation.
 - Architect slice smoke must install its own deterministic `storage/handoff/PLAN.md` fixture and must not depend on whatever live handoff `PLAN.md` currently contains.
+- Auto-route smoke must control `storage/handoff/PLAN.md` state explicitly instead of inheriting incidental local residue.
+- Synthetic audit TASK fallback must live under `archives/surfaces/` so dump active-pointer inclusion sees the same path class as production.
+- Smoke bundle invocations use explicit unique output paths under `storage/handoff/` so concurrent local gate runs do not reuse shared branch/head artifact paths.
 - `--mode=certify-critical` must not run the full analyst/profile/ATS/meta matrix.
 
 ## Anecdotal Anchor

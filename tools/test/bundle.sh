@@ -63,6 +63,7 @@ AUDIT_FIXTURE_TASK_REL=""
 AUDIT_FIXTURE_RESULTS_REL=""
 AUDIT_FIXTURE_CLOSING_REL=""
 AUDIT_EXPECTED_PACKET_ID=""
+BUNDLE_OUTPUT_SEQUENCE=0
 
 restore_fixture_overrides() {
   local plan_rel="storage/handoff/PLAN.md"
@@ -156,15 +157,9 @@ resolve_current_task_surface_rel() {
 }
 
 ensure_architect_plan_fixture() {
+  ensure_plan_restore_state
   local plan_rel="storage/handoff/PLAN.md"
   local plan_abs="${REPO_ROOT}/${plan_rel}"
-
-  if (( ARCHITECT_PLAN_RESTORE == 0 )) && [[ -f "$plan_abs" ]]; then
-    mkdir -p "${REPO_ROOT}/var/tmp"
-    ARCHITECT_PLAN_BACKUP="$(mktemp "${REPO_ROOT}/var/tmp/bundle-plan-backup.XXXXXX")"
-    cp "$plan_abs" "$ARCHITECT_PLAN_BACKUP"
-    ARCHITECT_PLAN_RESTORE=1
-  fi
 
   mkdir -p "$(dirname "$plan_abs")"
   cat > "$plan_abs" <<'EOF'
@@ -190,6 +185,26 @@ EOF
   if (( ! ARCHITECT_PLAN_RESTORE )); then
     queue_cleanup_path "$plan_rel"
   fi
+}
+
+ensure_plan_restore_state() {
+  local plan_rel="storage/handoff/PLAN.md"
+  local plan_abs="${REPO_ROOT}/${plan_rel}"
+
+  if (( ARCHITECT_PLAN_RESTORE == 0 )) && [[ -f "$plan_abs" ]]; then
+    mkdir -p "${REPO_ROOT}/var/tmp"
+    ARCHITECT_PLAN_BACKUP="$(mktemp "${REPO_ROOT}/var/tmp/bundle-plan-backup.XXXXXX")"
+    cp "$plan_abs" "$ARCHITECT_PLAN_BACKUP"
+    ARCHITECT_PLAN_RESTORE=1
+  fi
+}
+
+ensure_plan_absent_fixture() {
+  local plan_rel="storage/handoff/PLAN.md"
+  local plan_abs="${REPO_ROOT}/${plan_rel}"
+
+  ensure_plan_restore_state
+  rm -f -- "$plan_abs"
 }
 
 ensure_analyst_topic_fixture() {
@@ -246,7 +261,7 @@ ensure_audit_receipt_fixture() {
   AUDIT_FIXTURE_CLOSING_REL="storage/handoff/CLOSING-DP-OPS-9999.md"
   AUDIT_EXPECTED_PACKET_ID="DP-OPS-9999"
 
-  mkdir -p "${REPO_ROOT}/var/tmp" "${REPO_ROOT}/storage/handoff"
+  mkdir -p "${REPO_ROOT}/var/tmp" "${REPO_ROOT}/storage/handoff" "${REPO_ROOT}/archives/surfaces"
   cat > "${REPO_ROOT}/${AUDIT_FIXTURE_TASK_REL}" <<'EOF'
 ---
 packet_id: DP-OPS-9999
@@ -429,6 +444,29 @@ expected_artifact_prefix_for_profile() {
   policy_scalar "artifact_prefix_${profile}"
 }
 
+next_bundle_output_path() {
+  local resolved_profile="$1"
+  local prefix=""
+
+  prefix="$(expected_artifact_prefix_for_profile "$resolved_profile")"
+  if [[ -z "$prefix" ]]; then
+    fail "policy missing artifact prefix for explicit bundle output profile: ${resolved_profile}"
+    return 1
+  fi
+
+  BUNDLE_OUTPUT_SEQUENCE=$((BUNDLE_OUTPUT_SEQUENCE + 1))
+  printf 'storage/handoff/%s-bundle-smoke-%s-%03d.txt' "$prefix" "$$" "$BUNDLE_OUTPUT_SEQUENCE"
+}
+
+run_bundle_capture() {
+  local resolved_profile="$1"
+  shift
+  local out_rel=""
+
+  out_rel="$(next_bundle_output_path "$resolved_profile")" || return 1
+  run_capture "${REPO_ROOT}/ops/bin/bundle" "$@" "--out=${out_rel}"
+}
+
 assert_file_exists() {
   local rel_path="$1"
   [[ -f "${REPO_ROOT}/${rel_path}" ]] || fail "expected file missing: ${rel_path}"
@@ -466,13 +504,6 @@ registry_first_id() {
       }
     }
   ' "${REPO_ROOT}/${registry_rel}"
-}
-
-latest_project_manifest() {
-  local latest=""
-  latest="$(ls -1t "${REPO_ROOT}/storage/handoff"/PROJECT-*.manifest.json 2>/dev/null | head -n 1 || true)"
-  [[ -n "$latest" ]] || return 1
-  normalize_rel_path "$latest"
 }
 
 track_bundle_outputs() {
@@ -673,8 +704,9 @@ test_valid_profiles() {
 
   ensure_analyst_topic_fixture
   ensure_audit_receipt_fixture
-  for profile in analyst architect audit conform auto; do
-    run_capture "${REPO_ROOT}/ops/bin/bundle" --profile="$profile" --out=auto
+  ensure_architect_plan_fixture
+  for profile in analyst architect audit conform; do
+    run_bundle_capture "$profile" --profile="$profile"
     if (( RUN_STATUS != 0 )); then
       fail "bundle failed for profile=${profile}"
       echo "$RUN_OUTPUT" >&2
@@ -715,6 +747,59 @@ test_valid_profiles() {
   done
 }
 
+test_auto_profile_default_route() {
+  local resolved=""
+  local route_reason=""
+
+  ensure_plan_absent_fixture
+  ensure_analyst_topic_fixture
+
+  run_bundle_capture analyst --profile=auto
+  if (( RUN_STATUS != 0 )); then
+    fail "auto default route should succeed"
+    echo "$RUN_OUTPUT" >&2
+    return
+  fi
+
+  track_bundle_outputs
+  [[ -n "$LAST_MANIFEST" ]] || return
+
+  resolved="$(extract_manifest_value "$LAST_MANIFEST" "resolved_profile")"
+  route_reason="$(extract_manifest_value "$LAST_MANIFEST" "route_reason")"
+  if [[ "$resolved" != "analyst" ]]; then
+    fail "auto default route resolved_profile mismatch: expected analyst, got ${resolved}"
+  fi
+  if [[ "$route_reason" != "auto: PLAN.md missing" ]]; then
+    fail "auto default route_reason mismatch: ${route_reason}"
+  fi
+}
+
+test_auto_profile_plan_route() {
+  local resolved=""
+  local route_reason=""
+
+  ensure_architect_plan_fixture
+
+  run_bundle_capture architect --profile=auto
+  if (( RUN_STATUS != 0 )); then
+    fail "auto plan route should succeed"
+    echo "$RUN_OUTPUT" >&2
+    return
+  fi
+
+  track_bundle_outputs
+  [[ -n "$LAST_MANIFEST" ]] || return
+
+  resolved="$(extract_manifest_value "$LAST_MANIFEST" "resolved_profile")"
+  route_reason="$(extract_manifest_value "$LAST_MANIFEST" "route_reason")"
+  if [[ "$resolved" != "architect" ]]; then
+    fail "auto plan route resolved_profile mismatch: expected architect, got ${resolved}"
+  fi
+  if [[ "$route_reason" != "auto: PLAN.md present and plan lint passed" ]]; then
+    fail "auto plan route_reason mismatch: ${route_reason}"
+  fi
+}
+
 test_analyst_contract() {
   local request_topic_source=""
   local request_output_surface=""
@@ -726,7 +811,7 @@ test_analyst_contract() {
 
   ensure_analyst_topic_fixture
 
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --out=auto
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst "--out=storage/handoff/ANALYST-bundle-smoke-$$-manifest-fail.txt"
   if (( RUN_STATUS != 0 )); then
     fail "analyst contract path failed"
     echo "$RUN_OUTPUT" >&2
@@ -807,7 +892,7 @@ test_analyst_contract() {
   cp "$topic_path" "$backup_path"
   rm -f "$topic_path"
 
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --out=auto
+  run_bundle_capture analyst --profile=analyst
 
   cp "$backup_path" "$topic_path"
   rm -f "$backup_path"
@@ -834,7 +919,7 @@ test_architect_slice_valid() {
   local dump_payload_path=""
   local dump_manifest_path=""
 
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=architect --slice="$slice_id" --out=auto
+  run_bundle_capture architect --profile=architect --slice="$slice_id"
   if (( RUN_STATUS != 0 )); then
     fail "architect --slice=${slice_id} should succeed"
     echo "$RUN_OUTPUT" >&2
@@ -940,7 +1025,7 @@ test_architect_slice_ad_hoc() {
   local request_title_suffix_val=""
 
   ensure_architect_plan_fixture
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=architect --out=auto
+  run_bundle_capture architect --profile=architect
   if (( RUN_STATUS != 0 )); then
     fail "architect ad hoc run should succeed"
     echo "$RUN_OUTPUT" >&2
@@ -1013,7 +1098,7 @@ test_audit_contract() {
   audit_closing_rel="storage/handoff/CLOSING-${AUDIT_EXPECTED_PACKET_ID}.md"
   audit_task_surface_rel="$(resolve_current_task_surface_rel)"
 
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=audit --out=auto
+  run_bundle_capture audit --profile=audit
   if (( RUN_STATUS != 0 )); then
     fail "audit contract path failed"
     echo "$RUN_OUTPUT" >&2
@@ -1070,33 +1155,33 @@ test_audit_contract() {
 
 test_architect_slice_unknown_fails() {
   ensure_architect_plan_fixture
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=architect --slice=UNKNOWN --out=auto
+  run_bundle_capture architect --profile=architect --slice=UNKNOWN
   if (( RUN_STATUS == 0 )); then
     fail "architect unknown --slice should fail"
   fi
 }
 
 test_architect_slice_blank_fails() {
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=architect --slice= --out=auto
+  run_bundle_capture architect --profile=architect --slice=
   if (( RUN_STATUS == 0 )); then
     fail "architect blank --slice should fail"
   fi
 }
 
 test_architect_slice_non_architect_fails() {
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --slice=T1 --out=auto
+  run_bundle_capture analyst --profile=analyst --slice=T1
   if (( RUN_STATUS == 0 )); then
     fail "--slice with non-architect profile should fail"
   fi
 }
 
 test_foreman_invalid_paths() {
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=foreman --out=auto
+  run_bundle_capture foreman --profile=foreman
   if (( RUN_STATUS == 0 )); then
     fail "foreman path without --intent should fail"
   fi
 
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=foreman --intent="bad format" --out=auto
+  run_bundle_capture foreman --profile=foreman --intent="bad format"
   if (( RUN_STATUS == 0 )); then
     fail "foreman path with malformed --intent should fail"
   fi
@@ -1118,7 +1203,7 @@ test_foreman_valid_path() {
   decision_id="$(basename "$decision_leaf" .md)"
   intent="ADDENDUM REQUIRED: ${decision_id} - bundle smoke gate test"
 
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=foreman --intent="$intent" --out=auto
+  run_bundle_capture foreman --profile=foreman --intent="$intent"
   if (( RUN_STATUS != 0 )); then
     fail "foreman path with valid --intent failed"
     echo "$RUN_OUTPUT" >&2
@@ -1156,7 +1241,7 @@ test_legacy_hygiene_alias() {
   local actual_status
   local actual_remove_after
 
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=hygiene --out=auto
+  run_bundle_capture conform --profile=hygiene
   if (( RUN_STATUS != 0 )); then
     fail "legacy hygiene alias path failed"
     echo "$RUN_OUTPUT" >&2
@@ -1211,7 +1296,7 @@ test_manifest_fail_closed() {
   # Remove one required key to force parser failure.
   grep -v '^supported_profiles=' "$backup_path" > "$policy_abs"
 
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --out=auto
+  run_bundle_capture analyst --profile=analyst
   if (( RUN_STATUS == 0 )); then
     fail "bundle should fail when required manifest key is missing"
   fi
@@ -1225,7 +1310,7 @@ test_manifest_fail_closed() {
 
 test_ats_partial_flags_fail() {
   ensure_analyst_topic_fixture
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --agent-id=R-AGENT-01 --out=auto
+  run_bundle_capture analyst --profile=analyst --agent-id=R-AGENT-01
   if (( RUN_STATUS == 0 )); then
     fail "ATS partial flags should fail"
   fi
@@ -1247,7 +1332,7 @@ test_ats_unknown_ids_fail() {
     return
   fi
 
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --agent-id=R-AGENT-99 --skill-id="$known_skill_id" --task-id="$known_task_id" --out=auto
+  run_bundle_capture analyst --profile=analyst --agent-id=R-AGENT-99 --skill-id="$known_skill_id" --task-id="$known_task_id"
   if (( RUN_STATUS == 0 )); then
     fail "unknown agent_id should fail"
   fi
@@ -1255,7 +1340,7 @@ test_ats_unknown_ids_fail() {
     fail "unknown agent_id failure message mismatch"
   fi
 
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --agent-id="$known_agent_id" --skill-id=S-LEARN-99 --task-id="$known_task_id" --out=auto
+  run_bundle_capture analyst --profile=analyst --agent-id="$known_agent_id" --skill-id=S-LEARN-99 --task-id="$known_task_id"
   if (( RUN_STATUS == 0 )); then
     fail "unknown skill_id should fail"
   fi
@@ -1263,7 +1348,7 @@ test_ats_unknown_ids_fail() {
     fail "unknown skill_id failure message mismatch"
   fi
 
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --agent-id="$known_agent_id" --skill-id="$known_skill_id" --task-id=B-TASK-99 --out=auto
+  run_bundle_capture analyst --profile=analyst --agent-id="$known_agent_id" --skill-id="$known_skill_id" --task-id=B-TASK-99
   if (( RUN_STATUS == 0 )); then
     fail "unknown task_id should fail"
   fi
@@ -1296,7 +1381,7 @@ test_ats_valid_triplet() {
     return
   fi
 
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst --agent-id="$known_agent_id" --skill-id="$known_skill_id" --task-id="$known_task_id" --out=auto
+  run_bundle_capture analyst --profile=analyst --agent-id="$known_agent_id" --skill-id="$known_skill_id" --task-id="$known_task_id"
   if (( RUN_STATUS != 0 )); then
     fail "valid ATS triplet path failed"
     echo "$RUN_OUTPUT" >&2
@@ -1341,6 +1426,7 @@ test_meta_shim() {
   local fixture_readme="${fixture_dir}/README.md"
   local fixture_dir_created=0
   local fixture_readme_created=0
+  local project_out_rel=""
   local project_manifest=""
   local project_artifact=""
   local project_package=""
@@ -1375,7 +1461,8 @@ test_meta_shim() {
     fail "meta missing-project failure message mismatch"
   fi
 
-  run_capture "${REPO_ROOT}/ops/bin/meta" "$fixture_slug"
+  project_out_rel="$(next_bundle_output_path project)" || return
+  run_capture "${REPO_ROOT}/ops/bin/meta" "$fixture_slug" "--out=${project_out_rel}"
   if (( RUN_STATUS != 0 )); then
     fail "meta shim failed for valid project fixture"
     echo "$RUN_OUTPUT" >&2
@@ -1384,7 +1471,7 @@ test_meta_shim() {
       fail "meta success output missing completion line"
     fi
 
-    project_manifest="$(latest_project_manifest || true)"
+    project_manifest="${project_out_rel%.txt}.manifest.json"
     if [[ -z "$project_manifest" ]]; then
       fail "meta run did not produce a PROJECT manifest"
     else
@@ -1449,6 +1536,8 @@ run_full_suite() {
   test_manifest_fail_closed
   test_stance_template_renderer
   test_valid_profiles
+  test_auto_profile_default_route
+  test_auto_profile_plan_route
   test_analyst_contract
   test_architect_slice_valid
   test_architect_slice_ad_hoc

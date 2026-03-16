@@ -871,6 +871,23 @@ if [[ -z "$output_target" ]]; then
 elif [[ "$compress_mode" == "tar.xz" ]]; then
   archive_path="$output_target"
 fi
+if [[ -n "$output_target" && -z "$archive_path" ]]; then
+  payload_path="$output_target"
+  if [[ "$payload_path" == *.txt ]]; then
+    manifest_path="${payload_path%.txt}.manifest.txt"
+  else
+    manifest_path="${payload_path}.manifest.txt"
+  fi
+  if [[ "$selection_mode" == "dp" || "$selection_mode" == "dp+allowlist" ]]; then
+    if [[ "$payload_path" == *.txt ]]; then
+      manifest_alias_path="${payload_path%.txt}_manifest.txt"
+    else
+      manifest_alias_path="${payload_path}_manifest.txt"
+    fi
+  else
+    manifest_alias_path=""
+  fi
+fi
 mkdir -p "$(dirname "$payload_path")"
 if [[ -n "$output_target" ]]; then
   mkdir -p "$(dirname "$output_target")"

@@ -457,6 +457,27 @@ bundle_resolve_output_path() {
   printf '%s' "${REPO_ROOT}/${out_rel}"
 }
 
+bundle_resolve_dump_output_path() {
+  local out_token="$1"
+  local artifact_rel="$2"
+  local dump_scope="$3"
+  local branch_safe="$4"
+  local head_short="$5"
+
+  if [[ "$out_token" == "auto" ]]; then
+    printf 'storage/dumps/dump-%s-%s-%s.txt' "$dump_scope" "$branch_safe" "$head_short"
+    return 0
+  fi
+
+  local artifact_name
+  artifact_name="$(basename "$artifact_rel")"
+  local artifact_stem="$artifact_name"
+  if [[ "$artifact_stem" == *.* ]]; then
+    artifact_stem="${artifact_stem%.*}"
+  fi
+  printf 'storage/dumps/dump-%s-%s.txt' "$dump_scope" "$artifact_stem"
+}
+
 bundle_dump_scope_for_profile() {
   local profile="$1"
   local mapped_scope="${BUNDLE_DUMP_SCOPE_BY_PROFILE[$profile]:-}"
@@ -1146,7 +1167,8 @@ bundle_run() {
   local dump_scope
   dump_scope="$(bundle_dump_scope_for_profile "$resolved_profile")"
   local dump_history_profile="$resolved_profile"
-  local dump_payload_target_rel="storage/dumps/dump-${dump_scope}-${branch_safe}-${head_short}.txt"
+  local dump_payload_target_rel
+  dump_payload_target_rel="$(bundle_resolve_dump_output_path "$out_token" "$out_rel" "$dump_scope" "$branch_safe" "$head_short")"
   local -a dump_args=("${REPO_ROOT}/ops/bin/dump" "--scope=${dump_scope}" "--history-profile=${dump_history_profile}" "--format=chatgpt" "--out=${dump_payload_target_rel}")
 
   local profile_disposable_output=""

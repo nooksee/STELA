@@ -40,7 +40,7 @@ Policy source:
 Front-door contract:
 1. Canonical front door is `ops/bin/bundle`.
 2. `ops/bin/meta` is a project-only compatibility shim and must not contain independent routing logic.
-3. `ops/bin/meta` delegates to `ops/bin/bundle --profile=project --project=<name> --out=auto` only.
+3. `ops/bin/meta` delegates to `ops/bin/bundle --profile=project --project=<name> --out=<resolved-value>` only, where meta defaults to `--out=auto` and may pass through an explicit `--out=PATH` without adding independent routing logic.
 
 Profile intent split:
 1. `audit` is the audit-verdict intake profile.
@@ -150,7 +150,7 @@ Disposable transport rule:
    - audit current `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md`
 3. Future additions must be exact-file policy wiring plus matching smoke-test proof.
 
-Bundle runtime invokes dump with explicit `.txt` output path and explicit `--history-profile=<resolved-profile>` to suppress dump auto-compression side effects during bundle orchestration while keeping history depth deterministic.
+Bundle runtime invokes dump with explicit `.txt` output path and explicit `--history-profile=<resolved-profile>` to suppress dump auto-compression side effects during bundle orchestration while keeping history depth deterministic. When bundle output uses an explicit non-`auto` path, bundle derives a matching explicit dump payload path so concurrent smoke runs do not reuse the same branch/head dump artifact names.
 
 ATS validation gate:
 1. ATS flags are all-or-none. Any partial ATS argument set fails before artifact emission.

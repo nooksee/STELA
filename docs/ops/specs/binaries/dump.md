@@ -53,7 +53,7 @@ Active pointer targets for `PoW.md`, `SoP.md`, and `TASK.md` are force-selected 
 
 Metadata-only blocks are not silent omissions. They must state that the full body was omitted, preserve the exact file path, disclose the history class and tier, emit a re-include instruction using `--include-file=<path>`, and surface available identity fields such as `trace_id`, `packet_id`, `created_at`, `previous`, or first heading text. Explicit `--include-file` and `--include-file-list` entries override cold-body omission for those exact paths.
 
-Non-history files still emit full content from tracked state through `git show` or the current working tree when explicitly included and untracked. Optional truncation limits are applied per full-body text file when `--max-lines` is set. The binary writes payload and manifest artifacts under `storage/dumps`, optionally packs payload and manifest into a tarball, and prints artifact paths when `--out` is used.
+Non-history files still emit full content from tracked state through `git show` or the current working tree when explicitly included and untracked. Optional truncation limits are applied per full-body text file when `--max-lines` is set. The binary writes payload and manifest artifacts under `storage/dumps`, optionally packs payload and manifest into a tarball, and prints artifact paths when `--out` is used. When `--out=<path>` is an explicit non-archive text path, that path becomes the canonical payload path for the run and the manifest is emitted alongside it instead of through the shared branch/head default names.
 
 ### Factory-Only Audit Recipe and Guardrail Examples
 

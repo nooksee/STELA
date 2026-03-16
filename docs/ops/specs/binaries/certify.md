@@ -24,6 +24,7 @@ Before replay begins, certify computes the exact certify-owned generated surface
 
 These paths are structurally owned by certify for the active run and therefore do not require packet-specific allowlist additions. Unrelated changed paths remain subject to the normal allowlist gate.
 For base DP runs, certify materializes the archived `TASK` leaf body from the current active DP block before writing the new pointer head so prior-packet body text cannot be carried forward by an old TASK pointer target.
+When `PoW.md` or `SoP.md` has been authored as a multi-line pre-certify current-entry head, certify preserves archive chain linkage by deriving `previous:` from the committed HEAD pointer for that surface while snapshotting the current working-tree body into the new leaf.
 When `--allow-intake-fallback` is explicitly enabled and `TASK.md` is a pointer-only head while the matching intake packet is present, certify prefers the intake packet as the active DP source for rerun recovery instead of reusing a stale packet body embedded in the current TASK leaf.
 
 Certify emits `Certify phase: <phase>` when the active phase changes, and all hard-fail exits are tagged as `ERROR [<phase>]` so closeout failures are phase-local without requiring transcript archaeology.
