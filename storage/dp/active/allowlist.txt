@@ -454,3 +454,14 @@ docs/ops/specs/tools/test/bundle.md
 docs/ops/specs/tools/test/factory.md
 docs/ops/registry/binaries.md
 docs/MANUAL.md
+storage/handoff/CLOSING-DP-OPS-0201.md
+ops/bin/certify
+ops/lib/scripts/bundle.sh
+tools/test/bundle.sh
+docs/ops/specs/binaries/certify.md
+docs/ops/specs/binaries/bundle.md
+docs/ops/specs/scripts/bundle.md
+docs/ops/specs/tools/test/bundle.md
+docs/ops/specs/surfaces/results.md
+docs/ops/specs/surfaces/task.md
+docs/MANUAL.md

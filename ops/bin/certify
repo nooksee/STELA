@@ -740,6 +740,32 @@ move_dp_packet_to_processed() {
   printf 'DP packet moved: %s -> %s\n' "$intake_rel" "$processed_rel"
 }
 
+resolve_authoritative_dp_source_for_results() {
+  local dp_id="$1"
+  local runtime_dp_source="$2"
+  local addendum_id="${3:-}"
+  local packet_name="${dp_id}.md"
+  if [[ -n "$addendum_id" ]]; then
+    packet_name="${dp_id}-ADDENDUM-${addendum_id}.md"
+  fi
+
+  local intake_rel="storage/dp/intake/${packet_name}"
+  local processed_rel="storage/dp/processed/${packet_name}"
+
+  if [[ -f "${REPO_ROOT}/${processed_rel}" ]]; then
+    printf '%s' "$processed_rel"
+    return 0
+  fi
+  if [[ -f "${REPO_ROOT}/${intake_rel}" ]]; then
+    # Successful certify moves intake packets to processed. RESULTS should record
+    # the authoritative packet-source path that survives into the delivered packet.
+    printf '%s' "$processed_rel"
+    return 0
+  fi
+
+  printf '%s' "$runtime_dp_source"
+}
+
 assert_dp_matches_work_branch() {
   local dp_id="$1"
   local branch_name
@@ -2090,7 +2116,9 @@ DIFF_STAT="$(printf '%s' "$DIFF_STAT" | sanitize_disposable_refs)"
 [[ -n "$DIFF_NAME_ONLY" ]] || DIFF_NAME_ONLY="(none)"
 [[ -n "$DIFF_STAT" ]] || DIFF_STAT="(none)"
 
+RESULTS_DP_SOURCE="$(resolve_authoritative_dp_source_for_results "$DP_ID" "$DP_SOURCE" "$ADDENDUM_ID")"
 RESULTS_ALLOWLIST_POINTER="$ALLOWLIST_POINTER"
+RESULTS_ALLOWLIST_POINTER+=$'\n'"- dp_source: ${RESULTS_DP_SOURCE}"
 RESULTS_ALLOWLIST_POINTER+=$'\n'"- dump_manifest: ${DUMP_MANIFEST_POINTER}"
 
 CERTIFIED_AT="$(utc_now)"
@@ -2223,6 +2251,7 @@ INTEGRITY_OUTPUT+="${HASH_PARITY_OUTPUT}"$'\n'
 INTEGRITY_OUTPUT+="${SLOT_TOKEN_CHECK_OUTPUT}"
 
 RESULTS_ALLOWLIST_POINTER="$ALLOWLIST_POINTER"
+RESULTS_ALLOWLIST_POINTER+=$'\n'"- dp_source: ${RESULTS_DP_SOURCE}"
 RESULTS_ALLOWLIST_POINTER+=$'\n'"- dump_manifest: ${DUMP_MANIFEST_POINTER}"
 
 "$TEMPLATE_BIN" render results --out="$OUT_PATH" \
@@ -2263,13 +2292,14 @@ TELEMETRY_LEAF="$(
     "${OUT_PATH#${REPO_ROOT}/}" \
     "$BRANCH" \
     "$GIT_HASH" \
-    "$DP_SOURCE" \
+    "$RESULTS_DP_SOURCE" \
     "$CERTIFY_TOTAL_DURATION_SECONDS" \
     "$CERTIFY_PHASE_SUMMARY_OUTPUT" \
     "$CERTIFY_LONG_POLE_SUMMARY_OUTPUT"
 )"
 
-echo "DP source: ${DP_SOURCE}"
+echo "DP replay source: ${DP_SOURCE}"
+echo "DP source: ${RESULTS_DP_SOURCE}"
 echo "RESULTS saved: ${OUT_PATH#${REPO_ROOT}/}"
 echo "${DP_PACKET_MOVE_OUTPUT}"
 echo "Telemetry leaf: ${TELEMETRY_LEAF}"

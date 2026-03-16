@@ -64,11 +64,13 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 - Validated architect slice output must include `[ACTIVE SLICE PROJECTION]` with active-slice handoff data only.
 - Architect ad hoc output must not emit `[ACTIVE SLICE PROJECTION]`.
 - Audit requires current `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md`; bundle must fail closed when either is missing or current DP resolution is unavailable.
+- Audit requires the active packet source file at `storage/dp/processed/<DP_ID>.md` or `storage/dp/intake/<DP_ID>.md`; bundle must fail closed when packet source is ambiguous or unavailable.
 - Audit dump payload must contain file blocks for the current `RESULTS` and `CLOSING` files.
 - Audit dump payload must contain the current active TASK leaf file block resolved through `TASK.md`, not only the one-line `TASK.md` pointer.
+- Audit dump payload must contain the current packet source file block for the active packet id.
 - Audit dump manifest must report `History profile: audit`.
-- Audit dump manifest must record explicit include provenance for the current `RESULTS` and `CLOSING` files.
-- Audit package must include the current `RESULTS` and `CLOSING` files and omit unrelated disposable inputs such as `TOPIC.md` and `PLAN.md`.
+- Audit dump manifest must record explicit include provenance for the current `RESULTS`, `CLOSING`, and packet-source files.
+- Audit package must include the current `RESULTS`, `CLOSING`, and packet-source files and omit unrelated disposable inputs such as `TOPIC.md` and `PLAN.md`.
 - Compatibility legacy artifact outputs (`BUNDLE-*`) are asserted from manifest `artifact_naming` metadata when legacy emission is enabled by policy.
 - `auto` must resolve to a supported route (`analyst` or `architect`).
 - Foreman must fail without `--intent`.

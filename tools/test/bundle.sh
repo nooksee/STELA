@@ -62,7 +62,9 @@ AUDIT_TASK_RESTORE=0
 AUDIT_FIXTURE_TASK_REL=""
 AUDIT_FIXTURE_RESULTS_REL=""
 AUDIT_FIXTURE_CLOSING_REL=""
+AUDIT_FIXTURE_PACKET_REL=""
 AUDIT_EXPECTED_PACKET_ID=""
+AUDIT_EXPECTED_PACKET_SOURCE_REL=""
 BUNDLE_OUTPUT_SEQUENCE=0
 
 restore_fixture_overrides() {
@@ -122,7 +124,7 @@ queue_cleanup_path() {
   [[ -n "$rel_path" ]] || return 0
 
   case "$rel_path" in
-    storage/handoff/*|storage/dumps/*)
+    storage/*)
       ;;
     *)
       fail "refusing to queue cleanup path outside storage/: ${rel_path}"
@@ -228,6 +230,7 @@ ensure_audit_receipt_fixture() {
   local branch=""
   local current_results_rel=""
   local current_closing_rel=""
+  local current_packet_source_rel=""
 
   if [[ -f "$task_abs" ]]; then
     local current_pointer=""
@@ -237,10 +240,17 @@ ensure_audit_receipt_fixture() {
       current_packet_id="$(awk '/^packet_id:[[:space:]]*/ { sub(/^packet_id:[[:space:]]*/, "", $0); print; exit }' "${REPO_ROOT}/${current_pointer}")"
       current_results_rel="storage/handoff/${current_packet_id}-RESULTS.md"
       current_closing_rel="storage/handoff/CLOSING-${current_packet_id}.md"
+      if [[ -f "${REPO_ROOT}/storage/dp/processed/${current_packet_id}.md" ]]; then
+        current_packet_source_rel="storage/dp/processed/${current_packet_id}.md"
+      elif [[ -f "${REPO_ROOT}/storage/dp/intake/${current_packet_id}.md" ]]; then
+        current_packet_source_rel="storage/dp/intake/${current_packet_id}.md"
+      fi
       if [[ "$current_packet_id" =~ ^DP-[A-Z]+-[0-9]{4,}$ \
         && -f "${REPO_ROOT}/${current_results_rel}" \
-        && -f "${REPO_ROOT}/${current_closing_rel}" ]]; then
+        && -f "${REPO_ROOT}/${current_closing_rel}" \
+        && -n "$current_packet_source_rel" ]]; then
         AUDIT_EXPECTED_PACKET_ID="$current_packet_id"
+        AUDIT_EXPECTED_PACKET_SOURCE_REL="$current_packet_source_rel"
         return 0
       fi
     fi
@@ -259,9 +269,11 @@ ensure_audit_receipt_fixture() {
   AUDIT_FIXTURE_TASK_REL="archives/surfaces/TASK-DP-OPS-9999-fixture.md"
   AUDIT_FIXTURE_RESULTS_REL="storage/handoff/DP-OPS-9999-RESULTS.md"
   AUDIT_FIXTURE_CLOSING_REL="storage/handoff/CLOSING-DP-OPS-9999.md"
+  AUDIT_FIXTURE_PACKET_REL="storage/dp/processed/DP-OPS-9999.md"
   AUDIT_EXPECTED_PACKET_ID="DP-OPS-9999"
+  AUDIT_EXPECTED_PACKET_SOURCE_REL="$AUDIT_FIXTURE_PACKET_REL"
 
-  mkdir -p "${REPO_ROOT}/var/tmp" "${REPO_ROOT}/storage/handoff" "${REPO_ROOT}/archives/surfaces"
+  mkdir -p "${REPO_ROOT}/var/tmp" "${REPO_ROOT}/storage/handoff" "${REPO_ROOT}/archives/surfaces" "${REPO_ROOT}/storage/dp/processed"
   cat > "${REPO_ROOT}/${AUDIT_FIXTURE_TASK_REL}" <<'EOF'
 ---
 packet_id: DP-OPS-9999
@@ -294,9 +306,18 @@ Fixture only.
 Confirm Merge (Add a Comment)
 Fixture only.
 EOF
+  cat > "${REPO_ROOT}/${AUDIT_FIXTURE_PACKET_REL}" <<'EOF'
+### DP-OPS-9999: Bundle audit fixture
+
+## 3.1 Freshness Gate (Must Pass Before Work)
+Base Branch: main
+Required Work Branch: work/dp-ops-9999-bundle-audit-fixture
+Base HEAD: 0000000
+EOF
 
   queue_cleanup_path "$AUDIT_FIXTURE_RESULTS_REL"
   queue_cleanup_path "$AUDIT_FIXTURE_CLOSING_REL"
+  queue_cleanup_path "$AUDIT_FIXTURE_PACKET_REL"
 }
 
 run_capture() {
@@ -1088,6 +1109,8 @@ test_audit_contract() {
   local audit_results_rel=""
   local audit_closing_rel=""
   local audit_task_surface_rel=""
+  local audit_packet_source_rel=""
+  local results_dp_source_line=""
 
   ensure_audit_receipt_fixture
   [[ -n "$AUDIT_EXPECTED_PACKET_ID" ]] || {
@@ -1097,6 +1120,22 @@ test_audit_contract() {
   audit_results_rel="storage/handoff/${AUDIT_EXPECTED_PACKET_ID}-RESULTS.md"
   audit_closing_rel="storage/handoff/CLOSING-${AUDIT_EXPECTED_PACKET_ID}.md"
   audit_task_surface_rel="$(resolve_current_task_surface_rel)"
+  audit_packet_source_rel="$AUDIT_EXPECTED_PACKET_SOURCE_REL"
+
+  if [[ -f "${REPO_ROOT}/${audit_results_rel}" ]]; then
+    results_dp_source_line="$(awk '
+      /^-[[:space:]]*dp_source:[[:space:]]*/ {
+        line=$0
+        sub(/^[^:]*:[[:space:]]*/, "", line)
+        print line
+        exit
+      }
+    ' "${REPO_ROOT}/${audit_results_rel}")"
+    results_dp_source_line="$(trim "$results_dp_source_line")"
+    if [[ "$results_dp_source_line" != "$audit_packet_source_rel" ]]; then
+      fail "audit RESULTS dp_source mismatch: expected ${audit_packet_source_rel}, got ${results_dp_source_line:-"(missing)"}"
+    fi
+  fi
 
   run_bundle_capture audit --profile=audit
   if (( RUN_STATUS != 0 )); then
@@ -1126,11 +1165,14 @@ test_audit_contract() {
     if ! grep -Fq "<<< FILE BEGIN: ${audit_task_surface_rel}" "${REPO_ROOT}/${dump_payload_path}"; then
       fail "audit dump payload missing current TASK leaf file block"
     fi
+    if ! grep -Fq "<<< FILE BEGIN: ${audit_packet_source_rel}" "${REPO_ROOT}/${dump_payload_path}"; then
+      fail "audit dump payload missing current packet source file block"
+    fi
   fi
   if [[ -z "$dump_manifest_path" ]]; then
     fail "audit manifest missing dump manifest_path"
-  elif ! grep -Fq "Include files (explicit): ${audit_results_rel} ${audit_closing_rel}" "${REPO_ROOT}/${dump_manifest_path}"; then
-    fail "audit dump manifest missing explicit RESULTS/CLOSING include provenance"
+  elif ! grep -Fq "Include files (explicit): ${audit_results_rel} ${audit_closing_rel} ${audit_packet_source_rel}" "${REPO_ROOT}/${dump_manifest_path}"; then
+    fail "audit dump manifest missing explicit RESULTS/CLOSING/packet-source include provenance"
   elif ! grep -Fq 'History profile: audit' "${REPO_ROOT}/${dump_manifest_path}"; then
     fail "audit dump manifest missing history profile"
   fi
@@ -1144,6 +1186,9 @@ test_audit_contract() {
   fi
   if ! printf '%s\n' "$package_listing" | grep -Fxq "$audit_closing_rel"; then
     fail "audit package missing current closing sidecar"
+  fi
+  if ! printf '%s\n' "$package_listing" | grep -Fxq "$audit_packet_source_rel"; then
+    fail "audit package missing current packet source file"
   fi
   if printf '%s\n' "$package_listing" | grep -Fxq 'storage/handoff/TOPIC.md'; then
     fail "audit package should not include storage/handoff/TOPIC.md"
