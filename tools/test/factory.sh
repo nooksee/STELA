@@ -18,6 +18,8 @@ RUN_OUTPUT=""
 RUN_STATUS=0
 PLAN_BACKUP=""
 PLAN_RESTORE=0
+SMOKE_HANDOFF_ROOT="storage/_smoke/handoff"
+SMOKE_DUMP_ROOT="storage/_smoke/dumps"
 
 cleanup_generated() {
   local rel_path
@@ -72,7 +74,7 @@ queue_cleanup_path() {
   [[ -n "$rel_path" ]] || return 0
 
   case "$rel_path" in
-    storage/handoff/*|storage/dumps/*)
+    storage/*)
       ;;
     *)
       fail "refusing to queue cleanup path outside storage/: ${rel_path}"
@@ -116,7 +118,7 @@ ensure_plan_absent_fixture() {
 }
 
 next_bundle_output_path() {
-  printf 'storage/handoff/ANALYST-factory-smoke-%s.txt' "$$"
+  printf '%s/ANALYST-factory-smoke-%s.txt' "$SMOKE_HANDOFF_ROOT" "$$"
 }
 
 parse_bundle_output_path() {
@@ -185,6 +187,27 @@ package_rel="$(normalize_rel_path "$(parse_bundle_output_path "Bundle package")"
 if [[ -z "$artifact_rel" || -z "$manifest_rel" || -z "$package_rel" ]]; then
   fail "bundle output missing artifact/manifest/package paths"
 else
+  case "$artifact_rel" in
+    ${SMOKE_HANDOFF_ROOT}/*)
+      ;;
+    *)
+      fail "factory smoke artifact should be under ${SMOKE_HANDOFF_ROOT}/: ${artifact_rel}"
+      ;;
+  esac
+  case "$manifest_rel" in
+    ${SMOKE_HANDOFF_ROOT}/*)
+      ;;
+    *)
+      fail "factory smoke manifest should be under ${SMOKE_HANDOFF_ROOT}/: ${manifest_rel}"
+      ;;
+  esac
+  case "$package_rel" in
+    ${SMOKE_HANDOFF_ROOT}/*)
+      ;;
+    *)
+      fail "factory smoke package should be under ${SMOKE_HANDOFF_ROOT}/: ${package_rel}"
+      ;;
+  esac
   queue_cleanup_path "$artifact_rel"
   queue_cleanup_path "$manifest_rel"
   queue_cleanup_path "$package_rel"
@@ -202,10 +225,24 @@ fi
 payload_rel="$(extract_manifest_scalar "$manifest_rel" "payload_path")"
 dump_manifest_rel="$(extract_manifest_scalar "$manifest_rel" "manifest_path")"
 if [[ -n "$payload_rel" ]]; then
+  case "$payload_rel" in
+    ${SMOKE_DUMP_ROOT}/*)
+      ;;
+    *)
+      fail "factory smoke dump payload should be under ${SMOKE_DUMP_ROOT}/: ${payload_rel}"
+      ;;
+  esac
   queue_cleanup_path "$payload_rel"
   assert_file_exists "$payload_rel"
 fi
 if [[ -n "$dump_manifest_rel" ]]; then
+  case "$dump_manifest_rel" in
+    ${SMOKE_DUMP_ROOT}/*)
+      ;;
+    *)
+      fail "factory smoke dump manifest should be under ${SMOKE_DUMP_ROOT}/: ${dump_manifest_rel}"
+      ;;
+  esac
   queue_cleanup_path "$dump_manifest_rel"
   assert_file_exists "$dump_manifest_rel"
 fi
@@ -221,7 +258,7 @@ assert_manifest_has "$manifest_rel" '"agent_id": "R-AGENT-09"'
 assert_manifest_has "$manifest_rel" '"skill_id": "S-LEARN-09"'
 assert_manifest_has "$manifest_rel" '"task_id": "B-TASK-09"'
 assert_manifest_has "$manifest_rel" '"emitted": true'
-assert_manifest_has "$manifest_rel" '"path": "storage/handoff/'
+assert_manifest_has "$manifest_rel" "\"path\": \"${SMOKE_HANDOFF_ROOT}/"
 
 if ! grep -Fq '[ASSEMBLY]' "${REPO_ROOT}/${artifact_rel}"; then
   fail "bundle artifact missing [ASSEMBLY] block"

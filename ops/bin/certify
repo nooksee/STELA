@@ -1548,11 +1548,12 @@ extract_commands() {
 rewrite_certify_scoped_command() {
   local command="$1"
   case "$command" in
-    "bash tools/verify.sh")
-      printf '%s' "bash tools/verify.sh --mode=certify-critical"
-      ;;
-    "./tools/verify.sh")
-      printf '%s' "./tools/verify.sh --mode=certify-critical"
+    "bash tools/verify.sh"|"./tools/verify.sh"|"bash tools/verify.sh --mode=full"|"./tools/verify.sh --mode=full"|"bash tools/verify.sh --mode=certify-critical"|"./tools/verify.sh --mode=certify-critical")
+      if [[ -n "${CERTIFY_VERIFY_PATHS_REL:-}" ]]; then
+        printf '%s' "bash tools/verify.sh --mode=certify-critical --paths-file=${CERTIFY_VERIFY_PATHS_REL}"
+      else
+        printf '%s' "bash tools/verify.sh --mode=certify-critical"
+      fi
       ;;
     *)
       printf '%s' "$command"
@@ -1563,13 +1564,21 @@ rewrite_certify_scoped_command() {
 certify_phase_for_command() {
   local command="$1"
   case "$command" in
-    "bash tools/verify.sh --mode=certify-critical"|"./tools/verify.sh --mode=certify-critical"|"bash tools/verify.sh"|"./tools/verify.sh")
+    bash\ tools/verify.sh\ --mode=certify-critical*|"./tools/verify.sh --mode=certify-critical"*|"bash tools/verify.sh"|"./tools/verify.sh"|"bash tools/verify.sh --mode=full"|"./tools/verify.sh --mode=full")
       printf '%s' "verify"
       ;;
     *)
       printf '%s' "replay"
       ;;
   esac
+}
+
+build_certify_verify_paths_file() {
+  local out_path="$1"
+  {
+    git -C "$REPO_ROOT" diff --name-only HEAD
+    git -C "$REPO_ROOT" ls-files --others --exclude-standard
+  } | awk 'NF { print }' | LC_ALL=C sort -u > "$out_path"
 }
 
 build_command_plan() {
@@ -1712,6 +1721,9 @@ fi
 
 TMP_DIR="$(mktemp -d "${REPO_ROOT}/var/tmp/certify.${DP_ID}.XXXXXX")"
 trap 'emit_binary_leaf "certify" "finish"; rm -rf "$TMP_DIR"' EXIT
+CERTIFY_VERIFY_PATHS_REL="${TMP_DIR#${REPO_ROOT}/}/verify-paths.txt"
+CERTIFY_VERIFY_PATHS_PATH="${REPO_ROOT}/${CERTIFY_VERIFY_PATHS_REL}"
+build_certify_verify_paths_file "$CERTIFY_VERIFY_PATHS_PATH"
 
 DP_BLOCK_PATH="${TMP_DIR}/dp-block.md"
 BASE_DP_BLOCK_PATH=""

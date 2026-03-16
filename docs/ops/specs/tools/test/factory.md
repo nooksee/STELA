@@ -18,17 +18,19 @@ Run deterministic smoke checks for factory ATS triplet execution using canon tes
 - `opt/_factory/skills/s-learn-09.md`
 - `opt/_factory/tasks/b-task-09.md`
 - transient `storage/handoff/TOPIC.md` fixture when the resolved auto profile requires analyst input
-- bundle-generated artifacts under `storage/handoff/` and `storage/dumps/`
+- bundle-generated smoke artifacts under `storage/_smoke/handoff/` and `storage/_smoke/dumps/`
 
 ## Outputs
 - Stdout: `PASS: factory smoke test` on success.
 - Stderr: `FAIL:` lines for each failed assertion.
-- Cleanup behavior: removes only generated bundle artifacts, manifests, packages, assembly pointer artifacts, and dump payload/manifest files emitted during the test run.
+- Cleanup behavior: removes only generated smoke artifacts, manifests, packages, assembly pointer artifacts, and dump payload/manifest files emitted during the test run.
 
 ## Invariants and failure modes
 - `./ops/bin/bundle --profile=auto --agent-id=R-AGENT-09 --skill-id=S-LEARN-09 --task-id=B-TASK-09 --out=<explicit-test-path>` must succeed.
 - The test suppresses live `storage/handoff/PLAN.md` so auto routing is deterministic and resolves to analyst.
 - The test provisions a disposable `storage/handoff/TOPIC.md` fixture before bundle invocation.
+- Explicit smoke bundle output must land under `storage/_smoke/handoff/`.
+- Explicit smoke dump output must land under `storage/_smoke/dumps/`.
 - Bundle output must include non-empty artifact/manifest/package paths.
 - Bundle invocation failure is terminal for the smoke test; path-parsing assertions must not run on failed output.
 - Emitted artifact, manifest, package, dump payload, dump manifest, and assembly pointer files must exist.
@@ -39,7 +41,7 @@ Run deterministic smoke checks for factory ATS triplet execution using canon tes
   - `assembly.skill_id: S-LEARN-09`
   - `assembly.task_id: B-TASK-09`
   - `assembly.pointer.emitted: true`
-  - `assembly.pointer.path` under `storage/handoff/`
+  - `assembly.pointer.path` under `storage/_smoke/handoff/`
 - Bundle text artifact must include `[ASSEMBLY]` block and the ATS triplet IDs.
 
 ## Anecdotal Anchor

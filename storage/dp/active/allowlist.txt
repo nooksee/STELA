@@ -465,3 +465,11 @@ docs/ops/specs/tools/test/bundle.md
 docs/ops/specs/surfaces/results.md
 docs/ops/specs/surfaces/task.md
 docs/MANUAL.md
+ops/lib/manifests/VERIFY.md
+docs/ops/specs/tools/verify.md
+docs/ops/registry/lint.md
+docs/ops/registry/test.md
+docs/ops/registry/decisions.md
+docs/DESIGN.md
+RoR.md
+storage/handoff/CLOSING-DP-OPS-0202.md

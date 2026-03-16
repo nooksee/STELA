@@ -450,8 +450,16 @@ bundle_resolve_output_path() {
     out_rel="$(bundle_to_rel_path "$out_token")"
   fi
 
-  if [[ "$out_rel" != storage/handoff/* ]]; then
-    die "bundle output must be under storage/handoff/: ${out_rel}"
+  case "$out_rel" in
+    storage/handoff/*|storage/_smoke/handoff/*)
+      ;;
+    *)
+      die "bundle output must be under storage/handoff/ or storage/_smoke/handoff/: ${out_rel}"
+      ;;
+  esac
+
+  if [[ "$out_rel" == storage/_smoke/handoff/* ]]; then
+    mkdir -p "${REPO_ROOT}/storage/_smoke/handoff" "${REPO_ROOT}/storage/_smoke/dumps"
   fi
 
   printf '%s' "${REPO_ROOT}/${out_rel}"
@@ -475,7 +483,11 @@ bundle_resolve_dump_output_path() {
   if [[ "$artifact_stem" == *.* ]]; then
     artifact_stem="${artifact_stem%.*}"
   fi
-  printf 'storage/dumps/dump-%s-%s.txt' "$dump_scope" "$artifact_stem"
+  if [[ "$artifact_rel" == storage/_smoke/handoff/* ]]; then
+    printf 'storage/_smoke/dumps/dump-%s-%s.txt' "$dump_scope" "$artifact_stem"
+  else
+    printf 'storage/dumps/dump-%s-%s.txt' "$dump_scope" "$artifact_stem"
+  fi
 }
 
 bundle_dump_scope_for_profile() {

@@ -19,25 +19,42 @@
    - Fail non-markdown files in `docs/` and `opt/`.
    - Fail loose markdown in `ops/` outside allowed subtrees.
 5. Emit warnings (not hard failures) for unexpected `storage/` clutter and missing project `README.md` files.
-6. Run deterministic smoke and lint gates by mode in a fixed fail-fast order:
-   - `--mode=full` (default): `tools/test/open.sh`, `tools/test/editor.sh`, `tools/lint/debt.sh`, `tools/test/factory.sh`, `tools/lint/response.sh --test`, then `tools/test/bundle.sh`.
-   - `--mode=certify-critical`: `tools/test/open.sh`, then `tools/test/bundle.sh --mode=certify-critical`.
-7. Emit stable lane telemetry to stdout for every executed smoke/lint lane:
-   - `VERIFY-LANE: name=<lane> scope=<certify-critical|full-only> status=<pass|fail|missing> duration_seconds=<N> detail=<command-or-path>`
+6. Load lane policy from `ops/lib/manifests/VERIFY.md`. Each lane definition must declare:
+   - `owner`
+   - `registry_table`
+   - `registry_path`
+   - `reason_class`
+   - `decision_leaf`
+   - `match`
+7. Resolve `Infra Importance` from the canonical registry row named by `registry_table` plus `registry_path`:
+   - `docs/ops/registry/binaries.md`
+   - `docs/ops/registry/lint.md`
+   - `docs/ops/registry/test.md`
+8. Select deterministic lanes by mode:
+   - `--mode=full` runs every policy lane in order.
+   - `--mode=certify-critical` runs `closeout-critical` lanes always.
+   - `--mode=certify-critical --paths-file=PATH` additionally runs `packet-local` lanes when at least one changed path matches the lane `match` list.
+   - `standalone-full-only` lanes are deferred in certify-critical mode.
+9. Emit stable lane selection telemetry before execution:
+   - `VERIFY-SELECTION: name=<lane> scope=<scope> reason_class=<reason_class> owner=<ID> infra_importance=<level> decision_leaf=<path|none> detail=<command>`
+   - `VERIFY-DEFERRED: name=<lane> scope=<scope> reason_class=<reason_class> owner=<ID> infra_importance=<level> decision_leaf=<path|none> reason=<why> detail=<command>`
+10. Emit stable lane execution telemetry to stdout for every executed smoke/lint lane:
+   - `VERIFY-LANE: name=<lane> scope=<scope> reason_class=<reason_class> owner=<ID> infra_importance=<level> decision_leaf=<path|none> status=<pass|fail|missing> duration_seconds=<N> detail=<command-or-path>`
    - Final recap lines use the same data as `VERIFY-LANE-SUMMARY: ...`
-8. Emit one stable lane-order line before lane execution:
+11. Emit one stable lane-order line before lane execution:
    - `VERIFY-LANE-ORDER: mode=<mode> order=<comma-separated-lanes>`
 
 ## Invocation modes
 - `bash tools/verify.sh`
 - `bash tools/verify.sh --mode=full`
 - `bash tools/verify.sh --mode=certify-critical`
+- `bash tools/verify.sh --mode=certify-critical --paths-file=var/tmp/<file>.txt`
 
-`certify-critical` is a bounded closeout-safety path for `ops/bin/certify`. It preserves the cheap structural and closeout-critical smoke checks while avoiding the heaviest repo-wide bundle/factory/debt replay cost. Narrative scaffold validation already occurs in certify preflight, so editor smoke remains full-mode only. Full verify remains the SSOT hygiene pass outside certify. The lane order is part of the contract: cheap deterministic failures should surface before the expensive bundle matrix.
+`certify-critical` is a bounded closeout-safety path for `ops/bin/certify`. It preserves closeout-critical lanes and, when a `--paths-file` is provided, packet-local lanes whose owned paths were touched by the active packet. Narrative scaffold validation already occurs in certify preflight, so editor smoke remains full-mode only. Full verify remains the SSOT hygiene pass outside certify. The lane order is part of the contract: cheap deterministic failures should surface before the expensive bundle matrix.
 
 ## Anecdotal Anchor
 The gate formalizes a recurring startup-failure class where missing required runtime subdirectories or placeholders broke binary workflows before task execution began. Once `tools/verify.sh` became a required pre-work check, those structural defects were caught before dispatch.
 
 ## Integrity Filter Warnings
-The script mixes hard failures and warnings by design; warning-only findings still indicate hygiene drift that can become blocking later. Intake packet enforcement inspects tracked files, so untracked staging artifacts are outside that specific guard. Factory reachability checks validate candidate and promotion pointers, not full semantic validity of downstream definition content. `--mode=certify-critical` is intentionally narrower than full verify and must not be treated as a substitute for the full hygiene pass outside certify.
+The script mixes hard failures and warnings by design; warning-only findings still indicate hygiene drift that can become blocking later. Intake packet enforcement inspects tracked files, so untracked staging artifacts are outside that specific guard. Factory reachability checks validate candidate and promotion pointers, not full semantic validity of downstream definition content. `--mode=certify-critical` is intentionally narrower than full verify and must not be treated as a substitute for the full hygiene pass outside certify. Packet-local lane selection is deterministic from `--paths-file`; the script does not infer change relevance heuristically.
 Lane summaries report only executed smoke/lint lanes, not the earlier in-process structural checks.

@@ -5,7 +5,7 @@ Every CbC decision made against a named tool gets a row. Entries are updated whe
 
 | Tool | Score | Verdict | DP | Status | Leaf |
 | :--- | :---: | :--- | :--- | :--- | :--- |
-| tools/verify.sh | C | Keep | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-003-cbc-0140.md |
+| tools/verify.sh | C | Keep; lane-policy manifest and packet-local certify replay adopted | DP-OPS-0101, DP-OPS-0202 | Active | archives/decisions/RoR-2026-03-16-001-cbc-0202.md |
 | tools/lint/dp.sh | C | Keep; refactor candidate (extract test fixture) | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-004-cbc-0140.md |
 | tools/lint/agent.sh | C | Keep | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-005-cbc-0140.md |
 | tools/lint/context.sh (artifact existence, contamination) | C | Keep | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-006-cbc-0140.md |
@@ -27,3 +27,5 @@ Every CbC decision made against a named tool gets a row. Entries are updated whe
 | tools/lint/task.sh (ambiguous-language detection) | B | Keep; redesign queued: machine-parseable step format | DP-OPS-0101 | Improvement queued | archives/decisions/RoR-2026-03-01-022-cbc-0140.md |
 | tools/lint/truth.sh | C | Keep | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-023-cbc-0140.md |
 | tools/test/agent.sh | N/A | Keep (out of CbC scope) | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-024-cbc-0140.md |
+| tools/test/bundle.sh | C | Keep in certify-critical; smoke outputs quarantined under storage/_smoke | DP-OPS-0202 | Active | archives/decisions/RoR-2026-03-16-002-cbc-0202.md |
+| tools/test/factory.sh | B | Keep; certify replay narrowed to packet-local path matches only | DP-OPS-0202 | Improvement queued | archives/decisions/RoR-2026-03-16-003-cbc-0202.md |

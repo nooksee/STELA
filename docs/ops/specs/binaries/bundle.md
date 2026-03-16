@@ -151,7 +151,7 @@ Disposable transport rule:
    - audit current `storage/handoff/<DP_ID>-RESULTS.md`, `storage/handoff/CLOSING-<DP_ID>.md`, and the active packet source file at `storage/dp/processed/<DP_ID>.md` or `storage/dp/intake/<DP_ID>.md`
 3. Future additions must be exact-file policy wiring plus matching smoke-test proof.
 
-Bundle runtime invokes dump with explicit `.txt` output path and explicit `--history-profile=<resolved-profile>` to suppress dump auto-compression side effects during bundle orchestration while keeping history depth deterministic. When bundle output uses an explicit non-`auto` path, bundle derives a matching explicit dump payload path so concurrent smoke runs do not reuse the same branch/head dump artifact names.
+Bundle runtime invokes dump with explicit `.txt` output path and explicit `--history-profile=<resolved-profile>` to suppress dump auto-compression side effects during bundle orchestration while keeping history depth deterministic. When bundle output uses an explicit non-`auto` path, bundle derives a matching explicit dump payload path so concurrent smoke runs do not reuse the same branch/head dump artifact names. Explicit operator-facing outputs remain under `storage/handoff/`; smoke and validation runs may target quarantined paths under `storage/_smoke/handoff/` with matching dump outputs under `storage/_smoke/dumps/`.
 
 ATS validation gate:
 1. ATS flags are all-or-none. Any partial ATS argument set fails before artifact emission.
@@ -161,4 +161,4 @@ ATS validation gate:
 5. ATS success may emit a pointer artifact and must never inline full registry payloads into bundle text or manifest fields.
 
 ## Integrity Filter Warnings
-Bundle enforces output paths under `storage/handoff/`. Project profile rejects missing or invalid slugs. PLAN lint remains a deterministic safety floor; it validates structure, not plan quality. Policy parse errors in `ops/lib/manifests/BUNDLE.md` are fail-closed. Bundle runtime must remain deterministic and must not parse factory markdown governance files at runtime.
+Bundle enforces output paths under `storage/handoff/` for operator-facing artifacts and under `storage/_smoke/handoff/` for quarantined smoke outputs only. Project profile rejects missing or invalid slugs. PLAN lint remains a deterministic safety floor; it validates structure, not plan quality. Policy parse errors in `ops/lib/manifests/BUNDLE.md` are fail-closed. Bundle runtime must remain deterministic and must not parse factory markdown governance files at runtime.
