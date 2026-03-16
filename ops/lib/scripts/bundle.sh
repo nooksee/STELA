@@ -851,6 +851,31 @@ bundle_resolve_audit_packet_id() {
   printf '%s' "$packet_id"
 }
 
+bundle_resolve_audit_packet_source_rel() {
+  local packet_id="$1"
+  local intake_rel="storage/dp/intake/${packet_id}.md"
+  local processed_rel="storage/dp/processed/${packet_id}.md"
+  local intake_present=0
+  local processed_present=0
+
+  [[ -f "${REPO_ROOT}/${intake_rel}" ]] && intake_present=1
+  [[ -f "${REPO_ROOT}/${processed_rel}" ]] && processed_present=1
+
+  if (( intake_present && processed_present )); then
+    die "audit packet source is ambiguous for ${packet_id}: both ${intake_rel} and ${processed_rel} exist"
+  fi
+  if (( processed_present )); then
+    printf '%s' "$processed_rel"
+    return 0
+  fi
+  if (( intake_present )); then
+    printf '%s' "$intake_rel"
+    return 0
+  fi
+
+  die "audit requires current packet source at ${processed_rel} or ${intake_rel}"
+}
+
 bundle_collect_profile_disposable_inputs() {
   local profile="$1"
   local topic_rel="$2"
@@ -858,6 +883,7 @@ bundle_collect_profile_disposable_inputs() {
   local audit_packet_id=""
   local results_rel=""
   local closing_rel=""
+  local packet_source_rel=""
 
   case "$profile" in
     analyst)
@@ -873,9 +899,10 @@ bundle_collect_profile_disposable_inputs() {
       audit_packet_id="$(bundle_resolve_audit_packet_id)"
       results_rel="storage/handoff/${audit_packet_id}-RESULTS.md"
       closing_rel="storage/handoff/CLOSING-${audit_packet_id}.md"
+      packet_source_rel="$(bundle_resolve_audit_packet_source_rel "$audit_packet_id")"
       [[ -f "${REPO_ROOT}/${results_rel}" ]] || die "audit requires ${results_rel}"
       [[ -f "${REPO_ROOT}/${closing_rel}" ]] || die "audit requires ${closing_rel}"
-      printf '%s\n%s\n' "$results_rel" "$closing_rel"
+      printf '%s\n%s\n%s\n' "$results_rel" "$closing_rel" "$packet_source_rel"
       ;;
   esac
 }

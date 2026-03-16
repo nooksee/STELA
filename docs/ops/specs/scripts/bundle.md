@@ -68,8 +68,10 @@ The script provides `bundle_run` plus helpers for:
 24. Audit disposable transport:
    - resolve current packet id from the current TASK surface,
    - require current `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md`,
-   - invoke audit core dump with explicit include for those two files,
-   - include those two files in audit package members.
+   - resolve the current packet source at `storage/dp/processed/<DP_ID>.md` or `storage/dp/intake/<DP_ID>.md`,
+   - fail closed if both packet-source locations exist or neither exists,
+   - invoke audit core dump with explicit include for current `RESULTS`, `CLOSING`, and packet-source files,
+   - include those three files in audit package members.
 
 Stance contract extraction and render rules:
 - Resolve profile stance template key from `ops/lib/manifests/BUNDLE.md`.

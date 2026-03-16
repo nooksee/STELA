@@ -131,6 +131,7 @@ Dump scope mapping by resolved profile:
 2. `audit` -> `ops/bin/dump --scope=core`.
    - audit adds explicit `--include-file=storage/handoff/<DP_ID>-RESULTS.md`
    - audit adds explicit `--include-file=storage/handoff/CLOSING-<DP_ID>.md`
+   - audit adds explicit `--include-file=storage/dp/processed/<DP_ID>.md` or `storage/dp/intake/<DP_ID>.md` for the current packet source
 3. `foreman` -> `ops/bin/dump --scope=core`.
 4. `project` -> `ops/bin/dump --scope=project --project=<name>`.
 
@@ -147,7 +148,7 @@ Disposable transport rule:
 2. Current live set is:
    - analyst `storage/handoff/TOPIC.md`
    - architect `storage/handoff/PLAN.md`
-   - audit current `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md`
+   - audit current `storage/handoff/<DP_ID>-RESULTS.md`, `storage/handoff/CLOSING-<DP_ID>.md`, and the active packet source file at `storage/dp/processed/<DP_ID>.md` or `storage/dp/intake/<DP_ID>.md`
 3. Future additions must be exact-file policy wiring plus matching smoke-test proof.
 
 Bundle runtime invokes dump with explicit `.txt` output path and explicit `--history-profile=<resolved-profile>` to suppress dump auto-compression side effects during bundle orchestration while keeping history depth deterministic. When bundle output uses an explicit non-`auto` path, bundle derives a matching explicit dump payload path so concurrent smoke runs do not reuse the same branch/head dump artifact names.
