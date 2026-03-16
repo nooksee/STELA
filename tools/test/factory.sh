@@ -16,6 +16,8 @@ declare -A CLEANUP_SEEN=()
 FAILURES=0
 RUN_OUTPUT=""
 RUN_STATUS=0
+PLAN_BACKUP=""
+PLAN_RESTORE=0
 
 cleanup_generated() {
   local rel_path
@@ -27,7 +29,17 @@ cleanup_generated() {
   done
 }
 
-trap 'cleanup_generated; emit_binary_leaf "test-factory" "finish"' EXIT
+restore_fixture_overrides() {
+  local plan_rel="storage/handoff/PLAN.md"
+  local plan_abs="${REPO_ROOT}/${plan_rel}"
+
+  if (( PLAN_RESTORE )) && [[ -n "$PLAN_BACKUP" && -f "$PLAN_BACKUP" ]]; then
+    cp "$PLAN_BACKUP" "$plan_abs"
+    rm -f "$PLAN_BACKUP"
+  fi
+}
+
+trap 'restore_fixture_overrides; cleanup_generated; emit_binary_leaf "test-factory" "finish"' EXIT
 emit_binary_leaf "test-factory" "start"
 
 fail() {
@@ -89,6 +101,24 @@ EOF
   queue_cleanup_path "$topic_rel"
 }
 
+ensure_plan_absent_fixture() {
+  local plan_rel="storage/handoff/PLAN.md"
+  local plan_abs="${REPO_ROOT}/${plan_rel}"
+
+  if (( PLAN_RESTORE == 0 )) && [[ -f "$plan_abs" ]]; then
+    mkdir -p "${REPO_ROOT}/var/tmp"
+    PLAN_BACKUP="$(mktemp "${REPO_ROOT}/var/tmp/factory-plan-backup.XXXXXX")"
+    cp "$plan_abs" "$PLAN_BACKUP"
+    PLAN_RESTORE=1
+  fi
+
+  rm -f -- "$plan_abs"
+}
+
+next_bundle_output_path() {
+  printf 'storage/handoff/ANALYST-factory-smoke-%s.txt' "$$"
+}
+
 parse_bundle_output_path() {
   local label="$1"
   printf '%s\n' "$RUN_OUTPUT" | sed -n "s/^${label}:[[:space:]]*//p" | tail -n 1
@@ -139,8 +169,9 @@ extract_pointer_path() {
 }
 
 ensure_analyst_topic_fixture
+ensure_plan_absent_fixture
 
-run_capture ./ops/bin/bundle --profile=auto --agent-id=R-AGENT-09 --skill-id=S-LEARN-09 --task-id=B-TASK-09 --out=auto
+run_capture ./ops/bin/bundle --profile=auto --agent-id=R-AGENT-09 --skill-id=S-LEARN-09 --task-id=B-TASK-09 "--out=$(next_bundle_output_path)"
 if (( RUN_STATUS != 0 )); then
   fail "factory ATS smoke bundle invocation failed: ${RUN_OUTPUT}"
   echo "FAILED: ${FAILURES} issue(s) detected." >&2
@@ -162,6 +193,11 @@ fi
 assert_file_exists "$artifact_rel"
 assert_file_exists "$manifest_rel"
 assert_file_exists "$package_rel"
+
+resolved_profile="$(extract_manifest_scalar "$manifest_rel" "resolved_profile")"
+if [[ "$resolved_profile" != "analyst" ]]; then
+  fail "factory ATS smoke expected auto route to analyst, got: ${resolved_profile}"
+fi
 
 payload_rel="$(extract_manifest_scalar "$manifest_rel" "payload_path")"
 dump_manifest_rel="$(extract_manifest_scalar "$manifest_rel" "manifest_path")"

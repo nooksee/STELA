@@ -316,6 +316,34 @@ read_surface_head_pointer() {
   printf '%s' "$pointer_path"
 }
 
+read_surface_head_pointer_from_committed_head() {
+  local surface_abs_path="$1"
+  local surface_rel_path="${surface_abs_path#${REPO_ROOT}/}"
+  local snapshot_path="${TMP_DIR}/head-pointer-${surface_rel_path##*/}"
+
+  if ! git -C "$REPO_ROOT" cat-file -e "HEAD:${surface_rel_path}" >/dev/null 2>&1; then
+    return 1
+  fi
+  git -C "$REPO_ROOT" show "HEAD:${surface_rel_path}" > "$snapshot_path" || return 1
+
+  local line_count
+  line_count="$(awk 'END { print NR }' "$snapshot_path")"
+  if [[ "$line_count" != "1" ]]; then
+    return 1
+  fi
+
+  local pointer_path
+  pointer_path="$(trim "$(cat "$snapshot_path")")"
+  pointer_path="$(normalize_path "$pointer_path")"
+  if [[ ! "$pointer_path" =~ ^archives/surfaces/[A-Za-z0-9._/-]+\.md$ ]]; then
+    return 1
+  fi
+
+  local target_path="${REPO_ROOT}/${pointer_path}"
+  [[ -f "$target_path" ]] || die "${surface_rel_path} committed HEAD pointer target missing: ${pointer_path}"
+  printf '%s' "$pointer_path"
+}
+
 extract_markdown_body_for_snapshot() {
   local source_path="$1"
   awk '
@@ -790,6 +818,10 @@ emit_surface_leaf_and_pointer() {
         previous="$existing_previous"
       fi
     fi
+  elif [[ "$surface_rel_path" != "TASK.md" ]] && head_pointer="$(read_surface_head_pointer_from_committed_head "$surface_abs_path")"; then
+    # Pre-certify PoW/SoP heads are authored as single current-entry markdown. Preserve
+    # archive chain linkage from the committed pointer head while snapshotting the new body.
+    previous="$head_pointer"
   fi
 
   local body_tmp="${TMP_DIR}/snapshot-${surface_rel_path##*/}.body"

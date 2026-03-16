@@ -25,6 +25,8 @@ The script provides `bundle_run` plus helpers for:
    - Compatibility legacy artifact emission controlled by `compatibility_emit_legacy_bundle_artifacts` and `compatibility_legacy_bundle_prefix`.
 8. Deterministic embedded OPEN block generation (no internal `ops/bin/open` invocation).
 9. Dump orchestration with explicit `.txt` output path under `storage/dumps/` and explicit `--history-profile=<resolved-profile>`.
+   - Auto bundle output keeps the branch/head dump naming contract.
+   - Explicit non-`auto` bundle output derives a matching explicit dump payload/manifest path to avoid shared-output collisions in smoke and verify lanes.
 10. Foreman intent parsing and decision-leaf validation against dump payload.
 11. Architect slice parsing and validation:
    - `--slice=<ID>` accepted only for resolved profile `architect`.

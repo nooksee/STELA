@@ -35,12 +35,25 @@ require_policy_value() {
   fi
 }
 
-project_name="${1:-}"
+project_name=""
+out_path="auto"
+for arg in "$@"; do
+  case "$arg" in
+    --out=*)
+      out_path="${arg#--out=}"
+      [[ -n "$out_path" ]] || die "--out requires a value"
+      ;;
+    *)
+      if [[ -z "$project_name" ]]; then
+        project_name="$arg"
+      else
+        die "usage: ops/bin/meta <project-name> [--out=auto|PATH]"
+      fi
+      ;;
+  esac
+done
 if [[ -z "$project_name" ]]; then
   die "project name is required"
-fi
-if [[ $# -ne 1 ]]; then
-  die "usage: ops/bin/meta <project-name>"
 fi
 if [[ ! "$project_name" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]]; then
   die "project name must match ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"
@@ -64,6 +77,6 @@ fi
 trap 'emit_binary_leaf "meta" "finish"' EXIT
 emit_binary_leaf "meta" "start"
 
-"$REPO_ROOT/ops/bin/bundle" --profile=project --project="$project_name" --out=auto >/dev/null
+"$REPO_ROOT/ops/bin/bundle" --profile=project --project="$project_name" "--out=${out_path}" >/dev/null
 
 echo "project context generated: $project_name"
