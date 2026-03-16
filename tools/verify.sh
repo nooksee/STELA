@@ -18,15 +18,19 @@ emit_binary_leaf "verify" "start"
 
 usage() {
   cat <<'EOF'
-Usage: bash tools/verify.sh [--mode=full|certify-critical]
+Usage: bash tools/verify.sh [--mode=full|certify-critical] [--paths-file=PATH]
 EOF
 }
 
 VERIFY_MODE="full"
+VERIFY_PATHS_FILE=""
 for arg in "$@"; do
   case "$arg" in
     --mode=*)
       VERIFY_MODE="${arg#--mode=}"
+      ;;
+    --paths-file=*)
+      VERIFY_PATHS_FILE="${arg#--paths-file=}"
       ;;
     -h|--help)
       usage
@@ -48,13 +52,30 @@ case "$VERIFY_MODE" in
     ;;
 esac
 
+VERIFY_POLICY_PATH="${REPO_ROOT}/ops/lib/manifests/VERIFY.md"
+declare -a VERIFY_POLICY_LANES=()
+declare -a VERIFY_SELECTED_LANES=()
+declare -a VERIFY_DEFERRED_LANES=()
+declare -a VERIFY_CHANGED_PATHS=()
+declare -A VERIFY_REGISTRY_FILES=(
+  [binaries]="${REPO_ROOT}/docs/ops/registry/binaries.md"
+  [lint]="${REPO_ROOT}/docs/ops/registry/lint.md"
+  [test]="${REPO_ROOT}/docs/ops/registry/test.md"
+)
+
 echo "Stela Repo Hygiene Verification"
 echo "Root: $REPO_ROOT"
 echo "Verification Mode: $VERIFY_MODE"
-if [[ "$VERIFY_MODE" == "full" ]]; then
-  echo "VERIFY-LANE-ORDER: mode=full order=open-dedup,editor-scaffold,guard-debt-lint,factory-smoke,response-self-test,bundle-smoke"
-else
-  echo "VERIFY-LANE-ORDER: mode=certify-critical order=open-dedup,bundle-smoke"
+if [[ -n "$VERIFY_PATHS_FILE" ]]; then
+  VERIFY_PATHS_FILE="${VERIFY_PATHS_FILE#./}"
+  if [[ "$VERIFY_PATHS_FILE" != /* ]]; then
+    VERIFY_PATHS_FILE="${REPO_ROOT}/${VERIFY_PATHS_FILE}"
+  fi
+  if [[ ! -f "$VERIFY_PATHS_FILE" ]]; then
+    echo "ERROR: --paths-file not found: ${VERIFY_PATHS_FILE}" >&2
+    exit 1
+  fi
+  echo "Verification Paths File: ${VERIFY_PATHS_FILE#${REPO_ROOT}/}"
 fi
 echo
 
@@ -72,27 +93,305 @@ warn() {
   warnings=$((warnings+1))
 }
 
+trim_verify_value() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
+registry_importance_for_path() {
+  local registry_table="$1"
+  local registry_path="$2"
+  local registry_file="${VERIFY_REGISTRY_FILES[$registry_table]:-}"
+  local importance=""
+
+  [[ -n "$registry_file" ]] || {
+    fail "verify policy references unknown registry table: ${registry_table}"
+    return 1
+  }
+  [[ -f "$registry_file" ]] || {
+    fail "verify policy registry file missing: ${registry_file#${REPO_ROOT}/}"
+    return 1
+  }
+
+  importance="$(
+    awk -F'|' -v expected="$registry_path" '
+      /^\|/ {
+        file_path=$4
+        infra=$5
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", file_path)
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", infra)
+        if (file_path == expected) {
+          print infra
+          exit
+        }
+      }
+    ' "$registry_file"
+  )"
+  importance="$(trim_verify_value "$importance")"
+  if [[ -z "$importance" ]]; then
+    fail "verify policy registry lookup failed: ${registry_table}:${registry_path}"
+    return 1
+  fi
+  printf '%s' "$importance"
+}
+
+load_verify_policy() {
+  local line=""
+  [[ -f "$VERIFY_POLICY_PATH" ]] || {
+    fail "Missing required verify policy manifest: ${VERIFY_POLICY_PATH#${REPO_ROOT}/}"
+    return 1
+  }
+
+  VERIFY_POLICY_LANES=()
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ "$line" == lane=* ]] || continue
+    VERIFY_POLICY_LANES+=("$line")
+  done < "$VERIFY_POLICY_PATH"
+
+  if (( ${#VERIFY_POLICY_LANES[@]} == 0 )); then
+    fail "Verify policy manifest contains no lane definitions"
+    return 1
+  fi
+}
+
+verify_lane_field() {
+  local lane="$1"
+  local field_name="$2"
+  local part=""
+  local stripped="${lane#lane=}"
+  IFS='|' read -r -a parts <<< "$stripped"
+
+  if [[ "$field_name" == "name" ]]; then
+    printf '%s' "${parts[0]}"
+    return 0
+  fi
+
+  for part in "${parts[@]:1}"; do
+    if [[ "${part%%=*}" == "$field_name" ]]; then
+      printf '%s' "${part#*=}"
+      return 0
+    fi
+  done
+  printf '%s' ""
+}
+
+lane_supports_mode() {
+  local lane="$1"
+  local mode="$2"
+  local modes_csv
+  local mode_value
+  modes_csv="$(verify_lane_field "$lane" "modes")"
+  IFS=',' read -r -a mode_values <<< "$modes_csv"
+  for mode_value in "${mode_values[@]}"; do
+    mode_value="$(trim_verify_value "$mode_value")"
+    [[ "$mode_value" == "$mode" ]] && return 0
+  done
+  return 1
+}
+
+load_verify_changed_paths() {
+  local line=""
+  VERIFY_CHANGED_PATHS=()
+  [[ -n "$VERIFY_PATHS_FILE" ]] || return 0
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="$(trim_verify_value "$line")"
+    line="${line#./}"
+    [[ -n "$line" ]] || continue
+    VERIFY_CHANGED_PATHS+=("$line")
+  done < "$VERIFY_PATHS_FILE"
+}
+
+lane_matches_changed_paths() {
+  local lane="$1"
+  local match_csv
+  local lane_pattern
+  local changed_path
+
+  match_csv="$(verify_lane_field "$lane" "match")"
+  IFS=',' read -r -a lane_patterns <<< "$match_csv"
+  for lane_pattern in "${lane_patterns[@]}"; do
+    lane_pattern="$(trim_verify_value "$lane_pattern")"
+    [[ -n "$lane_pattern" ]] || continue
+    for changed_path in "${VERIFY_CHANGED_PATHS[@]}"; do
+      case "$changed_path" in
+        $lane_pattern)
+          return 0
+          ;;
+      esac
+    done
+  done
+  return 1
+}
+
+queue_verify_selection() {
+  local lane="$1"
+  VERIFY_SELECTED_LANES+=("$lane")
+}
+
+queue_verify_deferred() {
+  local lane="$1"
+  local reason="$2"
+  VERIFY_DEFERRED_LANES+=("${lane}"$'\t'"${reason}")
+}
+
+select_verify_lanes() {
+  local lane
+  local reason_class
+
+  VERIFY_SELECTED_LANES=()
+  VERIFY_DEFERRED_LANES=()
+
+  for lane in "${VERIFY_POLICY_LANES[@]}"; do
+    reason_class="$(verify_lane_field "$lane" "reason_class")"
+
+    if [[ "$VERIFY_MODE" == "certify-critical" && "$reason_class" == "standalone-full-only" ]]; then
+      queue_verify_deferred "$lane" "standalone-full-only"
+      continue
+    fi
+
+    if ! lane_supports_mode "$lane" "$VERIFY_MODE"; then
+      [[ "$VERIFY_MODE" == "certify-critical" ]] && queue_verify_deferred "$lane" "not-in-mode"
+      continue
+    fi
+
+    if [[ "$VERIFY_MODE" == "full" ]]; then
+      queue_verify_selection "$lane"
+      continue
+    fi
+
+    case "$reason_class" in
+      closeout-critical)
+        queue_verify_selection "$lane"
+        ;;
+      packet-local)
+        if [[ -z "$VERIFY_PATHS_FILE" ]]; then
+          queue_verify_deferred "$lane" "paths-file-missing"
+        elif lane_matches_changed_paths "$lane"; then
+          queue_verify_selection "$lane"
+        else
+          queue_verify_deferred "$lane" "no-path-match"
+        fi
+        ;;
+      standalone-full-only)
+        queue_verify_deferred "$lane" "standalone-full-only"
+        ;;
+      *)
+        fail "verify policy lane has invalid reason_class: $(verify_lane_field "$lane" "name") -> ${reason_class}"
+        ;;
+    esac
+  done
+}
+
+emit_verify_selection_output() {
+  local lane
+  local order_names=()
+  local name scope owner registry_table registry_path infra_importance reason_class decision_leaf command
+  local deferred_row deferred_reason
+
+  for lane in "${VERIFY_SELECTED_LANES[@]}"; do
+    name="$(verify_lane_field "$lane" "name")"
+    scope="$(verify_lane_field "$lane" "scope")"
+    owner="$(verify_lane_field "$lane" "owner")"
+    registry_table="$(verify_lane_field "$lane" "registry_table")"
+    registry_path="$(verify_lane_field "$lane" "registry_path")"
+    reason_class="$(verify_lane_field "$lane" "reason_class")"
+    decision_leaf="$(verify_lane_field "$lane" "decision_leaf")"
+    command="$(verify_lane_field "$lane" "command")"
+    infra_importance="$(registry_importance_for_path "$registry_table" "$registry_path")" || infra_importance="unknown"
+    [[ -n "$decision_leaf" ]] || decision_leaf="none"
+    order_names+=("$name")
+    printf 'VERIFY-SELECTION: name=%s scope=%s reason_class=%s owner=%s infra_importance=%s decision_leaf=%s detail=%s\n' \
+      "$name" "$scope" "$reason_class" "$owner" "$infra_importance" "$decision_leaf" "$command"
+  done
+
+  if (( ${#order_names[@]} == 0 )); then
+    echo "VERIFY-LANE-ORDER: mode=${VERIFY_MODE} order=(none)"
+  else
+    local order_csv
+    order_csv="$(IFS=,; printf '%s' "${order_names[*]}")"
+    echo "VERIFY-LANE-ORDER: mode=${VERIFY_MODE} order=${order_csv}"
+  fi
+
+  for deferred_row in "${VERIFY_DEFERRED_LANES[@]}"; do
+    IFS=$'\t' read -r lane deferred_reason <<< "$deferred_row"
+    name="$(verify_lane_field "$lane" "name")"
+    scope="$(verify_lane_field "$lane" "scope")"
+    owner="$(verify_lane_field "$lane" "owner")"
+    registry_table="$(verify_lane_field "$lane" "registry_table")"
+    registry_path="$(verify_lane_field "$lane" "registry_path")"
+    reason_class="$(verify_lane_field "$lane" "reason_class")"
+    decision_leaf="$(verify_lane_field "$lane" "decision_leaf")"
+    command="$(verify_lane_field "$lane" "command")"
+    infra_importance="$(registry_importance_for_path "$registry_table" "$registry_path")" || infra_importance="unknown"
+    [[ -n "$decision_leaf" ]] || decision_leaf="none"
+    printf 'VERIFY-DEFERRED: name=%s scope=%s reason_class=%s owner=%s infra_importance=%s decision_leaf=%s reason=%s detail=%s\n' \
+      "$name" "$scope" "$reason_class" "$owner" "$infra_importance" "$decision_leaf" "$deferred_reason" "$command"
+  done
+}
+
 record_verify_lane() {
   local lane="$1"
   local scope="$2"
-  local status="$3"
-  local duration_seconds="$4"
-  local detail="$5"
-  VERIFY_LANE_ROWS+=("${lane}"$'\t'"${scope}"$'\t'"${status}"$'\t'"${duration_seconds}"$'\t'"${detail}")
-  printf 'VERIFY-LANE: name=%s scope=%s status=%s duration_seconds=%s detail=%s\n' \
-    "$lane" "$scope" "$status" "$duration_seconds" "$detail"
+  local reason_class="$3"
+  local owner="$4"
+  local infra_importance="$5"
+  local decision_leaf="$6"
+  local status="$7"
+  local duration_seconds="$8"
+  local detail="$9"
+  VERIFY_LANE_ROWS+=("${lane}"$'\t'"${scope}"$'\t'"${reason_class}"$'\t'"${owner}"$'\t'"${infra_importance}"$'\t'"${decision_leaf}"$'\t'"${status}"$'\t'"${duration_seconds}"$'\t'"${detail}")
+  printf 'VERIFY-LANE: name=%s scope=%s reason_class=%s owner=%s infra_importance=%s decision_leaf=%s status=%s duration_seconds=%s detail=%s\n' \
+    "$lane" "$scope" "$reason_class" "$owner" "$infra_importance" "$decision_leaf" "$status" "$duration_seconds" "$detail"
 }
 
-run_verify_lane() {
-  local lane="$1"
-  local scope="$2"
-  local detail="$3"
-  shift 3
+run_verify_lane_command() {
+  local lane_def="$1"
+  local lane scope reason_class owner registry_table registry_path infra_importance decision_leaf command detail required_path
+  local start_epoch finish_epoch duration_seconds exit_code status exec_command
 
-  local start_epoch finish_epoch duration_seconds exit_code status
+  lane="$(verify_lane_field "$lane_def" "name")"
+  scope="$(verify_lane_field "$lane_def" "scope")"
+  reason_class="$(verify_lane_field "$lane_def" "reason_class")"
+  owner="$(verify_lane_field "$lane_def" "owner")"
+  registry_table="$(verify_lane_field "$lane_def" "registry_table")"
+  registry_path="$(verify_lane_field "$lane_def" "registry_path")"
+  decision_leaf="$(verify_lane_field "$lane_def" "decision_leaf")"
+  command="$(verify_lane_field "$lane_def" "command")"
+  detail="$command"
+  exec_command="$command"
+  infra_importance="$(registry_importance_for_path "$registry_table" "$registry_path")" || infra_importance="unknown"
+  [[ -n "$decision_leaf" ]] || decision_leaf="none"
+
+  if [[ "$VERIFY_MODE" == "certify-critical" && "$lane" == "bundle-smoke" ]]; then
+    exec_command="bash tools/test/bundle.sh --mode=certify-critical"
+    detail="$exec_command"
+  fi
+
+  required_path=""
+  read -r -a command_parts <<< "$command"
+  if (( ${#command_parts[@]} > 0 )); then
+    if [[ "${command_parts[0]}" == "bash" && ${#command_parts[@]} -gt 1 ]]; then
+      required_path="${command_parts[1]}"
+    else
+      required_path="${command_parts[0]}"
+    fi
+  fi
+
+  if [[ -n "$required_path" && "$required_path" == ./* ]]; then
+    required_path="${required_path#./}"
+  fi
+  if [[ -n "$required_path" && ! -f "$required_path" ]]; then
+    record_verify_lane "$lane" "$scope" "$reason_class" "$owner" "$infra_importance" "$decision_leaf" "missing" "0" "$detail"
+    fail "Missing required lane command path: ${required_path}"
+    return 1
+  fi
+
   start_epoch="$(date +%s)"
   set +e
-  "$@"
+  bash -lc "cd \"$REPO_ROOT\" && ${exec_command}" </dev/null
   exit_code=$?
   set -e
   finish_epoch="$(date +%s)"
@@ -102,18 +401,18 @@ run_verify_lane() {
   else
     status="fail"
   fi
-  record_verify_lane "$lane" "$scope" "$status" "$duration_seconds" "$detail"
+  record_verify_lane "$lane" "$scope" "$reason_class" "$owner" "$infra_importance" "$decision_leaf" "$status" "$duration_seconds" "$detail"
   return "$exit_code"
 }
 
 emit_verify_lane_summary() {
-  local row lane scope status duration_seconds detail
+  local row lane scope reason_class owner infra_importance decision_leaf status duration_seconds detail
   echo
   echo "Verify lane summary:"
   for row in "${VERIFY_LANE_ROWS[@]}"; do
-    IFS=$'\t' read -r lane scope status duration_seconds detail <<< "$row"
-    printf 'VERIFY-LANE-SUMMARY: name=%s scope=%s status=%s duration_seconds=%s detail=%s\n' \
-      "$lane" "$scope" "$status" "$duration_seconds" "$detail"
+    IFS=$'\t' read -r lane scope reason_class owner infra_importance decision_leaf status duration_seconds detail <<< "$row"
+    printf 'VERIFY-LANE-SUMMARY: name=%s scope=%s reason_class=%s owner=%s infra_importance=%s decision_leaf=%s status=%s duration_seconds=%s detail=%s\n' \
+      "$lane" "$scope" "$reason_class" "$owner" "$infra_importance" "$decision_leaf" "$status" "$duration_seconds" "$detail"
   done
 }
 
@@ -270,7 +569,7 @@ done
 for item in storage/*; do
   name="$(basename "$item")"
   case "$name" in
-    README.md|.gitignore|handoff|dumps|dp)
+    README.md|.gitignore|handoff|dumps|dp|_smoke)
       ;;
     *)
       warn "Storage drift: unexpected item 'storage/$name'. Keep storage/ clean."
@@ -367,55 +666,17 @@ else
   fi
 fi
 
-if [[ ! -f "tools/test/open.sh" ]]; then
-  record_verify_lane "open-dedup" "certify-critical" "missing" "0" "tools/test/open.sh"
-  fail "Missing required test script: tools/test/open.sh"
-elif ! run_verify_lane "open-dedup" "certify-critical" "bash tools/test/open.sh" bash tools/test/open.sh; then
-  fail "OPEN de-dup test failed: tools/test/open.sh"
-fi
+load_verify_policy
+load_verify_changed_paths
+select_verify_lanes
+emit_verify_selection_output
 
-if [[ ! -f "tools/test/editor.sh" ]]; then
-  record_verify_lane "editor-scaffold" "full-only" "missing" "0" "tools/test/editor.sh"
-  fail "Missing required test script: tools/test/editor.sh"
-elif [[ "$VERIFY_MODE" == "full" ]] && ! run_verify_lane "editor-scaffold" "full-only" "bash tools/test/editor.sh" bash tools/test/editor.sh; then
-  fail "Editor scaffold test failed: tools/test/editor.sh"
-fi
-
-if [[ "$VERIFY_MODE" == "full" ]]; then
-  if [[ ! -f "tools/lint/debt.sh" ]]; then
-    record_verify_lane "guard-debt-lint" "full-only" "missing" "0" "tools/lint/debt.sh"
-    fail "Missing required lint script: tools/lint/debt.sh"
-  elif ! run_verify_lane "guard-debt-lint" "full-only" "bash tools/lint/debt.sh" bash tools/lint/debt.sh; then
-    fail "Guard debt lint failed: tools/lint/debt.sh"
+for lane_def in "${VERIFY_SELECTED_LANES[@]}"; do
+  lane_name="$(verify_lane_field "$lane_def" "name")"
+  if ! run_verify_lane_command "$lane_def"; then
+    fail "Verify lane failed: ${lane_name}"
   fi
-
-  if [[ ! -f "tools/test/factory.sh" ]]; then
-    record_verify_lane "factory-smoke" "full-only" "missing" "0" "tools/test/factory.sh"
-    fail "Missing required test script: tools/test/factory.sh"
-  elif ! run_verify_lane "factory-smoke" "full-only" "bash tools/test/factory.sh" bash tools/test/factory.sh; then
-    fail "Factory smoke test failed: tools/test/factory.sh"
-  fi
-
-  if [[ ! -f "tools/lint/response.sh" ]]; then
-    record_verify_lane "response-self-test" "full-only" "missing" "0" "tools/lint/response.sh --test"
-    fail "Missing required lint script: tools/lint/response.sh"
-  elif ! run_verify_lane "response-self-test" "full-only" "bash tools/lint/response.sh --test" bash tools/lint/response.sh --test; then
-    fail "Response envelope lint self-test failed: tools/lint/response.sh --test"
-  fi
-fi
-
-if [[ ! -f "tools/test/bundle.sh" ]]; then
-  record_verify_lane "bundle-smoke" "certify-critical" "missing" "0" "tools/test/bundle.sh"
-  fail "Missing required test script: tools/test/bundle.sh"
-elif [[ "$VERIFY_MODE" == "full" ]]; then
-  if ! run_verify_lane "bundle-smoke" "certify-critical" "bash tools/test/bundle.sh" bash tools/test/bundle.sh; then
-    fail "Bundle smoke test failed: tools/test/bundle.sh"
-  fi
-else
-  if ! run_verify_lane "bundle-smoke" "certify-critical" "bash tools/test/bundle.sh --mode=certify-critical" bash tools/test/bundle.sh --mode=certify-critical; then
-    fail "Bundle smoke test failed: tools/test/bundle.sh --mode=certify-critical"
-  fi
-fi
+done
 
 echo
 emit_verify_lane_summary

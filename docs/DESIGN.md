@@ -166,6 +166,7 @@ Sixteen tools audited. 4,389 total lines across the suite. Ten surfaces score C 
 ## 5. Decision Registry
 
 The Decision Registry has been relocated to its canonical home. See `docs/ops/registry/decisions.md`.
+Runtime infrastructure importance is recorded in the canonical tool registries (`docs/ops/registry/binaries.md`, `docs/ops/registry/lint.md`, and `docs/ops/registry/test.md`). CbC decisions remain in the Decision Registry; runtime policy should consume registry importance plus decision leaves, not invent a detached hierarchy.
 
 ## 6. DP-OPS-0145 CbC Note (Bundle Routing + PLAN Gate)
 

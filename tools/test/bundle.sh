@@ -66,6 +66,8 @@ AUDIT_FIXTURE_PACKET_REL=""
 AUDIT_EXPECTED_PACKET_ID=""
 AUDIT_EXPECTED_PACKET_SOURCE_REL=""
 BUNDLE_OUTPUT_SEQUENCE=0
+SMOKE_HANDOFF_ROOT="storage/_smoke/handoff"
+SMOKE_DUMP_ROOT="storage/_smoke/dumps"
 
 restore_fixture_overrides() {
   local plan_rel="storage/handoff/PLAN.md"
@@ -231,6 +233,7 @@ ensure_audit_receipt_fixture() {
   local current_results_rel=""
   local current_closing_rel=""
   local current_packet_source_rel=""
+  local current_results_dp_source_rel=""
 
   if [[ -f "$task_abs" ]]; then
     local current_pointer=""
@@ -245,13 +248,28 @@ ensure_audit_receipt_fixture() {
       elif [[ -f "${REPO_ROOT}/storage/dp/intake/${current_packet_id}.md" ]]; then
         current_packet_source_rel="storage/dp/intake/${current_packet_id}.md"
       fi
+      if [[ -f "${REPO_ROOT}/${current_results_rel}" ]]; then
+        current_results_dp_source_rel="$(awk '
+          /^-[[:space:]]*dp_source:[[:space:]]*/ {
+            line=$0
+            sub(/^[^:]*:[[:space:]]*/, "", line)
+            print line
+            exit
+          }
+        ' "${REPO_ROOT}/${current_results_rel}")"
+        current_results_dp_source_rel="$(trim "$current_results_dp_source_rel")"
+      fi
       if [[ "$current_packet_id" =~ ^DP-[A-Z]+-[0-9]{4,}$ \
         && -f "${REPO_ROOT}/${current_results_rel}" \
         && -f "${REPO_ROOT}/${current_closing_rel}" \
         && -n "$current_packet_source_rel" ]]; then
+        if [[ -n "$current_results_dp_source_rel" && "$current_results_dp_source_rel" != "$current_packet_source_rel" ]]; then
+          current_results_dp_source_rel=""
+        else
         AUDIT_EXPECTED_PACKET_ID="$current_packet_id"
         AUDIT_EXPECTED_PACKET_SOURCE_REL="$current_packet_source_rel"
         return 0
+        fi
       fi
     fi
   fi
@@ -482,7 +500,7 @@ next_bundle_output_path() {
   fi
 
   BUNDLE_OUTPUT_SEQUENCE=$((BUNDLE_OUTPUT_SEQUENCE + 1))
-  printf 'storage/handoff/%s-bundle-smoke-%s-%03d.txt' "$prefix" "$$" "$BUNDLE_OUTPUT_SEQUENCE"
+  printf '%s/%s-bundle-smoke-%s-%03d.txt' "$SMOKE_HANDOFF_ROOT" "$prefix" "$$" "$BUNDLE_OUTPUT_SEQUENCE"
 }
 
 run_bundle_capture() {
@@ -582,9 +600,9 @@ track_bundle_outputs() {
   if [[ -z "$expected_prefix" ]]; then
     fail "policy missing artifact prefix for resolved profile: ${resolved_profile}"
   else
-    assert_prefix "$artifact_path" "storage/handoff/${expected_prefix}-"
-    assert_prefix "$manifest_path" "storage/handoff/${expected_prefix}-"
-    assert_prefix "$package_path" "storage/handoff/${expected_prefix}-"
+    assert_prefix "$artifact_path" "${SMOKE_HANDOFF_ROOT}/${expected_prefix}-"
+    assert_prefix "$manifest_path" "${SMOKE_HANDOFF_ROOT}/${expected_prefix}-"
+    assert_prefix "$package_path" "${SMOKE_HANDOFF_ROOT}/${expected_prefix}-"
   fi
 
   if ! grep -Fq 'Stance template key: stance-' "${REPO_ROOT}/${artifact_path}"; then
@@ -599,6 +617,7 @@ track_bundle_outputs() {
   dump_manifest_path="$(extract_manifest_value "$manifest_path" "manifest_path")"
 
   if [[ -n "$dump_payload_path" ]]; then
+    assert_prefix "$dump_payload_path" "${SMOKE_DUMP_ROOT}/dump-"
     assert_file_exists "$dump_payload_path"
     queue_cleanup_path "$dump_payload_path"
   else
@@ -606,6 +625,7 @@ track_bundle_outputs() {
   fi
 
   if [[ -n "$dump_manifest_path" ]]; then
+    assert_prefix "$dump_manifest_path" "${SMOKE_DUMP_ROOT}/dump-"
     assert_file_exists "$dump_manifest_path"
     queue_cleanup_path "$dump_manifest_path"
   else
@@ -623,9 +643,9 @@ track_bundle_outputs() {
     if [[ -z "$legacy_artifact_path" || -z "$legacy_manifest_path" || -z "$legacy_package_path" ]]; then
       fail "manifest ${manifest_path} missing legacy artifact compatibility paths"
     else
-      assert_prefix "$legacy_artifact_path" "storage/handoff/${legacy_prefix}-"
-      assert_prefix "$legacy_manifest_path" "storage/handoff/${legacy_prefix}-"
-      assert_prefix "$legacy_package_path" "storage/handoff/${legacy_prefix}-"
+      assert_prefix "$legacy_artifact_path" "${SMOKE_HANDOFF_ROOT}/${legacy_prefix}-"
+      assert_prefix "$legacy_manifest_path" "${SMOKE_HANDOFF_ROOT}/${legacy_prefix}-"
+      assert_prefix "$legacy_package_path" "${SMOKE_HANDOFF_ROOT}/${legacy_prefix}-"
       assert_file_exists "$legacy_artifact_path"
       assert_file_exists "$legacy_manifest_path"
       assert_file_exists "$legacy_package_path"
@@ -646,7 +666,7 @@ track_bundle_outputs() {
     if [[ -z "$LAST_ASSEMBLY_POINTER_PATH" ]]; then
       fail "manifest ${manifest_path} marks assembly pointer emitted=true but path is empty"
     else
-      assert_prefix "$LAST_ASSEMBLY_POINTER_PATH" "storage/handoff/"
+      assert_prefix "$LAST_ASSEMBLY_POINTER_PATH" "${SMOKE_HANDOFF_ROOT}/"
       assert_file_exists "$LAST_ASSEMBLY_POINTER_PATH"
       queue_cleanup_path "$LAST_ASSEMBLY_POINTER_PATH"
       if [[ "$LAST_ASSEMBLY_POINTER_PATH" != "$expected_pointer_candidate" ]]; then
@@ -838,7 +858,7 @@ test_analyst_contract() {
 
   ensure_analyst_topic_fixture
 
-  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst "--out=storage/handoff/ANALYST-bundle-smoke-$$-manifest-fail.txt"
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst "--out=${SMOKE_HANDOFF_ROOT}/ANALYST-bundle-smoke-$$-manifest-fail.txt"
   if (( RUN_STATUS != 0 )); then
     fail "analyst contract path failed"
     echo "$RUN_OUTPUT" >&2
@@ -1548,7 +1568,7 @@ test_meta_shim() {
       if [[ -z "$project_artifact" ]]; then
         fail "meta delegated manifest missing bundle_path"
       else
-        assert_prefix "$project_artifact" "storage/handoff/PROJECT-"
+        assert_prefix "$project_artifact" "${SMOKE_HANDOFF_ROOT}/PROJECT-"
         assert_file_exists "$project_artifact"
         queue_cleanup_path "$project_artifact"
         project_package="${project_artifact%.txt}.tar"

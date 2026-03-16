@@ -17,12 +17,12 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 ## Inputs
 - `ops/bin/bundle`
 - `archives/decisions/*.md` (for foreman valid-path intent source)
-- Bundle-generated manifests under `storage/handoff/`
+- Bundle-generated smoke manifests under `storage/_smoke/handoff/`
 
 ## Outputs
 - Stdout: `PASS: bundle smoke test` on success.
 - Stderr: `FAIL:` lines for each failed assertion.
-- Cleanup behavior: removes only bundle/dump artifacts created by this test run, using exact emitted paths.
+- Cleanup behavior: removes only bundle and dump artifacts created by this test run, using exact emitted paths under `storage/_smoke/` plus temporary runtime fixtures under `storage/`.
 
 ## Invariants and failure modes
 - Valid profiles `analyst`, `architect`, `audit`, `conform`, `auto` must succeed.
@@ -31,7 +31,7 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 - Architect `--slice=` (blank) must fail.
 - Non-architect `--slice` usage must fail.
 - Architect ad hoc run (no `--slice`) must succeed.
-- Generated canonical bundle artifact path must start with `storage/handoff/<artifact_prefix>-` where `<artifact_prefix>` is policy-mapped for the resolved profile.
+- Generated quarantined smoke bundle artifact path must start with `storage/_smoke/handoff/<artifact_prefix>-` where `<artifact_prefix>` is policy-mapped for the resolved profile.
 - Manifest must include `bundle_version: "2"`.
 - Architect manifest must include `request` metadata:
   - `request.slice_id`
@@ -65,6 +65,7 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 - Architect ad hoc output must not emit `[ACTIVE SLICE PROJECTION]`.
 - Audit requires current `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md`; bundle must fail closed when either is missing or current DP resolution is unavailable.
 - Audit requires the active packet source file at `storage/dp/processed/<DP_ID>.md` or `storage/dp/intake/<DP_ID>.md`; bundle must fail closed when packet source is ambiguous or unavailable.
+- Audit smoke may use live current packet state only when current `RESULTS dp_source` agrees with the resolved current packet-source path; mixed intake-versus-processed rerun state must fall back to the deterministic fixture instead of treating transient closeout state as the contract under test.
 - Audit dump payload must contain file blocks for the current `RESULTS` and `CLOSING` files.
 - Audit dump payload must contain the current active TASK leaf file block resolved through `TASK.md`, not only the one-line `TASK.md` pointer.
 - Audit dump payload must contain the current packet source file block for the active packet id.
@@ -90,7 +91,7 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
   - `validated_against` registry pointers to agents/skills/tasks registries.
 - ATS valid triplet must emit deterministic runtime pointer metadata and artifact:
   - `assembly.pointer.emitted: true`
-  - `assembly.pointer.path` under `storage/handoff/`
+  - `assembly.pointer.path` under `storage/_smoke/handoff/`
   - `assembly.pointer.format: json`
   - emitted pointer file exists and path matches manifest.
 - Non-ATS runs must not emit runtime assembly pointer artifacts:
@@ -108,7 +109,7 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 - Architect slice smoke must install its own deterministic `storage/handoff/PLAN.md` fixture and must not depend on whatever live handoff `PLAN.md` currently contains.
 - Auto-route smoke must control `storage/handoff/PLAN.md` state explicitly instead of inheriting incidental local residue.
 - Synthetic audit TASK fallback must live under `archives/surfaces/` so dump active-pointer inclusion sees the same path class as production.
-- Smoke bundle invocations use explicit unique output paths under `storage/handoff/` so concurrent local gate runs do not reuse shared branch/head artifact paths.
+- Smoke bundle invocations use explicit unique output paths under `storage/_smoke/handoff/` so concurrent local gate runs do not reuse shared branch/head artifact paths or pollute operator-facing handoff roots.
 - `--mode=certify-critical` must not run the full analyst/profile/ATS/meta matrix.
 
 ## Anecdotal Anchor
