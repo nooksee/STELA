@@ -15,7 +15,7 @@ max_lines=0
 target=""
 selection_mode="scope"
 from_dp=""
-history_profile_arg=""
+persistence_profile_arg=""
 
 # Optional refiners (apply after scope selection)
 include_dirs=()
@@ -28,14 +28,14 @@ forbidden_prefixes=()
 # Retained output metadata knob for compatibility.
 include_binary="meta"
 ALLOWLIST_BASELINE_PATH="${REPO_ROOT}/var/tmp/baseline-storage-dp-active-allowlist.txt"
-HISTORY_POLICY_PATH="${REPO_ROOT}/ops/lib/manifests/HISTORY.md"
+PERSISTENCE_POLICY_PATH="${REPO_ROOT}/ops/etc/persistence.manifest"
 
 usage() {
   cat <<'USAGE'
 Usage: ops/bin/dump [--scope=core|platform|full|factory|project] [--project=<slug>] [--format=chatgpt|claude]
                    [--max-lines=n] [--out=path|auto] [--compress=tar.xz] [--bundle]
                    [--include-binary=meta|raw|base64]
-                   [--history-profile=PROFILE]
+                   [--history-profile=PROFILE|--persistence-profile=PROFILE]
                    [--include-dir=DIR] [--exclude-dir=DIR] [--ignore-file=GLOB]
                    [--selection=scope|dp|dp+allowlist] [--from-dp=PATH|auto]
                    [--include-file=PATH] [--include-file-list=FILE]
@@ -96,9 +96,9 @@ for arg in "$@"; do
     --include-binary=meta|--include-binary=raw|--include-binary=base64)
       include_binary="${arg#--include-binary=}"
       ;;
-    --history-profile=*)
-      history_profile_arg="${arg#--history-profile=}"
-      [[ -n "$history_profile_arg" ]] || die "--history-profile requires a value"
+    --history-profile=*|--persistence-profile=*)
+      persistence_profile_arg="${arg#*=}"
+      [[ -n "$persistence_profile_arg" ]] || die "${arg%%=*} requires a value"
       ;;
     --include-dir=*)
       d="$(normalize_path_token "${arg#--include-dir=}")"
@@ -283,10 +283,10 @@ extract_paths_from_dp_scoped_load_order() {
     awk '
       function emit_candidate(line, path) {
         path=""
-        if (match(line, /^[[:space:]]*[0-9]+[.][[:space:]]*`([^`]+)`/, m)) {
-          path=m[1]
-        } else if (match(line, /^[[:space:]]*[0-9]+[.][[:space:]]*([A-Za-z0-9._\/-]+)/, m)) {
-          path=m[1]
+        if (match(line, /^[[:space:]]*([0-9]+[.]|-)[[:space:]]*`([^`]+)`/, m)) {
+          path=m[2]
+        } else if (match(line, /^[[:space:]]*([0-9]+[.]|-)[[:space:]]*([A-Za-z0-9._\/-]+)/, m)) {
+          path=m[2]
         }
         if (path != "") {
           print path
@@ -336,10 +336,10 @@ extract_paths_from_dp_scoped_load_order() {
   awk '
     function emit_candidate(line, path) {
       path=""
-      if (match(line, /^[[:space:]]*[0-9]+[.][[:space:]]*`([^`]+)`/, m)) {
-        path=m[1]
-      } else if (match(line, /^[[:space:]]*[0-9]+[.][[:space:]]*([A-Za-z0-9._\/-]+)/, m)) {
-        path=m[1]
+      if (match(line, /^[[:space:]]*([0-9]+[.]|-)[[:space:]]*`([^`]+)`/, m)) {
+        path=m[2]
+      } else if (match(line, /^[[:space:]]*([0-9]+[.]|-)[[:space:]]*([A-Za-z0-9._\/-]+)/, m)) {
+        path=m[2]
       }
       if (path != "") {
         print path
@@ -425,14 +425,14 @@ load_include_file_list() {
   done < "$resolved_list_path"
 }
 
-history_policy_scalar() {
+persistence_policy_scalar() {
   local key="$1"
   local value
-  value="$(awk -F'=' -v key="$key" '$1==key { print substr($0, index($0, "=") + 1); exit }' "$HISTORY_POLICY_PATH")"
+  value="$(awk -F'=' -v key="$key" '$1==key { print substr($0, index($0, "=") + 1); exit }' "$PERSISTENCE_POLICY_PATH")"
   trim "$value"
 }
 
-history_policy_rows() {
+persistence_policy_rows() {
   local section_heading="$1"
   awk -v section="$section_heading" '
     $0 == section { in_section=1; next }
@@ -445,7 +445,7 @@ history_policy_rows() {
         print line
       }
     }
-  ' "$HISTORY_POLICY_PATH"
+  ' "$PERSISTENCE_POLICY_PATH"
 }
 
 declare -A history_recent_count_by_profile=()
@@ -490,14 +490,14 @@ load_history_profiles() {
         cold_mode) cold_mode="$field_value" ;;
       esac
     done
-    [[ -n "$profile_name" ]] || die "HISTORY.md profile row missing profile name"
-    [[ "$recent_count" =~ ^[0-9]+$ ]] || die "HISTORY.md invalid recent_count for profile ${profile_name}"
-    [[ "$checkpoint_interval" =~ ^[0-9]+$ ]] || die "HISTORY.md invalid checkpoint_interval for profile ${profile_name}"
-    [[ "$cold_mode" == "metadata-only" ]] || die "HISTORY.md invalid cold_mode for profile ${profile_name}"
+    [[ -n "$profile_name" ]] || die "persistence.manifest profile row missing profile name"
+    [[ "$recent_count" =~ ^[0-9]+$ ]] || die "persistence.manifest invalid recent_count for profile ${profile_name}"
+    [[ "$checkpoint_interval" =~ ^[0-9]+$ ]] || die "persistence.manifest invalid checkpoint_interval for profile ${profile_name}"
+    [[ "$cold_mode" == "metadata-only" ]] || die "persistence.manifest invalid cold_mode for profile ${profile_name}"
     history_recent_count_by_profile["$profile_name"]="$recent_count"
     history_checkpoint_interval_by_profile["$profile_name"]="$checkpoint_interval"
     history_cold_mode_by_profile["$profile_name"]="$cold_mode"
-  done < <(history_policy_rows "## History Profiles")
+  done < <(persistence_policy_rows "## Persistence Profiles")
 }
 
 load_history_classes() {
@@ -519,27 +519,27 @@ load_history_classes() {
         kind) kind="$field_value" ;;
       esac
     done
-    [[ -n "$class_name" ]] || die "HISTORY.md serialization class missing class"
-    [[ -n "$pattern" ]] || die "HISTORY.md serialization class missing pattern (${class_name})"
-    [[ -n "$family" ]] || die "HISTORY.md serialization class missing family (${class_name})"
-    [[ -n "$kind" ]] || die "HISTORY.md serialization class missing kind (${class_name})"
+    [[ -n "$class_name" ]] || die "persistence.manifest serialization class missing class"
+    [[ -n "$pattern" ]] || die "persistence.manifest serialization class missing pattern (${class_name})"
+    [[ -n "$family" ]] || die "persistence.manifest serialization class missing family (${class_name})"
+    [[ -n "$kind" ]] || die "persistence.manifest serialization class missing kind (${class_name})"
     history_class_pattern["$class_name"]="$pattern"
     history_class_family["$class_name"]="$family"
     history_class_kind["$class_name"]="$kind"
-  done < <(history_policy_rows "## Archive Serialization Classes")
+  done < <(persistence_policy_rows "## Archive Serialization Classes")
 }
 
 resolve_default_history_profile() {
-  local scope_key="default_history_profile_${scope}"
+  local scope_key="default_persistence_profile_${scope}"
   local profile_name
-  profile_name="$(history_policy_scalar "$scope_key")"
-  [[ -n "$profile_name" ]] || die "HISTORY.md missing default history profile for scope ${scope}"
+  profile_name="$(persistence_policy_scalar "$scope_key")"
+  [[ -n "$profile_name" ]] || die "persistence.manifest missing default profile for scope ${scope}"
   printf '%s' "$profile_name"
 }
 
 load_history_policy() {
-  [[ -f "$HISTORY_POLICY_PATH" ]] || die "history policy missing: ${HISTORY_POLICY_PATH#${REPO_ROOT}/}"
-  [[ "$(history_policy_scalar history_manifest_version)" == "1" ]] || die "invalid history_manifest_version in HISTORY.md"
+  [[ -f "$PERSISTENCE_POLICY_PATH" ]] || die "persistence policy missing: ${PERSISTENCE_POLICY_PATH#${REPO_ROOT}/}"
+  [[ "$(persistence_policy_scalar persistence_manifest_version)" == "1" ]] || die "invalid persistence_manifest_version in persistence.manifest"
   load_history_profiles
   load_history_classes
 }
@@ -653,8 +653,8 @@ build_history_serialization_plan() {
 
   recent_count="${history_recent_count_by_profile[$history_profile]:-}"
   checkpoint_interval="${history_checkpoint_interval_by_profile[$history_profile]:-}"
-  [[ -n "$recent_count" ]] || die "history profile not loaded: ${history_profile}"
-  [[ -n "$checkpoint_interval" ]] || die "history profile checkpoint interval missing: ${history_profile}"
+  [[ -n "$recent_count" ]] || die "persistence profile not loaded: ${history_profile}"
+  [[ -n "$checkpoint_interval" ]] || die "persistence profile checkpoint interval missing: ${history_profile}"
 
   for rel_path in "${files[@]}"; do
     class_name="$(history_class_for_path "$rel_path" || true)"
@@ -707,12 +707,12 @@ build_history_serialization_plan() {
   done < <(printf '%s\n' "${!history_class_pattern[@]}" | sort)
 
   {
-    echo "History profile: ${history_profile}"
-    echo "History cold mode: ${history_cold_mode_by_profile[$history_profile]}"
-    echo "History recent count: ${recent_count}"
-    echo "History checkpoint interval: ${checkpoint_interval}"
-    echo "History full-body archive entries: ${history_full_body_count}"
-    echo "History metadata-only archive entries: ${history_metadata_only_count}"
+    echo "Persistence profile: ${history_profile}"
+    echo "Persistence cold mode: ${history_cold_mode_by_profile[$history_profile]}"
+    echo "Persistence recent count: ${recent_count}"
+    echo "Persistence checkpoint interval: ${checkpoint_interval}"
+    echo "Persistence full-body archive entries: ${history_full_body_count}"
+    echo "Persistence metadata-only archive entries: ${history_metadata_only_count}"
   } >> "$history_summary_tmp"
 }
 
@@ -724,12 +724,12 @@ emit_history_metadata_only_block() {
   local bytes="${history_file_bytes[$rel_path]}"
 
   cat <<EOF
-[history metadata-only]
-history_profile: ${history_profile}
-history_class: ${class_name}
-history_family: ${history_class_family[$class_name]}
-history_kind: ${history_class_kind[$class_name]}
-history_tier: ${reason}
+[persistence metadata-only]
+persistence_profile: ${history_profile}
+persistence_class: ${class_name}
+persistence_family: ${history_class_family[$class_name]}
+persistence_kind: ${history_class_kind[$class_name]}
+persistence_tier: ${reason}
 rank_in_class: ${rank}
 file_bytes: ${bytes}
 full_body_omitted: true
@@ -739,12 +739,12 @@ EOF
 }
 
 load_history_policy
-if [[ -n "$history_profile_arg" ]]; then
-  history_profile="$history_profile_arg"
+if [[ -n "$persistence_profile_arg" ]]; then
+  history_profile="$persistence_profile_arg"
 else
   history_profile="$(resolve_default_history_profile)"
 fi
-[[ -n "${history_recent_count_by_profile[$history_profile]:-}" ]] || die "unknown history profile: ${history_profile}"
+[[ -n "${history_recent_count_by_profile[$history_profile]:-}" ]] || die "unknown persistence profile: ${history_profile}"
 
 files=()
 rejected_files=()
@@ -1045,8 +1045,8 @@ emit_dump() {
   echo "Files included: $files_count"
   echo "Binary files: $binary_files"
   echo "Truncated text files: $truncated_files"
-  echo "History profile: $history_profile"
-  echo "History metadata-only archive entries: $history_metadata_only_count"
+  echo "Persistence profile: $history_profile"
+  echo "Persistence metadata-only archive entries: $history_metadata_only_count"
   case "$scope" in
     core)     echo "Excluded dirs (scope): projects/ opt/_factory/" ;;
     platform) echo "Excluded dirs (scope): projects/" ;;
@@ -1143,7 +1143,7 @@ emit_manifest() {
     echo "Branch: $branch"
     echo "HEAD: $head_short"
     echo "Scope: $scope"
-    echo "History profile: $history_profile"
+    echo "Persistence profile: $history_profile"
     if [[ "$scope" == "project" ]]; then
       echo "Target: $target"
     fi
@@ -1165,8 +1165,8 @@ emit_manifest() {
     if (( ${#include_file_lists[@]} > 0 )); then
       echo "Include file lists (explicit): ${include_file_lists[*]}"
     fi
-    echo "History metadata-only archive entries: ${history_metadata_only_count}"
-    echo "History full-body archive entries: ${history_full_body_count}"
+    echo "Persistence metadata-only archive entries: ${history_metadata_only_count}"
+    echo "Persistence full-body archive entries: ${history_full_body_count}"
     echo "History class summary:"
     for class_name in $(printf '%s\n' "${!history_class_pattern[@]}" | sort); do
       echo "- class=${class_name} full_body=${history_class_full_count[$class_name]:-0} metadata_only=${history_class_metadata_count[$class_name]:-0}"

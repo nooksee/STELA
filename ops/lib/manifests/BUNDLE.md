@@ -56,19 +56,19 @@ dump_scope_project=project
 dump_scope_conform=full
 dump_scope_foreman=core
 
-## History-Tier Routing Contract
-- Bundle does not serialize cold archive policy itself. It routes a history profile into `ops/bin/dump`, and `ops/bin/dump` resolves tiered archive serialization from `ops/lib/manifests/HISTORY.md`.
+## Persistence-Tier Routing Contract
+- Bundle does not serialize cold archive policy itself. It routes a persistence profile into `ops/bin/dump`, and `ops/bin/dump` resolves tiered archive serialization from `ops/etc/persistence.manifest`.
 - Current routing is profile-name aligned:
-  - analyst -> `--history-profile=analyst`
-  - architect -> `--history-profile=architect`
-  - audit -> `--history-profile=audit`
-  - project -> `--history-profile=project`
-  - conform -> `--history-profile=conform`
-  - foreman -> `--history-profile=foreman`
-- Scope and history profile are independent:
+  - analyst -> `--persistence-profile=analyst`
+  - architect -> `--persistence-profile=architect`
+  - audit -> `--persistence-profile=audit`
+  - project -> `--persistence-profile=project`
+  - conform -> `--persistence-profile=conform`
+  - foreman -> `--persistence-profile=foreman`
+- Scope and persistence profile are independent:
   - analyst and architect still use `--scope=full`
   - audit and foreman still use `--scope=core`
-  - history-tier compaction happens inside dump serialization, not traverse selection
+  - persistence-tier compaction happens inside dump serialization, not traverse selection
 
 ## Profile Attachment Contract
 - analyst: `ANALYST-*.txt`, `ANALYST-*.manifest.json`, transport-managed `storage/handoff/TOPIC.md`
@@ -117,7 +117,7 @@ dump_scope_foreman=core
 ## Audit Transport Contract
 - Audit resolves the current certified packet id from the current TASK surface.
 - Audit requires `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md` for that current packet and fails closed when either file is missing.
-- Audit invokes the core dump with explicit inclusion of those two files so the dump payload contains them as file blocks.
+- Audit invokes the core dump with explicit inclusion of those two files, the authoritative current packet source file, and existing exact-file entries from the active packet's `3.2.2 DP-Scoped Load Order` so new packet-substantive canon files are inspectable even when they are not yet tracked.
 - Audit package members include the resolved current `RESULTS` and `CLOSING` files.
 - Audit reruns must emit fresh artifact identity under `audit_resubmission_prefix` and record submission lineage in the emitted manifest.
 

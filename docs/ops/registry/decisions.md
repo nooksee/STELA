@@ -27,5 +27,5 @@ Every CbC decision made against a named tool gets a row. Entries are updated whe
 | tools/lint/task.sh (ambiguous-language detection) | B | Keep; redesign queued: machine-parseable step format | DP-OPS-0101 | Improvement queued | archives/decisions/RoR-2026-03-01-022-cbc-0140.md |
 | tools/lint/truth.sh | C | Keep | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-023-cbc-0140.md |
 | tools/test/agent.sh | N/A | Keep (out of CbC scope) | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-024-cbc-0140.md |
-| tools/test/bundle.sh | C | Keep in certify-critical; smoke outputs quarantined under storage/_smoke | DP-OPS-0202 | Active | archives/decisions/RoR-2026-03-16-002-cbc-0202.md |
+| tools/test/bundle.sh | C | Keep as split bundle proof: closeout slices stay in certify-critical, broader route/rerun slices are policy-routed, smoke outputs quarantined under var/tmp/_smoke | DP-OPS-0202, DP-OPS-0204 | Active | archives/decisions/RoR-2026-03-16-004-cbc-0204.md |
 | tools/test/factory.sh | B | Keep; certify replay narrowed to packet-local path matches only | DP-OPS-0202 | Improvement queued | archives/decisions/RoR-2026-03-16-003-cbc-0202.md |

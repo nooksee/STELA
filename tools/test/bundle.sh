@@ -13,15 +13,19 @@ cd "$REPO_ROOT" || exit 1
 
 usage() {
   cat <<'EOF'
-Usage: bash tools/test/bundle.sh [--mode=full|certify-critical]
+Usage: bash tools/test/bundle.sh [--mode=full|certify-critical] [--slice=closeout-sanity|audit-coherence|route-contract|rerun-lineage]
 EOF
 }
 
 TEST_MODE="full"
+BUNDLE_TEST_SLICE=""
 for arg in "$@"; do
   case "$arg" in
     --mode=*)
       TEST_MODE="${arg#--mode=}"
+      ;;
+    --slice=*)
+      BUNDLE_TEST_SLICE="${arg#--slice=}"
       ;;
     -h|--help)
       usage
@@ -42,6 +46,17 @@ case "$TEST_MODE" in
     exit 1
     ;;
 esac
+
+if [[ -n "$BUNDLE_TEST_SLICE" ]]; then
+  case "$BUNDLE_TEST_SLICE" in
+    closeout-sanity|audit-coherence|route-contract|rerun-lineage)
+      ;;
+    *)
+      echo "ERROR: invalid --slice value: ${BUNDLE_TEST_SLICE}" >&2
+      exit 1
+      ;;
+  esac
+fi
 
 declare -a CLEANUP_PATHS=()
 declare -A CLEANUP_SEEN=()
@@ -288,6 +303,8 @@ ensure_audit_receipt_fixture() {
   AUDIT_FIXTURE_RESULTS_REL="storage/handoff/DP-OPS-9999-RESULTS.md"
   AUDIT_FIXTURE_CLOSING_REL="storage/handoff/CLOSING-DP-OPS-9999.md"
   AUDIT_FIXTURE_PACKET_REL="storage/dp/processed/DP-OPS-9999.md"
+  AUDIT_FIXTURE_SUPPORT_PACKET_REL="storage/dp/processed/DP-OPS-9999-SUPPORT.md"
+  AUDIT_FIXTURE_SUPPORT_HANDOFF_REL="storage/handoff/BUNDLE-FIXTURE-DP-OPS-9999.md"
   AUDIT_EXPECTED_PACKET_ID="DP-OPS-9999"
   AUDIT_EXPECTED_PACKET_SOURCE_REL="$AUDIT_FIXTURE_PACKET_REL"
 
@@ -330,6 +347,16 @@ Fixture only.
 Confirm Merge (Add a Comment)
 Fixture only.
 EOF
+  cat > "${REPO_ROOT}/${AUDIT_FIXTURE_SUPPORT_PACKET_REL}" <<'EOF'
+# Bundle Fixture Support Packet
+
+Audit dump explicit-include support fixture.
+EOF
+  cat > "${REPO_ROOT}/${AUDIT_FIXTURE_SUPPORT_HANDOFF_REL}" <<'EOF'
+# Bundle Fixture Handoff
+
+Audit dump explicit-include handoff fixture.
+EOF
   cat > "${REPO_ROOT}/${AUDIT_FIXTURE_PACKET_REL}" <<'EOF'
 ### DP-OPS-9999: Bundle audit fixture
 
@@ -337,11 +364,41 @@ EOF
 Base Branch: main
 Required Work Branch: work/dp-ops-9999-bundle-audit-fixture
 Base HEAD: 0000000
+
+### 3.2.2 DP-Scoped Load Order (Declare the exact files required for this packet)
+1. storage/dp/processed/DP-OPS-9999-SUPPORT.md
+2. storage/handoff/BUNDLE-FIXTURE-DP-OPS-9999.md
 EOF
 
   queue_cleanup_path "$AUDIT_FIXTURE_RESULTS_REL"
   queue_cleanup_path "$AUDIT_FIXTURE_CLOSING_REL"
   queue_cleanup_path "$AUDIT_FIXTURE_PACKET_REL"
+  queue_cleanup_path "$AUDIT_FIXTURE_SUPPORT_PACKET_REL"
+  queue_cleanup_path "$AUDIT_FIXTURE_SUPPORT_HANDOFF_REL"
+}
+
+extract_fixture_dp_scoped_paths() {
+  local packet_rel="$1"
+  awk '
+    function emit_candidate(line, path) {
+      path=""
+      if (match(line, /^[[:space:]]*([0-9]+[.]|-)[[:space:]]*`([^`]+)`/, m)) {
+        path=m[2]
+      } else if (match(line, /^[[:space:]]*([0-9]+[.]|-)[[:space:]]*([A-Za-z0-9._\/-]+)/, m)) {
+        path=m[2]
+      }
+      if (path != "") {
+        print path
+      }
+    }
+    BEGIN {
+      in_load_order=0
+    }
+    /^### 3[.]2[.]2([.]|[[:space:]])/ { in_load_order=1; next }
+    in_load_order && /^##[[:space:]]*3[.]3([.]|[[:space:]])/ { exit }
+    in_load_order && /^### 3[.]3([.]|[[:space:]])/ { exit }
+    in_load_order { emit_candidate($0) }
+  ' "${REPO_ROOT}/${packet_rel}"
 }
 
 run_capture() {
@@ -938,18 +995,18 @@ test_analyst_contract() {
     fail "analyst manifest missing dump payload_path"
   elif ! grep -Fq '<<< FILE BEGIN: storage/handoff/TOPIC.md' "${REPO_ROOT}/${dump_payload_path}"; then
     fail "analyst dump payload missing storage/handoff/TOPIC.md file block"
-  elif ! grep -Fq '[history metadata-only]' "${REPO_ROOT}/${dump_payload_path}"; then
-    fail "analyst dump payload missing metadata-only cold history entries"
+  elif ! grep -Fq '[persistence metadata-only]' "${REPO_ROOT}/${dump_payload_path}"; then
+    fail "analyst dump payload missing metadata-only cold persistence entries"
   fi
   if [[ -z "$dump_manifest_path" ]]; then
     fail "analyst manifest missing dump manifest_path"
   elif ! grep -Fq 'Include files (explicit): storage/handoff/TOPIC.md' "${REPO_ROOT}/${dump_manifest_path}"; then
     fail "analyst dump manifest missing explicit TOPIC include provenance"
-  elif ! grep -Fq 'History profile: analyst' "${REPO_ROOT}/${dump_manifest_path}"; then
-    fail "analyst dump manifest missing history profile"
+  elif ! grep -Fq 'Persistence profile: analyst' "${REPO_ROOT}/${dump_manifest_path}"; then
+    fail "analyst dump manifest missing persistence profile"
   fi
-  if [[ "$(extract_manifest_value "$LAST_MANIFEST" "history_profile")" != "analyst" ]]; then
-    fail "analyst bundle manifest dump.history_profile mismatch"
+  if [[ "$(extract_manifest_value "$LAST_MANIFEST" "persistence_profile")" != "analyst" ]]; then
+    fail "analyst bundle manifest dump.persistence_profile mismatch"
   fi
 
   package_listing="$(tar -tf "${REPO_ROOT}/${LAST_PACKAGE}")"
@@ -1073,11 +1130,11 @@ test_architect_slice_valid() {
     fail "architect manifest missing dump manifest_path"
   elif ! grep -Fq 'Include files (explicit): storage/handoff/PLAN.md' "${REPO_ROOT}/${dump_manifest_path}"; then
     fail "architect dump manifest missing explicit PLAN include provenance"
-  elif ! grep -Fq 'History profile: architect' "${REPO_ROOT}/${dump_manifest_path}"; then
-    fail "architect dump manifest missing history profile"
+  elif ! grep -Fq 'Persistence profile: architect' "${REPO_ROOT}/${dump_manifest_path}"; then
+    fail "architect dump manifest missing persistence profile"
   fi
-  if [[ "$(extract_manifest_value "$LAST_MANIFEST" "history_profile")" != "architect" ]]; then
-    fail "architect bundle manifest dump.history_profile mismatch"
+  if [[ "$(extract_manifest_value "$LAST_MANIFEST" "persistence_profile")" != "architect" ]]; then
+    fail "architect bundle manifest dump.persistence_profile mismatch"
   fi
 
   package_listing="$(tar -tf "${REPO_ROOT}/${LAST_PACKAGE}")"
@@ -1162,6 +1219,7 @@ test_audit_contract() {
   local audit_closing_rel=""
   local audit_task_surface_rel=""
   local audit_packet_source_rel=""
+  local scoped_rel=""
   local results_dp_source_line=""
 
   ensure_audit_receipt_fixture
@@ -1225,11 +1283,23 @@ test_audit_contract() {
     fail "audit manifest missing dump manifest_path"
   elif ! grep -Fq "Include files (explicit): ${audit_results_rel} ${audit_closing_rel} ${audit_packet_source_rel}" "${REPO_ROOT}/${dump_manifest_path}"; then
     fail "audit dump manifest missing explicit RESULTS/CLOSING/packet-source include provenance"
-  elif ! grep -Fq 'History profile: audit' "${REPO_ROOT}/${dump_manifest_path}"; then
-    fail "audit dump manifest missing history profile"
+  elif ! grep -Fq 'Persistence profile: audit' "${REPO_ROOT}/${dump_manifest_path}"; then
+    fail "audit dump manifest missing persistence profile"
   fi
-  if [[ "$(extract_manifest_value "$LAST_MANIFEST" "history_profile")" != "audit" ]]; then
-    fail "audit bundle manifest dump.history_profile mismatch"
+  while IFS= read -r scoped_rel || [[ -n "$scoped_rel" ]]; do
+    [[ -n "$scoped_rel" ]] || continue
+    if [[ ! -f "${REPO_ROOT}/${scoped_rel}" ]]; then
+      continue
+    fi
+    if ! grep -Fq "<<< FILE BEGIN: ${scoped_rel}" "${REPO_ROOT}/${dump_payload_path}"; then
+      fail "audit dump payload missing scoped audit evidence file block: ${scoped_rel}"
+    fi
+    if ! grep -Fq "${scoped_rel}" "${REPO_ROOT}/${dump_manifest_path}"; then
+      fail "audit dump manifest missing scoped audit evidence include provenance: ${scoped_rel}"
+    fi
+  done < <(extract_fixture_dp_scoped_paths "$audit_packet_source_rel")
+  if [[ "$(extract_manifest_value "$LAST_MANIFEST" "persistence_profile")" != "audit" ]]; then
+    fail "audit bundle manifest dump.persistence_profile mismatch"
   fi
 
   package_listing="$(tar -tf "${REPO_ROOT}/${LAST_PACKAGE}")"
@@ -1247,6 +1317,48 @@ test_audit_contract() {
   fi
   if printf '%s\n' "$package_listing" | grep -Fxq 'storage/handoff/PLAN.md'; then
     fail "audit package should not include storage/handoff/PLAN.md"
+  fi
+}
+
+test_bundle_closeout_sanity() {
+  local dump_manifest_path=""
+  local package_listing=""
+
+  ensure_audit_receipt_fixture
+
+  run_bundle_capture audit --profile=audit
+  if (( RUN_STATUS != 0 )); then
+    fail "audit closeout sanity path failed"
+    echo "$RUN_OUTPUT" >&2
+    return
+  fi
+
+  track_bundle_outputs
+  [[ -n "$LAST_MANIFEST" && -n "$LAST_ARTIFACT" && -n "$LAST_PACKAGE" ]] || return
+
+  if [[ "$(extract_manifest_value "$LAST_MANIFEST" "resolved_profile")" != "audit" ]]; then
+    fail "audit closeout sanity resolved_profile mismatch"
+  fi
+  if [[ "$(extract_submission_field "$LAST_MANIFEST" "kind")" != "audit_submission" ]]; then
+    fail "audit closeout sanity submission.kind mismatch"
+  fi
+  if grep -Fq '[HANDOFF]' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "audit closeout sanity bundle text should not emit [HANDOFF]"
+  fi
+
+  dump_manifest_path="$(extract_manifest_value "$LAST_MANIFEST" "manifest_path")"
+  if [[ -z "$dump_manifest_path" ]]; then
+    fail "audit closeout sanity manifest missing dump manifest_path"
+  elif ! grep -Fq 'Persistence profile: audit' "${REPO_ROOT}/${dump_manifest_path}"; then
+    fail "audit closeout sanity dump manifest missing persistence profile"
+  fi
+
+  package_listing="$(tar -tf "${REPO_ROOT}/${LAST_PACKAGE}")"
+  if ! printf '%s\n' "$package_listing" | grep -Fxq "storage/handoff/${AUDIT_EXPECTED_PACKET_ID}-RESULTS.md"; then
+    fail "audit closeout sanity package missing current RESULTS file"
+  fi
+  if ! printf '%s\n' "$package_listing" | grep -Fxq "storage/handoff/CLOSING-${AUDIT_EXPECTED_PACKET_ID}.md"; then
+    fail "audit closeout sanity package missing current closing sidecar"
   fi
 }
 
@@ -1710,6 +1822,9 @@ test_meta_shim() {
 }
 
 run_full_suite() {
+  test_bundle_closeout_sanity
+  test_audit_contract
+  test_audit_resubmission_identity
   test_manifest_fail_closed
   test_stance_template_renderer
   test_valid_profiles
@@ -1718,8 +1833,6 @@ run_full_suite() {
   test_analyst_contract
   test_architect_slice_valid
   test_architect_slice_ad_hoc
-  test_audit_contract
-  test_audit_resubmission_identity
   test_architect_slice_unknown_fails
   test_architect_slice_blank_fails
   test_architect_slice_non_architect_fails
@@ -1733,26 +1846,69 @@ run_full_suite() {
 }
 
 run_certify_critical_suite() {
-  test_manifest_fail_closed
-  test_stance_template_renderer
-  test_architect_slice_valid
+  test_bundle_closeout_sanity
+  test_audit_contract
 }
 
-case "$TEST_MODE" in
-  full)
-    run_full_suite
-    ;;
-  certify-critical)
-    run_certify_critical_suite
-    ;;
-esac
+run_route_contract_slice() {
+  test_manifest_fail_closed
+  test_stance_template_renderer
+  test_valid_profiles
+  test_auto_profile_default_route
+  test_auto_profile_plan_route
+  test_analyst_contract
+  test_architect_slice_valid
+  test_architect_slice_ad_hoc
+  test_architect_slice_unknown_fails
+  test_architect_slice_blank_fails
+  test_architect_slice_non_architect_fails
+  test_foreman_invalid_paths
+  test_foreman_valid_path
+  test_legacy_hygiene_alias
+  test_ats_partial_flags_fail
+  test_ats_unknown_ids_fail
+  test_ats_valid_triplet
+  test_meta_shim
+}
+
+run_slice() {
+  case "$1" in
+    closeout-sanity)
+      test_bundle_closeout_sanity
+      ;;
+    audit-coherence)
+      test_audit_contract
+      ;;
+    route-contract)
+      run_route_contract_slice
+      ;;
+    rerun-lineage)
+      test_audit_resubmission_identity
+      ;;
+  esac
+}
+
+if [[ -n "$BUNDLE_TEST_SLICE" ]]; then
+  run_slice "$BUNDLE_TEST_SLICE"
+else
+  case "$TEST_MODE" in
+    full)
+      run_full_suite
+      ;;
+    certify-critical)
+      run_certify_critical_suite
+      ;;
+  esac
+fi
 
 if (( FAILURES > 0 )); then
   echo "FAIL: bundle smoke test detected ${FAILURES} issue(s) (mode: ${TEST_MODE})." >&2
   exit 1
 fi
 
-if [[ "$TEST_MODE" == "full" ]]; then
+if [[ -n "$BUNDLE_TEST_SLICE" ]]; then
+  echo "PASS: bundle smoke test (slice: ${BUNDLE_TEST_SLICE})"
+elif [[ "$TEST_MODE" == "full" ]]; then
   echo "PASS: bundle smoke test"
 else
   echo "PASS: bundle smoke test (mode: ${TEST_MODE})"

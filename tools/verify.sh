@@ -18,7 +18,7 @@ emit_binary_leaf "verify" "start"
 
 usage() {
   cat <<'EOF'
-Usage: bash tools/verify.sh [--mode=full|certify-critical] [--paths-file=PATH]
+Usage: bash tools/verify.sh [--mode=full|gates|certify-critical] [--paths-file=PATH]
 EOF
 }
 
@@ -44,7 +44,7 @@ for arg in "$@"; do
 done
 
 case "$VERIFY_MODE" in
-  full|certify-critical)
+  full|gates|certify-critical)
     ;;
   *)
     echo "ERROR: invalid --mode value: ${VERIFY_MODE}" >&2
@@ -52,7 +52,7 @@ case "$VERIFY_MODE" in
     ;;
 esac
 
-VERIFY_POLICY_PATH="${REPO_ROOT}/ops/lib/manifests/VERIFY.md"
+VERIFY_POLICY_PATH="${REPO_ROOT}/ops/etc/verification.manifest"
 declare -a VERIFY_POLICY_LANES=()
 declare -a VERIFY_SELECTED_LANES=()
 declare -a VERIFY_DEFERRED_LANES=()
@@ -276,7 +276,15 @@ select_verify_lanes() {
         fi
         ;;
       standalone-full-only)
-        queue_verify_deferred "$lane" "standalone-full-only"
+        if [[ "$VERIFY_MODE" == "certify-critical" ]]; then
+          queue_verify_deferred "$lane" "standalone-full-only"
+        elif [[ -z "$VERIFY_PATHS_FILE" ]]; then
+          queue_verify_deferred "$lane" "paths-file-missing"
+        elif lane_matches_changed_paths "$lane"; then
+          queue_verify_selection "$lane"
+        else
+          queue_verify_deferred "$lane" "no-path-match"
+        fi
         ;;
       *)
         fail "verify policy lane has invalid reason_class: $(verify_lane_field "$lane" "name") -> ${reason_class}"
@@ -364,11 +372,6 @@ run_verify_lane_command() {
   exec_command="$command"
   infra_importance="$(registry_importance_for_path "$registry_table" "$registry_path")" || infra_importance="unknown"
   [[ -n "$decision_leaf" ]] || decision_leaf="none"
-
-  if [[ "$VERIFY_MODE" == "certify-critical" && "$lane" == "bundle-smoke" ]]; then
-    exec_command="bash tools/test/bundle.sh --mode=certify-critical"
-    detail="$exec_command"
-  fi
 
   required_path=""
   read -r -a command_parts <<< "$command"
@@ -569,7 +572,7 @@ done
 for item in storage/*; do
   name="$(basename "$item")"
   case "$name" in
-    README.md|.gitignore|handoff|dumps|dp|_smoke)
+    README.md|.gitignore|handoff|dumps|dp)
       ;;
     *)
       warn "Storage drift: unexpected item 'storage/$name'. Keep storage/ clean."

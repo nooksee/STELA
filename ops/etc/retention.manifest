@@ -1,0 +1,59 @@
+<!-- CCD: ff_target="operator-technical" ff_band="30-45" -->
+# Retention Policy Manifest
+
+## Parse Contract
+`ops/bin/prune` reads this file before any candidate processing. Parse failure is fail-closed.
+
+default_phase=report
+apply_token=I_APPROVE_PRUNE
+high_watermark=30
+low_watermark=20
+target_sop_tier=operational
+target_pow_tier=historical
+weight_operational=1
+weight_historical=3
+quarantine_path=var/tmp/prune-quarantine
+
+## Tier Semantics
+- `critical`: never auto-prune
+- `operational`: rolling window retention under hysteresis limits
+- `historical`: budget reclaim path under hysteresis limits
+
+## Critical Patterns
+pattern=storage/handoff/*-RESULTS.md
+pattern=storage/handoff/CLOSING-DP-OPS-*.md
+pattern=storage/dp/active/*
+pattern=TASK.md
+pattern=SoP.md
+pattern=PoW.md
+
+## Denylist
+pattern=storage/handoff/*-RESULTS.md
+pattern=storage/handoff/CLOSING-DP-OPS-*.md
+pattern=storage/dp/active/*
+pattern=TASK.md
+pattern=SoP.md
+pattern=PoW.md
+
+## Storage Report Classes
+class=telemetry-leaves|pattern=logs/*.md|tier=historical|weight=1
+class=telemetry-heads|pattern=logs/*.telemetry.head|tier=operational|weight=1
+class=dump-payloads|pattern=storage/dumps/dump-*.txt|tier=historical|weight=3
+class=dump-manifests|pattern=storage/dumps/dump-*.manifest.txt|tier=historical|weight=2
+class=analyst-bundles|pattern=storage/handoff/ANALYST-*|tier=historical|weight=2
+class=architect-bundles|pattern=storage/handoff/ARCHITECT-*|tier=historical|weight=2
+class=audit-bundles|pattern=storage/handoff/AUDIT-*|tier=historical|weight=2
+class=audit-reruns|pattern=storage/handoff/AUDIT-R*|tier=historical|weight=2
+class=conform-bundles|pattern=storage/handoff/CONFORM-*|tier=historical|weight=2
+class=foreman-bundles|pattern=storage/handoff/FOREMAN-*|tier=historical|weight=2
+class=project-bundles|pattern=storage/handoff/PROJECT-*|tier=historical|weight=2
+class=legacy-bundles|pattern=storage/handoff/BUNDLE-*|tier=historical|weight=2
+
+## Shared Persistence Policy
+- Dump-visible report classes and repo-pressure classes are loaded from `ops/etc/persistence.manifest`.
+- `ops/bin/prune` reads persistence policy directly for:
+  - dump-visible class names and weights
+  - repo-context class names and weights
+  - canonical vs disposable retention status
+  - bounded `apply=1` authorization for dump-visible disposable classes
+- This keeps dump serialization, bundle routing, and prune pressure reporting on one shared persistence policy surface.

@@ -121,7 +121,7 @@ Note: certify resolves the target DP from the TASK head leaf by default. Ensure 
 `tools/lint/results.sh` enforces the RESULTS schema through `## Contractor Execution Narrative` and required Decision Leaf lines. Closing sidecar schema validation remains `ops/bin/certify` authority against `ops/lib/manifests/CLOSING.md` (Section 1).
 `ops/bin/certify` also emits schema-stamped surface leaves for PoW/SoP/TASK under `archives/surfaces/` and rewrites `PoW.md`, `SoP.md`, and `TASK.md` to single-line HEAD pointers to those leaves.
 If `TASK.md` does not contain the target DP block, certify now fails unless `--allow-intake-fallback` is explicitly provided.
-Default dump and bundle payloads now route archive serialization through `ops/lib/manifests/HISTORY.md`. Cold archive history remains visible by default as explicit metadata-only blocks with exact re-include instructions rather than literal full-body emission in every dump.
+Default dump and bundle payloads now route archive serialization through `ops/etc/persistence.manifest`. Cold archive history remains visible by default as explicit metadata-only blocks with exact re-include instructions rather than literal full-body emission in every dump.
 `bash tools/lint/results.sh` without arguments targets the active branch packet receipt when resolvable; use `--all` only for full historical receipt scans.
 Manual RESULTS fabrication is prohibited.
 
