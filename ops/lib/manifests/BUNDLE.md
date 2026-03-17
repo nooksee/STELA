@@ -120,6 +120,7 @@ dump_scope_foreman=core
 - Audit invokes the core dump with explicit inclusion of those two files, the authoritative current packet source file, and existing exact-file entries from the active packet's `3.2.2 DP-Scoped Load Order` so new packet-substantive canon files are inspectable even when they are not yet tracked.
 - Audit package members include the resolved current `RESULTS` and `CLOSING` files.
 - Audit reruns must emit fresh artifact identity under `audit_resubmission_prefix` and record submission lineage in the emitted manifest.
+- Audit rerun identity is gated on explicit `--rerun` intent. Prior local `AUDIT-*` artifacts do not force rerun naming without `--rerun`.
 
 ## Smoke Transport Contract
 - Quarantined smoke outputs use `smoke_handoff_root` and `smoke_dump_root`.

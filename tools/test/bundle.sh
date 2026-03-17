@@ -1367,8 +1367,10 @@ test_audit_resubmission_identity() {
   local expected_rerun_rel=""
   local first_artifact=""
   local first_manifest=""
-  local second_artifact=""
-  local second_manifest=""
+  local repeat_artifact=""
+  local repeat_manifest=""
+  local rerun_artifact=""
+  local rerun_manifest=""
   local rerun_dump_payload=""
   local rerun_submission_kind=""
   local rerun_submission_index=""
@@ -1379,9 +1381,10 @@ test_audit_resubmission_identity() {
   requested_out_rel="${SMOKE_HANDOFF_ROOT}/AUDIT-rerun-smoke-$$.txt"
   expected_rerun_rel="${SMOKE_HANDOFF_ROOT}/AUDIT-R1-rerun-smoke-$$.txt"
 
+  # Step 1: initial delivery — no prior artifact, no --rerun, must produce AUDIT-*
   run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=audit "--out=${requested_out_rel}"
   if (( RUN_STATUS != 0 )); then
-    fail "audit initial rerun-identity invocation failed"
+    fail "audit initial invocation failed"
     echo "$RUN_OUTPUT" >&2
     return
   fi
@@ -1401,23 +1404,44 @@ test_audit_resubmission_identity() {
     fail "audit initial submission.supersedes_bundle_path should be null"
   fi
 
+  # Step 2: repeat without --rerun — stale prior artifact exists; must still produce AUDIT-* (not AUDIT-R1-*)
   run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=audit "--out=${requested_out_rel}"
   if (( RUN_STATUS != 0 )); then
-    fail "audit rerun-identity invocation failed"
+    fail "audit repeat (no --rerun) invocation failed"
     echo "$RUN_OUTPUT" >&2
     return
   fi
   track_bundle_outputs
-  second_artifact="$LAST_ARTIFACT"
-  second_manifest="$LAST_MANIFEST"
-  rerun_submission_kind="$(extract_submission_field "$second_manifest" "kind")"
-  rerun_submission_index="$(extract_submission_field "$second_manifest" "resubmission_index")"
-  rerun_supersedes="$(extract_submission_field "$second_manifest" "supersedes_bundle_path")"
-  rerun_refresh_reason="$(extract_submission_field "$second_manifest" "refresh_reason")"
-  rerun_dump_payload="$(extract_manifest_value "$second_manifest" "payload_path")"
+  repeat_artifact="$LAST_ARTIFACT"
+  repeat_manifest="$LAST_MANIFEST"
+  if [[ "$repeat_artifact" != "$requested_out_rel" ]]; then
+    fail "audit stale-file repeat (no --rerun): expected initial identity ${requested_out_rel}, got ${repeat_artifact}"
+  fi
+  if [[ "$(extract_submission_field "$repeat_manifest" "kind")" != "audit_submission" ]]; then
+    fail "audit stale-file repeat (no --rerun): submission.kind must remain audit_submission"
+  fi
+  if [[ "$(extract_submission_field "$repeat_manifest" "resubmission_index")" != "0" ]]; then
+    fail "audit stale-file repeat (no --rerun): submission.resubmission_index must remain 0"
+  fi
 
-  if [[ "$second_artifact" != "$expected_rerun_rel" ]]; then
-    fail "audit rerun artifact path mismatch: expected ${expected_rerun_rel}, got ${second_artifact}"
+  # Step 3: explicit --rerun — prior AUDIT-* artifact present; must produce AUDIT-R1-* with lineage
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=audit --rerun "--out=${requested_out_rel}"
+  if (( RUN_STATUS != 0 )); then
+    fail "audit explicit --rerun invocation failed"
+    echo "$RUN_OUTPUT" >&2
+    return
+  fi
+  track_bundle_outputs
+  rerun_artifact="$LAST_ARTIFACT"
+  rerun_manifest="$LAST_MANIFEST"
+  rerun_submission_kind="$(extract_submission_field "$rerun_manifest" "kind")"
+  rerun_submission_index="$(extract_submission_field "$rerun_manifest" "resubmission_index")"
+  rerun_supersedes="$(extract_submission_field "$rerun_manifest" "supersedes_bundle_path")"
+  rerun_refresh_reason="$(extract_submission_field "$rerun_manifest" "refresh_reason")"
+  rerun_dump_payload="$(extract_manifest_value "$rerun_manifest" "payload_path")"
+
+  if [[ "$rerun_artifact" != "$expected_rerun_rel" ]]; then
+    fail "audit rerun artifact path mismatch: expected ${expected_rerun_rel}, got ${rerun_artifact}"
   fi
   if [[ "$rerun_submission_kind" != "audit_resubmission" ]]; then
     fail "audit rerun submission.kind mismatch: expected audit_resubmission, got ${rerun_submission_kind:-"(missing)"}"
@@ -1434,10 +1458,10 @@ test_audit_resubmission_identity() {
   if [[ "$rerun_dump_payload" != "${SMOKE_DUMP_ROOT}/dump-core-AUDIT-R1-rerun-smoke-$$.txt" ]]; then
     fail "audit rerun dump payload path mismatch: expected ${SMOKE_DUMP_ROOT}/dump-core-AUDIT-R1-rerun-smoke-$$.txt, got ${rerun_dump_payload:-"(missing)"}"
   fi
-  if ! grep -Fq '[SUBMISSION]' "${REPO_ROOT}/${second_artifact}"; then
+  if ! grep -Fq '[SUBMISSION]' "${REPO_ROOT}/${rerun_artifact}"; then
     fail "audit rerun bundle text missing [SUBMISSION] block"
   fi
-  if ! grep -Fq -- "- supersedes: ${first_artifact}" "${REPO_ROOT}/${second_artifact}"; then
+  if ! grep -Fq -- "- supersedes: ${first_artifact}" "${REPO_ROOT}/${rerun_artifact}"; then
     fail "audit rerun bundle text missing supersedes line"
   fi
 }

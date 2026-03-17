@@ -44,8 +44,9 @@ Current live set:
 - audit: current `RESULTS`, current `CLOSING`, and active packet source file
 
 ## Audit Submission Identity
-- initial audit delivery: `AUDIT-*`
-- rerun delivery: `AUDIT-R<index>-*`
+- initial audit delivery: `AUDIT-*` (default; no `--rerun` flag required)
+- rerun delivery: `AUDIT-R<index>-*` (requires explicit `--rerun` flag)
+- prior local `AUDIT-*` artifacts do not promote delivery to rerun identity; explicit `--rerun` is the sole trigger
 - manifest lineage fields:
   - `submission.kind`
   - `submission.resubmission_index`
