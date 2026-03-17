@@ -56,7 +56,7 @@ schema. If that template is absent, the Contractor stops and requests it from th
 Operator before proceeding. Absence of the closing sidecar is a certify hard-fail;
 it is not a recoverable warning.
 
-Finalization protocol order is strict: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
+Finalization protocol order is strict: Verify -> Generate Results -> Generate Audit Bundle -> COMMIT (Operator Only) -> Prune.
 Mandatory Closing Sidecar schema is defined in `TASK.md` Section 3.5.1.
 Only the current six-label closing sidecar schema is accepted; `ops/bin/certify` is the schema authority; `tools/lint/style.sh` enforces that schema. The current label set is SSOT in `ops/lib/manifests/CLOSING.md` (Section 1), and `ops/src/surfaces/closing.md.tpl` includes that section.
 Closeout label update procedure (future packets): edit `ops/lib/manifests/CLOSING.md` first, then validate and update every consumer that derives or validates the closing schema (`ops/src/surfaces/closing.md.tpl`, `ops/bin/certify`, `tools/lint/style.sh`, `tools/lint/results.sh`, and any coupled TASK lint logic), then rerun the full verify/certify closeout gates.
@@ -326,6 +326,13 @@ Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, 
 
 ~~~
 
+Generate Audit Bundle
+Run after Log to produce the audit package before the operator commit:
+~~~bash
+./ops/bin/bundle --profile=audit --out=auto
+~~~
+The generated artifact path is printed to stdout. If this is a resubmission following an audit FAIL, use `--rerun` to produce a distinct `AUDIT-R<index>-*` artifact; see Certify Rerun step 5 above.
+
 ---
 
 ## 1. Top Commands
@@ -488,6 +495,22 @@ ops/lib/scripts/task.sh harvest --id B-TASK-01 --name "task-title" --objective "
 # Promote the draft into opt/_factory/tasks and register it
 ops/lib/scripts/task.sh promote archives/definitions/task-candidate-YYYY-MM-DD-<suffix>-B-TASK-01.md
 ~~~
+
+### Analyst Workflow
+Canonical operator flow for an analyst session:
+
+1. Write the topic to `storage/handoff/TOPIC.md`.
+2. Generate the analyst bundle:
+~~~bash
+./ops/bin/bundle --profile=analyst --out=auto
+~~~
+3. Deliver the bundle artifact (`ANALYST-*.txt` or `ANALYST-*.tar`) to the analyst model.
+4. Read the model output from `storage/handoff/PLAN.md`.
+
+Surface contract:
+- `storage/handoff/TOPIC.md`: latest-wins input; operator replaces content before each run.
+- `storage/handoff/PLAN.md`: latest-wins model output; overwritten after each analyst run.
+- `var/tmp/PLAN.md.prev`: disposable safety backup of the prior `PLAN.md` written by bundle before each run. Not a certify input; prune may remove it.
 
 ---
 

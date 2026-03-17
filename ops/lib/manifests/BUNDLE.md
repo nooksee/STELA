@@ -92,6 +92,9 @@ dump_scope_foreman=core
 - Analyst invokes the full dump with explicit `storage/handoff/TOPIC.md` inclusion so the dump payload contains the topic artifact as a file block.
 - Analyst package members include `storage/handoff/TOPIC.md` and omit `storage/handoff/PLAN.md`.
 - Analyst `PLAN.md` is output only and is never transported as analyst input context.
+- `storage/handoff/TOPIC.md` is the latest-wins input surface; the operator replaces its content before each analyst run.
+- `storage/handoff/PLAN.md` is the latest-wins output surface written by the model after each analyst run.
+- Before each analyst run, bundle writes a disposable copy of the prior `storage/handoff/PLAN.md` to `var/tmp/PLAN.md.prev` if that file exists. This copy is a scratch artifact only; certify has no dependency on it and prune may remove it.
 
 ## Architect Transport Contract
 - Architect packet identity is transport-defined when an explicit validated slice is present.

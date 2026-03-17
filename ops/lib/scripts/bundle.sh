@@ -1500,6 +1500,11 @@ bundle_run() {
     fi
   fi
 
+  if [[ "$resolved_profile" == "analyst" ]] && [[ -f "${REPO_ROOT}/storage/handoff/PLAN.md" ]]; then
+    mkdir -p "${REPO_ROOT}/var/tmp"
+    cp "${REPO_ROOT}/storage/handoff/PLAN.md" "${REPO_ROOT}/var/tmp/PLAN.md.prev"
+  fi
+
   {
     echo "===== STELA BUNDLE ====="
     echo "Generated at: ${generated_at}"
