@@ -133,10 +133,6 @@ Notes:
 5 Use repo-relative paths only in all output. Never print absolute filesystem paths. Do not emit clickable file links.
 
 ### 3.2.2 DP-scoped load order (per DP)
-- ops/lib/manifests/HISTORY.md
-- ops/lib/manifests/PRUNE.md
-- ops/lib/manifests/VERIFY.md
-- docs/ops/specs/manifests/history.md
 - ops/etc/persistence.manifest
 - ops/etc/retention.manifest
 - ops/etc/verification.manifest
