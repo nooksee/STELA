@@ -18,8 +18,9 @@ RUN_OUTPUT=""
 RUN_STATUS=0
 PLAN_BACKUP=""
 PLAN_RESTORE=0
-SMOKE_HANDOFF_ROOT="storage/_smoke/handoff"
-SMOKE_DUMP_ROOT="storage/_smoke/dumps"
+BUNDLE_POLICY_REL="ops/lib/manifests/BUNDLE.md"
+SMOKE_HANDOFF_ROOT="$(awk -F'=' '$1=="smoke_handoff_root" { print substr($0, index($0, "=") + 1); exit }' "${REPO_ROOT}/${BUNDLE_POLICY_REL}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
+SMOKE_DUMP_ROOT="$(awk -F'=' '$1=="smoke_dump_root" { print substr($0, index($0, "=") + 1); exit }' "${REPO_ROOT}/${BUNDLE_POLICY_REL}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
 
 cleanup_generated() {
   local rel_path
@@ -74,10 +75,10 @@ queue_cleanup_path() {
   [[ -n "$rel_path" ]] || return 0
 
   case "$rel_path" in
-    storage/*)
+    storage/*|var/tmp/*)
       ;;
     *)
-      fail "refusing to queue cleanup path outside storage/: ${rel_path}"
+      fail "refusing to queue cleanup path outside storage/ or var/tmp/: ${rel_path}"
       return 1
       ;;
   esac

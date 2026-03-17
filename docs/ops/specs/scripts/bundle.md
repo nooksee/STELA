@@ -17,16 +17,20 @@ The script provides `bundle_run` plus helpers for:
    - all-or-none flag set required,
    - pattern checks from assembly policy keys,
    - canonical ID existence checks against `docs/ops/registry/agents.md`, `docs/ops/registry/skills.md`, and `docs/ops/registry/tasks.md`.
-5. Repo-relative path normalization and output confinement to `storage/handoff/` for operator-facing artifacts or `storage/_smoke/handoff/` for quarantined smoke runs.
+5. Repo-relative path normalization and output confinement to `storage/handoff/` for operator-facing artifacts or `var/tmp/_smoke/handoff/` for quarantined smoke runs.
 6. Auto routing using PLAN presence and `tools/lint/plan.sh` status.
 7. Dump scope and stance template key resolution per resolved profile from policy mappings.
    - dump history profile is passed as the resolved profile name and is enforced inside `ops/bin/dump` via `ops/lib/manifests/HISTORY.md`
    - Artifact naming prefix resolution per resolved profile from policy keys (`artifact_prefix_<profile>`).
    - Compatibility legacy artifact emission controlled by `compatibility_emit_legacy_bundle_artifacts` and `compatibility_legacy_bundle_prefix`.
 8. Deterministic embedded OPEN block generation (no internal `ops/bin/open` invocation).
-9. Dump orchestration with explicit `.txt` output path under `storage/dumps/` for operator-facing runs or `storage/_smoke/dumps/` for quarantined smoke runs, plus explicit `--history-profile=<resolved-profile>`.
-   - Auto bundle output keeps the branch/head dump naming contract.
+9. Dump orchestration with explicit `.txt` output path under `storage/dumps/` for operator-facing runs or `var/tmp/_smoke/dumps/` for quarantined smoke runs, plus explicit `--history-profile=<resolved-profile>`.
+   - Auto bundle output keeps the branch/head dump naming contract except for audit, where dump naming follows the emitted artifact stem so reruns stay distinct.
    - Explicit non-`auto` bundle output derives a matching explicit dump payload/manifest path to avoid shared-output collisions in smoke and verify lanes.
+10. Audit submission identity handling:
+   - initial audit delivery uses `AUDIT-*`
+   - reruns emit `AUDIT-R<index>-*`
+   - manifest records submission lineage (`kind`, `resubmission_index`, `supersedes_bundle_path`, `refresh_reason`)
 10. Foreman intent parsing and decision-leaf validation against dump payload.
 11. Architect slice parsing and validation:
    - `--slice=<ID>` accepted only for resolved profile `architect`.

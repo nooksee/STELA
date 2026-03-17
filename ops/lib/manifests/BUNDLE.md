@@ -36,6 +36,13 @@ artifact_prefix_conform=CONFORM
 artifact_prefix_foreman=FOREMAN
 compatibility_legacy_bundle_prefix=BUNDLE
 compatibility_emit_legacy_bundle_artifacts=false
+smoke_handoff_root=var/tmp/_smoke/handoff
+smoke_dump_root=var/tmp/_smoke/dumps
+audit_resubmission_prefix=AUDIT-R
+audit_submission_kind_initial=audit_submission
+audit_submission_kind_rerun=audit_resubmission
+audit_refresh_reason_initial=initial
+audit_refresh_reason_rerun=rerun
 frontdoor_canonical_binary=ops/bin/bundle
 frontdoor_meta_mode=project_shim
 frontdoor_meta_deprecation_status=not_scheduled
@@ -66,7 +73,7 @@ dump_scope_foreman=core
 ## Profile Attachment Contract
 - analyst: `ANALYST-*.txt`, `ANALYST-*.manifest.json`, transport-managed `storage/handoff/TOPIC.md`
 - architect: `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, transport-managed `storage/handoff/PLAN.md`, optional `--slice=<ID>` with request metadata (`slice_id`, `slice_validated`, `plan_source`, `packet_id`, `closing_sidecar`, `title_suffix`)
-- audit: `AUDIT-*.txt`, `AUDIT-*.manifest.json`, transport-managed current DP `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md`
+- audit: initial `AUDIT-*.txt`, rerun `AUDIT-R*-*.txt`, matching `.manifest.json`/`.tar`, transport-managed current DP `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md`
 - foreman: `FOREMAN-*.txt`, `FOREMAN-*.manifest.json`
 - project: `PROJECT-*.txt`, `PROJECT-*.manifest.json`
 - conform: `CONFORM-*.txt`, `CONFORM-*.manifest.json`, draft DP input
@@ -112,6 +119,11 @@ dump_scope_foreman=core
 - Audit requires `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md` for that current packet and fails closed when either file is missing.
 - Audit invokes the core dump with explicit inclusion of those two files so the dump payload contains them as file blocks.
 - Audit package members include the resolved current `RESULTS` and `CLOSING` files.
+- Audit reruns must emit fresh artifact identity under `audit_resubmission_prefix` and record submission lineage in the emitted manifest.
+
+## Smoke Transport Contract
+- Quarantined smoke outputs use `smoke_handoff_root` and `smoke_dump_root`.
+- Smoke outputs are resume/scratch artifacts under `var/tmp/`, not payload artifacts under `storage/`.
 
 ## Compatibility Notes
 Canonical audit verdict profile is `audit`.

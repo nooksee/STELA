@@ -98,9 +98,15 @@ Artifact contract (written under `storage/handoff/`):
    - architect includes `PLAN.md` when present and architect dump payload embeds `storage/handoff/PLAN.md`
    - audit includes current `RESULTS` and `CLOSING` files and audit dump payload embeds both
 4. Canonical bundle artifact names use policy-defined profile prefixes (`artifact_prefix_<profile>` in `ops/lib/manifests/BUNDLE.md`), for example `AUDIT-*` and `FOREMAN-*`.
+   - audit reruns emit fresh `AUDIT-R<index>-*` names instead of reusing the original `AUDIT-*` artifact stem.
 5. Legacy `BUNDLE-*` artifacts are compatibility outputs during migration when `compatibility_emit_legacy_bundle_artifacts=true`.
 6. Manifest `artifact_naming` metadata records canonical and compatibility artifact paths plus `legacy_emitted` status.
-7. Manifest includes `assembly` metadata block:
+7. Manifest includes `submission` metadata:
+   - `kind`
+   - `resubmission_index`
+   - `supersedes_bundle_path`
+   - `refresh_reason`
+8. Manifest includes `assembly` metadata block:
    - `applied`
    - `schema_version`
    - `policy_manifest`
@@ -108,8 +114,8 @@ Artifact contract (written under `storage/handoff/`):
    - `validated_against` registry pointers
    - `pointer` metadata (`emitted`, `path`, `format`)
    - advisory-input status for `STELA.md` and `SCAFFOLD.md`
-8. When ATS is applied and assembly pointer policy is `emit_when_applied`, runtime emits a deterministic pointer artifact under `storage/handoff/`.
-9. When ATS is not applied, `assembly.pointer.emitted` is `false` and runtime emits no assembly pointer artifact.
+9. When ATS is applied and assembly pointer policy is `emit_when_applied`, runtime emits a deterministic pointer artifact under `storage/handoff/` or the configured smoke handoff root.
+10. When ATS is not applied, `assembly.pointer.emitted` is `false` and runtime emits no assembly pointer artifact.
 
 Text artifact profile conditional block:
 1. The `[HANDOFF]` block is emitted for non-audit profiles.
@@ -118,6 +124,7 @@ Text artifact profile conditional block:
 4. For `architect`, the text artifact emits a `[REQUEST]` block with slice metadata and packet identity metadata, and `[HANDOFF]` reports `PLAN.md` only when present.
 5. Profiles without disposable input files emit no `[HANDOFF]` block.
 6. For validated architect slice runs, the text artifact also emits `[ACTIVE SLICE PROJECTION]`.
+7. Audit artifacts emit a `[SUBMISSION]` block showing submission lineage.
 
 Foreman gate:
 1. `--profile=foreman` requires `--intent`.
@@ -151,7 +158,7 @@ Disposable transport rule:
    - audit current `storage/handoff/<DP_ID>-RESULTS.md`, `storage/handoff/CLOSING-<DP_ID>.md`, and the active packet source file at `storage/dp/processed/<DP_ID>.md` or `storage/dp/intake/<DP_ID>.md`
 3. Future additions must be exact-file policy wiring plus matching smoke-test proof.
 
-Bundle runtime invokes dump with explicit `.txt` output path and explicit `--history-profile=<resolved-profile>` to suppress dump auto-compression side effects during bundle orchestration while keeping history depth deterministic. When bundle output uses an explicit non-`auto` path, bundle derives a matching explicit dump payload path so concurrent smoke runs do not reuse the same branch/head dump artifact names. Explicit operator-facing outputs remain under `storage/handoff/`; smoke and validation runs may target quarantined paths under `storage/_smoke/handoff/` with matching dump outputs under `storage/_smoke/dumps/`.
+Bundle runtime invokes dump with explicit `.txt` output path and explicit `--history-profile=<resolved-profile>` to suppress dump auto-compression side effects during bundle orchestration while keeping history depth deterministic. When bundle output uses an explicit non-`auto` path, bundle derives a matching explicit dump payload path so concurrent smoke runs do not reuse the same branch/head dump artifact names. Explicit operator-facing outputs remain under `storage/handoff/`; smoke and validation runs may target quarantined paths under `var/tmp/_smoke/handoff/` with matching dump outputs under `var/tmp/_smoke/dumps/`. Audit auto outputs use artifact-stem dump naming so reruns preserve delivery lineage across bundle, manifest, package, and dump artifacts.
 
 ATS validation gate:
 1. ATS flags are all-or-none. Any partial ATS argument set fails before artifact emission.
@@ -161,4 +168,4 @@ ATS validation gate:
 5. ATS success may emit a pointer artifact and must never inline full registry payloads into bundle text or manifest fields.
 
 ## Integrity Filter Warnings
-Bundle enforces output paths under `storage/handoff/` for operator-facing artifacts and under `storage/_smoke/handoff/` for quarantined smoke outputs only. Project profile rejects missing or invalid slugs. PLAN lint remains a deterministic safety floor; it validates structure, not plan quality. Policy parse errors in `ops/lib/manifests/BUNDLE.md` are fail-closed. Bundle runtime must remain deterministic and must not parse factory markdown governance files at runtime.
+Bundle enforces output paths under `storage/handoff/` for operator-facing artifacts and under `var/tmp/_smoke/handoff/` for quarantined smoke outputs only. Project profile rejects missing or invalid slugs. PLAN lint remains a deterministic safety floor; it validates structure, not plan quality. Policy parse errors in `ops/lib/manifests/BUNDLE.md` are fail-closed. Bundle runtime must remain deterministic and must not parse factory markdown governance files at runtime.

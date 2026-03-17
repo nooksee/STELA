@@ -66,8 +66,8 @@ AUDIT_FIXTURE_PACKET_REL=""
 AUDIT_EXPECTED_PACKET_ID=""
 AUDIT_EXPECTED_PACKET_SOURCE_REL=""
 BUNDLE_OUTPUT_SEQUENCE=0
-SMOKE_HANDOFF_ROOT="storage/_smoke/handoff"
-SMOKE_DUMP_ROOT="storage/_smoke/dumps"
+SMOKE_HANDOFF_ROOT="$(awk -F'=' '$1=="smoke_handoff_root" { print substr($0, index($0, "=") + 1); exit }' "${REPO_ROOT}/${BUNDLE_POLICY_REL}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
+SMOKE_DUMP_ROOT="$(awk -F'=' '$1=="smoke_dump_root" { print substr($0, index($0, "=") + 1); exit }' "${REPO_ROOT}/${BUNDLE_POLICY_REL}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
 
 restore_fixture_overrides() {
   local plan_rel="storage/handoff/PLAN.md"
@@ -126,10 +126,10 @@ queue_cleanup_path() {
   [[ -n "$rel_path" ]] || return 0
 
   case "$rel_path" in
-    storage/*)
+    storage/*|var/tmp/*)
       ;;
     *)
-      fail "refusing to queue cleanup path outside storage/: ${rel_path}"
+      fail "refusing to queue cleanup path outside storage/ or var/tmp/: ${rel_path}"
       return 1
       ;;
   esac
@@ -383,6 +383,32 @@ extract_request_field() {
         exit
       }
       if (match($0, "\"" field "\"[[:space:]]*:[[:space:]]*(true|false|null)", parts)) {
+        print parts[1]
+        exit
+      }
+    }
+  ' "${REPO_ROOT}/${manifest_rel}" | head -n 1
+}
+
+extract_submission_field() {
+  local manifest_rel="$1"
+  local field="$2"
+  awk -v field="$field" '
+    /"submission"[[:space:]]*:[[:space:]]*{/ { in_submission=1; depth=1; next }
+    in_submission {
+      if (/{/) { depth++ }
+      if (/}/) {
+        depth--
+        if (depth <= 0) {
+          in_submission=0
+          exit
+        }
+      }
+      if (match($0, "\"" field "\"[[:space:]]*:[[:space:]]*\"([^\"]*)\"", parts)) {
+        print parts[1]
+        exit
+      }
+      if (match($0, "\"" field "\"[[:space:]]*:[[:space:]]*(true|false|null|[0-9]+)", parts)) {
         print parts[1]
         exit
       }
@@ -1224,6 +1250,86 @@ test_audit_contract() {
   fi
 }
 
+test_audit_resubmission_identity() {
+  local requested_out_rel=""
+  local expected_rerun_rel=""
+  local first_artifact=""
+  local first_manifest=""
+  local second_artifact=""
+  local second_manifest=""
+  local rerun_dump_payload=""
+  local rerun_submission_kind=""
+  local rerun_submission_index=""
+  local rerun_supersedes=""
+  local rerun_refresh_reason=""
+
+  ensure_audit_receipt_fixture
+  requested_out_rel="${SMOKE_HANDOFF_ROOT}/AUDIT-rerun-smoke-$$.txt"
+  expected_rerun_rel="${SMOKE_HANDOFF_ROOT}/AUDIT-R1-rerun-smoke-$$.txt"
+
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=audit "--out=${requested_out_rel}"
+  if (( RUN_STATUS != 0 )); then
+    fail "audit initial rerun-identity invocation failed"
+    echo "$RUN_OUTPUT" >&2
+    return
+  fi
+  track_bundle_outputs
+  first_artifact="$LAST_ARTIFACT"
+  first_manifest="$LAST_MANIFEST"
+  if [[ "$first_artifact" != "$requested_out_rel" ]]; then
+    fail "audit initial artifact path mismatch: expected ${requested_out_rel}, got ${first_artifact}"
+  fi
+  if [[ "$(extract_submission_field "$first_manifest" "kind")" != "audit_submission" ]]; then
+    fail "audit initial submission.kind mismatch"
+  fi
+  if [[ "$(extract_submission_field "$first_manifest" "resubmission_index")" != "0" ]]; then
+    fail "audit initial submission.resubmission_index mismatch"
+  fi
+  if [[ "$(extract_submission_field "$first_manifest" "supersedes_bundle_path")" != "null" ]]; then
+    fail "audit initial submission.supersedes_bundle_path should be null"
+  fi
+
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=audit "--out=${requested_out_rel}"
+  if (( RUN_STATUS != 0 )); then
+    fail "audit rerun-identity invocation failed"
+    echo "$RUN_OUTPUT" >&2
+    return
+  fi
+  track_bundle_outputs
+  second_artifact="$LAST_ARTIFACT"
+  second_manifest="$LAST_MANIFEST"
+  rerun_submission_kind="$(extract_submission_field "$second_manifest" "kind")"
+  rerun_submission_index="$(extract_submission_field "$second_manifest" "resubmission_index")"
+  rerun_supersedes="$(extract_submission_field "$second_manifest" "supersedes_bundle_path")"
+  rerun_refresh_reason="$(extract_submission_field "$second_manifest" "refresh_reason")"
+  rerun_dump_payload="$(extract_manifest_value "$second_manifest" "payload_path")"
+
+  if [[ "$second_artifact" != "$expected_rerun_rel" ]]; then
+    fail "audit rerun artifact path mismatch: expected ${expected_rerun_rel}, got ${second_artifact}"
+  fi
+  if [[ "$rerun_submission_kind" != "audit_resubmission" ]]; then
+    fail "audit rerun submission.kind mismatch: expected audit_resubmission, got ${rerun_submission_kind:-"(missing)"}"
+  fi
+  if [[ "$rerun_submission_index" != "1" ]]; then
+    fail "audit rerun submission.resubmission_index mismatch: expected 1, got ${rerun_submission_index:-"(missing)"}"
+  fi
+  if [[ "$rerun_supersedes" != "$first_artifact" ]]; then
+    fail "audit rerun submission.supersedes_bundle_path mismatch: expected ${first_artifact}, got ${rerun_supersedes:-"(missing)"}"
+  fi
+  if [[ "$rerun_refresh_reason" != "rerun" ]]; then
+    fail "audit rerun submission.refresh_reason mismatch: expected rerun, got ${rerun_refresh_reason:-"(missing)"}"
+  fi
+  if [[ "$rerun_dump_payload" != "${SMOKE_DUMP_ROOT}/dump-core-AUDIT-R1-rerun-smoke-$$.txt" ]]; then
+    fail "audit rerun dump payload path mismatch: expected ${SMOKE_DUMP_ROOT}/dump-core-AUDIT-R1-rerun-smoke-$$.txt, got ${rerun_dump_payload:-"(missing)"}"
+  fi
+  if ! grep -Fq '[SUBMISSION]' "${REPO_ROOT}/${second_artifact}"; then
+    fail "audit rerun bundle text missing [SUBMISSION] block"
+  fi
+  if ! grep -Fq -- "- supersedes: ${first_artifact}" "${REPO_ROOT}/${second_artifact}"; then
+    fail "audit rerun bundle text missing supersedes line"
+  fi
+}
+
 test_architect_slice_unknown_fails() {
   ensure_architect_plan_fixture
   run_bundle_capture architect --profile=architect --slice=UNKNOWN
@@ -1613,6 +1719,7 @@ run_full_suite() {
   test_architect_slice_valid
   test_architect_slice_ad_hoc
   test_audit_contract
+  test_audit_resubmission_identity
   test_architect_slice_unknown_fails
   test_architect_slice_blank_fails
   test_architect_slice_non_architect_fails
