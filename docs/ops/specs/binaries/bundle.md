@@ -43,6 +43,12 @@ Current live set:
 - architect: `storage/handoff/PLAN.md`
 - audit: current `RESULTS`, current `CLOSING`, and active packet source file
 
+## Analyst Profile Surfaces
+- `storage/handoff/TOPIC.md`: required input surface; bundle fails closed if absent.
+- `ANALYST-*.txt`: emitted bundle artifact containing the dump payload and stance contract.
+- `storage/handoff/PLAN.md`: model output surface, latest-wins; the model writes this file after each analyst run.
+- `var/tmp/PLAN.md.prev`: disposable safety backup written by bundle before each analyst run if `storage/handoff/PLAN.md` is present. Not a certify input; prune may remove it.
+
 ## Audit Submission Identity
 - initial audit delivery: `AUDIT-*` (default; no `--rerun` flag required)
 - rerun delivery: `AUDIT-R<index>-*` (requires explicit `--rerun` flag)
