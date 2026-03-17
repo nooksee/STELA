@@ -1054,6 +1054,63 @@ bundle_resolve_audit_packet_source_rel() {
   die "audit requires current packet source at ${processed_rel} or ${intake_rel}"
 }
 
+bundle_extract_dp_scoped_load_order_paths() {
+  local source_path="$1"
+  awk '
+    function emit_candidate(line, path) {
+      path=""
+      if (match(line, /^[[:space:]]*([0-9]+[.]|-)[[:space:]]*`([^`]+)`/, m)) {
+        path=m[2]
+      } else if (match(line, /^[[:space:]]*([0-9]+[.]|-)[[:space:]]*([A-Za-z0-9._\/-]+)/, m)) {
+        path=m[1]
+        path=m[2]
+      }
+      if (path != "") {
+        print path
+      }
+    }
+    BEGIN {
+      in_load_order=0
+      saw_load_order=0
+    }
+    /^### 3[.]2[.]2([.]|[[:space:]])/ {
+      in_load_order=1
+      saw_load_order=1
+      next
+    }
+    in_load_order && /^##[[:space:]]*3[.]3([.]|[[:space:]])/ { exit }
+    in_load_order && /^### 3[.]3([.]|[[:space:]])/ { exit }
+    in_load_order { emit_candidate($0) }
+    END {
+      if (saw_load_order == 0) {
+        exit 3
+      }
+    }
+  ' "$source_path"
+}
+
+bundle_collect_audit_dump_explicit_inputs() {
+  local packet_source_rel="$1"
+  local packet_source_abs="${REPO_ROOT}/${packet_source_rel}"
+  local candidate=""
+  declare -A seen=()
+
+  [[ -f "$packet_source_abs" ]] || die "audit packet source missing while resolving scoped audit evidence: ${packet_source_rel}"
+
+  while IFS= read -r candidate || [[ -n "$candidate" ]]; do
+    candidate="$(bundle_to_rel_path "$candidate")"
+    [[ -n "$candidate" ]] || continue
+    if [[ -n "${seen[$candidate]+set}" ]]; then
+      continue
+    fi
+    if [[ ! -f "${REPO_ROOT}/${candidate}" ]]; then
+      continue
+    fi
+    seen["$candidate"]=1
+    printf '%s\n' "$candidate"
+  done < <(bundle_extract_dp_scoped_load_order_paths "$packet_source_abs")
+}
+
 bundle_collect_profile_disposable_inputs() {
   local profile="$1"
   local topic_rel="$2"
@@ -1370,18 +1427,28 @@ bundle_run() {
 
   local dump_scope
   dump_scope="$(bundle_dump_scope_for_profile "$resolved_profile")"
-  local dump_history_profile="$resolved_profile"
+  local dump_persistence_profile="$resolved_profile"
   local dump_payload_target_rel
   dump_payload_target_rel="$(bundle_resolve_dump_output_path "$out_token" "$out_rel" "$dump_scope" "$branch_safe" "$head_short" "$resolved_profile")"
-  local -a dump_args=("${REPO_ROOT}/ops/bin/dump" "--scope=${dump_scope}" "--history-profile=${dump_history_profile}" "--format=chatgpt" "--out=${dump_payload_target_rel}")
+  local -a dump_args=("${REPO_ROOT}/ops/bin/dump" "--scope=${dump_scope}" "--persistence-profile=${dump_persistence_profile}" "--format=chatgpt" "--out=${dump_payload_target_rel}")
 
   local profile_disposable_output=""
   profile_disposable_output="$(bundle_collect_profile_disposable_inputs "$resolved_profile" "$topic_rel" "$plan_rel")"
   if [[ -n "$profile_disposable_output" ]]; then
     mapfile -t profile_disposable_files < <(printf '%s\n' "$profile_disposable_output")
   fi
+  local -a profile_dump_explicit_files=()
+  if [[ "$resolved_profile" == "audit" ]]; then
+    local audit_packet_source_rel=""
+    audit_packet_source_rel="$(bundle_resolve_audit_packet_source_rel "$(bundle_resolve_audit_packet_id)")"
+    mapfile -t profile_dump_explicit_files < <(bundle_collect_audit_dump_explicit_inputs "$audit_packet_source_rel")
+  fi
   local disposable_rel=""
   for disposable_rel in "${profile_disposable_files[@]}"; do
+    [[ -n "$disposable_rel" ]] || continue
+    dump_args+=("--include-file=${disposable_rel}")
+  done
+  for disposable_rel in "${profile_dump_explicit_files[@]}"; do
     [[ -n "$disposable_rel" ]] || continue
     dump_args+=("--include-file=${disposable_rel}")
   done
@@ -1450,7 +1517,7 @@ bundle_run() {
     echo
     echo "[DUMP]"
     echo "- Scope: ${dump_scope}"
-    echo "- History profile: ${dump_history_profile}"
+    echo "- Persistence profile: ${dump_persistence_profile}"
     echo "- Payload path: ${dump_payload_rel}"
     echo "- Manifest path: ${dump_manifest_rel}"
     echo
@@ -1652,7 +1719,7 @@ bundle_run() {
     echo "  },"
     echo "  \"dump\": {"
     echo "    \"scope\": \"$(bundle_json_escape "$dump_scope")\"," 
-    echo "    \"history_profile\": \"$(bundle_json_escape "$dump_history_profile")\"," 
+    echo "    \"persistence_profile\": \"$(bundle_json_escape "$dump_persistence_profile")\"," 
     echo "    \"payload_path\": \"$(bundle_json_escape "$dump_payload_rel")\"," 
     echo "    \"manifest_path\": \"$(bundle_json_escape "$dump_manifest_rel")\""
     echo "  },"

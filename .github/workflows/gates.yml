@@ -11,6 +11,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute changed paths for gate routing
+        id: changed_paths
+        if: github.event_name == 'pull_request'
+        run: |
+          set -euo pipefail
+          mkdir -p var/tmp
+          git diff --name-only --diff-filter=ACMR "origin/${{ github.base_ref }}"...HEAD > var/tmp/gates-paths.txt
+          echo "changed_paths_file=var/tmp/gates-paths.txt" >> "$GITHUB_OUTPUT"
+          echo "changed_count=$(wc -l < var/tmp/gates-paths.txt)" >> "$GITHUB_OUTPUT"
 
       - name: Surface HEAD pointer reachability
         run: |
@@ -42,7 +54,13 @@ jobs:
           echo "OK: surface pointer reachability checks passed."
 
       - name: Verify tree
-        run: bash tools/verify.sh
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            bash tools/verify.sh --mode=gates --paths-file="${{ steps.changed_paths.outputs.changed_paths_file }}"
+          else
+            bash tools/verify.sh --mode=full
+          fi
 
       - name: Truth lint (authored surfaces)
         run: bash tools/lint/truth.sh

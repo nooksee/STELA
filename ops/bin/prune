@@ -9,8 +9,8 @@ source "${SCRIPT_DIR}/../lib/scripts/ledger.sh"
 SOP_PATH="${REPO_ROOT}/SoP.md"
 POW_PATH="${REPO_ROOT}/PoW.md"
 RESUME_DIR="${REPO_ROOT}/var/tmp"
-POLICY_PATH="${REPO_ROOT}/ops/lib/manifests/PRUNE.md"
-HISTORY_POLICY_PATH="${REPO_ROOT}/ops/lib/manifests/HISTORY.md"
+POLICY_PATH="${REPO_ROOT}/ops/etc/retention.manifest"
+PERSISTENCE_POLICY_PATH="${REPO_ROOT}/ops/etc/persistence.manifest"
 TARGET="sop"
 DRY_RUN=0
 SCRUB=0
@@ -146,8 +146,8 @@ require_int() {
 }
 
 load_prune_policy() {
-  [[ -f "$POLICY_PATH" ]] || die "prune policy missing: ${POLICY_PATH#${REPO_ROOT}/}"
-  [[ -f "$HISTORY_POLICY_PATH" ]] || die "history policy missing: ${HISTORY_POLICY_PATH#${REPO_ROOT}/}"
+  [[ -f "$POLICY_PATH" ]] || die "retention policy missing: ${POLICY_PATH#${REPO_ROOT}/}"
+  [[ -f "$PERSISTENCE_POLICY_PATH" ]] || die "persistence policy missing: ${PERSISTENCE_POLICY_PATH#${REPO_ROOT}/}"
 
   POLICY_DEFAULT_PHASE="$(policy_scalar default_phase)"
   POLICY_APPLY_TOKEN="$(policy_scalar apply_token)"
@@ -159,23 +159,23 @@ load_prune_policy() {
   WEIGHT_HISTORICAL="$(policy_scalar weight_historical)"
   POLICY_QUARANTINE_PATH="$(policy_scalar quarantine_path)"
 
-  [[ "$POLICY_DEFAULT_PHASE" == "report" || "$POLICY_DEFAULT_PHASE" == "apply" ]] || die "invalid default_phase in PRUNE.md"
-  [[ -n "$POLICY_APPLY_TOKEN" ]] || die "missing apply_token in PRUNE.md"
+  [[ "$POLICY_DEFAULT_PHASE" == "report" || "$POLICY_DEFAULT_PHASE" == "apply" ]] || die "invalid default_phase in retention.manifest"
+  [[ -n "$POLICY_APPLY_TOKEN" ]] || die "missing apply_token in retention.manifest"
 
   require_int high_watermark "$HIGH_WATERMARK"
   require_int low_watermark "$LOW_WATERMARK"
   require_int weight_operational "$WEIGHT_OPERATIONAL"
   require_int weight_historical "$WEIGHT_HISTORICAL"
 
-  (( HIGH_WATERMARK > LOW_WATERMARK )) || die "PRUNE.md requires high_watermark > low_watermark"
-  [[ "$TARGET_SOP_TIER" == "critical" || "$TARGET_SOP_TIER" == "operational" || "$TARGET_SOP_TIER" == "historical" ]] || die "invalid target_sop_tier in PRUNE.md"
-  [[ "$TARGET_POW_TIER" == "critical" || "$TARGET_POW_TIER" == "operational" || "$TARGET_POW_TIER" == "historical" ]] || die "invalid target_pow_tier in PRUNE.md"
+  (( HIGH_WATERMARK > LOW_WATERMARK )) || die "retention.manifest requires high_watermark > low_watermark"
+  [[ "$TARGET_SOP_TIER" == "critical" || "$TARGET_SOP_TIER" == "operational" || "$TARGET_SOP_TIER" == "historical" ]] || die "invalid target_sop_tier in retention.manifest"
+  [[ "$TARGET_POW_TIER" == "critical" || "$TARGET_POW_TIER" == "operational" || "$TARGET_POW_TIER" == "historical" ]] || die "invalid target_pow_tier in retention.manifest"
 
   mapfile -t CRITICAL_PATTERNS < <(policy_patterns "## Critical Patterns")
   mapfile -t DENYLIST_PATTERNS < <(policy_patterns "## Denylist")
 
-  (( ${#CRITICAL_PATTERNS[@]} > 0 )) || die "PRUNE.md missing critical patterns"
-  (( ${#DENYLIST_PATTERNS[@]} > 0 )) || die "PRUNE.md missing denylist patterns"
+  (( ${#CRITICAL_PATTERNS[@]} > 0 )) || die "retention.manifest missing critical patterns"
+  (( ${#DENYLIST_PATTERNS[@]} > 0 )) || die "retention.manifest missing denylist patterns"
   load_storage_report_classes
   load_dump_report_classes
   load_repo_report_classes
@@ -253,15 +253,15 @@ load_policy_report_classes() {
       esac
     done
 
-    [[ -n "$class_name" ]] || die "PRUNE.md class missing class field in ${section_heading}"
-    [[ -n "$pattern" ]] || die "PRUNE.md class missing pattern field (${class_name})"
-    [[ "$tier" == "critical" || "$tier" == "operational" || "$tier" == "historical" ]] || die "PRUNE.md class has invalid tier (${class_name})"
+    [[ -n "$class_name" ]] || die "retention.manifest class missing class field in ${section_heading}"
+    [[ -n "$pattern" ]] || die "retention.manifest class missing pattern field (${class_name})"
+    [[ "$tier" == "critical" || "$tier" == "operational" || "$tier" == "historical" ]] || die "retention.manifest class has invalid tier (${class_name})"
     require_int "${section_heading}:${class_name}:weight" "$weight"
     if (( use_retention )); then
-      [[ "$retention" == "canonical" || "$retention" == "disposable" ]] || die "PRUNE.md class has invalid retention (${class_name})"
+      [[ "$retention" == "canonical" || "$retention" == "disposable" ]] || die "retention.manifest class has invalid retention (${class_name})"
     fi
     if (( use_apply )); then
-      [[ "$apply" == "0" || "$apply" == "1" ]] || die "PRUNE.md class has invalid apply flag (${class_name})"
+      [[ "$apply" == "0" || "$apply" == "1" ]] || die "retention.manifest class has invalid apply flag (${class_name})"
     fi
 
     names_ref+=("$class_name")
@@ -289,7 +289,7 @@ load_storage_report_classes() {
 
 load_dump_report_classes() {
   load_policy_report_classes \
-    "$HISTORY_POLICY_PATH" \
+    "$PERSISTENCE_POLICY_PATH" \
     "## Dump Report Classes" \
     DUMP_REPORT_CLASS_NAMES \
     DUMP_REPORT_CLASS_PATTERNS \
@@ -301,7 +301,7 @@ load_dump_report_classes() {
 
 load_repo_report_classes() {
   load_policy_report_classes \
-    "$HISTORY_POLICY_PATH" \
+    "$PERSISTENCE_POLICY_PATH" \
     "## Repo Pressure Classes" \
     REPO_REPORT_CLASS_NAMES \
     REPO_REPORT_CLASS_PATTERNS \

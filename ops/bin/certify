@@ -1462,6 +1462,7 @@ extract_commands() {
 
   while IFS= read -r line || [[ -n "$line" ]]; do
     local candidate=""
+    local first_token=""
     local trimmed
     trimmed="$(trim "$line")"
 
@@ -1508,10 +1509,10 @@ extract_commands() {
         ;;
     esac
 
-    if [[ "$candidate" =~ (^|[[:space:]])(\./)?ops/bin/certify([[:space:]]|$) ]]; then
+    if [[ "$candidate" =~ ^(\./)?ops/bin/certify([[:space:]]|$) ]]; then
       continue
     fi
-    if [[ "$candidate" =~ (^|[[:space:]])bash[[:space:]]+tools/lint/results[.]sh([[:space:]]|$) ]]; then
+    if [[ "$candidate" =~ ^bash[[:space:]]+tools/lint/results[.]sh([[:space:]]|$) ]]; then
       continue
     fi
     if [[ "$candidate" =~ (^|[[:space:]])bash[[:space:]]+tools/lint/llms[.]sh([[:space:]]|$) ]] && [[ ! -f "${REPO_ROOT}/tools/lint/llms.sh" ]]; then
@@ -1529,11 +1530,17 @@ extract_commands() {
           ;;
       esac
     fi
+    first_token="${candidate%%[[:space:]]*}"
     if [[ "$candidate" == *"{"* || "$candidate" == *"}"* || "$candidate" == *"*"* || "$candidate" == *"?"* || "$candidate" == *"["* ]]; then
-      die "unsupported verification command in DP section 3.4.5: brace/glob patterns are not allowed (${candidate})"
+      case "$first_token" in
+        grep|rg)
+          ;;
+        *)
+          die "unsupported verification command in DP section 3.4.5: brace/glob patterns are not allowed (${candidate})"
+          ;;
+      esac
     fi
 
-    first_token="${candidate%%[[:space:]]*}"
     case "$first_token" in
       git|bash|./*|comm|cat|ls|cp|mv|rm|find|sed|awk|grep|rg|echo|printf|sh|test)
         printf '%s\n' "$candidate" >> "$out_path"
