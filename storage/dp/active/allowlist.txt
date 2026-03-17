@@ -491,3 +491,5 @@ archives/surfaces/TASK-DP-OPS-0206-*.md
 archives/manifests/compile-2026-03-17T*-7ef89be2.md
 storage/handoff/CLOSING-DP-OPS-0207.md
 archives/surfaces/TASK-DP-OPS-0207-*.md
+storage/handoff/CLOSING-DP-OPS-0208.md
+archives/surfaces/TASK-DP-OPS-0208-*.md

@@ -17,6 +17,8 @@ Define the template-backed Architect stance body used by bundle output contract 
 ## Outputs
 - Rendered stance body text beginning at `Rules:`.
 - No unresolved include directives.
+- Input surface: `storage/handoff/PLAN.md` is the latest-wins plan input written by the analyst model; operator ensures valid `## Architect Handoff` fields are present before each architect run.
+- Active DP draft surface: `storage/dp/intake/<packet_id>.md` is the deterministic output target; operator saves the fenced DP draft block output there for dispatch. Packet identity is derived from the validated slice and printed in bundle `[REQUEST]` as `dp_draft_path`.
 - Output contract requires exactly one fenced markdown code block.
 - Output contract requires no text before or after the fenced code block.
 - First non-empty line inside the fenced body must start with `### DP-`.

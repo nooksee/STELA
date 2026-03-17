@@ -49,6 +49,11 @@ Current live set:
 - `storage/handoff/PLAN.md`: model output surface, latest-wins; the model writes this file after each analyst run.
 - `var/tmp/PLAN.md.prev`: disposable safety backup written by bundle before each analyst run if `storage/handoff/PLAN.md` is present. Not a certify input; prune may remove it.
 
+## Architect Profile Surfaces
+- `storage/handoff/PLAN.md`: required plan input surface; must contain `## Architect Handoff` fields with slice selection. Bundle fails closed when `--slice` is given and this file is absent.
+- `ARCHITECT-*.txt`: emitted bundle artifact containing the dump payload and stance contract.
+- `storage/dp/intake/<packet_id>.md`: deterministic active DP draft surface; derived from the validated slice packet identity and printed in bundle `[REQUEST]` as `dp_draft_path`. Architect model output is a fenced DP draft block saved here by the operator for dispatch.
+
 ## Audit Submission Identity
 - initial audit delivery: `AUDIT-*` (default; no `--rerun` flag required)
 - rerun delivery: `AUDIT-R<index>-*` (requires explicit `--rerun` flag)

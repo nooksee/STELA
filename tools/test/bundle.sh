@@ -330,22 +330,23 @@ EOF
 EOF
   cat > "${REPO_ROOT}/${AUDIT_FIXTURE_CLOSING_REL}" <<'EOF'
 Commit Message
-Bundle audit fixture
+Add test bundle audit fixture
 
 Create Pull Request (Title)
 DP-OPS-9999 TEST: bundle audit fixture
 
 Create Pull Request (Description)
-Fixture only.
+## Fixture
+Bundle audit test fixture.
 
 Confirm Merge (Commit Message)
-Bundle audit fixture
+Ship test bundle audit fixture
 
 Confirm Merge (Extended Description)
-Fixture only.
+storage/dp/active/allowlist.txt
 
 Confirm Merge (Add a Comment)
-Fixture only.
+Is this test bundle audit fixture suitable for integration testing purposes?
 EOF
   cat > "${REPO_ROOT}/${AUDIT_FIXTURE_SUPPORT_PACKET_REL}" <<'EOF'
 # Bundle Fixture Support Packet
