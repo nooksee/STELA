@@ -162,6 +162,13 @@ On success, certify moves `storage/dp/intake/DP-OPS-XXXX.md` to
 `storage/dp/processed/DP-OPS-XXXX.md` again. The `var/tmp/` staging copy is
 disposable and does not require cleanup before certify runs.
 
+5. If this is an audit resubmission (re-certify after an audit FAIL), generate the
+resubmission bundle with `--rerun` so the new artifact has a distinct `AUDIT-R<index>-*`
+name rather than overwriting the prior `AUDIT-*` artifact:
+~~~bash
+./ops/bin/bundle --profile=audit --rerun --out=auto
+~~~
+
 **Note:** Replace `DP-OPS-XXXX` with the literal DP identifier for the active packet.
 Substitute `DP-OPS-XXXX.md` accordingly in all three commands above.
 
