@@ -35,6 +35,13 @@ BUNDLE_ARCHITECT_PACKET_ID_SEED_SLICE=""
 BUNDLE_COMPAT_LEGACY_PREFIX=""
 BUNDLE_COMPAT_EMIT_LEGACY=""
 BUNDLE_ASSEMBLY_POLICY_MANIFEST=""
+BUNDLE_SMOKE_HANDOFF_ROOT=""
+BUNDLE_SMOKE_DUMP_ROOT=""
+BUNDLE_AUDIT_RESUBMISSION_PREFIX=""
+BUNDLE_AUDIT_SUBMISSION_KIND_INITIAL=""
+BUNDLE_AUDIT_SUBMISSION_KIND_RERUN=""
+BUNDLE_AUDIT_REFRESH_REASON_INITIAL=""
+BUNDLE_AUDIT_REFRESH_REASON_RERUN=""
 ASSEMBLY_SCHEMA_VERSION=""
 ASSEMBLY_REQUIRED_FIELDS=""
 ASSEMBLY_REGISTRY_AGENTS_PATH=""
@@ -50,6 +57,13 @@ ASSEMBLY_ADVISORY_MINIMUM_CLEAN_CYCLES=""
 ASSEMBLY_RUNTIME_POINTER_EMIT_MODE=""
 ASSEMBLY_RUNTIME_POINTER_FORMAT=""
 ASSEMBLY_RUNTIME_POINTER_SUFFIX=""
+BUNDLE_SUBMISSION_KIND="standard"
+BUNDLE_RESUBMISSION_INDEX="0"
+BUNDLE_SUPERSEDES_BUNDLE_REL=""
+BUNDLE_REFRESH_REASON=""
+BUNDLE_RESOLVED_OUTPUT_ABS=""
+BUNDLE_RESOLVED_OUTPUT_REL=""
+BUNDLE_AUDIT_RESOLVED_OUTPUT_REL=""
 
 bundle_usage() {
   cat <<'USAGE'
@@ -178,6 +192,13 @@ bundle_load_policy() {
     architect_packet_id_seed_slice \
     compatibility_legacy_bundle_prefix \
     compatibility_emit_legacy_bundle_artifacts \
+    smoke_handoff_root \
+    smoke_dump_root \
+    audit_resubmission_prefix \
+    audit_submission_kind_initial \
+    audit_submission_kind_rerun \
+    audit_refresh_reason_initial \
+    audit_refresh_reason_rerun \
     assembly_policy_manifest \
     handoff_omit_profiles; do
     if [[ -z "$(bundle_policy_scalar "$required_key")" ]]; then
@@ -278,6 +299,13 @@ bundle_load_policy() {
 
   BUNDLE_COMPAT_LEGACY_PREFIX="$(bundle_policy_scalar compatibility_legacy_bundle_prefix)"
   BUNDLE_COMPAT_EMIT_LEGACY="$(bundle_policy_scalar compatibility_emit_legacy_bundle_artifacts)"
+  BUNDLE_SMOKE_HANDOFF_ROOT="$(bundle_policy_scalar smoke_handoff_root)"
+  BUNDLE_SMOKE_DUMP_ROOT="$(bundle_policy_scalar smoke_dump_root)"
+  BUNDLE_AUDIT_RESUBMISSION_PREFIX="$(bundle_policy_scalar audit_resubmission_prefix)"
+  BUNDLE_AUDIT_SUBMISSION_KIND_INITIAL="$(bundle_policy_scalar audit_submission_kind_initial)"
+  BUNDLE_AUDIT_SUBMISSION_KIND_RERUN="$(bundle_policy_scalar audit_submission_kind_rerun)"
+  BUNDLE_AUDIT_REFRESH_REASON_INITIAL="$(bundle_policy_scalar audit_refresh_reason_initial)"
+  BUNDLE_AUDIT_REFRESH_REASON_RERUN="$(bundle_policy_scalar audit_refresh_reason_rerun)"
   BUNDLE_ASSEMBLY_POLICY_MANIFEST="$(bundle_policy_scalar assembly_policy_manifest)"
   [[ -n "$BUNDLE_ASSEMBLY_POLICY_MANIFEST" ]] || die "bundle policy missing required key: assembly_policy_manifest"
   ASSEMBLY_POLICY_PATH="${REPO_ROOT}/$(bundle_to_rel_path "$BUNDLE_ASSEMBLY_POLICY_MANIFEST")"
@@ -292,6 +320,13 @@ bundle_load_policy() {
       die "bundle policy has invalid compatibility flag compatibility_emit_legacy_bundle_artifacts: ${BUNDLE_COMPAT_EMIT_LEGACY}"
       ;;
   esac
+  [[ "$BUNDLE_SMOKE_HANDOFF_ROOT" == var/tmp/* ]] || die "bundle policy smoke_handoff_root must be under var/tmp/: ${BUNDLE_SMOKE_HANDOFF_ROOT}"
+  [[ "$BUNDLE_SMOKE_DUMP_ROOT" == var/tmp/* ]] || die "bundle policy smoke_dump_root must be under var/tmp/: ${BUNDLE_SMOKE_DUMP_ROOT}"
+  [[ -n "$BUNDLE_AUDIT_RESUBMISSION_PREFIX" ]] || die "bundle policy missing required key: audit_resubmission_prefix"
+  [[ -n "$BUNDLE_AUDIT_SUBMISSION_KIND_INITIAL" ]] || die "bundle policy missing required key: audit_submission_kind_initial"
+  [[ -n "$BUNDLE_AUDIT_SUBMISSION_KIND_RERUN" ]] || die "bundle policy missing required key: audit_submission_kind_rerun"
+  [[ -n "$BUNDLE_AUDIT_REFRESH_REASON_INITIAL" ]] || die "bundle policy missing required key: audit_refresh_reason_initial"
+  [[ -n "$BUNDLE_AUDIT_REFRESH_REASON_RERUN" ]] || die "bundle policy missing required key: audit_refresh_reason_rerun"
 
   omit_csv="$(bundle_policy_scalar handoff_omit_profiles)"
   BUNDLE_HANDOFF_OMIT_PROFILES=()
@@ -430,6 +465,127 @@ bundle_runtime_pointer_rel_for_artifact() {
   printf '%s' "$pointer_rel"
 }
 
+bundle_reset_submission_metadata() {
+  local resolved_profile="$1"
+
+  if [[ "$resolved_profile" == "$BUNDLE_AUDIT_PROFILE" ]]; then
+    BUNDLE_SUBMISSION_KIND="$BUNDLE_AUDIT_SUBMISSION_KIND_INITIAL"
+    BUNDLE_RESUBMISSION_INDEX="0"
+    BUNDLE_SUPERSEDES_BUNDLE_REL=""
+    BUNDLE_REFRESH_REASON="$BUNDLE_AUDIT_REFRESH_REASON_INITIAL"
+  else
+    BUNDLE_SUBMISSION_KIND="standard"
+    BUNDLE_RESUBMISSION_INDEX="0"
+    BUNDLE_SUPERSEDES_BUNDLE_REL=""
+    BUNDLE_REFRESH_REASON=""
+  fi
+}
+
+bundle_parse_audit_submission_stem() {
+  local stem="$1"
+  local audit_prefix=""
+  local suffix=""
+  local remainder=""
+  local index=""
+
+  audit_prefix="$(bundle_artifact_prefix_for_profile "$BUNDLE_AUDIT_PROFILE")"
+  case "$stem" in
+    "${BUNDLE_AUDIT_RESUBMISSION_PREFIX}"[0-9]*-*)
+      remainder="${stem#${BUNDLE_AUDIT_RESUBMISSION_PREFIX}}"
+      index="${remainder%%-*}"
+      suffix="${remainder#${index}-}"
+      [[ "$index" =~ ^[0-9]+$ && -n "$suffix" ]] || return 1
+      printf '%s\t%s' "$index" "$suffix"
+      ;;
+    "${audit_prefix}"-*)
+      suffix="${stem#${audit_prefix}-}"
+      [[ -n "$suffix" ]] || return 1
+      printf '0\t%s' "$suffix"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+bundle_resolve_audit_submission_path() {
+  local requested_rel="$1"
+  local requested_name=""
+  local requested_dir=""
+  local requested_stem=""
+  local requested_ext=""
+  local parsed=""
+  local requested_suffix=""
+  local dir_abs=""
+  local existing_path=""
+  local existing_name=""
+  local existing_stem=""
+  local existing_parsed=""
+  local existing_index=""
+  local existing_suffix=""
+  local found_existing=0
+  local highest_index=-1
+  local next_index=0
+  local supersedes_rel=""
+  local audit_prefix=""
+
+  audit_prefix="$(bundle_artifact_prefix_for_profile "$BUNDLE_AUDIT_PROFILE")"
+  requested_name="$(basename "$requested_rel")"
+  requested_dir="$(dirname "$requested_rel")"
+  requested_stem="$requested_name"
+  requested_ext=""
+  if [[ "$requested_name" == *.* ]]; then
+    requested_stem="${requested_name%.*}"
+    requested_ext=".${requested_name##*.}"
+  fi
+
+  parsed="$(bundle_parse_audit_submission_stem "$requested_stem" 2>/dev/null || true)"
+  if [[ -z "$parsed" ]]; then
+    bundle_reset_submission_metadata "$BUNDLE_AUDIT_PROFILE"
+    BUNDLE_AUDIT_RESOLVED_OUTPUT_REL="$requested_rel"
+    return 0
+  fi
+  requested_suffix="${parsed#*$'\t'}"
+  dir_abs="${REPO_ROOT}/${requested_dir}"
+  mkdir -p "$dir_abs"
+  shopt -s nullglob
+  for existing_path in "$dir_abs"/"${audit_prefix}"-*"$requested_ext" "$dir_abs"/"${BUNDLE_AUDIT_RESUBMISSION_PREFIX}"*"$requested_ext"; do
+    [[ -f "$existing_path" ]] || continue
+    existing_name="$(basename "$existing_path")"
+    existing_stem="$existing_name"
+    if [[ -n "$requested_ext" ]]; then
+      existing_stem="${existing_name%.*}"
+    fi
+    existing_parsed="$(bundle_parse_audit_submission_stem "$existing_stem" 2>/dev/null || true)"
+    [[ -n "$existing_parsed" ]] || continue
+    existing_index="${existing_parsed%%$'\t'*}"
+    existing_suffix="${existing_parsed#*$'\t'}"
+    [[ "$existing_suffix" == "$requested_suffix" ]] || continue
+    found_existing=1
+    if (( existing_index > highest_index )); then
+      highest_index="$existing_index"
+      supersedes_rel="$(bundle_to_rel_path "$existing_path")"
+    fi
+  done
+  shopt -u nullglob
+
+  if (( found_existing == 0 )); then
+    BUNDLE_SUBMISSION_KIND="$BUNDLE_AUDIT_SUBMISSION_KIND_INITIAL"
+    BUNDLE_RESUBMISSION_INDEX="0"
+    BUNDLE_SUPERSEDES_BUNDLE_REL=""
+    BUNDLE_REFRESH_REASON="$BUNDLE_AUDIT_REFRESH_REASON_INITIAL"
+    BUNDLE_AUDIT_RESOLVED_OUTPUT_REL="$(printf '%s/%s-%s%s' "$requested_dir" "$audit_prefix" "$requested_suffix" "$requested_ext")"
+    return 0
+  fi
+
+  next_index=$((highest_index + 1))
+  BUNDLE_SUBMISSION_KIND="$BUNDLE_AUDIT_SUBMISSION_KIND_RERUN"
+  BUNDLE_RESUBMISSION_INDEX="$next_index"
+  BUNDLE_SUPERSEDES_BUNDLE_REL="$supersedes_rel"
+  BUNDLE_REFRESH_REASON="$BUNDLE_AUDIT_REFRESH_REASON_RERUN"
+  BUNDLE_AUDIT_RESOLVED_OUTPUT_REL="$(printf '%s/%s%d-%s%s' "$requested_dir" "$BUNDLE_AUDIT_RESUBMISSION_PREFIX" "$next_index" "$requested_suffix" "$requested_ext")"
+}
+
 bundle_resolve_output_path() {
   local out_token="$1"
   local resolved_profile="$2"
@@ -438,6 +594,7 @@ bundle_resolve_output_path() {
   local project_name="$5"
 
   local out_rel=""
+  bundle_reset_submission_metadata "$resolved_profile"
   if [[ "$out_token" == "auto" ]]; then
     local prefix
     prefix="$(bundle_artifact_prefix_for_profile "$resolved_profile")"
@@ -450,19 +607,25 @@ bundle_resolve_output_path() {
     out_rel="$(bundle_to_rel_path "$out_token")"
   fi
 
+  if [[ "$resolved_profile" == "$BUNDLE_AUDIT_PROFILE" ]]; then
+    bundle_resolve_audit_submission_path "$out_rel"
+    out_rel="$BUNDLE_AUDIT_RESOLVED_OUTPUT_REL"
+  fi
+
   case "$out_rel" in
-    storage/handoff/*|storage/_smoke/handoff/*)
+    storage/handoff/*|${BUNDLE_SMOKE_HANDOFF_ROOT}/*)
       ;;
     *)
-      die "bundle output must be under storage/handoff/ or storage/_smoke/handoff/: ${out_rel}"
+      die "bundle output must be under storage/handoff/ or ${BUNDLE_SMOKE_HANDOFF_ROOT}/: ${out_rel}"
       ;;
   esac
 
-  if [[ "$out_rel" == storage/_smoke/handoff/* ]]; then
-    mkdir -p "${REPO_ROOT}/storage/_smoke/handoff" "${REPO_ROOT}/storage/_smoke/dumps"
+  if [[ "$out_rel" == ${BUNDLE_SMOKE_HANDOFF_ROOT}/* ]]; then
+    mkdir -p "${REPO_ROOT}/${BUNDLE_SMOKE_HANDOFF_ROOT}" "${REPO_ROOT}/${BUNDLE_SMOKE_DUMP_ROOT}"
   fi
 
-  printf '%s' "${REPO_ROOT}/${out_rel}"
+  BUNDLE_RESOLVED_OUTPUT_REL="$out_rel"
+  BUNDLE_RESOLVED_OUTPUT_ABS="${REPO_ROOT}/${out_rel}"
 }
 
 bundle_resolve_dump_output_path() {
@@ -471,22 +634,25 @@ bundle_resolve_dump_output_path() {
   local dump_scope="$3"
   local branch_safe="$4"
   local head_short="$5"
+  local resolved_profile="$6"
+  local artifact_name=""
+  local artifact_stem=""
+  local dump_root="storage/dumps"
 
-  if [[ "$out_token" == "auto" ]]; then
-    printf 'storage/dumps/dump-%s-%s-%s.txt' "$dump_scope" "$branch_safe" "$head_short"
-    return 0
-  fi
-
-  local artifact_name
   artifact_name="$(basename "$artifact_rel")"
-  local artifact_stem="$artifact_name"
+  artifact_stem="$artifact_name"
   if [[ "$artifact_stem" == *.* ]]; then
     artifact_stem="${artifact_stem%.*}"
   fi
-  if [[ "$artifact_rel" == storage/_smoke/handoff/* ]]; then
-    printf 'storage/_smoke/dumps/dump-%s-%s.txt' "$dump_scope" "$artifact_stem"
+
+  if [[ "$artifact_rel" == ${BUNDLE_SMOKE_HANDOFF_ROOT}/* ]]; then
+    dump_root="$BUNDLE_SMOKE_DUMP_ROOT"
+  fi
+
+  if [[ "$out_token" == "auto" && "$resolved_profile" != "$BUNDLE_AUDIT_PROFILE" ]]; then
+    printf '%s/dump-%s-%s-%s.txt' "$dump_root" "$dump_scope" "$branch_safe" "$head_short"
   else
-    printf 'storage/dumps/dump-%s-%s.txt' "$dump_scope" "$artifact_stem"
+    printf '%s/dump-%s-%s.txt' "$dump_root" "$dump_scope" "$artifact_stem"
   fi
 }
 
@@ -1126,10 +1292,9 @@ bundle_run() {
   rendered_stance_tmp="$(mktemp)"
   bundle_render_stance_contract_for_profile "$resolved_profile" > "$rendered_stance_tmp"
 
-  local out_abs
-  out_abs="$(bundle_resolve_output_path "$out_token" "$resolved_profile" "$branch_safe" "$head_short" "$project_name")"
-  local out_rel
-  out_rel="$(bundle_to_rel_path "$out_abs")"
+  bundle_resolve_output_path "$out_token" "$resolved_profile" "$branch_safe" "$head_short" "$project_name"
+  local out_abs="$BUNDLE_RESOLVED_OUTPUT_ABS"
+  local out_rel="$BUNDLE_RESOLVED_OUTPUT_REL"
   local artifact_prefix
   artifact_prefix="$(bundle_artifact_prefix_for_profile "$resolved_profile")"
 
@@ -1207,7 +1372,7 @@ bundle_run() {
   dump_scope="$(bundle_dump_scope_for_profile "$resolved_profile")"
   local dump_history_profile="$resolved_profile"
   local dump_payload_target_rel
-  dump_payload_target_rel="$(bundle_resolve_dump_output_path "$out_token" "$out_rel" "$dump_scope" "$branch_safe" "$head_short")"
+  dump_payload_target_rel="$(bundle_resolve_dump_output_path "$out_token" "$out_rel" "$dump_scope" "$branch_safe" "$head_short" "$resolved_profile")"
   local -a dump_args=("${REPO_ROOT}/ops/bin/dump" "--scope=${dump_scope}" "--history-profile=${dump_history_profile}" "--format=chatgpt" "--out=${dump_payload_target_rel}")
 
   local profile_disposable_output=""
@@ -1268,6 +1433,20 @@ bundle_run() {
     echo "- HEAD short hash: ${head_short}"
     echo "- STELA_TRACE_ID: ${trace_id}"
     echo "- Intent for today: ${open_intent}"
+    echo
+    echo "[SUBMISSION]"
+    echo "- kind: ${BUNDLE_SUBMISSION_KIND}"
+    echo "- resubmission_index: ${BUNDLE_RESUBMISSION_INDEX}"
+    if [[ -n "$BUNDLE_SUPERSEDES_BUNDLE_REL" ]]; then
+      echo "- supersedes: ${BUNDLE_SUPERSEDES_BUNDLE_REL}"
+    else
+      echo "- supersedes: (none)"
+    fi
+    if [[ -n "$BUNDLE_REFRESH_REASON" ]]; then
+      echo "- refresh_reason: ${BUNDLE_REFRESH_REASON}"
+    else
+      echo "- refresh_reason: (none)"
+    fi
     echo
     echo "[DUMP]"
     echo "- Scope: ${dump_scope}"
@@ -1433,6 +1612,20 @@ bundle_run() {
       echo "  \"project\": null," 
     fi
     echo "  \"bundle_path\": \"$(bundle_json_escape "$out_rel")\"," 
+    echo "  \"submission\": {"
+    echo "    \"kind\": \"$(bundle_json_escape "$BUNDLE_SUBMISSION_KIND")\","
+    echo "    \"resubmission_index\": ${BUNDLE_RESUBMISSION_INDEX},"
+    if [[ -n "$BUNDLE_SUPERSEDES_BUNDLE_REL" ]]; then
+      echo "    \"supersedes_bundle_path\": \"$(bundle_json_escape "$BUNDLE_SUPERSEDES_BUNDLE_REL")\","
+    else
+      echo "    \"supersedes_bundle_path\": null,"
+    fi
+    if [[ -n "$BUNDLE_REFRESH_REASON" ]]; then
+      echo "    \"refresh_reason\": \"$(bundle_json_escape "$BUNDLE_REFRESH_REASON")\""
+    else
+      echo "    \"refresh_reason\": null"
+    fi
+    echo "  },"
     echo "  \"artifact_naming\": {"
     echo "    \"canonical_prefix\": \"$(bundle_json_escape "$artifact_prefix")\","
     echo "    \"canonical_bundle_path\": \"$(bundle_json_escape "$out_rel")\","

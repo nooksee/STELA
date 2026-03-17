@@ -17,12 +17,12 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 ## Inputs
 - `ops/bin/bundle`
 - `archives/decisions/*.md` (for foreman valid-path intent source)
-- Bundle-generated smoke manifests under `storage/_smoke/handoff/`
+- Bundle-generated smoke manifests under `var/tmp/_smoke/handoff/`
 
 ## Outputs
 - Stdout: `PASS: bundle smoke test` on success.
 - Stderr: `FAIL:` lines for each failed assertion.
-- Cleanup behavior: removes only bundle and dump artifacts created by this test run, using exact emitted paths under `storage/_smoke/` plus temporary runtime fixtures under `storage/`.
+- Cleanup behavior: removes only bundle and dump artifacts created by this test run, using exact emitted paths under `var/tmp/_smoke/` plus temporary runtime fixtures under `storage/`.
 
 ## Invariants and failure modes
 - Valid profiles `analyst`, `architect`, `audit`, `conform`, `auto` must succeed.
@@ -31,7 +31,7 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 - Architect `--slice=` (blank) must fail.
 - Non-architect `--slice` usage must fail.
 - Architect ad hoc run (no `--slice`) must succeed.
-- Generated quarantined smoke bundle artifact path must start with `storage/_smoke/handoff/<artifact_prefix>-` where `<artifact_prefix>` is policy-mapped for the resolved profile.
+- Generated quarantined smoke bundle artifact path must start with `var/tmp/_smoke/handoff/<artifact_prefix>-` where `<artifact_prefix>` is policy-mapped for the resolved profile.
 - Manifest must include `bundle_version: "2"`.
 - Architect manifest must include `request` metadata:
   - `request.slice_id`
@@ -72,6 +72,13 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 - Audit dump manifest must report `History profile: audit`.
 - Audit dump manifest must record explicit include provenance for the current `RESULTS`, `CLOSING`, and packet-source files.
 - Audit package must include the current `RESULTS`, `CLOSING`, and packet-source files and omit unrelated disposable inputs such as `TOPIC.md` and `PLAN.md`.
+- Audit rerun smoke must prove distinct artifact identity on repeated delivery:
+  - first submission stays `AUDIT-*`
+  - second submission becomes `AUDIT-R1-*`
+  - rerun manifest records `submission.kind: audit_resubmission`
+  - rerun manifest records `submission.resubmission_index: 1`
+  - rerun manifest records `submission.supersedes_bundle_path`
+  - rerun dump payload path follows the rerun artifact stem
 - Compatibility legacy artifact outputs (`BUNDLE-*`) are asserted from manifest `artifact_naming` metadata when legacy emission is enabled by policy.
 - `auto` must resolve to a supported route (`analyst` or `architect`).
 - Foreman must fail without `--intent`.
@@ -91,7 +98,7 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
   - `validated_against` registry pointers to agents/skills/tasks registries.
 - ATS valid triplet must emit deterministic runtime pointer metadata and artifact:
   - `assembly.pointer.emitted: true`
-  - `assembly.pointer.path` under `storage/_smoke/handoff/`
+  - `assembly.pointer.path` under `var/tmp/_smoke/handoff/`
   - `assembly.pointer.format: json`
   - emitted pointer file exists and path matches manifest.
 - Non-ATS runs must not emit runtime assembly pointer artifacts:
@@ -109,7 +116,7 @@ profile routing, artifact naming, manifest invariants, and foreman guard paths.
 - Architect slice smoke must install its own deterministic `storage/handoff/PLAN.md` fixture and must not depend on whatever live handoff `PLAN.md` currently contains.
 - Auto-route smoke must control `storage/handoff/PLAN.md` state explicitly instead of inheriting incidental local residue.
 - Synthetic audit TASK fallback must live under `archives/surfaces/` so dump active-pointer inclusion sees the same path class as production.
-- Smoke bundle invocations use explicit unique output paths under `storage/_smoke/handoff/` so concurrent local gate runs do not reuse shared branch/head artifact paths or pollute operator-facing handoff roots.
+- Smoke bundle invocations use explicit unique output paths under `var/tmp/_smoke/handoff/` so concurrent local gate runs do not reuse shared branch/head artifact paths or pollute operator-facing handoff roots.
 - `--mode=certify-critical` must not run the full analyst/profile/ATS/meta matrix.
 
 ## Anecdotal Anchor
