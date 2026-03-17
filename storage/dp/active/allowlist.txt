@@ -12,7 +12,6 @@ docs/ops/specs/tools/lint/integrity.md
 docs/ops/specs/binaries/trace.md
 docs/ops/specs/binaries/decision.md
 docs/ops/specs/binaries/certify.md
-docs/ops/specs/manifests/history.md
 docs/ops/specs/manifests/persistence.md
 docs/ops/specs/manifests/retention.md
 docs/ops/specs/manifests/verification.md
@@ -52,9 +51,6 @@ llms-full.txt
 ops/lib/manifests/OPS.md
 ops/lib/manifests/CONTRACTOR.md
 ops/lib/manifests/BUNDLE.md
-ops/lib/manifests/HISTORY.md
-ops/lib/manifests/PRUNE.md
-ops/lib/manifests/VERIFY.md
 ops/etc/persistence.manifest
 ops/etc/retention.manifest
 ops/etc/verification.manifest
@@ -227,7 +223,6 @@ docs/ops/specs/tools/lint/response.md
 ops/bin/prune
 ops/lib/scripts/ledger.sh
 docs/ops/specs/binaries/prune.md
-ops/lib/manifests/PRUNE.md
 ops/lib/manifests/DEBT.md
 tools/lint/debt.sh
 ops/bin/hygiene
@@ -438,7 +433,6 @@ archives/surfaces/TASK-DP-OPS-0193-*.md
 ops/bin/certify
 ops/bin/prune
 ops/bin/trace
-ops/lib/manifests/PRUNE.md
 tools/verify.sh
 docs/ops/specs/binaries/certify.md
 docs/ops/specs/binaries/prune.md
@@ -449,8 +443,6 @@ storage/handoff/CLOSING-DP-OPS-0197.md
 storage/handoff/CLOSING-DP-OPS-0198.md
 archives/surfaces/TASK-DP-OPS-0196-*.md
 archives/surfaces/TASK-DP-OPS-0197-*.md
-ops/lib/manifests/HISTORY.md
-docs/ops/specs/manifests/history.md
 ops/lib/manifests/BUNDLE.md
 docs/ops/specs/binaries/dump.md
 docs/ops/specs/binaries/bundle.md
@@ -484,7 +476,6 @@ docs/ops/specs/tools/test/bundle.md
 docs/ops/specs/surfaces/results.md
 docs/ops/specs/surfaces/task.md
 docs/MANUAL.md
-ops/lib/manifests/VERIFY.md
 docs/ops/specs/tools/verify.md
 docs/ops/registry/lint.md
 docs/ops/registry/test.md
@@ -495,3 +486,6 @@ storage/handoff/CLOSING-DP-OPS-0202.md
 storage/handoff/CLOSING-DP-OPS-0205.md
 archives/surfaces/TASK-DP-OPS-0205-*.md
 archives/manifests/compile-2026-03-17T060937-452741d6.md
+storage/handoff/CLOSING-DP-OPS-0206.md
+archives/surfaces/TASK-DP-OPS-0206-*.md
+archives/manifests/compile-2026-03-17T*-7ef89be2.md
