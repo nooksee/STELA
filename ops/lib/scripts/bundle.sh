@@ -1580,8 +1580,10 @@ bundle_run() {
     fi
     if [[ -n "$request_packet_id" ]]; then
       echo "- packet_id: ${request_packet_id}"
+      echo "- dp_draft_path: storage/dp/intake/${request_packet_id}.md"
     else
       echo "- packet_id: (none)"
+      echo "- dp_draft_path: (none)"
     fi
     if [[ -n "$request_closing_sidecar" ]]; then
       echo "- closing_sidecar: ${request_closing_sidecar}"
@@ -1807,6 +1809,7 @@ bundle_run() {
       echo "    \"slice_validated\": true,"
       echo "    \"plan_source\": \"$(bundle_json_escape "$request_plan_source")\","
       echo "    \"packet_id\": \"$(bundle_json_escape "$request_packet_id")\","
+      echo "    \"dp_draft_path\": \"storage/dp/intake/$(bundle_json_escape "$request_packet_id").md\","
       echo "    \"closing_sidecar\": \"$(bundle_json_escape "$request_closing_sidecar")\","
       if [[ -n "$request_title_suffix" ]]; then
         echo "    \"title_suffix\": \"$(bundle_json_escape "$request_title_suffix")\","
@@ -1820,6 +1823,7 @@ bundle_run() {
       echo "    \"slice_validated\": false,"
       echo "    \"plan_source\": null,"
       echo "    \"packet_id\": null,"
+      echo "    \"dp_draft_path\": null,"
       echo "    \"closing_sidecar\": null,"
       echo "    \"title_suffix\": null,"
       echo "    \"topic_source\": \"$(bundle_json_escape "$topic_rel")\","
@@ -1829,6 +1833,7 @@ bundle_run() {
       echo "    \"slice_validated\": false,"
       echo "    \"plan_source\": null,"
       echo "    \"packet_id\": null,"
+      echo "    \"dp_draft_path\": null,"
       echo "    \"closing_sidecar\": null,"
       echo "    \"title_suffix\": null,"
       echo "    \"topic_source\": null,"

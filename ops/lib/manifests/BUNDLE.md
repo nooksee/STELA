@@ -105,6 +105,8 @@ dump_scope_foreman=core
 - Runtime derives later architect packet ids by offset within `Execution Order` in `storage/handoff/PLAN.md`.
 - `closing_sidecar` is derived as `storage/handoff/CLOSING-<packet_id>.md`.
 - `title_suffix` is derived from the active slice heading text in `storage/handoff/PLAN.md`.
+- `storage/handoff/PLAN.md` is the latest-wins architect plan input surface; the operator ensures this file has valid `## Architect Handoff` fields before each architect run.
+- `storage/dp/intake/<packet_id>.md` is the deterministic active DP draft surface; architect model output is a fenced DP draft block that the operator saves to this path for dispatch.
 - Omitted `--slice` stays ad hoc unless `## Architect Handoff` explicitly opts into safe auto-bind with one unambiguous selected slice.
 - Architect text artifacts emit a stripped active-slice projection built only from:
   - `Selected Option`

@@ -86,6 +86,12 @@ fi
 
 last_commit="$(git log -1 --oneline)"
 
+plan_surface_rel="storage/handoff/PLAN.md"
+plan_surface_status="absent"
+if [[ -f "${REPO_ROOT}/${plan_surface_rel}" ]]; then
+  plan_surface_status="present"
+fi
+
 open_out_path="storage/handoff/OPEN-${tag_prefix}${branch_safe}-${head_short}.txt"
 : > "$open_out_path"
 
@@ -187,6 +193,9 @@ EOF
 
 [NEXT OPERATOR MOVES]
 - ./ops/bin/bundle --profile=auto --out=auto
+- ./ops/bin/bundle --profile=architect --slice=<SLICE_ID> --out=auto
+  plan surface: ${plan_surface_rel} (${plan_surface_status})
+  dp draft surface: storage/dp/intake/<packet_id>.md (packet_id in bundle [REQUEST])
 - ./ops/bin/dump --scope=core --format=chatgpt
 
 [OPERATOR CONTEXT]

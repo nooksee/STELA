@@ -512,6 +512,26 @@ Surface contract:
 - `storage/handoff/PLAN.md`: latest-wins model output; overwritten after each analyst run.
 - `var/tmp/PLAN.md.prev`: disposable safety backup of the prior `PLAN.md` written by bundle before each run. Not a certify input; prune may remove it.
 
+### Architect Workflow
+Canonical operator flow for an architect session:
+
+1. Confirm `storage/handoff/PLAN.md` has a valid `## Architect Handoff` section with `Selected Slices:` and `Execution Order:` fields.
+2. Generate the architect bundle:
+~~~bash
+./ops/bin/bundle --profile=architect --slice=<SLICE_ID> --out=auto
+~~~
+3. Deliver the bundle artifact (`ARCHITECT-*.txt` or `ARCHITECT-*.tar`) to the architect model.
+4. Save the fenced DP draft from the model output to the deterministic intake path printed in the bundle `[REQUEST]` block as `dp_draft_path`:
+~~~bash
+# path is storage/dp/intake/<packet_id>.md — packet_id printed in bundle [REQUEST]
+~~~
+5. Dispatch the DP per Section 2 Dispatch Packet Mechanics.
+
+Surface contract:
+- `storage/handoff/PLAN.md`: latest-wins plan input; analyst model writes this; operator delivers it to architect as the primary handoff surface.
+- `ARCHITECT-*.txt`: emitted bundle artifact; contains the dump payload and stance contract.
+- `storage/dp/intake/<packet_id>.md`: deterministic active DP draft surface; operator saves the fenced DP draft block output here after the architect model run. Packet identity is derived from the validated slice and printed by bundle.
+
 ---
 
 ## 2. Dispatch Packet (DP) Mechanics
