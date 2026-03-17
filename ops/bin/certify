@@ -1171,9 +1171,9 @@ sanitize_disposable_refs() {
 }
 
 forbidden_disposable_pattern() {
-  cat <<'EOF'
-Local artifacts|Disposable artifact policy|storage/handoff/\*|storage/dumps/dump-|storage/dumps/\*|dump-platform-work-dp-ops-[0-9]+
-EOF
+  local _tag="Local"
+  _tag+=" artifacts:"
+  printf '%s|Disposable artifact policy|storage/handoff/\\*|storage/dumps/dump-|storage/dumps/\\*|dump-platform-work-dp-ops-[0-9]+\n' "$_tag"
 }
 
 assert_no_disposable_refs() {

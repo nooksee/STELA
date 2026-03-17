@@ -18,8 +18,9 @@ The script provides `bundle_run` plus helpers for:
    - quarantined smoke dump outputs go under `var/tmp/_smoke/dumps/`
    - audit auto output uses artifact-stem dump naming so reruns stay distinct
 8. Audit submission identity handling:
-   - initial audit delivery uses `AUDIT-*`
-   - reruns emit `AUDIT-R<index>-*`
+   - initial audit delivery uses `AUDIT-*` (default; no `--rerun` required)
+   - reruns emit `AUDIT-R<index>-*` only when `--rerun` is explicitly supplied
+   - prior local `AUDIT-*` artifacts do not force rerun identity without `--rerun`
    - manifest records submission lineage (`kind`, `resubmission_index`, `supersedes_bundle_path`, `refresh_reason`)
 9. Architect slice validation and request metadata emission.
 10. Analyst, architect, and audit exact-file disposable transport.

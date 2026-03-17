@@ -13,7 +13,7 @@ Run deterministic transport smoke for `ops/bin/bundle`: profile routing, artifac
 - `closeout-sanity`: minimal audit delivery contract, current RESULTS/CLOSING presence, and dump/profile sanity.
 - `audit-coherence`: current RESULTS, current CLOSING, active TASK leaf, and authoritative packet-source coherence.
 - `route-contract`: analyst, architect, alias, ATS, and project/foreman route behavior.
-- `rerun-lineage`: `AUDIT-*` initial delivery vs `AUDIT-R*` rerun lineage.
+- `rerun-lineage`: `AUDIT-*` initial delivery vs `AUDIT-R*` explicit rerun lineage; proves stale prior artifacts do not force rerun identity.
 
 ## Invariants and Failure Modes
 - Valid profiles `analyst`, `architect`, `audit`, `conform`, and `auto` must succeed.
@@ -27,7 +27,8 @@ Run deterministic transport smoke for `ops/bin/bundle`: profile routing, artifac
 - Audit dump payload must contain direct file blocks for current `RESULTS`, current `CLOSING`, active TASK leaf, and packet source.
 - Audit rerun smoke must prove distinct artifact identity:
   - first submission stays `AUDIT-*`
-  - second submission becomes `AUDIT-R1-*`
+  - repeat submission without `--rerun` stays `AUDIT-*` even when prior artifact exists
+  - explicit `--rerun` submission becomes `AUDIT-R1-*`
   - rerun manifest records `submission.kind: audit_resubmission`
   - rerun manifest records `submission.resubmission_index: 1`
   - rerun manifest records `submission.supersedes_bundle_path`

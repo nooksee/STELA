@@ -67,7 +67,7 @@ BUNDLE_AUDIT_RESOLVED_OUTPUT_REL=""
 
 bundle_usage() {
   cat <<'USAGE'
-Usage: ops/bin/bundle [--profile=auto|analyst|architect|audit|project|conform|hygiene|foreman] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--slice=<ID>] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
+Usage: ops/bin/bundle [--profile=auto|analyst|architect|audit|project|conform|hygiene|foreman] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--slice=<ID>] [--rerun] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
 USAGE
 }
 
@@ -510,6 +510,7 @@ bundle_parse_audit_submission_stem() {
 
 bundle_resolve_audit_submission_path() {
   local requested_rel="$1"
+  local rerun_intent="${2:-0}"
   local requested_name=""
   local requested_dir=""
   local requested_stem=""
@@ -546,6 +547,15 @@ bundle_resolve_audit_submission_path() {
     return 0
   fi
   requested_suffix="${parsed#*$'\t'}"
+  # Without explicit rerun intent, deliver as initial identity; prior artifact presence is irrelevant.
+  if (( rerun_intent == 0 )); then
+    BUNDLE_SUBMISSION_KIND="$BUNDLE_AUDIT_SUBMISSION_KIND_INITIAL"
+    BUNDLE_RESUBMISSION_INDEX="0"
+    BUNDLE_SUPERSEDES_BUNDLE_REL=""
+    BUNDLE_REFRESH_REASON="$BUNDLE_AUDIT_REFRESH_REASON_INITIAL"
+    BUNDLE_AUDIT_RESOLVED_OUTPUT_REL="$(printf '%s/%s-%s%s' "$requested_dir" "$audit_prefix" "$requested_suffix" "$requested_ext")"
+    return 0
+  fi
   dir_abs="${REPO_ROOT}/${requested_dir}"
   mkdir -p "$dir_abs"
   shopt -s nullglob
@@ -592,6 +602,7 @@ bundle_resolve_output_path() {
   local branch_safe="$3"
   local head_short="$4"
   local project_name="$5"
+  local rerun_intent="${6:-0}"
 
   local out_rel=""
   bundle_reset_submission_metadata "$resolved_profile"
@@ -608,7 +619,7 @@ bundle_resolve_output_path() {
   fi
 
   if [[ "$resolved_profile" == "$BUNDLE_AUDIT_PROFILE" ]]; then
-    bundle_resolve_audit_submission_path "$out_rel"
+    bundle_resolve_audit_submission_path "$out_rel" "$rerun_intent"
     out_rel="$BUNDLE_AUDIT_RESOLVED_OUTPUT_REL"
   fi
 
@@ -1168,6 +1179,7 @@ bundle_run() {
   local request_packet_id=""
   local request_closing_sidecar=""
   local request_title_suffix=""
+  local rerun_intent=0
 
   local arg
   for arg in "$@"; do
@@ -1203,6 +1215,9 @@ bundle_run() {
       --task-id=*)
         assembly_task_id="${arg#--task-id=}"
         [[ -n "$assembly_task_id" ]] || die "--task-id requires a value"
+        ;;
+      --rerun)
+        rerun_intent=1
         ;;
       -h|--help)
         bundle_usage
@@ -1323,6 +1338,10 @@ bundle_run() {
     route_reason="explicit profile alias: ${alias_profile_source} -> ${alias_profile_target}"
   fi
 
+  if (( rerun_intent )) && [[ "$resolved_profile" != "$BUNDLE_AUDIT_PROFILE" ]]; then
+    die "--rerun is only valid with --profile=${BUNDLE_AUDIT_PROFILE}"
+  fi
+
   if [[ -n "$request_slice_id" && "$resolved_profile" != "architect" ]]; then
     die "--slice is only valid with --profile=architect"
   fi
@@ -1349,7 +1368,7 @@ bundle_run() {
   rendered_stance_tmp="$(mktemp)"
   bundle_render_stance_contract_for_profile "$resolved_profile" > "$rendered_stance_tmp"
 
-  bundle_resolve_output_path "$out_token" "$resolved_profile" "$branch_safe" "$head_short" "$project_name"
+  bundle_resolve_output_path "$out_token" "$resolved_profile" "$branch_safe" "$head_short" "$project_name" "$rerun_intent"
   local out_abs="$BUNDLE_RESOLVED_OUTPUT_ABS"
   local out_rel="$BUNDLE_RESOLVED_OUTPUT_REL"
   local artifact_prefix
