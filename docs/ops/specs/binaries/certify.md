@@ -8,7 +8,7 @@
 ## Mechanics and Sequencing
 `ops/bin/certify` now runs in explicit phases:
 1. `startup`: parse arguments, enforce branch to packet parity, resolve output path, and validate required binaries/lints.
-2. `preflight`: validate the non-empty closing sidecar at `storage/handoff/CLOSING-<DP>.md`; resolve the active TASK source and DP block; enforce required DP section headings; extract the allowlist pointer and receipt commands; prepend and de-duplicate mandatory DP preflight commands; validate trace / OPEN prerequisites; run the negative closing-validator self-check; run the pre-command integrity gate; and write, ingest, and validate the Contractor Execution Narrative scaffold before any long replay begins.
+2. `preflight`: validate the non-empty closing sidecar at `storage/handoff/CLOSING.md`; resolve the active TASK source and DP block; enforce required DP section headings; extract the allowlist pointer and receipt commands; prepend and de-duplicate mandatory DP preflight commands; validate trace / OPEN prerequisites; run the negative closing-validator self-check; run the pre-command integrity gate; and write, ingest, and validate the Contractor Execution Narrative scaffold before any long replay begins.
 3. `replay`: execute the assembled receipt command plan in order. Certify computes a repo-relative changed-path set under its run-local `var/tmp/certify.*` directory from tracked diff plus untracked packet files. It rewrites any receipt `tools/verify.sh` invocation, including explicit `--mode=full`, to `bash tools/verify.sh --mode=certify-critical --paths-file=<repo-relative-temp-file>` so certify replays only closeout-critical and packet-local lanes instead of broad full-repo hygiene. During verification command execution, certify tracks dump invocations and resolves the latest dump manifest pointer. For addendum draft verification commands (`ops/bin/draft --addendum=... --base-dp=...`), certify prepends `DRAFT_ALLOW_DIRTY_TREE=1` at execution time so the command can be replayed inside an intentionally dirty closeout session without relaxing `ops/bin/draft` global clean-tree enforcement.
 4. `verify`: nested phase label used when the replayed command is `tools/verify.sh --mode=certify-critical`; failures in that command report as verify-phase failures instead of generic replay failures.
 5. `postflight`: run post-command integrity, active TASK packet-consistency verification, changed-file subset checks against the allowlist, and a dump-visible prune pressure report after replay completes.
@@ -61,13 +61,13 @@ Certify delegates scaffold orchestration to `ops/lib/scripts/editor.sh`. In inte
 
 The validated narrative is passed as the `CONTRACTOR_NARRATIVE` slot to both template render invocations. The narrative appears in RESULTS under `## Contractor Execution Narrative`, and no closing sidecar block is embedded in RESULTS.
 
-In Addendum Routing Mode, the binary activates when `--addendum=X` is present alongside `--dp`. It validates the addendum letter as a single uppercase character `A` through `Z` and requires `--dp` to be present. It resolves intake from `storage/dp/intake/DP-OPS-XXXX-ADDENDUM-A.md` with no fallback to the base DP intake; a missing addendum intake is a hard stop. It resolves the sidecar from `storage/handoff/CLOSING-DP-OPS-XXXX-ADDENDUM-A.md`. It calls `validate_addendum_artifact_path_consistency` in place of `validate_artifact_path_consistency` to check addendum-namespaced paths. After loading the base allowlist, it extracts the SCOPE_DELTA field from the addendum intake artifact and adds each path to the runtime allowlist entries additively; SCOPE_DELTA paths containing glob or brace expansion tokens are a hard stop. RESULTS are written to `storage/handoff/DP-OPS-XXXX-RESULTS-A.md`. On success, the addendum intake artifact is moved to `storage/dp/processed/DP-OPS-XXXX-ADDENDUM-A.md` mirroring base DP processed-move behavior. The telemetry leaf is tagged with addendum identity `DP-OPS-XXXX-ADDENDUM-A` in the `packet_id` field.
+In Addendum Routing Mode, the binary activates when `--addendum=X` is present alongside `--dp`. It validates the addendum letter as a single uppercase character `A` through `Z` and requires `--dp` to be present. It resolves intake from `storage/dp/intake/ADDENDUM.md` with no fallback to the base DP intake; a missing addendum intake is a hard stop. It resolves the sidecar from `storage/handoff/CLOSING.md`. It calls `validate_addendum_artifact_path_consistency` in place of `validate_artifact_path_consistency` to check addendum-namespaced paths. After loading the base allowlist, it extracts the SCOPE_DELTA field from the addendum intake artifact and adds each path to the runtime allowlist entries additively; SCOPE_DELTA paths containing glob or brace expansion tokens are a hard stop. RESULTS are written to `storage/handoff/RESULTS.md`. On success, the addendum intake artifact is moved to `storage/dp/processed/DP-OPS-XXXX-ADDENDUM-A.md` mirroring base DP processed-move behavior. The telemetry leaf is tagged with addendum identity `DP-OPS-XXXX-ADDENDUM-A` in the `packet_id` field.
 
 ## Anecdotal Anchor
 The DP-OPS-0074 enforcement-model gap exposed ambiguity between permissive receipt scanning and strict closeout parity controls. `ops/bin/certify` addresses that class by enforcing explicit command extraction rules, strict closing-sidecar validation, and strict non-zero termination on parity failures instead of allowing discretionary operator interpretation.
 
 ## Integrity Filter Warnings
-Certification stops on unknown arguments, packet mismatch against work-branch naming, missing closing sidecar, empty closing sidecar, missing DP block in TASK when intake fallback is not explicitly authorized, malformed allowlist pointers, unsupported command substitution or glob tokens in receipt commands, integrity lint failure, any verification command failure, invalid Freshness Stamp format, missing trace identity, pointer resolution failure, unresolved template tokens in RESULTS, results lint failure, or changed files outside the allowlist. `grep` and `rg` proof commands may carry regex metacharacters in their search pattern, but command substitution remains forbidden. The binary sanitizes disposable artifact references in command logs, but it does not permit disposable artifact references inside DP or RESULTS surfaces. Contractor narrative validation stops certification when the narrative contains placeholder text or untouched scaffold prose, is missing required subsections, or is missing required Decision Leaf field lines. Preflight failures must stop before replay; replay must not be used to discover malformed sidecar, malformed narrative, or missing trace prerequisites.
+Certification stops on unknown arguments, packet mismatch against work-branch naming, missing closing sidecar, empty closing sidecar, missing DP block in TASK when intake fallback is not explicitly authorized, malformed allowlist pointers, unsupported command substitution or glob tokens in receipt commands, integrity lint failure, any verification command failure, invalid Freshness Stamp format, missing trace identity, pointer resolution failure, unresolved template tokens in RESULTS, results lint failure, or changed files outside the allowlist. It also stops when `SoP.md` or `PoW.md` do not present exactly one current entry for the target packet before surface emission; pointer heads that still resolve to a different packet are a hard preflight stop. `grep` and `rg` proof commands may carry regex metacharacters in their search pattern, but command substitution remains forbidden. The binary sanitizes disposable artifact references in command logs, but it does not permit disposable artifact references inside DP or RESULTS surfaces. Contractor narrative validation stops certification when the narrative contains placeholder text or untouched scaffold prose, is missing required subsections, or is missing required Decision Leaf field lines. Preflight failures must stop before replay; replay must not be used to discover malformed sidecar, malformed narrative, or missing trace prerequisites.
 In addendum mode, the binary additionally stops on: `--addendum` present without `--dp`; `--addendum` value that is not a single uppercase letter; missing addendum intake artifact with no fallback; or addendum SCOPE_DELTA entries containing glob or brace expansion tokens.
 Certify also runs `./ops/bin/prune --target=dump --phase=report --dry-run` during postflight and appends the report to receipt evidence. This is observational closeout intelligence only; it does not authorize deletion of canonical dump-visible history.
 
@@ -75,23 +75,14 @@ Phase and long-pole summaries are observational only. They do not alter pass/fai
 
 ## Rerun Path
 
-When `ops/bin/certify` has already completed at least one invocation and has moved the
-intake packet from `storage/dp/intake/` to `storage/dp/processed/`, a rerun requires
-the operator to restore the intake before invoking certify again.
+When `ops/bin/certify` has already completed once, reruns operate against the active draft surface `storage/dp/intake/DP.md` while preserving packet-scoped lineage in `storage/dp/processed/DP-OPS-XXXX.md`.
 
-The restore procedure is:
-1. Copy the intake artifact from `storage/dp/processed/DP-OPS-XXXX.md` back to
-   `storage/dp/intake/DP-OPS-XXXX.md`.
-2. Move the processed copy to `var/tmp/DP-OPS-XXXX.pre-rerun-processed.md` to
-   eliminate intake/processed coexistence.
-3. Invoke certify with fallback enabled so the restored intake packet is used as the active rerun source when TASK is pointer-only: `./ops/bin/certify --dp=DP-OPS-XXXX --allow-intake-fallback --out=auto`.
+The rerun procedure is:
+1. Confirm `storage/dp/intake/DP.md` exists and contains the requested `### DP-OPS-XXXX:` heading.
+2. Invoke certify with fallback enabled so pointer-only TASK recovery can use the active draft source when needed: `./ops/bin/certify --dp=DP-OPS-XXXX --allow-intake-fallback --out=auto`.
+3. If the active draft surface is missing or no longer matches the target packet, restore `storage/dp/intake/DP.md` first, then rerun certify.
 
-The coexistence prohibition is a hard constraint: certify artifact path resolution is
-indeterminate when the same packet exists in both `storage/dp/intake/` and
-`storage/dp/processed/` simultaneously.
-
-The full procedure with literal commands is documented in `docs/MANUAL.md`
-under `### Certify Rerun (Post-Move Recovery)` in the Closeout Cycle section.
+Processed storage remains the authoritative lineage copy, but rerun ergonomics are now driven by the active latest-wins draft surface rather than a packet-scoped intake filename.
 
 The `--reuse-processed-fallback` guarded flag is not implemented in this slice.
 Binary-level rerun ergonomics are deferred to a future packet.

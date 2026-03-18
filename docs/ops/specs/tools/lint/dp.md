@@ -7,7 +7,7 @@
 
 ## Mechanics and Sequencing
 1. Resolve repository root, emit telemetry, and enforce canonical template hash parity for `ops/src/surfaces/dp.md.tpl`.
-2. Resolve input mode (`--test`, explicit path, stdin, or default `TASK.md`), including TASK pointer-head resolution and DP block extraction when the source is a TASK surface. Explicit addendum intake artifacts (`DP-OPS-XXXX-ADDENDUM-A.md`) dispatch to `lint_addendum_intake()` instead of DP structure hashing.
+2. Resolve input mode (`--test`, explicit path, stdin, or default `TASK.md`), including TASK pointer-head resolution and DP block extraction when the source is a TASK surface. The active addendum intake surface (`storage/dp/intake/ADDENDUM.md`) dispatches to `lint_addendum_intake()` instead of DP structure hashing.
 3. For DP payloads, run a provisional-marker `PROPOSED` scan as the first `lint_payload()` check before template-hash verification and structural validation. The scan normalizes each line to a candidate value (trimmed line, bullet value, or field value suffix after `:`), reports each matching line number and full offending line to stderr, and exits non-zero only when the candidate matches a disallowed provisional-marker form (`^PROPOSED-[A-Za-z0-9/._-]+$`) or begins with a bare provisional prefix (`^PROPOSED `). The canonical DP template now renders `Required Work Branch` from the proposal-specific slot `{{PROPOSED_WORK_BRANCH}}`, which produces the allowed proposal-form branch value `PROPOSED/work/...`; that slot form is not rejected by this scan. The scan must not fail when the word `PROPOSED` appears only as prose that describes the feature.
 4. Run foreign citation contamination scan against DP body text. Reject the first line containing `:contentReference[` with a deterministic line-number failure.
 5. Render canonical DP in non-strict mode, normalize both canonical and payload structures, hash both normalized forms, and fail on mismatch.
@@ -32,7 +32,7 @@
 
 1. **Non-canonical closeout phrase (FAIL):** inject `- Route to contractor ...` into §3.5 and require failure.
 2. **Work-branch coherence mismatch (FAIL):** heading id and `Required Work Branch` id fragment disagree and must fail.
-3. **Closing-sidecar coherence mismatch (FAIL):** heading id and §3.5.1 `CLOSING-DP-OPS-XXXX.md` id fragment disagree and must fail.
+3. **Closing-sidecar coherence mismatch (FAIL):** a packet-scoped legacy sidecar token in §3.5.1 carries an id fragment that disagrees with the heading id.
 
 ### Mandatory Receipt Command Shape and Sidecar Pre-population Fixtures (`--test`)
 `dp.sh --test` must include deterministic fixtures for residual T1.1 hardening:
@@ -61,8 +61,8 @@
    - derives heading packet id from the first `### DP-...:` line,
    - requires `Required Work Branch` to include the lowercase packet-id fragment (for example `DP-OPS-0176` -> `dp-ops-0176`),
    - preserves the canonical proposal-slot rendering in the branch field (`PROPOSED/work/...`) while still enforcing packet-id fragment coherence,
-   - requires a canonical closing-sidecar path token in §3.5.1 (`storage/handoff/CLOSING-DP-OPS-XXXX.md`),
-   - fails when heading id and closing-sidecar id disagree.
+   - requires a canonical closing-sidecar path token in §3.5.1 (`storage/handoff/CLOSING.md`),
+   - still rejects legacy packet-scoped sidecar tokens when their id fragment disagrees with the heading id.
 2. `check_closeout_section_shape()`:
    - extracts §3.5 body content (between `## 3.5` and `### 3.5.1`),
    - fails when §3.5 is empty,
@@ -88,7 +88,7 @@
 DP-OPS-0074 exposed an enforcement-model gap where no-argument receipt scanning and explicit certification mode did not share identical hash-parity behavior. That gap allowed a RESULTS artifact to pass without full parity enforcement, and the repair cycle introduced explicit mode-sensitive parity logic plus stricter RESULTS schema checks.
 
 ## Integrity Filter Warnings
-Template hash constants are hard-coded; any legitimate template change requires synchronized constant updates or lint will fail every packet. Delegated results lint behavior in `tools/lint/results.sh` is mode-sensitive by design: explicit path mode enforces strict `Git Hash` parity, while historical scan modes report parity skips without blocking. Dump-selection scope enforcement is grandfathered for packets before `DP-OPS-0095`, so warning-only output on older archived packets is expected until a separate migration rewrites legacy receipt commands. Allowlist validation accepts selected generated-surface wildcard families and closing-sidecar patterns, so policy expansion mistakes in that branch can widen scope unintentionally.
+Template hash constants are hard-coded; any legitimate template change requires synchronized constant updates or lint will fail every packet. Delegated results lint behavior in `tools/lint/results.sh` is mode-sensitive by design: explicit path mode enforces strict `Git Hash` parity, while historical scan modes report parity skips without blocking. Dump-selection scope enforcement is grandfathered for packets before `DP-OPS-0095`, so warning-only output on older archived packets is expected until a separate migration rewrites legacy receipt commands. Allowlist validation accepts selected generated-surface wildcard families and selected historical closing-sidecar patterns, so policy expansion mistakes in that branch can widen scope unintentionally.
 
 ## Addendum Intake
 

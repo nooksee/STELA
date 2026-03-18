@@ -8,9 +8,9 @@
 ## Mechanics and Sequencing
 1. `ledger_entry_count` counts dated entry headings (`## YYYY-MM-DD ...`) in a target ledger.
 2. `ledger_archive_plan` computes month-bucket archive targets for entries beyond `THRESHOLD` and emits an archive plan report.
-3. `validate_pow_prune_candidates` parses PoW entries beyond threshold and enforces required fields plus receipt pointers for `RESULTS`, `OPEN`, and `DUMP`.
-4. Pointer validation normalizes paths and enforces target shapes (`storage/handoff/*-RESULTS.md`, `storage/handoff/OPEN-*`, `storage/dumps/dump-*`), then verifies each target exists, is tracked, and has no staged or unstaged diff.
-5. `ledger_extract_candidates` emits normalized pointer triplets for prunable PoW entries, keyed by entry index.
+3. `validate_pow_prune_candidates` parses PoW entries beyond threshold and enforces required fields plus receipt pointers for `RESULTS` and `OPEN`; `DUMP` is optional and validated only when the entry declares it.
+4. Pointer validation normalizes paths and enforces target shapes (`storage/handoff/RESULTS.md`, legacy `storage/handoff/*-RESULTS.md`, `storage/handoff/OPEN-*`, `storage/dumps/dump-*`), then verifies each target exists. These are disposable storage artifacts, so tracked-clean working-tree status is not part of the pointer contract.
+5. `ledger_extract_candidates` emits normalized pointer sets for prunable PoW entries, keyed by entry index: always `RESULTS` + `OPEN`, plus `DUMP` only when present in the entry.
 6. `ledger_prune_surface` splits retained and archived blocks by threshold cut-line, writes retained content back to the source ledger, writes archived blocks into monthly archive files, and prints summary lines.
 
 ## Anecdotal Anchor

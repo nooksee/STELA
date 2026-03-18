@@ -917,7 +917,7 @@ EOF_ARCH_DELEGATE_SLOTS
     fi
 
     cp "$response_architect_delegate_payload" "$response_architect_delegate_sidecar_payload"
-    sed -i 's/CLOSING-DP-OPS-9999\.md/CLOSING-DP-OPS-9998.md/g' "$response_architect_delegate_sidecar_payload"
+    sed -i 's#storage/handoff/CLOSING\.md#storage/handoff/CLOSING-ALT.md#g' "$response_architect_delegate_sidecar_payload"
     {
       echo '```markdown'
       cat "$response_architect_delegate_sidecar_payload"

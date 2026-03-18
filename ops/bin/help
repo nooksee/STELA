@@ -251,7 +251,7 @@ ${bold}Closeout Sequence${reset}
    ${green}bash tools/lint/truth.sh${reset}
    ${green}bash tools/lint/style.sh${reset}
    ${green}bash tools/lint/dp.sh TASK.md${reset}
-   ${green}bash tools/lint/dp.sh storage/handoff/DP-OPS-XXXX-RESULTS.md${reset}
+   ${green}bash tools/lint/dp.sh storage/handoff/RESULTS.md${reset}
    ${green}bash tools/lint/llms.sh${reset}
 2. Record proof and history:
    - Update RESULTS receipts.

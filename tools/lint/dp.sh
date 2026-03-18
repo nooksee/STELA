@@ -20,7 +20,7 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="edf4f82bd04ee7c660c4d05b26eba2af00d4b73eff54356808b9e6eaea758b07"
+CANONICAL_DP_TEMPLATE_SHA256="a3851786404b384ba5baa547cf40b916eff984e981d5b402c0b53070dae8f3d8"
 CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/stances/addendum.md.tpl"
 CANONICAL_ADDENDUM_TEMPLATE_SHA256="715db3fae0598a85a0fa490c16f590dd08e6d6f02fa9b18224ce48625612f624"
 TEMPLATE_RENDER_BIN="ops/bin/template"
@@ -553,13 +553,13 @@ normalize_dp_structure() {
       # Canonicalize §3.5.1 closing-sidecar prose references so template/body
       # placeholders and fixture substitutions hash to the same normalized form.
       if ($0 ~ /storage\/handoff\/CLOSING-\{\{DP_ID\}\}\.md/) {
-        gsub(/storage\/handoff\/CLOSING-\{\{DP_ID\}\}\.md/, "storage/handoff/CLOSING-DP-OPS-0000.md")
+        gsub(/storage\/handoff\/CLOSING-\{\{DP_ID\}\}\.md/, "storage/handoff/CLOSING.md")
         print $0
         next
       }
 
       if ($0 ~ /storage\/handoff\/CLOSING-DP-[A-Z]+-[0-9]{4,}\.md/) {
-        gsub(/storage\/handoff\/CLOSING-DP-[A-Z]+-[0-9]{4,}\.md/, "storage/handoff/CLOSING-DP-OPS-0000.md")
+        gsub(/storage\/handoff\/CLOSING-DP-[A-Z]+-[0-9]{4,}\.md/, "storage/handoff/CLOSING.md")
         print $0
         next
       }
@@ -883,9 +883,13 @@ check_dp_packet_coherence() {
     fail "Required Work Branch must include '${expected_fragment}' to match heading id '${dp_id}'"
   fi
 
-  sidecar_path="$(grep -m1 -Eo 'storage/handoff/CLOSING-DP-[A-Z]+-[0-9]{4,}(-ADDENDUM-[A-Z]+)?\.md' "$path" || true)"
+  sidecar_path="$(grep -m1 -Eo 'storage/handoff/CLOSING\.md|storage/handoff/CLOSING-DP-[A-Z]+-[0-9]{4,}(-ADDENDUM-[A-Z]+)?\.md' "$path" || true)"
   if [[ -z "$sidecar_path" ]]; then
-    fail "missing canonical closing-sidecar path in §3.5.1 (expected storage/handoff/CLOSING-${dp_id}.md)"
+    fail "missing canonical closing-sidecar path in §3.5.1 (expected storage/handoff/CLOSING.md)"
+    return
+  fi
+
+  if [[ "$sidecar_path" == "storage/handoff/CLOSING.md" ]]; then
     return
   fi
 
@@ -967,9 +971,9 @@ check_allowlist_pointer_integrity() {
     case "$normalized" in
       storage/dp/intake/DP.md)
         ;;
-      storage/dp/intake/DP-OPS-0096-ADDENDUM-A.md)
+      storage/dp/intake/DP-*.md|storage/dp/intake/*-ADDENDUM-*.md)
         ;;
-      storage/handoff/CLOSING-DP-OPS-*.md)
+      storage/handoff/CLOSING-*.md)
         ;;
       storage/handoff/*|storage/dumps/*|storage/dp/intake/*|storage/dp/processed/*)
         fail "allowlist entry must be persistent repo state (runtime artifact prefix forbidden): ${normalized}"
@@ -991,19 +995,20 @@ check_allowlist_pointer_integrity() {
     fi
 
     if [[ ! -e "${REPO_ROOT}/${normalized}" ]]; then
-      # Allow the latest-wins DP draft surface to be absent in clean clones.
-      # This path is gitignored operator state, not durable tracked repo content.
-      if [[ "$normalized" == "storage/dp/intake/DP.md" ]]; then
+      # The active DP draft surface is disposable and gitignored; clean CI clones do
+      # not materialize it until a draft run does. Allow the canonical allowlist
+      # entry to exist without forcing presence on disk.
+      if [[ "$normalized" == storage/dp/intake/DP.md ]]; then
         continue
       fi
       # Allow closing-sidecar allowlist entries even when the runtime file is absent
       # (for example in clean CI clones where storage/handoff is gitignored).
-      if [[ "$normalized" =~ ^storage/handoff/CLOSING-DP-[A-Z]+-[0-9]{4,}(-ADDENDUM-[A-Z]+)?\.md$ ]]; then
+      if [[ "$normalized" == storage/handoff/CLOSING-*.md ]]; then
         continue
       fi
-      # Allow the DP-OPS-0099 addendum intake receipt artifact path to remain in the
-      # allowlist before certify replays the addendum draft command that materializes it.
-      if [[ "$normalized" == "storage/dp/intake/DP-OPS-0096-ADDENDUM-A.md" ]]; then
+      # Allow legacy packet-scoped intake surfaces to remain in the allowlist before
+      # current runtime commands materialize or supersede them.
+      if [[ "$normalized" == storage/dp/intake/DP-*.md || "$normalized" == storage/dp/intake/*-ADDENDUM-*.md ]]; then
         continue
       fi
       # Allow deleted tracked files to stay in the allowlist while a DP is in-flight.
@@ -1179,12 +1184,12 @@ lint_path() {
     fi
   fi
 
-  if [[ "$source_path" == *-RESULTS.md ]]; then
+  if [[ "$(basename "$source_path")" == "RESULTS.md" || "$source_path" == *-RESULTS.md ]]; then
     bash tools/lint/results.sh "$source_path"
     return $?
   fi
 
-  if [[ "$(basename "$source_path")" =~ ^DP-OPS-[0-9]{4}-ADDENDUM-[A-Z]\.md$ ]]; then
+  if [[ "$(basename "$source_path")" == "ADDENDUM.md" || "$(basename "$source_path")" =~ ^DP-OPS-[0-9]{4}-ADDENDUM-[A-Z]\.md$ ]]; then
     lint_addendum_intake "$source_path"
     return $?
   fi
@@ -1380,7 +1385,7 @@ run_test() {
     echo "FAIL: --test expected packet-coherence work-branch mismatch failure" >&2
     exit 1
   fi
-  sed -i 's#storage/handoff/CLOSING-DP-OPS-0000.md#storage/handoff/CLOSING-DP-OPS-9999.md#g' "$tmp_coherence_bad"
+  sed -i 's#storage/handoff/CLOSING.md#storage/handoff/CLOSING-DP-OPS-9999.md#g' "$tmp_coherence_bad"
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_coherence_bad" >/dev/null 2>&1; then
     rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad" "$tmp_coherence_bad"
     echo "FAIL: --test expected packet-coherence sidecar mismatch failure" >&2

@@ -8,7 +8,7 @@ Think of `TASK.md` like the control desk card that shows which packet is active 
 ## Surface Roles
 - `TASK.md`: Dispatch contract template and active thread routing surface.
 - DP body (`TASK.md` Section 3): Worker-facing executable assignment.
-- `storage/handoff/DP-OPS-XXXX-RESULTS.md`: Pointer-first execution receipt with pasted proofs and verification outputs.
+- `storage/handoff/RESULTS.md`: Pointer-first execution receipt with pasted proofs and verification outputs.
 - `OPEN` and `DUMP` artifacts: Generated state artifacts used for refresh and receipt pointers.
 
 ## Enforcement

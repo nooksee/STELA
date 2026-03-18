@@ -36,7 +36,7 @@ Bundle sits at two points in the shipping spine:
 Profile-specific explicit includes:
 - analyst: `storage/handoff/TOPIC.md`
 - architect: `storage/handoff/PLAN.md` when present
-- audit: current `storage/handoff/<DP_ID>-RESULTS.md`, `storage/handoff/CLOSING-<DP_ID>.md`, authoritative current packet source file, and existing exact-file entries from the active packet source `3.2.2 DP-Scoped Load Order`
+- audit: current `storage/handoff/RESULTS.md`, `storage/handoff/CLOSING.md`, authoritative current packet source file, and existing exact-file entries from the active packet source `3.2.2 DP-Scoped Load Order`
 
 ## Persistence-Tier Routing
 1. Bundle passes the resolved profile name into dump as `--persistence-profile=<profile>`.
@@ -66,7 +66,7 @@ Current live set:
 - `storage/handoff/PLAN.md`: required plan input surface; must contain `## Architect Handoff` fields with slice selection. Bundle fails closed when `--slice` is given and this file is absent.
 - `ARCHITECT-*.txt`: emitted bundle artifact containing the dump payload and stance contract.
 - `storage/dp/intake/DP.md`: latest-wins active DP draft surface; printed in bundle `[REQUEST]` as `dp_draft_path`. Architect model output is a fenced DP draft block saved here by the operator for dispatch.
-- `packet_id`: process identity retained in bundle `[REQUEST]` and internal packet-scoped intake/processed paths (`DP-OPS-XXXX.md`).
+- `packet_id`: process identity retained in bundle `[REQUEST]`, processed storage, audit transport, and telemetry (`DP-OPS-XXXX`).
 
 ## Audit Submission Identity
 - initial audit delivery: `AUDIT-*` (default; no `--rerun` flag required)

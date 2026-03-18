@@ -10,7 +10,7 @@
 2. Search all tracked markdown for contraction tokens using regex patterns that cover ASCII and Unicode apostrophes.
 3. Enforce anti-jargon policy by scanning case-insensitive fixed matches for every term in `JARGON_BLACKLIST`.
 4. For each spec file under `docs/ops/specs/` that contains `<!-- SPEC-SURFACE:REQUIRED -->`, require the four canonical H2 headings.
-5. Scan `storage/handoff/CLOSING-*.md` and reject duplicate opening words across Mandatory Closing Block field entries.
+5. Scan the active current closing sidecar `storage/handoff/CLOSING.md` plus legacy `storage/handoff/CLOSING-*.md` artifacts and reject duplicate opening words across Mandatory Closing Block field entries.
 6a. Check that the Confirm Merge (Add a Comment) field value ends with `?`; emit failure with filename when it does not.
 6b. Check that every non-blank line in the Confirm Merge (Extended Description) field value matches a path pattern (two or more consecutive non-path tokens on a single line is a prose failure); emit failure with filename and line number for each detected prose line.
 6c. Check that the PR Description field value contains at least one markdown construct — a heading beginning with `##`, a list item beginning with `-`, `*`, or a digit followed by `.`, or a bold span (`**`); emit failure with filename when none is found.
@@ -21,7 +21,7 @@
 DP-OPS-0082 introduced spec-surface enforcement and anti-jargon checks after repeated review churn on docs that passed operational gates but still carried ambiguous structure or promotional language. Later packets used this gate to block malformed spec edits before certification.
 
 ## Integrity Filter Warnings
-The scan set includes tracked markdown only; untracked drafts are outside enforcement until tracked. `storage/` is excluded from the bulk markdown scan. Jargon checks are fixed-string matches and can flag quoted historical text that appears in explanatory context. Spec structure checks activate only when `<!-- SPEC-SURFACE:REQUIRED -->` is present, so files without that marker are not subject to four-slot heading validation. Closing block structural checks preserve the legacy `DP-OPS-0080+` threshold guard and additionally grandfather pre-`DP-OPS-0094` handoff receipts so historical audit artifacts are not rewritten.
+The scan set includes tracked markdown only; untracked drafts are outside enforcement until tracked. `storage/` is excluded from the bulk markdown scan. Jargon checks are fixed-string matches and can flag quoted historical text that appears in explanatory context. Spec structure checks activate only when `<!-- SPEC-SURFACE:REQUIRED -->` is present, so files without that marker are not subject to four-slot heading validation. Closing block structural checks inspect the active current sidecar `storage/handoff/CLOSING.md` when present, preserve the legacy `DP-OPS-0080+` threshold guard for `CLOSING-*.md`, and additionally grandfather pre-`DP-OPS-0094` historical handoff receipts so old audit artifacts are not rewritten.
 
 ## Closing Block Structural Checks
 
@@ -33,17 +33,17 @@ The accepted closing sidecar schema is the current six-label form defined in `op
 Style.sh loads the closeout header-detection list from `ops/lib/manifests/CLOSING.md` (Section 1) and applies all three closing-block semantic checks (Conversation Starter question form, path-only `Confirm Merge (Extended Description)`, and markdown-bearing PR Description) to that current schema. Lead-word deduplication applies to recognized current-schema sidecars.
 
 ### Check 1: Conversation Starter must end in `?`
-Detection logic: Extract the first non-blank line following `Confirm Merge (Add a Comment)` in each recognized current-schema `CLOSING-*.md` file. Trim trailing whitespace. Fail if the trimmed value does not end with `?`.
+Detection logic: Extract the first non-blank line following `Confirm Merge (Add a Comment)` in the active `storage/handoff/CLOSING.md` file when present, plus any recognized current-schema legacy `CLOSING-*.md` artifacts. Trim trailing whitespace. Fail if the trimmed value does not end with `?`.
 Failure message: `CLOSING BLOCK: Conversation Starter does not end in '?'. This field must be a genuine question.`
 Rationale: A field value that does not end with `?` is a statement, not a question. The Conversation Starter field exists to prompt reviewer engagement on a specific tradeoff or risk. Statements do not fulfill that job.
 
 ### Check 2: Confirm Merge (Extended Description) must contain paths only
-Detection logic: Extract the non-blank value lines of the `Confirm Merge (Extended Description)` field block in each recognized current-schema `CLOSING-*.md` file. For each line, tokenize on whitespace. Apply the prose heuristic: if two or more consecutive tokens are present that do not begin with a letter or digit and do not contain `/`, the line is classified as prose. Fail on the first prose line detected; emit the line number and text.
+Detection logic: Extract the non-blank value lines of the `Confirm Merge (Extended Description)` field block in the active `storage/handoff/CLOSING.md` file when present, plus any recognized current-schema legacy `CLOSING-*.md` artifacts. For each line, tokenize on whitespace. Apply the prose heuristic: if two or more consecutive tokens are present that do not begin with a letter or digit and do not contain `/`, the line is classified as prose. Fail on the first prose line detected; emit the line number and text.
 Failure message: `CLOSING BLOCK: <manifest field> contains prose on line N: "<line>". This field must contain file paths only.`
 Rationale: The path-manifest field is consumed by automated tools and future archaeology. Prose in this field, even a single explanatory clause, breaks machine-readability and signals that the writer substituted explanation for path enumeration. Explanation belongs in the PR Description or equivalent narrative field.
 
 ### Check 3: PR Description must contain at least one markdown construct
-Detection logic: Extract the value block of `Create Pull Request (Description)` in each recognized current-schema `CLOSING-*.md` file. Scan for: any heading line beginning with `##`, any list item beginning with `-` or `*` followed by a space, any ordered list item beginning with a digit followed by `.` and a space, or any occurrence of `**` (bold span). Fail if none of these constructs are present in the block.
+Detection logic: Extract the value block of `Create Pull Request (Description)` in the active `storage/handoff/CLOSING.md` file when present, plus any recognized current-schema legacy `CLOSING-*.md` artifacts. Scan for: any heading line beginning with `##`, any list item beginning with `-` or `*` followed by a space, any ordered list item beginning with a digit followed by `.` and a space, or any occurrence of `**` (bold span). Fail if none of these constructs are present in the block.
 Failure message: `CLOSING BLOCK: PR Description contains no markdown constructs. Use at least one heading (##), list item (- or 1.), or bold (**) to serve the reviewer interface.`
 Rationale: The PR Description renders in the GitHub pull request interface, which supports full markdown. A plaintext paragraph in a markdown rendering surface indicates the writer used the field as a text box rather than a structured reviewer handoff. At minimum, one markdown construct is required to demonstrate intentional use of the rendering surface.
 

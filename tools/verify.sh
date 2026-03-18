@@ -523,10 +523,10 @@ fi
 
 mapfile -t tracked_intake_packets < <(
   git ls-files storage/dp/intake \
-    | awk '/^storage\/dp\/intake\/DP-[A-Z]+-[0-9]{4,}\.md$/ { print }'
+    | awk '/^storage\/dp\/intake\/(DP\.md|ADDENDUM\.md|DP-[A-Z]+-[0-9]{4,}\.md|DP-[A-Z]+-[0-9]{4,}-ADDENDUM-[A-Z]\.md)$/ { print }'
 )
 if (( ${#tracked_intake_packets[@]} > 0 )); then
-  fail "Tracked intake DP packets are forbidden; move packets to storage/dp/processed/: ${tracked_intake_packets[*]}"
+  fail "Tracked intake DP surfaces are forbidden; keep active drafts disposable in storage/dp/intake/ and move packet lineage to storage/dp/processed/: ${tracked_intake_packets[*]}"
 fi
 
 # Required resume and telemetry roots
@@ -568,11 +568,11 @@ for f in "${placeholder_required[@]}"; do
 done
 
 # Drift check: warn on unexpected clutter in storage/
-# Allowed payload items: README.md, .gitignore, handoff, dumps, dp
+# Allowed payload items: README.md, .gitignore, handoff, current, dumps, dp
 for item in storage/*; do
   name="$(basename "$item")"
   case "$name" in
-    README.md|.gitignore|handoff|dumps|dp)
+    README.md|.gitignore|handoff|current|dumps|dp)
       ;;
     *)
       warn "Storage drift: unexpected item 'storage/$name'. Keep storage/ clean."

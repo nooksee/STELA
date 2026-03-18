@@ -19,7 +19,7 @@ APPROVE_TOKEN=""
 USE_QUARANTINE=0
 QUARANTINE_PATH_OVERRIDE=""
 RESULTS_GUARD_FATAL="SAFETY VIOLATION: Uncommitted Results artifact detected. Commit or stash before pruning."
-POW_GUARD_FATAL="SAFETY VIOLATION: PoW prune requires committed RESULTS/OPEN/DUMP receipt pointers in prune-candidate entries."
+POW_GUARD_FATAL="SAFETY VIOLATION: PoW prune requires committed RESULTS/OPEN receipt pointers in prune-candidate entries; DUMP is required only when the entry declares one."
 
 POLICY_DEFAULT_PHASE=""
 POLICY_APPLY_TOKEN=""
@@ -79,8 +79,8 @@ results_guard() {
   local -a tracked_receipts=()
   mapfile -t tracked_receipts < <(
     git -C "${REPO_ROOT}" ls-files -- \
-      'storage/handoff/*-RESULTS.md' \
-      'storage/handoff/CLOSING-DP-OPS-*.md'
+      'storage/handoff/RESULTS.md' \
+      'storage/handoff/CLOSING.md'
   )
 
   for rel in "${tracked_receipts[@]}"; do
@@ -451,7 +451,7 @@ dump_inventory_stream() {
   [[ -d "${REPO_ROOT}/tools" ]] && find "${REPO_ROOT}/tools" -type f -printf 'tools/%P\t%s\n' 2>/dev/null
   [[ -d "${REPO_ROOT}/opt" ]] && find "${REPO_ROOT}/opt" -type f -printf 'opt/%P\t%s\n' 2>/dev/null
   [[ -d "${REPO_ROOT}/storage/handoff" ]] && find "${REPO_ROOT}/storage/handoff" -maxdepth 1 -type f \
-    \( -name 'TOPIC.md' -o -name 'PLAN.md' -o -name '*-RESULTS.md' -o -name 'CLOSING-DP-OPS-*.md' \) \
+    \( -name 'TOPIC.md' -o -name 'PLAN.md' -o -name 'RESULTS.md' -o -name 'CLOSING.md' \) \
     -printf 'storage/handoff/%P\t%s\n' 2>/dev/null
 }
 
@@ -639,7 +639,11 @@ run_target() {
     # Validate pointer triples for rows that would be pruned.
     while IFS=$'\t' read -r entry_index results_path open_path dump_path; do
       [[ -n "$entry_index" ]] || continue
-      echo "PoW candidate #${entry_index}: ${results_path} | ${open_path} | ${dump_path}"
+      if [[ -n "$dump_path" ]]; then
+        echo "PoW candidate #${entry_index}: ${results_path} | ${open_path} | ${dump_path}"
+      else
+        echo "PoW candidate #${entry_index}: ${results_path} | ${open_path}"
+      fi
     done < <(ledger_extract_candidates "$POW_PATH" "$SOP_PATH" "$keep_count")
   fi
 

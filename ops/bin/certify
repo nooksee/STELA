@@ -13,6 +13,10 @@ RESULTS_LINT="${REPO_ROOT}/tools/lint/results.sh"
 HANDOFF_DIR="${REPO_ROOT}/storage/handoff"
 DP_INTAKE_DIR="${REPO_ROOT}/storage/dp/intake"
 DP_PROCESSED_DIR="${REPO_ROOT}/storage/dp/processed"
+ACTIVE_DP_REL="storage/dp/intake/DP.md"
+ACTIVE_ADDENDUM_REL="storage/dp/intake/ADDENDUM.md"
+ACTIVE_RESULTS_REL="storage/handoff/RESULTS.md"
+ACTIVE_CLOSING_REL="storage/handoff/CLOSING.md"
 LOGS_DIR="${REPO_ROOT}/logs"
 TELEMETRY_HEAD_PATH="${LOGS_DIR}/certify.telemetry.head"
 SURFACE_ARCHIVE_DIR="${REPO_ROOT}/archives/surfaces"
@@ -210,9 +214,11 @@ load_allowlist_entries() {
     case "$entry" in
       storage/dp/intake/DP.md)
         ;;
+      storage/dp/intake/DP-*.md)
+        ;;
       storage/dp/intake/*-ADDENDUM-*.md)
         ;;
-      storage/handoff/CLOSING-DP-OPS-*.md)
+      storage/handoff/CLOSING-*.md)
         ;;
       storage/handoff/*|storage/dumps/*|storage/dp/intake/*|storage/dp/processed/*)
         die "allowlist entry must be persistent repo state (runtime artifact prefix forbidden): ${entry}"
@@ -344,6 +350,63 @@ read_surface_head_pointer_from_committed_head() {
   local target_path="${REPO_ROOT}/${pointer_path}"
   [[ -f "$target_path" ]] || die "${surface_rel_path} committed HEAD pointer target missing: ${pointer_path}"
   printf '%s' "$pointer_path"
+}
+
+extract_surface_entry_header_packet_id() {
+  local surface_path="$1"
+  awk '
+    BEGIN { in_frontmatter=0 }
+    NR == 1 && $0 == "---" { in_frontmatter=1; next }
+    in_frontmatter && $0 == "---" { in_frontmatter=0; next }
+    in_frontmatter { next }
+    /^##[[:space:]]+/ {
+      if (match($0, /DP-[A-Z]+-[0-9]{4,}/)) {
+        print substr($0, RSTART, RLENGTH)
+        exit
+      }
+    }
+  ' "$surface_path"
+}
+
+count_surface_entry_headers() {
+  local surface_path="$1"
+  awk '
+    BEGIN { in_frontmatter=0 }
+    NR == 1 && $0 == "---" { in_frontmatter=1; next }
+    in_frontmatter && $0 == "---" { in_frontmatter=0; next }
+    in_frontmatter { next }
+    /^##[[:space:]]+/ { count++ }
+    END { print count + 0 }
+  ' "$surface_path"
+}
+
+validate_surface_head_authored_for_packet() {
+  local surface_abs_path="$1"
+  local expected_packet_id="$2"
+  local surface_rel_path="${surface_abs_path#${REPO_ROOT}/}"
+  local source_path="$surface_abs_path"
+  local source_rel_path="$surface_rel_path"
+  local head_pointer=""
+
+  if head_pointer="$(read_surface_head_pointer "$surface_abs_path")"; then
+    source_path="${REPO_ROOT}/${head_pointer}"
+    source_rel_path="$head_pointer"
+  fi
+
+  local entry_count
+  entry_count="$(count_surface_entry_headers "$source_path")"
+  [[ "$entry_count" == "1" ]] || die "${surface_rel_path} current source must contain exactly one entry before certify: source=${source_rel_path} entry_count=${entry_count}"
+
+  local body_packet_id
+  body_packet_id="$(trim "$(extract_surface_entry_header_packet_id "$source_path")")"
+  [[ -n "$body_packet_id" ]] || die "${surface_rel_path} current source is missing a DP entry header: source=${source_rel_path}"
+
+  if [[ "$body_packet_id" != "$expected_packet_id" ]]; then
+    if [[ -n "$head_pointer" ]]; then
+      die "${surface_rel_path} still points at ${body_packet_id}; author the current ${expected_packet_id} single-entry head before certify"
+    fi
+    die "${surface_rel_path} current entry does not match ${expected_packet_id}; author the current single-entry head before certify"
+  fi
 }
 
 extract_markdown_body_for_snapshot() {
@@ -661,34 +724,26 @@ EOF
 
 validate_artifact_path_consistency() {
   local dp_id="$1"
-  local dp_intake_rel="storage/dp/intake/${dp_id}.md"
-  local closing_rel="storage/handoff/CLOSING-${dp_id}.md"
-  local results_rel="storage/handoff/${dp_id}-RESULTS.md"
+  local dp_intake_rel="$ACTIVE_DP_REL"
+  local closing_rel="$ACTIVE_CLOSING_REL"
+  local results_rel="$ACTIVE_RESULTS_REL"
+  local processed_rel="storage/dp/processed/${dp_id}.md"
 
   [[ -f "${REPO_ROOT}/${dp_intake_rel}" ]] || die "missing canonical intake DP path: ${dp_intake_rel}"
   [[ -f "${REPO_ROOT}/${closing_rel}" ]] || die "missing canonical closing sidecar path: ${closing_rel}"
+  grep -Eq "^###[[:space:]]+${dp_id}:" "${REPO_ROOT}/${dp_intake_rel}" \
+    || die "active DP surface does not contain expected packet heading: ${dp_id}"
 
   [[ ! -f "${REPO_ROOT}/${dp_id}.md" ]] || die "non-canonical root DP variant detected: ${dp_id}.md"
   [[ ! -f "${REPO_ROOT}/CLOSING-${dp_id}.md" ]] || die "non-canonical root closing variant detected: CLOSING-${dp_id}.md"
   [[ ! -f "${REPO_ROOT}/${dp_id}-RESULTS.md" ]] || die "non-canonical root results variant detected: ${dp_id}-RESULTS.md"
 
-  local -a dp_matches=()
-  local -a closing_matches=()
-  mapfile -t dp_matches < <(find "$REPO_ROOT" -type f -name "${dp_id}.md" -printf '%P\n' | sort)
-  mapfile -t closing_matches < <(find "$REPO_ROOT" -type f -name "CLOSING-${dp_id}.md" -printf '%P\n' | sort)
-
-  if (( ${#dp_matches[@]} != 1 )) || [[ "${dp_matches[0]}" != "$dp_intake_rel" ]]; then
-    die "DP artifact path consistency failed for ${dp_id}.md (expected only ${dp_intake_rel})"
-  fi
-  if (( ${#closing_matches[@]} != 1 )) || [[ "${closing_matches[0]}" != "$closing_rel" ]]; then
-    die "closing artifact path consistency failed for CLOSING-${dp_id}.md (expected only ${closing_rel})"
-  fi
-
   cat <<EOF
 Artifact Path Consistency: PASS
 - Intake DP path: ${dp_intake_rel}
 - Closing sidecar path: ${closing_rel}
-- Expected RESULTS path: ${results_rel}
+- Active RESULTS path: ${results_rel}
+- Processed packet path: ${processed_rel}
 - Root-level lookalike variants absent: yes
 EOF
 }
@@ -697,12 +752,15 @@ validate_addendum_artifact_path_consistency() {
   local dp_id="$1"
   local addendum_id="$2"
   local addendum_label="ADDENDUM-${addendum_id}"
-  local intake_rel="storage/dp/intake/${dp_id}-${addendum_label}.md"
-  local closing_rel="storage/handoff/CLOSING-${dp_id}-${addendum_label}.md"
-  local results_rel="storage/handoff/${dp_id}-RESULTS-${addendum_id}.md"
+  local intake_rel="$ACTIVE_ADDENDUM_REL"
+  local closing_rel="$ACTIVE_CLOSING_REL"
+  local results_rel="$ACTIVE_RESULTS_REL"
+  local processed_rel="storage/dp/processed/${dp_id}-${addendum_label}.md"
 
   [[ -f "${REPO_ROOT}/${intake_rel}" ]] || die "missing canonical addendum intake path: ${intake_rel}"
   [[ -f "${REPO_ROOT}/${closing_rel}" ]] || die "missing canonical addendum closing sidecar path: ${closing_rel}"
+  grep -Eq "^###[[:space:]]+Addendum[[:space:]]+${addendum_id}[[:space:]]+to[[:space:]]+${dp_id}$" "${REPO_ROOT}/${intake_rel}" \
+    || die "active addendum surface does not contain expected heading for ${dp_id} addendum ${addendum_id}"
 
   [[ ! -f "${REPO_ROOT}/${dp_id}-${addendum_label}.md" ]] \
     || die "non-canonical root addendum DP variant detected: ${dp_id}-${addendum_label}.md"
@@ -715,7 +773,8 @@ validate_addendum_artifact_path_consistency() {
 Addendum Artifact Path Consistency: PASS
 - Addendum intake path: ${intake_rel}
 - Addendum closing sidecar path: ${closing_rel}
-- Expected addendum RESULTS path: ${results_rel}
+- Active addendum RESULTS path: ${results_rel}
+- Processed addendum path: ${processed_rel}
 - Root-level lookalike variants absent: yes
 EOF
 }
@@ -727,7 +786,10 @@ move_dp_packet_to_processed() {
   if [[ -n "$addendum_id" ]]; then
     packet_name="${dp_id}-ADDENDUM-${addendum_id}.md"
   fi
-  local intake_rel="storage/dp/intake/${packet_name}"
+  local intake_rel="$ACTIVE_DP_REL"
+  if [[ -n "$addendum_id" ]]; then
+    intake_rel="$ACTIVE_ADDENDUM_REL"
+  fi
   local processed_rel="storage/dp/processed/${packet_name}"
   local intake_abs="${REPO_ROOT}/${intake_rel}"
   local processed_abs="${REPO_ROOT}/${processed_rel}"
@@ -738,8 +800,8 @@ move_dp_packet_to_processed() {
   fi
 
   mkdir -p "$DP_PROCESSED_DIR"
-  mv "$intake_abs" "$processed_abs"
-  printf 'DP packet moved: %s -> %s\n' "$intake_rel" "$processed_rel"
+  cp "$intake_abs" "$processed_abs"
+  printf 'DP packet copied: %s -> %s\n' "$intake_rel" "$processed_rel"
 }
 
 resolve_authoritative_dp_source_for_results() {
@@ -751,16 +813,9 @@ resolve_authoritative_dp_source_for_results() {
     packet_name="${dp_id}-ADDENDUM-${addendum_id}.md"
   fi
 
-  local intake_rel="storage/dp/intake/${packet_name}"
   local processed_rel="storage/dp/processed/${packet_name}"
 
   if [[ -f "${REPO_ROOT}/${processed_rel}" ]]; then
-    printf '%s' "$processed_rel"
-    return 0
-  fi
-  if [[ -f "${REPO_ROOT}/${intake_rel}" ]]; then
-    # Successful certify moves intake packets to processed. RESULTS should record
-    # the authoritative packet-source path that survives into the delivered packet.
     printf '%s' "$processed_rel"
     return 0
   fi
@@ -1711,16 +1766,16 @@ mkdir -p "${HANDOFF_DIR}"
 mkdir -p "${SURFACE_ARCHIVE_DIR}"
 
 if [[ -n "$ADDENDUM_ID" ]]; then
-  ADDENDUM_INTAKE_PATH="${DP_INTAKE_DIR}/${DP_ID}-ADDENDUM-${ADDENDUM_ID}.md"
-  CLOSING_PATH="${HANDOFF_DIR}/CLOSING-${DP_ID}-ADDENDUM-${ADDENDUM_ID}.md"
+  ADDENDUM_INTAKE_PATH="${REPO_ROOT}/${ACTIVE_ADDENDUM_REL}"
+  CLOSING_PATH="${REPO_ROOT}/${ACTIVE_CLOSING_REL}"
   if [[ -z "$OUT_PATH" ]]; then
-    OUT_PATH="${HANDOFF_DIR}/${DP_ID}-RESULTS-${ADDENDUM_ID}.md"
+    OUT_PATH="${REPO_ROOT}/${ACTIVE_RESULTS_REL}"
   fi
 else
   ADDENDUM_INTAKE_PATH=""
-  CLOSING_PATH="${HANDOFF_DIR}/CLOSING-${DP_ID}.md"
+  CLOSING_PATH="${REPO_ROOT}/${ACTIVE_CLOSING_REL}"
   if [[ -z "$OUT_PATH" ]]; then
-    OUT_PATH="${HANDOFF_DIR}/${DP_ID}-RESULTS.md"
+    OUT_PATH="${REPO_ROOT}/${ACTIVE_RESULTS_REL}"
   fi
 fi
 [[ -f "$CLOSING_PATH" ]] || die "missing closing block sidecar: ${CLOSING_PATH#${REPO_ROOT}/}"
@@ -1756,16 +1811,11 @@ if [[ -n "$ADDENDUM_ID" ]]; then
 else
   TASK_SOURCE_PATH="$(resolve_task_source_path)"
   task_line_count="$(awk 'END { print NR }' "$TASK_PATH")"
-  FALLBACK_DP_PATH="${DP_INTAKE_DIR}/${DP_ID}.md"
+  FALLBACK_DP_PATH="${REPO_ROOT}/${ACTIVE_DP_REL}"
 
   if [[ "$ALLOW_INTAKE_FALLBACK" == "1" && "$task_line_count" == "1" && -f "$FALLBACK_DP_PATH" ]]; then
-    mapfile -t intake_packets < <(find "$DP_INTAKE_DIR" -maxdepth 1 -type f -name 'DP-*.md' -printf '%f\n' | sort)
-    intake_packet=""
-    for intake_packet in "${intake_packets[@]}"; do
-      if [[ "$intake_packet" != "${DP_ID}.md" ]]; then
-        die "intake fallback blocked: non-target packet present in intake (${intake_packet})"
-      fi
-    done
+    grep -Eq "^###[[:space:]]+${DP_ID}:" "$FALLBACK_DP_PATH" \
+      || die "intake fallback blocked: active DP draft does not match ${DP_ID}"
     cp "$FALLBACK_DP_PATH" "$DP_BLOCK_PATH"
     DP_SOURCE="${FALLBACK_DP_PATH#${REPO_ROOT}/}"
   else
@@ -1781,14 +1831,9 @@ else
           die "DP section '${DP_ID}' not found in TASK.md; intake fallback is disabled (pass --allow-intake-fallback to override)"
         fi
       fi
-      mapfile -t intake_packets < <(find "$DP_INTAKE_DIR" -maxdepth 1 -type f -name 'DP-*.md' -printf '%f\n' | sort)
-      intake_packet=""
-      for intake_packet in "${intake_packets[@]}"; do
-        if [[ "$intake_packet" != "${DP_ID}.md" ]]; then
-          die "intake fallback blocked: non-target packet present in intake (${intake_packet})"
-        fi
-      done
       [[ -f "$FALLBACK_DP_PATH" ]] || die "DP section '${DP_ID}' not found in TASK.md and fallback intake is missing: ${FALLBACK_DP_PATH#${REPO_ROOT}/}"
+      grep -Eq "^###[[:space:]]+${DP_ID}:" "$FALLBACK_DP_PATH" \
+        || die "intake fallback blocked: active DP draft does not match ${DP_ID}"
       cp "$FALLBACK_DP_PATH" "$DP_BLOCK_PATH"
       DP_SOURCE="${FALLBACK_DP_PATH#${REPO_ROOT}/}"
     fi
@@ -1865,6 +1910,8 @@ if [[ -n "$ADDENDUM_ID" ]]; then
   ARTIFACT_PATH_VALIDATION_OUTPUT="$(validate_addendum_artifact_path_consistency "$DP_ID" "$ADDENDUM_ID")"
 else
   ARTIFACT_PATH_VALIDATION_OUTPUT="$(validate_artifact_path_consistency "$DP_ID")"
+  validate_surface_head_authored_for_packet "$SOP_SURFACE_PATH" "$DP_ID"
+  validate_surface_head_authored_for_packet "$POW_SURFACE_PATH" "$DP_ID"
 fi
 
 TRACE_ID="$(resolve_trace_id)"

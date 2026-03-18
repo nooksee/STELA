@@ -25,17 +25,17 @@
   - `Base HEAD`
   - `Scope`
   - `Target Files allowlist`
-  - `Receipt pointers` (`RESULTS`, `OPEN`, `DUMP`)
+  - `Receipt pointers` (`RESULTS`, `OPEN`; `DUMP` only when the packet explicitly emitted a canonical dump artifact before certify)
   - `Notes`
 - Receipt pointer expectations:
-  - `RESULTS`: `storage/handoff/DP-OPS-XXXX-RESULTS.md`
+  - `RESULTS`: `storage/handoff/RESULTS.md`
   - `OPEN`: `storage/handoff/OPEN-*.txt`
-  - `DUMP`: `storage/dumps/dump-*.txt`
+  - `DUMP`: optional `storage/dumps/dump-*.txt` when the current packet intentionally emitted a canonical dump artifact before certify
 
 ## Operator Guidance
 - Author PoW entry content before running `ops/bin/certify`.
 - The pre-certify single-entry-head authoring rule and a worked example are documented in `docs/MANUAL.md` in the Log step section of the Closeout Cycle.
 - Treat `PoW.md` and `archives/surfaces/PoW-*.md` as generated surfaces once certify snapshots are emitted.
 - Do not embed raw OPEN or DUMP payloads inside PoW entries.
-- Do not reproduce the verification command list in PoW entries; the receipt pointers are sufficient.
+- Do not reproduce the full verification command list in PoW entries; `RESULTS.md` is the SSOT for command-by-command proof.
 - `Notes` are artifact-level context only (scope anomalies affecting the artifact inventory). Execution narrative and anomaly resolution belong in RESULTS Contractor Execution Narrative.

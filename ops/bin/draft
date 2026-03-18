@@ -374,10 +374,10 @@ render_dp() {
 
 base_dp_source_path() {
   local base_dp="$1"
-  local intake_path="$REPO_ROOT/storage/dp/intake/${base_dp}.md"
+  local intake_path="$REPO_ROOT/storage/dp/intake/DP.md"
   local processed_path="$REPO_ROOT/storage/dp/processed/${base_dp}.md"
 
-  if [[ -f "$intake_path" ]]; then
+  if [[ -f "$intake_path" ]] && grep -Eq "^###[[:space:]]+${base_dp}:" "$intake_path"; then
     printf '%s' "$intake_path"
     return 0
   fi
@@ -788,8 +788,8 @@ if (( ADDENDUM_MODE )); then
 
   mkdir -p "$REPO_ROOT/storage/dp/intake" "$REPO_ROOT/storage/handoff"
 
-  addendum_intake_path="$REPO_ROOT/storage/dp/intake/${BASE_DP_ID}-ADDENDUM-${ADDENDUM_LETTER}.md"
-  addendum_closing_path="$REPO_ROOT/storage/handoff/CLOSING-${BASE_DP_ID}-ADDENDUM-${ADDENDUM_LETTER}.md"
+  addendum_intake_path="$REPO_ROOT/storage/dp/intake/ADDENDUM.md"
+  addendum_closing_path="$REPO_ROOT/storage/handoff/CLOSING.md"
 
   render_addendum_intake "$BASE_DP_ID" "$ADDENDUM_LETTER" "$SLOTS_FILE" "$addendum_intake_path"
   render_closing_sidecar "${BASE_DP_ID} Addendum ${ADDENDUM_LETTER}" "$addendum_closing_path"
@@ -805,17 +805,14 @@ require_task_markers
 
 mkdir -p "$REPO_ROOT/storage/dp/intake"
 
-intake_path="$REPO_ROOT/storage/dp/intake/${DP_ID}.md"
 active_intake_path="$REPO_ROOT/storage/dp/intake/DP.md"
 rendered_path="$(mktemp)"
 
 render_dp "$rendered_path"
-cp "$rendered_path" "$intake_path"
 cp "$rendered_path" "$active_intake_path"
 update_task "$rendered_path"
 rm -f "$rendered_path"
 
-echo "Wrote: ${intake_path#${REPO_ROOT}/}"
 echo "Updated active draft: ${active_intake_path#${REPO_ROOT}/}"
 echo "Updated: TASK.md"
 exit 0
