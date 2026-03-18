@@ -3,7 +3,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=/dev/null
+source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 cd "${REPO_ROOT}"
+
+trap 'emit_binary_leaf "hooks" "finish"' EXIT
+emit_binary_leaf "hooks" "start"
 
 git config core.hooksPath .github/hooks
 echo "Hooks configured: core.hooksPath = .github/hooks"
