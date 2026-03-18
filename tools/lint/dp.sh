@@ -991,6 +991,11 @@ check_allowlist_pointer_integrity() {
     fi
 
     if [[ ! -e "${REPO_ROOT}/${normalized}" ]]; then
+      # Allow the latest-wins DP draft surface to be absent in clean clones.
+      # This path is gitignored operator state, not durable tracked repo content.
+      if [[ "$normalized" == "storage/dp/intake/DP.md" ]]; then
+        continue
+      fi
       # Allow closing-sidecar allowlist entries even when the runtime file is absent
       # (for example in clean CI clones where storage/handoff is gitignored).
       if [[ "$normalized" =~ ^storage/handoff/CLOSING-DP-[A-Z]+-[0-9]{4,}(-ADDENDUM-[A-Z]+)?\.md$ ]]; then
