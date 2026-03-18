@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+hook_fail() {
+  echo "ERROR [pre-commit]: $*" >&2
+  exit 1
+}
+
+repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || hook_fail "unable to resolve repository root"
+cd "${repo_root}"
+
+branch="$(git rev-parse --abbrev-ref HEAD)"
+
+if [[ "$branch" == "main" ]]; then
+  hook_fail "direct commits to main are forbidden (PoT §6.2.3). Work on a work/* branch."
+fi
+
+if [[ "$branch" != "work/"* ]]; then
+  hook_fail "commits must be on a work/* branch (PoT §6.2.3). Current branch: ${branch}"
+fi
+
+bash "${BASH_SOURCE[0]%/*}/llms"

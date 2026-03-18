@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+cd "${REPO_ROOT}"
+
+git config core.hooksPath .github/hooks
+echo "Hooks configured: core.hooksPath = .github/hooks"
+echo ""
+echo "Active hooks:"
+echo "  pre-commit  PoT branch guard (work/* only, no main) + llms refresh"
+echo "  pre-push    main push guard (no direct push to main)"
