@@ -995,6 +995,12 @@ check_allowlist_pointer_integrity() {
     fi
 
     if [[ ! -e "${REPO_ROOT}/${normalized}" ]]; then
+      # The active DP draft surface is disposable and gitignored; clean CI clones do
+      # not materialize it until a draft run does. Allow the canonical allowlist
+      # entry to exist without forcing presence on disk.
+      if [[ "$normalized" == storage/dp/intake/DP.md ]]; then
+        continue
+      fi
       # Allow closing-sidecar allowlist entries even when the runtime file is absent
       # (for example in clean CI clones where storage/handoff is gitignored).
       if [[ "$normalized" == storage/handoff/CLOSING-*.md ]]; then
