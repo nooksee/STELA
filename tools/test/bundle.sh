@@ -1044,6 +1044,7 @@ test_architect_slice_valid() {
   local request_validated_val=""
   local request_source_val=""
   local request_packet_id_val=""
+  local request_dp_draft_path_val=""
   local request_sidecar_val=""
   local request_title_suffix_val=""
   local package_listing=""
@@ -1072,6 +1073,9 @@ test_architect_slice_valid() {
   if ! grep -Fq 'packet_id: DP-OPS-0189' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
     fail "architect bundle text missing packet_id: DP-OPS-0189"
   fi
+  if ! grep -Fq 'dp_draft_path: storage/dp/intake/DP.md' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect bundle text missing active dp_draft_path marker"
+  fi
   if ! grep -Fq 'closing_sidecar: storage/handoff/CLOSING-DP-OPS-0189.md' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
     fail "architect bundle text missing closing sidecar marker"
   fi
@@ -1098,6 +1102,7 @@ test_architect_slice_valid() {
   request_validated_val="$(extract_request_field "$LAST_MANIFEST" "slice_validated")"
   request_source_val="$(extract_request_field "$LAST_MANIFEST" "plan_source")"
   request_packet_id_val="$(extract_request_field "$LAST_MANIFEST" "packet_id")"
+  request_dp_draft_path_val="$(extract_request_field "$LAST_MANIFEST" "dp_draft_path")"
   request_sidecar_val="$(extract_request_field "$LAST_MANIFEST" "closing_sidecar")"
   request_title_suffix_val="$(extract_request_field "$LAST_MANIFEST" "title_suffix")"
 
@@ -1112,6 +1117,9 @@ test_architect_slice_valid() {
   fi
   if [[ "$request_packet_id_val" != "DP-OPS-0189" ]]; then
     fail "architect request.packet_id mismatch: expected DP-OPS-0189, got ${request_packet_id_val}"
+  fi
+  if [[ "$request_dp_draft_path_val" != "storage/dp/intake/DP.md" ]]; then
+    fail "architect request.dp_draft_path mismatch: expected storage/dp/intake/DP.md, got ${request_dp_draft_path_val}"
   fi
   if [[ "$request_sidecar_val" != "storage/handoff/CLOSING-DP-OPS-0189.md" ]]; then
     fail "architect request.closing_sidecar mismatch: expected storage/handoff/CLOSING-DP-OPS-0189.md, got ${request_sidecar_val}"
@@ -1875,6 +1883,40 @@ run_certify_critical_suite() {
   test_audit_contract
 }
 
+test_spine_block_contract() {
+  # Verify [SPINE] block is present in bundle text output and contains expected contract lines.
+  ensure_analyst_topic_fixture
+
+  run_capture "${REPO_ROOT}/ops/bin/bundle" --profile=analyst "--out=${SMOKE_HANDOFF_ROOT}/ANALYST-spine-smoke-$$-manifest.txt"
+  if (( RUN_STATUS != 0 )); then
+    fail "spine block contract: analyst run failed"
+    echo "$RUN_OUTPUT" >&2
+    return
+  fi
+
+  track_bundle_outputs
+  [[ -n "$LAST_ARTIFACT" ]] || return
+
+  if ! grep -Fq '[SPINE]' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "spine block contract: [SPINE] block missing from analyst bundle text"
+  fi
+  if ! grep -Fq -- '- Main chain: TOPIC.md -> PLAN.md -> storage/dp/intake/DP.md -> execution -> RESULTS + CLOSING -> audit bundle -> merge' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "spine block contract: main chain line missing or incorrect"
+  fi
+  if ! grep -Fq -- '- Active draft surface: storage/dp/intake/DP.md (latest-wins); packet identity remains DP-OPS-XXXX.' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "spine block contract: active draft identity line missing or incorrect"
+  fi
+  if ! grep -Fq -- '- Certify requires STELA_TRACE_ID from OPEN artifact or STELA_TRACE_ID env var.' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "spine block contract: certify STELA_TRACE_ID line missing"
+  fi
+  if ! grep -Fq -- '- Audit dump: ./ops/bin/bundle --profile=audit --out=auto (separate from operator session refresh)' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "spine block contract: audit dump line missing or incorrect"
+  fi
+  if ! grep -Fq -- '- Secondary lanes: foreman/addendum (intervention), conform/conformist (normalization), execution-decision (disposable/manual)' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "spine block contract: secondary lanes line missing or incorrect"
+  fi
+}
+
 run_route_contract_slice() {
   test_manifest_fail_closed
   test_stance_template_renderer
@@ -1894,6 +1936,7 @@ run_route_contract_slice() {
   test_ats_unknown_ids_fail
   test_ats_valid_triplet
   test_meta_shim
+  test_spine_block_contract
 }
 
 run_slice() {

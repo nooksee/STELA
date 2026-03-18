@@ -2,24 +2,26 @@
 # DEPLOYMENT: Operator-entered prompt
 # PROOF: Output schema + drift review
 name: execution-decision-log
-description: "Standardized operator prompt for post-session intake drift analysis and effective-constraint self-report."
-version: 1.1.0
+description: "Standardized operator prompt for post-session artifact-grounded execution-decision capture."
+version: 1.2.0
 prompt_class: operator-diagnostic
 status: active
 
 prompt_template: |
   REQUEST FOR EXECUTION-DECISION LOG:
-  First, state the behavior-affecting instructions or constraints you actually applied to this task using exactly these labels:
-  Active operational constraints understood:
-  Constraint source visibility:
-  Constraint confidence:
-  Constraint gaps or unknowns:
+  First, state only the observable constraints and evidence you actually used for this task using exactly these labels:
+  Active task constraints used:
+  Observable evidence used:
+  Evidence gaps or unknowns:
+  Confidence level:
 
   For the constraint section:
-  - Report only constraints you actually applied to this response.
-  - If you cannot reveal exact hidden instruction text, say so plainly and provide the effective constraints only.
-  - Distinguish between visible prompt text, project/custom instructions, system or platform behavior you can only infer, memory, and tool or attachment state.
-  - Do not invent hidden instructions or generalize beyond what you actually used.
+  - Report only constraints and evidence that were directly visible in the provided artifacts or user-visible instructions.
+  - If a required artifact body was not directly visible, name the missing artifact explicitly under Evidence gaps or unknowns and do not present receipt-backed inference as direct inspection.
+  - Do not mention hidden system prompts, project instructions, internal tools, platform behavior, memory, or inferred policy unless that text was directly visible in the artifacts for this task.
+  - Do not describe internal reasoning helpers or tool names unless they were explicitly visible to the user in the task artifacts.
+  - Do not describe upload mechanics, document indexes, retrieval mechanics, or how artifacts were accessed.
+  - Keep this section artifact-grounded and concise.
 
   Then give a detailed execution-decision log for this session. For each step, include explicit labels exactly as:
   Trigger:
@@ -30,9 +32,18 @@ prompt_template: |
   Actions not taken:
   Key evidence:
 
+  Rules for the execution-decision log:
+  - Ground every step in visible artifacts, explicit user-visible instructions, or explicit output evidence.
+  - If something was inferred rather than directly observed, say so plainly.
+  - When relying on receipt-backed inference because a required artifact body was not directly visible, state that explicitly and name the missing artifact.
+  - Do not claim hidden instruction text, unseen tool activity, or internal platform behavior as evidence.
+  - Do not mention internal helper names, container paths, private runtime details, upload mechanics, document indexes, or retrieval mechanics unless they were directly visible in the task artifacts.
+  - Prefer file names, command outputs, and explicit artifact content in Key evidence.
+
 storage_targets:
-  hotfix_model: "storage/dp/intake/<MODEL>-EXECUTION-DECISION.md"
-  disposable_intake: "storage/dp/intake/EXECUTION-DECISION.md"
+  received_handoff: "storage/handoff/EXECUTION-DECISION.md"
+  architect_intake: "storage/dp/intake/EXECUTION-DECISION.md"
+placement_contract: "disposable/manual; no bundle profile; not a certify input; subordinate to RESULTS and audit truth"
 
 validation:
   mode: "execution-decision"

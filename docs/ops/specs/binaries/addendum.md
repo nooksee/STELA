@@ -47,6 +47,16 @@ Hard-stop errors include: missing required arguments, malformed `--base-dp`, unr
 ### Role Restriction and Manual Relationship
 `ops/bin/addendum` is an Integrator/foreman issuance tool used during the `docs/MANUAL.md` Closeout Cycle Post-Work Audit step when an authorized addendum is required. The Contractor does not invoke this binary and does not author addendum content.
 
+## Foreman Intervention Chain
+The full intervention path in the shipping spine is:
+1. **Trigger:** Contractor or auditor identifies a boundary condition and reports `ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>` to the operator.
+2. **Foreman wake-up:** Operator generates the foreman bundle: `./ops/bin/bundle --profile=foreman --intent="ADDENDUM REQUIRED: <DECISION_ID> - <BLOCKER>" --out=auto`. Delivers `FOREMAN-*.txt` to the foreman model.
+3. **Addendum issuance:** Foreman model outputs an authorized addendum fenced block. Operator reviews, provides `OPERATOR_AUTHORIZATION`, and issues the addendum artifact using: `./ops/bin/addendum --base-dp=DP-OPS-XXXX --slots-file=<path>`. The addendum is written to `storage/dp/intake/<BASE_DP_ID>-ADDENDUM-<LETTER>.md`.
+4. **Contractor resumes:** Contractor receives the finished addendum document and executes against it. Contractor does not self-authorize addendum scope.
+5. **Audit lineage:** Addendum artifacts are certify-tracked; the audit bundle includes current RESULTS and CLOSING which reference any addendum execution.
+
+This chain is a secondary lane; it does not replace RESULTS, CLOSING, or audit truth.
+
 ## Anecdotal Anchor
 Repeated certify-compatibility remediations in consecutive DPs showed that late-session structural fixes need an auditable intake-generation path that does not depend on hand-authored markdown. `ops/bin/addendum` applies the same template-first discipline used by `ops/bin/draft` to the addendum issuance path.
 

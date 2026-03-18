@@ -131,6 +131,21 @@ dump_scope_foreman=core
 - Quarantined smoke outputs use `smoke_handoff_root` and `smoke_dump_root`.
 - Smoke outputs are resume/scratch artifacts under `var/tmp/`, not payload artifacts under `storage/`.
 
+## Shipping Spine Contract
+The canonical operator shipping chain uses bundle at two points:
+- `--profile=analyst`: deliver context + TOPIC.md to analyst model; analyst writes PLAN.md
+- `--profile=architect`: deliver context + PLAN.md + slice to architect model; architect emits fenced DP draft block; operator saves to `storage/dp/intake/DP.md` while packet identity remains `DP-OPS-XXXX`
+- Worker executes DP; certify generates RESULTS + emits surface leaves
+- `--profile=audit`: package RESULTS + CLOSING for auditor review; audit bundle dump is the canonical audit evidence payload
+- Operator commits on work branch, opens PR per CLOSING sidecar, merges to main
+
+Secondary lanes are bounded and do not replace RESULTS or audit truth:
+- `--profile=foreman`: intervention intake only (not PASS/FAIL); intent form must be `ADDENDUM REQUIRED: <DECISION_ID> - <BLOCKER>`
+- `--profile=conform`: structure normalization; output is a revised DP draft, not an audit verdict
+- execution-decision: disposable/manual placement, not a bundle profile
+
+Audit dump generation is owned by `--profile=audit`. Standalone `ops/bin/dump --scope=core` in DP closeout is not a universal requirement and is not equivalent to the audit bundle dump.
+
 ## Compatibility Notes
 Canonical audit verdict profile is `audit`.
 Canonical addendum authorization profile is `foreman`.
