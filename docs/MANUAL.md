@@ -532,6 +532,21 @@ Surface contract:
 - `ARCHITECT-*.txt`: emitted bundle artifact; contains the dump payload and stance contract.
 - `storage/dp/intake/<packet_id>.md`: deterministic active DP draft surface; operator saves the fenced DP draft block output here after the architect model run. Packet identity is derived from the validated slice and printed by bundle.
 
+### Local Hooks Setup
+Run once after clone, and after any machine where the repo is checked out:
+
+~~~bash
+ops/bin/hooks
+~~~
+
+This sets `core.hooksPath = .github/hooks` so git invokes the repo hooks directory on every commit and push.
+
+Active hooks:
+- `pre-commit`: refuses commits on `main` or any non-`work/*` branch (PoT §6.2.3); then runs `ops/bin/llms` and stages `llms.txt`, `llms-core.txt`, `llms-full.txt`.
+- `pre-push`: refuses direct push to `main` (PoT §6.1).
+
+Bypass: `git commit --no-verify` or `git push --no-verify` bypasses all hooks. Use only when the guard is inapplicable (e.g., replaying a certify-controlled commit). Do not use to skip required gates.
+
 ---
 
 ## 2. Dispatch Packet (DP) Mechanics

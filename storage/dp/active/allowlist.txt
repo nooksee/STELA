@@ -493,3 +493,11 @@ storage/handoff/CLOSING-DP-OPS-0207.md
 archives/surfaces/TASK-DP-OPS-0207-*.md
 storage/handoff/CLOSING-DP-OPS-0208.md
 archives/surfaces/TASK-DP-OPS-0208-*.md
+.github/hooks/pre-commit
+.github/hooks/pre-push
+ops/bin/hooks
+docs/MANUAL.md
+docs/ops/specs/binaries/hooks.md
+archives/manifests/compile-2026-03-17T*-c6ac87bc.md
+storage/handoff/CLOSING-DP-OPS-0209.md
+archives/surfaces/TASK-DP-OPS-0209-*.md
