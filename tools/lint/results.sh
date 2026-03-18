@@ -113,20 +113,21 @@ if [[ "$#" -eq 1 ]]; then
 fi
 
 if (( scan_all )); then
+  if [[ -f "${REPO_ROOT}/storage/handoff/RESULTS.md" ]]; then
+    targets+=("${REPO_ROOT}/storage/handoff/RESULTS.md")
+  fi
   while IFS= read -r path; do
     targets+=("$path")
-  done < <(find "${REPO_ROOT}/storage/handoff" -maxdepth 1 -type f -name 'DP-OPS-*-RESULTS.md' | sort)
+  done < <(find "${REPO_ROOT}/storage/handoff" -maxdepth 1 -type f -name 'DP-OPS-*-RESULTS*.md' | sort)
 elif (( explicit_target == 0 )); then
-  if [[ -n "$active_dp_id" ]]; then
-    active_target="${REPO_ROOT}/storage/handoff/${active_dp_id}-RESULTS.md"
-    if [[ -f "$active_target" ]]; then
-      targets+=("$active_target")
-      inferred_target=1
-    fi
+  active_target="${REPO_ROOT}/storage/handoff/RESULTS.md"
+  if [[ -f "$active_target" ]]; then
+    targets+=("$active_target")
+    inferred_target=1
   fi
 
   if (( inferred_target == 0 )); then
-    mapfile -t discovered_targets < <(find "${REPO_ROOT}/storage/handoff" -maxdepth 1 -type f -name 'DP-OPS-*-RESULTS.md' | sort)
+    mapfile -t discovered_targets < <(find "${REPO_ROOT}/storage/handoff" -maxdepth 1 -type f \( -name 'RESULTS.md' -o -name 'DP-OPS-*-RESULTS*.md' \) | sort)
     if [[ "${#discovered_targets[@]}" -eq 1 ]]; then
       targets+=("${discovered_targets[0]}")
       inferred_target=1

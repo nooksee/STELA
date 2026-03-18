@@ -144,7 +144,7 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 
 ## 3.5 Closeout (Mandatory Routing)
 - Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
-- Update SoP.md and PoW.md with DP entries, including objective summary and verification commands run.
+- Update SoP.md and PoW.md with DP entries, including objective summary and current proof / receipt summary.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
 - Run prune hygiene: ./ops/bin/prune --scrub.
 - Refresh llms artifacts: `./ops/bin/llms`
@@ -154,10 +154,10 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 - Refresh side-effect: `ops/bin/llms` regenerates `ops/lib/manifests/OPS.md` as a compile event; if `OPS.md` is not in the allowlist, restore it before running `integrity.sh`. See `docs/MANUAL.md` Refresh side-effect notice for the full procedure.
 
 ### 3.5.1 Mandatory Closing Sidecar
-Closing sidecar content is generated and maintained at `storage/handoff/CLOSING-{{DP_ID}}.md` and is validated by `ops/bin/certify` as a hard gate at certification time. Do not author, predict, populate, or approximate any sidecar-derived closeout output outside this sidecar.
+Closing sidecar content is generated and maintained at `storage/handoff/CLOSING.md` and is validated by `ops/bin/certify` as a hard gate at certification time. Do not author, predict, populate, or approximate any sidecar-derived closeout output outside this sidecar.
 Certify separately collects contractor-authored narrative for the RESULTS Contractor Execution Narrative section at certify time via interactive editor prompt; this narrative input is independent from closing sidecar content.
 
-Before running certify, confirm `storage/handoff/CLOSING-{{DP_ID}}.md` has been maintained throughout execution and reflects observable reality only.
+Before running certify, confirm `storage/handoff/CLOSING.md` has been maintained throughout execution and reflects observable reality only.
 
 Closing sidecar fields required at certify time:
 - Commit Message

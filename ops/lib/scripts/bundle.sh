@@ -1042,17 +1042,16 @@ bundle_resolve_audit_packet_id() {
 
 bundle_resolve_audit_packet_source_rel() {
   local packet_id="$1"
-  local intake_rel="storage/dp/intake/${packet_id}.md"
+  local intake_rel="storage/dp/intake/DP.md"
   local processed_rel="storage/dp/processed/${packet_id}.md"
   local intake_present=0
   local processed_present=0
 
-  [[ -f "${REPO_ROOT}/${intake_rel}" ]] && intake_present=1
+  if [[ -f "${REPO_ROOT}/${intake_rel}" ]] && grep -Eq "^###[[:space:]]+${packet_id}:" "${REPO_ROOT}/${intake_rel}"; then
+    intake_present=1
+  fi
   [[ -f "${REPO_ROOT}/${processed_rel}" ]] && processed_present=1
 
-  if (( intake_present && processed_present )); then
-    die "audit packet source is ambiguous for ${packet_id}: both ${intake_rel} and ${processed_rel} exist"
-  fi
   if (( processed_present )); then
     printf '%s' "$processed_rel"
     return 0
@@ -1143,8 +1142,8 @@ bundle_collect_profile_disposable_inputs() {
       ;;
     audit)
       audit_packet_id="$(bundle_resolve_audit_packet_id)"
-      results_rel="storage/handoff/${audit_packet_id}-RESULTS.md"
-      closing_rel="storage/handoff/CLOSING-${audit_packet_id}.md"
+      results_rel="storage/handoff/RESULTS.md"
+      closing_rel="storage/handoff/CLOSING.md"
       packet_source_rel="$(bundle_resolve_audit_packet_source_rel "$audit_packet_id")"
       [[ -f "${REPO_ROOT}/${results_rel}" ]] || die "audit requires ${results_rel}"
       [[ -f "${REPO_ROOT}/${closing_rel}" ]] || die "audit requires ${closing_rel}"
@@ -1358,7 +1357,7 @@ bundle_run() {
     request_slice_validated=1
     request_plan_source="$plan_rel"
     request_packet_id="$(bundle_resolve_architect_packet_id "$request_slice_id" "${REPO_ROOT}/${plan_rel}")"
-    request_closing_sidecar="storage/handoff/CLOSING-${request_packet_id}.md"
+    request_closing_sidecar="storage/handoff/CLOSING.md"
     request_title_suffix="$(bundle_extract_architect_slice_title "${REPO_ROOT}/${plan_rel}" "$request_slice_id")"
   fi
 

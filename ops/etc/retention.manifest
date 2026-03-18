@@ -20,16 +20,16 @@ quarantine_path=var/tmp/prune-quarantine
 - `historical`: budget reclaim path under hysteresis limits
 
 ## Critical Patterns
-pattern=storage/handoff/*-RESULTS.md
-pattern=storage/handoff/CLOSING-DP-OPS-*.md
+pattern=storage/handoff/RESULTS.md
+pattern=storage/handoff/CLOSING.md
 pattern=storage/dp/active/*
 pattern=TASK.md
 pattern=SoP.md
 pattern=PoW.md
 
 ## Denylist
-pattern=storage/handoff/*-RESULTS.md
-pattern=storage/handoff/CLOSING-DP-OPS-*.md
+pattern=storage/handoff/RESULTS.md
+pattern=storage/handoff/CLOSING.md
 pattern=storage/dp/active/*
 pattern=TASK.md
 pattern=SoP.md

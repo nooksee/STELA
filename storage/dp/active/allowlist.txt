@@ -12,11 +12,13 @@ docs/ops/specs/tools/lint/integrity.md
 docs/ops/specs/binaries/trace.md
 docs/ops/specs/binaries/decision.md
 docs/ops/specs/binaries/certify.md
+docs/ops/specs/scripts/ledger.md
 docs/ops/specs/manifests/persistence.md
 docs/ops/specs/manifests/retention.md
 docs/ops/specs/manifests/verification.md
 docs/ops/registry/templates.md
 ops/bin/allowlist
+ops/bin/addendum
 ops/bin/dump
 ops/bin/prune
 ops/bin/trace

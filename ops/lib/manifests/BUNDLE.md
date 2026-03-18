@@ -73,7 +73,7 @@ dump_scope_foreman=core
 ## Profile Attachment Contract
 - analyst: `ANALYST-*.txt`, `ANALYST-*.manifest.json`, transport-managed `storage/handoff/TOPIC.md`
 - architect: `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, transport-managed `storage/handoff/PLAN.md`, optional `--slice=<ID>` with request metadata (`slice_id`, `slice_validated`, `plan_source`, `packet_id`, `closing_sidecar`, `title_suffix`)
-- audit: initial `AUDIT-*.txt`, rerun `AUDIT-R*-*.txt`, matching `.manifest.json`/`.tar`, transport-managed current DP `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md`
+- audit: initial `AUDIT-*.txt`, rerun `AUDIT-R*-*.txt`, matching `.manifest.json`/`.tar`, transport-managed current DP `storage/handoff/RESULTS.md` and `storage/handoff/CLOSING.md`
 - foreman: `FOREMAN-*.txt`, `FOREMAN-*.manifest.json`
 - project: `PROJECT-*.txt`, `PROJECT-*.manifest.json`
 - conform: `CONFORM-*.txt`, `CONFORM-*.manifest.json`, draft DP input
@@ -83,7 +83,7 @@ dump_scope_foreman=core
 - Current live disposable inputs are:
   - analyst: `storage/handoff/TOPIC.md`
   - architect: `storage/handoff/PLAN.md`
-  - audit: current `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md`
+  - audit: current `storage/handoff/RESULTS.md` and `storage/handoff/CLOSING.md`
 - Future disposable additions must be exact file paths added deliberately in runtime wiring, specs, and smoke tests.
 
 ## Analyst Transport Contract
@@ -103,10 +103,10 @@ dump_scope_foreman=core
 - `architect_packet_id_seed` defines the first dispatch-corridor packet id.
 - `architect_packet_id_seed_slice` defines the slice bound to that seed.
 - Runtime derives later architect packet ids by offset within `Execution Order` in `storage/handoff/PLAN.md`.
-- `closing_sidecar` is derived as `storage/handoff/CLOSING-<packet_id>.md`.
+- `closing_sidecar` is the active latest-wins sidecar `storage/handoff/CLOSING.md`; packet identity remains explicit in the request metadata and sidecar content.
 - `title_suffix` is derived from the active slice heading text in `storage/handoff/PLAN.md`.
 - `storage/handoff/PLAN.md` is the latest-wins architect plan input surface; the operator ensures this file has valid `## Architect Handoff` fields before each architect run.
-- `storage/dp/intake/<packet_id>.md` is the deterministic active DP draft surface; architect model output is a fenced DP draft block that the operator saves to this path for dispatch.
+- `storage/dp/intake/DP.md` is the deterministic active DP draft surface; architect model output is a fenced DP draft block that the operator saves to this path for dispatch.
 - Omitted `--slice` stays ad hoc unless `## Architect Handoff` explicitly opts into safe auto-bind with one unambiguous selected slice.
 - Architect text artifacts emit a stripped active-slice projection built only from:
   - `Selected Option`
@@ -121,7 +121,7 @@ dump_scope_foreman=core
 
 ## Audit Transport Contract
 - Audit resolves the current certified packet id from the current TASK surface.
-- Audit requires `storage/handoff/<DP_ID>-RESULTS.md` and `storage/handoff/CLOSING-<DP_ID>.md` for that current packet and fails closed when either file is missing.
+- Audit requires `storage/handoff/RESULTS.md` and `storage/handoff/CLOSING.md` for that current packet and fails closed when either file is missing.
 - Audit invokes the core dump with explicit inclusion of those two files, the authoritative current packet source file, and existing exact-file entries from the active packet's `3.2.2 DP-Scoped Load Order` so new packet-substantive canon files are inspectable even when they are not yet tracked.
 - Audit package members include the resolved current `RESULTS` and `CLOSING` files.
 - Audit reruns must emit fresh artifact identity under `audit_resubmission_prefix` and record submission lineage in the emitted manifest.

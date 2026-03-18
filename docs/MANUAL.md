@@ -14,16 +14,16 @@ Active surfaces by stage:
 - **Topic input:** `storage/handoff/TOPIC.md` (latest-wins; operator writes before each analyst run)
 - **Plan output:** `storage/handoff/PLAN.md` (latest-wins; analyst model writes this)
 - **Active DP draft:** `storage/dp/intake/DP.md` (latest-wins operator surface; architect output is saved here)
-- **Packet/process identity:** `DP-OPS-XXXX` (retained in the packet body, packet-scoped intake mirror, processed artifact path, RESULTS, and CLOSING)
+- **Packet/process identity:** `DP-OPS-XXXX` (retained in the packet body, processed artifact path, RESULTS content, CLOSING content, audit transport, and telemetry)
 - **Audit bundle:** `storage/handoff/AUDIT-*.txt` (initial) or `storage/handoff/AUDIT-R*.txt` (rerun)
-- **Results receipt:** `storage/handoff/DP-OPS-XXXX-RESULTS.md`
-- **Closing sidecar:** `storage/handoff/CLOSING-DP-OPS-XXXX.md`
+- **Results receipt:** `storage/handoff/RESULTS.md`
+- **Closing sidecar:** `storage/handoff/CLOSING.md`
 
 Audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto`. It is separate from operator session refresh (`./ops/bin/open --out=auto`). Do not conflate them: operator session refresh keeps state fresh for the next session; the audit bundle packages the certify-generated evidence for auditor review.
 
 **Execution Cycle:**
 1.  **Start:** `./ops/bin/open --out=auto` (freshness gate + trace anchor; OPEN provides `STELA_TRACE_ID` required by certify).
-2.  **Draft:** `./ops/bin/draft` (generates canonical DP block, refreshes `storage/dp/intake/DP.md` plus the packet-scoped intake mirror, and updates `TASK.md`).
+2.  **Draft:** `./ops/bin/draft` (generates canonical DP block, refreshes `storage/dp/intake/DP.md`, and updates `TASK.md`).
 3.  **Capture (CDD):** `./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto` (serializes Contractor-visible state).
     Note: Audit intake is bundle-first. Use `./ops/bin/bundle --profile=audit --out=auto` for audit review. Bundle dump scope is profile-mapped from `ops/lib/manifests/BUNDLE.md`; current audit mapping is `core`.
 4.  **Dispatch:** Hand DP to Worker (See Section 5).
@@ -86,7 +86,7 @@ This is a legibility hardening change only. Guard pass/fail semantics are unchan
 ## Closeout Cycle
 #### Closing Sidecar Authorship
 
-The Contractor creates and populates `storage/handoff/CLOSING-<DP-ID>.md` before
+The Contractor creates and populates `storage/handoff/CLOSING.md` before
 invoking `ops/bin/certify`. This file is not Operator-authored and is not deferred
 to a later session. The Contractor uses `ops/src/surfaces/closing.md.tpl` as the
 schema. If that template is absent, the Contractor stops and requests it from the
@@ -114,7 +114,7 @@ Run:
 bash tools/lint/factory.sh
 ~~~
 Tooling DP addendum: if the DP objective adds, modifies, or replaces a linter, script, guard, or validation binary, confirm at closeout that: (1) the CbC Design Discipline Preflight block in TASK.md §3.1.1 is present and non-empty; (2) enforcement complexity did not exceed 100 lines without a note in §3.4.4 justifying the budget; (3) a SoP note is added if structural prevention was identified as viable but deferred. Full procedure: docs/DESIGN.md.
-Keep `storage/handoff/CLOSING-DP-OPS-XXXX.md` populated throughout execution.
+Keep `storage/handoff/CLOSING.md` populated throughout execution.
 
 2. Generate Results
 #### Pre-Certify Allowlist Declaration (required when DP scope includes closeout)
@@ -138,7 +138,7 @@ Run:
 ~~~bash
 ./ops/bin/allowlist
 ./ops/bin/certify --dp=DP-OPS-XXXX --out=auto
-bash tools/lint/results.sh storage/handoff/DP-OPS-XXXX-RESULTS.md
+bash tools/lint/results.sh storage/handoff/RESULTS.md
 ~~~
 `ops/bin/certify` now fails in explicit phases: `preflight`, `replay`, `verify`, `postflight`, and `results`. Cheap closeout defects such as malformed closing sidecar content, malformed narrative scaffolds, missing trace / OPEN prerequisites, or obviously stale receipt-command shapes must fail in `preflight` before long replay begins. Certify emits `Certify phase: <phase>` on phase changes and phase-tags hard-fail output as `ERROR [<phase>]`.
 At the end of a run, certify also emits stable timing summaries:
@@ -162,55 +162,38 @@ Default dump and bundle payloads now route archive serialization through `ops/et
 `bash tools/lint/results.sh` without arguments targets the active branch packet receipt when resolvable; use `--all` only for full historical receipt scans.
 Manual RESULTS fabrication is prohibited.
 
-### Certify Rerun (Post-Move Recovery)
+### Certify Rerun
 
-**Trigger condition:** `ops/bin/certify` has completed at least one invocation for the
-active DP and has moved the intake packet from `storage/dp/intake/DP-OPS-XXXX.md` to
-`storage/dp/processed/DP-OPS-XXXX.md`. A second certify invocation is required (for
-example, after an allowlist correction or a sidecar fix identified during the first run).
+**Trigger condition:** `ops/bin/certify` has already completed once for the active packet
+and a second certify invocation is required (for example, after an allowlist correction
+or a closing-sidecar fix identified during the first run).
 
-**Coexistence prohibition:** The intake packet must not exist simultaneously in both
-`storage/dp/intake/` and `storage/dp/processed/` when certify is invoked. Violating this
-constraint produces an indeterminate path for certify artifact resolution.
+Current contract:
+- the active rerun source is `storage/dp/intake/DP.md`
+- processed storage remains `storage/dp/processed/DP-OPS-XXXX.md`
+- certify copies the active draft into processed storage; it does not remove `DP.md`
 
 **Recovery steps (run in order; do not skip):**
 
-1. Copy the intake packet back from processed to the intake directory:
+1. Confirm the active draft surface exists and still contains the target packet heading:
 ~~~bash
-cp storage/dp/processed/DP-OPS-XXXX.md storage/dp/intake/DP-OPS-XXXX.md
+grep -n "^### DP-OPS-XXXX:" storage/dp/intake/DP.md
 ~~~
 
-2. Move the processed copy to `var/tmp/` to eliminate coexistence:
-~~~bash
-mv storage/dp/processed/DP-OPS-XXXX.md var/tmp/DP-OPS-XXXX.pre-rerun-processed.md
-~~~
-
-3. Confirm `storage/dp/processed/DP-OPS-XXXX.md` no longer exists:
-~~~bash
-ls storage/dp/processed/
-~~~
-
-4. Run certify:
+2. Re-run certify with intake fallback enabled so pointer-only TASK recovery can use the active draft when needed:
 ~~~bash
 ./ops/bin/certify --dp=DP-OPS-XXXX --allow-intake-fallback --out=auto
 ~~~
 
-On success, certify moves `storage/dp/intake/DP-OPS-XXXX.md` to
-`storage/dp/processed/DP-OPS-XXXX.md` again. The `var/tmp/` staging copy is
-disposable and does not require cleanup before certify runs.
-
-5. If this is an audit resubmission (re-certify after an audit FAIL), generate the
-resubmission bundle with `--rerun` so the new artifact has a distinct `AUDIT-R<index>-*`
-name rather than overwriting the prior `AUDIT-*` artifact:
+3. If this is an audit resubmission (re-certify after an audit FAIL), generate the resubmission bundle with `--rerun` so the new artifact has a distinct `AUDIT-R<index>-*` name rather than overwriting the prior `AUDIT-*` artifact:
 ~~~bash
 ./ops/bin/bundle --profile=audit --rerun --out=auto
 ~~~
 
-**Note:** Replace `DP-OPS-XXXX` with the literal DP identifier for the active packet.
-Substitute `DP-OPS-XXXX.md` accordingly in all three commands above.
+If `storage/dp/intake/DP.md` is missing or no longer contains the target packet heading, restore the active draft surface first and only then rerun certify.
 
 2.5 Post-Work Audit (Integrator; mandatory before COMMIT)
-The Integrator reviews the diff (`git diff --name-only`, `git diff --stat`), the RESULTS receipt at `storage/handoff/DP-OPS-XXXX-RESULTS.md`, and the closing sidecar at `storage/handoff/CLOSING-DP-OPS-XXXX.md` against the DP scope definition (Section 3.3 In scope / Out of scope).
+The Integrator reviews the diff (`git diff --name-only`, `git diff --stat`), the RESULTS receipt at `storage/handoff/RESULTS.md`, and the closing sidecar at `storage/handoff/CLOSING.md` against the DP scope definition (Section 3.3 In scope / Out of scope).
 
 If scope was exceeded, a boundary condition was not anticipated, or an authorization is needed for work already done or needed to complete:
 - The Integrator renders an addendum recommendation from `ops/src/stances/addendum.md.tpl` and outputs it as a markdown code block.
@@ -334,8 +317,8 @@ Prepare SoP/PoW ledger updates before running certify so the emitted leaf snapsh
 After certify, treat `PoW.md`, `SoP.md`, and `TASK.md` as pointer heads; do not manually edit pointer lines or emitted `archives/surfaces/*` leaves.
 If operator authorization expands scope beyond the original DP boundaries, record that authorization explicitly in SoP and PoW entry content and mirror it in the closing sidecar.
 PoW contract and schema guidance are canonical in `docs/ops/specs/surfaces/pow.md`; author PoW entry content to that spec before certification snapshotting.
-PoW entry receipt pointers must include `RESULTS`, `OPEN`, and `DUMP` artifact paths.
-Do not reproduce the verification command list in SoP or PoW entries; RESULTS carries the full command log with outputs.
+PoW entry receipt pointers must include `RESULTS` and `OPEN`. Include `DUMP` only when the current packet explicitly emitted a canonical dump artifact before certify.
+Do not reproduce the full verification command list in SoP or PoW entries; RESULTS carries the full command log with outputs. A concise functional receipt summary in SoP is acceptable when it helps explain the shipment.
 PoW entry `Notes` are artifact-level context only (scope anomalies affecting the artifact inventory). Execution narrative and anomaly resolution belong in RESULTS Contractor Execution Narrative.
 Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, with reason and risk for each NOT RUN item.
 
@@ -344,7 +327,8 @@ Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, 
 2. Reason: `tools/lint/truth.sh` scans current heads and rejects historical strings from archive leaves. Those strings are tolerated in `archives/surfaces/` but are forbidden in head-lint context. Copying history into the head causes `truth.sh` to fail.
 3. Invariant: `ops/bin/certify` generates the `previous:` pointer on the new archive leaf and manages chain linkage. The contractor does not manage or reconstruct chain history manually.
 4. Confirmation note: DP-OPS-0116 and ADDENDUM-A confirmed that certify-managed pointer rewrites of `PoW.md`, `SoP.md`, and `TASK.md` to single-line HEAD pointers are expected closeout behavior; do not interpret those rewrites as corruption.
-5. Worked example (same pattern for both `SoP.md` and `PoW.md`):
+5. Preflight guard: `ops/bin/certify` now hard-fails if `SoP.md` or `PoW.md` still point at a different packet instead of carrying the current packet's single-entry head content.
+6. Worked example (same pattern for both `SoP.md` and `PoW.md`):
 
 ~~~md
 # Correct single-entry head (current DP only)
@@ -418,7 +402,7 @@ OPEN de-dup contract:
 ### Template Renderer
 ~~~bash
 # Render a DP template in strict mode (default)
-./ops/bin/template render dp --slots-file=storage/dp/intake/DP-OPS-0065.slots --out=storage/dp/intake/DP-OPS-0065.md
+./ops/bin/template render dp --slots-file=storage/dp/intake/DP.slots --out=storage/dp/intake/DP.md
 
 # Render canonical DP body for lint normalization (non-strict mode)
 ./ops/bin/template render dp --non-strict --out=-
@@ -498,7 +482,7 @@ Do not use:
 ### Validation (Lint)
 ~~~bash
 # Validate DP format before dispatch
-bash tools/lint/dp.sh storage/dp/intake/DP-OPS-0050.md
+bash tools/lint/dp.sh storage/dp/intake/DP.md
 
 # Validate Context consistency
 ./tools/lint/context.sh

@@ -44,8 +44,8 @@ class=tools-tree|pattern=tools/*|tier=operational|weight=1|retention=canonical|a
 class=opt-tree|pattern=opt/*|tier=operational|weight=1|retention=canonical|apply=0
 class=analyst-topic-input|pattern=storage/handoff/TOPIC.md|tier=operational|weight=1|retention=disposable|apply=1
 class=architect-plan-input|pattern=storage/handoff/PLAN.md|tier=operational|weight=1|retention=disposable|apply=1
-class=audit-results-input|pattern=storage/handoff/*-RESULTS.md|tier=operational|weight=1|retention=disposable|apply=0
-class=audit-closing-input|pattern=storage/handoff/CLOSING-DP-OPS-*.md|tier=operational|weight=1|retention=disposable|apply=0
+class=audit-results-input|pattern=storage/handoff/RESULTS.md|tier=operational|weight=1|retention=disposable|apply=0
+class=audit-closing-input|pattern=storage/handoff/CLOSING.md|tier=operational|weight=1|retention=disposable|apply=0
 
 ## Repo Pressure Classes
 class=archives-tree|pattern=archives/*|tier=historical|weight=2|retention=canonical

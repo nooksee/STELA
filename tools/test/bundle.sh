@@ -74,6 +74,10 @@ ARCHITECT_PLAN_BACKUP=""
 ARCHITECT_PLAN_RESTORE=0
 AUDIT_TASK_BACKUP=""
 AUDIT_TASK_RESTORE=0
+AUDIT_RESULTS_BACKUP=""
+AUDIT_RESULTS_RESTORE=0
+AUDIT_CLOSING_BACKUP=""
+AUDIT_CLOSING_RESTORE=0
 AUDIT_FIXTURE_TASK_REL=""
 AUDIT_FIXTURE_RESULTS_REL=""
 AUDIT_FIXTURE_CLOSING_REL=""
@@ -98,6 +102,16 @@ restore_fixture_overrides() {
   if (( AUDIT_TASK_RESTORE )) && [[ -n "$AUDIT_TASK_BACKUP" && -f "$AUDIT_TASK_BACKUP" ]]; then
     cp "$AUDIT_TASK_BACKUP" "$task_abs"
     rm -f "$AUDIT_TASK_BACKUP"
+  fi
+
+  if (( AUDIT_RESULTS_RESTORE )) && [[ -n "$AUDIT_RESULTS_BACKUP" && -f "$AUDIT_RESULTS_BACKUP" ]]; then
+    cp "$AUDIT_RESULTS_BACKUP" "${REPO_ROOT}/storage/handoff/RESULTS.md"
+    rm -f "$AUDIT_RESULTS_BACKUP"
+  fi
+
+  if (( AUDIT_CLOSING_RESTORE )) && [[ -n "$AUDIT_CLOSING_BACKUP" && -f "$AUDIT_CLOSING_BACKUP" ]]; then
+    cp "$AUDIT_CLOSING_BACKUP" "${REPO_ROOT}/storage/handoff/CLOSING.md"
+    rm -f "$AUDIT_CLOSING_BACKUP"
   fi
 
   [[ -n "$AUDIT_FIXTURE_TASK_REL" ]] && rm -f -- "${REPO_ROOT}/${AUDIT_FIXTURE_TASK_REL}"
@@ -256,12 +270,12 @@ ensure_audit_receipt_fixture() {
     current_pointer="$(sed -n '1p' "$task_abs" | sed 's/\r$//')"
     if [[ -n "$current_pointer" && -f "${REPO_ROOT}/${current_pointer}" ]]; then
       current_packet_id="$(awk '/^packet_id:[[:space:]]*/ { sub(/^packet_id:[[:space:]]*/, "", $0); print; exit }' "${REPO_ROOT}/${current_pointer}")"
-      current_results_rel="storage/handoff/${current_packet_id}-RESULTS.md"
-      current_closing_rel="storage/handoff/CLOSING-${current_packet_id}.md"
+      current_results_rel="storage/handoff/RESULTS.md"
+      current_closing_rel="storage/handoff/CLOSING.md"
       if [[ -f "${REPO_ROOT}/storage/dp/processed/${current_packet_id}.md" ]]; then
         current_packet_source_rel="storage/dp/processed/${current_packet_id}.md"
-      elif [[ -f "${REPO_ROOT}/storage/dp/intake/${current_packet_id}.md" ]]; then
-        current_packet_source_rel="storage/dp/intake/${current_packet_id}.md"
+      elif [[ -f "${REPO_ROOT}/storage/dp/intake/DP.md" ]] && grep -Eq "^###[[:space:]]+${current_packet_id}:" "${REPO_ROOT}/storage/dp/intake/DP.md"; then
+        current_packet_source_rel="storage/dp/intake/DP.md"
       fi
       if [[ -f "${REPO_ROOT}/${current_results_rel}" ]]; then
         current_results_dp_source_rel="$(awk '
@@ -296,12 +310,26 @@ ensure_audit_receipt_fixture() {
     AUDIT_TASK_RESTORE=1
   fi
 
+  if (( AUDIT_RESULTS_RESTORE == 0 )) && [[ -f "${REPO_ROOT}/storage/handoff/RESULTS.md" ]]; then
+    mkdir -p "${REPO_ROOT}/var/tmp"
+    AUDIT_RESULTS_BACKUP="$(mktemp "${REPO_ROOT}/var/tmp/bundle-results-backup.XXXXXX")"
+    cp "${REPO_ROOT}/storage/handoff/RESULTS.md" "$AUDIT_RESULTS_BACKUP"
+    AUDIT_RESULTS_RESTORE=1
+  fi
+
+  if (( AUDIT_CLOSING_RESTORE == 0 )) && [[ -f "${REPO_ROOT}/storage/handoff/CLOSING.md" ]]; then
+    mkdir -p "${REPO_ROOT}/var/tmp"
+    AUDIT_CLOSING_BACKUP="$(mktemp "${REPO_ROOT}/var/tmp/bundle-closing-backup.XXXXXX")"
+    cp "${REPO_ROOT}/storage/handoff/CLOSING.md" "$AUDIT_CLOSING_BACKUP"
+    AUDIT_CLOSING_RESTORE=1
+  fi
+
   branch="$(git rev-parse --abbrev-ref HEAD)"
   # Keep the synthetic TASK pointer in archives/surfaces so dump's active-pointer
   # inclusion path sees the same shape in clean CI checkouts.
   AUDIT_FIXTURE_TASK_REL="archives/surfaces/TASK-DP-OPS-9999-fixture.md"
-  AUDIT_FIXTURE_RESULTS_REL="storage/handoff/DP-OPS-9999-RESULTS.md"
-  AUDIT_FIXTURE_CLOSING_REL="storage/handoff/CLOSING-DP-OPS-9999.md"
+  AUDIT_FIXTURE_RESULTS_REL="storage/handoff/RESULTS.md"
+  AUDIT_FIXTURE_CLOSING_REL="storage/handoff/CLOSING.md"
   AUDIT_FIXTURE_PACKET_REL="storage/dp/processed/DP-OPS-9999.md"
   AUDIT_FIXTURE_SUPPORT_PACKET_REL="storage/dp/processed/DP-OPS-9999-SUPPORT.md"
   AUDIT_FIXTURE_SUPPORT_HANDOFF_REL="storage/handoff/BUNDLE-FIXTURE-DP-OPS-9999.md"
@@ -371,8 +399,12 @@ Base HEAD: 0000000
 2. storage/handoff/BUNDLE-FIXTURE-DP-OPS-9999.md
 EOF
 
-  queue_cleanup_path "$AUDIT_FIXTURE_RESULTS_REL"
-  queue_cleanup_path "$AUDIT_FIXTURE_CLOSING_REL"
+  if (( AUDIT_RESULTS_RESTORE == 0 )); then
+    queue_cleanup_path "$AUDIT_FIXTURE_RESULTS_REL"
+  fi
+  if (( AUDIT_CLOSING_RESTORE == 0 )); then
+    queue_cleanup_path "$AUDIT_FIXTURE_CLOSING_REL"
+  fi
   queue_cleanup_path "$AUDIT_FIXTURE_PACKET_REL"
   queue_cleanup_path "$AUDIT_FIXTURE_SUPPORT_PACKET_REL"
   queue_cleanup_path "$AUDIT_FIXTURE_SUPPORT_HANDOFF_REL"
@@ -1076,7 +1108,7 @@ test_architect_slice_valid() {
   if ! grep -Fq 'dp_draft_path: storage/dp/intake/DP.md' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
     fail "architect bundle text missing active dp_draft_path marker"
   fi
-  if ! grep -Fq 'closing_sidecar: storage/handoff/CLOSING-DP-OPS-0189.md' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+  if ! grep -Fq 'closing_sidecar: storage/handoff/CLOSING.md' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
     fail "architect bundle text missing closing sidecar marker"
   fi
   if ! grep -Fq 'title_suffix: Architect Transport Slice Intent' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
@@ -1121,8 +1153,8 @@ test_architect_slice_valid() {
   if [[ "$request_dp_draft_path_val" != "storage/dp/intake/DP.md" ]]; then
     fail "architect request.dp_draft_path mismatch: expected storage/dp/intake/DP.md, got ${request_dp_draft_path_val}"
   fi
-  if [[ "$request_sidecar_val" != "storage/handoff/CLOSING-DP-OPS-0189.md" ]]; then
-    fail "architect request.closing_sidecar mismatch: expected storage/handoff/CLOSING-DP-OPS-0189.md, got ${request_sidecar_val}"
+  if [[ "$request_sidecar_val" != "storage/handoff/CLOSING.md" ]]; then
+    fail "architect request.closing_sidecar mismatch: expected storage/handoff/CLOSING.md, got ${request_sidecar_val}"
   fi
   if [[ "$request_title_suffix_val" != "Architect Transport Slice Intent" ]]; then
     fail "architect request.title_suffix mismatch: expected Architect Transport Slice Intent, got ${request_title_suffix_val}"
@@ -1236,8 +1268,8 @@ test_audit_contract() {
     fail "audit contract expected packet id did not resolve"
     return
   }
-  audit_results_rel="storage/handoff/${AUDIT_EXPECTED_PACKET_ID}-RESULTS.md"
-  audit_closing_rel="storage/handoff/CLOSING-${AUDIT_EXPECTED_PACKET_ID}.md"
+  audit_results_rel="storage/handoff/RESULTS.md"
+  audit_closing_rel="storage/handoff/CLOSING.md"
   audit_task_surface_rel="$(resolve_current_task_surface_rel)"
   audit_packet_source_rel="$AUDIT_EXPECTED_PACKET_SOURCE_REL"
 
@@ -1363,10 +1395,10 @@ test_bundle_closeout_sanity() {
   fi
 
   package_listing="$(tar -tf "${REPO_ROOT}/${LAST_PACKAGE}")"
-  if ! printf '%s\n' "$package_listing" | grep -Fxq "storage/handoff/${AUDIT_EXPECTED_PACKET_ID}-RESULTS.md"; then
+  if ! printf '%s\n' "$package_listing" | grep -Fxq "storage/handoff/RESULTS.md"; then
     fail "audit closeout sanity package missing current RESULTS file"
   fi
-  if ! printf '%s\n' "$package_listing" | grep -Fxq "storage/handoff/CLOSING-${AUDIT_EXPECTED_PACKET_ID}.md"; then
+  if ! printf '%s\n' "$package_listing" | grep -Fxq "storage/handoff/CLOSING.md"; then
     fail "audit closeout sanity package missing current closing sidecar"
   fi
 }

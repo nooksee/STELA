@@ -12,7 +12,7 @@ The binary parses target selection (`sop`, `pow`, `both`, `storage`, `dump`, or 
 
 Policy load is fail-closed: missing required keys or malformed values stop execution.
 
-After policy load, `ops/bin/prune` resolves pointer-first `SoP.md` and `PoW.md` heads to concrete surface leaves and executes `results_guard` before destructive operations. The guard inspects tracked RESULTS and CLOSING artifacts and enforces clean staged and unstaged state for those paths before any deletion path executes.
+After policy load, `ops/bin/prune` resolves pointer-first `SoP.md` and `PoW.md` heads to concrete surface leaves and executes `results_guard` before destructive operations. The guard inspects tracked current receipt surfaces (`storage/handoff/RESULTS.md`, `storage/handoff/CLOSING.md`) and enforces clean staged and unstaged state for those paths before any deletion path executes.
 
 ## Targets
 For `--target=storage`, the binary is report-only. It emits weighted rows for exact-pattern runtime artifact classes defined in `ops/etc/retention.manifest` under `## Storage Report Classes`.

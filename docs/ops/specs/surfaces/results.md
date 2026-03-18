@@ -2,7 +2,7 @@
 # Surface Specification: RESULTS
 
 ## Constitutional Anchor
-`storage/handoff/DP-OPS-XXXX-RESULTS.md` is a generated audit receipt, not a hand-authored narrative.
+`storage/handoff/RESULTS.md` is the generated current receipt surface, not a hand-authored narrative.
 It records certification execution details, verification command output, contractor execution narrative, and git impact.
 
 ## Operator Contract
@@ -24,7 +24,7 @@ It records certification execution details, verification command output, contrac
   - Integrity-lint output.
   - Per-command verification logs with exit outcomes.
   - Contractor Execution Narrative collected interactively at certify time with required subsections.
-  - Closing sidecar validation is certify-internal and remains a hard gate via `storage/handoff/CLOSING-DP-OPS-XXXX.md`.
+  - Closing sidecar validation is certify-internal and remains a hard gate via `storage/handoff/CLOSING.md`.
 
 ## Contractor Execution Narrative
 The `## Contractor Execution Narrative` section is populated at certify time by `ops/bin/certify`. Certify writes a scaffold to a temp file and delegates capture to `ops/lib/scripts/editor.sh`: interactive editor mode by default, or non-interactive ingest via `--narrative-file=PATH`. The narrative is validated for required subsections, absence of placeholder tokens, and rejection of untouched scaffold prose before being rendered into RESULTS.
@@ -53,7 +53,7 @@ Enforcement linkage:
 - `ops/bin/certify` validates the closing sidecar as a hard gate before rendering and runs `tools/lint/results.sh` after rendering.
 
 ## Mechanics and Sequencing
-1. Maintain a human-authored closing sidecar at `storage/handoff/CLOSING-DP-OPS-XXXX.md`.
+1. Maintain a human-authored closing sidecar at `storage/handoff/CLOSING.md`.
 2. Run `ops/bin/certify --dp=DP-OPS-XXXX --out=auto`.
 3. Certifier captures contractor execution narrative via editor helper and validates subsection structure/content.
 4. Certifier validates the closing sidecar, runs integrity and verification gates, captures outputs, then renders RESULTS from template slots.

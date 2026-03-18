@@ -144,6 +144,20 @@ detect_closing_sidecar_schema_kind() {
   printf 'current'
 }
 
+collect_closing_sidecar_files() {
+  local handoff_dir="$1"
+  local -a files=()
+  [[ -d "$handoff_dir" ]] || return 0
+
+  shopt -s nullglob
+  [[ -f "${handoff_dir}/CLOSING.md" ]] && files+=("${handoff_dir}/CLOSING.md")
+  files+=("${handoff_dir}"/CLOSING-*.md)
+  shopt -u nullglob
+
+  (( ${#files[@]} > 0 )) || return 0
+  printf '%s\n' "${files[@]}" | awk '!seen[$0]++'
+}
+
 check_markdown_contractions() {
   # Contraction prohibition uses ASCII and unicode apostrophe variants.
   local apostrophe="['\\x{2019}]"
@@ -511,9 +525,7 @@ check_closing_block_lead_words() {
   [[ -d "$handoff_dir" ]] || return 0
 
   local -a closing_files=()
-  shopt -s nullglob
-  closing_files=("$handoff_dir"/CLOSING-*.md)
-  shopt -u nullglob
+  mapfile -t closing_files < <(collect_closing_sidecar_files "$handoff_dir")
   (( ${#closing_files[@]} > 0 )) || return 0
 
   local file
@@ -592,9 +604,7 @@ check_closing_block_conversation_starter_question() {
   [[ -d "$handoff_dir" ]] || return 0
 
   local -a closing_files=()
-  shopt -s nullglob
-  closing_files=("$handoff_dir"/CLOSING-*.md)
-  shopt -u nullglob
+  mapfile -t closing_files < <(collect_closing_sidecar_files "$handoff_dir")
   (( ${#closing_files[@]} > 0 )) || return 0
 
   local file base_name dp_number
@@ -647,9 +657,7 @@ check_closing_block_manifest_paths() {
   [[ -d "$handoff_dir" ]] || return 0
 
   local -a closing_files=()
-  shopt -s nullglob
-  closing_files=("$handoff_dir"/CLOSING-*.md)
-  shopt -u nullglob
+  mapfile -t closing_files < <(collect_closing_sidecar_files "$handoff_dir")
   (( ${#closing_files[@]} > 0 )) || return 0
 
   local file base_name dp_number
@@ -729,9 +737,7 @@ check_closing_block_pr_description_markdown() {
   [[ -d "$handoff_dir" ]] || return 0
 
   local -a closing_files=()
-  shopt -s nullglob
-  closing_files=("$handoff_dir"/CLOSING-*.md)
-  shopt -u nullglob
+  mapfile -t closing_files < <(collect_closing_sidecar_files "$handoff_dir")
   (( ${#closing_files[@]} > 0 )) || return 0
 
   local file base_name dp_number

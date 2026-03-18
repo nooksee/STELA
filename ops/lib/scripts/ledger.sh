@@ -54,7 +54,7 @@ validate_pow_prune_candidates() {
     }
     function reset_fields() {
       packet=0; timestamp=0; work_branch=0; base_head=0; scope=0
-      allowlist=0; receipts=0; verification=0; notes=0
+      allowlist=0; receipts=0; notes=0
       results=0; open=0; dump=0
       results_path=""; open_path=""; dump_path=""
     }
@@ -71,11 +71,9 @@ validate_pow_prune_candidates() {
       if (!scope)       missing=missing " Scope"
       if (!allowlist)   missing=missing " Target Files allowlist"
       if (!receipts)    missing=missing " Receipt pointers"
-      if (!verification) missing=missing " Verification commands"
       if (!notes)       missing=missing " Notes"
       if (!results)     missing=missing " RESULTS"
       if (!open)        missing=missing " OPEN"
-      if (!dump)        missing=missing " DUMP"
 
       if (missing != "") {
         printf "ERROR: PoW prune blocked. Entry missing required fields: %s ::%s\n", header, missing > "/dev/stderr"
@@ -84,7 +82,9 @@ validate_pow_prune_candidates() {
 
       printf "%s\tRESULTS\t%s\n", header, trim(results_path)
       printf "%s\tOPEN\t%s\n", header, trim(open_path)
-      printf "%s\tDUMP\t%s\n", header, trim(dump_path)
+      if (dump) {
+        printf "%s\tDUMP\t%s\n", header, trim(dump_path)
+      }
     }
     /^## [0-9]{4}-[0-9]{2}-[0-9]{2} / {
       if (in_entry) {
@@ -108,7 +108,6 @@ validate_pow_prune_candidates() {
       if ($0 ~ /^[[:space:]]*-[[:space:]]*Scope:[[:space:]]*.+$/) scope=1
       if ($0 ~ /^[[:space:]]*-[[:space:]]*Target Files allowlist:[[:space:]]*$/) allowlist=1
       if ($0 ~ /^[[:space:]]*-[[:space:]]*Receipt pointers:[[:space:]]*$/) receipts=1
-      if ($0 ~ /^[[:space:]]*-[[:space:]]*Verification commands:[[:space:]]*$/) verification=1
       if ($0 ~ /^[[:space:]]*-[[:space:]]*Notes:[[:space:]]*.+$/) notes=1
 
       if (match($0, /^[[:space:]]*-[[:space:]]*RESULTS:[[:space:]]*(.+)$/, m)) {
@@ -152,10 +151,10 @@ validate_pow_prune_candidates() {
 
     case "$kind" in
       RESULTS)
-        if [[ "$normalized" != storage/handoff/*-RESULTS.md ]]; then
+        if [[ "$normalized" != storage/handoff/RESULTS.md && "$normalized" != storage/handoff/*-RESULTS.md ]]; then
           rm -f "$pointers_tmp"
           echo "${POW_GUARD_FATAL}" >&2
-          die "PoW prune blocked: RESULTS pointer must target storage/handoff/*-RESULTS.md (${normalized})."
+          die "PoW prune blocked: RESULTS pointer must target storage/handoff/RESULTS.md (${normalized})."
         fi
         ;;
       OPEN)
@@ -185,6 +184,12 @@ validate_pow_prune_candidates() {
       echo "${POW_GUARD_FATAL}" >&2
       die "PoW prune blocked: pointer target missing (${rel_path})."
     fi
+    case "$kind" in
+      RESULTS|OPEN|DUMP)
+        # These are disposable storage artifacts, not tracked canon.
+        continue
+        ;;
+    esac
     if ! git -C "${REPO_ROOT}" ls-files --error-unmatch -- "$rel_path" >/dev/null 2>&1; then
       rm -f "$pointers_tmp"
       echo "${POW_GUARD_FATAL}" >&2
@@ -266,7 +271,7 @@ ledger_extract_candidates() {
 
   for header in "${ordered_headers[@]}"; do
     entry_index="${index_by_header[$header]}"
-    if [[ -z "${results_by_header[$header]:-}" || -z "${open_by_header[$header]:-}" || -z "${dump_by_header[$header]:-}" ]]; then
+    if [[ -z "${results_by_header[$header]:-}" || -z "${open_by_header[$header]:-}" ]]; then
       rm -f "$index_tmp"
       echo "${POW_GUARD_FATAL}" >&2
       die "PoW prune blocked: missing normalized pointer set for entry '${header}'."
@@ -275,7 +280,7 @@ ledger_extract_candidates() {
       "$entry_index" \
       "${results_by_header[$header]}" \
       "${open_by_header[$header]}" \
-      "${dump_by_header[$header]}"
+      "${dump_by_header[$header]:-}"
   done
 
   rm -f "$index_tmp"

@@ -145,17 +145,29 @@ require_base_dp_in_processed() {
 next_addendum_letter() {
   local base_dp="$1"
   local intake_dir="$REPO_ROOT/storage/dp/intake"
+  local active_addendum_path="${intake_dir}/ADDENDUM.md"
+  local active_base_dp=""
+  local active_addendum_id=""
   local code
   local letter
 
   mkdir -p "$intake_dir"
 
+  if [[ -f "$active_addendum_path" ]]; then
+    active_base_dp="$(trim "$(extract_field_value "Base Packet" "$active_addendum_path")")"
+    active_addendum_id="$(trim "$(extract_field_value "Addendum ID" "$active_addendum_path")")"
+  fi
+
   for code in $(seq 65 90); do
     printf -v letter '%b' "\\$(printf '%03o' "$code")"
-    if [[ ! -e "${intake_dir}/${base_dp}-ADDENDUM-${letter}.md" ]]; then
-      printf '%s' "$letter"
-      return 0
+    if find "${REPO_ROOT}/storage/dp/processed" -maxdepth 1 -type f -name "${base_dp}-ADDENDUM-${letter}.md" | grep -q .; then
+      continue
     fi
+    if [[ "$active_base_dp" == "$base_dp" && "$active_addendum_id" == "$letter" ]]; then
+      continue
+    fi
+    printf '%s' "$letter"
+    return 0
   done
 
   die "no addendum letter available for ${base_dp} (A-Z exhausted)"
@@ -227,7 +239,7 @@ read_addendum_lint_constants
 require_base_dp_in_processed "$BASE_DP_ID"
 
 ADDENDUM_LETTER="$(next_addendum_letter "$BASE_DP_ID")"
-OUTPUT_PATH="$REPO_ROOT/storage/dp/intake/${BASE_DP_ID}-ADDENDUM-${ADDENDUM_LETTER}.md"
+OUTPUT_PATH="$REPO_ROOT/storage/dp/intake/ADDENDUM.md"
 RENDERED_TMP="$(mktemp)"
 
 "$TEMPLATE_BIN" render addendum \
