@@ -20,9 +20,17 @@
    - `Actions taken:`
    - `Actions not taken:`
    - `Key evidence:`
-4. Output may be stored as a disposable comparative copy in `storage/dp/intake/<MODEL>-EXECUTION-DECISION.md` or latest-wins disposable target `storage/dp/intake/EXECUTION-DECISION.md` when that ingest path is active.
-5. Validation remains response-lint based through `bash tools/lint/response.sh --mode=execution-decision`.
-6. Execution-decision output is advisory evidence; unsupported claims are scored as `log-claim-drift` or `log-schema-drift` under active testing policy.
+4. Validation remains response-lint based through `bash tools/lint/response.sh --mode=execution-decision`.
+5. Execution-decision output is advisory evidence; unsupported claims are scored as `log-claim-drift` or `log-schema-drift` under active testing policy.
+
+## Interim Placement Contract
+`execution-decision` is disposable/manual-placement evidence for now: useful and explicit, but subordinate to `RESULTS`, `CLOSING`, and audit truth. No execution-decision bundle profile exists yet.
+
+Placement paths (manual; operator places the received fenced markdown):
+- `storage/handoff/EXECUTION-DECISION.md`: received fenced markdown from auditor/analyst/architect/other secondary lanes.
+- `storage/dp/intake/EXECUTION-DECISION.md`: architect-generated intake variant.
+
+These are latest-wins disposable files. They are not certify inputs and are not audit bundle artifacts. Prune may remove them.
 
 ## Anecdotal Anchor
 Execution-decision logs became necessary once provider outputs diverged not only in payload quality but in the reasoning they later claimed to have followed. The prompt structure exists to make those mismatches inspectable without requiring hidden prompt disclosure.

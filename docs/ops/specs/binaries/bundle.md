@@ -5,6 +5,19 @@
 ## First Principles Rationale
 `ops/bin/bundle` produces delivery packets for analyst, architect, audit, project, conform, and foreman roles. It is a transport contract, not a free-form export path: profile routing, explicit disposable inputs, dump selection, and emitted artifact identity are deterministic.
 
+## Shipping Spine Position
+Bundle sits at two points in the shipping spine:
+- **Analyst/Architect input:** `--profile=analyst` or `--profile=architect` delivers the context package that produces `PLAN.md` (analyst) or the active DP draft at `storage/dp/intake/DP.md` (architect).
+- **Audit delivery:** `--profile=audit` packages certify-generated RESULTS and CLOSING for auditor review. This is the canonical audit intake mechanism and is **separate** from operator session refresh (`ops/bin/open`, `ops/bin/dump` for CDD). Do not conflate bundle audit with standalone `ops/bin/dump --scope=core` closeout steps.
+- **Secondary lanes:** `--profile=foreman` is an intervention intake path (not a PASS/FAIL verdict workflow). `--profile=conform` is a structure normalization lane. Neither replaces RESULTS or audit truth.
+
+## Active Surface Names
+- Analyst input: `storage/handoff/TOPIC.md` (latest-wins)
+- Analyst output: `storage/handoff/PLAN.md` (latest-wins)
+- Architect output (active DP draft): `storage/dp/intake/DP.md` (printed in bundle `[REQUEST]` as `dp_draft_path`; `packet_id` retains `DP-OPS-XXXX`)
+- Audit initial bundle: `storage/handoff/AUDIT-*.txt`
+- Audit rerun bundle: `storage/handoff/AUDIT-R<index>-*.txt`
+
 ## Mechanics and Sequencing
 1. Validate arguments and resolve the requested profile or `auto` route.
 2. Load policy from `ops/lib/manifests/BUNDLE.md`.
@@ -52,7 +65,8 @@ Current live set:
 ## Architect Profile Surfaces
 - `storage/handoff/PLAN.md`: required plan input surface; must contain `## Architect Handoff` fields with slice selection. Bundle fails closed when `--slice` is given and this file is absent.
 - `ARCHITECT-*.txt`: emitted bundle artifact containing the dump payload and stance contract.
-- `storage/dp/intake/<packet_id>.md`: deterministic active DP draft surface; derived from the validated slice packet identity and printed in bundle `[REQUEST]` as `dp_draft_path`. Architect model output is a fenced DP draft block saved here by the operator for dispatch.
+- `storage/dp/intake/DP.md`: latest-wins active DP draft surface; printed in bundle `[REQUEST]` as `dp_draft_path`. Architect model output is a fenced DP draft block saved here by the operator for dispatch.
+- `packet_id`: process identity retained in bundle `[REQUEST]` and internal packet-scoped intake/processed paths (`DP-OPS-XXXX.md`).
 
 ## Audit Submission Identity
 - initial audit delivery: `AUDIT-*` (default; no `--rerun` flag required)

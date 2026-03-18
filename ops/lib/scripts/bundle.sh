@@ -1539,6 +1539,13 @@ bundle_run() {
       echo "- refresh_reason: (none)"
     fi
     echo
+    echo "[SPINE]"
+    echo "- Main chain: TOPIC.md -> PLAN.md -> storage/dp/intake/DP.md -> execution -> RESULTS + CLOSING -> audit bundle -> merge"
+    echo "- Active draft surface: storage/dp/intake/DP.md (latest-wins); packet identity remains DP-OPS-XXXX."
+    echo "- Certify requires STELA_TRACE_ID from OPEN artifact or STELA_TRACE_ID env var."
+    echo "- Audit dump: ./ops/bin/bundle --profile=audit --out=auto (separate from operator session refresh)"
+    echo "- Secondary lanes: foreman/addendum (intervention), conform/conformist (normalization), execution-decision (disposable/manual)"
+    echo
     echo "[DUMP]"
     echo "- Scope: ${dump_scope}"
     echo "- Persistence profile: ${dump_persistence_profile}"
@@ -1580,7 +1587,7 @@ bundle_run() {
     fi
     if [[ -n "$request_packet_id" ]]; then
       echo "- packet_id: ${request_packet_id}"
-      echo "- dp_draft_path: storage/dp/intake/${request_packet_id}.md"
+      echo "- dp_draft_path: storage/dp/intake/DP.md"
     else
       echo "- packet_id: (none)"
       echo "- dp_draft_path: (none)"
@@ -1809,7 +1816,7 @@ bundle_run() {
       echo "    \"slice_validated\": true,"
       echo "    \"plan_source\": \"$(bundle_json_escape "$request_plan_source")\","
       echo "    \"packet_id\": \"$(bundle_json_escape "$request_packet_id")\","
-      echo "    \"dp_draft_path\": \"storage/dp/intake/$(bundle_json_escape "$request_packet_id").md\","
+      echo "    \"dp_draft_path\": \"storage/dp/intake/DP.md\","
       echo "    \"closing_sidecar\": \"$(bundle_json_escape "$request_closing_sidecar")\","
       if [[ -n "$request_title_suffix" ]]; then
         echo "    \"title_suffix\": \"$(bundle_json_escape "$request_title_suffix")\","

@@ -208,6 +208,8 @@ load_allowlist_entries() {
       continue
     fi
     case "$entry" in
+      storage/dp/intake/DP.md)
+        ;;
       storage/dp/intake/*-ADDENDUM-*.md)
         ;;
       storage/handoff/CLOSING-DP-OPS-*.md)

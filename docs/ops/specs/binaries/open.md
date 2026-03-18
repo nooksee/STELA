@@ -5,10 +5,16 @@
 ## First Principles Rationale
 `ops/bin/open` establishes a verifiable freshness checkpoint before packet execution. It prevents stale-state execution by binding intent, branch, hash, and porcelain status to a timestamped artifact. In bundle-first intake flows, OPEN remains the freshness authority and `ops/bin/bundle` consumes its artifact path and metadata without changing OPEN semantics.
 
+## OPEN Trace Dependency
+`ops/bin/certify` requires a `STELA_TRACE_ID` to generate archive surface leaves. It resolves this ID from: (1) the `STELA_TRACE_ID` environment variable, or (2) the latest `storage/handoff/OPEN-*.txt` artifact. OPEN is therefore spine-grade: running `./ops/bin/open --out=auto` before certify is the standard method for establishing trace continuity. The fallback env var path is a secondary recovery mechanism.
+
+## OPEN-PORCELAIN Contract
+`storage/handoff/OPEN-PORCELAIN-*.txt` is conditionally emitted: it is written only when `git status --porcelain` returns non-empty output (dirty working tree). Clean sessions suppress OPEN-PORCELAIN by design. OPEN-PORCELAIN is dirty-state evidence, not a universal shipping requirement. Certify excludes it from OPEN artifact selection and redacts its path from receipt replays.
+
 ## Mechanics and Sequencing
 The binary parses format, intent, DP label, output mode, and optional tag. It emits a new `STELA_TRACE_ID`, reads branch and short hash, and captures porcelain state on every run. If porcelain is non-empty it writes normalized porcelain lines to `storage/handoff/OPEN-PORCELAIN-...txt`. OPEN remains pointer-first: it includes porcelain summary lines and the `Porcelain saved` artifact path, and does not inline full or preview porcelain payload blocks. It validates required canon pointer files, builds an OPEN prompt document with freshness gate data and operational guidance, and wraps the emitted document with canonical marker lines.
 
-Architect path: OPEN detects `storage/handoff/PLAN.md` presence and reflects its status in `[NEXT OPERATOR MOVES]` so the operator can see whether the architect plan input surface is ready. Architect surface details (packet identity, `dp_draft_path`, `closing_sidecar`) are bundle-mediated and appear in the bundle `[REQUEST]` block, not in OPEN output.
+Architect path: OPEN detects `storage/handoff/PLAN.md` presence and reflects its status in `[NEXT OPERATOR MOVES]` so the operator can see whether the architect plan input surface is ready. Architect surface details (`packet_id`, `dp_draft_path=storage/dp/intake/DP.md`, `closing_sidecar`) are bundle-mediated and appear in the bundle `[REQUEST]` block, not in OPEN output.
 - `===== STELA OPEN PROMPT =====`
 - `===== END STELA OPEN PROMPT =====`
 The legacy wrapper `===== OPEN PROMPT =====` and legacy standalone title line `Stela OPEN PROMPT` are retired. The binary writes the prompt to `storage/handoff/OPEN-...txt`, mirrors prompt content to stdout, and prints `OPEN saved:` only when `--out=auto` is requested. The Next Operator Moves block includes non-blocking guidance for `ops/bin/bundle --profile=auto --out=auto`.

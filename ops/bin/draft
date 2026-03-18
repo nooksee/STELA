@@ -806,13 +806,16 @@ require_task_markers
 mkdir -p "$REPO_ROOT/storage/dp/intake"
 
 intake_path="$REPO_ROOT/storage/dp/intake/${DP_ID}.md"
+active_intake_path="$REPO_ROOT/storage/dp/intake/DP.md"
 rendered_path="$(mktemp)"
 
 render_dp "$rendered_path"
 cp "$rendered_path" "$intake_path"
+cp "$rendered_path" "$active_intake_path"
 update_task "$rendered_path"
 rm -f "$rendered_path"
 
 echo "Wrote: ${intake_path#${REPO_ROOT}/}"
+echo "Updated active draft: ${active_intake_path#${REPO_ROOT}/}"
 echo "Updated: TASK.md"
 exit 0

@@ -27,6 +27,9 @@ Define the template-backed conformist stance body used by bundle output contract
 - Render output is deterministic for identical repository state.
 - Conformist stance is not used for audit verdict workflows or addendum authorization workflows.
 
+## Shipping Spine Position
+Conformist is a bounded secondary lane in the shipping spine. It provides structure normalization: the conformist model receives a draft DP and outputs a structurally corrected version. Conformist output is not an audit verdict, not a RESULTS receipt, and not an addendum authorization. It is subordinate to RESULTS, CLOSING, and audit truth.
+
 ## Related pointers
 - `ops/lib/manifests/BUNDLE.md`
 - `ops/lib/scripts/bundle.sh`

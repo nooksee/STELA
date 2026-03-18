@@ -191,11 +191,18 @@ Do not:
 EOF
   cat <<EOF
 
+[SHIPPING SPINE]
+- Main chain: TOPIC.md -> PLAN.md -> storage/dp/intake/DP.md -> execution -> RESULTS + CLOSING -> audit bundle -> merge
+- Active draft surface: storage/dp/intake/DP.md (latest-wins); packet identity remains DP-OPS-XXXX.
+- Certify requires STELA_TRACE_ID from this OPEN artifact or STELA_TRACE_ID env var.
+- Audit dump: ./ops/bin/bundle --profile=audit --out=auto (separate from session refresh)
+- Secondary lanes: foreman/addendum (intervention), conform/conformist (normalization), execution-decision (disposable/manual at storage/handoff/EXECUTION-DECISION.md)
+
 [NEXT OPERATOR MOVES]
 - ./ops/bin/bundle --profile=auto --out=auto
 - ./ops/bin/bundle --profile=architect --slice=<SLICE_ID> --out=auto
   plan surface: ${plan_surface_rel} (${plan_surface_status})
-  dp draft surface: storage/dp/intake/<packet_id>.md (packet_id in bundle [REQUEST])
+  dp draft surface: storage/dp/intake/DP.md (packet_id in bundle [REQUEST])
 - ./ops/bin/dump --scope=core --format=chatgpt
 
 [OPERATOR CONTEXT]

@@ -2,19 +2,56 @@
 # System Manual (Command Console)
 
 ## 0. Mechanical Workflow
+
+### Shipping Spine (End-to-End Chain)
+The canonical operator shipping chain is:
+
+`TOPIC.md` → `PLAN.md` → `storage/dp/intake/DP.md` (active draft) → Worker execution → `RESULTS` + `CLOSING` → audit bundle → merge
+
+Each stage has one obvious active surface. Secondary lanes (foreman/addendum, conform/conformist, execution-decision) are bounded sidepaths, not replacements for RESULTS, CLOSING, or audit truth.
+
+Active surfaces by stage:
+- **Topic input:** `storage/handoff/TOPIC.md` (latest-wins; operator writes before each analyst run)
+- **Plan output:** `storage/handoff/PLAN.md` (latest-wins; analyst model writes this)
+- **Active DP draft:** `storage/dp/intake/DP.md` (latest-wins operator surface; architect output is saved here)
+- **Packet/process identity:** `DP-OPS-XXXX` (retained in the packet body, packet-scoped intake mirror, processed artifact path, RESULTS, and CLOSING)
+- **Audit bundle:** `storage/handoff/AUDIT-*.txt` (initial) or `storage/handoff/AUDIT-R*.txt` (rerun)
+- **Results receipt:** `storage/handoff/DP-OPS-XXXX-RESULTS.md`
+- **Closing sidecar:** `storage/handoff/CLOSING-DP-OPS-XXXX.md`
+
+Audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto`. It is separate from operator session refresh (`./ops/bin/open --out=auto`). Do not conflate them: operator session refresh keeps state fresh for the next session; the audit bundle packages the certify-generated evidence for auditor review.
+
 **Execution Cycle:**
-1.  **Start:** `./ops/bin/open` (Generates prompt + freshness gate).
-2.  **Draft:** `./ops/bin/draft` (Generates canonical DP block and updates `TASK.md`).
-3.  **Capture (CDD):** `./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto` (Serializes Contractor-visible state).
+1.  **Start:** `./ops/bin/open --out=auto` (freshness gate + trace anchor; OPEN provides `STELA_TRACE_ID` required by certify).
+2.  **Draft:** `./ops/bin/draft` (generates canonical DP block, refreshes `storage/dp/intake/DP.md` plus the packet-scoped intake mirror, and updates `TASK.md`).
+3.  **Capture (CDD):** `./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto` (serializes Contractor-visible state).
     Note: Audit intake is bundle-first. Use `./ops/bin/bundle --profile=audit --out=auto` for audit review. Bundle dump scope is profile-mapped from `ops/lib/manifests/BUNDLE.md`; current audit mapping is `core`.
 4.  **Dispatch:** Hand DP to Worker (See Section 5).
 5.  **Review:** Verify `RECEIPT` (Proofs) vs `TASK.md` requirements.
-6.  **Close:** Merge PR + Update ledgers as required by closeout policy.
+6.  **Certify:** `./ops/bin/certify --dp=DP-OPS-XXXX --out=auto` (generates RESULTS, emits SoP/PoW/TASK archive leaves, moves DP from intake to processed).
+7.  **Audit:** `./ops/bin/bundle --profile=audit --out=auto` then deliver bundle for audit review.
+8.  **Merge:** Operator commits on work branch, opens PR per CLOSING sidecar, merges to main.
 
 **Dispatch Contract Notes:**
 - The DP Preflight Gate runs after the Freshness Gate and before any edits.
 - Worker input is DP text only; OPEN is for integrator refresh and receipt pointers and is not required reading for workers.
 - DP structure is generated from `ops/src/surfaces/dp.md.tpl` through `ops/bin/draft`; manual structural edits are prohibited.
+
+**OPEN and OPEN-PORCELAIN Contract:**
+- `OPEN` is spine-grade: `ops/bin/certify` requires a `STELA_TRACE_ID` sourced from `STELA_TRACE_ID` env var or the latest OPEN artifact (`storage/handoff/OPEN-*.txt`). Run `./ops/bin/open --out=auto` before certify.
+- `OPEN-PORCELAIN` (`storage/handoff/OPEN-PORCELAIN-*.txt`) is conditionally emitted: it is written only when the working tree is dirty. It is not a universal shipping requirement; clean sessions suppress it by design.
+
+**Execution-Decision Handling (Interim):**
+- `execution-decision` is disposable/manual-placement evidence, subordinate to `RESULTS`, `CLOSING`, and audit truth.
+- Received fenced markdown from auditor/analyst/architect/other secondary lanes may be placed at `storage/handoff/EXECUTION-DECISION.md`.
+- Architect-generated intake variant may be placed at `storage/dp/intake/EXECUTION-DECISION.md`.
+- No execution-decision bundle profile exists yet; placement is manual.
+- Validated via `bash tools/lint/response.sh --mode=execution-decision`.
+
+**Secondary Lanes:**
+- `foreman/addendum`: Intervention path. Contractor or auditor reports `ADDENDUM REQUIRED`. Operator generates a foreman wake-up bundle (`./ops/bin/bundle --profile=foreman --intent="ADDENDUM REQUIRED: <DECISION_ID> - <BLOCKER>" --out=auto`), delivers it to foreman, and foreman issues an authorized addendum. The authorized addendum is handed to the Contractor as a finished document. Contractor does not author addendum content.
+- `conform/conformist`: Structure normalization lane. Does not replace RESULTS or audit truth.
+- `execution-decision`: See above.
 - Surface and definition rendering is centralized in `ops/bin/template` with YAML metadata parsing, include injection, and strict slot enforcement by default.
 - Bundle stance contract rendering is template-backed via `ops/src/stances/*.md.tpl` and manifest stance keys in `ops/lib/manifests/BUNDLE.md`.
 - Definition registry guidance is canonical in `docs/ops/specs/definitions/agents.md`, `docs/ops/specs/definitions/tasks.md`, and `docs/ops/specs/definitions/skills.md`. `opt/_factory/AGENTS.md`, `opt/_factory/TASKS.md`, and `opt/_factory/SKILLS.md` are pointer heads.
@@ -521,16 +558,17 @@ Canonical operator flow for an architect session:
 ./ops/bin/bundle --profile=architect --slice=<SLICE_ID> --out=auto
 ~~~
 3. Deliver the bundle artifact (`ARCHITECT-*.txt` or `ARCHITECT-*.tar`) to the architect model.
-4. Save the fenced DP draft from the model output to the deterministic intake path printed in the bundle `[REQUEST]` block as `dp_draft_path`:
+4. Save the fenced DP draft from the model output to the active intake path printed in the bundle `[REQUEST]` block as `dp_draft_path`:
 ~~~bash
-# path is storage/dp/intake/<packet_id>.md — packet_id printed in bundle [REQUEST]
+# path is storage/dp/intake/DP.md — packet_id printed in bundle [REQUEST]
 ~~~
 5. Dispatch the DP per Section 2 Dispatch Packet Mechanics.
 
 Surface contract:
 - `storage/handoff/PLAN.md`: latest-wins plan input; analyst model writes this; operator delivers it to architect as the primary handoff surface.
 - `ARCHITECT-*.txt`: emitted bundle artifact; contains the dump payload and stance contract.
-- `storage/dp/intake/<packet_id>.md`: deterministic active DP draft surface; operator saves the fenced DP draft block output here after the architect model run. Packet identity is derived from the validated slice and printed by bundle.
+- `storage/dp/intake/DP.md`: latest-wins active DP draft surface; operator saves the fenced DP draft block output here after the architect model run.
+- `DP-OPS-XXXX`: packet identity printed by bundle and retained in packet-scoped internal paths used by certify and processed storage.
 
 ### Local Hooks Setup
 Run once after clone, and after any machine where the repo is checked out:

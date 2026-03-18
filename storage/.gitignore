@@ -19,3 +19,6 @@ handoff/*
 !dumps/
 dumps/*
 !dumps/.gitkeep
+!current/
+current/*
+!current/.gitkeep

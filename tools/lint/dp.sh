@@ -20,7 +20,7 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="4af892a0c0d5b4c3f872fed6cfb36f56a293057abf7ed97ea12fceadbe1c6249"
+CANONICAL_DP_TEMPLATE_SHA256="edf4f82bd04ee7c660c4d05b26eba2af00d4b73eff54356808b9e6eaea758b07"
 CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/stances/addendum.md.tpl"
 CANONICAL_ADDENDUM_TEMPLATE_SHA256="715db3fae0598a85a0fa490c16f590dd08e6d6f02fa9b18224ce48625612f624"
 TEMPLATE_RENDER_BIN="ops/bin/template"
@@ -965,6 +965,8 @@ check_allowlist_pointer_integrity() {
     fi
 
     case "$normalized" in
+      storage/dp/intake/DP.md)
+        ;;
       storage/dp/intake/DP-OPS-0096-ADDENDUM-A.md)
         ;;
       storage/handoff/CLOSING-DP-OPS-*.md)

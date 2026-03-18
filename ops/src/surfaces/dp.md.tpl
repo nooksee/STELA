@@ -149,8 +149,8 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 - Run prune hygiene: ./ops/bin/prune --scrub.
 - Refresh llms artifacts: `./ops/bin/llms`
 - Regenerate session artifacts: `./ops/bin/open --out=auto`
-- Capture updated Ops state: `./ops/bin/dump --scope=core --format=chatgpt --out=auto`
 - Ensure the next session begins with refreshed session artifacts and matching receipts.
+- Note: audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto` and is separate from operator session refresh. Do not stamp an additional `ops/bin/dump --scope=core` into closeout unless the DP explicitly authorizes a standalone state capture.
 - Refresh side-effect: `ops/bin/llms` regenerates `ops/lib/manifests/OPS.md` as a compile event; if `OPS.md` is not in the allowlist, restore it before running `integrity.sh`. See `docs/MANUAL.md` Refresh side-effect notice for the full procedure.
 
 ### 3.5.1 Mandatory Closing Sidecar
