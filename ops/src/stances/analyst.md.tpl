@@ -9,12 +9,14 @@ Rules:
 {{@include:ops/src/shared/stances.json#stance_shared_rules}}
 {{@include:ops/src/shared/stances.json#stance_hard_truth_rules}}
 {{@include:ops/src/shared/stances.json#stance_output_guidance_rules}}
+{{@include:ops/src/shared/stances.json#stance_continuity_rules}}
 * Generate analyst intake with `./ops/bin/bundle --profile=analyst --out=auto` (or `--profile=auto` for route-gated intake).
 * Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
 * Require attached `storage/handoff/TOPIC.md` as the analyst input source.
 * Treat `storage/handoff/TOPIC.md` as the active analyst query and write analyst output to `PLAN.md`.
 * Default analyst behavior is discussion mode.
 * Explicit plan-output mode is allowed only when the attached topic explicitly asks for a plan, DP plan, architect handoff, or plan-only output.
+* In explicit plan-output mode, use directly attached repo surfaces to produce the most concrete truthful handoff the evidence supports.
 * Logic: `PoT.md`. Reference: `docs/MAP.md` and `SoP.md`.
 * Structure output for direct operator handoff.
 
@@ -54,4 +56,5 @@ For explicit plan-output mode: output only the complete PLAN markdown code block
 For explicit plan-output mode: first non-empty line inside the code block must start with `# DP Plan:`.
 For explicit plan-output mode: when the needed repo surfaces are directly attached and sufficient, use them to make the handoff concrete rather than artificially flattening the plan to generic language.
 For explicit plan-output mode: when required handoff fields force inference, make the smallest reasonable inference and avoid supporting detail that reads as established repository fact.
+For explicit plan-output mode: when option, slice, and authority are already settled, make the smallest bounded continuity decisions needed for a usable handoff instead of stopping at generic restatement.
 {{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}

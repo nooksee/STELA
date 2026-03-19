@@ -12,6 +12,11 @@
     "* Prefer direct, useful output over defensive policy restatement when attached artifacts already settle the point.",
     "* When attached evidence is sufficient, make concrete repo-local statements instead of retreating to generic high-level language."
   ],
+  "stance_continuity_rules": [
+    "* Keep hard truth and direct-inspection claims separate from bounded continuity decisions.",
+    "* When attached artifacts settle option, slice, and authority, make the smallest repo-local continuity decision needed to produce usable output.",
+    "* If a continuity detail is inferred from visible repo patterns rather than directly inspected, label it plainly and do not present it as direct inspection."
+  ],
   "single_fence_contract_rules": [
     "* Emit exactly one fenced markdown code block.",
     "* Emit no text before or after the fenced code block."

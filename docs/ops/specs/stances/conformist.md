@@ -12,6 +12,9 @@ Define the template-backed conformist stance body used by bundle output contract
 ## Inputs
 - Template source: `ops/src/stances/conformist.md.tpl`
 - Shared include source: `ops/src/shared/stances.json#stance_shared_rules`
+- Shared include source: `ops/src/shared/stances.json#stance_hard_truth_rules`
+- Shared include source: `ops/src/shared/stances.json#stance_output_guidance_rules`
+- Shared include source: `ops/src/shared/stances.json#stance_continuity_rules`
 - Shared include source: `ops/src/shared/stances.json#single_fence_contract_rules`
 - Shared include source: `ops/src/shared/stances.json#non_audit_role_drift_rules`
 
@@ -20,6 +23,8 @@ Define the template-backed conformist stance body used by bundle output contract
 - No unresolved include directives.
 - First non-empty line inside the fenced body must start with `### DP-`.
 - For machine-ingest conformist mode, reject addendum authorization headings and decision fields.
+- Conformist is a bounded normalizer: visible draft intent plus repo patterns may settle ordinary continuity gaps without forcing a STOP.
+- Conformist still stops when missing detail leaves the normalization target or scope unclear.
 
 ## Invariants and failure modes
 - Include expansion is strict and fail-closed.
