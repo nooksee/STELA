@@ -11,6 +11,8 @@ Define the template-backed Architect stance body used by bundle output contract 
 ## Inputs
 - Template source: `ops/src/stances/architect.md.tpl`
 - Shared include source: `ops/src/shared/stances.json#stance_shared_rules`
+- Shared include source: `ops/src/shared/stances.json#stance_hard_truth_rules`
+- Shared include source: `ops/src/shared/stances.json#stance_output_guidance_rules`
 - Shared include source: `ops/src/shared/stances.json#single_fence_contract_rules`
 - Shared include source: `ops/src/shared/stances.json#non_audit_role_drift_rules`
 
@@ -24,6 +26,8 @@ Define the template-backed Architect stance body used by bundle output contract 
 - First non-empty line inside the fenced body must start with `### DP-`.
 - Architect drafts express `Required Work Branch` in the canonical proposal form (`PROPOSED/work/...`) and do not add branch-state narration or replacement instructions.
 - Output contract rejects Contractor Execution Narrative sections and receipt narrative subheadings.
+- Architect handoff selections remain the governing scope, but directly visible attached artifacts may be used to correct stale or self-contradictory request details inside that selected scope.
+- Architect may name repo/runtime contract defects plainly when those defects are directly visible in attached artifacts and the corrective work stays within the selected slice.
 - Architect ingress lint delegates fenced DP bodies to `tools/lint/dp.sh`; canonical body rules (including `3.4.5` receipt shape and `3.5.1` closing-sidecar coherence) remain mandatory.
 
 ## Invariants and failure modes

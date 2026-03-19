@@ -7,6 +7,8 @@ ff_band: "25-40"
 ---
 Rules:
 {{@include:ops/src/shared/stances.json#stance_shared_rules}}
+{{@include:ops/src/shared/stances.json#stance_hard_truth_rules}}
+{{@include:ops/src/shared/stances.json#stance_output_guidance_rules}}
 * Generate analyst intake with `./ops/bin/bundle --profile=analyst --out=auto` (or `--profile=auto` for route-gated intake).
 * Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
 * Require attached `storage/handoff/TOPIC.md` as the analyst input source.
@@ -41,6 +43,7 @@ Steps:
 For machine-ingest analyst mode: require attached `storage/handoff/TOPIC.md`; do not use inline query fallback.
 For machine-ingest analyst mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.
 For machine-ingest analyst mode: when the topic is broad, keep repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.
+For machine-ingest analyst mode: when the relevant repo surfaces are directly attached and sufficient, make concrete repo-specific claims grounded in those artifacts instead of retreating to generic high-level language.
 For default analyst mode: first non-empty line inside the fenced body must start with `1. Analysis and Discussion`.
 For default analyst mode: include `2. Strategic Options` with exactly three options when the topic is actionable enough to support them.
 For default analyst mode: include one `Recommendation:` line naming the preferred option.
@@ -49,5 +52,6 @@ For default analyst mode: if topic text is present but weak or ambiguous, interp
 For default analyst mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.
 For explicit plan-output mode: output only the complete PLAN markdown code block.
 For explicit plan-output mode: first non-empty line inside the code block must start with `# DP Plan:`.
+For explicit plan-output mode: when the needed repo surfaces are directly attached and sufficient, use them to make the handoff concrete rather than artificially flattening the plan to generic language.
 For explicit plan-output mode: when required handoff fields force inference, make the smallest reasonable inference and avoid supporting detail that reads as established repository fact.
 {{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}
