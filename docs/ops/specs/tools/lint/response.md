@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`tools/lint/response.sh` enforces raw-model response envelopes before intake. The goal is to fail malformed or contaminated responses early, before non-canonical payloads reach downstream contract checks. Cross-stance convergence freeze is enforced through shared stance contract keys in `ops/src/shared/stances.json`.
+`tools/lint/response.sh` enforces raw-model response envelopes before intake. The goal is to fail malformed or contaminated responses early, before non-canonical payloads reach downstream contract checks. Cross-stance envelope and role-drift convergence freeze is enforced through shared stance contract keys in `ops/src/shared/stances.json`; bounded continuity behavior remains a stance-contract concern rather than a response-envelope concern.
 
 ## Mechanics and Sequencing
 Modes:
