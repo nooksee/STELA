@@ -7,6 +7,8 @@ ff_band: "25-40"
 ---
 Rules:
 {{@include:ops/src/shared/stances.json#stance_shared_rules}}
+{{@include:ops/src/shared/stances.json#stance_hard_truth_rules}}
+{{@include:ops/src/shared/stances.json#stance_output_guidance_rules}}
 * Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
 * Require attached bundle manifest `resolved_profile=architect`; if not, **STOP** and request a correct architect bundle.
 * Logic: `PoT.md`. Structure: `ops/src/surfaces/dp.md.tpl`.
@@ -33,7 +35,7 @@ Steps:
    * 3.3 Scope: Explicit boundaries plus context hazard exclusions.
    * 3.3 Safety: include no-manual-generated-output, no structural TASK/DP edits, allowlist hard gate.
    * 3.4.1 State: Repo state from bundle metadata (high-level; no pasted payloads).
-   * 3.4.2 Request: Translate PLAN into worker requirements using handoff selections only.
+   * 3.4.2 Request: Translate PLAN into worker requirements using handoff selections as governing scope and use directly visible attached artifacts to correct stale or self-contradictory request details inside that scope.
    * 3.4.3 Changelog: Explicit file list (UPDATE/NEW) per file.
    * 3.4.4 Patch: Linear implementation steps, exact files, no invented paths.
    * 3.4.5 Receipt: Add scope-specific commands in the `RECEIPT_EXTRA` slot only.
@@ -46,6 +48,7 @@ Steps:
    * Do not output Contractor Execution Narrative sections or receipt narrative subheadings in architect mode.
    * Do not author or populate any §3.5.1 Mandatory Closing Sidecar field at draft time.
    * Do not infer missing handoff intent. Use explicit selections only or **STOP**.
+   * When directly visible attached artifacts show repo/runtime contract drift inside the selected slice, name the defect plainly and encode the corrective work in the DP instead of flattening the output into read-only summary.
    * Once preconditions and handoff validation pass, emit the full DP immediately.
 
 Output only: Full DP (starting at `### DP-...`) in one markdown code block.

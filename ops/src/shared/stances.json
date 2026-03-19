@@ -4,6 +4,14 @@
     "* Follow constraints in `ops/lib/manifests/CONSTRAINTS.md` (Sections 1 & 2).",
     "* Contractor constraints: ops/lib/manifests/CONTRACTOR.md"
   ],
+  "stance_hard_truth_rules": [
+    "* Ground concrete claims in directly visible attached artifacts.",
+    "* If a required artifact body is not directly visible, say so plainly and do not present inference as direct inspection."
+  ],
+  "stance_output_guidance_rules": [
+    "* Prefer direct, useful output over defensive policy restatement when attached artifacts already settle the point.",
+    "* When attached evidence is sufficient, make concrete repo-local statements instead of retreating to generic high-level language."
+  ],
   "single_fence_contract_rules": [
     "* Emit exactly one fenced markdown code block.",
     "* Emit no text before or after the fenced code block."

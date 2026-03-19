@@ -11,6 +11,8 @@ Define the template-backed Analyst stance body used by bundle output contract re
 ## Inputs
 - Template source: `ops/src/stances/analyst.md.tpl`
 - Shared include source: `ops/src/shared/stances.json#stance_shared_rules`
+- Shared include source: `ops/src/shared/stances.json#stance_hard_truth_rules`
+- Shared include source: `ops/src/shared/stances.json#stance_output_guidance_rules`
 - Shared include source: `ops/src/shared/stances.json#single_fence_contract_rules`
 - Shared include source: `ops/src/shared/stances.json#non_audit_role_drift_rules`
 
@@ -31,7 +33,9 @@ Define the template-backed Analyst stance body used by bundle output contract re
 - Explicit plan-output mode first non-empty line inside the fenced body must start with `# DP Plan:`.
 - Machine-ingest analyst mode must not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.
 - Machine-ingest analyst mode keeps repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.
+- Machine-ingest analyst mode may make concrete repo-specific claims when the relevant repo surfaces are directly attached and sufficient to support them.
 - Explicit plan-output mode uses the smallest reasonable inference for required handoff fields and does not let inference read as established repository fact.
+- Explicit plan-output mode may use directly attached repo surfaces to make the handoff concrete instead of flattening it to generic language.
 - Default analyst mode treats weak or ambiguous topics conservatively, states assumptions, and asks concise follow-up questions instead of forcing a plan-only artifact.
 - Default analyst mode stops truthfully and asks for clarification when topic text is nonsensical or non-actionable.
 
