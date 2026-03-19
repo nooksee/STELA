@@ -66,7 +66,7 @@ Current live set:
 - `storage/handoff/PLAN.md`: required plan input surface; must contain `## Architect Handoff` fields with slice selection. Bundle fails closed when `--slice` is given and this file is absent.
 - `ARCHITECT-*.txt`: emitted bundle artifact containing the dump payload and stance contract.
 - `storage/dp/intake/DP.md`: latest-wins active DP draft surface; printed in bundle `[REQUEST]` as `dp_draft_path`. Architect model output is a fenced DP draft block saved here by the operator for dispatch.
-- `packet_id`: process identity retained in bundle `[REQUEST]`, processed storage, audit transport, and telemetry (`DP-OPS-XXXX`).
+- `packet_id`: process identity retained in bundle `[REQUEST]`, TASK/addendum lineage, audit transport, and telemetry (`DP-OPS-XXXX`).
 
 ## Audit Submission Identity
 - initial audit delivery: `AUDIT-*` (default; no `--rerun` flag required)

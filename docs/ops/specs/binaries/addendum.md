@@ -8,8 +8,8 @@
 ## Mechanics and Sequencing
 1. Parse required arguments `--base-dp=DP-OPS-XXXX` and `--slots-file=PATH`, reject unknown arguments, and validate `--base-dp` against the canonical packet ID pattern.
 2. Verify the slots file exists and is readable, then read canonical addendum template path and hash constants from `tools/lint/dp.sh` and fail on hash-parity mismatch.
-3. Confirm the base DP exists in `storage/dp/processed/` by matching at least one file with the prefix `storage/dp/processed/<BASE_DP_ID>*.md`.
-4. Determine the next addendum letter by checking processed addendum lineage for the base packet and the current active addendum surface, then select the first available letter from `A` through `Z`.
+3. Confirm the base DP exists either in the active draft surface (`storage/dp/intake/DP.md` with matching heading) or in the TASK leaf chain at `archives/surfaces/TASK-<BASE_DP_ID>-<git-short-hash>.md`.
+4. Determine the next addendum letter by checking addendum lineage content for the base packet (`archives/surfaces/ADDENDUM-<BASE_DP_ID>-<git-short-hash>.md`) and the current active addendum surface, then select the first available letter from `A` through `Z`.
 5. Render the addendum through `ops/bin/template render addendum` using the provided slots file and binary-supplied slot overrides for `BASE_DP_ID` and `ADDENDUM_ID`.
 6. Validate the rendered output before write: `BASE_DP_ID` and `ADDENDUM_ID` must match the computed values, required addendum sections must be non-empty and non-placeholder, and command substitution tokens (`$(`) are rejected.
 7. Emit the rendered artifact to stdout as the preview, then write the identical content to `storage/dp/intake/ADDENDUM.md` and print the output path.
@@ -39,10 +39,10 @@ The rendered output must contain populated, non-placeholder content for:
 `BASE_DP_ID` and `ADDENDUM_ID` are enforced from the binary's computed values and must round-trip in the rendered artifact. The remaining required sections are extracted from rendered addendum labels/blocks and rejected when blank or when placeholder tokens are detected (for example `TODO`, `TBD`, `{{...}}`, or replacement markers).
 
 ### Next-Letter Auto-Assignment Logic
-The binary checks processed addenda for the base packet and the active `storage/dp/intake/ADDENDUM.md` surface, then assigns the first unused uppercase letter in lexical order (`A` to `Z`). If all letters are exhausted, the binary exits with an error and writes nothing.
+The binary checks archive-lineage addenda for the base packet and the active `storage/dp/intake/ADDENDUM.md` surface, then assigns the first unused uppercase letter in lexical order (`A` to `Z`). If all letters are exhausted, the binary exits with an error and writes nothing.
 
 ### Error Conditions
-Hard-stop errors include: missing required arguments, malformed `--base-dp`, unreadable or missing slots file, missing canonical template or template hash mismatch, base DP absent from `storage/dp/processed/`, no addendum letters available, required rendered slot content missing or placeholder, rendered identity mismatch, command substitution tokens in output, and write failures.
+Hard-stop errors include: missing required arguments, malformed `--base-dp`, unreadable or missing slots file, missing canonical template or template hash mismatch, base DP absent from both active intake and the TASK leaf chain, no addendum letters available, required rendered slot content missing or placeholder, rendered identity mismatch, command substitution tokens in output, and write failures.
 
 ### Role Restriction and Manual Relationship
 `ops/bin/addendum` is an Integrator/foreman issuance tool used during the `docs/MANUAL.md` Closeout Cycle Post-Work Audit step when an authorized addendum is required. The Contractor does not invoke this binary and does not author addendum content.

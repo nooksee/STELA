@@ -23,7 +23,7 @@ Required:
 
 Addendum generation mode (all required):
 - --addendum=A                        single uppercase letter A-Z
-- --base-dp=DP-OPS-XXXX               existing base packet in intake or processed
+- --base-dp=DP-OPS-XXXX               existing base packet in active intake or TASK leaf lineage
 - --slots-file=PATH                   addendum sidecar with required slot blocks
 
 Addendum slots-file required tokens:
@@ -375,15 +375,45 @@ render_dp() {
 base_dp_source_path() {
   local base_dp="$1"
   local intake_path="$REPO_ROOT/storage/dp/intake/DP.md"
-  local processed_path="$REPO_ROOT/storage/dp/processed/${base_dp}.md"
+  local task_path="$REPO_ROOT/TASK.md"
+  local pointer_rel=""
 
   if [[ -f "$intake_path" ]] && grep -Eq "^###[[:space:]]+${base_dp}:" "$intake_path"; then
     printf '%s' "$intake_path"
     return 0
   fi
 
-  if [[ -f "$processed_path" ]]; then
-    printf '%s' "$processed_path"
+  if [[ -f "$task_path" ]] && [[ "$(awk 'END { print NR }' "$task_path")" == "1" ]]; then
+    pointer_rel="$(trim "$(cat "$task_path")")"
+    pointer_rel="${pointer_rel#./}"
+    if [[ -n "$pointer_rel" && -f "$REPO_ROOT/$pointer_rel" ]] && awk -v expected="$base_dp" '
+      /^packet_id:[[:space:]]*/ {
+        line=$0
+        sub(/^packet_id:[[:space:]]*/, "", line)
+        if (line == expected) {
+          found=1
+          exit
+        }
+      }
+      /^###[[:space:]]*/ {
+        line=$0
+        sub(/^###[[:space:]]*/, "", line)
+        sub(/:.*/, "", line)
+        if (line == expected) {
+          found=1
+          exit
+        }
+      }
+      END { exit found ? 0 : 1 }
+    ' "$REPO_ROOT/$pointer_rel"; then
+      printf '%s' "$REPO_ROOT/$pointer_rel"
+      return 0
+    fi
+  fi
+
+  mapfile -t matches < <(find "$REPO_ROOT/archives/surfaces" -maxdepth 1 -type f -name "TASK-${base_dp}-*.md" | sort)
+  if (( ${#matches[@]} > 0 )); then
+    printf '%s' "${matches[-1]}"
     return 0
   fi
 
@@ -784,7 +814,7 @@ require_clean_tree
 
 if (( ADDENDUM_MODE )); then
   read_addendum_lint_constants
-  base_source_path="$(base_dp_source_path "$BASE_DP_ID")" || die "base DP intake artifact not found in storage/dp/intake or storage/dp/processed: ${BASE_DP_ID}"
+  base_source_path="$(base_dp_source_path "$BASE_DP_ID")" || die "base DP artifact not found in active intake or TASK leaf lineage: ${BASE_DP_ID}"
 
   mkdir -p "$REPO_ROOT/storage/dp/intake" "$REPO_ROOT/storage/handoff"
 

@@ -1069,26 +1069,43 @@ bundle_resolve_audit_packet_id() {
 
 bundle_resolve_audit_packet_source_rel() {
   local packet_id="$1"
+  local results_rel="storage/handoff/RESULTS.md"
+  local task_surface_rel=""
+  local results_dp_source_rel=""
   local intake_rel="storage/dp/intake/DP.md"
-  local processed_rel="storage/dp/processed/${packet_id}.md"
   local intake_present=0
-  local processed_present=0
+
+  if [[ -f "${REPO_ROOT}/${results_rel}" ]]; then
+    results_dp_source_rel="$(awk '
+      /^-[[:space:]]*dp_source:[[:space:]]*/ {
+        line=$0
+        sub(/^[^:]*:[[:space:]]*/, "", line)
+        print line
+        exit
+      }
+    ' "${REPO_ROOT}/${results_rel}")"
+    results_dp_source_rel="$(trim "$results_dp_source_rel")"
+    if [[ -n "$results_dp_source_rel" && -f "${REPO_ROOT}/${results_dp_source_rel}" ]]; then
+      printf '%s' "$results_dp_source_rel"
+      return 0
+    fi
+  fi
+
+  task_surface_rel="$(bundle_resolve_task_surface_rel)"
+  if [[ -f "${REPO_ROOT}/${task_surface_rel}" ]] && [[ "$(bundle_extract_task_packet_id "${REPO_ROOT}/${task_surface_rel}")" == "$packet_id" ]]; then
+    printf '%s' "$task_surface_rel"
+    return 0
+  fi
 
   if [[ -f "${REPO_ROOT}/${intake_rel}" ]] && grep -Eq "^###[[:space:]]+${packet_id}:" "${REPO_ROOT}/${intake_rel}"; then
     intake_present=1
-  fi
-  [[ -f "${REPO_ROOT}/${processed_rel}" ]] && processed_present=1
-
-  if (( processed_present )); then
-    printf '%s' "$processed_rel"
-    return 0
   fi
   if (( intake_present )); then
     printf '%s' "$intake_rel"
     return 0
   fi
 
-  die "audit requires current packet source at ${processed_rel} or ${intake_rel}"
+  die "audit requires current packet source from RESULTS dp_source, TASK leaf chain, or ${intake_rel}"
 }
 
 bundle_extract_dp_scoped_load_order_paths() {
