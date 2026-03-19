@@ -12,7 +12,6 @@ INTEGRITY_LINT="${REPO_ROOT}/tools/lint/integrity.sh"
 RESULTS_LINT="${REPO_ROOT}/tools/lint/results.sh"
 HANDOFF_DIR="${REPO_ROOT}/storage/handoff"
 DP_INTAKE_DIR="${REPO_ROOT}/storage/dp/intake"
-DP_PROCESSED_DIR="${REPO_ROOT}/storage/dp/processed"
 ACTIVE_DP_REL="storage/dp/intake/DP.md"
 ACTIVE_ADDENDUM_REL="storage/dp/intake/ADDENDUM.md"
 ACTIVE_RESULTS_REL="storage/handoff/RESULTS.md"
@@ -108,10 +107,68 @@ path_is_certify_generated() {
   [[ -n "${CERTIFY_GENERATED_PATHS[$normalized]+set}" ]]
 }
 
+task_lineage_leaf_rel() {
+  local dp_id="$1"
+  local git_short_hash="$2"
+  printf 'archives/surfaces/TASK-%s-%s.md' "$dp_id" "$git_short_hash"
+}
+
+addendum_lineage_leaf_rel() {
+  local dp_id="$1"
+  local git_short_hash="$2"
+  printf 'archives/surfaces/ADDENDUM-%s-%s.md' "$dp_id" "$git_short_hash"
+}
+
+task_lineage_leaf_contains_packet() {
+  local source_path="$1"
+  local dp_id="$2"
+  awk -v expected="$dp_id" '
+    /^packet_id:[[:space:]]*/ {
+      line=$0
+      sub(/^packet_id:[[:space:]]*/, "", line)
+      if (line == expected) {
+        found=1
+        exit
+      }
+    }
+    /^###[[:space:]]*/ {
+      line=$0
+      sub(/^###[[:space:]]*/, "", line)
+      sub(/:.*/, "", line)
+      if (line == expected) {
+        found=1
+        exit
+      }
+    }
+    END { exit found ? 0 : 1 }
+  ' "$source_path"
+}
+
+find_task_lineage_leaf_rel_for_packet() {
+  local dp_id="$1"
+  local pointer_rel=""
+
+  if pointer_rel="$(read_surface_head_pointer "$TASK_SURFACE_PATH")"; then
+    if [[ -f "${REPO_ROOT}/${pointer_rel}" ]] && task_lineage_leaf_contains_packet "${REPO_ROOT}/${pointer_rel}" "$dp_id"; then
+      printf '%s' "$pointer_rel"
+      return 0
+    fi
+  fi
+
+  mapfile -t matches < <(find "${REPO_ROOT}/archives/surfaces" -maxdepth 1 -type f -name "TASK-${dp_id}-*.md" | sort)
+  if (( ${#matches[@]} > 0 )); then
+    printf '%s' "${matches[-1]#${REPO_ROOT}/}"
+    return 0
+  fi
+
+  return 1
+}
+
 register_certify_generated_surface_paths() {
   local packet_id="$1"
   local freshness_stamp="$2"
   local git_short_hash="$3"
+  local addendum_id="${4:-}"
 
   CERTIFY_GENERATED_PATHS=()
   CERTIFY_GENERATED_PATH_ORDER=()
@@ -121,7 +178,10 @@ register_certify_generated_surface_paths() {
   register_certify_generated_path "TASK.md"
   register_certify_generated_path "archives/surfaces/PoW-${freshness_stamp}-${git_short_hash}.md"
   register_certify_generated_path "archives/surfaces/SoP-${freshness_stamp}-${git_short_hash}.md"
-  register_certify_generated_path "archives/surfaces/TASK-${packet_id}-${git_short_hash}.md"
+  register_certify_generated_path "$(task_lineage_leaf_rel "$packet_id" "$git_short_hash")"
+  if [[ -n "$addendum_id" ]]; then
+    register_certify_generated_path "$(addendum_lineage_leaf_rel "$packet_id" "$git_short_hash")"
+  fi
 }
 
 build_generated_surface_policy_output() {
@@ -220,7 +280,7 @@ load_allowlist_entries() {
         ;;
       storage/handoff/CLOSING-*.md)
         ;;
-      storage/handoff/*|storage/dumps/*|storage/dp/intake/*|storage/dp/processed/*)
+      storage/handoff/*|storage/dumps/*|storage/dp/intake/*)
         die "allowlist entry must be persistent repo state (runtime artifact prefix forbidden): ${entry}"
         ;;
     esac
@@ -727,7 +787,6 @@ validate_artifact_path_consistency() {
   local dp_intake_rel="$ACTIVE_DP_REL"
   local closing_rel="$ACTIVE_CLOSING_REL"
   local results_rel="$ACTIVE_RESULTS_REL"
-  local processed_rel="storage/dp/processed/${dp_id}.md"
 
   [[ -f "${REPO_ROOT}/${dp_intake_rel}" ]] || die "missing canonical intake DP path: ${dp_intake_rel}"
   [[ -f "${REPO_ROOT}/${closing_rel}" ]] || die "missing canonical closing sidecar path: ${closing_rel}"
@@ -743,7 +802,7 @@ Artifact Path Consistency: PASS
 - Intake DP path: ${dp_intake_rel}
 - Closing sidecar path: ${closing_rel}
 - Active RESULTS path: ${results_rel}
-- Processed packet path: ${processed_rel}
+- Authoritative packet lineage class: archives/surfaces/TASK-${dp_id}-<git-short-hash>.md
 - Root-level lookalike variants absent: yes
 EOF
 }
@@ -755,7 +814,6 @@ validate_addendum_artifact_path_consistency() {
   local intake_rel="$ACTIVE_ADDENDUM_REL"
   local closing_rel="$ACTIVE_CLOSING_REL"
   local results_rel="$ACTIVE_RESULTS_REL"
-  local processed_rel="storage/dp/processed/${dp_id}-${addendum_label}.md"
 
   [[ -f "${REPO_ROOT}/${intake_rel}" ]] || die "missing canonical addendum intake path: ${intake_rel}"
   [[ -f "${REPO_ROOT}/${closing_rel}" ]] || die "missing canonical addendum closing sidecar path: ${closing_rel}"
@@ -774,53 +832,36 @@ Addendum Artifact Path Consistency: PASS
 - Addendum intake path: ${intake_rel}
 - Addendum closing sidecar path: ${closing_rel}
 - Active addendum RESULTS path: ${results_rel}
-- Processed addendum path: ${processed_rel}
+- Authoritative addendum lineage class: archives/surfaces/ADDENDUM-${dp_id}-<git-short-hash>.md
 - Root-level lookalike variants absent: yes
 EOF
 }
 
-move_dp_packet_to_processed() {
+emit_addendum_lineage_leaf() {
   local dp_id="$1"
-  local addendum_id="${2:-}"
-  local packet_name="${dp_id}.md"
-  if [[ -n "$addendum_id" ]]; then
-    packet_name="${dp_id}-ADDENDUM-${addendum_id}.md"
-  fi
-  local intake_rel="$ACTIVE_DP_REL"
-  if [[ -n "$addendum_id" ]]; then
-    intake_rel="$ACTIVE_ADDENDUM_REL"
-  fi
-  local processed_rel="storage/dp/processed/${packet_name}"
-  local intake_abs="${REPO_ROOT}/${intake_rel}"
-  local processed_abs="${REPO_ROOT}/${processed_rel}"
+  local source_abs="$2"
+  local git_short_hash="$3"
+  local lineage_abs
+  local lineage_rel
 
-  if [[ ! -f "$intake_abs" ]]; then
-    printf 'DP packet move: skipped (intake packet not present: %s)\n' "$intake_rel"
-    return 0
-  fi
+  [[ -f "$source_abs" ]] || die "DP lineage source missing: ${source_abs#${REPO_ROOT}/}"
+  lineage_rel="$(addendum_lineage_leaf_rel "$dp_id" "$git_short_hash")"
+  lineage_abs="${REPO_ROOT}/${lineage_rel}"
 
-  mkdir -p "$DP_PROCESSED_DIR"
-  cp "$intake_abs" "$processed_abs"
-  printf 'DP packet copied: %s -> %s\n' "$intake_rel" "$processed_rel"
+  mkdir -p "$(dirname "$lineage_abs")"
+  cp "$source_abs" "$lineage_abs"
+  printf 'Addendum lineage leaf emitted: %s -> %s\n' "${source_abs#${REPO_ROOT}/}" "$lineage_rel"
 }
 
 resolve_authoritative_dp_source_for_results() {
   local dp_id="$1"
-  local runtime_dp_source="$2"
+  local git_short_hash="$2"
   local addendum_id="${3:-}"
-  local packet_name="${dp_id}.md"
   if [[ -n "$addendum_id" ]]; then
-    packet_name="${dp_id}-ADDENDUM-${addendum_id}.md"
-  fi
-
-  local processed_rel="storage/dp/processed/${packet_name}"
-
-  if [[ -f "${REPO_ROOT}/${processed_rel}" ]]; then
-    printf '%s' "$processed_rel"
+    addendum_lineage_leaf_rel "$dp_id" "$git_short_hash"
     return 0
   fi
-
-  printf '%s' "$runtime_dp_source"
+  task_lineage_leaf_rel "$dp_id" "$git_short_hash"
 }
 
 assert_dp_matches_work_branch() {
@@ -1803,10 +1844,10 @@ if [[ -n "$ADDENDUM_ID" ]]; then
   extract_dp_block_from_task "$DP_ID" "$TASK_SOURCE_PATH" "$BASE_DP_BLOCK_PATH"
   BASE_DP_SOURCE="TASK.md"
   if [[ ! -s "$BASE_DP_BLOCK_PATH" ]]; then
-    FALLBACK_BASE_DP_PATH="${DP_PROCESSED_DIR}/${DP_ID}.md"
-    [[ -f "$FALLBACK_BASE_DP_PATH" ]] || die "base DP payload not found in TASK.md and processed fallback is missing: ${FALLBACK_BASE_DP_PATH#${REPO_ROOT}/}"
+    FALLBACK_BASE_DP_REL="$(find_task_lineage_leaf_rel_for_packet "$DP_ID")" || die "base DP payload not found in TASK.md and TASK leaf fallback is missing for ${DP_ID}"
+    FALLBACK_BASE_DP_PATH="${REPO_ROOT}/${FALLBACK_BASE_DP_REL}"
     cp "$FALLBACK_BASE_DP_PATH" "$BASE_DP_BLOCK_PATH"
-    BASE_DP_SOURCE="${FALLBACK_BASE_DP_PATH#${REPO_ROOT}/}"
+    BASE_DP_SOURCE="${FALLBACK_BASE_DP_REL}"
   fi
 else
   TASK_SOURCE_PATH="$(resolve_task_source_path)"
@@ -1939,7 +1980,7 @@ CMD_INDEX=0
 SURFACE_PHASE_DONE=0
 VERIFICATION_COMMAND_COUNT=0
 GIT_SHORT_HASH="$(git -C "$REPO_ROOT" rev-parse --short HEAD)"
-register_certify_generated_surface_paths "$DP_ID" "$FRESHNESS_STAMP" "$GIT_SHORT_HASH"
+register_certify_generated_surface_paths "$DP_ID" "$FRESHNESS_STAMP" "$GIT_SHORT_HASH" "$ADDENDUM_ID"
 GENERATED_SURFACE_POLICY_OUTPUT="$(build_generated_surface_policy_output)"
 printf '%s\n' "$GENERATED_SURFACE_POLICY_OUTPUT"
 INTEGRITY_OUTPUT+=$'\n\n'"${GENERATED_SURFACE_POLICY_OUTPUT}"
@@ -2184,7 +2225,7 @@ DIFF_STAT="$(printf '%s' "$DIFF_STAT" | sanitize_disposable_refs)"
 [[ -n "$DIFF_NAME_ONLY" ]] || DIFF_NAME_ONLY="(none)"
 [[ -n "$DIFF_STAT" ]] || DIFF_STAT="(none)"
 
-RESULTS_DP_SOURCE="$(resolve_authoritative_dp_source_for_results "$DP_ID" "$DP_SOURCE" "$ADDENDUM_ID")"
+RESULTS_DP_SOURCE="$(resolve_authoritative_dp_source_for_results "$DP_ID" "$GIT_SHORT_HASH" "$ADDENDUM_ID")"
 RESULTS_ALLOWLIST_POINTER="$ALLOWLIST_POINTER"
 RESULTS_ALLOWLIST_POINTER+=$'\n'"- dp_source: ${RESULTS_DP_SOURCE}"
 RESULTS_ALLOWLIST_POINTER+=$'\n'"- dump_manifest: ${DUMP_MANIFEST_POINTER}"
@@ -2335,7 +2376,10 @@ RESULTS_ALLOWLIST_POINTER+=$'\n'"- dump_manifest: ${DUMP_MANIFEST_POINTER}"
   "--slot=CONTRACTOR_NARRATIVE=${CONTRACTOR_NARRATIVE}"
 assert_no_disposable_refs "$OUT_PATH" "${OUT_PATH#${REPO_ROOT}/}"
 bash "$RESULTS_LINT" "$OUT_PATH"
-DP_PACKET_MOVE_OUTPUT="$(move_dp_packet_to_processed "$DP_ID" "$ADDENDUM_ID")"
+DP_PACKET_MOVE_OUTPUT="DP lineage leaf emission: not applicable (base packet uses TASK leaf chain)"
+if [[ -n "$ADDENDUM_ID" ]]; then
+  DP_PACKET_MOVE_OUTPUT="$(emit_addendum_lineage_leaf "$DP_ID" "$DP_BLOCK_PATH" "$GIT_SHORT_HASH")"
+fi
 
 certify_finalize_phase_timing
 CERTIFY_TOTAL_DURATION_SECONDS=$(( $(date +%s) - CERTIFY_RUN_STARTED_EPOCH ))

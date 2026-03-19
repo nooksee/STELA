@@ -155,10 +155,10 @@ queue_cleanup_path() {
   [[ -n "$rel_path" ]] || return 0
 
   case "$rel_path" in
-    storage/*|var/tmp/*)
+    storage/*|var/tmp/*|archives/surfaces/*)
       ;;
     *)
-      fail "refusing to queue cleanup path outside storage/ or var/tmp/: ${rel_path}"
+      fail "refusing to queue cleanup path outside storage/, archives/surfaces/, or var/tmp/: ${rel_path}"
       return 1
       ;;
   esac
@@ -272,11 +272,6 @@ ensure_audit_receipt_fixture() {
       current_packet_id="$(awk '/^packet_id:[[:space:]]*/ { sub(/^packet_id:[[:space:]]*/, "", $0); print; exit }' "${REPO_ROOT}/${current_pointer}")"
       current_results_rel="storage/handoff/RESULTS.md"
       current_closing_rel="storage/handoff/CLOSING.md"
-      if [[ -f "${REPO_ROOT}/storage/dp/processed/${current_packet_id}.md" ]]; then
-        current_packet_source_rel="storage/dp/processed/${current_packet_id}.md"
-      elif [[ -f "${REPO_ROOT}/storage/dp/intake/DP.md" ]] && grep -Eq "^###[[:space:]]+${current_packet_id}:" "${REPO_ROOT}/storage/dp/intake/DP.md"; then
-        current_packet_source_rel="storage/dp/intake/DP.md"
-      fi
       if [[ -f "${REPO_ROOT}/${current_results_rel}" ]]; then
         current_results_dp_source_rel="$(awk '
           /^-[[:space:]]*dp_source:[[:space:]]*/ {
@@ -288,12 +283,19 @@ ensure_audit_receipt_fixture() {
         ' "${REPO_ROOT}/${current_results_rel}")"
         current_results_dp_source_rel="$(trim "$current_results_dp_source_rel")"
       fi
+      if [[ -n "$current_results_dp_source_rel" && -f "${REPO_ROOT}/${current_results_dp_source_rel}" ]]; then
+        current_packet_source_rel="$current_results_dp_source_rel"
+      elif [[ "$current_packet_id" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]]; then
+        current_packet_source_rel="$current_pointer"
+      elif [[ -f "${REPO_ROOT}/storage/dp/intake/DP.md" ]] && grep -Eq "^###[[:space:]]+${current_packet_id}:" "${REPO_ROOT}/storage/dp/intake/DP.md"; then
+        current_packet_source_rel="storage/dp/intake/DP.md"
+      fi
       if [[ "$current_packet_id" =~ ^DP-[A-Z]+-[0-9]{4,}$ \
         && -f "${REPO_ROOT}/${current_results_rel}" \
         && -f "${REPO_ROOT}/${current_closing_rel}" \
         && -n "$current_packet_source_rel" ]]; then
         if [[ -n "$current_results_dp_source_rel" && "$current_results_dp_source_rel" != "$current_packet_source_rel" ]]; then
-          current_results_dp_source_rel=""
+          current_packet_source_rel=""
         else
         AUDIT_EXPECTED_PACKET_ID="$current_packet_id"
         AUDIT_EXPECTED_PACKET_SOURCE_REL="$current_packet_source_rel"
@@ -330,17 +332,29 @@ ensure_audit_receipt_fixture() {
   AUDIT_FIXTURE_TASK_REL="archives/surfaces/TASK-DP-OPS-9999-fixture.md"
   AUDIT_FIXTURE_RESULTS_REL="storage/handoff/RESULTS.md"
   AUDIT_FIXTURE_CLOSING_REL="storage/handoff/CLOSING.md"
-  AUDIT_FIXTURE_PACKET_REL="storage/dp/processed/DP-OPS-9999.md"
-  AUDIT_FIXTURE_SUPPORT_PACKET_REL="storage/dp/processed/DP-OPS-9999-SUPPORT.md"
+  AUDIT_FIXTURE_PACKET_REL="$AUDIT_FIXTURE_TASK_REL"
+  AUDIT_FIXTURE_SUPPORT_PACKET_REL="archives/surfaces/BUNDLE-FIXTURE-SUPPORT-DP-OPS-9999.md"
   AUDIT_FIXTURE_SUPPORT_HANDOFF_REL="storage/handoff/BUNDLE-FIXTURE-DP-OPS-9999.md"
   AUDIT_EXPECTED_PACKET_ID="DP-OPS-9999"
   AUDIT_EXPECTED_PACKET_SOURCE_REL="$AUDIT_FIXTURE_PACKET_REL"
 
-  mkdir -p "${REPO_ROOT}/var/tmp" "${REPO_ROOT}/storage/handoff" "${REPO_ROOT}/archives/surfaces" "${REPO_ROOT}/storage/dp/processed"
+  mkdir -p "${REPO_ROOT}/var/tmp" "${REPO_ROOT}/storage/handoff" "${REPO_ROOT}/archives/surfaces"
   cat > "${REPO_ROOT}/${AUDIT_FIXTURE_TASK_REL}" <<'EOF'
 ---
 packet_id: DP-OPS-9999
 ---
+## 3. Current Dispatch Packet (DP)
+
+### DP-OPS-9999: Bundle audit fixture
+
+## 3.1 Freshness Gate (Must Pass Before Work)
+Base Branch: main
+Required Work Branch: work/dp-ops-9999-bundle-audit-fixture
+Base HEAD: 0000000
+
+### 3.2.2 DP-Scoped Load Order (Declare the exact files required for this packet)
+1. archives/surfaces/BUNDLE-FIXTURE-SUPPORT-DP-OPS-9999.md
+2. storage/handoff/BUNDLE-FIXTURE-DP-OPS-9999.md
 EOF
   printf '%s\n' "${AUDIT_FIXTURE_TASK_REL}" > "$task_abs"
   cat > "${REPO_ROOT}/${AUDIT_FIXTURE_RESULTS_REL}" <<EOF
@@ -385,18 +399,6 @@ EOF
 # Bundle Fixture Handoff
 
 Audit dump explicit-include handoff fixture.
-EOF
-  cat > "${REPO_ROOT}/${AUDIT_FIXTURE_PACKET_REL}" <<'EOF'
-### DP-OPS-9999: Bundle audit fixture
-
-## 3.1 Freshness Gate (Must Pass Before Work)
-Base Branch: main
-Required Work Branch: work/dp-ops-9999-bundle-audit-fixture
-Base HEAD: 0000000
-
-### 3.2.2 DP-Scoped Load Order (Declare the exact files required for this packet)
-1. storage/dp/processed/DP-OPS-9999-SUPPORT.md
-2. storage/handoff/BUNDLE-FIXTURE-DP-OPS-9999.md
 EOF
 
   if (( AUDIT_RESULTS_RESTORE == 0 )); then

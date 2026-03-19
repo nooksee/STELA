@@ -14,7 +14,7 @@ Active surfaces by stage:
 - **Topic input:** `storage/handoff/TOPIC.md` (latest-wins; operator writes before each analyst run)
 - **Plan output:** `storage/handoff/PLAN.md` (latest-wins; analyst model writes this)
 - **Active DP draft:** `storage/dp/intake/DP.md` (latest-wins operator surface; architect output is saved here)
-- **Packet/process identity:** `DP-OPS-XXXX` (retained in the packet body, processed artifact path, RESULTS content, CLOSING content, audit transport, and telemetry)
+- **Packet/process identity:** `DP-OPS-XXXX` (retained in the packet body, TASK/addendum lineage path, RESULTS content, CLOSING content, audit transport, and telemetry)
 - **Audit bundle:** `storage/handoff/AUDIT-*.txt` (initial) or `storage/handoff/AUDIT-R*.txt` (rerun)
 - **Results receipt:** `storage/handoff/RESULTS.md`
 - **Closing sidecar:** `storage/handoff/CLOSING.md`
@@ -28,7 +28,7 @@ Audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto`.
     Note: Audit intake is bundle-first. Use `./ops/bin/bundle --profile=audit --out=auto` for audit review. Bundle dump scope is profile-mapped from `ops/lib/manifests/BUNDLE.md`; current audit mapping is `core`.
 4.  **Dispatch:** Hand DP to Worker (See Section 5).
 5.  **Review:** Verify `RECEIPT` (Proofs) vs `TASK.md` requirements.
-6.  **Certify:** `./ops/bin/certify --dp=DP-OPS-XXXX --out=auto` (generates RESULTS, emits SoP/PoW/TASK archive leaves, moves DP from intake to processed).
+6.  **Certify:** `./ops/bin/certify --dp=DP-OPS-XXXX --out=auto` (generates RESULTS, emits SoP/PoW/TASK archive leaves, keeps base packet authority on the TASK leaf chain, and emits addendum lineage under `archives/surfaces/` only when an addendum is being certified).
 7.  **Audit:** `./ops/bin/bundle --profile=audit --out=auto` then deliver bundle for audit review.
 8.  **Merge:** Operator commits on work branch, opens PR per CLOSING sidecar, merges to main.
 
@@ -152,7 +152,7 @@ When certify replays a `tools/verify.sh` receipt line, it rewrites that invocati
 - `VERIFY-LANE: name=<lane> scope=<scope> reason_class=<reason_class> owner=<ID> infra_importance=<level> decision_leaf=<path|none> status=<pass|fail|missing> duration_seconds=<N> detail=<command-or-path>`
 - `VERIFY-LANE-SUMMARY: ...`
 It also emits `VERIFY-LANE-ORDER: mode=<mode> order=<comma-separated-lanes>` before lane execution so the active fail-fast lane order is visible.
-`ops/bin/certify` runs integrity checks, executes the Section 3.4.5 verification command list, renders the RESULTS receipt from template, records authoritative delivered `dp_source` plus `dump_manifest` in Scope Verification, and runs `tools/lint/results.sh` as a hard gate. If certify replays from intake fallback and then moves the packet to processed storage, `dp_source` must record the processed path so RESULTS matches the delivered audit packet.
+`ops/bin/certify` runs integrity checks, executes the Section 3.4.5 verification command list, renders the RESULTS receipt from template, records authoritative delivered `dp_source` plus `dump_manifest` in Scope Verification, and runs `tools/lint/results.sh` as a hard gate. `dp_source` must record the authoritative TASK/addendum lineage path so RESULTS matches the delivered audit packet.
 After surface emission, certify verifies that the active TASK leaf is packet-consistent and runs `./ops/bin/prune --target=dump --phase=report --dry-run` so closeout always captures dump-visible pressure. The prune report is observational receipt evidence only; it does not authorize canonical archive deletion.
 Note: certify resolves the target DP from the TASK head leaf by default. Ensure the TASK head leaf is structurally valid and contains the live current DP block before running certify. If `TASK.md` is pointer-only and `--allow-intake-fallback` is explicitly enabled while the matching intake packet is present, certify may prefer the intake packet as the live rerun source instead of reusing a stale packet body embedded in the current TASK leaf. This fallback remains a recovery path only.
 `tools/lint/results.sh` enforces the RESULTS schema through `## Contractor Execution Narrative` and required Decision Leaf lines. Closing sidecar schema validation remains `ops/bin/certify` authority against `ops/lib/manifests/CLOSING.md` (Section 1).
@@ -170,8 +170,9 @@ or a closing-sidecar fix identified during the first run).
 
 Current contract:
 - the active rerun source is `storage/dp/intake/DP.md`
-- processed storage remains `storage/dp/processed/DP-OPS-XXXX.md`
-- certify copies the active draft into processed storage; it does not remove `DP.md`
+- the authoritative base-packet lineage copy is the TASK leaf `archives/surfaces/TASK-DP-OPS-XXXX-<git-short-hash>.md`
+- addenda emit `archives/surfaces/ADDENDUM-DP-OPS-XXXX-<git-short-hash>.md`
+- certify does not create a standalone `archives/surfaces/DP-OPS-XXXX.md` packet leaf and does not remove `DP.md`
 
 **Recovery steps (run in order; do not skip):**
 
@@ -552,7 +553,7 @@ Surface contract:
 - `storage/handoff/PLAN.md`: latest-wins plan input; analyst model writes this; operator delivers it to architect as the primary handoff surface.
 - `ARCHITECT-*.txt`: emitted bundle artifact; contains the dump payload and stance contract.
 - `storage/dp/intake/DP.md`: latest-wins active DP draft surface; operator saves the fenced DP draft block output here after the architect model run.
-- `DP-OPS-XXXX`: packet identity printed by bundle and retained in packet-scoped internal paths used by certify and processed storage.
+- `DP-OPS-XXXX`: packet identity printed by bundle and retained in TASK/addendum lineage, certify receipts, and telemetry.
 
 ### Local Hooks Setup
 Run once after clone, and after any machine where the repo is checked out:
@@ -574,7 +575,8 @@ Bypass: `git commit --no-verify` or `git push --no-verify` bypasses all hooks. U
 ## 2. Dispatch Packet (DP) Mechanics
 **Placement:**
 * Drafts: `storage/dp/intake/`
-* Processed: `storage/dp/processed/`
+* Authoritative base packet lineage: `archives/surfaces/TASK-DP-OPS-XXXX-<git-short-hash>.md`
+* Authoritative addendum lineage: `archives/surfaces/ADDENDUM-DP-OPS-XXXX-<git-short-hash>.md`
 * `storage/dp/intake/` is staging-only and must not contain tracked `DP-*.md` packets in commits.
 
 **Operator Prompts:**
@@ -622,7 +624,7 @@ ATS rules:
 
 **Allowlist Rule:**
 * **Rule:** If a DP includes the llms command, the allowlist must include `llms.txt`, `llms-core.txt`, and `llms-full.txt`.
-* **Rule:** `storage/dp/active/allowlist.txt` is persistent-path policy only. Do not include runtime artifact prefixes (`storage/handoff/`, `storage/dumps/`, `storage/dp/intake/`, `storage/dp/processed/`).
+* **Rule:** `storage/dp/active/allowlist.txt` is persistent-path policy only. Do not include runtime artifact prefixes such as `storage/handoff/`, `storage/dumps/`, or `storage/dp/intake/`.
 
 ### Contractor Dispatch Dump (CDD)
 

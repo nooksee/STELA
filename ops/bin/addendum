@@ -127,19 +127,87 @@ require_non_placeholder_value() {
   fi
 }
 
-require_base_dp_in_processed() {
-  local base_dp="$1"
-  local processed_dir="$REPO_ROOT/storage/dp/processed"
+task_lineage_leaf_contains_packet() {
+  local source_path="$1"
+  local dp_id="$2"
+  awk -v expected="$dp_id" '
+    /^packet_id:[[:space:]]*/ {
+      line=$0
+      sub(/^packet_id:[[:space:]]*/, "", line)
+      if (line == expected) {
+        found=1
+        exit
+      }
+    }
+    /^###[[:space:]]*/ {
+      line=$0
+      sub(/^###[[:space:]]*/, "", line)
+      sub(/:.*/, "", line)
+      if (line == expected) {
+        found=1
+        exit
+      }
+    }
+    END { exit found ? 0 : 1 }
+  ' "$source_path"
+}
 
-  [[ -d "$processed_dir" ]] || die "missing processed DP directory: ${processed_dir}"
+find_task_lineage_leaf_for_packet() {
+  local dp_id="$1"
+  local task_head_path="$REPO_ROOT/TASK.md"
+  local pointer_rel=""
 
-  shopt -s nullglob
-  local matches=("${processed_dir}/${base_dp}"*.md)
-  shopt -u nullglob
-
-  if (( ${#matches[@]} == 0 )); then
-    die "base DP not found in storage/dp/processed matching ${base_dp}*.md"
+  if [[ -f "$task_head_path" ]] && [[ "$(awk 'END { print NR }' "$task_head_path")" == "1" ]]; then
+    pointer_rel="$(trim "$(cat "$task_head_path")")"
+    pointer_rel="${pointer_rel#./}"
+    if [[ -n "$pointer_rel" && -f "$REPO_ROOT/$pointer_rel" ]] && task_lineage_leaf_contains_packet "$REPO_ROOT/$pointer_rel" "$dp_id"; then
+      printf '%s' "$REPO_ROOT/$pointer_rel"
+      return 0
+    fi
   fi
+
+  mapfile -t matches < <(find "$REPO_ROOT/archives/surfaces" -maxdepth 1 -type f -name "TASK-${dp_id}-*.md" | sort)
+  if (( ${#matches[@]} > 0 )); then
+    printf '%s' "${matches[-1]}"
+    return 0
+  fi
+
+  return 1
+}
+
+addendum_lineage_leaf_glob() {
+  local dp_id="$1"
+  printf '%s/archives/surfaces/ADDENDUM-%s-*.md' "$REPO_ROOT" "$dp_id"
+}
+
+require_base_dp_lineage() {
+  local base_dp="$1"
+  local active_dp_path="$REPO_ROOT/storage/dp/intake/DP.md"
+
+  if [[ -f "$active_dp_path" ]] && grep -Eq "^###[[:space:]]+${base_dp}:" "$active_dp_path"; then
+    return 0
+  fi
+
+  find_task_lineage_leaf_for_packet "$base_dp" >/dev/null || die "base DP not found in active intake or TASK leaf lineage: ${base_dp}"
+}
+
+extract_addendum_id() {
+  local source_path="$1"
+  local value=""
+  value="$(trim "$(extract_field_value "Addendum ID" "$source_path")")"
+  if [[ -n "$value" ]]; then
+    printf '%s' "$value"
+    return 0
+  fi
+  awk '
+    /^###[[:space:]]+Addendum[[:space:]]+[A-Z][[:space:]]+to[[:space:]]+DP-[A-Z]+-[0-9]{4,}[[:space:]]*$/ {
+      line=$0
+      sub(/^###[[:space:]]+Addendum[[:space:]]+/, "", line)
+      sub(/[[:space:]]+to.*/, "", line)
+      print line
+      exit
+    }
+  ' "$source_path"
 }
 
 next_addendum_letter() {
@@ -148,6 +216,9 @@ next_addendum_letter() {
   local active_addendum_path="${intake_dir}/ADDENDUM.md"
   local active_base_dp=""
   local active_addendum_id=""
+  local archived_addendum=""
+  local archived_letter=""
+  declare -A used_letters=()
   local code
   local letter
 
@@ -155,15 +226,25 @@ next_addendum_letter() {
 
   if [[ -f "$active_addendum_path" ]]; then
     active_base_dp="$(trim "$(extract_field_value "Base Packet" "$active_addendum_path")")"
-    active_addendum_id="$(trim "$(extract_field_value "Addendum ID" "$active_addendum_path")")"
+    active_addendum_id="$(extract_addendum_id "$active_addendum_path")"
+    active_addendum_id="$(trim "$active_addendum_id")"
+    if [[ "$active_base_dp" == "$base_dp" && "$active_addendum_id" =~ ^[A-Z]$ ]]; then
+      used_letters["$active_addendum_id"]=1
+    fi
   fi
+
+  while IFS= read -r archived_addendum || [[ -n "$archived_addendum" ]]; do
+    [[ -f "$archived_addendum" ]] || continue
+    archived_letter="$(extract_addendum_id "$archived_addendum")"
+    archived_letter="$(trim "$archived_letter")"
+    if [[ "$archived_letter" =~ ^[A-Z]$ ]]; then
+      used_letters["$archived_letter"]=1
+    fi
+  done < <(find "$REPO_ROOT/archives/surfaces" -maxdepth 1 -type f -name "ADDENDUM-${base_dp}-*.md" | sort)
 
   for code in $(seq 65 90); do
     printf -v letter '%b' "\\$(printf '%03o' "$code")"
-    if find "${REPO_ROOT}/storage/dp/processed" -maxdepth 1 -type f -name "${base_dp}-ADDENDUM-${letter}.md" | grep -q .; then
-      continue
-    fi
-    if [[ "$active_base_dp" == "$base_dp" && "$active_addendum_id" == "$letter" ]]; then
+    if [[ -n "${used_letters[$letter]+set}" ]]; then
       continue
     fi
     printf '%s' "$letter"
@@ -236,7 +317,7 @@ trap 'emit_binary_leaf "addendum" "finish"' EXIT
 emit_binary_leaf "addendum" "start"
 
 read_addendum_lint_constants
-require_base_dp_in_processed "$BASE_DP_ID"
+require_base_dp_lineage "$BASE_DP_ID"
 
 ADDENDUM_LETTER="$(next_addendum_letter "$BASE_DP_ID")"
 OUTPUT_PATH="$REPO_ROOT/storage/dp/intake/ADDENDUM.md"

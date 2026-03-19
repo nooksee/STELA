@@ -526,7 +526,7 @@ mapfile -t tracked_intake_packets < <(
     | awk '/^storage\/dp\/intake\/(DP\.md|ADDENDUM\.md|DP-[A-Z]+-[0-9]{4,}\.md|DP-[A-Z]+-[0-9]{4,}-ADDENDUM-[A-Z]\.md)$/ { print }'
 )
 if (( ${#tracked_intake_packets[@]} > 0 )); then
-  fail "Tracked intake DP surfaces are forbidden; keep active drafts disposable in storage/dp/intake/ and move packet lineage to storage/dp/processed/: ${tracked_intake_packets[*]}"
+  fail "Tracked intake DP surfaces are forbidden; keep active drafts disposable in storage/dp/intake/, keep base-packet lineage on the TASK leaf chain, and emit addendum lineage only under archives/surfaces/: ${tracked_intake_packets[*]}"
 fi
 
 # Required resume and telemetry roots

@@ -58,7 +58,7 @@ Enforcement linkage:
 3. Certifier captures contractor execution narrative via editor helper and validates subsection structure/content.
 4. Certifier validates the closing sidecar, runs integrity and verification gates, captures outputs, then renders RESULTS from template slots.
    - Scope Verification must record the authoritative packet source path carried in the delivered closeout packet as `dp_source`.
-   - When certify replays from intake fallback and then moves the packet to processed storage, `dp_source` must record the processed path so RESULTS matches the delivered audit bundle and dump evidence.
+   - `dp_source` must record the authoritative TASK/addendum lineage path so RESULTS matches the delivered audit bundle and dump evidence.
 5. Certifier lints the generated RESULTS artifact and exits non-zero on any failure.
 
 ## Forensic Insight
