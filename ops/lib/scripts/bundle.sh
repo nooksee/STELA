@@ -829,6 +829,26 @@ bundle_extract_architect_execution_order() {
   bundle_extract_architect_handoff_scalar "$plan_path" "Execution Order"
 }
 
+bundle_resolve_architect_plan_seed() {
+  local plan_path="$1"
+  local execution_order="$2"
+  local order_csv=""
+  local candidate=""
+  local seed_packet_block=""
+
+  order_csv="$(printf '%s' "$execution_order" | sed 's/[[:space:]]*->[[:space:]]*/,/g')"
+  while IFS= read -r candidate; do
+    [[ -n "$candidate" ]] || continue
+    seed_packet_block="$(bundle_extract_architect_slice_field "$plan_path" "$candidate" "Seed packet")"
+    if [[ "$seed_packet_block" =~ (DP-OPS-[0-9]{4}) ]]; then
+      printf '%s\t%s' "$candidate" "${BASH_REMATCH[1]}"
+      return 0
+    fi
+  done < <(bundle_parse_csv_lines "$order_csv")
+
+  return 1
+}
+
 bundle_packet_id_increment() {
   local seed="$1"
   local offset="$2"
@@ -854,6 +874,9 @@ bundle_resolve_architect_packet_id() {
   local plan_path="$2"
   local execution_order=""
   local order_csv=""
+  local seed_packet_id="$BUNDLE_ARCHITECT_PACKET_ID_SEED"
+  local seed_slice_id="$BUNDLE_ARCHITECT_PACKET_ID_SEED_SLICE"
+  local plan_seed=""
   local candidate=""
   local seed_index=-1
   local slice_index=-1
@@ -861,11 +884,15 @@ bundle_resolve_architect_packet_id() {
 
   execution_order="$(bundle_extract_architect_execution_order "$plan_path")"
   [[ -n "$execution_order" ]] || die "architect packet id resolution failed: Execution Order not found in storage/handoff/PLAN.md"
+  if plan_seed="$(bundle_resolve_architect_plan_seed "$plan_path" "$execution_order")"; then
+    seed_slice_id="${plan_seed%%$'\t'*}"
+    seed_packet_id="${plan_seed#*$'\t'}"
+  fi
   order_csv="$(printf '%s' "$execution_order" | sed 's/[[:space:]]*->[[:space:]]*/,/g')"
 
   while IFS= read -r candidate; do
     [[ -n "$candidate" ]] || continue
-    if [[ "$candidate" == "$BUNDLE_ARCHITECT_PACKET_ID_SEED_SLICE" ]]; then
+    if [[ "$candidate" == "$seed_slice_id" ]]; then
       seed_index="$index"
     fi
     if [[ "$candidate" == "$slice_id" ]]; then
@@ -874,11 +901,11 @@ bundle_resolve_architect_packet_id() {
     index=$((index + 1))
   done < <(bundle_parse_csv_lines "$order_csv")
 
-  (( seed_index >= 0 )) || die "architect packet id seed slice '${BUNDLE_ARCHITECT_PACKET_ID_SEED_SLICE}' missing from Execution Order"
+  (( seed_index >= 0 )) || die "architect packet id seed slice '${seed_slice_id}' missing from Execution Order"
   (( slice_index >= 0 )) || die "architect packet id resolution failed: slice '${slice_id}' missing from Execution Order"
-  (( slice_index >= seed_index )) || die "architect packet id resolution failed: slice '${slice_id}' precedes seed slice '${BUNDLE_ARCHITECT_PACKET_ID_SEED_SLICE}'"
+  (( slice_index >= seed_index )) || die "architect packet id resolution failed: slice '${slice_id}' precedes seed slice '${seed_slice_id}'"
 
-  bundle_packet_id_increment "$BUNDLE_ARCHITECT_PACKET_ID_SEED" "$((slice_index - seed_index))"
+  bundle_packet_id_increment "$seed_packet_id" "$((slice_index - seed_index))"
 }
 
 bundle_resolve_architect_implicit_slice() {
