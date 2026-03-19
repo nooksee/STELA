@@ -113,7 +113,7 @@ Structural prevention assessment:
 - Partial. Shared stance rules can structurally carry more of the common truth/output/continuity contract so local stance files stop reintroducing dominant prohibition stacks. Detection remains necessary for behavior that is still frozen in lane-local wording or specs.
 
 Complexity note:
-- Moderate. The packet is narrow in file count but high leverage because small stance lines strongly shape downstream drafting behavior.
+- Moderate. The packet is narrow in file count but high impact because small stance lines strongly shape downstream drafting behavior.
 
 Decision Record Trigger:
 - If execution discovers that materially useful recentering requires transport/runtime changes outside stance/spec/shared-contract surfaces, set `Decision Required: Yes` and author a decision leaf under `archives/decisions/`.
