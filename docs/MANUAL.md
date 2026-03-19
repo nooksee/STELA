@@ -551,9 +551,10 @@ Canonical operator flow for an architect session:
 
 Surface contract:
 - `storage/handoff/PLAN.md`: latest-wins plan input; analyst model writes this; operator delivers it to architect as the primary handoff surface.
+- `storage/current/PLAN.md`: when present, architect bundle includes it as direct current-authority evidence. This does not change routing precedence by itself; `storage/handoff/PLAN.md` remains the live architect handoff surface until runtime precedence changes in a later packet.
 - `ARCHITECT-*.txt`: emitted bundle artifact; contains the dump payload and stance contract.
 - `storage/dp/intake/DP.md`: latest-wins active DP draft surface; operator saves the fenced DP draft block output here after the architect model run.
-- `DP-OPS-XXXX`: packet identity printed by bundle and retained in TASK/addendum lineage, certify receipts, and telemetry.
+- `DP-OPS-XXXX`: packet identity printed by bundle and retained in TASK/addendum lineage, certify receipts, and telemetry. For architect slice dispatch, bundle resolves the next packet id from the current certified TASK packet id plus one.
 
 ### Local Hooks Setup
 Run once after clone, and after any machine where the repo is checked out:

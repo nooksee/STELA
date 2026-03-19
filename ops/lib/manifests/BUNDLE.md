@@ -14,8 +14,6 @@ project_profile=project
 audit_profile=audit
 foreman_profile=foreman
 foreman_intent_form=ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>
-architect_packet_id_seed=DP-OPS-0189
-architect_packet_id_seed_slice=T1
 profile_alias_legacy_hygiene_to=conform
 profile_alias_legacy_hygiene_deprecation_status=sunset
 profile_alias_legacy_hygiene_remove_after_dp=DP-OPS-0165
@@ -99,10 +97,10 @@ dump_scope_foreman=core
 ## Architect Transport Contract
 - Architect packet identity is transport-defined when an explicit validated slice is present.
 - Architect invokes the full dump with explicit `storage/handoff/PLAN.md` inclusion when that file is present.
+- Architect also includes `storage/current/PLAN.md` when that file exists, because current-plan authority must be directly visible when the selected slice expects reasoning about it.
 - Architect package members include `storage/handoff/PLAN.md` when present.
-- `architect_packet_id_seed` defines the first dispatch-corridor packet id.
-- `architect_packet_id_seed_slice` defines the slice bound to that seed.
-- Runtime derives later architect packet ids by offset within `Execution Order` in `storage/handoff/PLAN.md`.
+- Runtime derives architect `packet_id` from the current certified TASK packet id plus one. Slice selection does not allocate packet ids by historical offset.
+- Architect request metadata emits `current_plan_source=storage/current/PLAN.md` when that file exists, otherwise `(absent)`.
 - `closing_sidecar` is the active latest-wins sidecar `storage/handoff/CLOSING.md`; packet identity remains explicit in the request metadata and sidecar content.
 - `title_suffix` is derived from the active slice heading text in `storage/handoff/PLAN.md`.
 - `storage/handoff/PLAN.md` is the latest-wins architect plan input surface; the operator ensures this file has valid `## Architect Handoff` fields before each architect run.
