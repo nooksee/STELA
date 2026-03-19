@@ -64,9 +64,11 @@ Current live set:
 
 ## Architect Profile Surfaces
 - `storage/handoff/PLAN.md`: required plan input surface; must contain `## Architect Handoff` fields with slice selection. Bundle fails closed when `--slice` is given and this file is absent.
+- `storage/current/PLAN.md`: included in architect dump/package when present so current accepted multi-slice authority is directly visible to the architect request. Handoff remains the live routing surface until consumer precedence changes in runtime.
 - `ARCHITECT-*.txt`: emitted bundle artifact containing the dump payload and stance contract.
 - `storage/dp/intake/DP.md`: latest-wins active DP draft surface; printed in bundle `[REQUEST]` as `dp_draft_path`. Architect model output is a fenced DP draft block saved here by the operator for dispatch.
-- `packet_id`: process identity retained in bundle `[REQUEST]`, TASK/addendum lineage, audit transport, and telemetry (`DP-OPS-XXXX`).
+- `packet_id`: process identity retained in bundle `[REQUEST]`, TASK/addendum lineage, audit transport, and telemetry (`DP-OPS-XXXX`). For architect slice dispatch, runtime resolves the next packet id from the current certified TASK packet id plus one.
+- `current_plan_source`: architect request metadata line showing `storage/current/PLAN.md` when present, otherwise `null`/`(absent)`.
 
 ## Audit Submission Identity
 - initial audit delivery: `AUDIT-*` (default; no `--rerun` flag required)
