@@ -313,7 +313,7 @@ check_architect_mode_contract() {
   local required_first='First non-empty line inside the code block must start with `### DP-`.'
   local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
   local required_no_narrative='Do not emit Contractor Execution Narrative sections or receipt narrative subheadings.'
-  local required_scope_only='Do not add, rewrite, or propose new options, phases, or slices in architect mode.'
+  local required_scope_only='Do not expand or replace the settled plan scope in architect mode.'
 
   [[ -f "$stance_architect" ]] || mark_failure "architect.md.tpl missing for mode contract checks"
 
@@ -346,19 +346,17 @@ check_analyst_mode_contract() {
   local stance_analyst="${REPO_ROOT}/ops/src/stances/analyst.md.tpl"
   local required_shared_fence_include='{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}'
   local required_topic='For machine-ingest analyst mode: require attached `storage/handoff/TOPIC.md`; do not use inline query fallback.'
-  local required_discussion_default='* Default analyst behavior is discussion mode.'
-  local required_explicit_plan='* Explicit plan-output mode is allowed only when the attached topic explicitly asks for a plan, DP plan, architect handoff, or plan-only output.'
+  local required_discussion_default='* Default analyst behavior is conversational planning.'
+  local required_final_plan='* When the topic and attached evidence settle intent enough for direct architect handoff, emit the final `PLAN.md` draft in one fenced markdown block.'
   local required_no_operating_detail='For machine-ingest analyst mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.'
   local required_generic_broad_topic='For machine-ingest analyst mode: when the topic is broad, keep repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.'
-  local required_default_first='For default analyst mode: first non-empty line inside the fenced body must start with `1. Analysis and Discussion`.'
-  local required_three_options='For default analyst mode: include `2. Strategic Options` with exactly three options when the topic is actionable enough to support them.'
-  local required_recommendation='For default analyst mode: include one `Recommendation:` line naming the preferred option.'
-  local required_questions='For default analyst mode: end with `Questions / Conversation:` and short operator-facing prompts when clarification, tradeoff choice, or confirmation would help.'
-  local required_weak_topic='For default analyst mode: if topic text is present but weak or ambiguous, interpret conservatively, state assumptions, and ask concise follow-up questions instead of forcing a plan-only artifact.'
-  local required_bad_topic='For default analyst mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.'
-  local required_plan_output='For explicit plan-output mode: output only the complete PLAN markdown code block.'
-  local required_plan_first='For explicit plan-output mode: first non-empty line inside the code block must start with `# DP Plan:`.'
-  local required_smallest_inference='For explicit plan-output mode: when required handoff fields force inference, make the smallest reasonable inference and avoid supporting detail that reads as established repository fact.'
+  local required_default_first='For conversational planning mode: first non-empty line inside the fenced body must start with `1. Analysis and Discussion`.'
+  local required_questions='For conversational planning mode: end with `Questions / Conversation:` and short operator-facing prompts when clarification, tradeoff choice, or confirmation would help.'
+  local required_weak_topic='For conversational planning mode: if topic text is present but weak or ambiguous, interpret conservatively, state assumptions, and ask concise follow-up questions instead of forcing a final plan.'
+  local required_bad_topic='For conversational planning mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.'
+  local required_plan_output='For final plan mode: output only the complete PLAN markdown code block.'
+  local required_plan_shape='For final plan mode: use the canonical plan template shape with `Summary`, `Key Changes`, `Test Plan`, and `Assumptions`.'
+  local required_plan_direct='For final plan mode: emit the final plan only when the topic and attached evidence settle intent enough for direct architect drafting.'
   local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
 
   [[ -f "$stance_analyst" ]] || mark_failure "analyst.md.tpl missing for mode contract checks"
@@ -371,8 +369,8 @@ check_analyst_mode_contract() {
     mark_failure "analyst.md.tpl missing analyst discussion-mode default line"
   fi
 
-  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_explicit_plan" "$stance_analyst"; then
-    mark_failure "analyst.md.tpl missing analyst explicit plan-output trigger line"
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_final_plan" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing analyst final-plan trigger line"
   fi
 
   if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_topic" "$stance_analyst"; then
@@ -391,14 +389,6 @@ check_analyst_mode_contract() {
     mark_failure "analyst.md.tpl missing analyst discussion-mode first-line marker line"
   fi
 
-  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_three_options" "$stance_analyst"; then
-    mark_failure "analyst.md.tpl missing analyst three-options line"
-  fi
-
-  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_recommendation" "$stance_analyst"; then
-    mark_failure "analyst.md.tpl missing analyst recommendation line"
-  fi
-
   if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_questions" "$stance_analyst"; then
     mark_failure "analyst.md.tpl missing analyst questions line"
   fi
@@ -415,16 +405,16 @@ check_analyst_mode_contract() {
     mark_failure "analyst.md.tpl missing analyst plan-output-only line"
   fi
 
-  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_plan_first" "$stance_analyst"; then
-    mark_failure "analyst.md.tpl missing analyst plan-output first-line marker line"
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_plan_shape" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing analyst final-plan shape line"
   fi
 
   if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_shared_non_audit_include" "$stance_analyst"; then
     mark_failure "analyst.md.tpl missing shared non-audit include line"
   fi
 
-  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_smallest_inference" "$stance_analyst"; then
-    mark_failure "analyst.md.tpl missing analyst plan-output smallest-inference line"
+  if [[ -f "$stance_analyst" ]] && ! grep -Fq -- "$required_plan_direct" "$stance_analyst"; then
+    mark_failure "analyst.md.tpl missing analyst final-plan emit line"
   fi
 }
 

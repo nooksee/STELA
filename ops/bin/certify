@@ -1560,8 +1560,10 @@ extract_commands() {
 
   while IFS= read -r line || [[ -n "$line" ]]; do
     local candidate=""
+    local emitted_command=""
     local first_token=""
     local trimmed
+    local negated=0
     trimmed="$(trim "$line")"
 
     if [[ "$trimmed" =~ ^\`\`\` || "$trimmed" =~ ^~~~ ]]; then
@@ -1616,6 +1618,14 @@ extract_commands() {
     if [[ "$candidate" =~ (^|[[:space:]])bash[[:space:]]+tools/lint/llms[.]sh([[:space:]]|$) ]] && [[ ! -f "${REPO_ROOT}/tools/lint/llms.sh" ]]; then
       continue
     fi
+
+    if [[ "$candidate" =~ ^![[:space:]]+ ]]; then
+      negated=1
+      candidate="${candidate#!}"
+      candidate="$(trim "$candidate")"
+      [[ -n "$candidate" ]] || continue
+    fi
+
     if [[ "$candidate" == *"\`"* ]]; then
       continue
     fi
@@ -1639,9 +1649,14 @@ extract_commands() {
       esac
     fi
 
+    emitted_command="$candidate"
+    if (( negated )); then
+      emitted_command="! ${candidate}"
+    fi
+
     case "$first_token" in
       git|bash|./*|comm|cat|ls|cp|mv|rm|find|sed|awk|grep|rg|echo|printf|sh|test)
-        printf '%s\n' "$candidate" >> "$out_path"
+        printf '%s\n' "$emitted_command" >> "$out_path"
         ;;
       *)
         continue

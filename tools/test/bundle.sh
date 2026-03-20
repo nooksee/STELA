@@ -72,8 +72,6 @@ LAST_ASSEMBLY_POINTER_FORMAT=""
 BUNDLE_POLICY_REL="ops/lib/manifests/BUNDLE.md"
 ARCHITECT_PLAN_BACKUP=""
 ARCHITECT_PLAN_RESTORE=0
-ARCHITECT_CURRENT_PLAN_BACKUP=""
-ARCHITECT_CURRENT_PLAN_RESTORE=0
 AUDIT_TASK_BACKUP=""
 AUDIT_TASK_RESTORE=0
 AUDIT_RESULTS_BACKUP=""
@@ -99,11 +97,6 @@ restore_fixture_overrides() {
   if (( ARCHITECT_PLAN_RESTORE )) && [[ -n "$ARCHITECT_PLAN_BACKUP" && -f "$ARCHITECT_PLAN_BACKUP" ]]; then
     cp "$ARCHITECT_PLAN_BACKUP" "$plan_abs"
     rm -f "$ARCHITECT_PLAN_BACKUP"
-  fi
-
-  if (( ARCHITECT_CURRENT_PLAN_RESTORE )) && [[ -n "$ARCHITECT_CURRENT_PLAN_BACKUP" && -f "$ARCHITECT_CURRENT_PLAN_BACKUP" ]]; then
-    cp "$ARCHITECT_CURRENT_PLAN_BACKUP" "${REPO_ROOT}/storage/current/PLAN.md"
-    rm -f "$ARCHITECT_CURRENT_PLAN_BACKUP"
   fi
 
   if (( AUDIT_TASK_RESTORE )) && [[ -n "$AUDIT_TASK_BACKUP" && -f "$AUDIT_TASK_BACKUP" ]]; then
@@ -255,95 +248,28 @@ resolve_current_task_surface_rel() {
 
 ensure_architect_plan_fixture() {
   ensure_plan_restore_state
-  ensure_architect_current_plan_fixture
   local plan_rel="storage/handoff/PLAN.md"
   local plan_abs="${REPO_ROOT}/${plan_rel}"
 
   mkdir -p "$(dirname "$plan_abs")"
   cat > "$plan_abs" <<'EOF'
-## Architect Handoff
-Selected Option: A (Dispatch Reliability Corridor)
-Slice Mode: multi
-Selected Slices: T1
-Execution Order: T1
-Architect Constraints:
-- test fixture architect constraint
-
-## Pending Slice Definitions
-### T1 - Architect Transport Slice Intent
-Objective:
-- test fixture objective
-
-Scope:
-- test fixture scope
-
-Acceptance gate:
-- test fixture acceptance gate
-EOF
-  if (( ! ARCHITECT_PLAN_RESTORE )); then
-    queue_cleanup_path "$plan_rel"
-  fi
-}
-
-ensure_architect_plan_autobind_fixture() {
-  ensure_plan_restore_state
-  ensure_architect_current_plan_fixture
-  local plan_rel="storage/handoff/PLAN.md"
-  local plan_abs="${REPO_ROOT}/${plan_rel}"
-
-  mkdir -p "$(dirname "$plan_abs")"
-  cat > "$plan_abs" <<'EOF'
-## Architect Handoff
-Selected Option: A (Dispatch Reliability Corridor)
-Slice Mode: multi
-Selected Slices: T1
-Execution Order: T1
-Omitted Slice Mode: auto-bind
-Architect Constraints:
-- test fixture architect constraint
-
-## Pending Slice Definitions
-### T1 - Architect Transport Slice Intent
-Objective:
-- test fixture objective
-
-Scope:
-- test fixture scope
-
-Acceptance gate:
-- test fixture acceptance gate
-EOF
-  if (( ! ARCHITECT_PLAN_RESTORE )); then
-    queue_cleanup_path "$plan_rel"
-  fi
-}
-
-ensure_architect_current_plan_fixture() {
-  local current_plan_rel="storage/current/PLAN.md"
-  local current_plan_abs="${REPO_ROOT}/${current_plan_rel}"
-
-  if (( ARCHITECT_CURRENT_PLAN_RESTORE == 0 )) && [[ -f "$current_plan_abs" ]]; then
-    mkdir -p "${REPO_ROOT}/var/tmp"
-    ARCHITECT_CURRENT_PLAN_BACKUP="$(mktemp "${REPO_ROOT}/var/tmp/bundle-current-plan-backup.XXXXXX")"
-    cp "$current_plan_abs" "$ARCHITECT_CURRENT_PLAN_BACKUP"
-    ARCHITECT_CURRENT_PLAN_RESTORE=1
-  fi
-
-  mkdir -p "$(dirname "$current_plan_abs")"
-  cat > "$current_plan_abs" <<'EOF'
-# DP Plan: Current Accepted Multi-Slice Fixture
+# Reset Generated Planning
 
 ## Summary
-Current accepted multi-slice plan fixture for architect bundle smoke tests.
+Architect reads the final plan directly and drafts the active DP.
 
-## Architect Handoff
-Selected Option: RECOMMENDED
-Slice Mode: multi
-Selected Slices: D2
-Execution Order: D1 -> D2 -> D3
+## Key Changes
+- Remove generated slice routing.
+- Keep one final plan location.
+
+## Test Plan
+- bash tools/test/bundle.sh --slice=route-contract
+
+## Assumptions
+- No compatibility prose remains in live transport.
 EOF
-  if (( ! ARCHITECT_CURRENT_PLAN_RESTORE )); then
-    queue_cleanup_path "$current_plan_rel"
+  if (( ! ARCHITECT_PLAN_RESTORE )); then
+    queue_cleanup_path "$plan_rel"
   fi
 }
 
@@ -1134,14 +1060,14 @@ test_analyst_contract() {
   if ! grep -Fq -- '- storage/handoff/TOPIC.md: present' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
     fail "analyst bundle text missing TOPIC handoff line"
   fi
-  if ! grep -Fq 'Default analyst behavior is discussion mode.' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "analyst bundle text missing discussion-mode default line"
+  if ! grep -Fq 'Default analyst behavior is conversational planning.' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "analyst bundle text missing conversational-default line"
   fi
-  if ! grep -Fq 'For default analyst mode: include one `Recommendation:` line naming the preferred option.' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "analyst bundle text missing recommendation contract line"
+  if ! grep -Fq 'For final plan mode: output only the complete PLAN markdown code block.' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "analyst bundle text missing final-plan output line"
   fi
-  if ! grep -Fq 'For explicit plan-output mode: output only the complete PLAN markdown code block.' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "analyst bundle text missing explicit plan-output line"
+  if ! grep -Fq 'For conversational planning mode: end with `Questions / Conversation:` and short operator-facing prompts when clarification, tradeoff choice, or confirmation would help.' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "analyst bundle text missing conversational footer line"
   fi
   if grep -Fq -- '- storage/handoff/PLAN.md:' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
     fail "analyst bundle text should not advertise PLAN.md as handoff input"
@@ -1197,18 +1123,12 @@ test_analyst_contract() {
   fi
 }
 
-test_architect_slice_valid() {
-  local slice_id="T1"
+test_architect_plan_valid() {
   local expected_packet_id=""
-
-  ensure_architect_plan_fixture
-  local request_slice_id_val=""
-  local request_validated_val=""
   local request_source_val=""
   local request_packet_id_val=""
   local request_dp_draft_path_val=""
   local request_sidecar_val=""
-  local request_title_suffix_val=""
   local package_listing=""
   local dump_payload_path=""
   local dump_manifest_path=""
@@ -1218,9 +1138,10 @@ test_architect_slice_valid() {
     return
   }
 
-  run_bundle_capture architect --profile=architect --slice="$slice_id"
+  ensure_architect_plan_fixture
+  run_bundle_capture architect --profile=architect
   if (( RUN_STATUS != 0 )); then
-    fail "architect --slice=${slice_id} should succeed"
+    fail "architect run should succeed with direct PLAN intake"
     echo "$RUN_OUTPUT" >&2
     return
   fi
@@ -1229,19 +1150,16 @@ test_architect_slice_valid() {
   [[ -n "$LAST_MANIFEST" && -n "$LAST_ARTIFACT" ]] || return
 
   if ! grep -Fq '[REQUEST]' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect bundle text missing [REQUEST] block for valid slice"
+    fail "architect bundle text missing [REQUEST] block"
   fi
-  if ! grep -Fq "slice_id: ${slice_id}" "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect bundle text missing valid slice_id marker"
+  if grep -Fq 'slice_id:' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect bundle text should not emit slice_id"
   fi
-  if ! grep -Fq 'slice_validated: true' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect bundle text missing slice_validated: true"
+  if ! grep -Fq 'plan_source: storage/handoff/PLAN.md' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect bundle text missing plan_source marker"
   fi
   if ! grep -Fq "packet_id: ${expected_packet_id}" "${REPO_ROOT}/${LAST_ARTIFACT}"; then
     fail "architect bundle text missing packet_id: ${expected_packet_id}"
-  fi
-  if ! grep -Fq 'current_plan_source: storage/current/PLAN.md' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect bundle text missing current_plan_source marker"
   fi
   if ! grep -Fq 'dp_draft_path: storage/dp/intake/DP.md' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
     fail "architect bundle text missing active dp_draft_path marker"
@@ -1249,59 +1167,32 @@ test_architect_slice_valid() {
   if ! grep -Fq 'closing_sidecar: storage/handoff/CLOSING.md' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
     fail "architect bundle text missing closing sidecar marker"
   fi
-  if ! grep -Fq 'title_suffix: Architect Transport Slice Intent' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect bundle text missing title_suffix marker"
-  fi
   if ! grep -Fq -- '- storage/handoff/PLAN.md: present' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
     fail "architect bundle text missing PLAN handoff line"
-  fi
-  if ! grep -Fq -- '- storage/current/PLAN.md: present' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect bundle text missing current PLAN line"
   fi
   if grep -Fq -- '- storage/handoff/TOPIC.md:' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
     fail "architect bundle text should not advertise TOPIC.md as disposable input"
   fi
-  if ! grep -Fq '[ACTIVE SLICE PROJECTION]' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect bundle text missing [ACTIVE SLICE PROJECTION] block"
-  fi
-  if ! grep -Fq 'selected_option: A (Dispatch Reliability Corridor)' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect projection missing selected option"
-  fi
-  if ! grep -Fq 'execution_order: T1 -> T1.1 -> T1.2' "${REPO_ROOT}/${LAST_ARTIFACT}" && ! grep -Fq 'execution_order: T1' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect projection missing execution order"
+  if grep -Fq '[ACTIVE SLICE PROJECTION]' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
+    fail "architect bundle text should not emit [ACTIVE SLICE PROJECTION]"
   fi
 
-  request_slice_id_val="$(extract_request_field "$LAST_MANIFEST" "slice_id")"
-  request_validated_val="$(extract_request_field "$LAST_MANIFEST" "slice_validated")"
   request_source_val="$(extract_request_field "$LAST_MANIFEST" "plan_source")"
   request_packet_id_val="$(extract_request_field "$LAST_MANIFEST" "packet_id")"
   request_dp_draft_path_val="$(extract_request_field "$LAST_MANIFEST" "dp_draft_path")"
   request_sidecar_val="$(extract_request_field "$LAST_MANIFEST" "closing_sidecar")"
-  request_title_suffix_val="$(extract_request_field "$LAST_MANIFEST" "title_suffix")"
 
-  if [[ "$request_slice_id_val" != "$slice_id" ]]; then
-    fail "architect request.slice_id mismatch: expected ${slice_id}, got ${request_slice_id_val}"
-  fi
-  if [[ "$request_validated_val" != "true" ]]; then
-    fail "architect request.slice_validated mismatch: expected true, got ${request_validated_val}"
-  fi
   if [[ "$request_source_val" != "storage/handoff/PLAN.md" ]]; then
     fail "architect request.plan_source mismatch: expected storage/handoff/PLAN.md, got ${request_source_val}"
   fi
   if [[ "$request_packet_id_val" != "$expected_packet_id" ]]; then
     fail "architect request.packet_id mismatch: expected ${expected_packet_id}, got ${request_packet_id_val}"
   fi
-  if [[ "$(extract_request_field "$LAST_MANIFEST" "current_plan_source")" != "storage/current/PLAN.md" ]]; then
-    fail "architect request.current_plan_source mismatch: expected storage/current/PLAN.md"
-  fi
   if [[ "$request_dp_draft_path_val" != "storage/dp/intake/DP.md" ]]; then
     fail "architect request.dp_draft_path mismatch: expected storage/dp/intake/DP.md, got ${request_dp_draft_path_val}"
   fi
   if [[ "$request_sidecar_val" != "storage/handoff/CLOSING.md" ]]; then
     fail "architect request.closing_sidecar mismatch: expected storage/handoff/CLOSING.md, got ${request_sidecar_val}"
-  fi
-  if [[ "$request_title_suffix_val" != "Architect Transport Slice Intent" ]]; then
-    fail "architect request.title_suffix mismatch: expected Architect Transport Slice Intent, got ${request_title_suffix_val}"
   fi
 
   dump_payload_path="$(extract_manifest_value "$LAST_MANIFEST" "payload_path")"
@@ -1310,12 +1201,10 @@ test_architect_slice_valid() {
     fail "architect manifest missing dump payload_path"
   elif ! grep -Fq '<<< FILE BEGIN: storage/handoff/PLAN.md' "${REPO_ROOT}/${dump_payload_path}"; then
     fail "architect dump payload missing storage/handoff/PLAN.md file block"
-  elif ! grep -Fq '<<< FILE BEGIN: storage/current/PLAN.md' "${REPO_ROOT}/${dump_payload_path}"; then
-    fail "architect dump payload missing storage/current/PLAN.md file block"
   fi
   if [[ -z "$dump_manifest_path" ]]; then
     fail "architect manifest missing dump manifest_path"
-  elif ! grep -Fq 'storage/handoff/PLAN.md' "${REPO_ROOT}/${dump_manifest_path}" || ! grep -Fq 'storage/current/PLAN.md' "${REPO_ROOT}/${dump_manifest_path}"; then
+  elif ! grep -Fq 'storage/handoff/PLAN.md' "${REPO_ROOT}/${dump_manifest_path}"; then
     fail "architect dump manifest missing explicit PLAN include provenance"
   elif ! grep -Fq 'Persistence profile: architect' "${REPO_ROOT}/${dump_manifest_path}"; then
     fail "architect dump manifest missing persistence profile"
@@ -1328,163 +1217,8 @@ test_architect_slice_valid() {
   if ! printf '%s\n' "$package_listing" | grep -Fxq 'storage/handoff/PLAN.md'; then
     fail "architect package missing storage/handoff/PLAN.md"
   fi
-  if ! printf '%s\n' "$package_listing" | grep -Fxq 'storage/current/PLAN.md'; then
-    fail "architect package missing storage/current/PLAN.md"
-  fi
   if printf '%s\n' "$package_listing" | grep -Fxq 'storage/handoff/TOPIC.md'; then
     fail "architect package should not include storage/handoff/TOPIC.md"
-  fi
-}
-
-test_architect_slice_ad_hoc() {
-  local request_slice_id_val=""
-  local request_validated_val=""
-  local request_source_val=""
-  local request_packet_id_val=""
-  local request_sidecar_val=""
-  local request_title_suffix_val=""
-  local request_current_plan_source_val=""
-
-  ensure_architect_plan_fixture
-  run_bundle_capture architect --profile=architect
-  if (( RUN_STATUS != 0 )); then
-    fail "architect ad hoc run should succeed"
-    echo "$RUN_OUTPUT" >&2
-    return
-  fi
-
-  track_bundle_outputs
-  [[ -n "$LAST_MANIFEST" && -n "$LAST_ARTIFACT" ]] || return
-
-  if ! grep -Fq '[REQUEST]' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect bundle text missing [REQUEST] block for ad hoc run"
-  fi
-  if ! grep -Fq 'slice_id: (ad hoc)' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect ad hoc bundle text missing ad hoc slice marker"
-  fi
-  if ! grep -Fq 'slice_validated: false' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect ad hoc bundle text missing slice_validated: false"
-  fi
-  if ! grep -Fq 'packet_id: (none)' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect ad hoc bundle text missing packet_id: (none)"
-  fi
-  if ! grep -Fq 'closing_sidecar: (none)' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect ad hoc bundle text missing closing_sidecar: (none)"
-  fi
-  if grep -Fq '[ACTIVE SLICE PROJECTION]' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect ad hoc bundle text should not emit [ACTIVE SLICE PROJECTION]"
-  fi
-
-  request_slice_id_val="$(extract_request_field "$LAST_MANIFEST" "slice_id")"
-  request_validated_val="$(extract_request_field "$LAST_MANIFEST" "slice_validated")"
-  request_source_val="$(extract_request_field "$LAST_MANIFEST" "plan_source")"
-  request_current_plan_source_val="$(extract_request_field "$LAST_MANIFEST" "current_plan_source")"
-  request_packet_id_val="$(extract_request_field "$LAST_MANIFEST" "packet_id")"
-  request_sidecar_val="$(extract_request_field "$LAST_MANIFEST" "closing_sidecar")"
-  request_title_suffix_val="$(extract_request_field "$LAST_MANIFEST" "title_suffix")"
-
-  if [[ "$request_slice_id_val" != "null" ]]; then
-    fail "architect ad hoc request.slice_id mismatch: expected null, got ${request_slice_id_val}"
-  fi
-  if [[ "$request_validated_val" != "false" ]]; then
-    fail "architect ad hoc request.slice_validated mismatch: expected false, got ${request_validated_val}"
-  fi
-  if [[ "$request_source_val" != "null" ]]; then
-    fail "architect ad hoc request.plan_source mismatch: expected null, got ${request_source_val}"
-  fi
-  if [[ "$request_current_plan_source_val" != "storage/current/PLAN.md" ]]; then
-    fail "architect ad hoc request.current_plan_source mismatch: expected storage/current/PLAN.md, got ${request_current_plan_source_val}"
-  fi
-  if [[ "$request_packet_id_val" != "null" ]]; then
-    fail "architect ad hoc request.packet_id mismatch: expected null, got ${request_packet_id_val}"
-  fi
-  if [[ "$request_sidecar_val" != "null" ]]; then
-    fail "architect ad hoc request.closing_sidecar mismatch: expected null, got ${request_sidecar_val}"
-  fi
-  if [[ "$request_title_suffix_val" != "null" ]]; then
-    fail "architect ad hoc request.title_suffix mismatch: expected null, got ${request_title_suffix_val}"
-  fi
-}
-
-test_architect_slice_implicit_bind() {
-  local expected_packet_id=""
-  local request_slice_id_val=""
-  local request_validated_val=""
-  local request_source_val=""
-  local request_current_plan_source_val=""
-  local request_packet_id_val=""
-  local request_sidecar_val=""
-  local request_title_suffix_val=""
-
-  ensure_architect_plan_autobind_fixture
-  expected_packet_id="$(resolve_expected_architect_packet_id)" || {
-    fail "unable to resolve expected architect implicit-bind packet id from current TASK"
-    return
-  }
-
-  run_bundle_capture architect --profile=architect
-  if (( RUN_STATUS != 0 )); then
-    fail "architect implicit-bind run should succeed"
-    echo "$RUN_OUTPUT" >&2
-    return
-  fi
-
-  track_bundle_outputs
-  [[ -n "$LAST_MANIFEST" && -n "$LAST_ARTIFACT" ]] || return
-
-  if ! grep -Fq '[REQUEST]' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect implicit-bind bundle text missing [REQUEST] block"
-  fi
-  if ! grep -Fq 'slice_id: T1' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect implicit-bind bundle text missing slice_id: T1"
-  fi
-  if ! grep -Fq 'slice_validated: true' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect implicit-bind bundle text missing slice_validated: true"
-  fi
-  if ! grep -Fq "packet_id: ${expected_packet_id}" "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect implicit-bind bundle text missing packet_id: ${expected_packet_id}"
-  fi
-  if ! grep -Fq 'current_plan_source: storage/current/PLAN.md' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect implicit-bind bundle text missing current_plan_source marker"
-  fi
-  if ! grep -Fq 'closing_sidecar: storage/handoff/CLOSING.md' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect implicit-bind bundle text missing closing sidecar marker"
-  fi
-  if ! grep -Fq 'title_suffix: Architect Transport Slice Intent' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect implicit-bind bundle text missing title_suffix marker"
-  fi
-  if ! grep -Fq '[ACTIVE SLICE PROJECTION]' "${REPO_ROOT}/${LAST_ARTIFACT}"; then
-    fail "architect implicit-bind bundle text missing [ACTIVE SLICE PROJECTION]"
-  fi
-
-  request_slice_id_val="$(extract_request_field "$LAST_MANIFEST" "slice_id")"
-  request_validated_val="$(extract_request_field "$LAST_MANIFEST" "slice_validated")"
-  request_source_val="$(extract_request_field "$LAST_MANIFEST" "plan_source")"
-  request_current_plan_source_val="$(extract_request_field "$LAST_MANIFEST" "current_plan_source")"
-  request_packet_id_val="$(extract_request_field "$LAST_MANIFEST" "packet_id")"
-  request_sidecar_val="$(extract_request_field "$LAST_MANIFEST" "closing_sidecar")"
-  request_title_suffix_val="$(extract_request_field "$LAST_MANIFEST" "title_suffix")"
-
-  if [[ "$request_slice_id_val" != "T1" ]]; then
-    fail "architect implicit-bind request.slice_id mismatch: expected T1, got ${request_slice_id_val}"
-  fi
-  if [[ "$request_validated_val" != "true" ]]; then
-    fail "architect implicit-bind request.slice_validated mismatch: expected true, got ${request_validated_val}"
-  fi
-  if [[ "$request_source_val" != "storage/handoff/PLAN.md" ]]; then
-    fail "architect implicit-bind request.plan_source mismatch: expected storage/handoff/PLAN.md, got ${request_source_val}"
-  fi
-  if [[ "$request_current_plan_source_val" != "storage/current/PLAN.md" ]]; then
-    fail "architect implicit-bind request.current_plan_source mismatch: expected storage/current/PLAN.md, got ${request_current_plan_source_val}"
-  fi
-  if [[ "$request_packet_id_val" != "$expected_packet_id" ]]; then
-    fail "architect implicit-bind request.packet_id mismatch: expected ${expected_packet_id}, got ${request_packet_id_val}"
-  fi
-  if [[ "$request_sidecar_val" != "storage/handoff/CLOSING.md" ]]; then
-    fail "architect implicit-bind request.closing_sidecar mismatch: expected storage/handoff/CLOSING.md, got ${request_sidecar_val}"
-  fi
-  if [[ "$request_title_suffix_val" != "Architect Transport Slice Intent" ]]; then
-    fail "architect implicit-bind request.title_suffix mismatch: expected Architect Transport Slice Intent, got ${request_title_suffix_val}"
   fi
 }
 
@@ -1743,25 +1477,19 @@ test_audit_resubmission_identity() {
   fi
 }
 
-test_architect_slice_unknown_fails() {
+test_architect_missing_plan_fails() {
+  ensure_plan_absent_fixture
+  run_bundle_capture architect --profile=architect
+  if (( RUN_STATUS == 0 )); then
+    fail "architect run without PLAN.md should fail"
+  fi
+}
+
+test_architect_slice_flag_rejected() {
   ensure_architect_plan_fixture
-  run_bundle_capture architect --profile=architect --slice=UNKNOWN
+  run_bundle_capture architect --profile=architect --slice=T1
   if (( RUN_STATUS == 0 )); then
-    fail "architect unknown --slice should fail"
-  fi
-}
-
-test_architect_slice_blank_fails() {
-  run_bundle_capture architect --profile=architect --slice=
-  if (( RUN_STATUS == 0 )); then
-    fail "architect blank --slice should fail"
-  fi
-}
-
-test_architect_slice_non_architect_fails() {
-  run_bundle_capture analyst --profile=analyst --slice=T1
-  if (( RUN_STATUS == 0 )); then
-    fail "--slice with non-architect profile should fail"
+    fail "architect --slice should fail after slice machinery removal"
   fi
 }
 
@@ -2132,12 +1860,9 @@ run_full_suite() {
   test_auto_profile_default_route
   test_auto_profile_plan_route
   test_analyst_contract
-  test_architect_slice_valid
-  test_architect_slice_implicit_bind
-  test_architect_slice_ad_hoc
-  test_architect_slice_unknown_fails
-  test_architect_slice_blank_fails
-  test_architect_slice_non_architect_fails
+  test_architect_plan_valid
+  test_architect_missing_plan_fails
+  test_architect_slice_flag_rejected
   test_foreman_invalid_paths
   test_foreman_valid_path
   test_legacy_hygiene_alias
@@ -2193,12 +1918,9 @@ run_route_contract_slice() {
   test_auto_profile_default_route
   test_auto_profile_plan_route
   test_analyst_contract
-  test_architect_slice_valid
-  test_architect_slice_implicit_bind
-  test_architect_slice_ad_hoc
-  test_architect_slice_unknown_fails
-  test_architect_slice_blank_fails
-  test_architect_slice_non_architect_fails
+  test_architect_plan_valid
+  test_architect_missing_plan_fails
+  test_architect_slice_flag_rejected
   test_foreman_invalid_paths
   test_foreman_valid_path
   test_legacy_hygiene_alias

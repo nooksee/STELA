@@ -2,37 +2,31 @@
 # Surface Specification: PLAN
 
 ## Constitutional Anchor
-`storage/handoff/PLAN.md` is an operator-authored planning surface used to drive architect-mode DP drafting.
-It is not an execution gate by itself and does not replace DP execution controls.
+`storage/handoff/PLAN.md` is the operator-facing planning surface produced by the analyst lane and consumed by the architect lane.
+It remains planning-only; execution control still lives in the DP.
 
 ## Operator Contract
 - Canonical template source: `ops/src/stances/plan.md.tpl`.
-- Minimal deterministic validation: `tools/lint/plan.sh`.
-- Architect-targeted plans require `## Architect Handoff`.
-- Canonical simplified sections:
+- Deterministic validation: `tools/lint/plan.sh`.
+- Canonical headings:
+  - `# <Plan Title>`
   - `## Summary`
-  - `## Scope`
-  - `## Architect Handoff`
-  - `## Implementation Plan (Decision Complete)`
-
-Required `Architect Handoff` fields:
-- `Selected Option:`
-- `Slice Mode:` (`single|multi`)
-- `Selected Slices:`
-- `Execution Order:` (required when `Slice Mode=multi`)
+  - `## Key Changes`
+  - `## Test Plan`
+  - `## Assumptions`
 
 ## Mechanics and Sequencing
-1. Analyst produces PLAN intent and optioning.
-2. Operator records explicit handoff selections in `Architect Handoff`.
-3. Architect consumes attached bundle artifacts plus PLAN and drafts DP using `ops/src/surfaces/dp.md.tpl`.
-4. Execution-gate ownership remains in DP Section 3.1 at draft/execution time.
+1. Analyst works from `storage/handoff/TOPIC.md`.
+2. While intent is still open, analyst stays conversational in one fenced markdown block.
+3. Once intent is settled, analyst emits the final `PLAN.md` using the canonical plan headings.
+4. Architect consumes that final plan directly and drafts the DP.
 
 ## Failure States and Drift Triggers
-- Missing `Architect Handoff` fields in architect-targeted plans.
+- Missing any canonical heading.
 - Unresolved `{{TOKEN}}` placeholders.
 - Heading-only plans with no non-heading content.
-- Route-critical section drift (missing one of the canonical simplified sections).
+- Drift back to generated slice or handoff-field machinery.
 
 ## Integrity Filter Warnings
-`tools/lint/plan.sh` is a deterministic safety floor, not a style rubric.
-Do not add subjective prose checks or global-gate expansion beyond route gating and explicit receipt contexts.
+`tools/lint/plan.sh` is a structural safety floor, not a prose/style rubric.
+Do not add subjective checks or route-unrelated gate expansion.

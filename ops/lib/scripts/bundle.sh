@@ -65,7 +65,7 @@ BUNDLE_AUDIT_RESOLVED_OUTPUT_REL=""
 
 bundle_usage() {
   cat <<'USAGE'
-Usage: ops/bin/bundle [--profile=auto|analyst|architect|audit|project|conform|hygiene|foreman] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--slice=<ID>] [--rerun] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
+Usage: ops/bin/bundle [--profile=auto|analyst|architect|audit|project|conform|hygiene|foreman] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--rerun] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
 USAGE
 }
 
@@ -746,81 +746,6 @@ bundle_parse_foreman_intent() {
   return 1
 }
 
-bundle_extract_architect_selected_slices() {
-  local plan_path="$1"
-  awk '
-    BEGIN { in_handoff=0 }
-    /^##[[:space:]]+Architect Handoff([[:space:]]*)$/ { in_handoff=1; next }
-    in_handoff && /^##[[:space:]]+/ { exit }
-    in_handoff && /^Selected Slices:[[:space:]]*/ {
-      line=$0
-      sub(/^Selected Slices:[[:space:]]*/, "", line)
-      print line
-      exit
-    }
-  ' "$plan_path"
-}
-
-bundle_extract_architect_handoff_scalar() {
-  local plan_path="$1"
-  local label="$2"
-  awk -v label="$label" '
-    BEGIN { in_handoff=0 }
-    /^##[[:space:]]+Architect Handoff([[:space:]]*)$/ { in_handoff=1; next }
-    in_handoff && /^##[[:space:]]+/ { exit }
-    in_handoff && index($0, label ":") == 1 {
-      line=$0
-      sub("^" label ":[[:space:]]*", "", line)
-      print line
-      exit
-    }
-  ' "$plan_path"
-}
-
-bundle_extract_architect_handoff_block() {
-  local plan_path="$1"
-  local label="$2"
-  awk -v label="$label" '
-    BEGIN { in_handoff=0; capture=0 }
-    /^##[[:space:]]+Architect Handoff([[:space:]]*)$/ { in_handoff=1; next }
-    in_handoff && /^##[[:space:]]+/ { exit }
-    in_handoff && $0 == label ":" { capture=1; next }
-    capture && /^[A-Za-z][A-Za-z0-9 .()\/-]*:$/ { exit }
-    capture { print }
-  ' "$plan_path"
-}
-
-bundle_extract_architect_slice_title() {
-  local plan_path="$1"
-  local slice_id="$2"
-  awk -v prefix="### " -v slice="$slice_id" '
-    index($0, prefix slice " - ") == 1 {
-      print substr($0, length(prefix slice " - ") + 1)
-      exit
-    }
-  ' "$plan_path"
-}
-
-bundle_extract_architect_slice_field() {
-  local plan_path="$1"
-  local slice_id="$2"
-  local field="$3"
-  awk -v prefix="### " -v slice="$slice_id" -v field="$field" '
-    BEGIN { in_slice=0; capture=0 }
-    index($0, prefix slice " - ") == 1 { in_slice=1; capture=0; next }
-    in_slice && /^### / { exit }
-    in_slice && /^## / { exit }
-    in_slice && $0 == field ":" { capture=1; next }
-    capture && /^[A-Za-z][A-Za-z0-9 .()\/-]*:$/ { exit }
-    capture { print }
-  ' "$plan_path"
-}
-
-bundle_extract_architect_execution_order() {
-  local plan_path="$1"
-  bundle_extract_architect_handoff_scalar "$plan_path" "Execution Order"
-}
-
 bundle_packet_id_increment() {
   local seed="$1"
   local offset="$2"
@@ -852,37 +777,10 @@ bundle_resolve_current_task_packet_id() {
 }
 
 bundle_resolve_architect_packet_id() {
-  local slice_id="$1"
-  local _plan_path="$2"
   local current_packet_id=""
 
-  [[ -n "$slice_id" ]] || die "architect packet id resolution failed: missing slice id"
   current_packet_id="$(bundle_resolve_current_task_packet_id)"
   bundle_packet_id_increment "$current_packet_id" 1
-}
-
-bundle_resolve_architect_implicit_slice() {
-  local plan_path="$1"
-  local omitted_mode=""
-  local selected_slices=""
-  local candidate=""
-  local selected_count=0
-  local selected_slice=""
-
-  omitted_mode="$(bundle_extract_architect_handoff_scalar "$plan_path" "Omitted Slice Mode")"
-  [[ "$omitted_mode" == "auto-bind" ]] || return 1
-
-  selected_slices="$(bundle_extract_architect_selected_slices "$plan_path")"
-  [[ -n "$selected_slices" ]] || die "architect omitted-slice auto-bind failed: Selected Slices not found in storage/handoff/PLAN.md"
-
-  while IFS= read -r candidate; do
-    [[ -n "$candidate" ]] || continue
-    selected_slice="$candidate"
-    selected_count=$((selected_count + 1))
-  done < <(bundle_parse_csv_lines "$selected_slices")
-
-  (( selected_count == 1 )) || die "architect omitted-slice auto-bind failed: Selected Slices must contain exactly one slice"
-  printf '%s' "$selected_slice"
 }
 
 bundle_emit_prefixed_block() {
@@ -894,85 +792,6 @@ bundle_emit_prefixed_block() {
   done <<< "$content"
 }
 
-bundle_emit_architect_slice_projection() {
-  local plan_path="$1"
-  local slice_id="$2"
-  local packet_id="$3"
-  local closing_sidecar="$4"
-  local title_suffix="$5"
-  local selected_option=""
-  local execution_order=""
-  local objective=""
-  local scope=""
-  local acceptance_gate=""
-  local receipt_contract=""
-  local architect_constraints=""
-
-  selected_option="$(bundle_extract_architect_handoff_scalar "$plan_path" "Selected Option")"
-  execution_order="$(bundle_extract_architect_execution_order "$plan_path")"
-  objective="$(bundle_extract_architect_slice_field "$plan_path" "$slice_id" "Objective")"
-  scope="$(bundle_extract_architect_slice_field "$plan_path" "$slice_id" "Scope")"
-  acceptance_gate="$(bundle_extract_architect_slice_field "$plan_path" "$slice_id" "Acceptance gate")"
-  receipt_contract="$(bundle_extract_architect_slice_field "$plan_path" "$slice_id" "Receipt contract")"
-  architect_constraints="$(bundle_extract_architect_handoff_block "$plan_path" "Architect Constraints")"
-
-  echo "[ACTIVE SLICE PROJECTION]"
-  echo "- selected_option: ${selected_option:-"(none)"}"
-  echo "- selected_slice: ${slice_id}"
-  echo "- execution_order: ${execution_order:-"(none)"}"
-  echo "- packet_id: ${packet_id}"
-  echo "- closing_sidecar: ${closing_sidecar}"
-  if [[ -n "$title_suffix" ]]; then
-    echo "- title_suffix: ${title_suffix}"
-  else
-    echo "- title_suffix: (none)"
-  fi
-  if [[ -n "$objective" ]]; then
-    echo "- objective:"
-    bundle_emit_prefixed_block "  " "$objective"
-  fi
-  if [[ -n "$scope" ]]; then
-    echo "- scope:"
-    bundle_emit_prefixed_block "  " "$scope"
-  fi
-  if [[ -n "$acceptance_gate" ]]; then
-    echo "- acceptance_gate:"
-    bundle_emit_prefixed_block "  " "$acceptance_gate"
-  fi
-  if [[ -n "$receipt_contract" ]]; then
-    echo "- receipt_contract:"
-    bundle_emit_prefixed_block "  " "$receipt_contract"
-  fi
-  if [[ -n "$architect_constraints" ]]; then
-    echo "- architect_constraints:"
-    bundle_emit_prefixed_block "  " "$architect_constraints"
-  fi
-  echo
-}
-
-bundle_validate_architect_slice() {
-  local slice_id="$1"
-  local plan_path="$2"
-  local selected_slices=""
-  local slice_found=0
-  local candidate=""
-  local IFS="," 
-
-  [[ -f "$plan_path" ]] || die "--slice requires storage/handoff/PLAN.md (not present)"
-
-  selected_slices="$(bundle_extract_architect_selected_slices "$plan_path")"
-  [[ -n "$selected_slices" ]] || die "slice validation failed: Architect Handoff 'Selected Slices:' not found in storage/handoff/PLAN.md"
-
-  for candidate in $selected_slices; do
-    candidate="$(trim "$candidate")"
-    if [[ "$candidate" == "$slice_id" ]]; then
-      slice_found=1
-      break
-    fi
-  done
-
-  (( slice_found )) || die "unknown slice '${slice_id}' not in Architect Handoff Selected Slices (${selected_slices})"
-}
 
 bundle_resolve_task_surface_rel() {
   local task_rel="TASK.md"
@@ -1116,7 +935,6 @@ bundle_collect_profile_disposable_inputs() {
   local profile="$1"
   local topic_rel="$2"
   local plan_rel="$3"
-  local current_plan_rel="storage/current/PLAN.md"
   local audit_packet_id=""
   local results_rel=""
   local closing_rel=""
@@ -1130,9 +948,6 @@ bundle_collect_profile_disposable_inputs() {
     architect)
       if [[ -f "${REPO_ROOT}/${plan_rel}" ]]; then
         printf '%s\n' "$plan_rel"
-      fi
-      if [[ -f "${REPO_ROOT}/${current_plan_rel}" ]]; then
-        printf '%s\n' "$current_plan_rel"
       fi
       ;;
     audit)
@@ -1167,13 +982,9 @@ bundle_run() {
   local assembly_pointer_emitted=0
   local assembly_pointer_rel=""
   local assembly_pointer_abs=""
-  local request_slice_id=""
-  local request_slice_validated=0
   local request_plan_source=""
-  local request_current_plan_source=""
   local request_packet_id=""
   local request_closing_sidecar=""
-  local request_title_suffix=""
   local rerun_intent=0
 
   local arg
@@ -1194,10 +1005,6 @@ bundle_run() {
       --intent=*)
         intent_token="${arg#--intent=}"
         [[ -n "$intent_token" ]] || die "--intent requires a value"
-        ;;
-      --slice=*)
-        request_slice_id="${arg#--slice=}"
-        [[ -n "$request_slice_id" ]] || die "--slice requires a non-empty value"
         ;;
       --agent-id=*)
         assembly_agent_id="${arg#--agent-id=}"
@@ -1337,29 +1144,15 @@ bundle_run() {
     die "--rerun is only valid with --profile=${BUNDLE_AUDIT_PROFILE}"
   fi
 
-  if [[ -n "$request_slice_id" && "$resolved_profile" != "architect" ]]; then
-    die "--slice is only valid with --profile=architect"
-  fi
-
-  if [[ "$resolved_profile" == "architect" && -z "$request_slice_id" ]] && (( plan_present )); then
-    local implicit_slice=""
-    if implicit_slice="$(bundle_resolve_architect_implicit_slice "${REPO_ROOT}/${plan_rel}")"; then
-      request_slice_id="$implicit_slice"
+  if [[ "$resolved_profile" == "architect" ]]; then
+    (( plan_present )) || die "architect requires storage/handoff/PLAN.md"
+    if ! plan_lint_output="$(bash "${REPO_ROOT}/tools/lint/plan.sh" "$plan_rel" 2>&1)"; then
+      die "architect requires a valid PLAN.md: $(printf '%s\n' "$plan_lint_output" | tail -n 1)"
     fi
-  fi
-
-  if [[ "$resolved_profile" == "architect" && -n "$request_slice_id" ]]; then
-    bundle_validate_architect_slice "$request_slice_id" "${REPO_ROOT}/${plan_rel}"
-    request_slice_validated=1
+    plan_lint_status="PASS"
     request_plan_source="$plan_rel"
-    if [[ -f "${REPO_ROOT}/storage/current/PLAN.md" ]]; then
-      request_current_plan_source="storage/current/PLAN.md"
-    fi
-    request_packet_id="$(bundle_resolve_architect_packet_id "$request_slice_id" "${REPO_ROOT}/${plan_rel}")"
+    request_packet_id="$(bundle_resolve_architect_packet_id)"
     request_closing_sidecar="storage/handoff/CLOSING.md"
-    request_title_suffix="$(bundle_extract_architect_slice_title "${REPO_ROOT}/${plan_rel}" "$request_slice_id")"
-  elif [[ "$resolved_profile" == "architect" && -f "${REPO_ROOT}/storage/current/PLAN.md" ]]; then
-    request_current_plan_source="storage/current/PLAN.md"
   fi
 
   local stance_template_key
@@ -1424,11 +1217,7 @@ bundle_run() {
   elif [[ "$requested_profile" == "auto" ]]; then
     open_intent="Bundle profile (auto -> ${resolved_profile})"
   elif [[ "$requested_profile_input" == "architect" ]]; then
-    if (( request_slice_validated )); then
-      open_intent="Architect profile: ${request_slice_id}"
-    else
-      open_intent="Architect profile: ad hoc"
-    fi
+    open_intent="Architect profile"
   else
     open_intent="Bundle profile: ${resolved_profile}"
   fi
@@ -1574,45 +1363,12 @@ bundle_run() {
     echo
     if [[ "$resolved_profile" == "architect" ]]; then
       echo "[REQUEST]"
-    if [[ -n "$request_slice_id" ]]; then
-      echo "- slice_id: ${request_slice_id}"
-    else
-      echo "- slice_id: (ad hoc)"
-    fi
-    echo "- slice_validated: $(bundle_bool "$request_slice_validated")"
-    if [[ -n "$request_plan_source" ]]; then
       echo "- plan_source: ${request_plan_source}"
-    else
-      echo "- plan_source: (none)"
-    fi
-    if [[ -n "$request_current_plan_source" ]]; then
-      echo "- current_plan_source: ${request_current_plan_source}"
-    else
-      echo "- current_plan_source: (absent)"
-    fi
-    if [[ -n "$request_packet_id" ]]; then
       echo "- packet_id: ${request_packet_id}"
       echo "- dp_draft_path: storage/dp/intake/DP.md"
-    else
-      echo "- packet_id: (none)"
-      echo "- dp_draft_path: (none)"
-    fi
-    if [[ -n "$request_closing_sidecar" ]]; then
       echo "- closing_sidecar: ${request_closing_sidecar}"
-    else
-      echo "- closing_sidecar: (none)"
-    fi
-    if [[ -n "$request_title_suffix" ]]; then
-      echo "- title_suffix: ${request_title_suffix}"
-    else
-      echo "- title_suffix: (none)"
-    fi
-    echo
-    if (( request_slice_validated )); then
-      bundle_emit_architect_slice_projection "${REPO_ROOT}/${plan_rel}" "$request_slice_id" "$request_packet_id" "$request_closing_sidecar" "$request_title_suffix"
-    fi
-    echo
-  elif [[ "$resolved_profile" == "analyst" ]]; then
+      echo
+    elif [[ "$resolved_profile" == "analyst" ]]; then
       echo "[REQUEST]"
       echo "- topic_source: ${topic_rel}"
       echo "- output_surface: ${plan_rel}"
@@ -1816,60 +1572,25 @@ bundle_run() {
       echo "  },"
     fi
     echo "  \"request\": {"
-    if [[ "$resolved_profile" == "architect" && -n "$request_slice_id" ]]; then
-      echo "    \"slice_id\": \"$(bundle_json_escape "$request_slice_id")\"," 
-      echo "    \"slice_validated\": true,"
+    if [[ "$resolved_profile" == "architect" ]]; then
       echo "    \"plan_source\": \"$(bundle_json_escape "$request_plan_source")\","
-      if [[ -n "$request_current_plan_source" ]]; then
-        echo "    \"current_plan_source\": \"$(bundle_json_escape "$request_current_plan_source")\","
-      else
-        echo "    \"current_plan_source\": null,"
-      fi
       echo "    \"packet_id\": \"$(bundle_json_escape "$request_packet_id")\","
       echo "    \"dp_draft_path\": \"storage/dp/intake/DP.md\","
       echo "    \"closing_sidecar\": \"$(bundle_json_escape "$request_closing_sidecar")\","
-      if [[ -n "$request_title_suffix" ]]; then
-        echo "    \"title_suffix\": \"$(bundle_json_escape "$request_title_suffix")\","
-      else
-        echo "    \"title_suffix\": null,"
-      fi
-      echo "    \"topic_source\": null,"
-      echo "    \"output_surface\": null"
-    elif [[ "$resolved_profile" == "architect" ]]; then
-      echo "    \"slice_id\": null,"
-      echo "    \"slice_validated\": false,"
-      echo "    \"plan_source\": null,"
-      if [[ -n "$request_current_plan_source" ]]; then
-        echo "    \"current_plan_source\": \"$(bundle_json_escape "$request_current_plan_source")\","
-      else
-        echo "    \"current_plan_source\": null,"
-      fi
-      echo "    \"packet_id\": null,"
-      echo "    \"dp_draft_path\": null,"
-      echo "    \"closing_sidecar\": null,"
-      echo "    \"title_suffix\": null,"
       echo "    \"topic_source\": null,"
       echo "    \"output_surface\": null"
     elif [[ "$resolved_profile" == "analyst" ]]; then
-      echo "    \"slice_id\": null,"
-      echo "    \"slice_validated\": false,"
       echo "    \"plan_source\": null,"
-      echo "    \"current_plan_source\": null,"
       echo "    \"packet_id\": null,"
       echo "    \"dp_draft_path\": null,"
       echo "    \"closing_sidecar\": null,"
-      echo "    \"title_suffix\": null,"
       echo "    \"topic_source\": \"$(bundle_json_escape "$topic_rel")\","
       echo "    \"output_surface\": \"$(bundle_json_escape "$plan_rel")\""
     else
-      echo "    \"slice_id\": null,"
-      echo "    \"slice_validated\": false,"
       echo "    \"plan_source\": null,"
-      echo "    \"current_plan_source\": null,"
       echo "    \"packet_id\": null,"
       echo "    \"dp_draft_path\": null,"
       echo "    \"closing_sidecar\": null,"
-      echo "    \"title_suffix\": null,"
       echo "    \"topic_source\": null,"
       echo "    \"output_surface\": null"
     fi

@@ -10,15 +10,9 @@ dp/active/*
 !dp/intake/
 dp/intake/*
 !dp/intake/.gitkeep
-!dp/processed/
-dp/processed/*
-!dp/processed/.gitkeep
 !handoff/
 handoff/*
 !handoff/.gitkeep
 !dumps/
 dumps/*
 !dumps/.gitkeep
-!current/
-current/*
-!current/.gitkeep

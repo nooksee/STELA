@@ -975,7 +975,7 @@ check_allowlist_pointer_integrity() {
         ;;
       storage/handoff/CLOSING-*.md)
         ;;
-      storage/handoff/*|storage/dumps/*|storage/dp/intake/*|storage/dp/processed/*)
+      storage/handoff/*|storage/dumps/*|storage/dp/intake/*)
         fail "allowlist entry must be persistent repo state (runtime artifact prefix forbidden): ${normalized}"
         continue
         ;;

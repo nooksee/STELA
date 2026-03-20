@@ -35,6 +35,7 @@ tools/lint/integrity.sh
 tools/verify.sh
 tools/test/bundle.sh
 storage/dp/active/allowlist.txt
+storage/.gitignore
 storage/handoff/CLOSING-DP-OPS-0127.md
 storage/handoff/CLOSING-DP-OPS-0128.md
 storage/handoff/CLOSING-DP-OPS-0129.md
