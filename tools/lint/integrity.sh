@@ -207,7 +207,7 @@ while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
       ;;
     storage/dp/intake/DP-*.md)
       ;;
-    storage/handoff/*|storage/dumps/*|storage/dp/intake/*|storage/dp/processed/*)
+    storage/handoff/*|storage/dumps/*|storage/dp/intake/*)
       die "allowlist entry must be persistent repo state (runtime artifact prefix forbidden): ${entry}"
       ;;
   esac

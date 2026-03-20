@@ -20,19 +20,15 @@ Define the template-backed Architect stance body used by bundle output contract 
 ## Outputs
 - Rendered stance body text beginning at `Rules:`.
 - No unresolved include directives.
-- Input surface: `storage/handoff/PLAN.md` is the latest-wins plan input written by the analyst model; operator ensures valid `## Architect Handoff` fields are present before each architect run.
-- Active DP draft surface: `storage/dp/intake/DP.md` is the latest-wins output target; operator saves the fenced DP draft block output there for dispatch. Packet identity remains `DP-OPS-XXXX` and is printed in bundle `[REQUEST]`.
+- Input surface: `storage/handoff/PLAN.md` is the latest-wins plan input written by the analyst model.
+- Active DP draft surface: `storage/dp/intake/DP.md` is the latest-wins output target; operator saves the fenced DP draft block output there for dispatch.
 - Output contract requires exactly one fenced markdown code block.
 - Output contract requires no text before or after the fenced code block.
 - First non-empty line inside the fenced body must start with `### DP-`.
-- Architect drafts express `Required Work Branch` in the canonical proposal form (`PROPOSED/work/...`) and do not add branch-state narration or replacement instructions.
-- Output contract rejects Contractor Execution Narrative sections and receipt narrative subheadings.
-- Architect handoff selections remain the governing scope, but directly visible attached artifacts may be used to correct stale or self-contradictory request details inside that selected scope.
-- Architect may make the smallest bridge decisions needed to realize the selected slice when attached artifacts settle option, slice, and authority.
-- Missing handoff detail is a hard stop only when option, slice, or authority remains unclear after inspecting attached artifacts.
-- Architect may name repo/runtime contract defects plainly when those defects are directly visible in attached artifacts and the corrective work stays within the selected slice.
-- Architect should emit a complete usable DP once selected scope is settled; the lane should not collapse to read-only summary when bounded in-scope continuity work is truthful and directly supported.
-- Architect ingress lint delegates fenced DP bodies to `tools/lint/dp.sh`; canonical body rules (including `3.4.5` receipt shape and `3.5.1` closing-sidecar coherence) remain mandatory.
+- Architect reads the final plan body directly and uses `Summary`, `Key Changes`, `Test Plan`, and `Assumptions` when present to build the DP.
+- Architect may make the smallest bridge decisions needed to realize the settled plan when attached artifacts settle intent and authority.
+- Architect does not expand or replace the settled plan scope.
+- Architect ingress lint delegates fenced DP bodies to `tools/lint/dp.sh`.
 
 ## Invariants and failure modes
 - Include expansion is strict and fail-closed.
@@ -40,7 +36,10 @@ Define the template-backed Architect stance body used by bundle output contract 
 - Render output is deterministic for identical repository state.
 
 ## Shipping Spine Position
-Architect is the third step in the main shipping spine: `TOPIC.md` → `PLAN.md` → architect bundle → `storage/dp/intake/DP.md` (active DP draft) → Worker execution. Architect output is a fenced DP draft block; the operator saves it to the `dp_draft_path` printed in bundle `[REQUEST]`. `packet_id` remains process-grade as `DP-OPS-XXXX`. Architect is not an audit lane; its output does not contain `## Contractor Execution Narrative`, receipt narrative subheadings, or audit verdict markers.
+Architect is the third step in the main shipping spine: `TOPIC.md` -> `PLAN.md` -> architect bundle -> `storage/dp/intake/DP.md` (active DP draft) -> Worker execution.
+Architect output is a fenced DP draft block; the operator saves it to the `dp_draft_path` printed in bundle `[REQUEST]`.
+`packet_id` remains process-grade as `DP-OPS-XXXX`.
+Architect is not an audit lane; its output does not contain `## Contractor Execution Narrative`, receipt narrative subheadings, or audit verdict markers.
 
 ## Related pointers
 - `ops/lib/manifests/BUNDLE.md`

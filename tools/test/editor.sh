@@ -114,24 +114,21 @@ queue_cleanup_path "$SLOTS_EDIT_TARGET"
 queue_cleanup_path "$SLOTS_FILLED_FIXTURE"
 
 cat > "$PLAN_FILLED_FIXTURE" <<'PLAN_OK'
+# Reset Generated Planning
+
 ## Summary
 Deliver deterministic plan scaffold authoring support.
 
-## Scope
-- In scope: scaffold emit, edit, and validation flows.
-- Out of scope: DP rendering behavior changes.
+## Key Changes
+- Emit scaffold.
+- Fill scaffold content.
+- Validate scaffold deterministically.
 
-## Architect Handoff
-Selected Option: B
-Slice Mode: single
-Selected Slices: S7
-Execution Order: S7
-Architect Constraints: no new options; draft from selected fields only
+## Test Plan
+- bash tools/test/editor.sh
 
-## Implementation Plan (Decision Complete)
-1. Emit scaffold.
-2. Fill scaffold content.
-3. Validate scaffold deterministically.
+## Assumptions
+- No DP rendering behavior changes.
 PLAN_OK
 
 cat > "$SLOTS_FILLED_FIXTURE" <<'SLOTS_OK'
@@ -177,8 +174,9 @@ if (( RUN_STATUS != 0 )); then
   printf '%s\n' "$RUN_OUTPUT" >&2
 fi
 assert_file_exists "$PLAN_SCAFFOLD"
+assert_contains "$PLAN_SCAFFOLD" "# Plan Title"
 assert_contains "$PLAN_SCAFFOLD" "## Summary"
-assert_contains "$PLAN_SCAFFOLD" "## Architect Handoff"
+assert_contains "$PLAN_SCAFFOLD" "## Key Changes"
 
 run_capture ./ops/bin/draft --validate-plan-scaffold="$PLAN_SCAFFOLD"
 if (( RUN_STATUS == 0 )); then

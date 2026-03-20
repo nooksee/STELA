@@ -5,22 +5,22 @@ template_version: 1
 requires_slots:
   - PLAN_TITLE
   - SUMMARY
-  - SCOPE
-  - ARCHITECT_HANDOFF
-  - IMPLEMENTATION_PLAN
+  - KEY_CHANGES
+  - TEST_PLAN
+  - ASSUMPTIONS
 ff_target: operator-technical
 ff_band: "30-45"
 ---
-# DP Plan: {{PLAN_TITLE}}
+# {{PLAN_TITLE}}
 
 ## Summary
 {{SUMMARY}}
 
-## Scope
-{{SCOPE}}
+## Key Changes
+{{KEY_CHANGES}}
 
-## Architect Handoff
-{{ARCHITECT_HANDOFF}}
+## Test Plan
+{{TEST_PLAN}}
 
-## Implementation Plan (Decision Complete)
-{{IMPLEMENTATION_PLAN}}
+## Assumptions
+{{ASSUMPTIONS}}

@@ -80,20 +80,10 @@ lint_plan_file() {
     return 1
   fi
 
-  local has_architect_handoff=0
-  if grep -Eq '^##+[[:space:]]+Architect Handoff([[:space:]]*)$' "$abs_path"; then
-    has_architect_handoff=1
-  fi
-
-  if (( has_architect_handoff )); then
-    plan_require_pattern "$abs_path" 'Selected Option:[[:space:]]+[^[:space:]]+' "Architect Handoff requires 'Selected Option:' value (${rel_path})" || return 1
-    plan_require_pattern "$abs_path" 'Slice Mode:[[:space:]]+(single|multi)' "Architect Handoff requires 'Slice Mode: single|multi' (${rel_path})" || return 1
-    plan_require_pattern "$abs_path" 'Selected Slices:[[:space:]]+[^[:space:]]+' "Architect Handoff requires 'Selected Slices:' value (${rel_path})" || return 1
-
-    if grep -Eq 'Slice Mode:[[:space:]]+multi([[:space:]]|$)' "$abs_path"; then
-      plan_require_pattern "$abs_path" 'Execution Order:[[:space:]]+[^[:space:]]+' "Architect Handoff requires 'Execution Order:' when Slice Mode is multi (${rel_path})" || return 1
-    fi
-  fi
+  plan_require_pattern "$abs_path" '^##[[:space:]]+Summary([[:space:]]*)$' "PLAN file requires '## Summary' (${rel_path})" || return 1
+  plan_require_pattern "$abs_path" '^##[[:space:]]+Key Changes([[:space:]]*)$' "PLAN file requires '## Key Changes' (${rel_path})" || return 1
+  plan_require_pattern "$abs_path" '^##[[:space:]]+Test Plan([[:space:]]*)$' "PLAN file requires '## Test Plan' (${rel_path})" || return 1
+  plan_require_pattern "$abs_path" '^##[[:space:]]+Assumptions([[:space:]]*)$' "PLAN file requires '## Assumptions' (${rel_path})" || return 1
 
   echo "PLAN lint: PASS (${rel_path})"
   return 0
@@ -107,10 +97,20 @@ run_tests() {
   trap 'rm -rf "${test_dir}"' RETURN
 
   cat > "${test_dir}/valid.md" <<'EOF_VALID'
-# PLAN
+# Reset Generated Planning
 
-## Objective
-Ship bundle routing.
+## Summary
+Replace slice machinery with direct plan-driven drafting.
+
+## Key Changes
+- Analyst stays conversational until intent is settled.
+- Architect reads the final plan directly.
+
+## Test Plan
+- bash tools/lint/plan.sh --test
+
+## Assumptions
+- No compatibility prose is retained.
 EOF_VALID
 
   cat > "${test_dir}/no-heading.md" <<'EOF_NO_HEADING'
@@ -128,31 +128,18 @@ EOF_HEADING_ONLY
 {{PLACEHOLDER}}
 EOF_TOKEN
 
-  cat > "${test_dir}/architect-valid.md" <<'EOF_ARCH_OK'
+  cat > "${test_dir}/missing-key-changes.md" <<'EOF_MISSING_KEY_CHANGES'
 # PLAN
 
-## Architect Handoff
-- Selected Option: RECOMMENDED
-- Slice Mode: single
-- Selected Slices: S1
-EOF_ARCH_OK
+## Summary
+Ship bundle routing.
 
-  cat > "${test_dir}/architect-missing-slices.md" <<'EOF_ARCH_MISSING_SLICES'
-# PLAN
+## Test Plan
+- smoke
 
-## Architect Handoff
-- Selected Option: RECOMMENDED
-- Slice Mode: single
-EOF_ARCH_MISSING_SLICES
-
-  cat > "${test_dir}/architect-multi-missing-order.md" <<'EOF_ARCH_MULTI_NO_ORDER'
-# PLAN
-
-## Architect Handoff
-- Selected Option: RECOMMENDED
-- Slice Mode: multi
-- Selected Slices: S1,S2
-EOF_ARCH_MULTI_NO_ORDER
+## Assumptions
+- none
+EOF_MISSING_KEY_CHANGES
 
   if ! lint_plan_file "${test_dir}/valid.md" >/dev/null 2>&1; then
     echo "FAIL: --test expected valid plan to pass" >&2
@@ -179,18 +166,8 @@ EOF_ARCH_MULTI_NO_ORDER
     failures=1
   fi
 
-  if ! lint_plan_file "${test_dir}/architect-valid.md" >/dev/null 2>&1; then
-    echo "FAIL: --test expected architect-valid plan to pass" >&2
-    failures=1
-  fi
-
-  if lint_plan_file "${test_dir}/architect-missing-slices.md" >/dev/null 2>&1; then
-    echo "FAIL: --test expected architect plan missing selected slices to fail" >&2
-    failures=1
-  fi
-
-  if lint_plan_file "${test_dir}/architect-multi-missing-order.md" >/dev/null 2>&1; then
-    echo "FAIL: --test expected architect multi plan missing execution order to fail" >&2
+  if lint_plan_file "${test_dir}/missing-key-changes.md" >/dev/null 2>&1; then
+    echo "FAIL: --test expected plan missing key changes to fail" >&2
     failures=1
   fi
 

@@ -537,10 +537,10 @@ Surface contract:
 ### Architect Workflow
 Canonical operator flow for an architect session:
 
-1. Confirm `storage/handoff/PLAN.md` has a valid `## Architect Handoff` section with `Selected Slices:` and `Execution Order:` fields.
+1. Confirm `storage/handoff/PLAN.md` is the final settled plan for the current topic.
 2. Generate the architect bundle:
 ~~~bash
-./ops/bin/bundle --profile=architect --slice=<SLICE_ID> --out=auto
+./ops/bin/bundle --profile=architect --out=auto
 ~~~
 3. Deliver the bundle artifact (`ARCHITECT-*.txt` or `ARCHITECT-*.tar`) to the architect model.
 4. Save the fenced DP draft from the model output to the active intake path printed in the bundle `[REQUEST]` block as `dp_draft_path`:
@@ -551,10 +551,9 @@ Canonical operator flow for an architect session:
 
 Surface contract:
 - `storage/handoff/PLAN.md`: latest-wins plan input; analyst model writes this; operator delivers it to architect as the primary handoff surface.
-- `storage/current/PLAN.md`: when present, architect bundle includes it as direct current-authority evidence. This does not change routing precedence by itself; `storage/handoff/PLAN.md` remains the live architect handoff surface until runtime precedence changes in a later packet.
 - `ARCHITECT-*.txt`: emitted bundle artifact; contains the dump payload and stance contract.
 - `storage/dp/intake/DP.md`: latest-wins active DP draft surface; operator saves the fenced DP draft block output here after the architect model run.
-- `DP-OPS-XXXX`: packet identity printed by bundle and retained in TASK/addendum lineage, certify receipts, and telemetry. For architect slice dispatch, bundle resolves the next packet id from the current certified TASK packet id plus one.
+- `DP-OPS-XXXX`: packet identity printed by bundle and retained in TASK/addendum lineage, certify receipts, and telemetry. Bundle resolves the next packet id from the current certified TASK packet id plus one.
 
 ### Local Hooks Setup
 Run once after clone, and after any machine where the repo is checked out:
@@ -590,7 +589,7 @@ Attachment contract defaults and profile routing semantics are governed by `ops/
 | Profile | Bundle Command | Required Attachments | Notes |
 | --- | --- | --- | --- |
 | `analyst` | `./ops/bin/bundle --profile=analyst --out=auto` | `ANALYST-*.txt`, `ANALYST-*.manifest.json`, `storage/handoff/TOPIC.md` | Analyst reads `TOPIC.md` and emits `PLAN.md`; attach `ANALYST-*.tar` when the model session reliably ingests tar artifacts. |
-| `architect` | `./ops/bin/bundle --profile=architect --out=auto` | `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, `storage/handoff/PLAN.md` | PLAN-driven drafting requires Architect Handoff fields in PLAN. |
+| `architect` | `./ops/bin/bundle --profile=architect --out=auto` | `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, `storage/handoff/PLAN.md` | PLAN-driven drafting reads the final plan body directly. |
 | `audit` | `./ops/bin/bundle --profile=audit --out=auto` | initial `AUDIT-*.txt`, rerun `AUDIT-R*.txt`, matching manifests, DP RESULTS receipt | Audit stance is PASS/FAIL verdict only. Use `--rerun` for resubmissions; prior local `AUDIT-*` artifacts do not trigger rerun identity. |
 | `foreman` | `./ops/bin/bundle --profile=foreman --intent="ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>" --out=auto` | `FOREMAN-*.txt`, `FOREMAN-*.manifest.json` | Addendum authorization intake only; not used for PASS/FAIL verdicts. |
 | `project` | `./ops/bin/bundle --profile=project --project=<name> --out=auto` | `PROJECT-*.txt`, `PROJECT-*.manifest.json` | Project-scoped dump context is embedded in the bundle metadata. |

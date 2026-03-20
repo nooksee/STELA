@@ -200,7 +200,7 @@ EOF
 
 [NEXT OPERATOR MOVES]
 - ./ops/bin/bundle --profile=auto --out=auto
-- ./ops/bin/bundle --profile=architect --slice=<SLICE_ID> --out=auto
+- ./ops/bin/bundle --profile=architect --out=auto
   plan surface: ${plan_surface_rel} (${plan_surface_status})
   dp draft surface: storage/dp/intake/DP.md (packet_id in bundle [REQUEST])
 - ./ops/bin/dump --scope=core --format=chatgpt

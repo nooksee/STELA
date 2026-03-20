@@ -149,21 +149,19 @@ editor_load_scaffold_from_file() {
 editor_write_plan_scaffold() {
   local target_path="$1"
   cat > "$target_path" <<'EOF'
+# Plan Title
+
 ## Summary
 Write one to three lines stating the objective and expected outcome.
 
-## Scope
-List in-scope and out-of-scope boundaries as concise bullets.
+## Key Changes
+List the concrete contract changes as concise bullets.
 
-## Architect Handoff
-Selected Option: <A|B|C|RECOMMENDED>
-Slice Mode: <single|multi>
-Selected Slices: <S1[,S2...]>
-Execution Order: <required when Slice Mode=multi>
-Architect Constraints: <no new options; draft from selected fields only>
+## Test Plan
+List the validation commands and route proofs.
 
-## Implementation Plan (Decision Complete)
-List deterministic implementation steps for the selected slices only.
+## Assumptions
+State the bounded assumptions that keep the plan usable.
 EOF
 }
 
@@ -218,7 +216,7 @@ editor_validate_plan_scaffold_file() {
   fi
 
   local required_heading
-  for required_heading in '^## Summary$' '^## Scope$' '^## Architect Handoff$' '^## Implementation Plan \(Decision Complete\)$'; do
+  for required_heading in '^# .+$' '^## Summary$' '^## Key Changes$' '^## Test Plan$' '^## Assumptions$'; do
     if ! printf '%s\n' "$content" | grep -Eq "$required_heading"; then
       die "plan scaffold missing required heading (pattern: ${required_heading})"
     fi
@@ -227,25 +225,15 @@ editor_validate_plan_scaffold_file() {
   local untouched_line
   local -a untouched_lines=(
     "Write one to three lines stating the objective and expected outcome."
-    "List in-scope and out-of-scope boundaries as concise bullets."
-    "Execution Order: <required when Slice Mode=multi>"
-    "List deterministic implementation steps for the selected slices only."
+    "List the concrete contract changes as concise bullets."
+    "List the validation commands and route proofs."
+    "State the bounded assumptions that keep the plan usable."
   )
   for untouched_line in "${untouched_lines[@]}"; do
     if printf '%s\n' "$content" | grep -Fqx -- "$untouched_line"; then
       die "plan scaffold contains untouched scaffold line: ${untouched_line}"
     fi
   done
-
-  if ! printf '%s\n' "$content" | grep -Eq '^Selected Option:'; then
-    die "plan scaffold missing required Architect Handoff field: Selected Option"
-  fi
-  if ! printf '%s\n' "$content" | grep -Eq '^Slice Mode:'; then
-    die "plan scaffold missing required Architect Handoff field: Slice Mode"
-  fi
-  if ! printf '%s\n' "$content" | grep -Eq '^Selected Slices:'; then
-    die "plan scaffold missing required Architect Handoff field: Selected Slices"
-  fi
 
   if printf '%s\n' "$content" | grep -Eq '^/|[[:space:]]/[A-Za-z]'; then
     die "plan scaffold contains absolute path; use repo-relative paths only"

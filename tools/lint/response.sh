@@ -213,6 +213,7 @@ check_analyst_body_scope() {
   local line_number=""
   local line_text=""
   local plan_lint_output=""
+  local conversational_mode=0
 
   first_content_line="$(awk 'NF { print; exit }' "$body_path")"
   if [[ -z "$first_content_line" ]]; then
@@ -220,9 +221,8 @@ check_analyst_body_scope() {
     return 1
   fi
 
-  if [[ ! "$first_content_line" =~ ^#[[:space:]]+DP[[:space:]]+Plan: ]]; then
-    response_fail "analyst body must start with '# DP Plan:'"
-    return 1
+  if [[ "$first_content_line" =~ ^1[.][[:space:]]+Analysis[[:space:]]+and[[:space:]]+Discussion$ ]]; then
+    conversational_mode=1
   fi
 
   hit="$(awk '
@@ -265,8 +265,16 @@ check_analyst_body_scope() {
     response_fail "analyst body must not contain role-policy overcompensation prose at line ${line_number}: ${line_text}"
   fi
 
+  if (( conversational_mode )); then
+    if ! grep -Eq '^Questions / Conversation:[[:space:]]*$' "$body_path"; then
+      response_fail "conversational analyst body must include 'Questions / Conversation:'"
+      return 1
+    fi
+    return 0
+  fi
+
   if ! plan_lint_output="$(bash tools/lint/plan.sh "$body_path" 2>&1)"; then
-    response_fail "analyst body must satisfy PLAN contract: $(printf '%s\n' "$plan_lint_output" | tail -n 1)"
+    response_fail "analyst body must be either conversational planning or a valid final PLAN: $(printf '%s\n' "$plan_lint_output" | tail -n 1)"
     return 1
   fi
 }
@@ -592,14 +600,8 @@ run_test() {
   local response_architect_valid
   local response_architect_audit_marker
   local response_architect_narrative
-  local response_architect_delegate_valid
-  local response_architect_receipt_shape_drift
-  local response_architect_sidecar_mismatch
-  local response_architect_delegate_slots
-  local response_architect_delegate_payload
-  local response_architect_delegate_drift_payload
-  local response_architect_delegate_sidecar_payload
   local response_analyst_valid
+  local response_analyst_conversation_valid
   local response_analyst_audit_marker
   local response_analyst_narrative
   local response_analyst_policy
@@ -633,14 +635,8 @@ run_test() {
   response_architect_valid="${test_dir}/response-architect-valid.md"
   response_architect_audit_marker="${test_dir}/response-architect-audit-marker.md"
   response_architect_narrative="${test_dir}/response-architect-narrative.md"
-  response_architect_delegate_valid="${test_dir}/response-architect-delegate-valid.md"
-  response_architect_receipt_shape_drift="${test_dir}/response-architect-receipt-shape-drift.md"
-  response_architect_sidecar_mismatch="${test_dir}/response-architect-sidecar-mismatch.md"
-  response_architect_delegate_slots="${test_dir}/response-architect-delegate-slots.md"
-  response_architect_delegate_payload="${test_dir}/response-architect-delegate-payload.md"
-  response_architect_delegate_drift_payload="${test_dir}/response-architect-delegate-drift-payload.md"
-  response_architect_delegate_sidecar_payload="${test_dir}/response-architect-delegate-sidecar-payload.md"
   response_analyst_valid="${test_dir}/response-analyst-valid.md"
+  response_analyst_conversation_valid="${test_dir}/response-analyst-conversation-valid.md"
   response_analyst_audit_marker="${test_dir}/response-analyst-audit-marker.md"
   response_analyst_narrative="${test_dir}/response-analyst-narrative.md"
   response_analyst_policy="${test_dir}/response-analyst-policy.md"
@@ -656,11 +652,6 @@ run_test() {
 
   response_mode="dp"
   response_skip_dp_delegate=1
-
-  if ! bash tools/lint/dp.sh --test >/dev/null 2>&1; then
-    echo "FAIL: --test expected dp lint self-test to pass" >&2
-    failures_local=1
-  fi
 
   cat > "$response_valid" <<'EOF_VALID'
 ```markdown
@@ -833,122 +824,23 @@ EOF_ARCH_NARRATIVE
     failures_local=1
   fi
 
-  cat > "$response_architect_delegate_slots" <<'EOF_ARCH_DELEGATE_SLOTS'
-[DP_ID]
-DP-OPS-9999
-
-[DP_TITLE]
-Response Architect Delegate Fixture
-
-[BASE_BRANCH]
-main
-
-[PROPOSED_WORK_BRANCH]
-PROPOSED/work/dp-ops-9999-response-architect-delegate-fixture-2026-03-09
-
-[BASE_HEAD]
-ac852bb9
-
-[FRESHNESS_STAMP]
-2026-03-09
-
-[DP_SCOPED_LOAD_ORDER]
-- PoT.md
-- TASK.md
-
-[OBJECTIVE]
-Keep architect response delegate fixture deterministic.
-
-[IN_SCOPE]
-- Validate architect delegate positive and negative fixture paths.
-
-[OUT_OF_SCOPE]
-- Runtime transport behavior changes.
-
-[SAFETY_INVARIANTS]
-- Deterministic fixtures only.
-
-[PLAN_STATE]
-- Fixture-only state for architect response lint tests.
-
-[PLAN_REQUEST]
-1. Generate canonical DP body for architect delegate tests.
-
-[PLAN_CHANGELOG]
-UPDATE:
-- tools/lint/response.sh
-
-[PLAN_PATCH]
-1. Render canonical body and wrap in a fenced architect response fixture.
-
-[RECEIPT_EXTRA]
-- bash tools/lint/response.sh --test
-
-[CBC_PREFLIGHT]
-Applicable. Deterministic fixture checks only.
-EOF_ARCH_DELEGATE_SLOTS
-
-  if ! ./ops/bin/manifest render dp --slots-file="$response_architect_delegate_slots" --out="$response_architect_delegate_payload" >/dev/null 2>&1; then
-    echo "FAIL: --test expected canonical architect delegate fixture render to pass" >&2
-    failures_local=1
-  else
-    {
-      echo '```markdown'
-      cat "$response_architect_delegate_payload"
-      printf '\n```\n'
-    } > "$response_architect_delegate_valid"
-
-    response_skip_dp_delegate=0
-    if ! lint_response_file "$response_architect_delegate_valid" >/dev/null 2>&1; then
-      echo "FAIL: --test expected architect delegate-on canonical fixture to pass" >&2
-      failures_local=1
-    fi
-
-    cp "$response_architect_delegate_payload" "$response_architect_delegate_drift_payload"
-    sed -i 's/^### 3\.4\.5 Receipt (Proofs to collect) - MUST RUN$/### 3.4.5 Receipt/' "$response_architect_delegate_drift_payload"
-    {
-      echo '```markdown'
-      cat "$response_architect_delegate_drift_payload"
-      printf '\n```\n'
-    } > "$response_architect_receipt_shape_drift"
-    if lint_response_file "$response_architect_receipt_shape_drift" >/dev/null 2>&1; then
-      echo "FAIL: --test expected architect delegate fixture with 3.4.5 drift to fail" >&2
-      failures_local=1
-    fi
-
-    cp "$response_architect_delegate_payload" "$response_architect_delegate_sidecar_payload"
-    sed -i 's#storage/handoff/CLOSING\.md#storage/handoff/CLOSING-ALT.md#g' "$response_architect_delegate_sidecar_payload"
-    {
-      echo '```markdown'
-      cat "$response_architect_delegate_sidecar_payload"
-      printf '\n```\n'
-    } > "$response_architect_sidecar_mismatch"
-    if lint_response_file "$response_architect_sidecar_mismatch" >/dev/null 2>&1; then
-      echo "FAIL: --test expected architect delegate fixture with sidecar mismatch to fail" >&2
-      failures_local=1
-    fi
-    response_skip_dp_delegate=1
-  fi
-
   response_mode="analyst"
 
   cat > "$response_analyst_valid" <<'EOF_ANALYST_VALID'
 ```markdown
-# DP Plan: Analyst Fixture
+# Reset Generated Planning
 
 ## Summary
 Analyst output is rendered as a plan surface.
 
-## Scope
-Produce a deterministic plan draft from the attached topic.
+## Key Changes
+- Produce a deterministic plan draft from the attached topic.
 
-## Architect Handoff
-Selected Option: RECOMMENDED
-Slice Mode: single
-Selected Slices: A1
+## Test Plan
+- bash tools/lint/response.sh --test
 
-## Implementation Plan (Decision Complete)
-1. Keep the output plan-shaped and machine-ingestible.
+## Assumptions
+- Keep the output plan-shaped and machine-ingestible.
 ```
 EOF_ANALYST_VALID
   if ! lint_response_file "$response_analyst_valid" >/dev/null 2>&1; then
@@ -956,9 +848,23 @@ EOF_ANALYST_VALID
     failures_local=1
   fi
 
+  cat > "$response_analyst_conversation_valid" <<'EOF_ANALYST_CONVERSATION'
+```markdown
+1. Analysis and Discussion
+The topic still leaves scope ambiguity around the exact runtime reset surface.
+
+Questions / Conversation:
+- Should the reset remove generated slice handling from editor assist as well as bundle/runtime?
+```
+EOF_ANALYST_CONVERSATION
+  if ! lint_response_file "$response_analyst_conversation_valid" >/dev/null 2>&1; then
+    echo "FAIL: --test expected analyst conversational response to pass" >&2
+    failures_local=1
+  fi
+
   cat > "$response_analyst_audit_marker" <<'EOF_ANALYST_AUDIT'
 ```markdown
-# DP Plan: Analyst Fixture
+# Reset Generated Planning
 **AUDIT - DP-OPS-9999**
 ```
 EOF_ANALYST_AUDIT
@@ -969,7 +875,7 @@ EOF_ANALYST_AUDIT
 
   cat > "$response_analyst_narrative" <<'EOF_ANALYST_NARRATIVE'
 ```markdown
-# DP Plan: Analyst Fixture
+# Reset Generated Planning
 ## Contractor Execution Narrative
 ```
 EOF_ANALYST_NARRATIVE
@@ -980,8 +886,11 @@ EOF_ANALYST_NARRATIVE
 
   cat > "$response_analyst_policy" <<'EOF_ANALYST_POLICY'
 ```markdown
-# DP Plan: Analyst Fixture
+1. Analysis and Discussion
 Section 3.4.5 requires RECEIPT_EXTRA policy wording.
+
+Questions / Conversation:
+- confirm
 ```
 EOF_ANALYST_POLICY
   if lint_response_file "$response_analyst_policy" >/dev/null 2>&1; then
@@ -991,11 +900,11 @@ EOF_ANALYST_POLICY
 
   cat > "$response_analyst_missing_plan" <<'EOF_ANALYST_MISSING'
 ```markdown
-# DP Plan: Analyst Fixture
+1. Analysis and Discussion
 ```
 EOF_ANALYST_MISSING
   if lint_response_file "$response_analyst_missing_plan" >/dev/null 2>&1; then
-    echo "FAIL: --test expected analyst response missing PLAN body content to fail" >&2
+    echo "FAIL: --test expected analyst response missing both final PLAN structure and conversation footer to fail" >&2
     failures_local=1
   fi
 

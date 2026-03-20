@@ -70,7 +70,7 @@ dump_scope_foreman=core
 
 ## Profile Attachment Contract
 - analyst: `ANALYST-*.txt`, `ANALYST-*.manifest.json`, transport-managed `storage/handoff/TOPIC.md`
-- architect: `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, transport-managed `storage/handoff/PLAN.md`, optional `--slice=<ID>` with request metadata (`slice_id`, `slice_validated`, `plan_source`, `packet_id`, `closing_sidecar`, `title_suffix`)
+- architect: `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, transport-managed `storage/handoff/PLAN.md` with request metadata (`plan_source`, `packet_id`, `closing_sidecar`, `dp_draft_path`)
 - audit: initial `AUDIT-*.txt`, rerun `AUDIT-R*-*.txt`, matching `.manifest.json`/`.tar`, transport-managed current DP `storage/handoff/RESULTS.md` and `storage/handoff/CLOSING.md`
 - foreman: `FOREMAN-*.txt`, `FOREMAN-*.manifest.json`
 - project: `PROJECT-*.txt`, `PROJECT-*.manifest.json`
@@ -95,27 +95,13 @@ dump_scope_foreman=core
 - Before each analyst run, bundle writes a disposable copy of the prior `storage/handoff/PLAN.md` to `var/tmp/PLAN.md.prev` if that file exists. This copy is a scratch artifact only; certify has no dependency on it and prune may remove it.
 
 ## Architect Transport Contract
-- Architect packet identity is transport-defined when an explicit validated slice is present.
-- Architect invokes the full dump with explicit `storage/handoff/PLAN.md` inclusion when that file is present.
-- Architect also includes `storage/current/PLAN.md` when that file exists, because current-plan authority must be directly visible when the selected slice expects reasoning about it.
-- Architect package members include `storage/handoff/PLAN.md` when present.
-- Runtime derives architect `packet_id` from the current certified TASK packet id plus one. Slice selection does not allocate packet ids by historical offset.
-- Architect request metadata emits `current_plan_source=storage/current/PLAN.md` when that file exists, otherwise `(absent)`.
-- `closing_sidecar` is the active latest-wins sidecar `storage/handoff/CLOSING.md`; packet identity remains explicit in the request metadata and sidecar content.
-- `title_suffix` is derived from the active slice heading text in `storage/handoff/PLAN.md`.
-- `storage/handoff/PLAN.md` is the latest-wins architect plan input surface; the operator ensures this file has valid `## Architect Handoff` fields before each architect run.
+- Architect requires `storage/handoff/PLAN.md`.
+- Architect invokes the full dump with explicit `storage/handoff/PLAN.md` inclusion.
+- Architect package members include `storage/handoff/PLAN.md` only.
+- Runtime derives architect `packet_id` from the current certified TASK packet id plus one.
+- `closing_sidecar` is the active latest-wins sidecar `storage/handoff/CLOSING.md`; packet identity remains explicit in request metadata and sidecar content.
+- `storage/handoff/PLAN.md` is the latest-wins architect plan input surface.
 - `storage/dp/intake/DP.md` is the deterministic active DP draft surface; architect model output is a fenced DP draft block that the operator saves to this path for dispatch.
-- Omitted `--slice` stays ad hoc unless `## Architect Handoff` explicitly opts into safe auto-bind with one unambiguous selected slice.
-- Architect text artifacts emit a stripped active-slice projection built only from:
-  - `Selected Option`
-  - selected slice id
-  - `Execution Order`
-  - slice `Objective`
-  - slice `Scope`
-  - slice `Acceptance gate`
-  - slice `Receipt contract` when present
-  - `Architect Constraints`
-  - transport-defined `packet_id`, `closing_sidecar`, and `title_suffix`
 
 ## Audit Transport Contract
 - Audit resolves the current certified packet id from the current TASK surface.
@@ -132,7 +118,7 @@ dump_scope_foreman=core
 ## Shipping Spine Contract
 The canonical operator shipping chain uses bundle at two points:
 - `--profile=analyst`: deliver context + TOPIC.md to analyst model; analyst writes PLAN.md
-- `--profile=architect`: deliver context + PLAN.md + slice to architect model; architect emits fenced DP draft block; operator saves to `storage/dp/intake/DP.md` while packet identity remains `DP-OPS-XXXX`
+- `--profile=architect`: deliver context + PLAN.md to architect model; architect emits fenced DP draft block; operator saves to `storage/dp/intake/DP.md` while packet identity remains `DP-OPS-XXXX`
 - Worker executes DP; certify generates RESULTS + emits surface leaves
 - `--profile=audit`: package RESULTS + CLOSING for auditor review; audit bundle dump is the canonical audit evidence payload
 - Operator commits on work branch, opens PR per CLOSING sidecar, merges to main

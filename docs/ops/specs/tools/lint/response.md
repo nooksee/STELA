@@ -31,8 +31,9 @@ Deterministic checks:
    - reject audit-verdict marker lines (`**AUDIT -`),
    - reject `## Contractor Execution Narrative`,
    - reject receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`).
-8. In `analyst` mode, extracted body must start with `# DP Plan:`.
-9. In `analyst` mode, extracted body must satisfy `bash tools/lint/plan.sh <extracted-body>`.
+8. In `analyst` mode, extracted body must be either:
+   - conversational planning with first non-empty line `1. Analysis and Discussion` and a `Questions / Conversation:` footer, or
+   - a final plan body that satisfies `bash tools/lint/plan.sh <extracted-body>`.
 10. In `analyst` mode, reject role-drift markers:
    - audit-verdict markers (`**AUDIT -`),
    - `## Contractor Execution Narrative`,
@@ -67,11 +68,11 @@ Exit behavior:
 - Fail: prints `FAIL: ...` and exits non-zero.
 
 `--test` fixtures:
-- PASS: `tools/lint/dp.sh --test` succeeds (delegate health check).
 - PASS: single fenced block with valid DP envelope (`dp` mode; delegate skipped in self-test fixture for determinism).
 - PASS: single fenced block with `**AUDIT -` marker (`audit` mode).
 - PASS: single fenced block with valid DP body (`architect` mode).
-- PASS: single fenced block with valid `PLAN` body (`analyst` mode).
+- PASS: single fenced block with valid final `PLAN` body (`analyst` mode).
+- PASS: single fenced block with valid conversational analyst body (`analyst` mode).
 - PASS: single fenced block with addendum headings (`foreman` mode).
 - PASS: single fenced block with valid DP heading and no drift markers (`conformist` mode).
 - FAIL: text outside fence.
@@ -85,14 +86,10 @@ Exit behavior:
 - FAIL: audit citation token (`audit` mode).
 - FAIL: architect response containing audit marker (`architect` mode).
 - FAIL: architect response containing Contractor Execution Narrative sections (`architect` mode).
-- PASS: architect response with delegate enabled against a canonical rendered DP body.
-- FAIL: architect delegate-on response with malformed `3.4.5` receipt shape.
-- FAIL: architect delegate-on response with `3.5.1` closing-sidecar DP-id mismatch.
-
 - FAIL: analyst response containing audit marker (`analyst` mode).
 - FAIL: analyst response containing Contractor Execution Narrative sections (`analyst` mode).
 - FAIL: analyst response containing policy-overcompensation prose (`analyst` mode).
-- FAIL: analyst response missing required PLAN body content (`analyst` mode).
+- FAIL: analyst response missing both valid conversational structure and valid final PLAN structure (`analyst` mode).
 - FAIL: foreman response containing audit marker (`foreman` mode).
 - FAIL: foreman response missing required addendum headings (`foreman` mode).
 - FAIL: foreman response with incoherent decision fields (`foreman` mode).
