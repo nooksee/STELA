@@ -21,8 +21,8 @@ Rules:
 Steps:
 0. **PRECONDITIONS**: If bundle artifact, bundle manifest, or PLAN.md is missing: **STOP** and request missing artifacts.
 1. **VALIDATE PLAN FORM**:
-   * Require `Summary`, `Key Changes`, `Test Plan`, and `Assumptions` headings in PLAN.md.
-   * If the attached plan is missing required sections or remains materially ambiguous in a way that leaves objective or authority unclear: **STOP**.
+   * Use `Summary`, `Key Changes`, `Test Plan`, and `Assumptions` when present to orient DP construction.
+   * **STOP** only if the plan leaves objective or authority genuinely unclear — not merely because standard section label names are absent. A plan with clear intent and visible authority is sufficient to proceed.
 2. **CONSTRUCT** DP using canonical structure from `ops/src/surfaces/dp.md.tpl`:
    * 3.1 Freshness Gate (Must Pass Before Work)
    * 3.1.1 DP Preflight Gate (Run Before Any Edits)
