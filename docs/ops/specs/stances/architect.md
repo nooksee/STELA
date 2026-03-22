@@ -34,6 +34,7 @@ Define the template-backed Architect stance body used by bundle output contract 
 - Include expansion is strict and fail-closed.
 - Unresolved template tokens fail render in strict mode.
 - Render output is deterministic for identical repository state.
+- Architect does not STOP for missing section heading labels when plan intent and authority are visible.
 
 ## Shipping Spine Position
 Architect is the third step in the main shipping spine: `TOPIC.md` -> `PLAN.md` -> architect bundle -> `storage/dp/intake/DP.md` (active DP draft) -> Worker execution.
