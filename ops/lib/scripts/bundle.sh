@@ -13,6 +13,11 @@ if ! declare -F die >/dev/null 2>&1; then
   source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 fi
 
+# Test-only isolation override. When BUNDLE_TEST_HANDOFF_ROOT is set (by
+# tools/test/bundle.sh only), input surface reads redirect to that root so the
+# test never touches live storage/handoff/ or TASK.md.
+BUNDLE_HANDOFF_BASE="${BUNDLE_TEST_HANDOFF_ROOT:-${REPO_ROOT}/storage/handoff}"
+
 BUNDLE_POLICY_PATH="${REPO_ROOT}/ops/lib/manifests/BUNDLE.md"
 ASSEMBLY_POLICY_PATH=""
 declare -a BUNDLE_SUPPORTED_PROFILES=()
@@ -795,7 +800,12 @@ bundle_emit_prefixed_block() {
 
 bundle_resolve_task_surface_rel() {
   local task_rel="TASK.md"
-  local task_abs="${REPO_ROOT}/${task_rel}"
+  local task_abs
+  if [[ -n "${BUNDLE_TEST_HANDOFF_ROOT:-}" ]]; then
+    task_abs="${BUNDLE_TEST_HANDOFF_ROOT}/${task_rel}"
+  else
+    task_abs="${REPO_ROOT}/${task_rel}"
+  fi
   local first_line=""
 
   [[ -f "$task_abs" ]] || die "TASK.md missing"
@@ -841,7 +851,7 @@ bundle_resolve_audit_packet_source_rel() {
   local intake_rel="storage/dp/intake/DP.md"
   local intake_present=0
 
-  if [[ -f "${REPO_ROOT}/${results_rel}" ]]; then
+  if [[ -f "${BUNDLE_HANDOFF_BASE}/RESULTS.md" ]]; then
     results_dp_source_rel="$(awk '
       /^-[[:space:]]*dp_source:[[:space:]]*/ {
         line=$0
@@ -849,7 +859,7 @@ bundle_resolve_audit_packet_source_rel() {
         print line
         exit
       }
-    ' "${REPO_ROOT}/${results_rel}")"
+    ' "${BUNDLE_HANDOFF_BASE}/RESULTS.md")"
     results_dp_source_rel="$(trim "$results_dp_source_rel")"
     if [[ -n "$results_dp_source_rel" && -f "${REPO_ROOT}/${results_dp_source_rel}" ]]; then
       printf '%s' "$results_dp_source_rel"
@@ -942,12 +952,12 @@ bundle_collect_profile_disposable_inputs() {
 
   case "$profile" in
     analyst)
-      [[ -f "${REPO_ROOT}/${topic_rel}" ]] || die "analyst requires ${topic_rel}"
-      printf '%s\n' "$topic_rel"
+      [[ -f "${BUNDLE_HANDOFF_BASE}/TOPIC.md" ]] || die "analyst requires ${topic_rel}"
+      printf '%s\n' "$(bundle_to_rel_path "${BUNDLE_HANDOFF_BASE}/TOPIC.md")"
       ;;
     architect)
-      if [[ -f "${REPO_ROOT}/${plan_rel}" ]]; then
-        printf '%s\n' "$plan_rel"
+      if [[ -f "${BUNDLE_HANDOFF_BASE}/PLAN.md" ]]; then
+        printf '%s\n' "$(bundle_to_rel_path "${BUNDLE_HANDOFF_BASE}/PLAN.md")"
       fi
       ;;
     audit)
@@ -955,9 +965,12 @@ bundle_collect_profile_disposable_inputs() {
       results_rel="storage/handoff/RESULTS.md"
       closing_rel="storage/handoff/CLOSING.md"
       packet_source_rel="$(bundle_resolve_audit_packet_source_rel "$audit_packet_id")"
-      [[ -f "${REPO_ROOT}/${results_rel}" ]] || die "audit requires ${results_rel}"
-      [[ -f "${REPO_ROOT}/${closing_rel}" ]] || die "audit requires ${closing_rel}"
-      printf '%s\n%s\n%s\n' "$results_rel" "$closing_rel" "$packet_source_rel"
+      [[ -f "${BUNDLE_HANDOFF_BASE}/RESULTS.md" ]] || die "audit requires ${results_rel}"
+      [[ -f "${BUNDLE_HANDOFF_BASE}/CLOSING.md" ]] || die "audit requires ${closing_rel}"
+      printf '%s\n%s\n%s\n' \
+        "$(bundle_to_rel_path "${BUNDLE_HANDOFF_BASE}/RESULTS.md")" \
+        "$(bundle_to_rel_path "${BUNDLE_HANDOFF_BASE}/CLOSING.md")" \
+        "$packet_source_rel"
       ;;
   esac
 }
@@ -1110,8 +1123,8 @@ bundle_run() {
   local plan_present=0
   local -a profile_disposable_files=()
 
-  [[ -f "${REPO_ROOT}/${topic_rel}" ]] && topic_present=1
-  [[ -f "${REPO_ROOT}/${plan_rel}" ]] && plan_present=1
+  [[ -f "${BUNDLE_HANDOFF_BASE}/TOPIC.md" ]] && topic_present=1
+  [[ -f "${BUNDLE_HANDOFF_BASE}/PLAN.md" ]] && plan_present=1
 
   local resolved_profile="$requested_profile"
   local route_reason="explicit profile"
@@ -1120,7 +1133,7 @@ bundle_run() {
 
   if [[ "$requested_profile" == "auto" ]]; then
     if (( plan_present )); then
-      if plan_lint_output="$(bash "${REPO_ROOT}/tools/lint/plan.sh" "$plan_rel" 2>&1)"; then
+      if plan_lint_output="$(bash "${REPO_ROOT}/tools/lint/plan.sh" "${BUNDLE_HANDOFF_BASE}/PLAN.md" 2>&1)"; then
         resolved_profile="$BUNDLE_AUTO_PLAN_PROFILE"
         route_reason="auto: PLAN.md present and plan lint passed"
         plan_lint_status="PASS"
@@ -1146,7 +1159,7 @@ bundle_run() {
 
   if [[ "$resolved_profile" == "architect" ]]; then
     (( plan_present )) || die "architect requires storage/handoff/PLAN.md"
-    if ! plan_lint_output="$(bash "${REPO_ROOT}/tools/lint/plan.sh" "$plan_rel" 2>&1)"; then
+    if ! plan_lint_output="$(bash "${REPO_ROOT}/tools/lint/plan.sh" "${BUNDLE_HANDOFF_BASE}/PLAN.md" 2>&1)"; then
       die "architect requires a valid PLAN.md: $(printf '%s\n' "$plan_lint_output" | tail -n 1)"
     fi
     plan_lint_status="PASS"
@@ -1289,9 +1302,9 @@ bundle_run() {
     fi
   fi
 
-  if [[ "$resolved_profile" == "analyst" ]] && [[ -f "${REPO_ROOT}/storage/handoff/PLAN.md" ]]; then
+  if [[ "$resolved_profile" == "analyst" ]] && [[ -f "${BUNDLE_HANDOFF_BASE}/PLAN.md" ]]; then
     mkdir -p "${REPO_ROOT}/var/tmp"
-    cp "${REPO_ROOT}/storage/handoff/PLAN.md" "${REPO_ROOT}/var/tmp/PLAN.md.prev"
+    cp "${BUNDLE_HANDOFF_BASE}/PLAN.md" "${REPO_ROOT}/var/tmp/PLAN.md.prev"
   fi
 
   {

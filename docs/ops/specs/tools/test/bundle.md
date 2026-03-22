@@ -2,42 +2,41 @@
 # Technical Specification: tools/test/bundle.sh
 
 ## Purpose
-Run deterministic transport smoke for `ops/bin/bundle`: profile routing, artifact naming, manifest invariants, audit delivery coherence, and rerun identity.
+Verify bundle transport-kernel truth: profile routing, required/forbidden package membership, fail-closed behavior on missing inputs or invalid profiles, and audit rerun lineage identity. The test does not check stance wording, shipping-spine prose, or operator-facing narration; those belong to certify and audit, not bundle smoke.
 
 ## Invocation
 - `bash tools/test/bundle.sh`
 - `bash tools/test/bundle.sh --mode=certify-critical`
-- `bash tools/test/bundle.sh --slice=closeout-sanity|audit-coherence|route-contract|rerun-lineage`
+- `bash tools/test/bundle.sh --slice=route-contract|package-contract|fail-closed|rerun-lineage`
 
 ## Slice Contract
-- `closeout-sanity`: minimal audit delivery contract, current RESULTS/CLOSING presence, and dump/profile sanity.
-- `audit-coherence`: current RESULTS, current CLOSING, active TASK leaf, and authoritative packet-source coherence.
-- `route-contract`: analyst, architect, alias, ATS, and project/foreman route behavior.
-- `rerun-lineage`: `AUDIT-*` initial delivery vs `AUDIT-R*` explicit rerun lineage; proves stale prior artifacts do not force rerun identity.
+- `route-contract`: analyst, architect, auto, and alias route behavior; asserts `resolved_profile`, artifact naming prefix, and basic dump manifest fields from structured JSON sources only.
+- `package-contract`: required/forbidden package membership per profile; analyst includes `TOPIC.md` and excludes `PLAN.md`; architect includes `PLAN.md`; audit includes resolved `RESULTS.md` and `CLOSING.md`.
+- `fail-closed`: missing `TOPIC.md` fails analyst; missing `PLAN.md` fails architect; missing `RESULTS.md` or `CLOSING.md` fails audit; invalid profile fails closed.
+- `rerun-lineage`: initial audit stays `AUDIT-*`; repeat without `--rerun` stays `AUDIT-*` even when prior artifact exists; explicit `--rerun` becomes `AUDIT-R1-*`; rerun manifest records `submission.kind: audit_resubmission`, `submission.resubmission_index: 1`, and `submission.supersedes_bundle_path`.
+
+## Ephemeral Isolation Contract
+Each test run generates a unique ephemeral input root at `var/tmp/_smoke/<pid>/`. The environment variable `BUNDLE_TEST_HANDOFF_ROOT` is exported to this root so bundle reads all handoff input surfaces (TOPIC.md, PLAN.md, RESULTS.md, CLOSING.md, TASK.md) from the ephemeral root instead of live `storage/handoff/` or live `TASK.md`. Output routing is unchanged; bundle artifacts go to `var/tmp/_smoke/handoff/` and dump outputs go to `var/tmp/_smoke/dumps/` as defined by BUNDLE.md policy. Before/after `git status --porcelain` is unchanged by the test run.
 
 ## Invariants and Failure Modes
-- Valid profiles `analyst`, `architect`, `audit`, `conform`, and `auto` must succeed.
-- Architect slice validation and ad hoc behavior remain deterministic.
-- Analyst requires `storage/handoff/TOPIC.md` and must fail closed when it is missing.
-- Analyst dump manifest must report `Persistence profile: analyst`.
-- Analyst dump payload must contain explicit `[persistence metadata-only]` blocks for cold archive history.
-- Architect dump manifest must report `Persistence profile: architect`.
-- Audit requires current `RESULTS`, current `CLOSING`, and authoritative current packet source.
-- Audit dump manifest must report `Persistence profile: audit`.
-- Audit dump payload must contain direct file blocks for current `RESULTS`, current `CLOSING`, active TASK leaf, and packet source.
-- Audit rerun smoke must prove distinct artifact identity:
+- Valid profiles `analyst`, `architect`, `audit`, `conform`, and `auto` must succeed when required inputs are present.
+- Analyst requires `TOPIC.md` in the ephemeral root; fails closed when absent.
+- Architect requires `PLAN.md` in the ephemeral root; fails closed when absent.
+- Audit requires `RESULTS.md` and `CLOSING.md` in the ephemeral root; fails closed when either is absent.
+- Audit rerun identity contract:
   - first submission stays `AUDIT-*`
-  - repeat submission without `--rerun` stays `AUDIT-*` even when prior artifact exists
-  - explicit `--rerun` submission becomes `AUDIT-R1-*`
-  - rerun manifest records `submission.kind: audit_resubmission`
-  - rerun manifest records `submission.resubmission_index: 1`
-  - rerun manifest records `submission.supersedes_bundle_path`
-- Smoke bundle invocations use explicit unique output paths under `var/tmp/_smoke/handoff/` with matching dump outputs under `var/tmp/_smoke/dumps/`.
-- `--mode=certify-critical` runs only bounded closeout-safe slices and must not execute the full analyst/architect/ATS/meta matrix.
+  - repeat without `--rerun` stays `AUDIT-*` even when prior artifact exists
+  - explicit `--rerun` becomes `AUDIT-R1-*`
+  - rerun manifest records `submission.kind: audit_resubmission`, `submission.resubmission_index: 1`, `submission.supersedes_bundle_path`
+- `--mode=certify-critical` inspects `git diff --name-only` and `git ls-files --others --exclude-standard` at test entry; if no watched path appears in the combined set, prints one skip line and exits 0; otherwise runs all four slices.
+- Watched paths for `--mode=certify-critical`: `ops/bin/bundle`, `ops/lib/scripts/bundle.sh`, `ops/lib/manifests/BUNDLE.md`, `tools/test/bundle.sh`.
+- Explicit `--slice=...` always forces execution regardless of mode.
+- `--mode=certify-critical` must not run the full analyst/architect/ATS/meta matrix.
 
 ## Cleanup Contract
-The test removes only paths created by the active run. Cleanup is confined to exact emitted paths under `var/tmp/_smoke/` and temporary runtime fixtures under `storage/` or `var/tmp/`.
+The cleanup trap removes the active run's ephemeral input root (`var/tmp/_smoke/<pid>/`) and individually tracked bundle output artifacts from `var/tmp/_smoke/handoff/`. Cleanup is confined to `var/tmp/_smoke/`; no live `TASK.md`, `storage/handoff/*`, or `storage/dp/*` is written or restored by the test.
 
 ## Related Pointers
 - Registry entry: `docs/ops/registry/test.md` (`TEST-02`)
 - Runtime implementation: `ops/lib/scripts/bundle.sh`
+- Isolation env var: `BUNDLE_TEST_HANDOFF_ROOT` (test-only; never set by operator workflows)
