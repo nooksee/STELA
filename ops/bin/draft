@@ -339,10 +339,6 @@ render_dp() {
   local proposed_work_branch="$WORK_BRANCH"
   [[ -x "$TEMPLATE_BIN" ]] || die "template binary missing or not executable: ${TEMPLATE_BIN}"
 
-  if [[ "$proposed_work_branch" != PROPOSED/* ]]; then
-    proposed_work_branch="PROPOSED/${proposed_work_branch}"
-  fi
-
   local -a cmd=(
     "$TEMPLATE_BIN" render dp
     "--out=${out_path}"

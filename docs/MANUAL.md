@@ -214,7 +214,7 @@ certify proceeds. The narrative is rendered into the RESULTS receipt under
 `## Contractor Execution Narrative`.
 
 Required subsections:
-- `### Preflight State` — state the preflight outcome: branch, Base HEAD, clean tree, and preflight lint results.
+- `### Preflight State` — paste the verbatim outputs of the three §3.1 freshness-gate commands (`git rev-parse --abbrev-ref HEAD`, `git rev-parse --short HEAD`, `git status --porcelain`) captured before any file edits began, plus the preflight lint results. These outputs must appear here, in the narrative, not in the receipt command list. Receipt commands run at certify time against a dirty working tree and cannot prove pre-edit clean state.
 - `### Implemented Changes` — describe each change made: what was modified, created, or removed, and why.
 - `### Closeout Notes` — describe anomalies, open items, or residue; state None. if all items are resolved.
 - `### Decision Leaf` — record the decision record outcome:

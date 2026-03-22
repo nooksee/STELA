@@ -1071,29 +1071,15 @@ check_proposed_token_scan() {
   local found=0
   local lineno=0
   local line=""
-  local candidate=""
   while IFS= read -r line || [[ -n "$line" ]]; do
     lineno=$(( lineno + 1 ))
-    candidate="$(trim "$line")"
-    if [[ "$candidate" =~ ^-[[:space:]]+ ]]; then
-      candidate="$(trim "${candidate#-}")"
-    fi
-    if [[ "$candidate" == *:* ]]; then
-      candidate="$(trim "${candidate#*:}")"
-    fi
-
-    # Match only disallowed structural provisional value forms, not prose
-    # mentions of the feature name and not the canonical proposal-form branch
-    # value used by the DP template (`PROPOSED/work/...`). We evaluate a
-    # normalized value candidate (line-start, bullet value, or field value
-    # after ':').
-    if [[ "$candidate" =~ ^PROPOSED-[A-Za-z0-9/._-]+$ ]] || [[ "$candidate" =~ ^PROPOSED[[:space:]] ]]; then
+    if [[ "$line" == *PROPOSED* ]]; then
       echo "PROPOSED token at line ${lineno}: ${line}" >&2
       found=1
     fi
   done < "$path"
   if (( found )); then
-    fail "disallowed PROPOSED provisional-marker form found in DP payload"
+    fail "PROPOSED is a drafting marker and must not appear in a finalized DP — remove it before worker execution"
   fi
 }
 
@@ -1253,7 +1239,7 @@ render_fixture_from_template() {
     line="${line//'{{DP_ID}}'/DP-OPS-0000}"
     line="${line//'{{DP_TITLE}}'/Fixture structure-hash lint coverage}"
     line="${line//'{{BASE_BRANCH}}'/main}"
-    line="${line//'{{PROPOSED_WORK_BRANCH}}'/PROPOSED/work/dp-ops-0000-2026-02-14}"
+    line="${line//'{{PROPOSED_WORK_BRANCH}}'/work/dp-ops-0000-2026-02-14}"
     line="${line//'{{BASE_HEAD}}'/d3801c3a}"
     line="${line//'{{FRESHNESS_STAMP}}'/2026-02-14}"
 
@@ -1503,19 +1489,19 @@ TESTRESULTS
     exit 1
   fi
 
-  # Prose that names the feature (contains the word PROPOSED) must pass.
+  # Prose containing the word PROPOSED must also fail — the word is forbidden anywhere in a finalized DP.
   cp "$tmp_valid" "$tmp_proposed_prose_ok"
-  sed -i 's/^-\s*Validate template-hash flow for DP lint\.$/- Validate PROPOSED scan prose description handling for fixture coverage./' "$tmp_proposed_prose_ok"
+  sed -i 's/^-\s*Validate template-hash flow for DP lint\.$/- This lint validates removal of PROPOSED drafting markers./' "$tmp_proposed_prose_ok"
   failures=0
-  check_proposed_token_scan "$tmp_proposed_prose_ok"
-  if (( failures )); then
+  check_proposed_token_scan "$tmp_proposed_prose_ok" >/dev/null 2>&1
+  if (( failures == 0 )); then
     rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
-    echo "FAIL: --test expected direct PROPOSED prose-only scan pass" >&2
+    echo "FAIL: --test expected prose-only PROPOSED scan failure" >&2
     exit 1
   fi
-  if ! DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_proposed_prose_ok" >/dev/null 2>&1; then
+  if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_proposed_prose_ok" >/dev/null 2>&1; then
     rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
-    echo "FAIL: --test expected PROPOSED prose-only fixture pass" >&2
+    echo "FAIL: --test expected prose-only PROPOSED lint failure" >&2
     exit 1
   fi
 

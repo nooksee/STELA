@@ -704,7 +704,7 @@ run_test() {
 
 ## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Required Work Branch: PROPOSED/work/dp-ops-9999-response-envelope-self-test-2026-03-04
+Required Work Branch: work/dp-ops-9999-response-envelope-self-test-2026-03-04
 Base HEAD: 00000000
 Freshness Stamp: 2026-03-04
 ```
