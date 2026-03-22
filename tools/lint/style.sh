@@ -351,7 +351,7 @@ check_analyst_mode_contract() {
   local required_no_operating_detail='For machine-ingest analyst mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.'
   local required_generic_broad_topic='For machine-ingest analyst mode: when the topic is broad, keep repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.'
   local required_default_first='For conversational planning mode: first non-empty line inside the fenced body must start with `1. Analysis and Discussion`.'
-  local required_questions='For conversational planning mode: end with `Questions / Conversation:` and short operator-facing prompts when clarification, tradeoff choice, or confirmation would help.'
+  local required_questions='For conversational planning mode: when asking questions, use a `2. Decision Questions` section; allow at most 3 questions; each question must present exactly 3 meaningful options with one marked `(Recommended)`; end with `Questions / Conversation:` and a concise operator response format such as `Q1:A, Q2:C` or `Use recommended options`.'
   local required_weak_topic='For conversational planning mode: if topic text is present but weak or ambiguous, interpret conservatively, state assumptions, and ask concise follow-up questions instead of forcing a final plan.'
   local required_bad_topic='For conversational planning mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.'
   local required_plan_output='For final plan mode: output only the complete PLAN markdown code block.'

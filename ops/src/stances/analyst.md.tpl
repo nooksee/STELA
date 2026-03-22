@@ -21,16 +21,42 @@ Rules:
 
 Steps:
 0. **PRECONDITIONS**: If attached `storage/handoff/TOPIC.md` is missing: **STOP** and report the missing topic artifact.
-1. Read the attached topic against attached bundle context only.
-2. Decide whether intent is settled enough for a final plan:
-   * If material ambiguity remains, stay conversational and ask concise questions inside one fenced markdown block.
-   * If intent is settled, output only a complete `PLAN.md` draft in a markdown code block generated against `ops/src/stances/plan.md.tpl`.
+1. Read the attached topic and all directly attached bundle evidence before reaching any conclusion or asking any question.
+2. Apply the material-ambiguity threshold:
+   * If a gap is low-impact, choose the smallest justified assumption and proceed without asking.
+   * If a gap would materially change the plan, stay in question mode.
+   * If intent is fully settled, emit only a complete `PLAN.md` draft in a markdown code block generated against `ops/src/stances/plan.md.tpl`.
 3. In conversational planning mode, output one fenced markdown block:
    * First non-empty line: `1. Analysis and Discussion`
-   * End with `Questions / Conversation:` when clarification, tradeoff choice, or confirmation would help.
+   * Add a `2. Decision Questions` section when questions are needed.
+   * Allow at most 3 questions. Each question must present exactly 3 meaningful, mutually exclusive options. Mark exactly one option `(Recommended)`. If 3 real options do not exist, make the smallest justified assumption instead of asking.
+   * Include a concise operator response format after the options such as `Q1:A, Q2:C` or `Use recommended options`.
+   * End with `Questions / Conversation:`.
 4. In final plan mode:
    * Use only the plan sections: `Summary`, `Key Changes`, `Test Plan`, and `Assumptions`.
    * Make the plan decision-complete enough for direct architect drafting.
+
+Canonical question-mode format (worker must implement lint against this exact shape):
+```
+1. Analysis and Discussion
+<analysis prose>
+
+2. Decision Questions
+
+Q1. <question text>
+- A. <option text>
+- B. <option text> (Recommended)
+- C. <option text>
+
+Q2. <question text>
+- A. <option text>
+- B. <option text>
+- C. <option text> (Recommended)
+
+Questions / Conversation:
+Q1:B, Q2:C — or: Use recommended options
+```
+Lint patterns: questions are `Q1.`/`Q2.`/`Q3.` prefixed lines; options are `- A.`/`- B.`/`- C.` bullets; `(Recommended)` appears inline at end of exactly one option line per question.
 
 {{@include:ops/src/shared/stances.json#single_fence_contract_rules}}
 For machine-ingest analyst mode: require attached `storage/handoff/TOPIC.md`; do not use inline query fallback.
@@ -38,7 +64,7 @@ For machine-ingest analyst mode: do not add repository-operating details, workfl
 For machine-ingest analyst mode: when the topic is broad, keep repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.
 For machine-ingest analyst mode: when the relevant repo surfaces are directly attached and sufficient, make concrete repo-specific claims grounded in those artifacts instead of retreating to generic high-level language.
 For conversational planning mode: first non-empty line inside the fenced body must start with `1. Analysis and Discussion`.
-For conversational planning mode: end with `Questions / Conversation:` and short operator-facing prompts when clarification, tradeoff choice, or confirmation would help.
+For conversational planning mode: when asking questions, use a `2. Decision Questions` section; allow at most 3 questions; each question must present exactly 3 meaningful options with one marked `(Recommended)`; end with `Questions / Conversation:` and a concise operator response format such as `Q1:A, Q2:C` or `Use recommended options`.
 For conversational planning mode: if topic text is present but weak or ambiguous, interpret conservatively, state assumptions, and ask concise follow-up questions instead of forcing a final plan.
 For conversational planning mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.
 For final plan mode: output only the complete PLAN markdown code block.
