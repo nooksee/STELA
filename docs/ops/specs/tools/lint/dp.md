@@ -8,24 +8,23 @@
 ## Mechanics and Sequencing
 1. Resolve repository root, emit telemetry, and enforce canonical template hash parity for `ops/src/surfaces/dp.md.tpl`.
 2. Resolve input mode (`--test`, explicit path, stdin, or default `TASK.md`), including TASK pointer-head resolution and DP block extraction when the source is a TASK surface. The active addendum intake surface (`storage/dp/intake/ADDENDUM.md`) dispatches to `lint_addendum_intake()` instead of DP structure hashing.
-3. For DP payloads, run a provisional-marker `PROPOSED` scan as the first `lint_payload()` check before template-hash verification and structural validation. The scan normalizes each line to a candidate value (trimmed line, bullet value, or field value suffix after `:`), reports each matching line number and full offending line to stderr, and exits non-zero only when the candidate matches a disallowed provisional-marker form (`^PROPOSED-[A-Za-z0-9/._-]+$`) or begins with a bare provisional prefix (`^PROPOSED `). The canonical DP template now renders `Required Work Branch` from the proposal-specific slot `{{PROPOSED_WORK_BRANCH}}`, which produces the allowed proposal-form branch value `PROPOSED/work/...`; that slot form is not rejected by this scan. The scan must not fail when the word `PROPOSED` appears only as prose that describes the feature.
+3. For DP payloads, run a drafting-marker scan as the first `lint_payload()` check before template-hash verification and structural validation. The scan checks every line for the literal drafting-marker word; if the word appears anywhere in the rendered DP text the scan reports each matching line number and full offending line to stderr and exits non-zero with the canonical drafting-marker error message. The `Required Work Branch` field in a finalized DP must carry the bare `work/<topic>-YYYY-MM-DD` value only. There is no prose-only exception; the word must not appear anywhere in a worker-ready DP.
 4. Run foreign citation contamination scan against DP body text. Reject the first line containing `:contentReference[` with a deterministic line-number failure.
 5. Render canonical DP in non-strict mode, normalize both canonical and payload structures, hash both normalized forms, and fail on mismatch.
 6. Validate required fields and section blocks, including heading ID/title shape, base branch metadata, scoped load-order content, plan slots, and receipt slot non-placeholder content.
 7. Enforce receipt dump-selection scoping in Section 3.4.5: packets `DP-OPS-0095` and newer fail if any `ops/bin/dump` command omits `--selection=dp` or `--selection=dp+allowlist`; older packets emit a grandfathered warning only.
 8. Enforce allowlist pointer integrity: exactly one pointer entry, canonical pointer path match, allowlist file existence, entry normalization, runtime-prefix restrictions, wildcard policy constraints, and repository reachability checks.
 9. For RESULTS paths, delegate validation to `tools/lint/results.sh` and propagate its exit code. RESULTS schema enforcement is sourced from the canonical template plus narrative field checks.
-10. In `--test` mode, execute fixture-driven negative and positive checks that exercise template-hash drift, structure mismatch, allowlist-pointer mismatch, allowlist-file invalidity, narrowed `PROPOSED` provisional-marker detection, foreign citation contamination detection, and delegated RESULTS validation coverage (valid fixture and deterministic invalid fixture).
+10. In `--test` mode, execute fixture-driven negative and positive checks that exercise template-hash drift, structure mismatch, allowlist-pointer mismatch, allowlist-file invalidity, drafting-marker word detection, foreign citation contamination detection, and delegated RESULTS validation coverage (valid fixture and deterministic invalid fixture).
 11. Enforce mandatory receipt-command shape in `3.4.5`: verify canonical mandatory command lines are present and fail deterministically when missing.
 12. Enforce closing-sidecar non-prepopulation in `3.5.1`: reject architect payloads that provide non-empty values for canonical sidecar fields.
 13. Enforce include-metadata leakage guard in DP payload bodies: fail on first line containing `<!-- CCD:` or a raw frontmatter delimiter line `---`.
 
-### PROPOSED Provisional-Marker Scan Fixtures (`--test`)
-`dp.sh --test` must cover all three `PROPOSED` scan outcome classes introduced by DP-OPS-0112 addendum ADD-DP-OPS-0112-001:
+### Drafting-Marker Scan Fixtures (`--test`)
+`dp.sh --test` must cover both drafting-marker scan outcome classes:
 
-1. **Clean fixture (PASS):** no provisional-marker forms are present.
-2. **Disallowed provisional-marker form (FAIL):** a fixture line contains an unfinalized branch-style value such as `PROPOSED-work/...`, which must fail.
-3. **Prose-only `PROPOSED` (PASS):** a fixture line contains the word `PROPOSED` as feature-description prose without a provisional-marker form, which must pass.
+1. **Clean fixture (PASS):** the drafting-marker word is absent.
+2. **Drafting-marker present (FAIL):** any fixture line contains the drafting-marker word — whether as a value-level prefix, a branch style value, or prose — which must fail. There is no prose-only exception.
 
 ### Closeout and Coherence Fixtures (`--test`)
 `dp.sh --test` must include deterministic fixtures for contract-shape hardening:
@@ -60,7 +59,7 @@
 1. `check_dp_packet_coherence()`:
    - derives heading packet id from the first `### DP-...:` line,
    - requires `Required Work Branch` to include the lowercase packet-id fragment (for example `DP-OPS-0176` -> `dp-ops-0176`),
-   - preserves the canonical proposal-slot rendering in the branch field (`PROPOSED/work/...`) while still enforcing packet-id fragment coherence,
+   - enforces packet-id fragment coherence against the bare `work/...` branch value,
    - requires a canonical closing-sidecar path token in §3.5.1 (`storage/handoff/CLOSING.md`),
    - still rejects legacy packet-scoped sidecar tokens when their id fragment disagrees with the heading id.
 2. `check_closeout_section_shape()`:
