@@ -8,10 +8,10 @@
 ## Mechanics and Sequencing
 1. The prompt source lives in `ops/src/runbook/execution-decision.yaml`.
 2. The prompt first requests a constrained self-report of active operational constraints using four exact labels:
-   - `Active operational constraints understood:`
-   - `Constraint source visibility:`
-   - `Constraint confidence:`
-   - `Constraint gaps or unknowns:`
+   - `Active task constraints used:`
+   - `Observable evidence used:`
+   - `Evidence gaps or unknowns:`
+   - `Confidence level:`
 3. The prompt then requests a per-step execution-decision log using exact labels:
    - `Trigger:`
    - `Decision:`
@@ -20,8 +20,8 @@
    - `Actions taken:`
    - `Actions not taken:`
    - `Key evidence:`
-4. Validation remains response-lint based through `bash tools/lint/response.sh --mode=execution-decision`.
-5. Execution-decision output is advisory evidence; unsupported claims are scored as `log-claim-drift` or `log-schema-drift` under active testing policy.
+4. Validation: `bash tools/lint/response.sh --mode=execution-decision`. The check verifies required constraint-section labels and at least one complete step block are present.
+5. Execution-decision output is advisory evidence, subordinate to RESULTS and audit truth.
 
 ## Interim Placement Contract
 `execution-decision` is disposable/manual-placement evidence for now: useful and explicit, but subordinate to `RESULTS`, `CLOSING`, and audit truth. No execution-decision bundle profile exists yet.

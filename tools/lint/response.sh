@@ -14,7 +14,7 @@ emit_binary_leaf "lint-response" "start"
 
 usage() {
   cat <<'USAGE'
-Usage: bash tools/lint/response.sh [--mode=dp|audit|architect|analyst|foreman|conformist] [--test] [path|-]
+Usage: bash tools/lint/response.sh [--mode=dp|audit|architect|analyst|foreman|conformist|execution-decision] [--test] [path|-]
 Default input: stdin
 Example: bash tools/lint/response.sh --mode=audit var/tmp/response-audit-valid.md
 Mode matrix freeze: architect|analyst|foreman|conformist remain explicit machine-ingest modes.
@@ -567,6 +567,69 @@ check_drift_tokens() {
   fi
 }
 
+check_execution_decision_schema() {
+  local body_path="$1"
+  local required_constraint_labels=(
+    "Active task constraints used:"
+    "Observable evidence used:"
+    "Evidence gaps or unknowns:"
+    "Confidence level:"
+  )
+  local required_step_labels=(
+    "Trigger:"
+    "Decision:"
+    "Rationale:"
+    "Tools considered or used:"
+    "Actions taken:"
+    "Actions not taken:"
+    "Key evidence:"
+  )
+  local label complete_block_found in_block block_text ok line
+  for label in "${required_constraint_labels[@]}"; do
+    if ! grep -qF "$label" "$body_path"; then
+      response_fail "execution-decision body missing required constraint label: ${label}"
+    fi
+  done
+  for label in "${required_step_labels[@]}"; do
+    if ! grep -qF "$label" "$body_path"; then
+      response_fail "execution-decision body missing required step label: ${label}"
+    fi
+  done
+  # Verify at least one complete step block: all seven step labels must appear
+  # within the same Trigger-to-Trigger (or Trigger-to-end) region. Split-block
+  # distributions — where labels are spread across multiple incomplete blocks so
+  # each individual block is missing one or more labels — are rejected.
+  complete_block_found=0
+  in_block=0
+  block_text=""
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" == *"Trigger:"* ]]; then
+      if (( in_block )); then
+        ok=1
+        for label in "${required_step_labels[@]:1}"; do
+          if [[ "$block_text" != *"$label"* ]]; then ok=0; break; fi
+        done
+        if (( ok )); then complete_block_found=1; break; fi
+      fi
+      in_block=1
+      block_text="$line"$'\n'
+    elif (( in_block )); then
+      block_text+="$line"$'\n'
+    fi
+  done < "$body_path"
+  if (( in_block && ! complete_block_found )); then
+    ok=1
+    for label in "${required_step_labels[@]:1}"; do
+      if [[ "$block_text" != *"$label"* ]]; then ok=0; break; fi
+    done
+    if (( ok )); then complete_block_found=1; fi
+  fi
+  if (( ! complete_block_found )); then
+    response_fail "execution-decision body has no complete step block — all seven step labels must appear together within a single Trigger-to-Trigger (or Trigger-to-end) block"
+  fi
+  return 0
+}
+
 lint_response_file() {
   local input_path="$1"
   local body_tmp
@@ -599,6 +662,9 @@ lint_response_file() {
   elif [[ "$response_mode" == "audit" ]]; then
     extract_single_fenced_block "$input_path" "$body_tmp"
     check_audit_body_start "$body_tmp"
+  elif [[ "$response_mode" == "execution-decision" ]]; then
+    extract_single_fenced_block "$input_path" "$body_tmp"
+    check_execution_decision_schema "$body_tmp"
   else
     response_fail "unsupported lint mode: ${response_mode}"
   fi
@@ -655,6 +721,10 @@ run_test() {
   local response_conformist_audit_marker
   local response_conformist_addendum_marker
   local response_conformist_decision_fields
+  local response_exec_decision_valid
+  local response_exec_decision_missing_constraint
+  local response_exec_decision_missing_step
+  local response_exec_decision_split_block
   local failures_local=0
   local saved_mode="$response_mode"
 
@@ -1204,6 +1274,154 @@ EOF_CONFORMIST_DECISION
     failures_local=1
   fi
 
+  response_exec_decision_valid="${test_dir}/response-exec-decision-valid.md"
+  response_exec_decision_missing_constraint="${test_dir}/response-exec-decision-missing-constraint.md"
+  response_exec_decision_missing_step="${test_dir}/response-exec-decision-missing-step.md"
+
+  cat > "$response_exec_decision_valid" <<'EOF_EXEC_DECISION_VALID'
+```
+Active task constraints used:
+PoT.md, TASK.md, allowlist.
+
+Observable evidence used:
+Diff output and integrity lint results.
+
+Evidence gaps or unknowns:
+None.
+
+Confidence level:
+High.
+
+Trigger:
+Worker received DP-OPS-0221.
+Decision:
+Proceed with execution.
+Rationale:
+Preflight passed.
+Tools considered or used:
+bash tools/lint/dp.sh
+Actions taken:
+Read all required context.
+Actions not taken:
+Did not modify out-of-scope files.
+Key evidence:
+dp.sh PASS, task.sh PASS.
+```
+EOF_EXEC_DECISION_VALID
+  response_mode="execution-decision"
+  failures=0
+  if ! lint_response_file "$response_exec_decision_valid" >/dev/null 2>&1; then
+    echo "FAIL: --test expected valid execution-decision response to pass" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_exec_decision_missing_constraint" <<'EOF_EXEC_DECISION_MISSING_CONSTRAINT'
+```
+Observable evidence used:
+Diff output.
+
+Evidence gaps or unknowns:
+None.
+
+Confidence level:
+High.
+
+Trigger:
+Worker received DP.
+Decision:
+Proceed.
+Rationale:
+Preflight passed.
+Tools considered or used:
+bash tools/lint/dp.sh
+Actions taken:
+Read context.
+Actions not taken:
+None.
+Key evidence:
+dp.sh PASS.
+```
+EOF_EXEC_DECISION_MISSING_CONSTRAINT
+  failures=0
+  if lint_response_file "$response_exec_decision_missing_constraint" >/dev/null 2>&1; then
+    echo "FAIL: --test expected execution-decision missing constraint label to fail" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_exec_decision_missing_step" <<'EOF_EXEC_DECISION_MISSING_STEP'
+```
+Active task constraints used:
+PoT.md.
+
+Observable evidence used:
+Diff output.
+
+Evidence gaps or unknowns:
+None.
+
+Confidence level:
+High.
+
+Trigger:
+Worker received DP.
+Decision:
+Proceed.
+Rationale:
+Preflight passed.
+Tools considered or used:
+bash tools/lint/dp.sh
+Actions taken:
+Read context.
+Actions not taken:
+None.
+```
+EOF_EXEC_DECISION_MISSING_STEP
+  failures=0
+  if lint_response_file "$response_exec_decision_missing_step" >/dev/null 2>&1; then
+    echo "FAIL: --test expected execution-decision missing step label to fail" >&2
+    failures_local=1
+  fi
+
+  response_exec_decision_split_block="${test_dir}/response-exec-decision-split-block.md"
+  cat > "$response_exec_decision_split_block" <<'EOF_EXEC_DECISION_SPLIT_BLOCK'
+```
+Active task constraints used:
+PoT.md.
+
+Observable evidence used:
+Diff output.
+
+Evidence gaps or unknowns:
+None.
+
+Confidence level:
+High.
+
+Trigger:
+First step.
+Decision:
+Proceed.
+Rationale:
+Good reason.
+Tools considered or used:
+Tool A.
+
+Trigger:
+Second step.
+Actions taken:
+Done.
+Actions not taken:
+Nothing.
+Key evidence:
+Test passed.
+```
+EOF_EXEC_DECISION_SPLIT_BLOCK
+  failures=0
+  if lint_response_file "$response_exec_decision_split_block" >/dev/null 2>&1; then
+    echo "FAIL: --test expected execution-decision split-block response to fail" >&2
+    failures_local=1
+  fi
+
   response_mode="$saved_mode"
   response_skip_dp_delegate=0
 
@@ -1254,10 +1472,10 @@ while (($# > 0)); do
 done
 
 case "$response_mode" in
-  dp|audit|architect|analyst|foreman|conformist) ;;
+  dp|audit|architect|analyst|foreman|conformist|execution-decision) ;;
   *)
     usage >&2
-    response_fail "invalid mode: ${response_mode}. Use dp, audit, architect, analyst, foreman, or conformist."
+    response_fail "invalid mode: ${response_mode}. Use dp, audit, architect, analyst, foreman, conformist, or execution-decision."
     exit 1
     ;;
 esac

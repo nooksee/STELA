@@ -49,7 +49,3 @@ validation:
   mode: "execution-decision"
   lint_command: "bash tools/lint/response.sh --mode=execution-decision"
   pass_condition: "OK: response lint passed (mode=execution-decision)"
-  failure_modes:
-    schema_missing: "Missing markers (Trigger, Decision, etc.) indicates narrative summary."
-    drift_detected: "Unsupported execution-outcome claims indicate log-claim-drift."
-    constraint_blur: "Constraint section collapses visible instructions, inferred platform behavior, and unknown hidden rules into one undifferentiated claim."
