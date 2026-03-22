@@ -46,7 +46,7 @@ Audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto`.
 - Received fenced markdown from auditor/analyst/architect/other secondary lanes may be placed at `storage/handoff/EXECUTION-DECISION.md`.
 - Architect-generated intake variant may be placed at `storage/dp/intake/EXECUTION-DECISION.md`.
 - No execution-decision bundle profile exists yet; placement is manual.
-- Validated via `bash tools/lint/response.sh --mode=execution-decision`.
+- Validated via `bash tools/lint/response.sh --mode=execution-decision`; checks required constraint-section labels and at least one complete step block.
 
 **Secondary Lanes:**
 - `foreman/addendum`: Intervention path. Contractor or auditor reports `ADDENDUM REQUIRED`. Operator generates a foreman wake-up bundle (`./ops/bin/bundle --profile=foreman --intent="ADDENDUM REQUIRED: <DECISION_ID> - <BLOCKER>" --out=auto`), delivers it to foreman, and foreman issues an authorized addendum. The authorized addendum is handed to the Contractor as a finished document. Contractor does not author addendum content.
