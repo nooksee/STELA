@@ -134,6 +134,8 @@ Those exact current-run generated paths no longer require packet-specific allowl
 entries. All other touched tracked files still require normal allowlist coverage
 before certify runs.
 
+`storage/handoff/CLOSING.md` is a latest-wins disposable surface. Certify reads and validates it in place; it does not rename or archive it to a per-packet path. Do not add `storage/handoff/CLOSING-DP-OPS-*.md` entries to the allowlist.
+
 Run:
 ~~~bash
 ./ops/bin/allowlist

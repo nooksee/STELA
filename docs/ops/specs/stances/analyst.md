@@ -22,8 +22,11 @@ Define the template-backed Analyst stance body used by bundle output contract re
 - No unresolved include directives.
 - Machine-ingest analyst mode requires attached `storage/handoff/TOPIC.md` and has no inline-query fallback.
 - Machine-ingest analyst mode outputs exactly one fenced markdown code block.
+- Analyst reads topic and all directly attached bundle evidence before asking anything (explore-first).
+- Material-ambiguity threshold: low-impact gaps are absorbed as smallest justified assumptions; only gaps that would materially change the plan trigger question mode.
 - Analyst remains conversational while material ambiguity is still open.
 - Conversational mode first non-empty line is `1. Analysis and Discussion`.
+- Structured question mode: at most 3 questions per run; each question presents exactly 3 meaningful, mutually exclusive options; exactly one option per question is marked `(Recommended)`.
 - Conversational mode ends with `Questions / Conversation:` when clarification, tradeoff choice, or confirmation would help.
 - Final plan mode emits only the complete `PLAN.md` draft in the canonical plan shape.
 - Final plan mode uses the headings `Summary`, `Key Changes`, `Test Plan`, and `Assumptions`.
@@ -36,6 +39,7 @@ Define the template-backed Analyst stance body used by bundle output contract re
 - Include expansion is strict and fail-closed.
 - Unresolved template tokens fail render in strict mode.
 - Render output is deterministic for identical repository state.
+- Analyst does not emit structureless questions; when question mode is used, the Q1./Q2./Q3. format with A./B./C. options and one `(Recommended)` per question is required.
 
 ## Related pointers
 - `ops/lib/manifests/BUNDLE.md`

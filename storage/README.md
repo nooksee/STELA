@@ -12,6 +12,6 @@ Canonical storage lanes:
 - `storage/handoff/` for OPEN, OPEN-PORCELAIN, and DP results.
 - `storage/dumps/` for dump bundles and manifests.
 - `storage/dp/intake/` for pre-closeout DP packet staging.
-- `storage/dp/processed/` for post-closeout DP packets.
+- `storage/dp/active/` durable allowlist.txt lives here.
 - `ops/bin/certify` enforces intake -> processed routing after the final `tools/lint/results.sh` pass.
-- Intake is staging-only and should not carry tracked `DP-*.md` packets in committed state.
+- Intake is staging-only and should not carry tracked `DP.md` packets in committed state.

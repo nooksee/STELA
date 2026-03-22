@@ -270,6 +270,43 @@ check_analyst_body_scope() {
       response_fail "conversational analyst body must include 'Questions / Conversation:'"
       return 1
     fi
+    local q_count
+    q_count="$(grep -cE '^Q[0-9][.][[:space:]]' "$body_path" || true)"
+    if (( q_count > 3 )); then
+      response_fail "analyst conversational body must contain at most 3 questions"
+      return 1
+    fi
+    if (( q_count > 0 )); then
+      local q_num
+      for q_num in 1 2 3; do
+        if ! grep -qE "^Q${q_num}[.][[:space:]]" "$body_path"; then
+          continue
+        fi
+        local opt_count rec_count
+        opt_count="$(awk -v q="$q_num" '
+          $0 ~ "^Q" q "[.][[:space:]]" { f=1; next }
+          f && /^Q[0-9][.][[:space:]]/ { exit }
+          f && /^Questions / { exit }
+          f && /^- [ABC][.][[:space:]]/ { c++ }
+          END { print c+0 }
+        ' "$body_path")"
+        if [[ "$opt_count" != "3" ]]; then
+          response_fail "each analyst question must have exactly 3 options (Q${q_num} has ${opt_count})"
+          return 1
+        fi
+        rec_count="$(awk -v q="$q_num" '
+          $0 ~ "^Q" q "[.][[:space:]]" { f=1; next }
+          f && /^Q[0-9][.][[:space:]]/ { exit }
+          f && /^Questions / { exit }
+          f && /\(Recommended\)/ { c++ }
+          END { print c+0 }
+        ' "$body_path")"
+        if [[ "$rec_count" != "1" ]]; then
+          response_fail "each analyst question must have exactly one (Recommended) option (Q${q_num} has ${rec_count})"
+          return 1
+        fi
+      done
+    fi
     return 0
   fi
 
@@ -606,6 +643,10 @@ run_test() {
   local response_analyst_narrative
   local response_analyst_policy
   local response_analyst_missing_plan
+  local response_analyst_structured_valid
+  local response_analyst_few_options
+  local response_analyst_no_recommended
+  local response_analyst_too_many_questions
   local response_foreman_valid
   local response_foreman_audit_marker
   local response_foreman_missing_sections
@@ -641,6 +682,10 @@ run_test() {
   response_analyst_narrative="${test_dir}/response-analyst-narrative.md"
   response_analyst_policy="${test_dir}/response-analyst-policy.md"
   response_analyst_missing_plan="${test_dir}/response-analyst-missing-plan.md"
+  response_analyst_structured_valid="${test_dir}/response-analyst-structured-valid.md"
+  response_analyst_few_options="${test_dir}/response-analyst-few-options.md"
+  response_analyst_no_recommended="${test_dir}/response-analyst-no-recommended.md"
+  response_analyst_too_many_questions="${test_dir}/response-analyst-too-many-questions.md"
   response_foreman_valid="${test_dir}/response-foreman-valid.md"
   response_foreman_audit_marker="${test_dir}/response-foreman-audit-marker.md"
   response_foreman_missing_sections="${test_dir}/response-foreman-missing-sections.md"
@@ -851,10 +896,17 @@ EOF_ANALYST_VALID
   cat > "$response_analyst_conversation_valid" <<'EOF_ANALYST_CONVERSATION'
 ```markdown
 1. Analysis and Discussion
-The topic still leaves scope ambiguity around the exact runtime reset surface.
+The topic leaves scope ambiguity around the exact runtime reset surface.
+
+2. Decision Questions
+
+Q1. Should the reset remove generated slice handling from editor assist as well as bundle/runtime?
+- A. Reset bundle/runtime only; leave editor assist unchanged.
+- B. Reset bundle/runtime and editor assist together. (Recommended)
+- C. Reset editor assist only and defer bundle/runtime.
 
 Questions / Conversation:
-- Should the reset remove generated slice handling from editor assist as well as bundle/runtime?
+Q1:B — or: Use recommended options
 ```
 EOF_ANALYST_CONVERSATION
   if ! lint_response_file "$response_analyst_conversation_valid" >/dev/null 2>&1; then
@@ -905,6 +957,109 @@ EOF_ANALYST_POLICY
 EOF_ANALYST_MISSING
   if lint_response_file "$response_analyst_missing_plan" >/dev/null 2>&1; then
     echo "FAIL: --test expected analyst response missing both final PLAN structure and conversation footer to fail" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_analyst_structured_valid" <<'EOF_ANALYST_STRUCTURED'
+```markdown
+1. Analysis and Discussion
+The scope leaves two material gaps that affect implementation direction.
+
+2. Decision Questions
+
+Q1. Which reset surface should be targeted first?
+- A. Bundle/runtime reset only; defer editor assist.
+- B. Bundle/runtime and editor assist together. (Recommended)
+- C. Editor assist only; leave bundle/runtime for a follow-on packet.
+
+Q2. Should the new validation path be gated behind a feature flag?
+- A. No feature flag; ship validation as default behavior.
+- B. Feature flag for gradual rollout. (Recommended)
+- C. Validation disabled by default; operator opt-in required.
+
+Questions / Conversation:
+Q1:B, Q2:B — or: Use recommended options
+```
+EOF_ANALYST_STRUCTURED
+  if ! lint_response_file "$response_analyst_structured_valid" >/dev/null 2>&1; then
+    echo "FAIL: --test expected analyst structured question-mode response to pass" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_analyst_few_options" <<'EOF_ANALYST_FEW_OPTIONS'
+```markdown
+1. Analysis and Discussion
+Ambiguity remains around the target surface.
+
+2. Decision Questions
+
+Q1. Which surface should be reset?
+- A. Bundle/runtime only. (Recommended)
+- B. Editor assist only.
+
+Questions / Conversation:
+Q1:A — or: Use recommended options
+```
+EOF_ANALYST_FEW_OPTIONS
+  if lint_response_file "$response_analyst_few_options" >/dev/null 2>&1; then
+    echo "FAIL: --test expected analyst question with fewer than 3 options to fail" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_analyst_no_recommended" <<'EOF_ANALYST_NO_REC'
+```markdown
+1. Analysis and Discussion
+Ambiguity remains around the target surface.
+
+2. Decision Questions
+
+Q1. Which surface should be reset?
+- A. Bundle/runtime only.
+- B. Editor assist only.
+- C. Both together.
+
+Questions / Conversation:
+Q1:A
+```
+EOF_ANALYST_NO_REC
+  if lint_response_file "$response_analyst_no_recommended" >/dev/null 2>&1; then
+    echo "FAIL: --test expected analyst question with no (Recommended) option to fail" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_analyst_too_many_questions" <<'EOF_ANALYST_TOO_MANY'
+```markdown
+1. Analysis and Discussion
+Four gaps remain.
+
+2. Decision Questions
+
+Q1. First question?
+- A. Option one. (Recommended)
+- B. Option two.
+- C. Option three.
+
+Q2. Second question?
+- A. Option one.
+- B. Option two. (Recommended)
+- C. Option three.
+
+Q3. Third question?
+- A. Option one.
+- B. Option two.
+- C. Option three. (Recommended)
+
+Q4. Fourth question?
+- A. Option one. (Recommended)
+- B. Option two.
+- C. Option three.
+
+Questions / Conversation:
+Use recommended options
+```
+EOF_ANALYST_TOO_MANY
+  if lint_response_file "$response_analyst_too_many_questions" >/dev/null 2>&1; then
+    echo "FAIL: --test expected analyst response with 4 questions to fail" >&2
     failures_local=1
   fi
 
