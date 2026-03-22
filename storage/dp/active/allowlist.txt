@@ -527,3 +527,8 @@ tools/test/bundle.sh
 storage/handoff/CLOSING-DP-OPS-0210.md
 storage/dp/intake/DP.md
 archives/surfaces/TASK-DP-OPS-0210-*.md
+storage/handoff/CLOSING-DP-OPS-0217.md
+archives/surfaces/TASK-DP-OPS-0217-*.md
+ops/lib/scripts/bundle.sh
+docs/ops/specs/tools/test/bundle.md
+docs/ops/registry/test.md
