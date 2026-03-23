@@ -22,8 +22,8 @@ The script provides `bundle_run` plus helpers for:
    - reruns emit `AUDIT-R<index>-*` only when `--rerun` is explicitly supplied
    - prior local `AUDIT-*` artifacts do not force rerun identity without `--rerun`
    - manifest records submission lineage (`kind`, `resubmission_index`, `supersedes_bundle_path`, `refresh_reason`)
-9. Architect plan-intake request metadata emission.
-10. Analyst, architect, and audit exact-file disposable transport.
+9. Draft plan-intake request metadata emission.
+10. Planning, draft, and audit exact-file disposable transport.
 11. Manifest v2 emission and package `.tar` emission with manifest-aligned member list.
 
 ## Persistence Routing Contract

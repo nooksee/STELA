@@ -464,3 +464,10 @@ archives/surfaces/TASK-DP-OPS-0222-*.md
 archives/surfaces/TASK-DP-OPS-0223-*.md
 ops/src/stances/planning.md.tpl
 docs/ops/specs/stances/planning.md
+ops/src/stances/draft.md.tpl
+docs/ops/specs/stances/draft.md
+ops/etc/persistence.manifest
+ops/etc/retention.manifest
+docs/ops/specs/binaries/manifest.md
+ops/bin/open
+ops/bin/help

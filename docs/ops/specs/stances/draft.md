@@ -1,15 +1,15 @@
 <!-- CCD: ff_target="operator-technical" ff_band="30-45" -->
-# Technical Specification: ops/src/stances/architect.md.tpl
+# Technical Specification: ops/src/stances/draft.md.tpl
 
 ## Purpose
-Define the template-backed Architect stance body used by bundle output contract rendering.
+Define the template-backed draft stance body used by bundle output contract rendering.
 
 ## Invocation
-- Render path: `ops/bin/manifest render stance-architect --out=-`
+- Render path: `ops/bin/manifest render stance-draft --out=-`
 - Runtime consumer: `ops/lib/scripts/bundle.sh`
 
 ## Inputs
-- Template source: `ops/src/stances/architect.md.tpl`
+- Template source: `ops/src/stances/draft.md.tpl`
 - Shared include source: `ops/src/shared/stances.json#stance_shared_rules`
 - Shared include source: `ops/src/shared/stances.json#stance_hard_truth_rules`
 - Shared include source: `ops/src/shared/stances.json#stance_output_guidance_rules`
@@ -37,7 +37,7 @@ Define the template-backed Architect stance body used by bundle output contract 
 - Architect does not STOP for missing section heading labels when plan intent and authority are visible.
 
 ## Shipping Spine Position
-Architect is the third step in the main shipping spine: `TOPIC.md` -> `PLAN.md` -> architect bundle -> `storage/dp/intake/DP.md` (active DP draft) -> Worker execution.
+Architect is the third step in the main shipping spine: `TOPIC.md` -> `PLAN.md` -> draft bundle -> `storage/dp/intake/DP.md` (active DP draft) -> Worker execution.
 Architect output is a fenced DP draft block; the operator saves it to the `dp_draft_path` printed in bundle `[REQUEST]`.
 `packet_id` remains process-grade as `DP-OPS-XXXX`.
 Architect is not an audit lane; its output does not contain `## Contractor Execution Narrative`, receipt narrative subheadings, or audit verdict markers.
@@ -45,4 +45,4 @@ Architect is not an audit lane; its output does not contain `## Contractor Execu
 ## Related pointers
 - `ops/lib/manifests/BUNDLE.md`
 - `ops/lib/scripts/bundle.sh`
-- `ops/src/stances/architect.md.tpl`
+- `ops/src/stances/draft.md.tpl`

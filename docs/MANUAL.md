@@ -13,7 +13,7 @@ Each stage has one obvious active surface. Secondary lanes (foreman/addendum, co
 Active surfaces by stage:
 - **Topic input:** `storage/handoff/TOPIC.md` (latest-wins; operator writes before each planning run)
 - **Plan output:** `storage/handoff/PLAN.md` (latest-wins; analyst model writes this)
-- **Active DP draft:** `storage/dp/intake/DP.md` (latest-wins operator surface; architect output is saved here)
+- **Active DP draft:** `storage/dp/intake/DP.md` (latest-wins operator surface; draft output is saved here)
 - **Packet/process identity:** `DP-OPS-XXXX` (retained in the packet body, TASK/addendum lineage path, RESULTS content, CLOSING content, audit transport, and telemetry)
 - **Audit bundle:** `storage/handoff/AUDIT-*.txt` (initial) or `storage/handoff/AUDIT-R*.txt` (rerun)
 - **Results receipt:** `storage/handoff/RESULTS.md`
@@ -43,8 +43,8 @@ Audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto`.
 
 **Execution-Decision Handling (Interim):**
 - `execution-decision` is disposable/manual-placement evidence, subordinate to `RESULTS`, `CLOSING`, and audit truth.
-- Received fenced markdown from auditor/analyst/architect/other secondary lanes may be placed at `storage/handoff/EXECUTION-DECISION.md`.
-- Architect-generated intake variant may be placed at `storage/dp/intake/EXECUTION-DECISION.md`.
+- Received fenced markdown from auditor/analyst/draft/other secondary lanes may be placed at `storage/handoff/EXECUTION-DECISION.md`.
+- Draft-generated intake variant may be placed at `storage/dp/intake/EXECUTION-DECISION.md`.
 - No execution-decision bundle profile exists yet; placement is manual.
 - Validated via `bash tools/lint/response.sh --mode=execution-decision`; checks required constraint-section labels and at least one complete step block.
 
@@ -384,7 +384,7 @@ OPEN de-dup contract:
   --work-branch=work/dp-ops-0065-2026-02-14 --base-head=d3801c3a \
   --slots-file=storage/dp/intake/DP-OPS-0065.slots
 
-# Emit plan scaffold for analyst/architect authoring
+# Emit plan scaffold for analyst/draft authoring
 ./ops/bin/draft --emit-plan-scaffold=var/tmp/plan-scaffold.md
 
 # Emit DP slots scaffold for sidecar authoring
@@ -536,15 +536,15 @@ Surface contract:
 - `storage/handoff/PLAN.md`: latest-wins model output; overwritten after each planning run.
 - `var/tmp/PLAN.md.prev`: disposable safety backup of the prior `PLAN.md` written by bundle before each run. Not a certify input; prune may remove it.
 
-### Architect Workflow
-Canonical operator flow for an architect session:
+### Draft Workflow
+Canonical operator flow for a draft session:
 
 1. Confirm `storage/handoff/PLAN.md` is the final settled plan for the current topic.
-2. Generate the architect bundle:
+2. Generate the draft bundle:
 ~~~bash
-./ops/bin/bundle --profile=architect --out=auto
+./ops/bin/bundle --profile=draft --out=auto
 ~~~
-3. Deliver the bundle artifact (`ARCHITECT-*.txt` or `ARCHITECT-*.tar`) to the architect model.
+3. Deliver the bundle artifact (`DRAFT-*.txt` or `DRAFT-*.tar`) to the drafting model.
 4. Save the fenced DP draft from the model output to the active intake path printed in the bundle `[REQUEST]` block as `dp_draft_path`:
 ~~~bash
 # path is storage/dp/intake/DP.md — packet_id printed in bundle [REQUEST]
@@ -552,9 +552,9 @@ Canonical operator flow for an architect session:
 5. Dispatch the DP per Section 2 Dispatch Packet Mechanics.
 
 Surface contract:
-- `storage/handoff/PLAN.md`: latest-wins plan input; analyst model writes this; operator delivers it to architect as the primary handoff surface.
-- `ARCHITECT-*.txt`: emitted bundle artifact; contains the dump payload and stance contract.
-- `storage/dp/intake/DP.md`: latest-wins active DP draft surface; operator saves the fenced DP draft block output here after the architect model run.
+- `storage/handoff/PLAN.md`: latest-wins plan input; analyst model writes this; operator delivers it to the drafting model as the primary handoff surface.
+- `DRAFT-*.txt`: emitted bundle artifact; contains the dump payload and stance contract.
+- `storage/dp/intake/DP.md`: latest-wins active DP draft surface; operator saves the fenced DP draft block output here after the draft model run.
 - `DP-OPS-XXXX`: packet identity printed by bundle and retained in TASK/addendum lineage, certify receipts, and telemetry. Bundle resolves the next packet id from the current certified TASK packet id plus one.
 
 ### Local Hooks Setup
@@ -591,7 +591,7 @@ Attachment contract defaults and profile routing semantics are governed by `ops/
 | Profile | Bundle Command | Required Attachments | Notes |
 | --- | --- | --- | --- |
 | `planning` | `./ops/bin/bundle --profile=planning --out=auto` | `PLANNING-*.txt`, `PLANNING-*.manifest.json`, `storage/handoff/TOPIC.md` | Analyst reads `TOPIC.md` and emits `PLAN.md`; attach `PLANNING-*.tar` when the model session reliably ingests tar artifacts. |
-| `architect` | `./ops/bin/bundle --profile=architect --out=auto` | `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, `storage/handoff/PLAN.md` | PLAN-driven drafting reads the final plan body directly. |
+| `draft` | `./ops/bin/bundle --profile=draft --out=auto` | `DRAFT-*.txt`, `DRAFT-*.manifest.json`, `storage/handoff/PLAN.md` | PLAN-driven drafting reads the final plan body directly. |
 | `audit` | `./ops/bin/bundle --profile=audit --out=auto` | initial `AUDIT-*.txt`, rerun `AUDIT-R*.txt`, matching manifests, DP RESULTS receipt | Audit stance is PASS/FAIL verdict only. Use `--rerun` for resubmissions; prior local `AUDIT-*` artifacts do not trigger rerun identity. |
 | `foreman` | `./ops/bin/bundle --profile=foreman --intent="ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>" --out=auto` | `FOREMAN-*.txt`, `FOREMAN-*.manifest.json` | Addendum authorization intake only; not used for PASS/FAIL verdicts. |
 | `project` | `./ops/bin/bundle --profile=project --project=<name> --out=auto` | `PROJECT-*.txt`, `PROJECT-*.manifest.json` | Project-scoped dump context is embedded in the bundle metadata. |

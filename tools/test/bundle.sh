@@ -222,17 +222,17 @@ slice_route_contract() {
       || fail "route/planning: artifact prefix wrong: ${out}"
   fi
 
-  # Architect: explicit profile with PLAN.md, artifact prefix ARCHITECT
+  # Draft: explicit profile with PLAN.md, artifact prefix DRAFT
   make_plan
-  out="$(next_out architect)"
-  run_bundle "$out" --profile=architect
+  out="$(next_out draft)"
+  run_bundle "$out" --profile=draft
   if [[ "$BUNDLE_LAST_STATUS" -ne 0 ]]; then
-    fail "route/architect: expected exit 0; output: ${BUNDLE_LAST_OUTPUT}"
+    fail "route/draft: expected exit 0; output: ${BUNDLE_LAST_OUTPUT}"
   else
     rp="$(mf_string resolved_profile "$BUNDLE_LAST_MANIFEST_ABS")"
-    [[ "$rp" == "architect" ]] || fail "route/architect: resolved_profile='${rp}' expected 'architect'"
-    [[ "$out" == "${SMOKE_HANDOFF_ROOT}/ARCHITECT-"* ]] \
-      || fail "route/architect: artifact prefix wrong: ${out}"
+    [[ "$rp" == "draft" ]] || fail "route/draft: resolved_profile='${rp}' expected 'draft'"
+    [[ "$out" == "${SMOKE_HANDOFF_ROOT}/DRAFT-"* ]] \
+      || fail "route/draft: artifact prefix wrong: ${out}"
   fi
 
   # Auto: no PLAN.md → routes to planning
@@ -250,15 +250,15 @@ slice_route_contract() {
       || fail "route/auto-no-plan: route_reason='${rr}' expected 'PLAN.md missing'"
   fi
 
-  # Auto: with valid PLAN.md → routes to architect
+  # Auto: with valid PLAN.md → routes to draft
   make_plan
-  out="$(next_out architect)"
+  out="$(next_out draft)"
   run_bundle "$out" --profile=auto
   if [[ "$BUNDLE_LAST_STATUS" -ne 0 ]]; then
     fail "route/auto-plan: expected exit 0; output: ${BUNDLE_LAST_OUTPUT}"
   else
     rp="$(mf_string resolved_profile "$BUNDLE_LAST_MANIFEST_ABS")"
-    [[ "$rp" == "architect" ]] || fail "route/auto-plan: resolved_profile='${rp}' expected 'architect'"
+    [[ "$rp" == "draft" ]] || fail "route/auto-plan: resolved_profile='${rp}' expected 'draft'"
   fi
 
   # Alias: hygiene → conform
@@ -302,18 +302,18 @@ slice_package_contract() {
       || fail "package/planning: package must not contain PLAN.md"
   fi
 
-  # Architect: package contains PLAN.md, not TOPIC.md
+  # Draft: package contains PLAN.md, not TOPIC.md
   make_plan
-  out="$(next_out architect)"
-  run_bundle "$out" --profile=architect
+  out="$(next_out draft)"
+  run_bundle "$out" --profile=draft
   if [[ "$BUNDLE_LAST_STATUS" -ne 0 ]]; then
-    fail "package/architect: expected exit 0; output: ${BUNDLE_LAST_OUTPUT}"
+    fail "package/draft: expected exit 0; output: ${BUNDLE_LAST_OUTPUT}"
   else
     mf="$BUNDLE_LAST_MANIFEST_ABS"
     pkg_contains "${EPHEMERAL_ROOT}/PLAN.md" "$mf" \
-      || fail "package/architect: package missing PLAN.md (${EPHEMERAL_ROOT}/PLAN.md)"
+      || fail "package/draft: package missing PLAN.md (${EPHEMERAL_ROOT}/PLAN.md)"
     ! pkg_contains "${EPHEMERAL_ROOT}/TOPIC.md" "$mf" \
-      || fail "package/architect: package must not contain TOPIC.md"
+      || fail "package/draft: package must not contain TOPIC.md"
   fi
 
   # Audit: package contains RESULTS.md and CLOSING.md
@@ -348,12 +348,12 @@ slice_fail_closed() {
   [[ "$BUNDLE_LAST_STATUS" -ne 0 ]] \
     || fail "fail-closed/planning-no-topic: expected nonzero exit"
 
-  # Architect: no PLAN.md → fail
+  # Draft: no PLAN.md → fail
   clean_surfaces
-  out="$(next_out architect)"
-  run_bundle "$out" --profile=architect
+  out="$(next_out draft)"
+  run_bundle "$out" --profile=draft
   [[ "$BUNDLE_LAST_STATUS" -ne 0 ]] \
-    || fail "fail-closed/architect-no-plan: expected nonzero exit"
+    || fail "fail-closed/draft-no-plan: expected nonzero exit"
 
   # Audit: no RESULTS.md (only CLOSING.md) → fail
   clean_surfaces

@@ -7,9 +7,9 @@ Stance contract bodies are rendered from `ops/src/stances/*.md.tpl` through `ops
 ATS schema policy is loaded from `ops/lib/manifests/ASSEMBLY.md` through the key `assembly_policy_manifest`.
 
 bundle_manifest_version=1
-supported_profiles=planning,architect,audit,project,conform,foreman
+supported_profiles=planning,draft,audit,project,conform,foreman
 auto_default_profile=planning
-auto_plan_profile=architect
+auto_plan_profile=draft
 project_profile=project
 audit_profile=audit
 foreman_profile=foreman
@@ -20,14 +20,14 @@ profile_alias_legacy_hygiene_remove_after_dp=DP-OPS-0165
 handoff_omit_profiles=audit,foreman
 
 stance_template_planning=stance-planning
-stance_template_architect=stance-architect
+stance_template_draft=stance-draft
 stance_template_audit=stance-auditor
 stance_template_project=stance-planning
 stance_template_conform=stance-conformist
 stance_template_foreman=stance-foreman
 
 artifact_prefix_planning=PLANNING
-artifact_prefix_architect=ARCHITECT
+artifact_prefix_draft=DRAFT
 artifact_prefix_audit=AUDIT
 artifact_prefix_project=PROJECT
 artifact_prefix_conform=CONFORM
@@ -48,7 +48,7 @@ frontdoor_meta_remove_after_dp=none
 assembly_policy_manifest=ops/lib/manifests/ASSEMBLY.md
 
 dump_scope_planning=full
-dump_scope_architect=full
+dump_scope_draft=full
 dump_scope_audit=core
 dump_scope_project=project
 dump_scope_conform=full
@@ -58,19 +58,19 @@ dump_scope_foreman=core
 - Bundle does not serialize cold archive policy itself. It routes a persistence profile into `ops/bin/dump`, and `ops/bin/dump` resolves tiered archive serialization from `ops/etc/persistence.manifest`.
 - Current routing is profile-name aligned:
   - planning -> `--persistence-profile=planning`
-  - architect -> `--persistence-profile=architect`
+  - draft -> `--persistence-profile=draft`
   - audit -> `--persistence-profile=audit`
   - project -> `--persistence-profile=project`
   - conform -> `--persistence-profile=conform`
   - foreman -> `--persistence-profile=foreman`
 - Scope and persistence profile are independent:
-  - planning and architect still use `--scope=full`
+  - planning and draft still use `--scope=full`
   - audit and foreman still use `--scope=core`
   - persistence-tier compaction happens inside dump serialization, not traverse selection
 
 ## Profile Attachment Contract
 - planning: `PLANNING-*.txt`, `PLANNING-*.manifest.json`, transport-managed `storage/handoff/TOPIC.md`
-- architect: `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, transport-managed `storage/handoff/PLAN.md` with request metadata (`plan_source`, `packet_id`, `closing_sidecar`, `dp_draft_path`)
+- draft: `DRAFT-*.txt`, `DRAFT-*.manifest.json`, transport-managed `storage/handoff/PLAN.md` with request metadata (`plan_source`, `packet_id`, `closing_sidecar`, `dp_draft_path`)
 - audit: initial `AUDIT-*.txt`, rerun `AUDIT-R*-*.txt`, matching `.manifest.json`/`.tar`, transport-managed current DP `storage/handoff/RESULTS.md` and `storage/handoff/CLOSING.md`
 - foreman: `FOREMAN-*.txt`, `FOREMAN-*.manifest.json`
 - project: `PROJECT-*.txt`, `PROJECT-*.manifest.json`
@@ -80,7 +80,7 @@ dump_scope_foreman=core
 - Disposable transport is profile-scoped exact-file wiring only. No directory sweeps, globs, or generic `storage/` capture are allowed.
 - Current live disposable inputs are:
   - planning: `storage/handoff/TOPIC.md`
-  - architect: `storage/handoff/PLAN.md`
+  - draft: `storage/handoff/PLAN.md`
   - audit: current `storage/handoff/RESULTS.md` and `storage/handoff/CLOSING.md`
 - Future disposable additions must be exact file paths added deliberately in runtime wiring, specs, and smoke tests.
 
@@ -94,14 +94,14 @@ dump_scope_foreman=core
 - `storage/handoff/PLAN.md` is the latest-wins output surface written by the model after each planning run.
 - Before each planning run, bundle writes a disposable copy of the prior `storage/handoff/PLAN.md` to `var/tmp/PLAN.md.prev` if that file exists. This copy is a scratch artifact only; certify has no dependency on it and prune may remove it.
 
-## Architect Transport Contract
-- Architect requires `storage/handoff/PLAN.md`.
-- Architect invokes the full dump with explicit `storage/handoff/PLAN.md` inclusion.
-- Architect package members include `storage/handoff/PLAN.md` only.
-- Runtime derives architect `packet_id` from the current certified TASK packet id plus one.
+## Draft Transport Contract
+- Draft requires `storage/handoff/PLAN.md`.
+- Draft invokes the full dump with explicit `storage/handoff/PLAN.md` inclusion.
+- Draft package members include `storage/handoff/PLAN.md` only.
+- Runtime derives draft `packet_id` from the current certified TASK packet id plus one.
 - `closing_sidecar` is the active latest-wins sidecar `storage/handoff/CLOSING.md`; packet identity remains explicit in request metadata and sidecar content.
-- `storage/handoff/PLAN.md` is the latest-wins architect plan input surface.
-- `storage/dp/intake/DP.md` is the deterministic active DP draft surface; architect model output is a fenced DP draft block that the operator saves to this path for dispatch.
+- `storage/handoff/PLAN.md` is the latest-wins draft plan input surface.
+- `storage/dp/intake/DP.md` is the deterministic active DP draft surface; Architect model output is a fenced DP draft block that the operator saves to this path for dispatch.
 
 ## Audit Transport Contract
 - Audit resolves the current certified packet id from the current TASK surface.
@@ -118,7 +118,7 @@ dump_scope_foreman=core
 ## Shipping Spine Contract
 The canonical operator shipping chain uses bundle at two points:
 - `--profile=planning`: deliver context + TOPIC.md to planning model; planning writes PLAN.md
-- `--profile=architect`: deliver context + PLAN.md to architect model; architect emits fenced DP draft block; operator saves to `storage/dp/intake/DP.md` while packet identity remains `DP-OPS-XXXX`
+- `--profile=draft`: deliver context + PLAN.md to Architect model; Architect emits fenced DP draft block; operator saves to `storage/dp/intake/DP.md` while packet identity remains `DP-OPS-XXXX`
 - Worker executes DP; certify generates RESULTS + emits surface leaves
 - `--profile=audit`: package RESULTS + CLOSING for auditor review; audit bundle dump is the canonical audit evidence payload
 - Operator commits on work branch, opens PR per CLOSING sidecar, merges to main
@@ -132,6 +132,7 @@ Audit dump generation is owned by `--profile=audit`. Standalone `ops/bin/dump --
 
 ## Compatibility Notes
 Canonical audit verdict profile is `audit`.
+Canonical draft profile is `draft`.
 Canonical addendum authorization profile is `foreman`.
 Legacy `hygiene` remains accepted as a compatibility alias and resolves to `conform`.
 Alias routing values are loaded from `profile_alias_legacy_hygiene_to` at runtime.

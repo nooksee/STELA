@@ -17,7 +17,7 @@ profile=core-default|recent_count=2|checkpoint_interval=30|cold_mode=metadata-on
 profile=factory-default|recent_count=4|checkpoint_interval=20|cold_mode=metadata-only
 profile=project-default|recent_count=4|checkpoint_interval=20|cold_mode=metadata-only
 profile=planning|recent_count=3|checkpoint_interval=18|cold_mode=metadata-only
-profile=architect|recent_count=5|checkpoint_interval=12|cold_mode=metadata-only
+profile=draft|recent_count=5|checkpoint_interval=12|cold_mode=metadata-only
 profile=audit|recent_count=2|checkpoint_interval=30|cold_mode=metadata-only
 profile=project|recent_count=4|checkpoint_interval=20|cold_mode=metadata-only
 profile=conform|recent_count=4|checkpoint_interval=16|cold_mode=metadata-only
@@ -43,7 +43,7 @@ class=ops-tree|pattern=ops/*|tier=operational|weight=1|retention=canonical|apply
 class=tools-tree|pattern=tools/*|tier=operational|weight=1|retention=canonical|apply=0
 class=opt-tree|pattern=opt/*|tier=operational|weight=1|retention=canonical|apply=0
 class=planning-topic-input|pattern=storage/handoff/TOPIC.md|tier=operational|weight=1|retention=disposable|apply=1
-class=architect-plan-input|pattern=storage/handoff/PLAN.md|tier=operational|weight=1|retention=disposable|apply=1
+class=draft-plan-input|pattern=storage/handoff/PLAN.md|tier=operational|weight=1|retention=disposable|apply=1
 class=audit-results-input|pattern=storage/handoff/RESULTS.md|tier=operational|weight=1|retention=disposable|apply=0
 class=audit-closing-input|pattern=storage/handoff/CLOSING.md|tier=operational|weight=1|retention=disposable|apply=0
 
