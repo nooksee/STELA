@@ -10,14 +10,14 @@ Modes:
 1. `bash tools/lint/response.sh --mode=dp [path|-]` (default mode, default input is stdin).
 2. `bash tools/lint/response.sh --mode=audit [path|-]`.
 3. `bash tools/lint/response.sh --mode=architect [path|-]`.
-4. `bash tools/lint/response.sh --mode=analyst [path|-]`.
+4. `bash tools/lint/response.sh --mode=planning [path|-]`.
 5. `bash tools/lint/response.sh --mode=foreman [path|-]`.
 6. `bash tools/lint/response.sh --mode=conformist [path|-]`.
 7. `bash tools/lint/response.sh --test` (runs deterministic fixtures for supported modes).
 
 Deterministic checks:
-1. In `dp`, `audit`, `architect`, `analyst`, `foreman`, and `conformist` modes, input must contain exactly one fenced markdown code block.
-2. In `dp`, `audit`, `architect`, `analyst`, `foreman`, and `conformist` modes, non-whitespace text outside the fenced block is a hard failure.
+1. In `dp`, `audit`, `architect`, `planning`, `foreman`, and `conformist` modes, input must contain exactly one fenced markdown code block.
+2. In `dp`, `audit`, `architect`, `planning`, `foreman`, and `conformist` modes, non-whitespace text outside the fenced block is a hard failure.
 3. Shared cross-stance freeze is defined in `ops/src/shared/stances.json` using keys `single_fence_contract_rules` and `non_audit_role_drift_rules`.
 4. In `dp` mode, extracted body must start with `### DP-` on the first non-empty line.
 5. In `audit` mode, extracted body must start with `**AUDIT -` (or `**AUDIT —`) on the first non-empty line.
@@ -31,10 +31,10 @@ Deterministic checks:
    - reject audit-verdict marker lines (`**AUDIT -`),
    - reject `## Contractor Execution Narrative`,
    - reject receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`).
-8. In `analyst` mode, extracted body must be either:
+8. In `planning` mode, extracted body must be either:
    - conversational planning with first non-empty line `1. Analysis and Discussion` and a `Questions / Conversation:` footer, or
    - a final plan body that satisfies `bash tools/lint/plan.sh <extracted-body>`.
-10. In `analyst` mode, reject role-drift markers:
+10. In `planning` mode, reject role-drift markers:
    - audit-verdict markers (`**AUDIT -`),
    - `## Contractor Execution Narrative`,
    - receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`),
@@ -64,15 +64,15 @@ Deterministic checks:
 17. In `audit` mode, envelope, marker, and drift checks are authoritative.
 
 Exit behavior:
-- Pass: prints `OK: response lint passed (mode=<dp|audit|architect|analyst|foreman|conformist>)`.
+- Pass: prints `OK: response lint passed (mode=<dp|audit|architect|planning|foreman|conformist>)`.
 - Fail: prints `FAIL: ...` and exits non-zero.
 
 `--test` fixtures:
 - PASS: single fenced block with valid DP envelope (`dp` mode; delegate skipped in self-test fixture for determinism).
 - PASS: single fenced block with `**AUDIT -` marker (`audit` mode).
 - PASS: single fenced block with valid DP body (`architect` mode).
-- PASS: single fenced block with valid final `PLAN` body (`analyst` mode).
-- PASS: single fenced block with valid conversational analyst body (`analyst` mode).
+- PASS: single fenced block with valid final `PLAN` body (`planning` mode).
+- PASS: single fenced block with valid conversational planning body (`planning` mode).
 - PASS: single fenced block with addendum headings (`foreman` mode).
 - PASS: single fenced block with valid DP heading and no drift markers (`conformist` mode).
 - FAIL: text outside fence.
@@ -86,10 +86,10 @@ Exit behavior:
 - FAIL: audit citation token (`audit` mode).
 - FAIL: architect response containing audit marker (`architect` mode).
 - FAIL: architect response containing Contractor Execution Narrative sections (`architect` mode).
-- FAIL: analyst response containing audit marker (`analyst` mode).
-- FAIL: analyst response containing Contractor Execution Narrative sections (`analyst` mode).
-- FAIL: analyst response containing policy-overcompensation prose (`analyst` mode).
-- FAIL: analyst response missing both valid conversational structure and valid final PLAN structure (`analyst` mode).
+- FAIL: planning response containing audit marker (`planning` mode).
+- FAIL: planning response containing Contractor Execution Narrative sections (`planning` mode).
+- FAIL: planning response containing policy-overcompensation prose (`planning` mode).
+- FAIL: planning response missing both valid conversational structure and valid final PLAN structure (`planning` mode).
 - FAIL: foreman response containing audit marker (`foreman` mode).
 - FAIL: foreman response missing required addendum headings (`foreman` mode).
 - FAIL: foreman response with incoherent decision fields (`foreman` mode).

@@ -1,4 +1,4 @@
-<!-- CCD: ff_target="operator-technical" ff_band="45-60" -->
+<!-- CCD: ff_target="operator-technical" ff_band="30-45" -->
 # Technical Specification: tools/test/factory.sh
 
 ## Purpose
@@ -17,7 +17,7 @@ Run deterministic smoke checks for factory ATS triplet execution using canon tes
 - `opt/_factory/agents/r-agent-09.md`
 - `opt/_factory/skills/s-learn-09.md`
 - `opt/_factory/tasks/b-task-09.md`
-- transient `storage/handoff/TOPIC.md` fixture when the resolved auto profile requires analyst input
+- transient `storage/handoff/TOPIC.md` fixture when the resolved auto profile requires planning input
 - bundle-generated smoke artifacts under `var/tmp/_smoke/handoff/` and `var/tmp/_smoke/dumps/`
 
 ## Outputs
@@ -27,14 +27,14 @@ Run deterministic smoke checks for factory ATS triplet execution using canon tes
 
 ## Invariants and failure modes
 - `./ops/bin/bundle --profile=auto --agent-id=R-AGENT-09 --skill-id=S-LEARN-09 --task-id=B-TASK-09 --out=<explicit-test-path>` must succeed.
-- The test suppresses live `storage/handoff/PLAN.md` so auto routing is deterministic and resolves to analyst.
+- The test suppresses live `storage/handoff/PLAN.md` so auto routing is deterministic and resolves to planning.
 - The test provisions a disposable `storage/handoff/TOPIC.md` fixture before bundle invocation.
 - Explicit smoke bundle output must land under `var/tmp/_smoke/handoff/`.
 - Explicit smoke dump output must land under `var/tmp/_smoke/dumps/`.
 - Bundle output must include non-empty artifact/manifest/package paths.
 - Bundle invocation failure is terminal for the smoke test; path-parsing assertions must not run on failed output.
 - Emitted artifact, manifest, package, dump payload, dump manifest, and assembly pointer files must exist.
-- Manifest `resolved_profile` must be `analyst`.
+- Manifest `resolved_profile` must be `planning`.
 - Manifest must include ATS assembly assertions:
   - `assembly.applied: true`
   - `assembly.agent_id: R-AGENT-09`

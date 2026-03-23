@@ -209,17 +209,17 @@ slice_route_contract() {
   local out rp rr
   make_task
 
-  # Analyst: explicit profile, artifact prefix ANALYST
+  # Planning: explicit profile, artifact prefix PLANNING
   make_topic
-  out="$(next_out analyst)"
-  run_bundle "$out" --profile=analyst
+  out="$(next_out planning)"
+  run_bundle "$out" --profile=planning
   if [[ "$BUNDLE_LAST_STATUS" -ne 0 ]]; then
-    fail "route/analyst: expected exit 0; output: ${BUNDLE_LAST_OUTPUT}"
+    fail "route/planning: expected exit 0; output: ${BUNDLE_LAST_OUTPUT}"
   else
     rp="$(mf_string resolved_profile "$BUNDLE_LAST_MANIFEST_ABS")"
-    [[ "$rp" == "analyst" ]] || fail "route/analyst: resolved_profile='${rp}' expected 'analyst'"
-    [[ "$out" == "${SMOKE_HANDOFF_ROOT}/ANALYST-"* ]] \
-      || fail "route/analyst: artifact prefix wrong: ${out}"
+    [[ "$rp" == "planning" ]] || fail "route/planning: resolved_profile='${rp}' expected 'planning'"
+    [[ "$out" == "${SMOKE_HANDOFF_ROOT}/PLANNING-"* ]] \
+      || fail "route/planning: artifact prefix wrong: ${out}"
   fi
 
   # Architect: explicit profile with PLAN.md, artifact prefix ARCHITECT
@@ -235,17 +235,17 @@ slice_route_contract() {
       || fail "route/architect: artifact prefix wrong: ${out}"
   fi
 
-  # Auto: no PLAN.md → routes to analyst
+  # Auto: no PLAN.md → routes to planning
   clean_surfaces
   make_topic
-  out="$(next_out analyst)"
+  out="$(next_out planning)"
   run_bundle "$out" --profile=auto
   if [[ "$BUNDLE_LAST_STATUS" -ne 0 ]]; then
     fail "route/auto-no-plan: expected exit 0; output: ${BUNDLE_LAST_OUTPUT}"
   else
     rp="$(mf_string resolved_profile "$BUNDLE_LAST_MANIFEST_ABS")"
     rr="$(mf_string route_reason "$BUNDLE_LAST_MANIFEST_ABS")"
-    [[ "$rp" == "analyst" ]] || fail "route/auto-no-plan: resolved_profile='${rp}' expected 'analyst'"
+    [[ "$rp" == "planning" ]] || fail "route/auto-no-plan: resolved_profile='${rp}' expected 'planning'"
     [[ "$rr" == *"PLAN.md missing"* ]] \
       || fail "route/auto-no-plan: route_reason='${rr}' expected 'PLAN.md missing'"
   fi
@@ -274,7 +274,7 @@ slice_route_contract() {
   fi
 
   # Invalid profile → fail closed
-  out="$(next_out analyst)"
+  out="$(next_out planning)"
   run_bundle "$out" --profile=__invalid__
   [[ "$BUNDLE_LAST_STATUS" -ne 0 ]] \
     || fail "route/invalid-profile: expected nonzero exit"
@@ -288,18 +288,18 @@ slice_package_contract() {
   local out mf
   make_task
 
-  # Analyst: package contains TOPIC.md, not PLAN.md
+  # Planning: package contains TOPIC.md, not PLAN.md
   make_topic
-  out="$(next_out analyst)"
-  run_bundle "$out" --profile=analyst
+  out="$(next_out planning)"
+  run_bundle "$out" --profile=planning
   if [[ "$BUNDLE_LAST_STATUS" -ne 0 ]]; then
-    fail "package/analyst: expected exit 0; output: ${BUNDLE_LAST_OUTPUT}"
+    fail "package/planning: expected exit 0; output: ${BUNDLE_LAST_OUTPUT}"
   else
     mf="$BUNDLE_LAST_MANIFEST_ABS"
     pkg_contains "${EPHEMERAL_ROOT}/TOPIC.md" "$mf" \
-      || fail "package/analyst: package missing TOPIC.md (${EPHEMERAL_ROOT}/TOPIC.md)"
+      || fail "package/planning: package missing TOPIC.md (${EPHEMERAL_ROOT}/TOPIC.md)"
     ! pkg_contains "${EPHEMERAL_ROOT}/PLAN.md" "$mf" \
-      || fail "package/analyst: package must not contain PLAN.md"
+      || fail "package/planning: package must not contain PLAN.md"
   fi
 
   # Architect: package contains PLAN.md, not TOPIC.md
@@ -341,12 +341,12 @@ slice_fail_closed() {
   local out
   make_task
 
-  # Analyst: no TOPIC.md → fail
+  # Planning: no TOPIC.md → fail
   clean_surfaces
-  out="$(next_out analyst)"
-  run_bundle "$out" --profile=analyst
+  out="$(next_out planning)"
+  run_bundle "$out" --profile=planning
   [[ "$BUNDLE_LAST_STATUS" -ne 0 ]] \
-    || fail "fail-closed/analyst-no-topic: expected nonzero exit"
+    || fail "fail-closed/planning-no-topic: expected nonzero exit"
 
   # Architect: no PLAN.md → fail
   clean_surfaces
@@ -374,7 +374,7 @@ slice_fail_closed() {
   # Invalid profile → fail
   clean_surfaces
   make_topic
-  out="$(next_out analyst)"
+  out="$(next_out planning)"
   run_bundle "$out" --profile=__invalid__
   [[ "$BUNDLE_LAST_STATUS" -ne 0 ]] \
     || fail "fail-closed/invalid-profile: expected nonzero exit"

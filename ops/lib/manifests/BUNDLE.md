@@ -7,8 +7,8 @@ Stance contract bodies are rendered from `ops/src/stances/*.md.tpl` through `ops
 ATS schema policy is loaded from `ops/lib/manifests/ASSEMBLY.md` through the key `assembly_policy_manifest`.
 
 bundle_manifest_version=1
-supported_profiles=analyst,architect,audit,project,conform,foreman
-auto_default_profile=analyst
+supported_profiles=planning,architect,audit,project,conform,foreman
+auto_default_profile=planning
 auto_plan_profile=architect
 project_profile=project
 audit_profile=audit
@@ -19,14 +19,14 @@ profile_alias_legacy_hygiene_deprecation_status=sunset
 profile_alias_legacy_hygiene_remove_after_dp=DP-OPS-0165
 handoff_omit_profiles=audit,foreman
 
-stance_template_analyst=stance-analyst
+stance_template_planning=stance-planning
 stance_template_architect=stance-architect
 stance_template_audit=stance-auditor
-stance_template_project=stance-analyst
+stance_template_project=stance-planning
 stance_template_conform=stance-conformist
 stance_template_foreman=stance-foreman
 
-artifact_prefix_analyst=ANALYST
+artifact_prefix_planning=PLANNING
 artifact_prefix_architect=ARCHITECT
 artifact_prefix_audit=AUDIT
 artifact_prefix_project=PROJECT
@@ -47,7 +47,7 @@ frontdoor_meta_deprecation_status=not_scheduled
 frontdoor_meta_remove_after_dp=none
 assembly_policy_manifest=ops/lib/manifests/ASSEMBLY.md
 
-dump_scope_analyst=full
+dump_scope_planning=full
 dump_scope_architect=full
 dump_scope_audit=core
 dump_scope_project=project
@@ -57,19 +57,19 @@ dump_scope_foreman=core
 ## Persistence-Tier Routing Contract
 - Bundle does not serialize cold archive policy itself. It routes a persistence profile into `ops/bin/dump`, and `ops/bin/dump` resolves tiered archive serialization from `ops/etc/persistence.manifest`.
 - Current routing is profile-name aligned:
-  - analyst -> `--persistence-profile=analyst`
+  - planning -> `--persistence-profile=planning`
   - architect -> `--persistence-profile=architect`
   - audit -> `--persistence-profile=audit`
   - project -> `--persistence-profile=project`
   - conform -> `--persistence-profile=conform`
   - foreman -> `--persistence-profile=foreman`
 - Scope and persistence profile are independent:
-  - analyst and architect still use `--scope=full`
+  - planning and architect still use `--scope=full`
   - audit and foreman still use `--scope=core`
   - persistence-tier compaction happens inside dump serialization, not traverse selection
 
 ## Profile Attachment Contract
-- analyst: `ANALYST-*.txt`, `ANALYST-*.manifest.json`, transport-managed `storage/handoff/TOPIC.md`
+- planning: `PLANNING-*.txt`, `PLANNING-*.manifest.json`, transport-managed `storage/handoff/TOPIC.md`
 - architect: `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, transport-managed `storage/handoff/PLAN.md` with request metadata (`plan_source`, `packet_id`, `closing_sidecar`, `dp_draft_path`)
 - audit: initial `AUDIT-*.txt`, rerun `AUDIT-R*-*.txt`, matching `.manifest.json`/`.tar`, transport-managed current DP `storage/handoff/RESULTS.md` and `storage/handoff/CLOSING.md`
 - foreman: `FOREMAN-*.txt`, `FOREMAN-*.manifest.json`
@@ -79,20 +79,20 @@ dump_scope_foreman=core
 ## Disposable Transport Contract
 - Disposable transport is profile-scoped exact-file wiring only. No directory sweeps, globs, or generic `storage/` capture are allowed.
 - Current live disposable inputs are:
-  - analyst: `storage/handoff/TOPIC.md`
+  - planning: `storage/handoff/TOPIC.md`
   - architect: `storage/handoff/PLAN.md`
   - audit: current `storage/handoff/RESULTS.md` and `storage/handoff/CLOSING.md`
 - Future disposable additions must be exact file paths added deliberately in runtime wiring, specs, and smoke tests.
 
-## Analyst Transport Contract
-- Analyst requires `storage/handoff/TOPIC.md` as input and fails closed when it is absent.
-- Analyst emits request metadata `topic_source=storage/handoff/TOPIC.md` and `output_surface=storage/handoff/PLAN.md`.
-- Analyst invokes the full dump with explicit `storage/handoff/TOPIC.md` inclusion so the dump payload contains the topic artifact as a file block.
-- Analyst package members include `storage/handoff/TOPIC.md` and omit `storage/handoff/PLAN.md`.
-- Analyst `PLAN.md` is output only and is never transported as analyst input context.
-- `storage/handoff/TOPIC.md` is the latest-wins input surface; the operator replaces its content before each analyst run.
-- `storage/handoff/PLAN.md` is the latest-wins output surface written by the model after each analyst run.
-- Before each analyst run, bundle writes a disposable copy of the prior `storage/handoff/PLAN.md` to `var/tmp/PLAN.md.prev` if that file exists. This copy is a scratch artifact only; certify has no dependency on it and prune may remove it.
+## Planning Transport Contract
+- Planning requires `storage/handoff/TOPIC.md` as input and fails closed when it is absent.
+- Planning emits request metadata `topic_source=storage/handoff/TOPIC.md` and `output_surface=storage/handoff/PLAN.md`.
+- Planning invokes the full dump with explicit `storage/handoff/TOPIC.md` inclusion so the dump payload contains the topic artifact as a file block.
+- Planning package members include `storage/handoff/TOPIC.md` and omit `storage/handoff/PLAN.md`.
+- Planning `PLAN.md` is output only and is never transported as planning input context.
+- `storage/handoff/TOPIC.md` is the latest-wins input surface; the operator replaces its content before each planning run.
+- `storage/handoff/PLAN.md` is the latest-wins output surface written by the model after each planning run.
+- Before each planning run, bundle writes a disposable copy of the prior `storage/handoff/PLAN.md` to `var/tmp/PLAN.md.prev` if that file exists. This copy is a scratch artifact only; certify has no dependency on it and prune may remove it.
 
 ## Architect Transport Contract
 - Architect requires `storage/handoff/PLAN.md`.
@@ -117,7 +117,7 @@ dump_scope_foreman=core
 
 ## Shipping Spine Contract
 The canonical operator shipping chain uses bundle at two points:
-- `--profile=analyst`: deliver context + TOPIC.md to analyst model; analyst writes PLAN.md
+- `--profile=planning`: deliver context + TOPIC.md to planning model; planning writes PLAN.md
 - `--profile=architect`: deliver context + PLAN.md to architect model; architect emits fenced DP draft block; operator saves to `storage/dp/intake/DP.md` while packet identity remains `DP-OPS-XXXX`
 - Worker executes DP; certify generates RESULTS + emits surface leaves
 - `--profile=audit`: package RESULTS + CLOSING for auditor review; audit bundle dump is the canonical audit evidence payload

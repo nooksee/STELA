@@ -9,7 +9,7 @@ source "${SCRIPT_DIR}/../lib/scripts/common.sh"
 usage() {
   cat <<'USAGE'
 Usage:
-  ops/bin/manifest [render] <dp|results|task-surface|spec|addendum|closing|stance-analyst|stance-architect|stance-auditor|stance-audit|stance-foreman|stance-authority|stance-conformist> --out=PATH [options]
+  ops/bin/manifest [render] <dp|results|task-surface|spec|addendum|closing|stance-planning|stance-analyst|stance-architect|stance-auditor|stance-audit|stance-foreman|stance-authority|stance-conformist> --out=PATH [options]
 
 Options:
   --slots-file=PATH          Load [TOKEN] blocks from a slots file.
@@ -46,7 +46,8 @@ declare -A TEMPLATE_PATHS=(
   [addendum]="ops/src/stances/addendum.md.tpl"
   [closing]="ops/src/surfaces/closing.md.tpl"
   [spec]="ops/src/docs/spec.md.tpl"
-  [stance-analyst]="ops/src/stances/analyst.md.tpl"
+  [stance-planning]="ops/src/stances/planning.md.tpl"
+  [stance-analyst]="ops/src/stances/planning.md.tpl"
   [stance-architect]="ops/src/stances/architect.md.tpl"
   [stance-auditor]="ops/src/stances/auditor.md.tpl"
   [stance-audit]="ops/src/stances/auditor.md.tpl"
@@ -675,7 +676,7 @@ parse_args() {
     esac
   done
 
-  [[ "$render_key" =~ ^(dp|results|task-surface|spec|addendum|closing|stance-analyst|stance-architect|stance-auditor|stance-audit|stance-foreman|stance-authority|stance-conformist)$ ]] || die "unknown template key '${render_key}'"
+  [[ "$render_key" =~ ^(dp|results|task-surface|spec|addendum|closing|stance-planning|stance-analyst|stance-architect|stance-auditor|stance-audit|stance-foreman|stance-authority|stance-conformist)$ ]] || die "unknown template key '${render_key}'"
   if (( dry_run )); then
     return 0
   fi

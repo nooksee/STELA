@@ -222,13 +222,13 @@ tools/test/bundle.sh
 archives/surfaces/TASK-DP-OPS-0150-*.md
 ops/bin/manifest
 ops/bin/template
-ops/src/stances/analyst.md.tpl
+ops/src/stances/planning.md.tpl
 ops/src/stances/architect.md.tpl
 ops/src/stances/auditor.md.tpl
 ops/src/stances/foreman.md.tpl
 ops/src/stances/conformist.md.tpl
 ops/src/shared/stances.json
-docs/ops/specs/stances/analyst.md
+docs/ops/specs/stances/planning.md
 docs/ops/specs/stances/architect.md
 docs/ops/specs/stances/auditor.md
 docs/ops/specs/stances/conformist.md
@@ -321,12 +321,12 @@ archives/surfaces/TASK-DP-OPS-0184-*.md
 archives/surfaces/TASK-DP-OPS-0185-*.md
 RoR.md
 archives/decisions/RoR-2026-03-12-001-cbc-0184.md
-ops/src/stances/analyst.md.tpl
+ops/src/stances/planning.md.tpl
 ops/src/stances/architect.md.tpl
 ops/src/stances/auditor.md.tpl
 ops/src/stances/foreman.md.tpl
 tools/lint/style.sh
-docs/ops/specs/stances/analyst.md
+docs/ops/specs/stances/planning.md
 docs/ops/README.md
 docs/ops/registry/templates.md
 docs/ops/registry/runbook.md
@@ -462,3 +462,5 @@ archives/surfaces/TASK-DP-OPS-0221-*.md
 archives/manifests/compile-2026-03-22T200951-d77042d1.md
 archives/surfaces/TASK-DP-OPS-0222-*.md
 archives/surfaces/TASK-DP-OPS-0223-*.md
+ops/src/stances/planning.md.tpl
+docs/ops/specs/stances/planning.md

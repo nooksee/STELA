@@ -70,7 +70,7 @@ BUNDLE_AUDIT_RESOLVED_OUTPUT_REL=""
 
 bundle_usage() {
   cat <<'USAGE'
-Usage: ops/bin/bundle [--profile=auto|analyst|architect|audit|project|conform|hygiene|foreman] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--rerun] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
+Usage: ops/bin/bundle [--profile=auto|planning|architect|audit|project|conform|hygiene|foreman] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--rerun] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
 USAGE
 }
 
@@ -951,8 +951,8 @@ bundle_collect_profile_disposable_inputs() {
   local packet_source_rel=""
 
   case "$profile" in
-    analyst)
-      [[ -f "${BUNDLE_HANDOFF_BASE}/TOPIC.md" ]] || die "analyst requires ${topic_rel}"
+    planning)
+      [[ -f "${BUNDLE_HANDOFF_BASE}/TOPIC.md" ]] || die "planning requires ${topic_rel}"
       printf '%s\n' "$(bundle_to_rel_path "${BUNDLE_HANDOFF_BASE}/TOPIC.md")"
       ;;
     architect)
@@ -1314,7 +1314,7 @@ bundle_run() {
     fi
   fi
 
-  if [[ "$resolved_profile" == "analyst" ]] && [[ -f "${BUNDLE_HANDOFF_BASE}/PLAN.md" ]]; then
+  if [[ "$resolved_profile" == "planning" ]] && [[ -f "${BUNDLE_HANDOFF_BASE}/PLAN.md" ]]; then
     mkdir -p "${REPO_ROOT}/var/tmp"
     cp "${BUNDLE_HANDOFF_BASE}/PLAN.md" "${REPO_ROOT}/var/tmp/PLAN.md.prev"
   fi
@@ -1393,18 +1393,18 @@ bundle_run() {
       echo "- dp_draft_path: storage/dp/intake/DP.md"
       echo "- closing_sidecar: ${request_closing_sidecar}"
       echo
-    elif [[ "$resolved_profile" == "analyst" ]]; then
+    elif [[ "$resolved_profile" == "planning" ]]; then
       echo "[REQUEST]"
       echo "- topic_source: ${topic_rel}"
       echo "- output_surface: ${plan_rel}"
       echo
   fi
-    if ! bundle_profile_handoff_omitted "$resolved_profile" && { (( ${#profile_disposable_files[@]} > 0 )) || [[ "$requested_profile" == "auto" && "$resolved_profile" != "analyst" ]]; }; then
+    if ! bundle_profile_handoff_omitted "$resolved_profile" && { (( ${#profile_disposable_files[@]} > 0 )) || [[ "$requested_profile" == "auto" && "$resolved_profile" != "planning" ]]; }; then
       echo "[HANDOFF]"
       for disposable_rel in "${profile_disposable_files[@]}"; do
         echo "- ${disposable_rel}: present"
       done
-      if [[ "$requested_profile" == "auto" && "$resolved_profile" != "analyst" ]]; then
+      if [[ "$requested_profile" == "auto" && "$resolved_profile" != "planning" ]]; then
         echo "- PLAN lint status: ${plan_lint_status}"
       fi
       echo
@@ -1414,7 +1414,7 @@ bundle_run() {
       echo "- Base DP confirmed in dump: $([[ "$foreman_base_dp_in_dump" == "1" ]] && echo true || echo false)"
       echo
     fi
-    if [[ "$requested_profile" == "auto" && "$resolved_profile" != "analyst" ]]; then
+    if [[ "$requested_profile" == "auto" && "$resolved_profile" != "planning" ]]; then
       echo "[PLAN LINT OUTPUT]"
       printf '%s\n' "$plan_lint_output"
       echo
@@ -1589,7 +1589,7 @@ bundle_run() {
     echo "    \"path\": \"$(bundle_json_escape "$topic_rel")\"," 
     echo "    \"present\": $(bundle_bool "$topic_present")"
     echo "  },"
-    if [[ "$resolved_profile" != "analyst" ]]; then
+    if [[ "$resolved_profile" != "planning" ]]; then
       echo "  \"plan\": {"
       echo "    \"path\": \"$(bundle_json_escape "$plan_rel")\"," 
       echo "    \"present\": $(bundle_bool "$plan_present"),"
@@ -1604,7 +1604,7 @@ bundle_run() {
       echo "    \"closing_sidecar\": \"$(bundle_json_escape "$request_closing_sidecar")\","
       echo "    \"topic_source\": null,"
       echo "    \"output_surface\": null"
-    elif [[ "$resolved_profile" == "analyst" ]]; then
+    elif [[ "$resolved_profile" == "planning" ]]; then
       echo "    \"plan_source\": null,"
       echo "    \"packet_id\": null,"
       echo "    \"dp_draft_path\": null,"

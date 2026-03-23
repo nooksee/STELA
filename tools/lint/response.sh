@@ -14,10 +14,10 @@ emit_binary_leaf "lint-response" "start"
 
 usage() {
   cat <<'USAGE'
-Usage: bash tools/lint/response.sh [--mode=dp|audit|architect|analyst|foreman|conformist|execution-decision] [--test] [path|-]
+Usage: bash tools/lint/response.sh [--mode=dp|audit|architect|planning|foreman|conformist|execution-decision] [--test] [path|-]
 Default input: stdin
 Example: bash tools/lint/response.sh --mode=audit var/tmp/response-audit-valid.md
-Mode matrix freeze: architect|analyst|foreman|conformist remain explicit machine-ingest modes.
+Mode matrix freeze: architect|planning|foreman|conformist remain explicit machine-ingest modes.
 USAGE
 }
 
@@ -206,7 +206,7 @@ check_architect_body_scope() {
   fi
 }
 
-check_analyst_body_scope() {
+check_planning_body_scope() {
   local body_path="$1"
   local first_content_line
   local hit=""
@@ -217,7 +217,7 @@ check_analyst_body_scope() {
 
   first_content_line="$(awk 'NF { print; exit }' "$body_path")"
   if [[ -z "$first_content_line" ]]; then
-    response_fail "analyst body is empty"
+    response_fail "planning body is empty"
     return 1
   fi
 
@@ -230,7 +230,7 @@ check_analyst_body_scope() {
   ' "$body_path")"
   if [[ -n "$hit" ]]; then
     IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "analyst body must not contain audit verdict marker at line ${line_number}: ${line_text}"
+    response_fail "planning body must not contain audit verdict marker at line ${line_number}: ${line_text}"
   fi
 
   hit="$(awk '
@@ -238,7 +238,7 @@ check_analyst_body_scope() {
   ' "$body_path")"
   if [[ -n "$hit" ]]; then
     IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "analyst body must not contain contractor narrative section at line ${line_number}: ${line_text}"
+    response_fail "planning body must not contain contractor narrative section at line ${line_number}: ${line_text}"
   fi
 
   hit="$(awk '
@@ -246,7 +246,7 @@ check_analyst_body_scope() {
   ' "$body_path")"
   if [[ -n "$hit" ]]; then
     IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "analyst body must not contain receipt narrative subheading at line ${line_number}: ${line_text}"
+    response_fail "planning body must not contain receipt narrative subheading at line ${line_number}: ${line_text}"
   fi
 
   hit="$(awk '
@@ -254,7 +254,7 @@ check_analyst_body_scope() {
   ' "$body_path")"
   if [[ -n "$hit" ]]; then
     IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "analyst body must not contain audit/foreman decision fields at line ${line_number}: ${line_text}"
+    response_fail "planning body must not contain audit/foreman decision fields at line ${line_number}: ${line_text}"
   fi
 
   hit="$(awk '
@@ -262,18 +262,18 @@ check_analyst_body_scope() {
   ' "$body_path")"
   if [[ -n "$hit" ]]; then
     IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "analyst body must not contain role-policy overcompensation prose at line ${line_number}: ${line_text}"
+    response_fail "planning body must not contain role-policy overcompensation prose at line ${line_number}: ${line_text}"
   fi
 
   if (( conversational_mode )); then
     if ! grep -Eq '^Questions / Conversation:[[:space:]]*$' "$body_path"; then
-      response_fail "conversational analyst body must include 'Questions / Conversation:'"
+      response_fail "conversational planning body must include 'Questions / Conversation:'"
       return 1
     fi
     local q_count
     q_count="$(grep -cE '^Q[0-9][.][[:space:]]' "$body_path" || true)"
     if (( q_count > 3 )); then
-      response_fail "analyst conversational body must contain at most 3 questions"
+      response_fail "planning conversational body must contain at most 3 questions"
       return 1
     fi
     if (( q_count > 0 )); then
@@ -291,7 +291,7 @@ check_analyst_body_scope() {
           END { print c+0 }
         ' "$body_path")"
         if [[ "$opt_count" != "3" ]]; then
-          response_fail "each analyst question must have exactly 3 options (Q${q_num} has ${opt_count})"
+          response_fail "each planning question must have exactly 3 options (Q${q_num} has ${opt_count})"
           return 1
         fi
         rec_count="$(awk -v q="$q_num" '
@@ -302,7 +302,7 @@ check_analyst_body_scope() {
           END { print c+0 }
         ' "$body_path")"
         if [[ "$rec_count" != "1" ]]; then
-          response_fail "each analyst question must have exactly one (Recommended) option (Q${q_num} has ${rec_count})"
+          response_fail "each planning question must have exactly one (Recommended) option (Q${q_num} has ${rec_count})"
           return 1
         fi
       done
@@ -311,7 +311,7 @@ check_analyst_body_scope() {
   fi
 
   if ! plan_lint_output="$(bash tools/lint/plan.sh "$body_path" 2>&1)"; then
-    response_fail "analyst body must be either conversational planning or a valid final PLAN: $(printf '%s\n' "$plan_lint_output" | tail -n 1)"
+    response_fail "planning body must be either conversational planning or a valid final PLAN: $(printf '%s\n' "$plan_lint_output" | tail -n 1)"
     return 1
   fi
 }
@@ -650,9 +650,9 @@ lint_response_file() {
     extract_single_fenced_block "$input_path" "$body_tmp"
     check_dp_body_start "$body_tmp"
     check_architect_body_scope "$body_tmp"
-  elif [[ "$response_mode" == "analyst" ]]; then
+  elif [[ "$response_mode" == "planning" ]]; then
     extract_single_fenced_block "$input_path" "$body_tmp"
-    check_analyst_body_scope "$body_tmp"
+    check_planning_body_scope "$body_tmp"
   elif [[ "$response_mode" == "foreman" ]]; then
     extract_single_fenced_block "$input_path" "$body_tmp"
     check_foreman_body_scope "$body_tmp"
@@ -703,16 +703,16 @@ run_test() {
   local response_architect_valid
   local response_architect_audit_marker
   local response_architect_narrative
-  local response_analyst_valid
-  local response_analyst_conversation_valid
-  local response_analyst_audit_marker
-  local response_analyst_narrative
-  local response_analyst_policy
-  local response_analyst_missing_plan
-  local response_analyst_structured_valid
-  local response_analyst_few_options
-  local response_analyst_no_recommended
-  local response_analyst_too_many_questions
+  local response_planning_valid
+  local response_planning_conversation_valid
+  local response_planning_audit_marker
+  local response_planning_narrative
+  local response_planning_policy
+  local response_planning_missing_plan
+  local response_planning_structured_valid
+  local response_planning_few_options
+  local response_planning_no_recommended
+  local response_planning_too_many_questions
   local response_foreman_valid
   local response_foreman_audit_marker
   local response_foreman_missing_sections
@@ -747,16 +747,16 @@ run_test() {
   response_architect_valid="${test_dir}/response-architect-valid.md"
   response_architect_audit_marker="${test_dir}/response-architect-audit-marker.md"
   response_architect_narrative="${test_dir}/response-architect-narrative.md"
-  response_analyst_valid="${test_dir}/response-analyst-valid.md"
-  response_analyst_conversation_valid="${test_dir}/response-analyst-conversation-valid.md"
-  response_analyst_audit_marker="${test_dir}/response-analyst-audit-marker.md"
-  response_analyst_narrative="${test_dir}/response-analyst-narrative.md"
-  response_analyst_policy="${test_dir}/response-analyst-policy.md"
-  response_analyst_missing_plan="${test_dir}/response-analyst-missing-plan.md"
-  response_analyst_structured_valid="${test_dir}/response-analyst-structured-valid.md"
-  response_analyst_few_options="${test_dir}/response-analyst-few-options.md"
-  response_analyst_no_recommended="${test_dir}/response-analyst-no-recommended.md"
-  response_analyst_too_many_questions="${test_dir}/response-analyst-too-many-questions.md"
+  response_planning_valid="${test_dir}/response-planning-valid.md"
+  response_planning_conversation_valid="${test_dir}/response-planning-conversation-valid.md"
+  response_planning_audit_marker="${test_dir}/response-planning-audit-marker.md"
+  response_planning_narrative="${test_dir}/response-planning-narrative.md"
+  response_planning_policy="${test_dir}/response-planning-policy.md"
+  response_planning_missing_plan="${test_dir}/response-planning-missing-plan.md"
+  response_planning_structured_valid="${test_dir}/response-planning-structured-valid.md"
+  response_planning_few_options="${test_dir}/response-planning-few-options.md"
+  response_planning_no_recommended="${test_dir}/response-planning-no-recommended.md"
+  response_planning_too_many_questions="${test_dir}/response-planning-too-many-questions.md"
   response_foreman_valid="${test_dir}/response-foreman-valid.md"
   response_foreman_audit_marker="${test_dir}/response-foreman-audit-marker.md"
   response_foreman_missing_sections="${test_dir}/response-foreman-missing-sections.md"
@@ -940,14 +940,14 @@ EOF_ARCH_NARRATIVE
     failures_local=1
   fi
 
-  response_mode="analyst"
+  response_mode="planning"
 
-  cat > "$response_analyst_valid" <<'EOF_ANALYST_VALID'
+  cat > "$response_planning_valid" <<'EOF_PLANNING_VALID'
 ```markdown
 # Reset Generated Planning
 
 ## Summary
-Analyst output is rendered as a plan surface.
+Planning output is rendered as a plan surface.
 
 ## Key Changes
 - Produce a deterministic plan draft from the attached topic.
@@ -958,13 +958,13 @@ Analyst output is rendered as a plan surface.
 ## Assumptions
 - Keep the output plan-shaped and machine-ingestible.
 ```
-EOF_ANALYST_VALID
-  if ! lint_response_file "$response_analyst_valid" >/dev/null 2>&1; then
-    echo "FAIL: --test expected analyst plan-shaped response to pass" >&2
+EOF_PLANNING_VALID
+  if ! lint_response_file "$response_planning_valid" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning plan-shaped response to pass" >&2
     failures_local=1
   fi
 
-  cat > "$response_analyst_conversation_valid" <<'EOF_ANALYST_CONVERSATION'
+  cat > "$response_planning_conversation_valid" <<'EOF_PLANNING_CONVERSATION'
 ```markdown
 1. Analysis and Discussion
 The topic leaves scope ambiguity around the exact runtime reset surface.
@@ -979,35 +979,35 @@ Q1. Should the reset remove generated slice handling from editor assist as well 
 Questions / Conversation:
 Q1:B — or: Use recommended options
 ```
-EOF_ANALYST_CONVERSATION
-  if ! lint_response_file "$response_analyst_conversation_valid" >/dev/null 2>&1; then
-    echo "FAIL: --test expected analyst conversational response to pass" >&2
+EOF_PLANNING_CONVERSATION
+  if ! lint_response_file "$response_planning_conversation_valid" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning conversational response to pass" >&2
     failures_local=1
   fi
 
-  cat > "$response_analyst_audit_marker" <<'EOF_ANALYST_AUDIT'
+  cat > "$response_planning_audit_marker" <<'EOF_PLANNING_AUDIT'
 ```markdown
 # Reset Generated Planning
 **AUDIT - DP-OPS-9999**
 ```
-EOF_ANALYST_AUDIT
-  if lint_response_file "$response_analyst_audit_marker" >/dev/null 2>&1; then
-    echo "FAIL: --test expected analyst response with audit marker to fail" >&2
+EOF_PLANNING_AUDIT
+  if lint_response_file "$response_planning_audit_marker" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning response with audit marker to fail" >&2
     failures_local=1
   fi
 
-  cat > "$response_analyst_narrative" <<'EOF_ANALYST_NARRATIVE'
+  cat > "$response_planning_narrative" <<'EOF_PLANNING_NARRATIVE'
 ```markdown
 # Reset Generated Planning
 ## Contractor Execution Narrative
 ```
-EOF_ANALYST_NARRATIVE
-  if lint_response_file "$response_analyst_narrative" >/dev/null 2>&1; then
-    echo "FAIL: --test expected analyst response with contractor narrative to fail" >&2
+EOF_PLANNING_NARRATIVE
+  if lint_response_file "$response_planning_narrative" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning response with contractor narrative to fail" >&2
     failures_local=1
   fi
 
-  cat > "$response_analyst_policy" <<'EOF_ANALYST_POLICY'
+  cat > "$response_planning_policy" <<'EOF_PLANNING_POLICY'
 ```markdown
 1. Analysis and Discussion
 Section 3.4.5 requires RECEIPT_EXTRA policy wording.
@@ -1015,23 +1015,23 @@ Section 3.4.5 requires RECEIPT_EXTRA policy wording.
 Questions / Conversation:
 - confirm
 ```
-EOF_ANALYST_POLICY
-  if lint_response_file "$response_analyst_policy" >/dev/null 2>&1; then
-    echo "FAIL: --test expected analyst response with policy-overcompensation prose to fail" >&2
+EOF_PLANNING_POLICY
+  if lint_response_file "$response_planning_policy" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning response with policy-overcompensation prose to fail" >&2
     failures_local=1
   fi
 
-  cat > "$response_analyst_missing_plan" <<'EOF_ANALYST_MISSING'
+  cat > "$response_planning_missing_plan" <<'EOF_PLANNING_MISSING'
 ```markdown
 1. Analysis and Discussion
 ```
-EOF_ANALYST_MISSING
-  if lint_response_file "$response_analyst_missing_plan" >/dev/null 2>&1; then
-    echo "FAIL: --test expected analyst response missing both final PLAN structure and conversation footer to fail" >&2
+EOF_PLANNING_MISSING
+  if lint_response_file "$response_planning_missing_plan" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning response missing both final PLAN structure and conversation footer to fail" >&2
     failures_local=1
   fi
 
-  cat > "$response_analyst_structured_valid" <<'EOF_ANALYST_STRUCTURED'
+  cat > "$response_planning_structured_valid" <<'EOF_PLANNING_STRUCTURED'
 ```markdown
 1. Analysis and Discussion
 The scope leaves two material gaps that affect implementation direction.
@@ -1051,13 +1051,13 @@ Q2. Should the new validation path be gated behind a feature flag?
 Questions / Conversation:
 Q1:B, Q2:B — or: Use recommended options
 ```
-EOF_ANALYST_STRUCTURED
-  if ! lint_response_file "$response_analyst_structured_valid" >/dev/null 2>&1; then
-    echo "FAIL: --test expected analyst structured question-mode response to pass" >&2
+EOF_PLANNING_STRUCTURED
+  if ! lint_response_file "$response_planning_structured_valid" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning structured question-mode response to pass" >&2
     failures_local=1
   fi
 
-  cat > "$response_analyst_few_options" <<'EOF_ANALYST_FEW_OPTIONS'
+  cat > "$response_planning_few_options" <<'EOF_PLANNING_FEW_OPTIONS'
 ```markdown
 1. Analysis and Discussion
 Ambiguity remains around the target surface.
@@ -1071,13 +1071,13 @@ Q1. Which surface should be reset?
 Questions / Conversation:
 Q1:A — or: Use recommended options
 ```
-EOF_ANALYST_FEW_OPTIONS
-  if lint_response_file "$response_analyst_few_options" >/dev/null 2>&1; then
-    echo "FAIL: --test expected analyst question with fewer than 3 options to fail" >&2
+EOF_PLANNING_FEW_OPTIONS
+  if lint_response_file "$response_planning_few_options" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning question with fewer than 3 options to fail" >&2
     failures_local=1
   fi
 
-  cat > "$response_analyst_no_recommended" <<'EOF_ANALYST_NO_REC'
+  cat > "$response_planning_no_recommended" <<'EOF_PLANNING_NO_REC'
 ```markdown
 1. Analysis and Discussion
 Ambiguity remains around the target surface.
@@ -1092,13 +1092,13 @@ Q1. Which surface should be reset?
 Questions / Conversation:
 Q1:A
 ```
-EOF_ANALYST_NO_REC
-  if lint_response_file "$response_analyst_no_recommended" >/dev/null 2>&1; then
-    echo "FAIL: --test expected analyst question with no (Recommended) option to fail" >&2
+EOF_PLANNING_NO_REC
+  if lint_response_file "$response_planning_no_recommended" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning question with no (Recommended) option to fail" >&2
     failures_local=1
   fi
 
-  cat > "$response_analyst_too_many_questions" <<'EOF_ANALYST_TOO_MANY'
+  cat > "$response_planning_too_many_questions" <<'EOF_PLANNING_TOO_MANY'
 ```markdown
 1. Analysis and Discussion
 Four gaps remain.
@@ -1128,9 +1128,9 @@ Q4. Fourth question?
 Questions / Conversation:
 Use recommended options
 ```
-EOF_ANALYST_TOO_MANY
-  if lint_response_file "$response_analyst_too_many_questions" >/dev/null 2>&1; then
-    echo "FAIL: --test expected analyst response with 4 questions to fail" >&2
+EOF_PLANNING_TOO_MANY
+  if lint_response_file "$response_planning_too_many_questions" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning response with 4 questions to fail" >&2
     failures_local=1
   fi
 
@@ -1476,7 +1476,7 @@ while (($# > 0)); do
       shift
       if (($# == 0)); then
         usage >&2
-        response_fail "--mode requires one of: dp audit architect analyst foreman conformist"
+        response_fail "--mode requires one of: dp audit architect planning foreman conformist"
         exit 1
       fi
       response_mode="$1"
@@ -1507,10 +1507,10 @@ while (($# > 0)); do
 done
 
 case "$response_mode" in
-  dp|audit|architect|analyst|foreman|conformist|execution-decision) ;;
+  dp|audit|architect|planning|foreman|conformist|execution-decision) ;;
   *)
     usage >&2
-    response_fail "invalid mode: ${response_mode}. Use dp, audit, architect, analyst, foreman, conformist, or execution-decision."
+    response_fail "invalid mode: ${response_mode}. Use dp, audit, architect, planning, foreman, conformist, or execution-decision."
     exit 1
     ;;
 esac
