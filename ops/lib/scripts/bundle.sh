@@ -70,7 +70,7 @@ BUNDLE_AUDIT_RESOLVED_OUTPUT_REL=""
 
 bundle_usage() {
   cat <<'USAGE'
-Usage: ops/bin/bundle [--profile=auto|planning|architect|audit|project|conform|hygiene|foreman] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--rerun] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
+Usage: ops/bin/bundle [--profile=auto|planning|draft|audit|project|conform|hygiene|foreman] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--rerun] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
 USAGE
 }
 
@@ -763,11 +763,11 @@ bundle_packet_id_increment() {
     prefix="${BASH_REMATCH[1]}"
     numeric="${BASH_REMATCH[2]}"
   else
-    die "invalid architect packet id seed: ${seed}"
+    die "invalid draft packet id seed: ${seed}"
   fi
 
   next_value=$((10#${numeric} + offset))
-  (( next_value >= 0 )) || die "architect packet id underflow from seed ${seed} offset ${offset}"
+  (( next_value >= 0 )) || die "draft packet id underflow from seed ${seed} offset ${offset}"
   printf '%s%04d' "$prefix" "$next_value"
 }
 
@@ -781,7 +781,7 @@ bundle_resolve_current_task_packet_id() {
   printf '%s' "$packet_id"
 }
 
-bundle_resolve_architect_packet_id() {
+bundle_resolve_draft_packet_id() {
   local current_packet_id=""
 
   current_packet_id="$(bundle_resolve_current_task_packet_id)"
@@ -955,7 +955,7 @@ bundle_collect_profile_disposable_inputs() {
       [[ -f "${BUNDLE_HANDOFF_BASE}/TOPIC.md" ]] || die "planning requires ${topic_rel}"
       printf '%s\n' "$(bundle_to_rel_path "${BUNDLE_HANDOFF_BASE}/TOPIC.md")"
       ;;
-    architect)
+    draft)
       if [[ -f "${BUNDLE_HANDOFF_BASE}/PLAN.md" ]]; then
         printf '%s\n' "$(bundle_to_rel_path "${BUNDLE_HANDOFF_BASE}/PLAN.md")"
       fi
@@ -1169,14 +1169,14 @@ bundle_run() {
     fi
   fi
 
-  if [[ "$resolved_profile" == "architect" ]]; then
-    (( plan_present )) || die "architect requires storage/handoff/PLAN.md"
+  if [[ "$resolved_profile" == "draft" ]]; then
+    (( plan_present )) || die "draft requires storage/handoff/PLAN.md"
     if ! plan_lint_output="$(bash "${REPO_ROOT}/tools/lint/plan.sh" "${BUNDLE_HANDOFF_BASE}/PLAN.md" 2>&1)"; then
-      die "architect requires a valid PLAN.md: $(printf '%s\n' "$plan_lint_output" | tail -n 1)"
+      die "draft requires a valid PLAN.md: $(printf '%s\n' "$plan_lint_output" | tail -n 1)"
     fi
     plan_lint_status="PASS"
     request_plan_source="$plan_rel"
-    request_packet_id="$(bundle_resolve_architect_packet_id)"
+    request_packet_id="$(bundle_resolve_draft_packet_id)"
     request_closing_sidecar="storage/handoff/CLOSING.md"
   fi
 
@@ -1241,8 +1241,8 @@ bundle_run() {
     open_intent="$intent_token"
   elif [[ "$requested_profile" == "auto" ]]; then
     open_intent="Bundle profile (auto -> ${resolved_profile})"
-  elif [[ "$requested_profile_input" == "architect" ]]; then
-    open_intent="Architect profile"
+  elif [[ "$requested_profile_input" == "draft" ]]; then
+    open_intent="Draft profile"
   else
     open_intent="Bundle profile: ${resolved_profile}"
   fi
@@ -1386,7 +1386,7 @@ bundle_run() {
     echo "- advisory input stela present: $([[ "$assembly_stela_present" == "1" ]] && echo true || echo false)"
     echo "- advisory input scaffold present: $([[ "$assembly_scaffold_present" == "1" ]] && echo true || echo false)"
     echo
-    if [[ "$resolved_profile" == "architect" ]]; then
+    if [[ "$resolved_profile" == "draft" ]]; then
       echo "[REQUEST]"
       echo "- plan_source: ${request_plan_source}"
       echo "- packet_id: ${request_packet_id}"
@@ -1597,7 +1597,7 @@ bundle_run() {
       echo "  },"
     fi
     echo "  \"request\": {"
-    if [[ "$resolved_profile" == "architect" ]]; then
+    if [[ "$resolved_profile" == "draft" ]]; then
       echo "    \"plan_source\": \"$(bundle_json_escape "$request_plan_source")\","
       echo "    \"packet_id\": \"$(bundle_json_escape "$request_packet_id")\","
       echo "    \"dp_draft_path\": \"storage/dp/intake/DP.md\","

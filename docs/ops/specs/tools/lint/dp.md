@@ -17,7 +17,7 @@
 9. For RESULTS paths, delegate validation to `tools/lint/results.sh` and propagate its exit code. RESULTS schema enforcement is sourced from the canonical template plus narrative field checks.
 10. In `--test` mode, execute fixture-driven negative and positive checks that exercise template-hash drift, structure mismatch, allowlist-pointer mismatch, allowlist-file invalidity, drafting-marker word detection, foreign citation contamination detection, and delegated RESULTS validation coverage (valid fixture and deterministic invalid fixture).
 11. Enforce mandatory receipt-command shape in `3.4.5`: verify canonical mandatory command lines are present and fail deterministically when missing.
-12. Enforce closing-sidecar non-prepopulation in `3.5.1`: reject architect payloads that provide non-empty values for canonical sidecar fields.
+12. Enforce closing-sidecar non-prepopulation in `3.5.1`: reject draft payloads that provide non-empty values for canonical sidecar fields.
 13. Enforce include-metadata leakage guard in DP payload bodies: fail on first line containing `<!-- CCD:` or a raw frontmatter delimiter line `---`.
 
 ### Drafting-Marker Scan Fixtures (`--test`)

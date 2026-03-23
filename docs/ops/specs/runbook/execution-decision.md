@@ -27,8 +27,8 @@
 `execution-decision` is disposable/manual-placement evidence for now: useful and explicit, but subordinate to `RESULTS`, `CLOSING`, and audit truth. No execution-decision bundle profile exists yet.
 
 Placement paths (manual; operator places the received fenced markdown):
-- `storage/handoff/EXECUTION-DECISION.md`: received fenced markdown from auditor/analyst/architect/other secondary lanes.
-- `storage/dp/intake/EXECUTION-DECISION.md`: architect-generated intake variant.
+- `storage/handoff/EXECUTION-DECISION.md`: received fenced markdown from auditor/analyst/draft/other secondary lanes.
+- `storage/dp/intake/EXECUTION-DECISION.md`: draft-generated intake variant.
 
 These are latest-wins disposable files. They are not certify inputs and are not audit bundle artifacts. Prune may remove them.
 

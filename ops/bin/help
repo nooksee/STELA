@@ -283,7 +283,7 @@ ${bold}Command Index${reset}
   ${cyan}open${reset}       Session freshness and trace anchor (STELA_TRACE_ID required by certify).
   ${cyan}draft${reset}      Generate canonical DP from template; saves to storage/dp/intake/ and TASK.md.
   ${cyan}dump${reset}       Platform context capture (use --selection=dp+allowlist for CDD; --scope=core for operator audit).
-  ${cyan}bundle${reset}     Delivery transport for planning, architect, audit, foreman, conform profiles.
+  ${cyan}bundle${reset}     Delivery transport for planning, draft, audit, foreman, conform profiles.
   ${cyan}certify${reset}    Generate RESULTS receipt, emit SoP/PoW/TASK archive leaves, move DP to processed.
   ${cyan}addendum${reset}   Issuance tool for operator/foreman-authorized addendum artifacts.
   ${cyan}context${reset}    Context archive assembly.

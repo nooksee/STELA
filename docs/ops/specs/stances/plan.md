@@ -2,7 +2,7 @@
 # Surface Specification: PLAN
 
 ## Constitutional Anchor
-`storage/handoff/PLAN.md` is the operator-facing planning surface produced by the planning lane and consumed by the architect lane.
+`storage/handoff/PLAN.md` is the operator-facing planning surface produced by the planning lane and consumed by the draft lane.
 It remains planning-only; execution control still lives in the DP.
 
 ## Operator Contract

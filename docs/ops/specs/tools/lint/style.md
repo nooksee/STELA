@@ -207,7 +207,7 @@ Invariant: nonsense topics stop truthfully instead of producing fabricated plans
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For final plan mode: output only the complete PLAN markdown code block.`
 Failure message: `planning.md.tpl missing planning plan-output-only line`
-Invariant: architect-ready plan serialization remains available once intent is settled.
+Invariant: draft-ready plan serialization remains available once intent is settled.
 
 ### Guard 30: Planning final-plan shape line
 Target file: `ops/src/stances/planning.md.tpl`

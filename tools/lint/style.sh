@@ -306,39 +306,39 @@ check_audit_foreman_mode_split() {
 
 }
 
-check_architect_mode_contract() {
-  local stance_architect="${REPO_ROOT}/ops/src/stances/architect.md.tpl"
+check_draft_mode_contract() {
+  local stance_draft="${REPO_ROOT}/ops/src/stances/draft.md.tpl"
   local required_output='Output only: Full DP (starting at `### DP-...`) in one markdown code block.'
   local required_shared_fence_include='{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}'
   local required_first='First non-empty line inside the code block must start with `### DP-`.'
   local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
   local required_no_narrative='Do not emit Contractor Execution Narrative sections or receipt narrative subheadings.'
-  local required_scope_only='Do not expand or replace the settled plan scope in architect mode.'
+  local required_scope_only='Do not expand or replace the settled plan scope in draft mode.'
 
-  [[ -f "$stance_architect" ]] || mark_failure "architect.md.tpl missing for mode contract checks"
+  [[ -f "$stance_draft" ]] || mark_failure "draft.md.tpl missing for mode contract checks"
 
-  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_output" "$stance_architect"; then
-    mark_failure "architect.md.tpl missing output contract line"
+  if [[ -f "$stance_draft" ]] && ! grep -Fq -- "$required_output" "$stance_draft"; then
+    mark_failure "draft.md.tpl missing output contract line"
   fi
 
-  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_shared_fence_include" "$stance_architect"; then
-    mark_failure "architect.md.tpl missing shared fence include line"
+  if [[ -f "$stance_draft" ]] && ! grep -Fq -- "$required_shared_fence_include" "$stance_draft"; then
+    mark_failure "draft.md.tpl missing shared fence include line"
   fi
 
-  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_first" "$stance_architect"; then
-    mark_failure "architect.md.tpl missing first-line marker line"
+  if [[ -f "$stance_draft" ]] && ! grep -Fq -- "$required_first" "$stance_draft"; then
+    mark_failure "draft.md.tpl missing first-line marker line"
   fi
 
-  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_shared_non_audit_include" "$stance_architect"; then
-    mark_failure "architect.md.tpl missing shared non-audit include line"
+  if [[ -f "$stance_draft" ]] && ! grep -Fq -- "$required_shared_non_audit_include" "$stance_draft"; then
+    mark_failure "draft.md.tpl missing shared non-audit include line"
   fi
 
-  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_no_narrative" "$stance_architect"; then
-    mark_failure "architect.md.tpl missing no-receipt-narrative line"
+  if [[ -f "$stance_draft" ]] && ! grep -Fq -- "$required_no_narrative" "$stance_draft"; then
+    mark_failure "draft.md.tpl missing no-receipt-narrative line"
   fi
 
-  if [[ -f "$stance_architect" ]] && ! grep -Fq -- "$required_scope_only" "$stance_architect"; then
-    mark_failure "architect.md.tpl missing architect scope-only line"
+  if [[ -f "$stance_draft" ]] && ! grep -Fq -- "$required_scope_only" "$stance_draft"; then
+    mark_failure "draft.md.tpl missing draft scope-only line"
   fi
 }
 
@@ -784,7 +784,7 @@ check_markdown_contractions
 check_jargon_blacklist
 check_shared_stance_contract
 check_audit_foreman_mode_split
-check_architect_mode_contract
+check_draft_mode_contract
 check_planning_mode_contract
 check_foreman_mode_contract
 check_conformist_mode_contract

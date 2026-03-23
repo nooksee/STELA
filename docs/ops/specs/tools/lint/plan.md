@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`tools/lint/plan.sh` is the deterministic safety-floor gate for the final `storage/handoff/PLAN.md` surface used by planning output and architect intake.
+`tools/lint/plan.sh` is the deterministic safety-floor gate for the final `storage/handoff/PLAN.md` surface used by planning output and draft intake.
 
 ## Mechanics and Sequencing
 Modes:

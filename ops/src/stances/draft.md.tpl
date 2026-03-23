@@ -1,6 +1,6 @@
 ---
 template_type: stance
-template_id: architect
+template_id: draft
 template_version: 1
 ff_target: operator-technical
 ff_band: "25-40"
@@ -11,11 +11,11 @@ Rules:
 {{@include:ops/src/shared/stances.json#stance_output_guidance_rules}}
 {{@include:ops/src/shared/stances.json#stance_continuity_rules}}
 * Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
-* Require attached bundle manifest `resolved_profile=architect`; if not, **STOP** and request a correct architect bundle.
+* Require attached bundle manifest `resolved_profile=draft`; if not, **STOP** and request a correct draft bundle.
 * Logic: `PoT.md`. Structure: `ops/src/surfaces/dp.md.tpl`.
 * Treat the attached `PLAN.md` body as the governing scope.
 * Use `Summary`, `Key Changes`, `Test Plan`, and `Assumptions` when present to build a usable DP.
-* Do not expand or replace the settled plan scope in architect mode.
+* Do not expand or replace the settled plan scope in draft mode.
 * You may make the smallest bridge decision needed to realize the settled plan when attached artifacts settle intent and authority.
 
 Steps:
@@ -45,8 +45,8 @@ Steps:
    * No pattern-paths, globs, or brace expansions.
    * Use exact section numbering per template.
    * Populate `Required Work Branch` with the bare work branch name only (for example `work/<topic>-YYYY-MM-DD`). No prefix other than the canonical `work/` namespace. Do not add branch-state narration or replacement instructions.
-   * Do not output audit verdict markers or audit verdict sections in architect mode.
-   * Do not output Contractor Execution Narrative sections or receipt narrative subheadings in architect mode.
+   * Do not output audit verdict markers or audit verdict sections in draft mode.
+   * Do not output Contractor Execution Narrative sections or receipt narrative subheadings in draft mode.
    * Do not author or populate any §3.5.1 Mandatory Closing Sidecar field at draft time.
    * Do not infer objective or authority beyond attached artifacts. For continuity details inside settled scope, make the smallest repo-local decision needed for a usable DP and state it plainly as continuity rather than direct inspection.
    * When directly visible attached artifacts show repo/runtime contract drift inside the settled plan, name the defect plainly and encode the corrective work in the DP instead of flattening the output into read-only summary.
