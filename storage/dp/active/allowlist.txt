@@ -223,13 +223,13 @@ archives/surfaces/TASK-DP-OPS-0150-*.md
 ops/bin/manifest
 ops/bin/template
 ops/src/stances/planning.md.tpl
-ops/src/stances/architect.md.tpl
+ops/src/stances/draft.md.tpl
 ops/src/stances/auditor.md.tpl
 ops/src/stances/foreman.md.tpl
 ops/src/stances/conformist.md.tpl
 ops/src/shared/stances.json
 docs/ops/specs/stances/planning.md
-docs/ops/specs/stances/architect.md
+docs/ops/specs/stances/draft.md
 docs/ops/specs/stances/auditor.md
 docs/ops/specs/stances/conformist.md
 docs/ops/specs/stances/foreman.md
@@ -322,7 +322,7 @@ archives/surfaces/TASK-DP-OPS-0185-*.md
 RoR.md
 archives/decisions/RoR-2026-03-12-001-cbc-0184.md
 ops/src/stances/planning.md.tpl
-ops/src/stances/architect.md.tpl
+ops/src/stances/draft.md.tpl
 ops/src/stances/auditor.md.tpl
 ops/src/stances/foreman.md.tpl
 tools/lint/style.sh
@@ -356,8 +356,8 @@ ops/lib/manifests/OPS.md
 archives/surfaces/TASK-DP-OPS-0188-*.md
 archives/surfaces/TASK-DP-OPS-0189-*.md
 ops/bin/draft
-ops/src/stances/architect.md.tpl
-docs/ops/specs/stances/architect.md
+ops/src/stances/draft.md.tpl
+docs/ops/specs/stances/draft.md
 ops/src/surfaces/dp.md.tpl
 docs/MANUAL.md
 tools/lint/dp.sh
@@ -443,7 +443,7 @@ docs/ops/specs/binaries/addendum.md
 docs/ops/specs/binaries/draft.md
 docs/ops/specs/runbook/execution-decision.md
 ops/src/runbook/execution-decision.yaml
-docs/ops/specs/stances/architect.md
+docs/ops/specs/stances/draft.md
 docs/ops/specs/stances/foreman.md
 docs/ops/specs/stances/conformist.md
 tools/lint/integrity.sh
