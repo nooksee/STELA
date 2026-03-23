@@ -37,4 +37,4 @@
     - Retired-ID anti-reappearance check: parse the ## Retired Definitions table from docs/ops/registry/factory.md; for each retired row, fail if a file exists at the former path.
 
 ## Integrity Filter Warnings
-The script depends on delegated outputs from `tools/lint/agent.sh` and `tools/lint/task.sh`; a failure in either script blocks factory lint even when head files are locally valid. Census validation and baseline contract checks are fail-closed and deterministic.
+The script depends on delegated outputs from `tools/lint/agent.sh` and `tools/lint/task.sh`; a failure in either script blocks factory lint even when head files are locally valid. Runtime reference scans prefer `rg` and fall back to `grep -E` when `rg` is unavailable. Census validation and baseline contract checks are fail-closed and deterministic.

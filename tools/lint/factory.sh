@@ -55,6 +55,17 @@ normalize_token() {
   printf '%s' "$value"
 }
 
+collect_runtime_factory_paths() {
+  local pattern='opt/_factory/(agents|skills|tasks)/[A-Za-z0-9._-]+\.md'
+
+  if command -v rg >/dev/null 2>&1; then
+    rg -oN --no-heading -h "$pattern" ops tools docs 2>/dev/null || true
+    return 0
+  fi
+
+  grep -RhoE -- "$pattern" ops tools docs 2>/dev/null || true
+}
+
 extract_section() {
   local section="$1"
   local path="$2"
@@ -449,7 +460,7 @@ while IFS= read -r file; do
   fi
 done < <(find "${FACTORY_DIR}/tasks" -type f -name "*.md")
 
-mapfile -t runtime_factory_paths < <(rg -oN --no-heading -h 'opt/_factory/(agents|skills|tasks)/[A-Za-z0-9._-]+\.md' ops tools docs | sort -u)
+mapfile -t runtime_factory_paths < <(collect_runtime_factory_paths | sort -u)
 for runtime_path in "${runtime_factory_paths[@]}"; do
   if [[ ! -f "$runtime_path" ]]; then
     continue

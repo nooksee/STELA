@@ -46,6 +46,55 @@ trim() {
   printf '%s' "$value"
 }
 
+search_regex_with_fallback() {
+  local ignore_case=0
+  if [[ "${1:-}" == "--ignore-case" ]]; then
+    ignore_case=1
+    shift
+  fi
+
+  local pattern="$1"
+  shift
+
+  if command -v rg >/dev/null 2>&1; then
+    if (( ignore_case )); then
+      rg -n -i -e "$pattern" "$@" 2>/dev/null || true
+    else
+      rg -n -e "$pattern" "$@" 2>/dev/null || true
+    fi
+    return 0
+  fi
+
+  if (( ignore_case )); then
+    grep -RinE -- "$pattern" "$@" 2>/dev/null || true
+  else
+    grep -RnE -- "$pattern" "$@" 2>/dev/null || true
+  fi
+}
+
+extract_regex_tokens_with_fallback() {
+  local pattern="$1"
+  local path="$2"
+
+  if command -v rg >/dev/null 2>&1; then
+    rg -o -- "$pattern" "$path" 2>/dev/null || true
+    return 0
+  fi
+
+  grep -oE -- "$pattern" "$path" 2>/dev/null || true
+}
+
+extract_canon_load_order_items() {
+  local path="$1"
+  awk '
+    /^### 3[.]2[.]1[[:space:]]+/ { in_section=1; next }
+    in_section && /^Notes:[[:space:]]*$/ { exit }
+    in_section && /^## Rules$/ { exit }
+    in_section && /^### 3[.]2[.]2[[:space:]]+/ { exit }
+    in_section { print }
+  ' "$path"
+}
+
 CLOSING_LABELS_MANIFEST_PATH="ops/lib/manifests/CLOSING.md"
 declare -a CURRENT_CLOSING_LABELS=()
 CURRENT_CLOSING_LABELS_LOADED=0
@@ -299,7 +348,7 @@ check_task_dashboard() {
   fi
 
   local canon_block
-  canon_block="$(extract_block "$path" '^### 3[.]2[.]1' '^### 3[.]2[.]2')"
+  canon_block="$(extract_canon_load_order_items "$path")"
   local -a canon_expected=(
     "1. PoT.md"
     "2. SoP.md"
@@ -433,13 +482,21 @@ if [[ ! -d "$TASKS_DIR" ]]; then
 fi
 
 contraction_pattern="\\b(don\\x27t|can\\x27t|won\\x27t|it\\x27s|shouldn\\x27t|didn\\x27t|doesn\\x27t|isn\\x27t|aren\\x27t|wasn\\x27t|weren\\x27t|haven\\x27t|hasn\\x27t|hadn\\x27t|wouldn\\x27t|couldn\\x27t|mustn\\x27t|shan\\x27t|let\\x27s|they\\x27re|we\\x27re|you\\x27re|i\\x27m|i\\x27ve|i\\x27ll|i\\x27d)\\b"
-contraction_hits="$(rg -n -i "$contraction_pattern" "$TASKS_DIR" 2>/dev/null || true)"
+contraction_hits="$(search_regex_with_fallback --ignore-case "$contraction_pattern" "$TASKS_DIR")"
 if [[ -n "$contraction_hits" ]]; then
   fail "Contractions found in task files."
   echo "$contraction_hits" >&2
 fi
 
-legacy_task_state_hits="$(rg -n -e 'Active Branch:' -e 'Base HEAD: .*Must match session context output' -e 'Gate Artifacts \\(Must Match\\)' -e 'Gate Commands \\(Must Pass\\)' -e 'update TASK\\.md gate artifacts' "$TASKS_DIR" 2>/dev/null || true)"
+legacy_task_state_hits="$(
+  {
+    search_regex_with_fallback 'Active Branch:' "$TASKS_DIR"
+    search_regex_with_fallback 'Base HEAD: .*Must match session context output' "$TASKS_DIR"
+    search_regex_with_fallback 'Gate Artifacts \(Must Match\)' "$TASKS_DIR"
+    search_regex_with_fallback 'Gate Commands \(Must Pass\)' "$TASKS_DIR"
+    search_regex_with_fallback 'update TASK\.md gate artifacts' "$TASKS_DIR"
+  } | awk '!seen[$0]++'
+)"
 if [[ -n "$legacy_task_state_hits" ]]; then
   fail "Legacy TASK inline state mutation language found in task files."
   echo "$legacy_task_state_hits" >&2
@@ -582,7 +639,7 @@ if compgen -G "${TASKS_DIR}/*.md" > /dev/null; then
       esac
     done
 
-    mapfile -t agent_refs < <(rg -o "R-AGENT-[0-9]{2,}" "$task" | sort -u)
+    mapfile -t agent_refs < <(extract_regex_tokens_with_fallback "R-AGENT-[0-9]{2,}" "$task" | sort -u)
     for ref in "${agent_refs[@]}"; do
       ref_slug="${ref,,}"
       if [[ ! -f "$REPO_ROOT/opt/_factory/agents/${ref_slug}.md" ]]; then
@@ -590,7 +647,7 @@ if compgen -G "${TASKS_DIR}/*.md" > /dev/null; then
       fi
     done
 
-    mapfile -t skill_refs < <(rg -o "S-LEARN-[0-9]{2,}" "$task" | sort -u)
+    mapfile -t skill_refs < <(extract_regex_tokens_with_fallback "S-LEARN-[0-9]{2,}" "$task" | sort -u)
     for ref in "${skill_refs[@]}"; do
       ref_slug="${ref,,}"
       if [[ ! -f "$REPO_ROOT/opt/_factory/skills/${ref_slug}.md" ]]; then
