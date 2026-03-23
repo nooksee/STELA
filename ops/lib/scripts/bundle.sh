@@ -1157,6 +1157,18 @@ bundle_run() {
     die "--rerun is only valid with --profile=${BUNDLE_AUDIT_PROFILE}"
   fi
 
+  if [[ "$resolved_profile" == "$BUNDLE_AUDIT_PROFILE" ]] && (( ! rerun_intent )); then
+    local audit_initial_prefix
+    audit_initial_prefix="$(bundle_artifact_prefix_for_profile "$BUNDLE_AUDIT_PROFILE")"
+    local -a existing_audit_artifacts=()
+    shopt -s nullglob
+    existing_audit_artifacts=("${BUNDLE_HANDOFF_BASE}/${audit_initial_prefix}-"*"-${branch_safe}-${head_short}.txt")
+    shopt -u nullglob
+    if (( ${#existing_audit_artifacts[@]} > 0 )); then
+      die "prior AUDIT artifact already exists for this branch+hash — add --rerun to generate an AUDIT-R1 resubmission bundle"
+    fi
+  fi
+
   if [[ "$resolved_profile" == "architect" ]]; then
     (( plan_present )) || die "architect requires storage/handoff/PLAN.md"
     if ! plan_lint_output="$(bash "${REPO_ROOT}/tools/lint/plan.sh" "${BUNDLE_HANDOFF_BASE}/PLAN.md" 2>&1)"; then

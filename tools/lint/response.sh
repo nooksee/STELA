@@ -586,13 +586,13 @@ check_execution_decision_schema() {
   )
   local label complete_block_found in_block block_text ok line
   for label in "${required_constraint_labels[@]}"; do
-    if ! grep -qF "$label" "$body_path"; then
-      response_fail "execution-decision body missing required constraint label: ${label}"
+    if ! grep -qE "^${label}" "$body_path"; then
+      response_fail "execution-decision body missing required constraint label at line start: ${label}"
     fi
   done
   for label in "${required_step_labels[@]}"; do
-    if ! grep -qF "$label" "$body_path"; then
-      response_fail "execution-decision body missing required step label: ${label}"
+    if ! grep -qE "^${label}" "$body_path"; then
+      response_fail "execution-decision body missing required step label at line start: ${label}"
     fi
   done
   # Verify at least one complete step block: all seven step labels must appear
@@ -607,7 +607,7 @@ check_execution_decision_schema() {
       if (( in_block )); then
         ok=1
         for label in "${required_step_labels[@]:1}"; do
-          if [[ "$block_text" != *"$label"* ]]; then ok=0; break; fi
+          if ! grep -qE "^${label}" <<< "$block_text"; then ok=0; break; fi
         done
         if (( ok )); then complete_block_found=1; break; fi
       fi
@@ -725,6 +725,7 @@ run_test() {
   local response_exec_decision_missing_constraint
   local response_exec_decision_missing_step
   local response_exec_decision_split_block
+  local response_exec_decision_label_in_prose
   local failures_local=0
   local saved_mode="$response_mode"
 
@@ -1419,6 +1420,40 @@ EOF_EXEC_DECISION_SPLIT_BLOCK
   failures=0
   if lint_response_file "$response_exec_decision_split_block" >/dev/null 2>&1; then
     echo "FAIL: --test expected execution-decision split-block response to fail" >&2
+    failures_local=1
+  fi
+
+  response_exec_decision_label_in_prose="${test_dir}/response-exec-decision-label-in-prose.md"
+  cat > "$response_exec_decision_label_in_prose" <<'EOF_EXEC_DECISION_LABEL_IN_PROSE'
+```
+Observable evidence used:
+Diff output confirming "Active task constraints used: PoT.md" was noted inline.
+
+Evidence gaps or unknowns:
+None.
+
+Confidence level:
+High.
+
+Trigger:
+Worker received DP.
+Decision:
+Proceed.
+Rationale:
+Preflight passed.
+Tools considered or used:
+bash tools/lint/dp.sh
+Actions taken:
+Read context.
+Actions not taken:
+None.
+Key evidence:
+dp.sh PASS.
+```
+EOF_EXEC_DECISION_LABEL_IN_PROSE
+  failures=0
+  if lint_response_file "$response_exec_decision_label_in_prose" >/dev/null 2>&1; then
+    echo "FAIL: --test expected execution-decision with constraint label only in prose to fail" >&2
     failures_local=1
   fi
 
