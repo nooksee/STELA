@@ -79,21 +79,18 @@ Required local re-check (worker runs; paste outputs in RESULTS):
 - git status --porcelain
 
 Preconditions:
-- Stay on the current inherited work branch.
-- This packet continues from the current inherited in-progress branch state rather than claiming a clean-start baseline.
-- Do not create, switch, reset, rebase, or cherry-pick branches as part of this packet.
-- Current branch state may be dirty or clean, but every touched tracked path must remain within this packet's authoritative scope or certify-owned generated surfaces.
+- No commits on main.
+- Working tree must be clean before execution begins.
+- If Base HEAD changes, regenerate session artifacts from canonical tools before proceeding.
 
 STOP conditions:
-- STOP if the active branch is not `work/dp-ops-0219-analyst-planning-upgrade-2026-03-22`.
-- STOP if Base HEAD is not `c37d55ce`.
-- STOP if `git status --porcelain` shows tracked paths outside this packet's authoritative scope or certify-owned generated surfaces.
-- STOP if this packet would require baseline reconstruction, branch surgery, or retroactive clean-start claims.
-- STOP if verification finds substantive rename drift outside the file set listed below.
+- STOP if any mismatch (branch, Base HEAD, missing work branch).
+- STOP if working tree is dirty before execution begins.
+- STOP if told to create or switch branches.
 
 ## 3.1.1 DP Preflight Gate (Run Before Any Edits)
 Purpose:
-- Catch malformed DP or TASK schema before closeout work begins.
+- Catch malformed DP or TASK schema before work begins.
 
 Worker runs (paste outcome in RESULTS):
 - bash tools/lint/dp.sh --test
@@ -123,7 +120,7 @@ Worker must confirm loaded before edits begin:
 7. ops/lib/manifests/CONTEXT.md
 
 Notes:
-- Worker does not read OPEN. OPEN is for Integrator state refresh and receipts.
+- Worker does not read OPEN. OPEN is for Integrator state refresh and for receipts.
 - Disposable artifacts must not be referenced or included.
 - Worker input is the DP text only.
 - DP writer must not attach or cite disposable artifacts.
@@ -131,13 +128,11 @@ Notes:
 
 ## Rules
 
-1. Temp path rule uses `var/tmp` only
-2. RESULTS generation rule uses `ops/bin/certify` only
-3. Receipt rule runs every DP-mandated command and treats any skip as STOP
-4. Disposable artifact rule treats OPEN dump bundles and manifests as non-canonical session artifacts
-5. Use repo-relative paths only in all output. Never print absolute filesystem paths. Do not emit clickable file links.
-6. This packet must describe the inherited current branch state truthfully. Do not narrate a clean start that did not happen.
-7. Do not claim any proof from prior attempts unless it is rerun now and logged now.
+1 Temp path rule uses `var/tmp` only
+2 RESULTS generation rule uses `ops/bin/certify` only
+3 Receipt rule runs every DP mandated command and treats any skip as STOP
+4 Disposable artifact rule treats OPEN dump bundles and manifests as non canonical session artifacts
+5 Use repo-relative paths only in all output. Never print absolute filesystem paths. Do not emit clickable file links.
 
 ### 3.2.2 DP-scoped load order (per DP)
 - ops/src/stances/planning.md.tpl
@@ -336,25 +331,21 @@ Notes:
 - If any verification command fails, STOP, fix only within scope, and rerun.
 
 ## 3.5 Closeout (Mandatory Routing)
-- Execute `docs/MANUAL.md` Closeout Cycle in order: Verify -> Harvest -> Refresh -> Log -> Prune.
-- Update SoP.md and PoW.md with DP-OPS-0224 entries that truthfully describe:
-  - this packet continued from the inherited current branch state,
-  - the implementation was verified in place,
-  - only current-run proof is asserted.
+- Execute docs/MANUAL.md Closeout Cycle in order (Verify, Harvest, Refresh, Log, Prune).
+- Update SoP.md and PoW.md with DP entries, including objective summary and current proof / receipt summary.
 - Protocol order for closeout: Verify -> Generate Results -> COMMIT (Operator Only) -> Prune.
-- Run `./ops/bin/open --out=auto` before certify so the current run has a valid `STELA_TRACE_ID`.
-- Refresh llms artifacts with `./ops/bin/llms`.
-- Regenerate session artifacts with `./ops/bin/open --out=auto`.
-- Run prune hygiene with `./ops/bin/prune --scrub`.
-- Audit bundle generation is owned by `./ops/bin/bundle --profile=audit --out=auto`.
-- Do not emit any extra non-canonical dump or bundle artifacts unless explicitly authorized by this packet.
+- Run prune hygiene: ./ops/bin/prune --scrub.
+- Refresh llms artifacts: `./ops/bin/llms`
+- Regenerate session artifacts: `./ops/bin/open --out=auto`
+- Ensure the next session begins with refreshed session artifacts and matching receipts.
+- Note: audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto` and is separate from operator session refresh. Do not stamp an additional `ops/bin/dump --scope=core` into closeout unless the DP explicitly authorizes a standalone state capture.
+- Refresh side-effect: `ops/bin/llms` regenerates `ops/lib/manifests/OPS.md` as a compile event; if `OPS.md` is not in the allowlist, restore it before running `integrity.sh`. See `docs/MANUAL.md` Refresh side-effect notice for the full procedure.
 
 ### 3.5.1 Mandatory Closing Sidecar
 Closing sidecar content is generated and maintained at `storage/handoff/CLOSING.md` and is validated by `ops/bin/certify` as a hard gate at certification time. Do not author, predict, populate, or approximate any sidecar-derived closeout output outside this sidecar.
-
 Certify separately collects contractor-authored narrative for the RESULTS Contractor Execution Narrative section at certify time via interactive editor prompt; this narrative input is independent from closing sidecar content.
 
-Before running certify, confirm `storage/handoff/CLOSING.md` reflects observable current reality only.
+Before running certify, confirm `storage/handoff/CLOSING.md` has been maintained throughout execution and reflects observable reality only.
 
 Closing sidecar fields required at certify time:
 - Commit Message
