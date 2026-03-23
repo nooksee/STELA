@@ -13,7 +13,7 @@ auto_plan_profile=architect
 project_profile=project
 audit_profile=audit
 foreman_profile=foreman
-foreman_intent_form=ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>
+foreman_intent_form=ADDENDUM REQUIRED: <BASE_DP_ID> - <ONE-LINE BLOCKER>
 profile_alias_legacy_hygiene_to=conform
 profile_alias_legacy_hygiene_deprecation_status=sunset
 profile_alias_legacy_hygiene_remove_after_dp=DP-OPS-0165
@@ -124,7 +124,7 @@ The canonical operator shipping chain uses bundle at two points:
 - Operator commits on work branch, opens PR per CLOSING sidecar, merges to main
 
 Secondary lanes are bounded and do not replace RESULTS or audit truth:
-- `--profile=foreman`: intervention intake only (not PASS/FAIL); intent form must be `ADDENDUM REQUIRED: <DECISION_ID> - <BLOCKER>`
+- `--profile=foreman`: intervention intake only (not PASS/FAIL); intent form must be `ADDENDUM REQUIRED: <BASE_DP_ID> - <BLOCKER>`
 - `--profile=conform`: structure normalization; output is a revised DP draft, not an audit verdict
 - execution-decision: disposable/manual placement, not a bundle profile
 

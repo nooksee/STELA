@@ -460,3 +460,4 @@ archives/surfaces/TASK-DP-OPS-0220-*.md
 archives/manifests/compile-2026-03-22T190035-d7f51e6a.md
 archives/surfaces/TASK-DP-OPS-0221-*.md
 archives/manifests/compile-2026-03-22T200951-d77042d1.md
+archives/surfaces/TASK-DP-OPS-0222-*.md
