@@ -30,9 +30,9 @@ Define the template-backed foreman stance body used for `foreman` profile bundle
 ## Shipping Spine Position
 Foreman is a bounded secondary lane in the shipping spine. It is an intervention path only, not a PASS/FAIL verdict workflow. The foreman chain:
 1. Contractor or auditor reports a boundary condition to the operator.
-2. Operator runs: `./ops/bin/bundle --profile=foreman --intent="ADDENDUM REQUIRED: <DECISION_ID> - <BLOCKER>" --out=auto`
-3. Foreman model receives `FOREMAN-*.txt` bundle and outputs an authorized addendum fenced block.
-4. Operator provides `OPERATOR_AUTHORIZATION` and issues the addendum via `ops/bin/addendum`.
+2. Operator runs: `./ops/bin/bundle --profile=foreman --intent="ADDENDUM REQUIRED: <BASE_DP_ID> - <BLOCKER>" --out=auto`
+3. Foreman model receives `FOREMAN-*.txt` bundle and builds the addendum case from visible evidence in the dump (RESULTS narrative, OPEN metadata, boundary condition in intent). No pre-existing decision leaf is required.
+4. Foreman outputs an authorized addendum fenced block. Operator provides `OPERATOR_AUTHORIZATION` and issues the addendum via `ops/bin/addendum`.
 5. Contractor receives and executes the finished addendum document.
 
 The foreman lane does not replace RESULTS, CLOSING, or audit truth. Addendum authority flows through operator/foreman issuance only; workers do not self-authorize addendum scope.

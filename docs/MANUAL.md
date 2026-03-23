@@ -49,7 +49,7 @@ Audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto`.
 - Validated via `bash tools/lint/response.sh --mode=execution-decision`; checks required constraint-section labels and at least one complete step block.
 
 **Secondary Lanes:**
-- `foreman/addendum`: Intervention path. Contractor or auditor reports `ADDENDUM REQUIRED`. Operator generates a foreman wake-up bundle (`./ops/bin/bundle --profile=foreman --intent="ADDENDUM REQUIRED: <DECISION_ID> - <BLOCKER>" --out=auto`), delivers it to foreman, and foreman issues an authorized addendum. The authorized addendum is handed to the Contractor as a finished document. Contractor does not author addendum content.
+- `foreman/addendum`: Intervention path. Contractor or auditor reports `ADDENDUM REQUIRED`. Operator generates a foreman wake-up bundle (`./ops/bin/bundle --profile=foreman --intent="ADDENDUM REQUIRED: <BASE_DP_ID> - <BLOCKER>" --out=auto`), delivers it to foreman, and foreman builds the addendum case from visible evidence in the dump (RESULTS, OPEN metadata, boundary condition) — no pre-existing decision leaf required. Foreman issues an authorized addendum. The authorized addendum is handed to the Contractor as a finished document. Contractor does not author addendum content.
 - `conform/conformist`: Structure normalization lane. Does not replace RESULTS or audit truth.
 - `execution-decision`: See above.
 - Surface and definition rendering is centralized in `ops/bin/template` with YAML metadata parsing, include injection, and strict slot enforcement by default.

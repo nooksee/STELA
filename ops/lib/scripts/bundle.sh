@@ -743,8 +743,8 @@ bundle_emit_stance_contract() {
 
 bundle_parse_foreman_intent() {
   local intent_text="$1"
-  if [[ "$intent_text" =~ ^ADDENDUM[[:space:]]+REQUIRED:[[:space:]]+([^[:space:]]+)[[:space:]]+-[[:space:]]+(.+)$ ]]; then
-    BUNDLE_FOREMAN_DECISION_ID="${BASH_REMATCH[1]}"
+  if [[ "$intent_text" =~ ^ADDENDUM[[:space:]]+REQUIRED:[[:space:]]+(DP-OPS-[0-9]{4,})[[:space:]]+-[[:space:]]+(.+)$ ]]; then
+    BUNDLE_FOREMAN_BASE_DP_ID="${BASH_REMATCH[1]}"
     BUNDLE_FOREMAN_BLOCKER="${BASH_REMATCH[2]}"
     return 0
   fi
@@ -1236,14 +1236,14 @@ bundle_run() {
   fi
 
   local addendum_required=0
-  local decision_id=""
-  local decision_leaf_present=0
+  local foreman_base_dp_id=""
+  local foreman_base_dp_in_dump=0
   if [[ "$resolved_profile" == "$BUNDLE_FOREMAN_PROFILE" ]]; then
     addendum_required=1
     if ! bundle_parse_foreman_intent "$open_intent"; then
       die "${BUNDLE_FOREMAN_PROFILE} intent must match: ${BUNDLE_FOREMAN_INTENT_FORM}"
     fi
-    decision_id="$BUNDLE_FOREMAN_DECISION_ID"
+    foreman_base_dp_id="$BUNDLE_FOREMAN_BASE_DP_ID"
   fi
 
   local dump_scope
@@ -1295,10 +1295,10 @@ bundle_run() {
   [[ -f "${REPO_ROOT}/${dump_manifest_rel}" ]] || die "dump manifest missing: ${dump_manifest_rel}"
 
   if [[ "$resolved_profile" == "$BUNDLE_FOREMAN_PROFILE" ]]; then
-    if grep -Fq "$decision_id" "${REPO_ROOT}/${dump_payload_rel}"; then
-      decision_leaf_present=1
+    if grep -Fq "$foreman_base_dp_id" "${REPO_ROOT}/${dump_payload_rel}"; then
+      foreman_base_dp_in_dump=1
     else
-      die "${BUNDLE_FOREMAN_PROFILE} decision leaf not present in dump payload: ${decision_id}"
+      die "${BUNDLE_FOREMAN_PROFILE} base DP not confirmed in dump payload: ${foreman_base_dp_id}"
     fi
   fi
 
@@ -1398,8 +1398,8 @@ bundle_run() {
       echo
     fi
     if [[ "$resolved_profile" == "$BUNDLE_FOREMAN_PROFILE" ]]; then
-      echo "- Addendum decision id: ${decision_id}"
-      echo "- Decision leaf present in dump: $([[ "$decision_leaf_present" == "1" ]] && echo true || echo false)"
+      echo "- Addendum base DP: ${foreman_base_dp_id}"
+      echo "- Base DP confirmed in dump: $([[ "$foreman_base_dp_in_dump" == "1" ]] && echo true || echo false)"
       echo
     fi
     if [[ "$requested_profile" == "auto" && "$resolved_profile" != "analyst" ]]; then
@@ -1610,12 +1610,12 @@ bundle_run() {
     echo "  },"
     echo "  \"addendum\": {"
     echo "    \"required\": $(bundle_bool "$addendum_required"),"
-    if [[ -n "$decision_id" ]]; then
-      echo "    \"decision_id\": \"$(bundle_json_escape "$decision_id")\"," 
+    if [[ -n "$foreman_base_dp_id" ]]; then
+      echo "    \"base_dp_id\": \"$(bundle_json_escape "$foreman_base_dp_id")\","
     else
-      echo "    \"decision_id\": null," 
+      echo "    \"base_dp_id\": null,"
     fi
-    echo "    \"decision_leaf_present\": $(bundle_bool "$decision_leaf_present")"
+    echo "    \"base_dp_in_dump\": $(bundle_bool "$foreman_base_dp_in_dump")"
     echo "  },"
     echo "  \"package\": {"
     echo "    \"path\": \"$(bundle_json_escape "$package_rel")\"," 

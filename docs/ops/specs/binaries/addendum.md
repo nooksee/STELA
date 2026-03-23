@@ -49,8 +49,8 @@ Hard-stop errors include: missing required arguments, malformed `--base-dp`, unr
 
 ## Foreman Intervention Chain
 The full intervention path in the shipping spine is:
-1. **Trigger:** Contractor or auditor identifies a boundary condition and reports `ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>` to the operator.
-2. **Foreman wake-up:** Operator generates the foreman bundle: `./ops/bin/bundle --profile=foreman --intent="ADDENDUM REQUIRED: <DECISION_ID> - <BLOCKER>" --out=auto`. Delivers `FOREMAN-*.txt` to the foreman model.
+1. **Trigger:** Contractor or auditor identifies a boundary condition and reports `ADDENDUM REQUIRED: <BASE_DP_ID> - <ONE-LINE BLOCKER>` to the operator.
+2. **Foreman wake-up:** Operator generates the foreman bundle: `./ops/bin/bundle --profile=foreman --intent="ADDENDUM REQUIRED: <BASE_DP_ID> - <BLOCKER>" --out=auto`. Delivers `FOREMAN-*.txt` to the foreman model.
 3. **Addendum issuance:** Foreman model outputs an authorized addendum fenced block. Operator reviews, provides `OPERATOR_AUTHORIZATION`, and issues the addendum artifact using: `./ops/bin/addendum --base-dp=DP-OPS-XXXX --slots-file=<path>`. The addendum is written to `storage/dp/intake/ADDENDUM.md`.
 4. **Contractor resumes:** Contractor receives the finished addendum document and executes against it. Contractor does not self-authorize addendum scope.
 5. **Audit lineage:** Addendum artifacts are certify-tracked; the audit bundle includes current RESULTS and CLOSING which reference any addendum execution.
