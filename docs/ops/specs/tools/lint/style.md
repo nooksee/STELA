@@ -14,7 +14,7 @@
 6a. Check that the Confirm Merge (Add a Comment) field value ends with `?`; emit failure with filename when it does not.
 6b. Check that every non-blank line in the Confirm Merge (Extended Description) field value matches a path pattern (two or more consecutive non-path tokens on a single line is a prose failure); emit failure with filename and line number for each detected prose line.
 6c. Check that the PR Description field value contains at least one markdown construct — a heading beginning with `##`, a list item beginning with `-`, `*`, or a digit followed by `.`, or a bold span (`**`); emit failure with filename when none is found.
-7. Check that `ops/src/stances/analyst.md.tpl` contains the exact analyst contract lines that preserve conversational planning, weak-topic handling, unsupported-detail restraint, and final-plan emission boundaries.
+7. Check that `ops/src/stances/planning.md.tpl` contains the exact planning contract lines that preserve conversational planning, weak-topic handling, unsupported-detail restraint, and final-plan emission boundaries.
 8. Aggregate failures and exit non-zero when any check reports an error.
 
 ## Anecdotal Anchor
@@ -153,70 +153,70 @@ Assertion: file must not include `Stela OPEN PROMPT`
 Failure message: `ops/bin/open still contains legacy standalone OPEN title line`
 Invariant: legacy header regression is blocked.
 
-## Analyst Mode Contract Guardrails
+## Planning Mode Contract Guardrails
 
-### Guard 21: Analyst no-unsupported-operating-detail line
-Target file: `ops/src/stances/analyst.md.tpl`
-Assertion: file must include `For machine-ingest analyst mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.`
-Failure message: `analyst.md.tpl missing analyst no-unsupported-operating-detail line`
-Invariant: broad analyst topics do not silently expand into unsupported repo-operating detail.
+### Guard 21: Planning no-unsupported-operating-detail line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest planning mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.`
+Failure message: `planning.md.tpl missing planning no-unsupported-operating-detail line`
+Invariant: broad planning topics do not silently expand into unsupported repo-operating detail.
 
-### Guard 22: Analyst discussion-mode default line
-Target file: `ops/src/stances/analyst.md.tpl`
-Assertion: file must include `* Default analyst behavior is discussion mode.`
-Failure message: `analyst.md.tpl missing analyst discussion-mode default line`
-Invariant: analyst is not silently reduced to plan-only serialization.
+### Guard 22: Planning discussion-mode default line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* Default planning behavior is conversational planning.`
+Failure message: `planning.md.tpl missing planning discussion-mode default line`
+Invariant: planning is not silently reduced to plan-only serialization.
 
-### Guard 23: Analyst explicit plan-output trigger line
-Target file: `ops/src/stances/analyst.md.tpl`
-Assertion: file must include `* Explicit plan-output mode is allowed only when the attached topic explicitly asks for a plan, DP plan, architect handoff, or plan-only output.`
-Failure message: `analyst.md.tpl missing analyst explicit plan-output trigger line`
-Invariant: plan-only mode is explicit and does not erase default analyst discussion behavior.
+### Guard 23: Planning final-plan trigger line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* When the topic and attached evidence settle intent enough for direct draft handoff, emit the final \`PLAN.md\` draft in one fenced markdown block.`
+Failure message: `planning.md.tpl missing planning final-plan trigger line`
+Invariant: plan-only mode remains explicit and does not erase default planning discussion behavior.
 
-### Guard 24: Analyst broad-topic genericity line
-Target file: `ops/src/stances/analyst.md.tpl`
-Assertion: file must include `For machine-ingest analyst mode: when the topic is broad, keep repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.`
-Failure message: `analyst.md.tpl missing analyst broad-topic-genericity line`
-Invariant: topic-driven analyst output stays high-level when attached evidence is thin.
+### Guard 24: Planning broad-topic genericity line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest planning mode: when the topic is broad, keep repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.`
+Failure message: `planning.md.tpl missing planning broad-topic-genericity line`
+Invariant: topic-driven planning output stays high-level when attached evidence is thin.
 
-### Guard 25: Analyst discussion-mode first-line marker
-Target file: `ops/src/stances/analyst.md.tpl`
+### Guard 25: Planning discussion-mode first-line marker
+Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For conversational planning mode: first non-empty line inside the fenced body must start with \`1. Analysis and Discussion\`.`
-Failure message: `analyst.md.tpl missing analyst discussion-mode first-line marker line`
-Invariant: conversational analyst output stays in planning mode instead of collapsing to final-plan output too early.
+Failure message: `planning.md.tpl missing planning discussion-mode first-line marker line`
+Invariant: conversational planning output stays in planning mode instead of collapsing to final-plan output too early.
 
-### Guard 26: Analyst conversation tail line
-Target file: `ops/src/stances/analyst.md.tpl`
-Assertion: file must include `For conversational planning mode: end with \`Questions / Conversation:\` and short operator-facing prompts when clarification, tradeoff choice, or confirmation would help.`
-Failure message: `analyst.md.tpl missing analyst questions line`
-Invariant: analyst mode invites bounded operator conversation when it helps move the decision forward.
+### Guard 26: Planning question-shape line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For conversational planning mode: when asking questions, use a \`2. Decision Questions\` section; allow at most 3 questions; each question must present exactly 3 meaningful options with one marked \`(Recommended)\`; end with \`Questions / Conversation:\` and a concise operator response format such as \`Q1:A, Q2:C\` or \`Use recommended options\`.`
+Failure message: `planning.md.tpl missing planning questions line`
+Invariant: planning mode invites bounded operator conversation when it helps move the decision forward.
 
-### Guard 27: Analyst weak-topic handling line
-Target file: `ops/src/stances/analyst.md.tpl`
+### Guard 27: Planning weak-topic handling line
+Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For conversational planning mode: if topic text is present but weak or ambiguous, interpret conservatively, state assumptions, and ask concise follow-up questions instead of forcing a final plan.`
-Failure message: `analyst.md.tpl missing analyst weak-topic handling line`
+Failure message: `planning.md.tpl missing planning weak-topic handling line`
 Invariant: weak topics trigger bounded clarification rather than dead serialization.
 
-### Guard 28: Analyst non-actionable-topic line
-Target file: `ops/src/stances/analyst.md.tpl`
+### Guard 28: Planning non-actionable-topic line
+Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For conversational planning mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.`
-Failure message: `analyst.md.tpl missing analyst non-actionable-topic line`
+Failure message: `planning.md.tpl missing planning non-actionable-topic line`
 Invariant: nonsense topics stop truthfully instead of producing fabricated plans.
 
-### Guard 29: Analyst plan-output-only line
-Target file: `ops/src/stances/analyst.md.tpl`
+### Guard 29: Planning plan-output-only line
+Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For final plan mode: output only the complete PLAN markdown code block.`
-Failure message: `analyst.md.tpl missing analyst plan-output-only line`
+Failure message: `planning.md.tpl missing planning plan-output-only line`
 Invariant: architect-ready plan serialization remains available once intent is settled.
 
-### Guard 30: Analyst final-plan shape line
-Target file: `ops/src/stances/analyst.md.tpl`
+### Guard 30: Planning final-plan shape line
+Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For final plan mode: use the canonical plan template shape with \`Summary\`, \`Key Changes\`, \`Test Plan\`, and \`Assumptions\`.`
-Failure message: `analyst.md.tpl missing analyst final-plan shape line`
+Failure message: `planning.md.tpl missing planning final-plan shape line`
 Invariant: final plan mode stays on one canonical planning surface shape.
 
-### Guard 31: Analyst final-plan emission line
-Target file: `ops/src/stances/analyst.md.tpl`
-Assertion: file must include `For final plan mode: emit the final plan only when the topic and attached evidence settle intent enough for direct architect drafting.`
-Failure message: `analyst.md.tpl missing analyst final-plan emit line`
+### Guard 31: Planning final-plan emission line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For final plan mode: emit the final plan only when the topic and attached evidence settle intent enough for direct draft drafting.`
+Failure message: `planning.md.tpl missing planning final-plan emit line`
 Invariant: final plan output happens only after the ambiguity boundary is crossed.

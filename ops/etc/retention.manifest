@@ -40,7 +40,7 @@ class=telemetry-leaves|pattern=logs/*.md|tier=historical|weight=1
 class=telemetry-heads|pattern=logs/*.telemetry.head|tier=operational|weight=1
 class=dump-payloads|pattern=storage/dumps/dump-*.txt|tier=historical|weight=3
 class=dump-manifests|pattern=storage/dumps/dump-*.manifest.txt|tier=historical|weight=2
-class=analyst-bundles|pattern=storage/handoff/ANALYST-*|tier=historical|weight=2
+class=planning-bundles|pattern=storage/handoff/PLANNING-*|tier=historical|weight=2
 class=architect-bundles|pattern=storage/handoff/ARCHITECT-*|tier=historical|weight=2
 class=audit-bundles|pattern=storage/handoff/AUDIT-*|tier=historical|weight=2
 class=audit-reruns|pattern=storage/handoff/AUDIT-R*|tier=historical|weight=2

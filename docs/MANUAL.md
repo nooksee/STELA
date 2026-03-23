@@ -11,7 +11,7 @@ The canonical operator shipping chain is:
 Each stage has one obvious active surface. Secondary lanes (foreman/addendum, conform/conformist, execution-decision) are bounded sidepaths, not replacements for RESULTS, CLOSING, or audit truth.
 
 Active surfaces by stage:
-- **Topic input:** `storage/handoff/TOPIC.md` (latest-wins; operator writes before each analyst run)
+- **Topic input:** `storage/handoff/TOPIC.md` (latest-wins; operator writes before each planning run)
 - **Plan output:** `storage/handoff/PLAN.md` (latest-wins; analyst model writes this)
 - **Active DP draft:** `storage/dp/intake/DP.md` (latest-wins operator surface; architect output is saved here)
 - **Packet/process identity:** `DP-OPS-XXXX` (retained in the packet body, TASK/addendum lineage path, RESULTS content, CLOSING content, audit transport, and telemetry)
@@ -524,16 +524,16 @@ ops/lib/scripts/task.sh promote archives/definitions/task-candidate-YYYY-MM-DD-<
 Canonical operator flow for an analyst session:
 
 1. Write the topic to `storage/handoff/TOPIC.md`.
-2. Generate the analyst bundle:
+2. Generate the planning bundle:
 ~~~bash
-./ops/bin/bundle --profile=analyst --out=auto
+./ops/bin/bundle --profile=planning --out=auto
 ~~~
-3. Deliver the bundle artifact (`ANALYST-*.txt` or `ANALYST-*.tar`) to the analyst model.
+3. Deliver the bundle artifact (`PLANNING-*.txt` or `PLANNING-*.tar`) to the analyst model.
 4. Read the model output from `storage/handoff/PLAN.md`.
 
 Surface contract:
 - `storage/handoff/TOPIC.md`: latest-wins input; operator replaces content before each run.
-- `storage/handoff/PLAN.md`: latest-wins model output; overwritten after each analyst run.
+- `storage/handoff/PLAN.md`: latest-wins model output; overwritten after each planning run.
 - `var/tmp/PLAN.md.prev`: disposable safety backup of the prior `PLAN.md` written by bundle before each run. Not a certify input; prune may remove it.
 
 ### Architect Workflow
@@ -590,7 +590,7 @@ Attachment contract defaults and profile routing semantics are governed by `ops/
 
 | Profile | Bundle Command | Required Attachments | Notes |
 | --- | --- | --- | --- |
-| `analyst` | `./ops/bin/bundle --profile=analyst --out=auto` | `ANALYST-*.txt`, `ANALYST-*.manifest.json`, `storage/handoff/TOPIC.md` | Analyst reads `TOPIC.md` and emits `PLAN.md`; attach `ANALYST-*.tar` when the model session reliably ingests tar artifacts. |
+| `planning` | `./ops/bin/bundle --profile=planning --out=auto` | `PLANNING-*.txt`, `PLANNING-*.manifest.json`, `storage/handoff/TOPIC.md` | Analyst reads `TOPIC.md` and emits `PLAN.md`; attach `PLANNING-*.tar` when the model session reliably ingests tar artifacts. |
 | `architect` | `./ops/bin/bundle --profile=architect --out=auto` | `ARCHITECT-*.txt`, `ARCHITECT-*.manifest.json`, `storage/handoff/PLAN.md` | PLAN-driven drafting reads the final plan body directly. |
 | `audit` | `./ops/bin/bundle --profile=audit --out=auto` | initial `AUDIT-*.txt`, rerun `AUDIT-R*.txt`, matching manifests, DP RESULTS receipt | Audit stance is PASS/FAIL verdict only. Use `--rerun` for resubmissions; prior local `AUDIT-*` artifacts do not trigger rerun identity. |
 | `foreman` | `./ops/bin/bundle --profile=foreman --intent="ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>" --out=auto` | `FOREMAN-*.txt`, `FOREMAN-*.manifest.json` | Addendum authorization intake only; not used for PASS/FAIL verdicts. |
@@ -607,7 +607,7 @@ Attachment contract defaults and profile routing semantics are governed by `ops/
 Bundle supports optional ATS triplet validation:
 
 ~~~bash
-./ops/bin/bundle --profile=analyst --agent-id=R-AGENT-01 --skill-id=S-LEARN-08 --task-id=B-TASK-08 --out=auto
+./ops/bin/bundle --profile=planning --agent-id=R-AGENT-01 --skill-id=S-LEARN-08 --task-id=B-TASK-08 --out=auto
 ~~~
 
 ATS rules:

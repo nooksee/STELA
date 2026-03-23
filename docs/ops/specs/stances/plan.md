@@ -2,7 +2,7 @@
 # Surface Specification: PLAN
 
 ## Constitutional Anchor
-`storage/handoff/PLAN.md` is the operator-facing planning surface produced by the analyst lane and consumed by the architect lane.
+`storage/handoff/PLAN.md` is the operator-facing planning surface produced by the planning lane and consumed by the architect lane.
 It remains planning-only; execution control still lives in the DP.
 
 ## Operator Contract
@@ -16,9 +16,9 @@ It remains planning-only; execution control still lives in the DP.
   - `## Assumptions`
 
 ## Mechanics and Sequencing
-1. Analyst works from `storage/handoff/TOPIC.md`.
-2. While intent is still open, analyst stays conversational in one fenced markdown block.
-3. Once intent is settled, analyst emits the final `PLAN.md` using the canonical plan headings.
+1. Planning works from `storage/handoff/TOPIC.md`.
+2. While intent is still open, planning stays conversational in one fenced markdown block.
+3. Once intent is settled, planning emits the final `PLAN.md` using the canonical plan headings.
 4. Architect consumes that final plan directly and drafts the DP.
 
 ## Failure States and Drift Triggers

@@ -3,17 +3,17 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/bin/bundle` produces delivery packets for analyst, architect, audit, project, conform, and foreman roles. It is a transport contract, not a free-form export path: profile routing, explicit disposable inputs, dump selection, and emitted artifact identity are deterministic.
+`ops/bin/bundle` produces delivery packets for planning, architect, audit, project, conform, and foreman profiles. It is a transport contract, not a free-form export path: profile routing, explicit disposable inputs, dump selection, and emitted artifact identity are deterministic.
 
 ## Shipping Spine Position
 Bundle sits at two points in the shipping spine:
-- **Analyst/Architect input:** `--profile=analyst` or `--profile=architect` delivers the context package that produces `PLAN.md` (analyst) or the active DP draft at `storage/dp/intake/DP.md` (architect).
+- **Planning/Architect input:** `--profile=planning` or `--profile=architect` delivers the context package that produces `PLAN.md` (planning) or the active DP draft at `storage/dp/intake/DP.md` (architect).
 - **Audit delivery:** `--profile=audit` packages certify-generated RESULTS and CLOSING for auditor review. This is the canonical audit intake mechanism and is **separate** from operator session refresh (`ops/bin/open`, `ops/bin/dump` for CDD). Do not conflate bundle audit with standalone `ops/bin/dump --scope=core` closeout steps.
 - **Secondary lanes:** `--profile=foreman` is an intervention intake path (not a PASS/FAIL verdict workflow). `--profile=conform` is a structure normalization lane. Neither replaces RESULTS or audit truth.
 
 ## Active Surface Names
-- Analyst input: `storage/handoff/TOPIC.md` (latest-wins)
-- Analyst output: `storage/handoff/PLAN.md` (latest-wins)
+- Planning input: `storage/handoff/TOPIC.md` (latest-wins)
+- Planning output: `storage/handoff/PLAN.md` (latest-wins)
 - Architect output (active DP draft): `storage/dp/intake/DP.md` (printed in bundle `[REQUEST]` as `dp_draft_path`; `packet_id` retains `DP-OPS-XXXX`)
 - Audit initial bundle: `storage/handoff/AUDIT-*.txt`
 - Audit rerun bundle: `storage/handoff/AUDIT-R<index>-*.txt`
@@ -28,13 +28,13 @@ Bundle sits at two points in the shipping spine:
 7. For audit reruns, emit fresh transport identity and submission lineage.
 
 ## Dump Scope Mapping
-1. `analyst|architect|conform` -> `ops/bin/dump --scope=full`
+1. `planning|architect|conform` -> `ops/bin/dump --scope=full`
 2. `audit` -> `ops/bin/dump --scope=core`
 3. `foreman` -> `ops/bin/dump --scope=core`
 4. `project` -> `ops/bin/dump --scope=project --project=<name>`
 
 Profile-specific explicit includes:
-- analyst: `storage/handoff/TOPIC.md`
+- planning: `storage/handoff/TOPIC.md`
 - architect: `storage/handoff/PLAN.md` when present
 - audit: current `storage/handoff/RESULTS.md`, `storage/handoff/CLOSING.md`, authoritative current packet source file, and existing exact-file entries from the active packet source `3.2.2 DP-Scoped Load Order`
 
@@ -42,7 +42,7 @@ Profile-specific explicit includes:
 1. Bundle passes the resolved profile name into dump as `--persistence-profile=<profile>`.
 2. `ops/bin/dump` resolves tiered archive serialization from `ops/etc/persistence.manifest`.
 3. Scope and persistence depth stay separate:
-   - analyst and architect remain `--scope=full`
+   - planning and architect remain `--scope=full`
    - audit and foreman remain `--scope=core`
    - cold archive compaction happens in dump serialization, not traversal selection
 
@@ -52,15 +52,15 @@ Compatibility alias: `--history-profile=<profile>` remains accepted by dump, but
 Disposable inputs are exact file paths only. No directory sweeps, globs, or generic `storage/` capture are allowed.
 
 Current live set:
-- analyst: `storage/handoff/TOPIC.md`
+- planning: `storage/handoff/TOPIC.md`
 - architect: `storage/handoff/PLAN.md`
 - audit: current `RESULTS`, current `CLOSING`, and active packet source file
 
-## Analyst Profile Surfaces
+## Planning Profile Surfaces
 - `storage/handoff/TOPIC.md`: required input surface; bundle fails closed if absent.
-- `ANALYST-*.txt`: emitted bundle artifact containing the dump payload and stance contract.
-- `storage/handoff/PLAN.md`: model output surface, latest-wins; the model writes this file after each analyst run.
-- `var/tmp/PLAN.md.prev`: disposable safety backup written by bundle before each analyst run if `storage/handoff/PLAN.md` is present. Not a certify input; prune may remove it.
+- `PLANNING-*.txt`: emitted bundle artifact containing the dump payload and stance contract.
+- `storage/handoff/PLAN.md`: model output surface, latest-wins; the model writes this file after each planning run.
+- `var/tmp/PLAN.md.prev`: disposable safety backup written by bundle before each planning run if `storage/handoff/PLAN.md` is present. Not a certify input; prune may remove it.
 
 ## Architect Profile Surfaces
 - `storage/handoff/PLAN.md`: required plan input surface for architect intake.

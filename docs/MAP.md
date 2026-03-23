@@ -36,8 +36,8 @@ Use `docs/MANUAL.md` for command procedure details and `docs/CCD.md` for density
 
 `TOPIC.md` → `PLAN.md` → `storage/dp/intake/DP.md` → execution → `RESULTS` + `CLOSING` → audit bundle → merge
 
-* **Topic:** `storage/handoff/TOPIC.md` — latest-wins analyst input.
-* **Plan:** `storage/handoff/PLAN.md` — latest-wins analyst output, architect input.
+* **Topic:** `storage/handoff/TOPIC.md` — latest-wins planning input.
+* **Plan:** `storage/handoff/PLAN.md` — latest-wins planning output, architect input.
 * **Active DP draft:** `storage/dp/intake/DP.md` — latest-wins operator surface.
 * **Packet/process identity:** `DP-OPS-XXXX` — retained in the TASK leaf chain for base packets, addendum lineage leaves for addenda, certify receipts, and telemetry. Architect dispatch allocates the next packet id from the current certified TASK packet id plus one.
 * **Certify:** `ops/bin/certify` — generates `RESULTS`, emits SoP/PoW/TASK archive leaves, requires `STELA_TRACE_ID` from latest OPEN artifact.

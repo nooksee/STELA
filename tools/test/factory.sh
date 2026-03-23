@@ -89,7 +89,7 @@ queue_cleanup_path() {
   fi
 }
 
-ensure_analyst_topic_fixture() {
+ensure_planning_topic_fixture() {
   local topic_rel="storage/handoff/TOPIC.md"
   local topic_abs="${REPO_ROOT}/${topic_rel}"
 
@@ -119,7 +119,7 @@ ensure_plan_absent_fixture() {
 }
 
 next_bundle_output_path() {
-  printf '%s/ANALYST-factory-smoke-%s.txt' "$SMOKE_HANDOFF_ROOT" "$$"
+  printf '%s/PLANNING-factory-smoke-%s.txt' "$SMOKE_HANDOFF_ROOT" "$$"
 }
 
 parse_bundle_output_path() {
@@ -171,7 +171,7 @@ extract_pointer_path() {
   ' "${REPO_ROOT}/${manifest_rel}" | head -n 1
 }
 
-ensure_analyst_topic_fixture
+ensure_planning_topic_fixture
 ensure_plan_absent_fixture
 
 run_capture ./ops/bin/bundle --profile=auto --agent-id=R-AGENT-09 --skill-id=S-LEARN-09 --task-id=B-TASK-09 "--out=$(next_bundle_output_path)"
@@ -219,8 +219,8 @@ assert_file_exists "$manifest_rel"
 assert_file_exists "$package_rel"
 
 resolved_profile="$(extract_manifest_scalar "$manifest_rel" "resolved_profile")"
-if [[ "$resolved_profile" != "analyst" ]]; then
-  fail "factory ATS smoke expected auto route to analyst, got: ${resolved_profile}"
+if [[ "$resolved_profile" != "planning" ]]; then
+  fail "factory ATS smoke expected auto route to planning, got: ${resolved_profile}"
 fi
 
 payload_rel="$(extract_manifest_scalar "$manifest_rel" "payload_path")"
