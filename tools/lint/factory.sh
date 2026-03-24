@@ -541,8 +541,8 @@ if compgen -G "${FACTORY_DIR}/agents/*.md" > /dev/null; then
     esac
 
     case "$stance_id" in
-      foreman|auditor|conformist) ;;
-      *) fail "${agent_name} stance_id '${stance_id}' is not in allowed set {foreman,auditor,conformist}" ;;
+      foreman|audit|conformist) ;;
+      *) fail "${agent_name} stance_id '${stance_id}' is not in allowed set {foreman,audit,conformist}" ;;
     esac
   done
 fi

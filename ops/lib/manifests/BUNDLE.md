@@ -21,7 +21,7 @@ handoff_omit_profiles=audit,foreman
 
 stance_template_planning=stance-planning
 stance_template_draft=stance-draft
-stance_template_audit=stance-auditor
+stance_template_audit=stance-audit
 stance_template_project=stance-planning
 stance_template_conform=stance-conformist
 stance_template_foreman=stance-foreman
@@ -84,6 +84,12 @@ dump_scope_foreman=core
   - audit: current `storage/handoff/RESULTS.md` and `storage/handoff/CLOSING.md`
 - Future disposable additions must be exact file paths added deliberately in runtime wiring, specs, and smoke tests.
 
+## OPEN Anchor Contract
+- OPEN remains the sole spine-grade trace anchor for certify lineage.
+- Bundle consumes a current real `OPEN-*.txt` artifact for the active branch/head.
+- If the latest OPEN is missing or stale for the current branch/head, bundle refreshes one through `ops/bin/open` before continuing.
+- Bundle text and manifest may mirror OPEN fields such as `artifact_path`, `branch`, `head_short`, `trace_id`, and `intent`, but those mirrors are descriptive only and do not replace the OPEN artifact.
+
 ## Planning Transport Contract
 - Planning requires `storage/handoff/TOPIC.md` as input and fails closed when it is absent.
 - Planning emits request metadata `topic_source=storage/handoff/TOPIC.md` and `output_surface=storage/handoff/PLAN.md`.
@@ -109,7 +115,7 @@ dump_scope_foreman=core
 - Audit invokes the core dump with explicit inclusion of those two files, the authoritative current packet source file, and existing exact-file entries from the active packet's `3.2.2 DP-Scoped Load Order` so new packet-substantive canon files are inspectable even when they are not yet tracked.
 - Audit package members include the resolved current `RESULTS` and `CLOSING` files.
 - Audit reruns must emit fresh artifact identity under `audit_resubmission_prefix` and record submission lineage in the emitted manifest.
-- Audit rerun identity is gated on explicit `--rerun` intent. Prior local `AUDIT-*` artifacts do not force rerun naming without `--rerun`.
+- Audit rerun identity is gated on explicit `--rerun` intent. Prior local `AUDIT-*` artifacts do not force rerun naming without `--rerun`. Explicit `--rerun` still emits rerun identity when no local predecessor exists; in that case `supersedes_bundle_path` remains null and the first rerun index is `1`.
 
 ## Smoke Transport Contract
 - Quarantined smoke outputs use `smoke_handoff_root` and `smoke_dump_root`.
@@ -120,7 +126,7 @@ The canonical operator shipping chain uses bundle at two points:
 - `--profile=planning`: deliver context + TOPIC.md to planning model; planning writes PLAN.md
 - `--profile=draft`: deliver context + PLAN.md to Architect model; Architect emits fenced DP draft block; operator saves to `storage/dp/intake/DP.md` while packet identity remains `DP-OPS-XXXX`
 - Worker executes DP; certify generates RESULTS + emits surface leaves
-- `--profile=audit`: package RESULTS + CLOSING for auditor review; audit bundle dump is the canonical audit evidence payload
+- `--profile=audit`: package RESULTS + CLOSING for audit review; audit bundle dump is the canonical audit evidence payload
 - Operator commits on work branch, opens PR per CLOSING sidecar, merges to main
 
 Secondary lanes are bounded and do not replace RESULTS or audit truth:

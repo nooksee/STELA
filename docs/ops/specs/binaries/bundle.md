@@ -8,7 +8,7 @@
 ## Shipping Spine Position
 Bundle sits at two points in the shipping spine:
 - **Planning/Draft input:** `--profile=planning` or `--profile=draft` delivers the context package that produces `PLAN.md` (planning) or the active DP draft at `storage/dp/intake/DP.md` (draft).
-- **Audit delivery:** `--profile=audit` packages certify-generated RESULTS and CLOSING for auditor review. This is the canonical audit intake mechanism and is **separate** from operator session refresh (`ops/bin/open`, `ops/bin/dump` for CDD). Do not conflate bundle audit with standalone `ops/bin/dump --scope=core` closeout steps.
+- **Audit delivery:** `--profile=audit` packages certify-generated RESULTS and CLOSING for audit review. This is the canonical audit intake mechanism and is **separate** from operator session refresh (`ops/bin/open`, `ops/bin/dump` for CDD). Do not conflate bundle audit with standalone `ops/bin/dump --scope=core` closeout steps.
 - **Secondary lanes:** `--profile=foreman` is an intervention intake path (not a PASS/FAIL verdict workflow). `--profile=conform` is a structure normalization lane. Neither replaces RESULTS or audit truth.
 
 ## Active Surface Names
@@ -21,11 +21,12 @@ Bundle sits at two points in the shipping spine:
 ## Mechanics and Sequencing
 1. Validate arguments and resolve the requested profile or `auto` route.
 2. Load policy from `ops/lib/manifests/BUNDLE.md`.
-3. Resolve stance template, artifact prefix, dump scope, and dump persistence profile from policy.
-4. Resolve profile-scoped exact-file disposable inputs.
-5. Invoke `ops/bin/dump` with explicit output path and explicit persistence profile.
-6. Render bundle text, emit manifest, and emit package tar.
-7. For audit reruns, emit fresh transport identity and submission lineage.
+3. Resolve a real current OPEN anchor for the active branch/head. Bundle consumes the latest matching `OPEN-*.txt` artifact and refreshes it through `ops/bin/open` when absent or stale. Bundle never invents standalone pseudo-OPEN trace ids.
+4. Resolve stance template, artifact prefix, dump scope, and dump persistence profile from policy.
+5. Resolve profile-scoped exact-file disposable inputs.
+6. Invoke `ops/bin/dump` with explicit output path and explicit persistence profile.
+7. Render bundle text, emit manifest, and emit package tar. The emitted `[OPEN]` block and manifest `open` object carry a pointer plus copied metadata from the real OPEN artifact; they are not an anchor substitute.
+8. For audit reruns, emit fresh transport identity and submission lineage.
 
 ## Dump Scope Mapping
 1. `planning|draft|conform` -> `ops/bin/dump --scope=full`
@@ -56,6 +57,12 @@ Current live set:
 - draft: `storage/handoff/PLAN.md`
 - audit: current `RESULTS`, current `CLOSING`, and active packet source file
 
+## OPEN Anchor Contract
+- OPEN remains the sole spine-grade trace anchor for certify lineage.
+- Bundle consumes a current real `OPEN-*.txt` artifact for the active branch/head.
+- If the latest OPEN is missing or stale for the current branch/head, bundle refreshes one through `ops/bin/open` before continuing.
+- Bundle text/manifest may mirror OPEN fields (`artifact_path`, `branch`, `head_short`, `trace_id`, `intent`) but those mirrors are descriptive only; they do not replace the OPEN artifact.
+
 ## Planning Profile Surfaces
 - `storage/handoff/TOPIC.md`: required input surface; bundle fails closed if absent.
 - `PLANNING-*.txt`: emitted bundle artifact containing the dump payload and stance contract.
@@ -72,6 +79,7 @@ Current live set:
 - initial audit delivery: `AUDIT-*` (default; no `--rerun` flag required)
 - rerun delivery: `AUDIT-R<index>-*` (requires explicit `--rerun` flag)
 - prior local `AUDIT-*` artifacts do not promote delivery to rerun identity; explicit `--rerun` is the sole trigger
+- explicit `--rerun` still emits rerun identity even when no local prior audit bundle is present; in that case `submission.supersedes_bundle_path` remains null and the first rerun index is `1`
 - manifest lineage fields:
   - `submission.kind`
   - `submission.resubmission_index`

@@ -1,6 +1,6 @@
 ---
 template_type: stance
-template_id: auditor
+template_id: audit
 template_version: 1
 ff_target: operator-technical
 ff_band: "25-40"

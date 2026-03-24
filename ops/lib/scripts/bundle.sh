@@ -74,12 +74,27 @@ Usage: ops/bin/bundle [--profile=auto|planning|draft|audit|project|conform|hygie
 USAGE
 }
 
-bundle_generate_trace_id() {
-  local stamp
-  local suffix
-  stamp="$(date -u '+%Y%m%dT%H%M%SZ')"
-  suffix="$(printf '%04x%04x' "$RANDOM" "$RANDOM")"
-  printf 'stela-%s-%s' "$stamp" "$suffix"
+select_latest_path_by_mtime() {
+  local latest_path=""
+  local latest_mtime=-1
+  local path=""
+  local mtime=0
+
+  for path in "$@"; do
+    [[ -f "$path" ]] || continue
+    mtime="$(stat -c %Y "$path")"
+    if (( mtime > latest_mtime )); then
+      latest_mtime="$mtime"
+      latest_path="$path"
+      continue
+    fi
+    if (( mtime == latest_mtime )) && [[ "$path" > "$latest_path" ]]; then
+      latest_path="$path"
+    fi
+  done
+
+  [[ -n "$latest_path" ]] || return 1
+  printf '%s' "$latest_path"
 }
 
 bundle_to_rel_path() {
@@ -117,6 +132,84 @@ bundle_bool() {
   else
     printf 'false'
   fi
+}
+
+bundle_select_latest_open_artifact() {
+  local -a opens=()
+  mapfile -t opens < <(
+    find "$BUNDLE_HANDOFF_BASE" -maxdepth 1 -type f | awk '
+      {
+        filename=$0
+        sub(/^.*\//, "", filename)
+        if (filename ~ /^OPEN-.*\.txt$/ && filename !~ /^OPEN-PORCELAIN-/) {
+          print $0
+        }
+      }
+    '
+  )
+  if (( ${#opens[@]} == 0 )); then
+    return 1
+  fi
+  select_latest_path_by_mtime "${opens[@]}"
+}
+
+bundle_extract_open_field() {
+  local open_path="$1"
+  local label="$2"
+  [[ -f "$open_path" ]] || return 1
+  local value
+  value="$(
+    awk -v label="$label" '
+      index($0, "- " label ":") == 1 {
+        line=$0
+        sub(/^- /, "", line)
+        sub(label ":[[:space:]]*", "", line)
+        print line
+        exit
+      }
+    ' "$open_path"
+  )"
+  value="$(trim "$value")"
+  printf '%s' "$value"
+}
+
+bundle_extract_trace_id_from_open() {
+  local open_path="$1"
+  local trace_id
+  trace_id="$(bundle_extract_open_field "$open_path" "STELA_TRACE_ID" || true)"
+  [[ -n "$trace_id" ]] || return 1
+  printf '%s' "$trace_id"
+}
+
+bundle_open_matches_current_head() {
+  local open_path="$1"
+  local branch="$2"
+  local head_short="$3"
+  local open_branch
+  local open_head_short
+  open_branch="$(bundle_extract_open_field "$open_path" "Active branch" || true)"
+  open_head_short="$(bundle_extract_open_field "$open_path" "HEAD short hash" || true)"
+  [[ -n "$open_branch" && -n "$open_head_short" ]] || return 1
+  [[ "$open_branch" == "$branch" && "$open_head_short" == "$head_short" ]]
+}
+
+bundle_materialize_open_artifact() {
+  local open_output=""
+  local open_rel=""
+  local open_abs=""
+
+  open_output="$(
+    OPEN_HANDOFF_BASE="$BUNDLE_HANDOFF_BASE" \
+      "${REPO_ROOT}/ops/bin/open" --out=auto 2>&1
+  )" || die "bundle failed to refresh OPEN anchor via ops/bin/open: ${open_output}"
+
+  open_rel="$(printf '%s\n' "$open_output" | sed -n 's/^OPEN saved: //p' | tail -n 1)"
+  open_rel="$(bundle_to_rel_path "$(trim "$open_rel")")"
+  [[ -n "$open_rel" ]] || die "bundle failed to parse OPEN saved path from ops/bin/open output"
+
+  open_abs="${REPO_ROOT}/${open_rel}"
+  [[ -f "$open_abs" ]] || die "bundle OPEN refresh missing emitted artifact: ${open_rel}"
+  printf '%s' "$open_abs"
 }
 
 bundle_policy_scalar() {
@@ -577,11 +670,11 @@ bundle_resolve_audit_submission_path() {
   shopt -u nullglob
 
   if (( found_existing == 0 )); then
-    BUNDLE_SUBMISSION_KIND="$BUNDLE_AUDIT_SUBMISSION_KIND_INITIAL"
-    BUNDLE_RESUBMISSION_INDEX="0"
+    BUNDLE_SUBMISSION_KIND="$BUNDLE_AUDIT_SUBMISSION_KIND_RERUN"
+    BUNDLE_RESUBMISSION_INDEX="1"
     BUNDLE_SUPERSEDES_BUNDLE_REL=""
-    BUNDLE_REFRESH_REASON="$BUNDLE_AUDIT_REFRESH_REASON_INITIAL"
-    BUNDLE_AUDIT_RESOLVED_OUTPUT_REL="$(printf '%s/%s-%s%s' "$requested_dir" "$audit_prefix" "$requested_suffix" "$requested_ext")"
+    BUNDLE_REFRESH_REASON="$BUNDLE_AUDIT_REFRESH_REASON_RERUN"
+    BUNDLE_AUDIT_RESOLVED_OUTPUT_REL="$(printf '%s/%s1-%s%s' "$requested_dir" "$BUNDLE_AUDIT_RESUBMISSION_PREFIX" "$requested_suffix" "$requested_ext")"
     return 0
   fi
 
@@ -1115,7 +1208,33 @@ bundle_run() {
   local branch_safe="${branch//\//-}"
   local generated_at
   generated_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  local trace_id="${STELA_TRACE_ID:-$(bundle_generate_trace_id)}"
+  mkdir -p "$BUNDLE_HANDOFF_BASE"
+  local open_source="reused"
+  local open_abs_path=""
+  local open_rel_path=""
+  local open_branch=""
+  local open_head_short=""
+  local trace_id=""
+  local open_artifact_intent=""
+
+  open_abs_path="$(bundle_select_latest_open_artifact || true)"
+  if [[ -n "$open_abs_path" ]] && ! bundle_open_matches_current_head "$open_abs_path" "$branch" "$head_short"; then
+    open_abs_path=""
+  fi
+  if [[ -z "$open_abs_path" ]]; then
+    open_abs_path="$(bundle_materialize_open_artifact)"
+    open_source="refreshed"
+  fi
+
+  open_rel_path="$(bundle_to_rel_path "$open_abs_path")"
+  open_branch="$(bundle_extract_open_field "$open_abs_path" "Active branch" || true)"
+  open_head_short="$(bundle_extract_open_field "$open_abs_path" "HEAD short hash" || true)"
+  trace_id="$(bundle_extract_trace_id_from_open "$open_abs_path" || true)"
+  open_artifact_intent="$(bundle_extract_open_field "$open_abs_path" "Intent for today" || true)"
+
+  [[ -n "$trace_id" ]] || die "bundle OPEN anchor missing STELA_TRACE_ID: ${open_rel_path}"
+  [[ "$open_branch" == "$branch" ]] || die "bundle OPEN anchor branch mismatch: expected ${branch}, found ${open_branch:-<blank>} in ${open_rel_path}"
+  [[ "$open_head_short" == "$head_short" ]] || die "bundle OPEN anchor HEAD mismatch: expected ${head_short}, found ${open_head_short:-<blank>} in ${open_rel_path}"
 
   local topic_rel="storage/handoff/TOPIC.md"
   local plan_rel="storage/handoff/PLAN.md"
@@ -1236,15 +1355,15 @@ bundle_run() {
   mkdir -p "$(dirname "$out_abs")"
   mkdir -p "${REPO_ROOT}/storage/dumps"
 
-  local open_intent=""
+  local bundle_intent=""
   if [[ -n "$intent_token" ]]; then
-    open_intent="$intent_token"
+    bundle_intent="$intent_token"
   elif [[ "$requested_profile" == "auto" ]]; then
-    open_intent="Bundle profile (auto -> ${resolved_profile})"
+    bundle_intent="Bundle profile (auto -> ${resolved_profile})"
   elif [[ "$requested_profile_input" == "draft" ]]; then
-    open_intent="Draft profile"
+    bundle_intent="Draft profile"
   else
-    open_intent="Bundle profile: ${resolved_profile}"
+    bundle_intent="Bundle profile: ${resolved_profile}"
   fi
 
   local addendum_required=0
@@ -1252,7 +1371,7 @@ bundle_run() {
   local foreman_base_dp_in_dump=0
   if [[ "$resolved_profile" == "$BUNDLE_FOREMAN_PROFILE" ]]; then
     addendum_required=1
-    if ! bundle_parse_foreman_intent "$open_intent"; then
+    if ! bundle_parse_foreman_intent "$bundle_intent"; then
       die "${BUNDLE_FOREMAN_PROFILE} intent must match: ${BUNDLE_FOREMAN_INTENT_FORM}"
     fi
     foreman_base_dp_id="$BUNDLE_FOREMAN_BASE_DP_ID"
@@ -1333,11 +1452,13 @@ bundle_run() {
     fi
     echo
     echo "[OPEN]"
-    echo "- Embedded: true"
-    echo "- Active branch: ${branch}"
-    echo "- HEAD short hash: ${head_short}"
+    echo "- Embedded: false"
+    echo "- Artifact path: ${open_rel_path}"
+    echo "- Source: ${open_source}"
+    echo "- Active branch: ${open_branch}"
+    echo "- HEAD short hash: ${open_head_short}"
     echo "- STELA_TRACE_ID: ${trace_id}"
-    echo "- Intent for today: ${open_intent}"
+    echo "- Intent for today: ${open_artifact_intent}"
     echo
     echo "[SUBMISSION]"
     echo "- kind: ${BUNDLE_SUBMISSION_KIND}"
@@ -1530,11 +1651,13 @@ bundle_run() {
     echo "    \"legacy_emitted\": $(bundle_bool "$compatibility_legacy_emitted")"
     echo "  },"
     echo "  \"open\": {"
-    echo "    \"embedded\": true,"
-    echo "    \"branch\": \"$(bundle_json_escape "$branch")\"," 
-    echo "    \"head_short\": \"$(bundle_json_escape "$head_short")\"," 
+    echo "    \"embedded\": false,"
+    echo "    \"artifact_path\": \"$(bundle_json_escape "$open_rel_path")\","
+    echo "    \"source\": \"$(bundle_json_escape "$open_source")\","
+    echo "    \"branch\": \"$(bundle_json_escape "$open_branch")\"," 
+    echo "    \"head_short\": \"$(bundle_json_escape "$open_head_short")\"," 
     echo "    \"trace_id\": \"$(bundle_json_escape "$trace_id")\"," 
-    echo "    \"intent\": \"$(bundle_json_escape "$open_intent")\""
+    echo "    \"intent\": \"$(bundle_json_escape "$open_artifact_intent")\""
     echo "  },"
     echo "  \"dump\": {"
     echo "    \"scope\": \"$(bundle_json_escape "$dump_scope")\"," 

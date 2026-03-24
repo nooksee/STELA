@@ -156,11 +156,16 @@ required_headings=(
 unresolved_artifact_marker_regex='<PORCELAIN_ARTIFACT>|<SESSION_ARTIFACT>|<DUMP_ARTIFACT>|<[^>]*ARTIFACT[^>]*>'
 forbidden_disposable_regex='Local artifacts:|Disposable artifact policy|storage/handoff/OPEN-|storage/handoff/OPEN-PORCELAIN-|storage/handoff/\*|storage/dumps/dump-|storage/dumps/\*|OPEN-work-dp-ops-[0-9]+|OPEN-PORCELAIN-work-dp-ops-[0-9]+|dump-platform-work-dp-ops-[0-9]+'
 narrative_scaffold_lines=(
-  "State the preflight outcome: branch, Base HEAD, clean working tree, and preflight lint results."
+  "Paste the verbatim outputs of git rev-parse --abbrev-ref HEAD, git rev-parse --short HEAD, and git status --porcelain captured before any edits began, then add a short preflight lint status summary."
   "Describe each change made: what was modified, created, or removed, and why."
   "Describe any anomalies, open items, or residue. State None. if all items are resolved."
   "Decision Required: Yes|No"
   "Decision Leaf: archives/decisions/... or None"
+)
+required_preflight_commands=(
+  "git rev-parse --abbrev-ref HEAD"
+  "git rev-parse --short HEAD"
+  "git status --porcelain"
 )
 
 failures=0
@@ -168,6 +173,7 @@ checked=0
 hash_parity_skips=0
 narrative_scaffold_skips=0
 decision_coherence_skips=0
+preflight_proof_skips=0
 
 for target in "${targets[@]}"; do
   if [[ ! -f "$target" ]]; then
@@ -222,6 +228,27 @@ for target in "${targets[@]}"; do
       fail "${rel_target}: Contractor Execution Narrative contains untouched scaffold instruction prose"
     else
       narrative_scaffold_skips=$((narrative_scaffold_skips + 1))
+    fi
+  fi
+
+  preflight_block="$(extract_field_block "$target" '^### Preflight State[[:space:]]*$' '^### Implemented Changes[[:space:]]*$')"
+  preflight_proof_error=""
+  if [[ -z "$(printf '%s\n' "$preflight_block" | sed '/^[[:space:]]*$/d')" ]]; then
+    preflight_proof_error="Contractor Execution Narrative Preflight State subsection is empty"
+  else
+    required_preflight_command=""
+    for required_preflight_command in "${required_preflight_commands[@]}"; do
+      if ! grep -Fq -- "$required_preflight_command" <<< "$preflight_block"; then
+        preflight_proof_error="Contractor Execution Narrative Preflight State missing required freshness command output: ${required_preflight_command}"
+        break
+      fi
+    done
+  fi
+  if [[ -n "$preflight_proof_error" ]]; then
+    if (( explicit_target || inferred_target )); then
+      fail "${rel_target}: ${preflight_proof_error}"
+    else
+      preflight_proof_skips=$((preflight_proof_skips + 1))
     fi
   fi
 
@@ -310,6 +337,9 @@ if (( narrative_scaffold_skips > 0 )); then
 fi
 if (( decision_coherence_skips > 0 )); then
   echo "NOTE: skipped Decision Required/Decision Leaf coherence enforcement for ${decision_coherence_skips} historical receipt(s); pass an explicit path to enforce."
+fi
+if (( preflight_proof_skips > 0 )); then
+  echo "NOTE: skipped strict Preflight State freshness-proof enforcement for ${preflight_proof_skips} historical receipt(s); pass an explicit path to enforce."
 fi
 
 echo "OK: RESULTS lint passed (${checked} file(s) checked)."

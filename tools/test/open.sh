@@ -15,6 +15,8 @@ FAILURES=0
 RUN_OUTPUT=""
 RUN_STATUS=0
 DIRTY_FILE=""
+OPEN_TEST_ROOT="var/tmp/_smoke/open-$$"
+OPEN_TEST_ROOT_ABS="${REPO_ROOT}/${OPEN_TEST_ROOT}"
 declare -a CLEANUP_PATHS=()
 declare -A CLEANUP_SEEN=()
 
@@ -23,6 +25,8 @@ cleanup_generated() {
   if [[ -n "$DIRTY_FILE" && -e "$DIRTY_FILE" ]]; then
     rm -f -- "$DIRTY_FILE"
   fi
+
+  rm -rf -- "$OPEN_TEST_ROOT_ABS"
 
   for rel_path in "${CLEANUP_PATHS[@]}"; do
     [[ -n "$rel_path" ]] || continue
@@ -58,8 +62,10 @@ queue_cleanup_path() {
   case "$rel_path" in
     storage/handoff/*)
       ;;
+    var/tmp/_smoke/*)
+      ;;
     *)
-      fail "refusing to queue cleanup path outside storage/handoff/: ${rel_path}"
+      fail "refusing to queue cleanup path outside storage/handoff/ or var/tmp/_smoke/: ${rel_path}"
       return 1
       ;;
   esac
@@ -112,8 +118,9 @@ assert_absent() {
 
 DIRTY_FILE="open-test-dirty-${RANDOM}${RANDOM}.tmp"
 printf 'open-test-dirty\n' > "$DIRTY_FILE"
+mkdir -p "$OPEN_TEST_ROOT_ABS"
 
-run_capture ./ops/bin/open --out=auto --tag=open-test
+run_capture env OPEN_HANDOFF_BASE="$OPEN_TEST_ROOT_ABS" ./ops/bin/open --out=auto --tag=open-test
 if [[ "$RUN_STATUS" -ne 0 ]]; then
   fail "ops/bin/open failed during de-dup test"
   printf '%s\n' "$RUN_OUTPUT" >&2
@@ -131,7 +138,7 @@ if [[ -n "$open_path" ]]; then
 
   assert_contains "$open_path" "- Porcelain entries:"
   assert_contains "$open_path" "- Porcelain artifact: emitted"
-  assert_contains "$open_path" "- Porcelain saved: storage/handoff/OPEN-PORCELAIN-open-test-"
+  assert_contains "$open_path" "- Porcelain saved: ${OPEN_TEST_ROOT}/OPEN-PORCELAIN-open-test-"
   assert_absent "$open_path" "- Porcelain (git status --porcelain):"
   assert_absent "$open_path" "- Porcelain preview (truncated to 50 lines):"
 
