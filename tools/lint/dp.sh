@@ -20,7 +20,7 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="a3851786404b384ba5baa547cf40b916eff984e981d5b402c0b53070dae8f3d8"
+CANONICAL_DP_TEMPLATE_SHA256="b1662f36c495a621976552ccdd40e4d9f8827ed94833e6df15aa378f978c60ec"
 CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/stances/addendum.md.tpl"
 CANONICAL_ADDENDUM_TEMPLATE_SHA256="715db3fae0598a85a0fa490c16f590dd08e6d6f02fa9b18224ce48625612f624"
 TEMPLATE_RENDER_BIN="ops/bin/template"
@@ -224,6 +224,8 @@ lint_addendum_intake() {
       fail "addendum intake SCOPE_DELTA entry contains whitespace: ${line}"
     fi
   done <<< "$scope_delta"
+
+  check_receipt_block_replayability "$receipt_block" "Addendum receipt command"
 }
 
 render_canonical_template_non_strict() {
@@ -731,23 +733,99 @@ check_freshness_stamp_format() {
   fi
 }
 
-check_receipt_command_substitution() {
+receipt_command_first_token_allowed() {
+  local first_token="$1"
+  case "$first_token" in
+    git|bash|./*|ops/bin/*|comm|cat|ls|cp|mv|rm|find|sed|awk|grep|rg|echo|printf|sh|test)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+check_receipt_block_replayability() {
+  local receipt_block="$1"
+  local section_label="$2"
+  local line=""
+  local trimmed_line=""
+  local candidate=""
+  local first_token=""
+
+  [[ -n "$receipt_block" ]] || return 0
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ -z "$line" ]] && continue
+    trimmed_line="$(trim "$line")"
+    [[ "$trimmed_line" == -* ]] || continue
+
+    candidate="${trimmed_line#- }"
+    candidate="$(trim "$candidate")"
+    [[ -n "$candidate" ]] || continue
+
+    if [[ "$candidate" == \`* && "$candidate" == *\` ]]; then
+      candidate="${candidate#\`}"
+      candidate="${candidate%\`}"
+      candidate="$(trim "$candidate")"
+    fi
+
+    case "$candidate" in
+      "**Mandatory receipt commands"*|"**DP-specific receipt commands"*|"**Addendum-specific receipt commands"*|"Mandatory receipt commands"*|"DP-specific receipt commands"*|"Addendum-specific receipt commands"*|"Required pasted outputs:"*|"Mandatory Closing Block"*|"Mandatory Closing Sidecar"*|"Verify Section "*|"Worker runs"*|"Purpose:"*)
+        continue
+        ;;
+      "Note: "*)
+        continue
+        ;;
+    esac
+
+    if [[ "$candidate" =~ ^(\./)?ops/bin/certify([[:space:]]|$) ]]; then
+      continue
+    fi
+    if [[ "$candidate" =~ ^bash[[:space:]]+tools/lint/results[.]sh([[:space:]]|$) ]]; then
+      continue
+    fi
+    if [[ "$candidate" =~ ^![[:space:]]+ ]]; then
+      candidate="${candidate#!}"
+      candidate="$(trim "$candidate")"
+      [[ -n "$candidate" ]] || continue
+    fi
+
+    if [[ "$candidate" == *"\`"* ]]; then
+      fail "${section_label} contains inline backticks (rejected by certify replay): ${trimmed_line}"
+      continue
+    fi
+    if [[ "$candidate" == *'$('* ]]; then
+      fail "${section_label} contains command substitution (rejected by certify replay): ${trimmed_line}"
+      continue
+    fi
+
+    first_token="${candidate%%[[:space:]]*}"
+    if [[ "$candidate" == *"{"* || "$candidate" == *"}"* || "$candidate" == *"*"* || "$candidate" == *"?"* || "$candidate" == *"["* ]]; then
+      case "$first_token" in
+        grep|rg)
+          ;;
+        *)
+          fail "${section_label} contains unsupported brace/glob pattern (rejected by certify replay): ${trimmed_line}"
+          continue
+          ;;
+      esac
+    fi
+
+    if ! receipt_command_first_token_allowed "$first_token"; then
+      fail "${section_label} uses unsupported first token (rejected by certify replay): ${trimmed_line}"
+    fi
+  done <<< "$receipt_block"
+}
+
+check_receipt_command_replayability() {
   local path="$1"
   local receipt_block
-  local line
-  local trimmed_line
   receipt_block="$(extract_block "$path" '^### 3[.]4[.]5' '^## 3[.]5([.]|[[:space:]])')"
   if [[ -z "$receipt_block" ]]; then
     return 0
   fi
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    [[ -z "$line" ]] && continue
-    trimmed_line="$(trim "$line")"
-    [[ "$trimmed_line" != -* ]] && continue
-    if [[ "$trimmed_line" == *'$('* ]]; then
-      fail "Section 3.4.5 receipt command contains command substitution (rejected by certify replay): ${trimmed_line}"
-    fi
-  done <<< "$receipt_block"
+  check_receipt_block_replayability "$receipt_block" "Section 3.4.5 receipt command"
 }
 
 check_closeout_section_shape() {
@@ -1143,7 +1221,7 @@ lint_payload() {
   check_dump_selection_scope "$path"
   check_freshness_stamp_format "$path"
   check_dp_packet_coherence "$path"
-  check_receipt_command_substitution "$path"
+  check_receipt_command_replayability "$path"
   check_closeout_section_shape "$path"
   check_mandatory_receipt_commands "$path"
   check_sidecar_not_prepopulated "$path"
@@ -1225,7 +1303,8 @@ render_fixture_from_template() {
 - Added ops/src/surfaces/dp.md.tpl'
   plan_patch='- Implemented structure hashing
 - Added allowlist pointer integrity checks'
-  receipt_extra='- ./ops/bin/open --out=auto --dp="DP-OPS-0000"
+  receipt_extra='- ops/bin/manifest stance-fixture --out=-
+- ./ops/bin/open --out=auto --dp="DP-OPS-0000"
 - bash tools/lint/dp.sh TASK.md
 - git diff --name-only
 - git diff --stat'
@@ -1298,9 +1377,11 @@ run_test() {
   local tmp_allowlist_file_bad
   local tmp_results_valid
   local tmp_results_invalid
+  local tmp_results_preflight_invalid
   local tmp_proposed_marker_bad
   local tmp_proposed_prose_ok
   local tmp_contamination_bad
+  local tmp_receipt_token_bad
   local tmp_ccd_bad
   local tmp_frontmatter_bad
 
@@ -1417,7 +1498,14 @@ tools/lint/dp.sh
 
 ## Contractor Execution Narrative
 ### Preflight State
-Branch work/dp-ops-0099-2026-01-01 at HEAD. Clean tree. All preflight lints passed.
+~~~text
+git rev-parse --abbrev-ref HEAD
+work/dp-ops-0099-2026-01-01
+git rev-parse --short HEAD
+abcdef1
+git status --porcelain
+~~~
+Preflight lints passed: bash tools/lint/dp.sh TASK.md; bash tools/lint/task.sh.
 
 ### Implemented Changes
 Updated tools/lint/dp.sh to delegate RESULTS validation to tools/lint/results.sh.
@@ -1454,7 +1542,14 @@ tools/lint/dp.sh
 
 ## Contractor Execution Narrative
 ### Preflight State
-Branch work/dp-ops-0099-2026-01-01 at HEAD. Clean tree. All preflight lints passed.
+~~~text
+git rev-parse --abbrev-ref HEAD
+work/dp-ops-0099-2026-01-01
+git rev-parse --short HEAD
+abcdef1
+git status --porcelain
+~~~
+Preflight lints passed: bash tools/lint/dp.sh TASK.md; bash tools/lint/task.sh.
 
 ### Implemented Changes
 Updated tools/lint/dp.sh to delegate RESULTS validation to tools/lint/results.sh.
@@ -1468,6 +1563,54 @@ TESTRESULTS
   if lint_path "$tmp_results_invalid" >/dev/null 2>&1; then
     rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected RESULTS validation failure" >&2
+    exit 1
+  fi
+
+  tmp_results_preflight_invalid="$(mktemp --suffix=-RESULTS.md)"
+  cat > "$tmp_results_preflight_invalid" <<TESTRESULTS
+# DP-OPS-0099 RESULTS
+
+## Certification Metadata
+- Packet ID: DP-OPS-0099
+- Git Hash: ${current_git_hash}
+
+## Scope Verification
+### Integrity Lint Output
+PASS
+
+## Verification Command Log
+- bash tools/lint/dp.sh TASK.md
+
+## Git State Impact
+### git diff --name-only
+tools/lint/dp.sh
+
+### git diff --stat
+ tools/lint/dp.sh | 1 +
+
+## Contractor Execution Narrative
+### Preflight State
+~~~text
+git rev-parse --abbrev-ref HEAD
+work/dp-ops-0099-2026-01-01
+git rev-parse --short HEAD
+abcdef1
+~~~
+Preflight lints passed: bash tools/lint/dp.sh TASK.md; bash tools/lint/task.sh.
+
+### Implemented Changes
+Updated tools/lint/dp.sh to delegate RESULTS validation to tools/lint/results.sh.
+
+### Closeout Notes
+None.
+
+### Decision Leaf
+Decision Required: No
+Decision Leaf: None
+TESTRESULTS
+  if lint_path "$tmp_results_preflight_invalid" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_preflight_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+    echo "FAIL: --test expected RESULTS preflight-proof validation failure" >&2
     exit 1
   fi
 
@@ -1559,6 +1702,16 @@ TESTRESULTS
   fi
   rm -f "$tmp_receipt_missing_bad"
 
+  tmp_receipt_token_bad="$(mktemp)"
+  cp "$tmp_valid" "$tmp_receipt_token_bad"
+  sed -i 's#^- ops/bin/manifest stance-fixture --out=-$#- python tools/example.py#' "$tmp_receipt_token_bad"
+  if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_receipt_token_bad" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_preflight_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad" "$tmp_receipt_token_bad"
+    echo "FAIL: --test expected unsupported receipt first-token failure" >&2
+    exit 1
+  fi
+  rm -f "$tmp_receipt_token_bad"
+
   tmp_sidecar_prepop_bad="$(mktemp)"
   cp "$tmp_valid" "$tmp_sidecar_prepop_bad"
   sed -i 's/^- Commit Message$/- Commit Message: feat: prefilled/' "$tmp_sidecar_prepop_bad"
@@ -1578,7 +1731,7 @@ TESTRESULTS
     exit 1
   fi
 
-  rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+  rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_preflight_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
   echo "OK: --test passed"
 }
 

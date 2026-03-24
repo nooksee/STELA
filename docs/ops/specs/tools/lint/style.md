@@ -49,46 +49,46 @@ Rationale: The PR Description renders in the GitHub pull request interface, whic
 
 ## Audit-Foreman Mode Split Guardrails
 
-### Guard 1: Audit stance marker in `auditor.md.tpl`
-Target file: `ops/src/stances/auditor.md.tpl`
+### Guard 1: Audit stance marker in `audit.md.tpl`
+Target file: `ops/src/stances/audit.md.tpl`
 Assertion: file must include `` `--profile=foreman` is addendum-authorization mode and is never valid for audit verdict workflows. ``
-Failure message: `auditor.md.tpl missing audit-verdict stance marker`
+Failure message: `audit.md.tpl missing audit-verdict stance marker`
 Invariant: audit verdict flow and foreman authorization flow remain separated by explicit stance guidance.
 
-### Guard 2: Audit attach-only line in `auditor.md.tpl`
-Target file: `ops/src/stances/auditor.md.tpl`
+### Guard 2: Audit attach-only line in `audit.md.tpl`
+Target file: `ops/src/stances/audit.md.tpl`
 Assertion: file must include `If user text is empty and required attachments are present, proceed and emit only the final audit block.`
-Failure message: `auditor.md.tpl missing empty-input attach-only rule line`
+Failure message: `audit.md.tpl missing empty-input attach-only rule line`
 Invariant: attach-only audit intake proceeds deterministically without requiring user text.
 
-### Guard 3: Audit output contract line in `auditor.md.tpl`
-Target file: `ops/src/stances/auditor.md.tpl`
+### Guard 3: Audit output contract line in `audit.md.tpl`
+Target file: `ops/src/stances/audit.md.tpl`
 Assertion: file must include `Output only: Complete audit report.`
-Failure message: `auditor.md.tpl missing audit output contract line`
-Invariant: auditor output remains deterministic.
+Failure message: `audit.md.tpl missing audit output contract line`
+Invariant: audit output remains deterministic.
 
-### Guard 4: Audit first-line marker in `auditor.md.tpl`
-Target file: `ops/src/stances/auditor.md.tpl`
+### Guard 4: Audit first-line marker in `audit.md.tpl`
+Target file: `ops/src/stances/audit.md.tpl`
 Assertion: file must include `First non-empty line must start with \`**AUDIT -\`.`
-Failure message: `auditor.md.tpl missing audit first-line marker output line`
-Invariant: auditor output has a stable entry marker for deterministic intake checks.
+Failure message: `audit.md.tpl missing audit first-line marker output line`
+Invariant: audit output has a stable entry marker for deterministic intake checks.
 
-### Guard 5: Audit no-citations line in `auditor.md.tpl`
-Target file: `ops/src/stances/auditor.md.tpl`
+### Guard 5: Audit no-citations line in `audit.md.tpl`
+Target file: `ops/src/stances/audit.md.tpl`
 Assertion: file must include `Do not emit citation tokens (\`:contentReference[\` or \`oaicite\`).`
-Failure message: `auditor.md.tpl missing audit no-citations output line`
-Invariant: auditor output avoids citation-token contamination.
+Failure message: `audit.md.tpl missing audit no-citations output line`
+Invariant: audit output avoids citation-token contamination.
 
-### Guard 6: Audit evidence-authority conflict rule in `auditor.md.tpl`
-Target file: `ops/src/stances/auditor.md.tpl`
+### Guard 6: Audit evidence-authority conflict rule in `audit.md.tpl`
+Target file: `ops/src/stances/audit.md.tpl`
 Assertion: file must include `If interpretation conflicts with receipt command outputs, treat command outputs and lint results as authoritative and mark the interpretation as non-blocking.`
-Failure message: `auditor.md.tpl missing audit evidence-authority conflict rule line`
+Failure message: `audit.md.tpl missing audit evidence-authority conflict rule line`
 Invariant: audit output resolves interpretation conflicts to tool evidence instead of inventing blockers.
 
-### Guard 7: Audit allowlist-authority rule in `auditor.md.tpl`
-Target file: `ops/src/stances/auditor.md.tpl`
+### Guard 7: Audit allowlist-authority rule in `audit.md.tpl`
+Target file: `ops/src/stances/audit.md.tpl`
 Assertion: file must include `For allowlist interpretation, \`tools/lint/integrity.sh\` plus certify changed-file subset check are authoritative; raw \`comm\` output is informational.`
-Failure message: `auditor.md.tpl missing audit allowlist-authority interpretation rule line`
+Failure message: `audit.md.tpl missing audit allowlist-authority interpretation rule line`
 Invariant: audit output does not misclassify raw comm output as a hard gate failure when authoritative checks pass.
 
 ### Guard 8: Foreman stance marker in `foreman.md.tpl`

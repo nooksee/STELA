@@ -6,6 +6,8 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # shellcheck source=/dev/null
 source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 
+OPEN_HANDOFF_BASE="${OPEN_HANDOFF_BASE:-${REPO_ROOT}/storage/handoff}"
+
 format="chatgpt"
 intent=""
 dp="(none)"
@@ -24,6 +26,15 @@ generate_trace_id() {
   stamp="$(date -u '+%Y%m%dT%H%M%SZ')"
   suffix="$(printf '%04x%04x' "$RANDOM" "$RANDOM")"
   printf 'stela-%s-%s' "$stamp" "$suffix"
+}
+
+to_repo_rel() {
+  local raw_path="$1"
+  raw_path="${raw_path#./}"
+  if [[ "$raw_path" == "${REPO_ROOT}/"* ]]; then
+    raw_path="${raw_path#${REPO_ROOT}/}"
+  fi
+  printf '%s' "$raw_path"
 }
 
 for arg in "$@"; do
@@ -56,6 +67,9 @@ done
 trap 'emit_binary_leaf "open" "finish"' EXIT
 emit_binary_leaf "open" "start"
 
+[[ "$OPEN_HANDOFF_BASE" == "${REPO_ROOT}/"* ]] || die "OPEN_HANDOFF_BASE must be under repo root: ${OPEN_HANDOFF_BASE}"
+mkdir -p "$OPEN_HANDOFF_BASE"
+
 branch="$(git rev-parse --abbrev-ref HEAD)"
 head_short="$(git rev-parse --short HEAD)"
 branch_safe="${branch//\//-}"
@@ -68,7 +82,8 @@ fi
 
 status_summary="clean"
 porcelain_count=0
-porcelain_path="storage/handoff/OPEN-PORCELAIN-${tag_prefix}${branch_safe}-${head_short}.txt"
+porcelain_abs_path="${OPEN_HANDOFF_BASE}/OPEN-PORCELAIN-${tag_prefix}${branch_safe}-${head_short}.txt"
+porcelain_path="$(to_repo_rel "$porcelain_abs_path")"
 porcelain_saved="(suppressed: clean working tree)"
 porcelain_artifact_note="suppressed (clean working tree)"
 
@@ -81,7 +96,7 @@ if [[ -n "$porcelain_raw" ]]; then
   status_summary="dirty"
   porcelain_saved="$porcelain_path"
   porcelain_artifact_note="emitted"
-  printf "%s\n" "$porcelain_normalized" > "$porcelain_saved"
+  printf "%s\n" "$porcelain_normalized" > "$porcelain_abs_path"
 fi
 
 last_commit="$(git log -1 --oneline)"
@@ -92,8 +107,9 @@ if [[ -f "${REPO_ROOT}/${plan_surface_rel}" ]]; then
   plan_surface_status="present"
 fi
 
-open_out_path="storage/handoff/OPEN-${tag_prefix}${branch_safe}-${head_short}.txt"
-: > "$open_out_path"
+open_out_abs_path="${OPEN_HANDOFF_BASE}/OPEN-${tag_prefix}${branch_safe}-${head_short}.txt"
+open_out_path="$(to_repo_rel "$open_out_abs_path")"
+: > "$open_out_abs_path"
 
 required_files=(
   "PoT.md"
@@ -125,7 +141,7 @@ mode_line="Mode: collaborator stance. Follow repo canon and request missing cont
 
 emit() {
   if [[ -n "$open_out_path" ]]; then
-    tee -a "$open_out_path"
+    tee -a "$open_out_abs_path"
   else
     cat
   fi

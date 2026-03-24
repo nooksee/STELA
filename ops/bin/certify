@@ -1193,7 +1193,7 @@ resolve_trace_id() {
   if [[ -n "$open_path" ]]; then
     trace_id="$(extract_trace_id_from_open "$open_path" || true)"
   fi
-  [[ -n "$trace_id" ]] || die "failed to resolve STELA_TRACE_ID from environment or latest OPEN artifact"
+  [[ -n "$trace_id" ]] || die "failed to resolve STELA_TRACE_ID from environment or latest OPEN artifact; run ./ops/bin/open --out=auto"
   printf '%s' "$trace_id"
 }
 
@@ -1627,14 +1627,14 @@ extract_commands() {
     fi
 
     if [[ "$candidate" == *"\`"* ]]; then
-      continue
+      die "unsupported verification command in receipt section: inline backticks are not allowed (${candidate})"
     fi
     if [[ "$candidate" == *'$('* ]]; then
       case "$candidate" in
         'test "$(cat PoW.md)" = "archives/surfaces/'*.md'"'|'test "$(cat SoP.md)" = "archives/surfaces/'*.md'"'|'test "$(cat TASK.md)" = "archives/surfaces/'*.md'"')
           ;;
         *)
-          die "unsupported verification command in DP section 3.4.5: command substitution is not allowed (${candidate})"
+          die "unsupported verification command in receipt section: command substitution is not allowed (${candidate})"
           ;;
       esac
     fi
@@ -1644,7 +1644,7 @@ extract_commands() {
         grep|rg)
           ;;
         *)
-          die "unsupported verification command in DP section 3.4.5: brace/glob patterns are not allowed (${candidate})"
+          die "unsupported verification command in receipt section: brace/glob patterns are not allowed (${candidate})"
           ;;
       esac
     fi
@@ -1655,11 +1655,11 @@ extract_commands() {
     fi
 
     case "$first_token" in
-      git|bash|./*|comm|cat|ls|cp|mv|rm|find|sed|awk|grep|rg|echo|printf|sh|test)
+      git|bash|./*|ops/bin/*|comm|cat|ls|cp|mv|rm|find|sed|awk|grep|rg|echo|printf|sh|test)
         printf '%s\n' "$emitted_command" >> "$out_path"
         ;;
       *)
-        continue
+        die "unsupported verification command in receipt section: unsupported first token (${candidate})"
         ;;
     esac
   done < "$receipt_block_path"

@@ -138,6 +138,12 @@ mf_int_in_block() {
     'index($0,b){in_block=1} in_block&&index($0,k){gsub(/.*": */,"");gsub(/[,}].*/,"");print;exit}' "$file"
 }
 
+mf_bool_in_block() {
+  local block="$1" key="$2" file="$3"
+  awk -v b="\"${block}\":" -v k="\"${key}\":" \
+    'index($0,b){in_block=1} in_block&&index($0,k){gsub(/.*": */,"");gsub(/[,}].*/,"");print;exit}' "$file"
+}
+
 pkg_contains() {
   local needle="$1" file="$2"
   grep -qF "\"${needle}\"" "$file"
@@ -207,6 +213,7 @@ clean_surfaces() {
 slice_route_contract() {
   echo "--- slice: route-contract"
   local out rp rr
+  local open_embedded open_path open_source open_trace
   make_task
 
   # Planning: explicit profile, artifact prefix PLANNING
@@ -220,6 +227,20 @@ slice_route_contract() {
     [[ "$rp" == "planning" ]] || fail "route/planning: resolved_profile='${rp}' expected 'planning'"
     [[ "$out" == "${SMOKE_HANDOFF_ROOT}/PLANNING-"* ]] \
       || fail "route/planning: artifact prefix wrong: ${out}"
+    open_embedded="$(mf_bool_in_block open embedded "$BUNDLE_LAST_MANIFEST_ABS")"
+    open_path="$(mf_string_in_block open artifact_path "$BUNDLE_LAST_MANIFEST_ABS")"
+    open_source="$(mf_string_in_block open source "$BUNDLE_LAST_MANIFEST_ABS")"
+    open_trace="$(mf_string_in_block open trace_id "$BUNDLE_LAST_MANIFEST_ABS")"
+    [[ "$open_embedded" == "false" ]] \
+      || fail "route/planning: expected open.embedded=false, got '${open_embedded}'"
+    [[ "$open_source" == "refreshed" ]] \
+      || fail "route/planning: expected open.source='refreshed', got '${open_source}'"
+    [[ "$open_path" == "${EPHEMERAL_ROOT}/OPEN-"* ]] \
+      || fail "route/planning: expected open.artifact_path under ${EPHEMERAL_ROOT}, got '${open_path}'"
+    [[ -f "${REPO_ROOT}/${open_path}" ]] \
+      || fail "route/planning: open artifact missing at ${open_path}"
+    [[ "$open_trace" == stela-* ]] \
+      || fail "route/planning: invalid open.trace_id '${open_trace}'"
   fi
 
   # Draft: explicit profile with PLAN.md, artifact prefix DRAFT
@@ -233,6 +254,9 @@ slice_route_contract() {
     [[ "$rp" == "draft" ]] || fail "route/draft: resolved_profile='${rp}' expected 'draft'"
     [[ "$out" == "${SMOKE_HANDOFF_ROOT}/DRAFT-"* ]] \
       || fail "route/draft: artifact prefix wrong: ${out}"
+    open_source="$(mf_string_in_block open source "$BUNDLE_LAST_MANIFEST_ABS")"
+    [[ "$open_source" == "reused" ]] \
+      || fail "route/draft: expected open.source='reused', got '${open_source}'"
   fi
 
   # Auto: no PLAN.md → routes to planning
@@ -392,6 +416,24 @@ slice_rerun_lineage() {
   # Use a fixed suffix so repeat/rerun runs share the same suffix for lineage tracking
   local suffix="rerun-${$}"
   local initial_rel="${SMOKE_HANDOFF_ROOT}/AUDIT-${suffix}.txt"
+  local explicit_rerun_rel="${SMOKE_HANDOFF_ROOT}/AUDIT-rerun-only-${suffix}.txt"
+
+  # Explicit --rerun with no prior local artifact must still produce rerun identity
+  run_bundle "$explicit_rerun_rel" --profile=audit --rerun
+  if [[ "$BUNDLE_LAST_STATUS" -ne 0 ]]; then
+    fail "rerun-lineage/rerun-without-prior: expected exit 0; output: ${BUNDLE_LAST_OUTPUT}"
+  else
+    local kind idx supersedes
+    kind="$(mf_string_in_block submission kind "$BUNDLE_LAST_MANIFEST_ABS")"
+    idx="$(mf_int_in_block submission resubmission_index "$BUNDLE_LAST_MANIFEST_ABS")"
+    supersedes="$(mf_string_in_block submission supersedes_bundle_path "$BUNDLE_LAST_MANIFEST_ABS")"
+    [[ "$kind" == "audit_resubmission" ]] \
+      || fail "rerun-lineage/rerun-without-prior: submission.kind='${kind}' expected 'audit_resubmission'"
+    [[ "$idx" == "1" ]] \
+      || fail "rerun-lineage/rerun-without-prior: resubmission_index='${idx}' expected '1'"
+    [[ "$supersedes" == "null" ]] \
+      || fail "rerun-lineage/rerun-without-prior: supersedes_bundle_path should be null, got '${supersedes}'"
+  fi
 
   # Initial audit
   run_bundle "$initial_rel" --profile=audit

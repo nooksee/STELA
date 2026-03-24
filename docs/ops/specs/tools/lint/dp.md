@@ -16,7 +16,7 @@
 8. Enforce allowlist pointer integrity: exactly one pointer entry, canonical pointer path match, allowlist file existence, entry normalization, runtime-prefix restrictions, wildcard policy constraints, and repository reachability checks.
 9. For RESULTS paths, delegate validation to `tools/lint/results.sh` and propagate its exit code. RESULTS schema enforcement is sourced from the canonical template plus narrative field checks.
 10. In `--test` mode, execute fixture-driven negative and positive checks that exercise template-hash drift, structure mismatch, allowlist-pointer mismatch, allowlist-file invalidity, drafting-marker word detection, foreign citation contamination detection, and delegated RESULTS validation coverage (valid fixture and deterministic invalid fixture).
-11. Enforce mandatory receipt-command shape in `3.4.5`: verify canonical mandatory command lines are present and fail deterministically when missing.
+11. Enforce mandatory receipt-command shape in `3.4.5`: verify canonical mandatory command lines are present, and fail deterministically when DP-specific receipt commands are not replayable by certify.
 12. Enforce closing-sidecar non-prepopulation in `3.5.1`: reject draft payloads that provide non-empty values for canonical sidecar fields.
 13. Enforce include-metadata leakage guard in DP payload bodies: fail on first line containing `<!-- CCD:` or a raw frontmatter delimiter line `---`.
 
@@ -47,11 +47,38 @@
 2. **Frontmatter delimiter leakage (FAIL):** appending raw delimiter line `---` to a canonical fixture must fail full `lint_path` invocation.
 3. **Canonical clean payload (PASS):** canonical fixture with no leaked metadata must pass contamination and include-metadata checks.
 
-### Freshness Stamp and Receipt Command Substitution Checks
+### Freshness Stamp and Receipt Command Replayability Checks
 `lint_payload()` runs two certify-compatibility checks immediately after `check_dump_selection_scope()`:
 
 1. `check_freshness_stamp_format()`: extracts `Freshness Stamp`, trims and dequotes it, skips blank or placeholder values (handled by existing required-field checks), and fails unless the value matches `^[0-9]{4}-[0-9]{2}-[0-9]{2}$`.
-2. `check_receipt_command_substitution()`: extracts Section `3.4.5`, scans receipt command bullet lines, and fails on any command line containing the `$(` token because certify replay requires literal commands.
+2. `check_receipt_command_replayability()`: extracts Section `3.4.5`, scans receipt command bullet lines, and fails when a DP-specific receipt command is not replayable by certify. Hard failures include:
+   - command substitution (`$(`),
+   - inline backticks,
+   - unsupported brace/glob patterns outside `grep` or `rg`,
+   - unsupported first tokens.
+
+Allowed literal first-token families are exactly:
+- `git`
+- `bash`
+- `./*`
+- `ops/bin/*`
+- `comm`
+- `cat`
+- `ls`
+- `cp`
+- `mv`
+- `rm`
+- `find`
+- `sed`
+- `awk`
+- `grep`
+- `rg`
+- `echo`
+- `printf`
+- `sh`
+- `test`
+
+`lint_addendum_intake()` applies the same replayability checks to the `A.5` addendum receipt block so addendum-specific receipt commands cannot rely on certify-silent command disappearance.
 
 ### Packet Coherence and Closeout Shape Checks
 `lint_payload()` runs two deterministic contract checks after freshness and receipt-command checks:

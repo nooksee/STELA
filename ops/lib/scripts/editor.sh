@@ -5,7 +5,7 @@ editor_write_narrative_scaffold() {
   local target_path="$1"
   cat > "$target_path" <<'EOF'
 ### Preflight State
-State the preflight outcome: branch, Base HEAD, clean working tree, and preflight lint results.
+Paste the verbatim outputs of git rev-parse --abbrev-ref HEAD, git rev-parse --short HEAD, and git status --porcelain captured before any edits began, then add a short preflight lint status summary.
 
 ### Implemented Changes
 Describe each change made: what was modified, created, or removed, and why.
@@ -84,7 +84,7 @@ editor_validate_narrative_file() {
 
   local scaffold_line=""
   local -a scaffold_lines=(
-    "State the preflight outcome: branch, Base HEAD, clean working tree, and preflight lint results."
+    "Paste the verbatim outputs of git rev-parse --abbrev-ref HEAD, git rev-parse --short HEAD, and git status --porcelain captured before any edits began, then add a short preflight lint status summary."
     "Describe each change made: what was modified, created, or removed, and why."
     "Describe any anomalies, open items, or residue. State None. if all items are resolved."
     "Decision Required: Yes|No"
@@ -100,6 +100,28 @@ editor_validate_narrative_file() {
   for narrative_subheading in "^### Preflight State$" "^### Implemented Changes$" "^### Closeout Notes$" "^### Decision Leaf$"; do
     if ! printf '%s\n' "$narrative_content" | grep -Eq "$narrative_subheading"; then
       die "contractor narrative missing required subheading (pattern: ${narrative_subheading})"
+    fi
+  done
+
+  local preflight_block
+  preflight_block="$(printf '%s\n' "$narrative_content" | awk '
+    BEGIN { in_block=0 }
+    /^### Preflight State$/ { in_block=1; next }
+    in_block && /^### Implemented Changes$/ { exit }
+    in_block { print }
+  ')"
+  [[ -n "$(printf '%s\n' "$preflight_block" | sed '/^[[:space:]]*$/d')" ]] \
+    || die "contractor narrative Preflight State subsection is empty"
+
+  local required_preflight_command=""
+  local -a required_preflight_commands=(
+    "git rev-parse --abbrev-ref HEAD"
+    "git rev-parse --short HEAD"
+    "git status --porcelain"
+  )
+  for required_preflight_command in "${required_preflight_commands[@]}"; do
+    if ! printf '%s\n' "$preflight_block" | grep -Fq -- "$required_preflight_command"; then
+      die "contractor narrative Preflight State missing required freshness command output: ${required_preflight_command}"
     fi
   done
 

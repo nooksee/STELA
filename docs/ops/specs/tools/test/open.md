@@ -2,7 +2,7 @@
 # Technical Specification: tools/test/open.sh
 
 ## Purpose
-Run deterministic checks for OPEN de-dup policy in `ops/bin/open`: OPEN must include porcelain summary and pointer fields only, while OPEN-PORCELAIN retains detailed porcelain payload content.
+Run deterministic checks for OPEN de-dup policy in `ops/bin/open`: OPEN must include porcelain summary and pointer fields only, while OPEN-PORCELAIN retains detailed porcelain payload content. The test also exercises the internal `OPEN_HANDOFF_BASE` override used by smoke/runtime helpers so OPEN can be materialized under an alternate repo-relative handoff root without touching live `storage/handoff/`.
 
 ## Invocation
 - Command: `bash tools/test/open.sh`
@@ -19,10 +19,10 @@ Run deterministic checks for OPEN de-dup policy in `ops/bin/open`: OPEN must inc
 ## Outputs
 - Stdout: `PASS: open de-dup test` on success.
 - Stderr: `FAIL:` lines for each failed assertion.
-- Cleanup behavior: removes only artifacts created by this test run (`OPEN-open-test-...` and `OPEN-PORCELAIN-open-test-...`) and its temporary dirty-state file.
+- Cleanup behavior: removes only artifacts created by this test run under `var/tmp/_smoke/open-<pid>/` and its temporary dirty-state file.
 
 ## Invariants and failure modes
-- Dirty-state run is deterministic: test creates a temporary untracked file and executes `./ops/bin/open --out=auto --tag=open-test`.
+- Dirty-state run is deterministic: test creates a temporary untracked file and executes `OPEN_HANDOFF_BASE=<repo-relative-smoke-root> ./ops/bin/open --out=auto --tag=open-test`.
 - OPEN must include porcelain summary lines:
   - `Porcelain entries`
   - `Porcelain artifact`
@@ -32,6 +32,7 @@ Run deterministic checks for OPEN de-dup policy in `ops/bin/open`: OPEN must inc
   - `- Porcelain preview (truncated to 50 lines):`
 - OPEN must reference an emitted OPEN-PORCELAIN path for dirty-state runs.
 - Referenced OPEN-PORCELAIN artifact must exist and be non-empty.
+- Emitted OPEN and OPEN-PORCELAIN paths must remain under the smoke root provided through `OPEN_HANDOFF_BASE`; the test must not touch live `storage/handoff/`.
 
 ## Anecdotal Anchor
 This test is the S5 payload-duplication tripwire. If OPEN starts inlining full porcelain data again, the test fails before certify.

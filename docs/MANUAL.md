@@ -19,7 +19,7 @@ Active surfaces by stage:
 - **Results receipt:** `storage/handoff/RESULTS.md`
 - **Closing sidecar:** `storage/handoff/CLOSING.md`
 
-Audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto`. It is separate from operator session refresh (`./ops/bin/open --out=auto`). Do not conflate them: operator session refresh keeps state fresh for the next session; the audit bundle packages the certify-generated evidence for auditor review.
+Audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto`. It is separate from operator session refresh (`./ops/bin/open --out=auto`). Do not conflate them: operator session refresh keeps state fresh for the next session; the audit bundle packages the certify-generated evidence for audit review.
 
 **Execution Cycle:**
 1.  **Start:** `./ops/bin/open --out=auto` (freshness gate + trace anchor; OPEN provides `STELA_TRACE_ID` required by certify).
@@ -39,11 +39,12 @@ Audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto`.
 
 **OPEN and OPEN-PORCELAIN Contract:**
 - `OPEN` is spine-grade: `ops/bin/certify` requires a `STELA_TRACE_ID` sourced from `STELA_TRACE_ID` env var or the latest OPEN artifact (`storage/handoff/OPEN-*.txt`). Run `./ops/bin/open --out=auto` before certify.
+- `ops/bin/bundle` consumes a real current OPEN artifact for the active branch and HEAD. If none exists, or the latest OPEN is stale for the current branch/HEAD, bundle refreshes one through `./ops/bin/open --out=auto` before continuing. Bundle metadata may mirror OPEN fields, but it is not a substitute for the artifact.
 - `OPEN-PORCELAIN` (`storage/handoff/OPEN-PORCELAIN-*.txt`) is conditionally emitted: it is written only when the working tree is dirty. It is not a universal shipping requirement; clean sessions suppress it by design.
 
 **Execution-Decision Handling (Interim):**
 - `execution-decision` is disposable/manual-placement evidence, subordinate to `RESULTS`, `CLOSING`, and audit truth.
-- Received fenced markdown from auditor/analyst/draft/other secondary lanes may be placed at `storage/handoff/EXECUTION-DECISION.md`.
+- Received fenced markdown from audit/planning/draft/other secondary lanes may be placed at `storage/handoff/EXECUTION-DECISION.md`.
 - Draft-generated intake variant may be placed at `storage/dp/intake/EXECUTION-DECISION.md`.
 - No execution-decision bundle profile exists yet; placement is manual.
 - Validated via `bash tools/lint/response.sh --mode=execution-decision`; checks required constraint-section labels and at least one complete step block.
@@ -214,7 +215,7 @@ certify proceeds. The narrative is rendered into the RESULTS receipt under
 `## Contractor Execution Narrative`.
 
 Required subsections:
-- `### Preflight State` — paste the verbatim outputs of the three §3.1 freshness-gate commands (`git rev-parse --abbrev-ref HEAD`, `git rev-parse --short HEAD`, `git status --porcelain`) captured before any file edits began, plus the preflight lint results. These outputs must appear here, in the narrative, not in the receipt command list. Receipt commands run at certify time against a dirty working tree and cannot prove pre-edit clean state.
+- `### Preflight State` — paste the verbatim outputs of the three §3.1 freshness-gate commands (`git rev-parse --abbrev-ref HEAD`, `git rev-parse --short HEAD`, `git status --porcelain`) captured before any file edits began, plus a short preflight lint status summary. These outputs must appear here, in the narrative, not in the receipt command list. Receipt commands run at certify time against a dirty working tree and cannot prove pre-edit clean state. Summary-only prose is rejected by the editor scaffold validator and RESULTS lint.
 - `### Implemented Changes` — describe each change made: what was modified, created, or removed, and why.
 - `### Closeout Notes` — describe anomalies, open items, or residue; state None. if all items are resolved.
 - `### Decision Leaf` — record the decision record outcome:

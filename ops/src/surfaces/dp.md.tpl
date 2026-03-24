@@ -35,10 +35,12 @@ Base HEAD: {{BASE_HEAD}}
 Freshness Stamp: {{FRESHNESS_STAMP}}
 Note: FRESHNESS_STAMP must be YYYY-MM-DD format only. No trace tokens, no timestamps, no other text. Certify rejects all other forms. dp.sh enforces at lint time.
 
-Required local re-check (worker runs; paste outputs in RESULTS):
+Required local re-check (worker runs before any edits; paste verbatim outputs under `## Contractor Execution Narrative` -> `### Preflight State` in RESULTS):
 - git rev-parse --abbrev-ref HEAD
 - git rev-parse --short HEAD
 - git status --porcelain
+
+These three commands are freshness proof only. Do not treat §3.4.5 receipt replay as a substitute for their pre-edit outputs.
 
 Preconditions:
 - No commits on main.
@@ -139,7 +141,7 @@ Target Files allowlist (hard gate):
 - ./ops/bin/open
 
 **DP-specific receipt commands (scope-specific; author below):**
-Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by certify replay. Use literal values only. dp.sh enforces at lint time.
+Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by certify replay. Use literal values only. Repo-local binaries must be authored as literal `./ops/bin/...` or `ops/bin/...` commands. Unsupported receipt-command forms are rejected by dp.sh and certify.
 {{RECEIPT_EXTRA}}
 
 ## 3.5 Closeout (Mandatory Routing)

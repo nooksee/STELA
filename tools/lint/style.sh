@@ -231,7 +231,7 @@ check_shared_stance_contract() {
 }
 
 check_audit_foreman_mode_split() {
-  local stance_auditor="${REPO_ROOT}/ops/src/stances/auditor.md.tpl"
+  local stance_audit="${REPO_ROOT}/ops/src/stances/audit.md.tpl"
   local stance_foreman="${REPO_ROOT}/ops/src/stances/foreman.md.tpl"
   local bundle_manifest="${REPO_ROOT}/ops/lib/manifests/BUNDLE.md"
   local required_audit_guard='`--profile=foreman` is addendum-authorization mode and is never valid for audit verdict workflows.'
@@ -248,40 +248,40 @@ check_audit_foreman_mode_split() {
   local required_manifest_alias_hygiene_status_key='profile_alias_legacy_hygiene_deprecation_status='
   local required_manifest_alias_hygiene_remove_key='profile_alias_legacy_hygiene_remove_after_dp='
 
-  [[ -f "$stance_auditor" ]] || mark_failure "auditor.md.tpl missing for mode split checks"
+  [[ -f "$stance_audit" ]] || mark_failure "audit.md.tpl missing for mode split checks"
   [[ -f "$stance_foreman" ]] || mark_failure "foreman.md.tpl missing for mode split checks"
   [[ -f "$bundle_manifest" ]] || mark_failure "BUNDLE.md missing for mode split checks"
 
-  if [[ -f "$stance_auditor" ]] && ! grep -Fq -- "$required_audit_guard" "$stance_auditor"; then
-    mark_failure "auditor.md.tpl missing audit-verdict stance marker"
+  if [[ -f "$stance_audit" ]] && ! grep -Fq -- "$required_audit_guard" "$stance_audit"; then
+    mark_failure "audit.md.tpl missing audit-verdict stance marker"
   fi
 
-  if [[ -f "$stance_auditor" ]] && ! grep -Fq -- "$required_audit_empty_input" "$stance_auditor"; then
-    mark_failure "auditor.md.tpl missing empty-input attach-only rule line"
+  if [[ -f "$stance_audit" ]] && ! grep -Fq -- "$required_audit_empty_input" "$stance_audit"; then
+    mark_failure "audit.md.tpl missing empty-input attach-only rule line"
   fi
 
-  if [[ -f "$stance_auditor" ]] && ! grep -Fq -- "$required_audit_output" "$stance_auditor"; then
-    mark_failure "auditor.md.tpl missing audit output contract line"
+  if [[ -f "$stance_audit" ]] && ! grep -Fq -- "$required_audit_output" "$stance_audit"; then
+    mark_failure "audit.md.tpl missing audit output contract line"
   fi
 
-  if [[ -f "$stance_auditor" ]] && ! grep -Fq -- "$required_audit_shared_fence_include" "$stance_auditor"; then
-    mark_failure "auditor.md.tpl missing shared fence include line"
+  if [[ -f "$stance_audit" ]] && ! grep -Fq -- "$required_audit_shared_fence_include" "$stance_audit"; then
+    mark_failure "audit.md.tpl missing shared fence include line"
   fi
 
-  if [[ -f "$stance_auditor" ]] && ! grep -Fq -- "$required_audit_output_first" "$stance_auditor"; then
-    mark_failure "auditor.md.tpl missing audit first-line marker output line"
+  if [[ -f "$stance_audit" ]] && ! grep -Fq -- "$required_audit_output_first" "$stance_audit"; then
+    mark_failure "audit.md.tpl missing audit first-line marker output line"
   fi
 
-  if [[ -f "$stance_auditor" ]] && ! grep -Fq -- "$required_audit_no_citations" "$stance_auditor"; then
-    mark_failure "auditor.md.tpl missing audit no-citations output line"
+  if [[ -f "$stance_audit" ]] && ! grep -Fq -- "$required_audit_no_citations" "$stance_audit"; then
+    mark_failure "audit.md.tpl missing audit no-citations output line"
   fi
 
-  if [[ -f "$stance_auditor" ]] && ! grep -Fq -- "$required_audit_authority" "$stance_auditor"; then
-    mark_failure "auditor.md.tpl missing audit evidence-authority conflict rule line"
+  if [[ -f "$stance_audit" ]] && ! grep -Fq -- "$required_audit_authority" "$stance_audit"; then
+    mark_failure "audit.md.tpl missing audit evidence-authority conflict rule line"
   fi
 
-  if [[ -f "$stance_auditor" ]] && ! grep -Fq -- "$required_audit_allowlist_authority" "$stance_auditor"; then
-    mark_failure "auditor.md.tpl missing audit allowlist-authority interpretation rule line"
+  if [[ -f "$stance_audit" ]] && ! grep -Fq -- "$required_audit_allowlist_authority" "$stance_audit"; then
+    mark_failure "audit.md.tpl missing audit allowlist-authority interpretation rule line"
   fi
 
   if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_foreman_guard" "$stance_foreman"; then
