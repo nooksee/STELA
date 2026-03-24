@@ -35,7 +35,7 @@ Audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto`.
 **Dispatch Contract Notes:**
 - The DP Preflight Gate runs after the Freshness Gate and before any edits.
 - Worker input is DP text only; OPEN is for integrator refresh and receipt pointers and is not required reading for workers.
-- DP structure is generated from `ops/src/surfaces/dp.md.tpl` through `ops/bin/draft`; manual structural edits are prohibited.
+- DP structure is generated from `ops/src/surfaces/dp.md.tpl` through canonical tooling (`ops/bin/draft` for direct local rendering or the draft bundle's embedded DP authoring scaffold for Architect runs); manual structural edits are prohibited.
 
 **OPEN and OPEN-PORCELAIN Contract:**
 - `OPEN` is spine-grade: `ops/bin/certify` requires a `STELA_TRACE_ID` sourced from `STELA_TRACE_ID` env var or the latest OPEN artifact (`storage/handoff/OPEN-*.txt`). Run `./ops/bin/open --out=auto` before certify.
@@ -546,15 +546,9 @@ Canonical operator flow for a draft session:
 ./ops/bin/bundle --profile=draft --out=auto
 ~~~
 3. Deliver the bundle artifact (`DRAFT-*.txt` or `DRAFT-*.tar`) to the Architect.
-4. Save the populated DP slots scaffold from the Architect output to `var/tmp/dp-slots-scaffold.md`.
-5. Render the DP:
-~~~bash
-# packet_id is printed in the bundle [REQUEST] block
-./ops/bin/draft --id=DP-OPS-XXXX --title="..." \
-  --work-branch=work/... --base-head=<hash> \
-  --slots-file=var/tmp/dp-slots-scaffold.md
-~~~
-6. Validate the rendered intake:
+4. Use the embedded `DP AUTHORING SCAFFOLD` block in the bundle as the canonical full-DP scaffold; Architect returns one fenced worker-ready DP body completed from that scaffold.
+5. Save the full DP output directly to `storage/dp/intake/DP.md`.
+6. Validate the intake immediately:
 ~~~bash
 bash tools/lint/dp.sh storage/dp/intake/DP.md
 ~~~
@@ -563,8 +557,8 @@ Confirm PASS before dispatch.
 
 Surface contract:
 - `storage/handoff/PLAN.md`: latest-wins plan input; Analyst writes this; operator delivers it to the Architect as the primary handoff surface.
-- `DRAFT-*.txt`: emitted bundle artifact; contains the dump payload and stance contract.
-- `storage/dp/intake/DP.md`: latest-wins active DP draft surface; operator renders the validated scaffold output here after the draft run.
+- `DRAFT-*.txt`: emitted bundle artifact; contains the dump payload, stance contract, and embedded `DP AUTHORING SCAFFOLD` block.
+- `storage/dp/intake/DP.md`: latest-wins active DP draft surface; operator saves the validated full DP output here after the draft run.
 - `DP-OPS-XXXX`: packet identity printed by bundle and retained in TASK/addendum lineage, certify receipts, and telemetry. Bundle resolves the next packet id from the current certified TASK packet id plus one.
 
 ### Local Hooks Setup

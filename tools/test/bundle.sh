@@ -214,6 +214,7 @@ slice_route_contract() {
   echo "--- slice: route-contract"
   local out rp rr
   local open_embedded open_path open_source open_trace
+  local request_packet_id request_dp_draft_path
   make_task
 
   # Planning: explicit profile, artifact prefix PLANNING
@@ -257,6 +258,21 @@ slice_route_contract() {
     open_source="$(mf_string_in_block open source "$BUNDLE_LAST_MANIFEST_ABS")"
     [[ "$open_source" == "reused" ]] \
       || fail "route/draft: expected open.source='reused', got '${open_source}'"
+    request_packet_id="$(mf_string_in_block request packet_id "$BUNDLE_LAST_MANIFEST_ABS")"
+    [[ "$request_packet_id" == DP-OPS-* ]] \
+      || fail "route/draft: request.packet_id='${request_packet_id}' expected DP-OPS-*"
+    request_dp_draft_path="$(mf_string_in_block request dp_draft_path "$BUNDLE_LAST_MANIFEST_ABS")"
+    [[ "$request_dp_draft_path" == "storage/dp/intake/DP.md" ]] \
+      || fail "route/draft: request.dp_draft_path='${request_dp_draft_path}' expected 'storage/dp/intake/DP.md'"
+    grep -Fq "===== DP AUTHORING SCAFFOLD BEGIN =====" "${REPO_ROOT}/${out}" \
+      || fail "route/draft: bundle missing DP authoring scaffold begin marker"
+    grep -Fq "===== DP AUTHORING SCAFFOLD END =====" "${REPO_ROOT}/${out}" \
+      || fail "route/draft: bundle missing DP authoring scaffold end marker"
+    grep -Fq "### ${request_packet_id}:" "${REPO_ROOT}/${out}" \
+      || fail "route/draft: bundle scaffold missing rendered DP heading for ${request_packet_id}"
+    if grep -Fq "[DP_SCOPED_LOAD_ORDER]" "${REPO_ROOT}/${out}"; then
+      fail "route/draft: bundle must embed rendered DP scaffold, not raw DP slots scaffold markers"
+    fi
   fi
 
   # Auto: no PLAN.md → routes to planning
