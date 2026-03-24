@@ -107,7 +107,7 @@ dump_scope_foreman=core
 - Runtime derives draft `packet_id` from the current certified TASK packet id plus one.
 - `closing_sidecar` is the active latest-wins sidecar `storage/handoff/CLOSING.md`; packet identity remains explicit in request metadata and sidecar content.
 - `storage/handoff/PLAN.md` is the latest-wins draft plan input surface.
-- `storage/dp/intake/DP.md` is the deterministic active DP draft surface; Architect model output is a fenced DP draft block that the operator saves to this path for dispatch.
+- `storage/dp/intake/DP.md` is the deterministic active DP draft surface; Architect emits a populated DP slots scaffold; operator renders to this path via `ops/bin/draft` and validates with `tools/lint/dp.sh` before dispatch.
 
 ## Audit Transport Contract
 - Audit resolves the current certified packet id from the current TASK surface.
@@ -123,8 +123,8 @@ dump_scope_foreman=core
 
 ## Shipping Spine Contract
 The canonical operator shipping chain uses bundle at two points:
-- `--profile=planning`: deliver context + TOPIC.md to planning model; planning writes PLAN.md
-- `--profile=draft`: deliver context + PLAN.md to Architect model; Architect emits fenced DP draft block; operator saves to `storage/dp/intake/DP.md` while packet identity remains `DP-OPS-XXXX`
+- `--profile=planning`: deliver context + TOPIC.md to the Analyst; Analyst writes PLAN.md
+- `--profile=draft`: deliver context + PLAN.md to the Architect; Architect emits populated DP slots scaffold; operator renders via `ops/bin/draft`, validates with `tools/lint/dp.sh`, and saves to `storage/dp/intake/DP.md` while packet identity remains `DP-OPS-XXXX`
 - Worker executes DP; certify generates RESULTS + emits surface leaves
 - `--profile=audit`: package RESULTS + CLOSING for audit review; audit bundle dump is the canonical audit evidence payload
 - Operator commits on work branch, opens PR per CLOSING sidecar, merges to main

@@ -385,7 +385,7 @@ OPEN de-dup contract:
   --work-branch=work/dp-ops-0065-2026-02-14 --base-head=d3801c3a \
   --slots-file=storage/dp/intake/DP-OPS-0065.slots
 
-# Emit plan scaffold for analyst/draft authoring
+# Emit plan scaffold for Analyst/Architect draft authoring
 ./ops/bin/draft --emit-plan-scaffold=var/tmp/plan-scaffold.md
 
 # Emit DP slots scaffold for sidecar authoring
@@ -545,17 +545,26 @@ Canonical operator flow for a draft session:
 ~~~bash
 ./ops/bin/bundle --profile=draft --out=auto
 ~~~
-3. Deliver the bundle artifact (`DRAFT-*.txt` or `DRAFT-*.tar`) to the drafting model.
-4. Save the fenced DP draft from the model output to the active intake path printed in the bundle `[REQUEST]` block as `dp_draft_path`:
+3. Deliver the bundle artifact (`DRAFT-*.txt` or `DRAFT-*.tar`) to the Architect.
+4. Save the populated DP slots scaffold from the Architect output to `var/tmp/dp-slots-scaffold.md`.
+5. Render the DP:
 ~~~bash
-# path is storage/dp/intake/DP.md — packet_id printed in bundle [REQUEST]
+# packet_id is printed in the bundle [REQUEST] block
+./ops/bin/draft --id=DP-OPS-XXXX --title="..." \
+  --work-branch=work/... --base-head=<hash> \
+  --slots-file=var/tmp/dp-slots-scaffold.md
 ~~~
-5. Dispatch the DP per Section 2 Dispatch Packet Mechanics.
+6. Validate the rendered intake:
+~~~bash
+bash tools/lint/dp.sh storage/dp/intake/DP.md
+~~~
+Confirm PASS before dispatch.
+7. Dispatch the DP per Section 2 Dispatch Packet Mechanics.
 
 Surface contract:
-- `storage/handoff/PLAN.md`: latest-wins plan input; analyst model writes this; operator delivers it to the drafting model as the primary handoff surface.
+- `storage/handoff/PLAN.md`: latest-wins plan input; Analyst writes this; operator delivers it to the Architect as the primary handoff surface.
 - `DRAFT-*.txt`: emitted bundle artifact; contains the dump payload and stance contract.
-- `storage/dp/intake/DP.md`: latest-wins active DP draft surface; operator saves the fenced DP draft block output here after the draft model run.
+- `storage/dp/intake/DP.md`: latest-wins active DP draft surface; operator renders the validated scaffold output here after the draft run.
 - `DP-OPS-XXXX`: packet identity printed by bundle and retained in TASK/addendum lineage, certify receipts, and telemetry. Bundle resolves the next packet id from the current certified TASK packet id plus one.
 
 ### Local Hooks Setup
