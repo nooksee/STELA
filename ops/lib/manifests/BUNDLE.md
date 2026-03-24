@@ -107,7 +107,8 @@ dump_scope_foreman=core
 - Runtime derives draft `packet_id` from the current certified TASK packet id plus one.
 - `closing_sidecar` is the active latest-wins sidecar `storage/handoff/CLOSING.md`; packet identity remains explicit in request metadata and sidecar content.
 - `storage/handoff/PLAN.md` is the latest-wins draft plan input surface.
-- `storage/dp/intake/DP.md` is the deterministic active DP draft surface; Architect emits a populated DP slots scaffold; operator renders to this path via `ops/bin/draft` and validates with `tools/lint/dp.sh` before dispatch.
+- Draft bundle text includes an embedded `DP AUTHORING SCAFFOLD` block generated from the canonical DP template with canon-owned text already expanded and bundle-known packet metadata already populated.
+- `storage/dp/intake/DP.md` is the deterministic active DP draft surface; Architect completes the embedded authoring scaffold into a worker-ready full DP body, operator saves it directly to this path, and validates with `tools/lint/dp.sh` before dispatch.
 
 ## Audit Transport Contract
 - Audit resolves the current certified packet id from the current TASK surface.
@@ -124,7 +125,7 @@ dump_scope_foreman=core
 ## Shipping Spine Contract
 The canonical operator shipping chain uses bundle at two points:
 - `--profile=planning`: deliver context + TOPIC.md to the Analyst; Analyst writes PLAN.md
-- `--profile=draft`: deliver context + PLAN.md to the Architect; Architect emits populated DP slots scaffold; operator renders via `ops/bin/draft`, validates with `tools/lint/dp.sh`, and saves to `storage/dp/intake/DP.md` while packet identity remains `DP-OPS-XXXX`
+- `--profile=draft`: deliver context + PLAN.md plus the embedded DP authoring scaffold to the Architect; Architect emits a worker-ready full DP body, operator saves it to `storage/dp/intake/DP.md`, validates with `tools/lint/dp.sh`, and packet identity remains `DP-OPS-XXXX`
 - Worker executes DP; certify generates RESULTS + emits surface leaves
 - `--profile=audit`: package RESULTS + CLOSING for audit review; audit bundle dump is the canonical audit evidence payload
 - Operator commits on work branch, opens PR per CLOSING sidecar, merges to main

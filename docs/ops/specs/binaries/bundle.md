@@ -25,8 +25,9 @@ Bundle sits at two points in the shipping spine:
 4. Resolve stance template, artifact prefix, dump scope, and dump persistence profile from policy.
 5. Resolve profile-scoped exact-file disposable inputs.
 6. Invoke `ops/bin/dump` with explicit output path and explicit persistence profile.
-7. Render bundle text, emit manifest, and emit package tar. The emitted `[OPEN]` block and manifest `open` object carry a pointer plus copied metadata from the real OPEN artifact; they are not an anchor substitute.
-8. For audit reruns, emit fresh transport identity and submission lineage.
+7. Render bundle text, emit manifest, and emit package tar. For `--profile=draft`, bundle text also carries an embedded `DP AUTHORING SCAFFOLD` block rendered from the canonical DP template with canon-owned text already expanded and bundle-known packet metadata already populated.
+8. The emitted `[OPEN]` block and manifest `open` object carry a pointer plus copied metadata from the real OPEN artifact; they are not an anchor substitute.
+9. For audit reruns, emit fresh transport identity and submission lineage.
 
 ## Dump Scope Mapping
 1. `planning|draft|conform` -> `ops/bin/dump --scope=full`
@@ -71,8 +72,8 @@ Current live set:
 
 ## Draft Profile Surfaces
 - `storage/handoff/PLAN.md`: required plan input surface for draft intake.
-- `DRAFT-*.txt`: emitted bundle artifact containing the dump payload and stance contract.
-- `storage/dp/intake/DP.md`: latest-wins active DP draft surface; printed in bundle `[REQUEST]` as `dp_draft_path`. Draft model output is a fenced DP draft block saved here by the operator for dispatch.
+- `DRAFT-*.txt`: emitted bundle artifact containing the dump payload, stance contract, and embedded `DP AUTHORING SCAFFOLD` block.
+- `storage/dp/intake/DP.md`: latest-wins active DP draft surface; printed in bundle `[REQUEST]` as `dp_draft_path`. Draft model output is a fenced worker-ready DP body saved here by the operator for dispatch.
 - `packet_id`: process identity retained in bundle `[REQUEST]`, TASK/addendum lineage, audit transport, and telemetry (`DP-OPS-XXXX`). Runtime resolves the next packet id from the current certified TASK packet id plus one.
 
 ## Audit Submission Identity

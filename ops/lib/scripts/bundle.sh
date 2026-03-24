@@ -834,6 +834,75 @@ bundle_emit_stance_contract() {
   rm -f "$normalized_tmp"
 }
 
+bundle_render_draft_authoring_scaffold() {
+  local packet_id="$1"
+  local base_branch="$2"
+  local base_head="$3"
+  local freshness_stamp="$4"
+  local packet_id_branch_fragment=""
+  local suggested_work_branch=""
+  local slots_tmp=""
+  local rendered_output=""
+
+  packet_id_branch_fragment="${packet_id,,}"
+  suggested_work_branch="work/${packet_id_branch_fragment}-<replace-branch-slug>-${freshness_stamp}"
+  slots_tmp="$(mktemp)"
+
+  cat > "$slots_tmp" <<'EOF'
+[DP_SCOPED_LOAD_ORDER]
+- Replace with the minimal DP-scoped load order required for this packet.
+
+[OBJECTIVE]
+Replace with a 1-3 line objective grounded in the attached PLAN.md and directly visible bundle artifacts.
+
+[IN_SCOPE]
+- Replace with the exact repo-relative files and bounded change intent.
+
+[OUT_OF_SCOPE]
+- Replace with explicit exclusions and no-touch zones.
+
+[SAFETY_INVARIANTS]
+- Replace with hard safety constraints, no-edit zones, and allowlist requirements.
+
+[PLAN_STATE]
+- Replace with the current repo state and visible baseline facts from attached artifacts only.
+
+[PLAN_REQUEST]
+- Replace with deterministic worker requirements translated from PLAN.md.
+
+[PLAN_CHANGELOG]
+- UPDATE path
+- NEW path (only when required)
+
+[PLAN_PATCH]
+1. Replace with linear implementation steps using exact repo-relative paths.
+
+[RECEIPT_EXTRA]
+- Replace with DP-specific receipt commands using literal repo-local paths only.
+
+[CBC_PREFLIGHT]
+Replace with `Not applicable.` plus one-line rationale, or state why this packet is tooling-applicable.
+EOF
+
+  rendered_output="$(
+    "${REPO_ROOT}/ops/bin/template" render dp \
+      "--slot=DP_ID=${packet_id}" \
+      "--slot=DP_TITLE=Replace with concise worker-facing packet title" \
+      "--slot=BASE_BRANCH=${base_branch}" \
+      "--slot=PROPOSED_WORK_BRANCH=${suggested_work_branch}" \
+      "--slot=BASE_HEAD=${base_head}" \
+      "--slot=FRESHNESS_STAMP=${freshness_stamp}" \
+      "--slots-file=${slots_tmp}" \
+      --out=-
+  )" || {
+    rm -f "$slots_tmp"
+    die "bundle failed to render draft authoring scaffold"
+  }
+
+  rm -f "$slots_tmp"
+  printf '%s\n' "$rendered_output"
+}
+
 bundle_parse_foreman_intent() {
   local intent_text="$1"
   if [[ "$intent_text" =~ ^ADDENDUM[[:space:]]+REQUIRED:[[:space:]]+(DP-OPS-[0-9]{4,})[[:space:]]+-[[:space:]]+(.+)$ ]]; then
@@ -1091,6 +1160,8 @@ bundle_run() {
   local request_plan_source=""
   local request_packet_id=""
   local request_closing_sidecar=""
+  local draft_freshness_stamp=""
+  local draft_authoring_scaffold_tmp=""
   local rerun_intent=0
 
   local arg
@@ -1297,6 +1368,13 @@ bundle_run() {
     request_plan_source="$plan_rel"
     request_packet_id="$(bundle_resolve_draft_packet_id)"
     request_closing_sidecar="storage/handoff/CLOSING.md"
+    draft_freshness_stamp="$(date -u +%Y-%m-%d)"
+    draft_authoring_scaffold_tmp="$(mktemp)"
+    bundle_render_draft_authoring_scaffold \
+      "$request_packet_id" \
+      "$branch" \
+      "$head_short" \
+      "$draft_freshness_stamp" > "$draft_authoring_scaffold_tmp"
   fi
 
   local stance_template_key
@@ -1514,6 +1592,15 @@ bundle_run() {
       echo "- dp_draft_path: storage/dp/intake/DP.md"
       echo "- closing_sidecar: ${request_closing_sidecar}"
       echo
+      echo "[DP AUTHORING SCAFFOLD]"
+      echo "- Use this scaffold as the canonical full-DP structure."
+      echo "- Preserve canon-owned text; replace the authoring markers with packet-specific content."
+      echo "- Save the completed worker-ready DP body to storage/dp/intake/DP.md, then lint it before dispatch."
+      echo
+      echo "===== DP AUTHORING SCAFFOLD BEGIN ====="
+      cat "$draft_authoring_scaffold_tmp"
+      echo "===== DP AUTHORING SCAFFOLD END ====="
+      echo
     elif [[ "$resolved_profile" == "planning" ]]; then
       echo "[REQUEST]"
       echo "- topic_source: ${topic_rel}"
@@ -1547,6 +1634,9 @@ bundle_run() {
   } > "$out_abs"
 
   rm -f "$rendered_stance_tmp"
+  if [[ -n "$draft_authoring_scaffold_tmp" ]]; then
+    rm -f "$draft_authoring_scaffold_tmp"
+  fi
 
   if (( assembly_pointer_emitted )); then
     {
