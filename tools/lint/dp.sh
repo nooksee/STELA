@@ -945,7 +945,6 @@ check_dp_packet_coherence() {
   local path="$1"
   local heading
   local dp_id
-  local expected_fragment
   local work_branch
   local sidecar_path
   local sidecar_dp_id
@@ -955,10 +954,11 @@ check_dp_packet_coherence() {
   dp_id="$(printf '%s' "$heading" | sed -E 's/^###[[:space:]]*(DP-[^:]+):.*$/\1/')"
   [[ "$dp_id" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]] || return
 
-  expected_fragment="$(printf '%s' "$dp_id" | tr '[:upper:]' '[:lower:]')"
   work_branch="$(trim "$(strip_backticks "$(extract_field_value "Required Work Branch" "$path")")")"
-  if [[ -n "$work_branch" && "$work_branch" != *"${expected_fragment}"* ]]; then
-    fail "Required Work Branch must include '${expected_fragment}' to match heading id '${dp_id}'"
+  if [[ -n "$work_branch" ]] && ! contains_placeholder "$work_branch"; then
+    if [[ ! "$work_branch" =~ ^work/[^[:space:]]+-[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+      fail "Required Work Branch must follow 'work/<topic>-YYYY-MM-DD' form (PoT.md §6.2.3): ${work_branch}"
+    fi
   fi
 
   sidecar_path="$(grep -m1 -Eo 'storage/handoff/CLOSING\.md|storage/handoff/CLOSING-DP-[A-Z]+-[0-9]{4,}(-ADDENDUM-[A-Z]+)?\.md' "$path" || true)"
@@ -1149,9 +1149,11 @@ check_proposed_token_scan() {
   local found=0
   local lineno=0
   local line=""
+  local scrubbed=""
   while IFS= read -r line || [[ -n "$line" ]]; do
     lineno=$(( lineno + 1 ))
-    if [[ "$line" == *PROPOSED* ]]; then
+    scrubbed="$(printf '%s' "$line" | sed 's/PROPOSED_[A-Z][A-Z_]*/SCHEMA_ID/g')"
+    if [[ "$scrubbed" == *PROPOSED* ]]; then
       echo "PROPOSED token at line ${lineno}: ${line}" >&2
       found=1
     fi
@@ -1380,6 +1382,7 @@ run_test() {
   local tmp_results_preflight_invalid
   local tmp_proposed_marker_bad
   local tmp_proposed_prose_ok
+  local tmp_proposed_schema_ok
   local tmp_contamination_bad
   local tmp_receipt_token_bad
   local tmp_ccd_bad
@@ -1404,6 +1407,7 @@ run_test() {
   tmp_results_invalid="$(mktemp --suffix=-RESULTS.md)"
   tmp_proposed_marker_bad="$(mktemp)"
   tmp_proposed_prose_ok="$(mktemp)"
+  tmp_proposed_schema_ok="$(mktemp)"
   tmp_contamination_bad="$(mktemp)"
   local current_git_hash
   current_git_hash="$(git rev-parse HEAD)"
@@ -1416,7 +1420,7 @@ run_test() {
   DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_valid" >/dev/null
 
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" DP_CANONICAL_TEMPLATE_SHA256_OVERRIDE="0000000000000000000000000000000000000000000000000000000000000000" lint_path "$tmp_valid" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected canonical template hash mismatch failure" >&2
     exit 1
   fi
@@ -1424,7 +1428,7 @@ run_test() {
   cp "$tmp_valid" "$tmp_structure_bad"
   sed -i 's/^## 3.4 Execution Plan (A-E)$/## 3.4 Execution Plan (BROKEN)/' "$tmp_structure_bad"
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_structure_bad" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected DP structure hash mismatch failure" >&2
     exit 1
   fi
@@ -1438,7 +1442,7 @@ run_test() {
     { print }
   ' "$tmp_valid" > "$tmp_closeout_bad"
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_closeout_bad" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad" "$tmp_closeout_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad" "$tmp_closeout_bad"
     echo "FAIL: --test expected non-canonical closeout routing phrase failure" >&2
     exit 1
   fi
@@ -1446,31 +1450,42 @@ run_test() {
 
   tmp_coherence_bad="$(mktemp)"
   cp "$tmp_valid" "$tmp_coherence_bad"
-  sed -i 's#^Required Work Branch: .*#Required Work Branch: work/dp-ops-9999-2026-02-14#' "$tmp_coherence_bad"
+  sed -i 's#^Required Work Branch: .*#Required Work Branch: work/no-date-fragment#' "$tmp_coherence_bad"
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_coherence_bad" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad" "$tmp_coherence_bad"
-    echo "FAIL: --test expected packet-coherence work-branch mismatch failure" >&2
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad" "$tmp_coherence_bad"
+    echo "FAIL: --test expected packet-coherence work-branch form failure" >&2
     exit 1
   fi
   sed -i 's#storage/handoff/CLOSING.md#storage/handoff/CLOSING-DP-OPS-9999.md#g' "$tmp_coherence_bad"
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_coherence_bad" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad" "$tmp_coherence_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad" "$tmp_coherence_bad"
     echo "FAIL: --test expected packet-coherence sidecar mismatch failure" >&2
     exit 1
   fi
   rm -f "$tmp_coherence_bad"
 
+  cp "$tmp_valid" "$tmp_proposed_schema_ok"
+  printf '%s\n' '# The PROPOSED_WORK_BRANCH slot is a schema identifier.' >> "$tmp_proposed_schema_ok"
+  failures=0
+  check_proposed_token_scan "$tmp_proposed_schema_ok" >/dev/null 2>&1
+  if (( failures )); then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
+    echo "FAIL: --test expected schema-identifier form to pass drafting-marker scan" >&2
+    exit 1
+  fi
+  rm -f "$tmp_proposed_schema_ok"
+
   cp "$tmp_valid" "$tmp_pointer_bad"
   sed -i "s#^- ${tmp_allowlist_valid}\$#- storage/dp/active/not-canonical.txt#" "$tmp_pointer_bad"
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_pointer_bad" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected allowlist pointer mismatch failure" >&2
     exit 1
   fi
 
   render_fixture_from_template "$tmp_allowlist_file_bad" "$tmp_allowlist_bad"
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_bad" lint_path "$tmp_allowlist_file_bad" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected allowlist file validation failure" >&2
     exit 1
   fi
@@ -1561,7 +1576,7 @@ None.
 Decision Required: No
 TESTRESULTS
   if lint_path "$tmp_results_invalid" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected RESULTS validation failure" >&2
     exit 1
   fi
@@ -1609,7 +1624,7 @@ Decision Required: No
 Decision Leaf: None
 TESTRESULTS
   if lint_path "$tmp_results_preflight_invalid" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_preflight_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_preflight_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected RESULTS preflight-proof validation failure" >&2
     exit 1
   fi
@@ -1622,12 +1637,12 @@ TESTRESULTS
   # successful --test runs do not contain contradictory FAIL/OK receipt evidence.
   check_proposed_token_scan "$tmp_proposed_marker_bad" >/dev/null 2>&1
   if (( failures == 0 )); then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected direct PROPOSED provisional-marker scan failure" >&2
     exit 1
   fi
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_proposed_marker_bad" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected PROPOSED provisional-marker scan failure" >&2
     exit 1
   fi
@@ -1638,12 +1653,12 @@ TESTRESULTS
   failures=0
   check_proposed_token_scan "$tmp_proposed_prose_ok" >/dev/null 2>&1
   if (( failures == 0 )); then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected prose-only PROPOSED scan failure" >&2
     exit 1
   fi
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_proposed_prose_ok" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected prose-only PROPOSED lint failure" >&2
     exit 1
   fi
@@ -1676,7 +1691,7 @@ TESTRESULTS
   cp "$tmp_valid" "$tmp_ccd_bad"
   printf '%s\n' '<!-- CCD: ff_target="test" ff_band="10-20" -->' >> "$tmp_ccd_bad"
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_ccd_bad" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad" "$tmp_ccd_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad" "$tmp_ccd_bad"
     echo "FAIL: --test expected CCD metadata leakage failure" >&2
     exit 1
   fi
@@ -1686,7 +1701,7 @@ TESTRESULTS
   cp "$tmp_valid" "$tmp_frontmatter_bad"
   printf '%s\n' '---' >> "$tmp_frontmatter_bad"
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_frontmatter_bad" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad" "$tmp_frontmatter_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad" "$tmp_frontmatter_bad"
     echo "FAIL: --test expected frontmatter delimiter leakage failure" >&2
     exit 1
   fi
@@ -1696,7 +1711,7 @@ TESTRESULTS
   cp "$tmp_valid" "$tmp_receipt_missing_bad"
   sed -i '/^- bash tools\/lint\/integrity\.sh$/d' "$tmp_receipt_missing_bad"
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_receipt_missing_bad" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad" "$tmp_receipt_missing_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad" "$tmp_receipt_missing_bad"
     echo "FAIL: --test expected missing mandatory receipt command failure" >&2
     exit 1
   fi
@@ -1706,7 +1721,7 @@ TESTRESULTS
   cp "$tmp_valid" "$tmp_receipt_token_bad"
   sed -i 's#^- ops/bin/manifest stance-fixture --out=-$#- python tools/example.py#' "$tmp_receipt_token_bad"
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_receipt_token_bad" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_preflight_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad" "$tmp_receipt_token_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_preflight_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad" "$tmp_receipt_token_bad"
     echo "FAIL: --test expected unsupported receipt first-token failure" >&2
     exit 1
   fi
@@ -1716,7 +1731,7 @@ TESTRESULTS
   cp "$tmp_valid" "$tmp_sidecar_prepop_bad"
   sed -i 's/^- Commit Message$/- Commit Message: feat: prefilled/' "$tmp_sidecar_prepop_bad"
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_sidecar_prepop_bad" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad" "$tmp_sidecar_prepop_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad" "$tmp_sidecar_prepop_bad"
     echo "FAIL: --test expected sidecar pre-population failure" >&2
     exit 1
   fi
@@ -1726,12 +1741,12 @@ TESTRESULTS
   check_mandatory_receipt_commands "$tmp_valid"
   check_sidecar_not_prepopulated "$tmp_valid"
   if (( failures )); then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected canonical pass through mandatory receipt and sidecar checks" >&2
     exit 1
   fi
 
-  rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_preflight_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+  rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_preflight_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
   echo "OK: --test passed"
 }
 
