@@ -845,7 +845,7 @@ bundle_render_draft_authoring_scaffold() {
   local rendered_output=""
 
   packet_id_branch_fragment="${packet_id,,}"
-  suggested_work_branch="work/${packet_id_branch_fragment}-<replace-branch-slug>-${freshness_stamp}"
+  suggested_work_branch="work/<DP-ID>-YYYY-MM-DD"
   slots_tmp="$(mktemp)"
 
   cat > "$slots_tmp" <<'EOF'

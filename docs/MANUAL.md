@@ -23,7 +23,7 @@ Audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto`.
 
 **Execution Cycle:**
 1.  **Start:** `./ops/bin/open --out=auto` (freshness gate + trace anchor; OPEN provides `STELA_TRACE_ID` required by certify).
-2.  **Draft:** `./ops/bin/draft` (generates canonical DP block, refreshes `storage/dp/intake/DP.md`, and updates `TASK.md`).
+2.  **Draft:** `./ops/bin/bundle --profile=draft --out=auto` (generates draft bundle with embedded DP AUTHORING SCAFFOLD; deliver `DRAFT-*.txt` to Architect; Architect returns one fenced worker-ready DP body; save full output to `storage/dp/intake/DP.md`; lint immediately: `bash tools/lint/dp.sh storage/dp/intake/DP.md`; confirm PASS before dispatch).
 3.  **Capture (CDD):** `./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto` (serializes Contractor-visible state).
     Note: Audit intake is bundle-first. Use `./ops/bin/bundle --profile=audit --out=auto` for audit review. Bundle dump scope is profile-mapped from `ops/lib/manifests/BUNDLE.md`; current audit mapping is `core`.
 4.  **Dispatch:** Hand DP to Worker (See Section 5).
@@ -41,6 +41,13 @@ Audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto`.
 - `OPEN` is spine-grade: `ops/bin/certify` requires a `STELA_TRACE_ID` sourced from `STELA_TRACE_ID` env var or the latest OPEN artifact (`storage/handoff/OPEN-*.txt`). Run `./ops/bin/open --out=auto` before certify.
 - `ops/bin/bundle` consumes a real current OPEN artifact for the active branch and HEAD. If none exists, or the latest OPEN is stale for the current branch/HEAD, bundle refreshes one through `./ops/bin/open --out=auto` before continuing. Bundle metadata may mirror OPEN fields, but it is not a substitute for the artifact.
 - `OPEN-PORCELAIN` (`storage/handoff/OPEN-PORCELAIN-*.txt`) is conditionally emitted: it is written only when the working tree is dirty. It is not a universal shipping requirement; clean sessions suppress it by design.
+
+**Non-Bundle Repo-Sharing Path (plain session):**
+For sessions where no bundle profile is in use, share repo state using:
+1. `./ops/bin/open --out=auto` — freshness gate and trace anchor.
+2. `./ops/bin/dump --scope=core --format=chatgpt --out=auto` — core context snapshot (excludes `projects/` and `opt/_factory/`).
+- Use `--scope=platform` only when `opt/_factory/` content is intentionally in scope for the session.
+This path is separate from bundle-mediated planning, draft, and audit transport; it does not replace bundle-based shipping spine stages.
 
 **Execution-Decision Handling (Interim):**
 - `execution-decision` is disposable/manual-placement evidence, subordinate to `RESULTS`, `CLOSING`, and audit truth.

@@ -37,12 +37,11 @@ Truth: tools/lint/truth.sh
 DP lint: tools/lint/dp.sh (enforces DP transaction rules in Section 3; does not enforce TASK container schema)
 TASK lint: tools/lint/task.sh (sole TASK surface/container schema enforcer)
 Repo verify: tools/verify.sh
-llms parity: tools/lint/llms.sh
 
 ## 3. Current Dispatch Packet (DP)
 
 Section-by-section authoring protocol:
-- Generate DP structure from `ops/src/surfaces/dp.md.tpl` using `ops/bin/draft`.
+- Generate DP structure via `./ops/bin/bundle --profile=draft --out=auto` (standard operator path: Architect completes the embedded DP AUTHORING SCAFFOLD; save the returned DP body to `storage/dp/intake/DP.md`) or locally via `ops/bin/draft` (template render only).
 - Do not hand-edit DP structural boilerplate in `TASK.md` after generation.
 - Manual edits are limited to slot content only (objective, scope, safety, plan body, receipt body).
 - Freeze each completed subsection in order (3.1 -> 3.2 -> 3.3 -> 3.4.x).
@@ -156,7 +155,6 @@ Populate during execution; do not pre-fill in TASK.md.
 - bash tools/lint/dp.sh --test
 - bash tools/lint/dp.sh TASK.md
 - bash tools/lint/task.sh
-- bash tools/lint/llms.sh
 - ./tools/verify.sh
 - ./ops/bin/prune --dry-run
 - ./ops/bin/prune --target=pow --dry-run
