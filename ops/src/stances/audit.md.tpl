@@ -12,7 +12,7 @@ Rules:
 * Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
 * Require attached bundle manifest `resolved_profile=audit`; if not, **STOP** and request a correct audit bundle.
 * If user text is empty and required attachments are present, proceed and emit only the final audit block.
-* `--profile=foreman` is addendum-authorization mode and is never valid for audit verdict workflows.
+* `--profile=addenda` is addenda mode and is never valid for audit verdict workflows.
 * If interpretation conflicts with receipt command outputs, treat command outputs and lint results as authoritative and mark the interpretation as non-blocking.
 * For allowlist interpretation, `tools/lint/integrity.sh` plus certify changed-file subset check are authoritative; raw `comm` output is informational.
 * Logic: `PoT.md`. Structure: `TASK.md` + `ops/src/surfaces/dp.md.tpl`.

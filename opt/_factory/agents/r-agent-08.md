@@ -23,7 +23,7 @@ Bundle artifact coordination and routing governance.
 ## Identity Contract
 - `agent_id`: `R-AGENT-08`
 - `runtime_role`: `foreman`
-- `stance_id`: `foreman`
+- `stance_id`: `addenda`
 
 ## Capability Tags
 - `bundle-routing-governance`

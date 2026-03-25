@@ -225,14 +225,14 @@ ops/bin/template
 ops/src/stances/planning.md.tpl
 ops/src/stances/draft.md.tpl
 ops/src/stances/audit.md.tpl
-ops/src/stances/foreman.md.tpl
+ops/src/stances/addenda.md.tpl
 ops/src/stances/conformist.md.tpl
 ops/src/shared/stances.json
 docs/ops/specs/stances/planning.md
 docs/ops/specs/stances/draft.md
 docs/ops/specs/stances/audit.md
 docs/ops/specs/stances/conformist.md
-docs/ops/specs/stances/foreman.md
+docs/ops/specs/stances/addenda.md
 archives/surfaces/TASK-DP-OPS-0151-*.md
 archives/surfaces/TASK-DP-OPS-0152-*.md
 archives/surfaces/TASK-DP-OPS-0153-*.md
@@ -324,7 +324,7 @@ archives/decisions/RoR-2026-03-12-001-cbc-0184.md
 ops/src/stances/planning.md.tpl
 ops/src/stances/draft.md.tpl
 ops/src/stances/audit.md.tpl
-ops/src/stances/foreman.md.tpl
+ops/src/stances/addenda.md.tpl
 tools/lint/style.sh
 docs/ops/specs/stances/planning.md
 docs/ops/README.md
@@ -444,7 +444,7 @@ docs/ops/specs/binaries/draft.md
 docs/ops/specs/runbook/execution-decision.md
 ops/src/runbook/execution-decision.yaml
 docs/ops/specs/stances/draft.md
-docs/ops/specs/stances/foreman.md
+docs/ops/specs/stances/addenda.md
 docs/ops/specs/stances/conformist.md
 tools/lint/integrity.sh
 tools/test/bundle.sh

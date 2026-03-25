@@ -45,7 +45,7 @@ class=draft-bundles|pattern=storage/handoff/DRAFT-*|tier=historical|weight=2
 class=audit-bundles|pattern=storage/handoff/AUDIT-*|tier=historical|weight=2
 class=audit-reruns|pattern=storage/handoff/AUDIT-R*|tier=historical|weight=2
 class=conform-bundles|pattern=storage/handoff/CONFORM-*|tier=historical|weight=2
-class=foreman-bundles|pattern=storage/handoff/FOREMAN-*|tier=historical|weight=2
+class=addenda-bundles|pattern=storage/handoff/ADDENDUM-*|tier=historical|weight=2
 class=project-bundles|pattern=storage/handoff/PROJECT-*|tier=historical|weight=2
 class=legacy-bundles|pattern=storage/handoff/BUNDLE-*|tier=historical|weight=2
 

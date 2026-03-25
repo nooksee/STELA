@@ -23,5 +23,5 @@ Define the template-backed Contractor stance for addendum authorization artifact
 
 ## Related pointers
 - `ops/src/stances/contractor.md.tpl`
-- `ops/src/stances/foreman.md.tpl`
+- `ops/src/stances/addenda.md.tpl`
 - `ops/src/stances/addendum.md.tpl`

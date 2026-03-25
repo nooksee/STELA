@@ -7,31 +7,31 @@ Stance contract bodies are rendered from `ops/src/stances/*.md.tpl` through `ops
 ATS schema policy is loaded from `ops/lib/manifests/ASSEMBLY.md` through the key `assembly_policy_manifest`.
 
 bundle_manifest_version=1
-supported_profiles=planning,draft,audit,project,conform,foreman
+supported_profiles=planning,draft,audit,project,conform,addenda
 auto_default_profile=planning
 auto_plan_profile=draft
 project_profile=project
 audit_profile=audit
-foreman_profile=foreman
-foreman_intent_form=ADDENDUM REQUIRED: <BASE_DP_ID> - <ONE-LINE BLOCKER>
+addenda_profile=addenda
+addenda_intent_form=ADDENDUM REQUIRED: <BASE_DP_ID> - <ONE-LINE BLOCKER>
 profile_alias_legacy_hygiene_to=conform
 profile_alias_legacy_hygiene_deprecation_status=sunset
 profile_alias_legacy_hygiene_remove_after_dp=DP-OPS-0165
-handoff_omit_profiles=audit,foreman
+handoff_omit_profiles=audit,addenda
 
 stance_template_planning=stance-planning
 stance_template_draft=stance-draft
 stance_template_audit=stance-audit
 stance_template_project=stance-planning
 stance_template_conform=stance-conformist
-stance_template_foreman=stance-foreman
+stance_template_addenda=stance-addenda
 
 artifact_prefix_planning=PLANNING
 artifact_prefix_draft=DRAFT
 artifact_prefix_audit=AUDIT
 artifact_prefix_project=PROJECT
 artifact_prefix_conform=CONFORM
-artifact_prefix_foreman=FOREMAN
+artifact_prefix_addenda=ADDENDUM
 compatibility_legacy_bundle_prefix=BUNDLE
 compatibility_emit_legacy_bundle_artifacts=false
 smoke_handoff_root=var/tmp/_smoke/handoff
@@ -52,7 +52,7 @@ dump_scope_draft=full
 dump_scope_audit=core
 dump_scope_project=project
 dump_scope_conform=full
-dump_scope_foreman=core
+dump_scope_addenda=core
 
 ## Persistence-Tier Routing Contract
 - Bundle does not serialize cold archive policy itself. It routes a persistence profile into `ops/bin/dump`, and `ops/bin/dump` resolves tiered archive serialization from `ops/etc/persistence.manifest`.
@@ -62,17 +62,17 @@ dump_scope_foreman=core
   - audit -> `--persistence-profile=audit`
   - project -> `--persistence-profile=project`
   - conform -> `--persistence-profile=conform`
-  - foreman -> `--persistence-profile=foreman`
+  - addenda -> `--persistence-profile=addenda`
 - Scope and persistence profile are independent:
   - planning and draft still use `--scope=full`
-  - audit and foreman still use `--scope=core`
+  - audit and addenda still use `--scope=core`
   - persistence-tier compaction happens inside dump serialization, not traverse selection
 
 ## Profile Attachment Contract
 - planning: `PLANNING-*.txt`, `PLANNING-*.manifest.json`, transport-managed `storage/handoff/TOPIC.md`
 - draft: `DRAFT-*.txt`, `DRAFT-*.manifest.json`, transport-managed `storage/handoff/PLAN.md` with request metadata (`plan_source`, `packet_id`, `closing_sidecar`, `dp_draft_path`)
 - audit: initial `AUDIT-*.txt`, rerun `AUDIT-R*-*.txt`, matching `.manifest.json`/`.tar`, transport-managed current DP `storage/handoff/RESULTS.md` and `storage/handoff/CLOSING.md`
-- foreman: `FOREMAN-*.txt`, `FOREMAN-*.manifest.json`
+- addenda: `ADDENDUM-*.txt`, `ADDENDUM-*.manifest.json`
 - project: `PROJECT-*.txt`, `PROJECT-*.manifest.json`
 - conform: `CONFORM-*.txt`, `CONFORM-*.manifest.json`, draft DP input
 
@@ -131,7 +131,7 @@ The canonical operator shipping chain uses bundle at two points:
 - Operator commits on work branch, opens PR per CLOSING sidecar, merges to main
 
 Secondary lanes are bounded and do not replace RESULTS or audit truth:
-- `--profile=foreman`: intervention intake only (not PASS/FAIL); intent form must be `ADDENDUM REQUIRED: <BASE_DP_ID> - <BLOCKER>`
+- `--profile=addenda`: intervention intake only (not PASS/FAIL); intent form must be `ADDENDUM REQUIRED: <BASE_DP_ID> - <BLOCKER>`
 - `--profile=conform`: structure normalization; output is a revised DP draft, not an audit verdict
 - execution-decision: disposable/manual placement, not a bundle profile
 
@@ -140,7 +140,7 @@ Audit dump generation is owned by `--profile=audit`. Standalone `ops/bin/dump --
 ## Compatibility Notes
 Canonical audit verdict profile is `audit`.
 Canonical draft profile is `draft`.
-Canonical addendum authorization profile is `foreman`.
+Canonical addenda profile is `addenda`.
 Legacy `hygiene` remains accepted as a compatibility alias and resolves to `conform`.
 Alias routing values are loaded from `profile_alias_legacy_hygiene_to` at runtime.
 Legacy `hygiene` alias deprecation status is `sunset`; removal target is `DP-OPS-0165`.
