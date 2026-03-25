@@ -251,8 +251,7 @@ ${bold}Closeout Sequence${reset}
    ${green}bash tools/lint/truth.sh${reset}
    ${green}bash tools/lint/style.sh${reset}
    ${green}bash tools/lint/dp.sh TASK.md${reset}
-   ${green}bash tools/lint/dp.sh storage/handoff/RESULTS.md${reset}
-   ${green}bash tools/lint/llms.sh${reset}
+   ${green}bash tools/lint/results.sh storage/handoff/RESULTS.md${reset}
 2. Record proof and history:
    - Update RESULTS receipts.
    - Append SoP history entry.
@@ -281,7 +280,7 @@ ${bold}Shipping Spine${reset}
 
 ${bold}Command Index${reset}
   ${cyan}open${reset}       Session freshness and trace anchor (STELA_TRACE_ID required by certify).
-  ${cyan}draft${reset}      Generate canonical DP from template; saves to storage/dp/intake/ and TASK.md.
+  ${cyan}draft${reset}      Local DP generator (template render); standard operator draft path is ${cyan}bundle --profile=draft${reset}.
   ${cyan}dump${reset}       Platform context capture (use --selection=dp+allowlist for CDD; --scope=core for operator audit).
   ${cyan}bundle${reset}     Delivery transport for planning, draft, audit, foreman, conform profiles.
   ${cyan}certify${reset}    Generate RESULTS receipt, emit SoP/PoW/TASK archive leaves, move DP to processed.
@@ -302,10 +301,11 @@ ${bold}Help Modes${reset}
 ${bold}Quick Start (Main Spine)${reset}
   1) Read constitution and active contract: ${green}PoT.md${reset}, ${green}TASK.md${reset}
   2) Open session: ${green}./ops/bin/open --out=auto${reset}
-  3) Run preflight gates: ${green}bash tools/lint/dp.sh --test${reset}, ${green}bash tools/lint/dp.sh TASK.md${reset}, ${green}bash tools/lint/task.sh${reset}
-  4) Execute DP. Certify: ${green}./ops/bin/certify --dp=DP-OPS-XXXX --out=auto${reset}
-  5) Audit: ${green}./ops/bin/bundle --profile=audit --out=auto${reset}
-  6) Operator: commit, PR, merge per CLOSING sidecar.
+  3) Draft: ${green}./ops/bin/bundle --profile=draft --out=auto${reset} (Architect completes scaffold; save DP to ${green}storage/dp/intake/DP.md${reset}; lint before dispatch)
+  4) Run preflight gates: ${green}bash tools/lint/dp.sh --test${reset}, ${green}bash tools/lint/dp.sh TASK.md${reset}, ${green}bash tools/lint/task.sh${reset}
+  5) Execute DP. Certify: ${green}./ops/bin/certify --dp=DP-OPS-XXXX --out=auto${reset}
+  6) Audit: ${green}./ops/bin/bundle --profile=audit --out=auto${reset}
+  7) Operator: commit, PR, merge per CLOSING sidecar.
 
 ${bold}Wayfinding${reset}
   MAP analogue: ${green}./ops/bin/help${reset}

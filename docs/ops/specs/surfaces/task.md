@@ -13,7 +13,8 @@ Think of `TASK.md` like the control desk card that shows which packet is active 
 
 ## Enforcement
 - `tools/lint/task.sh`: Enforces TASK surface schema and TASK-only container rules.
-- `tools/lint/dp.sh`: Enforces DP transaction rules in Section 3 and validates RESULTS artifacts.
+- `tools/lint/dp.sh`: Enforces DP transaction rules in Section 3.
+- `tools/lint/results.sh`: Validates RESULTS artifacts.
 - `ops/bin/draft`: Generates canonical DP structure from `ops/src/surfaces/dp.md.tpl` and updates `TASK.md`.
 - Separation of concerns is strict: DP lint does not duplicate TASK container validation.
 
@@ -32,7 +33,7 @@ Think of `TASK.md` like the control desk card that shows which packet is active 
 
 ## DP Generation Contract
 - DP structure is immutable and generated from `ops/src/surfaces/dp.md.tpl`.
-- Standard generation flow is `./ops/bin/open` then `./ops/bin/draft`.
+- Standard operator generation flow is bundle-first: `./ops/bin/bundle --profile=draft --out=auto`; Architect completes the embedded DP AUTHORING SCAFFOLD and returns a fenced worker-ready DP body; operator saves it to `storage/dp/intake/DP.md` and lints with `bash tools/lint/dp.sh storage/dp/intake/DP.md`. Local generation via `./ops/bin/draft` remains available as a template-render alternative.
 - Manual edits after generation are limited to slot content only; structural heading/label edits are prohibited.
 - `tools/lint/dp.sh` enforces canonical template hash and normalized structure-hash parity.
 
