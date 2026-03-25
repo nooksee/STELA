@@ -35,7 +35,7 @@ Steps:
    * Replace only the authoring markers and packet-specific section content using `PLAN.md` plus directly visible attached artifacts.
 4. **CONTENT REQUIREMENTS**:
    * Title line: replace the title marker with a concise worker-facing packet title while preserving the packet id from the scaffold.
-   * `Required Work Branch`: replace only the branch slug marker; preserve packet-id/date framing already present in the scaffold when present.
+   * `Work Branch`: replace only the branch slug marker; preserve packet-id/date framing already present in the scaffold when present.
    * `3.2.2 DP-scoped load order`: fill with the minimal canon docs/specs/lints the worker must load.
    * `Objective`: 1-3 lines.
    * `In scope`: explicit boundaries plus context hazard exclusions.

@@ -8,7 +8,7 @@
 ## Mechanics and Sequencing
 1. Resolve repository root, emit telemetry, and enforce canonical template hash parity for `ops/src/surfaces/dp.md.tpl`.
 2. Resolve input mode (`--test`, explicit path, stdin, or default `TASK.md`), including TASK pointer-head resolution and DP block extraction when the source is a TASK surface. The active addendum intake surface (`storage/dp/intake/ADDENDUM.md`) dispatches to `lint_addendum_intake()` instead of DP structure hashing.
-3. For DP payloads, run a drafting-marker scan as the first `lint_payload()` check before template-hash verification and structural validation. The scan is pattern-aware (PoT.md §6.3): before testing each line for the drafting-marker keyword, occurrences of the schema-identifier form — the keyword immediately followed by an underscore and one or more uppercase letters or underscores — are stripped via sed; a line where the keyword only appears within such schema identifiers passes; a line where the keyword remains after stripping fails, with the line number and original content reported to stderr. The `Required Work Branch` field in a finalized DP must carry the bare `work/<topic>-YYYY-MM-DD` value only. There is no prose-only exception for value-level usage.
+3. For DP payloads, run a drafting-marker scan as the first `lint_payload()` check before template-hash verification and structural validation. The scan is pattern-aware (PoT.md §6.2.2): before testing each line for the drafting-marker keyword, occurrences of the schema-identifier form — the keyword immediately followed by an underscore and one or more uppercase letters or underscores — are stripped via sed; a line where the keyword only appears within such schema identifiers passes; a line where the keyword remains after stripping fails, with the line number and original content reported to stderr. The `Work Branch` field in a finalized DP must carry the bare `work/<DP-ID>-YYYY-MM-DD` value only. Historical surfaces that still spell the field as `Required Work Branch` are normalized to `Work Branch` before structure comparison and field extraction; the value rule is identical. There is no prose-only exception for value-level usage.
 4. Run foreign citation contamination scan against DP body text. Reject the first line containing `:contentReference[` with a deterministic line-number failure.
 5. Render canonical DP in non-strict mode, normalize both canonical and payload structures, hash both normalized forms, and fail on mismatch.
 6. Validate required fields and section blocks, including heading ID/title shape, base branch metadata, scoped load-order content, plan slots, and receipt slot non-placeholder content.
@@ -31,7 +31,7 @@
 `dp.sh --test` must include deterministic fixtures for contract-shape hardening:
 
 1. **Non-canonical closeout phrase (FAIL):** inject `- Route to contractor ...` into §3.5 and require failure.
-2. **Invalid work-branch form (FAIL):** `Required Work Branch` does not follow `work/<topic>-YYYY-MM-DD` form (PoT.md §6.2.3) and must fail.
+2. **Invalid work-branch form (FAIL):** `Work Branch` does not follow `work/<DP-ID>-YYYY-MM-DD` form (PoT.md §6.2.1) and must fail.
 3. **Closing-sidecar coherence mismatch (FAIL):** a packet-scoped legacy sidecar token in §3.5.1 carries an id fragment that disagrees with the heading id.
 
 ### Mandatory Receipt Command Shape and Sidecar Pre-population Fixtures (`--test`)
@@ -86,7 +86,7 @@ Allowed literal first-token families are exactly:
 
 1. `check_dp_packet_coherence()`:
    - derives heading packet id from the first `### DP-...:` line,
-   - requires `Required Work Branch` to follow `work/<topic>-YYYY-MM-DD` form (PoT.md §6.2.3),
+   - requires `Work Branch` to follow `work/<DP-ID>-YYYY-MM-DD` form (PoT.md §6.2.1),
    - requires a canonical closing-sidecar path token in §3.5.1 (`storage/handoff/CLOSING.md`),
    - still rejects legacy packet-scoped sidecar tokens when their id fragment disagrees with the heading id.
 2. `check_closeout_section_shape()`:

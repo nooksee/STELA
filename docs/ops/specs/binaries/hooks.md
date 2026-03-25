@@ -24,7 +24,7 @@ This is a local `.git/config` change only. No tracked files are modified.
 
 | Hook | Trigger | Guard |
 |------|---------|-------|
-| `pre-commit` | `git commit` | Refuses commit on `main` or non-`work/*` branch (PoT §6.2.3); runs llms refresh and stages bundles |
+| `pre-commit` | `git commit` | Refuses commit on `main` or non-`work/*` branch (PoT §6.2.1); runs llms refresh and stages bundles |
 | `pre-push` | `git push` | Refuses direct push to `main` (PoT §6.1) |
 
 ## Bypass

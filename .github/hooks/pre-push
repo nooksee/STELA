@@ -8,6 +8,6 @@ hook_fail() {
 
 while IFS=' ' read -r _local_ref _local_sha remote_ref _remote_sha; do
   if [[ "$remote_ref" == "refs/heads/main" ]]; then
-    hook_fail "direct push to main is forbidden (PoT §6.1, §6.2.3). Open a PR from a work/* branch."
+    hook_fail "direct push to main is forbidden (PoT §6.1, §6.2.1). Open a PR from a work/* branch."
   fi
 done

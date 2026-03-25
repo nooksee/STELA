@@ -20,7 +20,7 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="b1662f36c495a621976552ccdd40e4d9f8827ed94833e6df15aa378f978c60ec"
+CANONICAL_DP_TEMPLATE_SHA256="e1076015c7e6a4cbb2cd050e3e40ba5ad90906697b1a78d4ccb98f605b7b8e82"
 CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/stances/addendum.md.tpl"
 CANONICAL_ADDENDUM_TEMPLATE_SHA256="715db3fae0598a85a0fa490c16f590dd08e6d6f02fa9b18224ce48625612f624"
 TEMPLATE_RENDER_BIN="ops/bin/template"
@@ -499,8 +499,8 @@ normalize_dp_structure() {
         print "Base Branch: {{BASE_BRANCH}}"
         next
       }
-      if ($0 ~ /^Required Work Branch:[[:space:]]*/) {
-        print "Required Work Branch: {{PROPOSED_WORK_BRANCH}}"
+      if ($0 ~ /^(Required Work Branch|Work Branch):[[:space:]]*/) {
+        print "Work Branch: {{PROPOSED_WORK_BRANCH}}"
         next
       }
       if ($0 ~ /^Base HEAD:[[:space:]]*/) {
@@ -629,7 +629,10 @@ check_required_fields() {
   local base_head
 
   base_branch="$(trim "$(strip_backticks "$(extract_field_value "Base Branch" "$path")")")"
-  work_branch="$(trim "$(strip_backticks "$(extract_field_value "Required Work Branch" "$path")")")"
+  work_branch="$(trim "$(strip_backticks "$(extract_field_value "Work Branch" "$path")")")"
+  if [[ -z "$work_branch" ]]; then
+    work_branch="$(trim "$(strip_backticks "$(extract_field_value "Required Work Branch" "$path")")")"
+  fi
   base_head_raw="$(trim "$(strip_backticks "$(extract_field_value "Base HEAD" "$path")")")"
   freshness_stamp="$(trim "$(strip_backticks "$(extract_field_value "Freshness Stamp" "$path")")")"
 
@@ -639,9 +642,9 @@ check_required_fields() {
     fail "missing or placeholder value for 'Base Branch'"
   fi
   if [[ -z "$work_branch" ]]; then
-    fail "missing value for 'Required Work Branch'"
+    fail "missing value for 'Work Branch'"
   elif contains_placeholder "$work_branch"; then
-    fail "missing or placeholder value for 'Required Work Branch'"
+    fail "missing or placeholder value for 'Work Branch'"
   fi
   if [[ -z "$base_head_raw" ]]; then
     fail "missing value for 'Base HEAD'"
@@ -954,10 +957,13 @@ check_dp_packet_coherence() {
   dp_id="$(printf '%s' "$heading" | sed -E 's/^###[[:space:]]*(DP-[^:]+):.*$/\1/')"
   [[ "$dp_id" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]] || return
 
-  work_branch="$(trim "$(strip_backticks "$(extract_field_value "Required Work Branch" "$path")")")"
+  work_branch="$(trim "$(strip_backticks "$(extract_field_value "Work Branch" "$path")")")"
+  if [[ -z "$work_branch" ]]; then
+    work_branch="$(trim "$(strip_backticks "$(extract_field_value "Required Work Branch" "$path")")")"
+  fi
   if [[ -n "$work_branch" ]] && ! contains_placeholder "$work_branch"; then
     if [[ ! "$work_branch" =~ ^work/[^[:space:]]+-[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
-      fail "Required Work Branch must follow 'work/<topic>-YYYY-MM-DD' form (PoT.md §6.2.3): ${work_branch}"
+      fail "Work Branch must follow 'work/<DP-ID>-YYYY-MM-DD' form (PoT.md §6.2.1): ${work_branch}"
     fi
   fi
 
@@ -1450,7 +1456,7 @@ run_test() {
 
   tmp_coherence_bad="$(mktemp)"
   cp "$tmp_valid" "$tmp_coherence_bad"
-  sed -i 's#^Required Work Branch: .*#Required Work Branch: work/no-date-fragment#' "$tmp_coherence_bad"
+  sed -i 's#^Work Branch: .*#Work Branch: work/no-date-fragment#' "$tmp_coherence_bad"
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_coherence_bad" >/dev/null 2>&1; then
     rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad" "$tmp_coherence_bad"
     echo "FAIL: --test expected packet-coherence work-branch form failure" >&2
@@ -1631,7 +1637,7 @@ TESTRESULTS
 
   # Disallowed provisional-marker form must fail.
   cp "$tmp_valid" "$tmp_proposed_marker_bad"
-  sed -i 's#^Required Work Branch: .*#Required Work Branch: PROPOSED-work/dp-ops-0000-2026-02-14#' "$tmp_proposed_marker_bad"
+  sed -i 's#^Work Branch: .*#Work Branch: PROPOSED-work/dp-ops-0000-2026-02-14#' "$tmp_proposed_marker_bad"
   failures=0
   # Expected-negative self-check: suppress emitted FAIL lines from the detector so
   # successful --test runs do not contain contradictory FAIL/OK receipt evidence.

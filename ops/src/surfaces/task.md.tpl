@@ -67,7 +67,7 @@ Input discipline (hard rule):
 
 ## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Required Work Branch: work/dp-ops-XXXX-YYYY-MM-DD
+Work Branch: work/<DP-ID>-YYYY-MM-DD
 Base HEAD: 0000000 (Must match session context output)
 
 Required local re-check (worker runs; paste outputs in RESULTS):

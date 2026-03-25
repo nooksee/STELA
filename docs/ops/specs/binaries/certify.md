@@ -39,7 +39,7 @@ The certify telemetry leaf includes:
 
 After surface emission, certify verifies that the active `TASK` pointer target is packet-consistent:
 - frontmatter `packet_id` must equal the first `### DP-...` body heading
-- the body `Required Work Branch:` must equal the current work branch
+- the body `Work Branch:` must equal the current work branch
 
 This postflight check is fail-closed and is recorded in the command log.
 

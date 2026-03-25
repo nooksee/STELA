@@ -1439,19 +1439,19 @@ verify_active_task_leaf_packet_consistency() {
 
   local branch_name
   branch_name="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
-  local required_work_branch
-  required_work_branch="$(awk '
-    /^Required Work Branch:[[:space:]]*/ {
-      sub(/^Required Work Branch:[[:space:]]*/, "", $0)
+  local work_branch
+  work_branch="$(awk '
+    /^Work Branch:[[:space:]]*/ {
+      sub(/^Work Branch:[[:space:]]*/, "", $0)
       print
       exit
     }
   ' "$task_source_path")"
-  required_work_branch="$(trim "$required_work_branch")"
-  [[ -n "$required_work_branch" ]] || die "TASK leaf missing Required Work Branch line: ${task_source_path#${REPO_ROOT}/}"
+  work_branch="$(trim "$work_branch")"
+  [[ -n "$work_branch" ]] || die "TASK leaf missing Work Branch line: ${task_source_path#${REPO_ROOT}/}"
 
-  if [[ "$required_work_branch" != "$branch_name" ]]; then
-    die "TASK leaf branch/body mismatch: required_work_branch=${required_work_branch} current_branch=${branch_name} path=${pointer_path}"
+  if [[ "$work_branch" != "$branch_name" ]]; then
+    die "TASK leaf branch/body mismatch: work_branch=${work_branch} current_branch=${branch_name} path=${pointer_path}"
   fi
 
   cat <<EOF
@@ -1459,7 +1459,7 @@ TASK packet-consistency check: PASS
 - task_pointer: ${pointer_path}
 - frontmatter_packet_id: ${leaf_packet_id}
 - body_packet_id: ${body_packet_id}
-- required_work_branch: ${required_work_branch}
+- work_branch: ${work_branch}
 EOF
 }
 
