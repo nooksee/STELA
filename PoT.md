@@ -8,7 +8,6 @@ PoT is the single constitutional document for Stela governance.
 ## 1. Physical Laws
 
 ### 1.1 Filing Doctrine
-Filing:
 - `ops/` = Run (binaries, manifests, automation).
 - `docs/` = Explain (manuals and rationale).
 - `opt/` = Isolate (JIT-only  content excluded from global context).
@@ -39,7 +38,7 @@ Filing:
 - `ops/lib/manifests/CONTEXT.md` — required context set.
 - `llms.txt` — discovery entry point.
 
-Source of Truth Read-in Order:
+**Source of Truth Read-in Order**:
 1. `PoT.md`: The Constitution. Physical laws, staffing, jurisdiction. The final authority.
 2. `SoP.md`: The History. State of Play ledger. Context on *why* things are the way they are.
 3. `PoW.md`: The Proof Ledger. Validate evidence pointers before state-changing maintenance.
@@ -47,27 +46,17 @@ Source of Truth Read-in Order:
 5. `docs/MAP.md`: The Terrain. Continuity map for navigating the repository context.
 
 ## 2. Enforcement
-Executed by the Integrator and through automated subsystems, including linters, build gates, and binary validation
+Executed by the worker and through automated subsystems, including linters, build gates, and binary validation.
 
-Operational Mandate:
+**STOP WORK**: worker complaint and halt and/or request clarification.
+- Canon Drift: divergence between `PoT.md` and repo state.
+- Dirty State: uncommitted changes in `main`.
+- Ambiguity: instructions capable of multiple interpretations.
 - Immediate Cessation: Cease all active task processing.
-- PR Rejection: Automatically decline non-compliant pull requests.
 - Process Termination: Kill any executing processes that violate safety or state constraints.
 
-
-System Failure States (Drift Triggers):
-- Canon Drift:
-  Divergence between `PoT.md` and repo state.
-  System response: **STOP WORK.** Reject PR.
-- Dirty State:
-  Uncommitted changes in `main`.
-  System response: **STOP WORK.** Worker complaint and halt.
-- Ambiguity:
-  Instructions capable of multiple interpretations.
-  System response: **STOP WORK.** Request clarification.
-
 ## 3. Jurisdiction
-Scope: `ops/`, `docs/`, `opt/`, `projects/`, `tools/`, `.github/`, and root governance surfaces.
+Scope: `archives/`, `ops/`, `docs/`, `logs/`, `opt/`, `projects/`, `storage/`, `tools/`, `var/tmp`, `.github/`, and root governance surfaces.
 Law: PoT is the sole authority across all scopes. No parallel jurisdictions exist.
 
 ## 4. Staffing & Logic
@@ -76,7 +65,7 @@ Hard constraints are: PoT.md, SoP.md, TASK.md, ops/lib/manifests/CONTEXT.md, doc
 ### 4.1 Staffing Protocol
 - Operator (Human): Owns final decisions, approvals, and secrets. Performs all commits, pushes, and merges.
 - Integrator (Lead AI): Maintains governance, structural integrity, and auditing. Generates Dispatch Packets and detects system drift.
-- Contractor (Guest AI): Executes specific logic tasks and drafts implementation details within a defined scope.
+- Contractor (Guest AI): Executes the defined packet scope, implements changes, runs required checks, and reports results within the provided contract.
 
 ### 4.2 Behavioral Logic Standard
 - No contractions across any scope, including projects.
@@ -96,19 +85,8 @@ Hard constraints are: PoT.md, SoP.md, TASK.md, ops/lib/manifests/CONTEXT.md, doc
 - Action: deception or incoherence are inherently destabilizing and must be resolved.
 
 ## 5 Security Policy
-Roles and access expectations are defined in PoT.md.
 
-### 5.1 Secrets Management
-- Never commit secrets, API keys, or credentials to the repo.
-- Use environment variables or a local secrets manager for sensitive values.
-- If a secret is exposed, rotate it and document the remediation.
-
-### 5.2 AI Usage Policy
-- AI assistance is allowed with human oversight.
-- All AI-proposed changes must be reviewed by a human operator.
-- Provide citations or provenance for external sources or non-trivial claims.
-
-### 5.3 Vulnerability Reporting
+### 5.1 Vulnerability Reporting
 Preferred:
 - Use a GitHub Security Advisory for this repository.
 
@@ -122,7 +100,7 @@ When reporting, include:
 - Affected files or versions (if known).
 - Suggested mitigations (optional, appreciated).
 
-### 5.4 Handling and Disclosure
+### 5.2 Handling and Disclosure
 - Reports are acknowledged as soon as practical.
 - Fixes are prioritized by impact, exploitability, and clarity.
 - We aim for coordinated, responsible disclosure.
@@ -135,28 +113,24 @@ When reporting, include:
 - Every PR must pass gates.
 
 ### 6.2 Standard Workflow
-- Create a branch named `work/<topic>-YYYY-MM-DD`.
+- Create a branch named `work/<DP-ID>-YYYY-MM-DD`.
 - Make small, reviewable changes.
 - Keep unrelated refactors out of the change set.
 - Review changes visually before commit.
 - Use clear commit messages.
 - Push the `work/*` branch, open a PR, wait for gates, then merge.
 
+### 6.2.1 Branching Doctrine (SSoT)
+- Immutable Trunk: main is verified state; direct pushes are forbidden.
+- Work Namespace: all work occurs on work/* branches.
+- Naming Schema: `work/<DP-ID>-YYYY-MM-DD`.
+- Drift Prevention: branches outside schema are trash and subject to pruning.
+
 ### 6.2.2 Immutable Dispatch Packet Workflow
-- Establish freshness state.
+- Refresh state from current canonical session artifacts before packet execution.
 - Generate dispatch packet structure; do not hand-author structural boilerplate.
+- Resolve every provisional value before worker execution begins.
 - Edit only approved dispatch packet slot content after draft generation.
 - If canonical dispatch packet template hash or normalized structure hash fails, stop and repair before proceeding.
 - Maintain closing-sidecar input during execution.
 - Execute receipt commands and generate RESULTS.
-
-### 6.2.3 Branching Doctrine (SSoT)
-- Immutable Trunk: main is verified state; direct pushes are forbidden.
-- Work Namespace: all work occurs on work/* branches.
-- Naming Schema: work/<topic>-YYYY-MM-DD.
-- Drift Prevention: branches outside schema are trash and subject to pruning.
-
-### 6.3 Drafting Proposal Protocol
-- Integrator proposals: An Integrator shall propose a work branch name and Base HEAD when they are not yet provided.
-- Operator authority: The Operator creates branches and provides the final Base HEAD; Contractors do not create or switch branches.
-- Provisional marking: Any provisional value must be prefixed with `PROPOSED` during drafting and must be removed or replaced with finalized values before any worker runs a DP.

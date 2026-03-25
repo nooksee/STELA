@@ -12,11 +12,11 @@ cd "${repo_root}"
 branch="$(git rev-parse --abbrev-ref HEAD)"
 
 if [[ "$branch" == "main" ]]; then
-  hook_fail "direct commits to main are forbidden (PoT §6.2.3). Work on a work/* branch."
+  hook_fail "direct commits to main are forbidden (PoT §6.2.1). Work on a work/* branch."
 fi
 
 if [[ "$branch" != "work/"* ]]; then
-  hook_fail "commits must be on a work/* branch (PoT §6.2.3). Current branch: ${branch}"
+  hook_fail "commits must be on a work/* branch (PoT §6.2.1). Current branch: ${branch}"
 fi
 
 bash "${BASH_SOURCE[0]%/*}/llms"

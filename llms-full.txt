@@ -136,35 +136,32 @@ When reporting, include:
 - Every PR must pass gates.
 
 ### 6.2 Standard Workflow
-- Create a branch named `work/<topic>-YYYY-MM-DD`.
+- Create a branch named `work/<DP-ID>-YYYY-MM-DD`.
 - Make small, reviewable changes.
 - Keep unrelated refactors out of the change set.
 - Review changes visually before commit.
 - Use clear commit messages.
 - Push the `work/*` branch, open a PR, wait for gates, then merge.
 
+### 6.2.1 Branching Doctrine (SSoT)
+- Immutable Trunk: main is verified state; direct pushes are forbidden.
+- Work Namespace: all work occurs on work/* branches.
+- Naming Schema: work/<DP-ID>-YYYY-MM-DD.
+- Drift Prevention: branches outside schema are trash and subject to pruning.
+
 ### 6.2.2 Immutable Dispatch Packet Workflow
 - Establish freshness state.
+- OPEN is the spine-grade freshness and trace anchor; establish it with `./ops/bin/open --out=auto` before packet execution.
 - Generate dispatch packet structure; do not hand-author structural boilerplate.
 - Edit only approved dispatch packet slot content after draft generation.
 - If canonical dispatch packet template hash or normalized structure hash fails, stop and repair before proceeding.
 - Maintain closing-sidecar input during execution.
+- Resolve every provisional value before worker execution begins.
 - Execute receipt commands and generate RESULTS.
-
-### 6.2.3 Branching Doctrine (SSoT)
-- Immutable Trunk: main is verified state; direct pushes are forbidden.
-- Work Namespace: all work occurs on work/* branches.
-- Naming Schema: work/<topic>-YYYY-MM-DD.
-- Drift Prevention: branches outside schema are trash and subject to pruning.
-
-### 6.3 Drafting Proposal Protocol
-- Integrator proposals: An Integrator shall propose a work branch name and Base HEAD when they are not yet provided.
-- Operator authority: The Operator creates branches and provides the final Base HEAD; Contractors do not create or switch branches.
-- Provisional marking: Any provisional value must be prefixed with `PROPOSED` during drafting and must be removed or replaced with finalized values before any worker runs a DP.
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-03-24-8112cde8.md
+archives/surfaces/PoW-2026-03-25-091a79ba.md
 
 
 ## README.md
@@ -181,11 +178,11 @@ Use [docs/MANUAL.md](docs/MANUAL.md) for command workflow and closeout routing.
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-03-24-8112cde8.md
+archives/surfaces/SoP-2026-03-25-091a79ba.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0230-8112cde8.md
+archives/surfaces/TASK-DP-OPS-0231-091a79ba.md
 
 
 ## docs/INDEX.md

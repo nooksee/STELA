@@ -571,7 +571,7 @@ ops/bin/hooks
 This sets `core.hooksPath = .github/hooks` so git invokes the repo hooks directory on every commit and push.
 
 Active hooks:
-- `pre-commit`: refuses commits on `main` or any non-`work/*` branch (PoT §6.2.3); then runs `ops/bin/llms` and stages `llms.txt`, `llms-core.txt`, `llms-full.txt`.
+- `pre-commit`: refuses commits on `main` or any non-`work/*` branch (PoT §6.2.1); then runs `ops/bin/llms` and stages `llms.txt`, `llms-core.txt`, `llms-full.txt`.
 - `pre-push`: refuses direct push to `main` (PoT §6.1).
 
 Bypass: `git commit --no-verify` or `git push --no-verify` bypasses all hooks. Use only when the guard is inapplicable (e.g., replaying a certify-controlled commit). Do not use to skip required gates.

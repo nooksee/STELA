@@ -19,6 +19,9 @@ Draft path: OPEN detects `storage/handoff/PLAN.md` presence and reflects its sta
 - `===== END STELA OPEN PROMPT =====`
 The legacy wrapper `===== OPEN PROMPT =====` and legacy standalone title line `Stela OPEN PROMPT` are retired. The binary writes the prompt to `storage/handoff/OPEN-...txt` by default (or the repo-relative `OPEN_HANDOFF_BASE` override when used by internal tests/runtime helpers), mirrors prompt content to stdout, and prints `OPEN saved:` only when `--out=auto` is requested. The Next Operator Moves block includes non-blocking guidance for `ops/bin/bundle --profile=auto --out=auto`.
 
+## OPEN Authority Boundary
+OPEN may be run on `main` for context refresh or intake routing. OPEN does not authorize packet execution or mutation on `main`; that authority is governed by `PoT.md` Section 6.
+
 ## Anecdotal Anchor
 The DP-OPS-0065 freshness gate formalization addressed prior runs where work started from stale local state with no serialized checkpoint. OPEN plus bundle routing in DP-OPS-0145 preserves this checkpoint while reducing ad hoc operator assembly steps.
 
