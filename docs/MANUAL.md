@@ -12,7 +12,7 @@ Each stage has one obvious active surface. Secondary lanes (foreman/addendum, co
 
 Active surfaces by stage:
 - **Topic input:** `storage/handoff/TOPIC.md` (latest-wins; operator writes before each planning run)
-- **Plan output:** `storage/handoff/PLAN.md` (latest-wins; analyst model writes this)
+- **Plan output:** `storage/handoff/PLAN.md` (latest-wins; Analyst writes this)
 - **Active DP draft:** `storage/dp/intake/DP.md` (latest-wins operator surface; draft output is saved here)
 - **Packet/process identity:** `DP-OPS-XXXX` (retained in the packet body, TASK/addendum lineage path, RESULTS content, CLOSING content, audit transport, and telemetry)
 - **Audit bundle:** `storage/handoff/AUDIT-*.txt` (initial) or `storage/handoff/AUDIT-R*.txt` (rerun)
@@ -529,7 +529,7 @@ Canonical operator flow for an analyst session:
 ~~~bash
 ./ops/bin/bundle --profile=planning --out=auto
 ~~~
-3. Deliver the bundle artifact (`PLANNING-*.txt` or `PLANNING-*.tar`) to the analyst model.
+3. Deliver the bundle artifact (`PLANNING-*.txt` or `PLANNING-*.tar`) to the Analyst.
 4. Read the model output from `storage/handoff/PLAN.md`.
 
 Surface contract:

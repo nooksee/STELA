@@ -97,7 +97,7 @@ dump_scope_foreman=core
 - Planning package members include `storage/handoff/TOPIC.md` and omit `storage/handoff/PLAN.md`.
 - Planning `PLAN.md` is output only and is never transported as planning input context.
 - `storage/handoff/TOPIC.md` is the latest-wins input surface; the operator replaces its content before each planning run.
-- `storage/handoff/PLAN.md` is the latest-wins output surface written by the model after each planning run.
+- `storage/handoff/PLAN.md` is the latest-wins output surface written by the Analyst after each planning run.
 - Before each planning run, bundle writes a disposable copy of the prior `storage/handoff/PLAN.md` to `var/tmp/PLAN.md.prev` if that file exists. This copy is a scratch artifact only; certify has no dependency on it and prune may remove it.
 
 ## Draft Transport Contract
