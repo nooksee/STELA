@@ -33,8 +33,8 @@ BUNDLE_AUTO_DEFAULT_PROFILE=""
 BUNDLE_AUTO_PLAN_PROFILE=""
 BUNDLE_PROJECT_PROFILE=""
 BUNDLE_AUDIT_PROFILE=""
-BUNDLE_FOREMAN_PROFILE=""
-BUNDLE_FOREMAN_INTENT_FORM=""
+BUNDLE_ADDENDA_PROFILE=""
+BUNDLE_ADDENDA_INTENT_FORM=""
 BUNDLE_COMPAT_LEGACY_PREFIX=""
 BUNDLE_COMPAT_EMIT_LEGACY=""
 BUNDLE_ASSEMBLY_POLICY_MANIFEST=""
@@ -70,7 +70,7 @@ BUNDLE_AUDIT_RESOLVED_OUTPUT_REL=""
 
 bundle_usage() {
   cat <<'USAGE'
-Usage: ops/bin/bundle [--profile=auto|planning|draft|audit|project|conform|hygiene|foreman] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--rerun] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
+Usage: ops/bin/bundle [--profile=auto|planning|draft|audit|project|conform|hygiene|addenda] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--rerun] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
 USAGE
 }
 
@@ -308,17 +308,17 @@ bundle_load_policy() {
   BUNDLE_AUTO_PLAN_PROFILE="$(bundle_policy_scalar auto_plan_profile)"
   BUNDLE_PROJECT_PROFILE="$(bundle_policy_scalar project_profile)"
   BUNDLE_AUDIT_PROFILE="$(bundle_policy_scalar audit_profile)"
-  BUNDLE_FOREMAN_PROFILE="$(bundle_policy_scalar foreman_profile)"
-  BUNDLE_FOREMAN_INTENT_FORM="$(bundle_policy_scalar foreman_intent_form)"
-  [[ -n "$BUNDLE_FOREMAN_PROFILE" ]] || die "bundle policy missing required key: foreman_profile"
-  [[ -n "$BUNDLE_FOREMAN_INTENT_FORM" ]] || die "bundle policy missing required key: foreman_intent_form"
+  BUNDLE_ADDENDA_PROFILE="$(bundle_policy_scalar addenda_profile)"
+  BUNDLE_ADDENDA_INTENT_FORM="$(bundle_policy_scalar addenda_intent_form)"
+  [[ -n "$BUNDLE_ADDENDA_PROFILE" ]] || die "bundle policy missing required key: addenda_profile"
+  [[ -n "$BUNDLE_ADDENDA_INTENT_FORM" ]] || die "bundle policy missing required key: addenda_intent_form"
 
   for profile in \
     "$BUNDLE_AUTO_DEFAULT_PROFILE" \
     "$BUNDLE_AUTO_PLAN_PROFILE" \
     "$BUNDLE_PROJECT_PROFILE" \
     "$BUNDLE_AUDIT_PROFILE" \
-    "$BUNDLE_FOREMAN_PROFILE"; do
+    "$BUNDLE_ADDENDA_PROFILE"; do
     bundle_profile_supported "$profile" || die "bundle policy references unsupported profile: ${profile}"
   done
 
@@ -903,11 +903,11 @@ EOF
   printf '%s\n' "$rendered_output"
 }
 
-bundle_parse_foreman_intent() {
+bundle_parse_addenda_intent() {
   local intent_text="$1"
   if [[ "$intent_text" =~ ^ADDENDUM[[:space:]]+REQUIRED:[[:space:]]+(DP-OPS-[0-9]{4,})[[:space:]]+-[[:space:]]+(.+)$ ]]; then
-    BUNDLE_FOREMAN_BASE_DP_ID="${BASH_REMATCH[1]}"
-    BUNDLE_FOREMAN_BLOCKER="${BASH_REMATCH[2]}"
+    BUNDLE_ADDENDA_BASE_DP_ID="${BASH_REMATCH[1]}"
+    BUNDLE_ADDENDA_BLOCKER="${BASH_REMATCH[2]}"
     return 0
   fi
   return 1
@@ -1232,8 +1232,8 @@ bundle_run() {
   if [[ "$requested_profile" != "$BUNDLE_PROJECT_PROFILE" && -n "$project_name" ]]; then
     die "--project is only valid with --profile=project"
   fi
-  if [[ "$requested_profile" == "$BUNDLE_FOREMAN_PROFILE" && -z "$intent_token" ]]; then
-    die "--intent is required when --profile=${BUNDLE_FOREMAN_PROFILE}"
+  if [[ "$requested_profile" == "$BUNDLE_ADDENDA_PROFILE" && -z "$intent_token" ]]; then
+    die "--intent is required when --profile=${BUNDLE_ADDENDA_PROFILE}"
   fi
 
   if [[ -n "$project_name" && ! "$project_name" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]]; then
@@ -1445,14 +1445,14 @@ bundle_run() {
   fi
 
   local addendum_required=0
-  local foreman_base_dp_id=""
-  local foreman_base_dp_in_dump=0
-  if [[ "$resolved_profile" == "$BUNDLE_FOREMAN_PROFILE" ]]; then
+  local addenda_base_dp_id=""
+  local addenda_base_dp_in_dump=0
+  if [[ "$resolved_profile" == "$BUNDLE_ADDENDA_PROFILE" ]]; then
     addendum_required=1
-    if ! bundle_parse_foreman_intent "$bundle_intent"; then
-      die "${BUNDLE_FOREMAN_PROFILE} intent must match: ${BUNDLE_FOREMAN_INTENT_FORM}"
+    if ! bundle_parse_addenda_intent "$bundle_intent"; then
+      die "${BUNDLE_ADDENDA_PROFILE} intent must match: ${BUNDLE_ADDENDA_INTENT_FORM}"
     fi
-    foreman_base_dp_id="$BUNDLE_FOREMAN_BASE_DP_ID"
+    addenda_base_dp_id="$BUNDLE_ADDENDA_BASE_DP_ID"
   fi
 
   local dump_scope
@@ -1503,11 +1503,11 @@ bundle_run() {
   [[ -f "${REPO_ROOT}/${dump_payload_rel}" ]] || die "dump payload missing: ${dump_payload_rel}"
   [[ -f "${REPO_ROOT}/${dump_manifest_rel}" ]] || die "dump manifest missing: ${dump_manifest_rel}"
 
-  if [[ "$resolved_profile" == "$BUNDLE_FOREMAN_PROFILE" ]]; then
-    if grep -Fq "$foreman_base_dp_id" "${REPO_ROOT}/${dump_payload_rel}"; then
-      foreman_base_dp_in_dump=1
+  if [[ "$resolved_profile" == "$BUNDLE_ADDENDA_PROFILE" ]]; then
+    if grep -Fq "$addenda_base_dp_id" "${REPO_ROOT}/${dump_payload_rel}"; then
+      addenda_base_dp_in_dump=1
     else
-      die "${BUNDLE_FOREMAN_PROFILE} base DP not confirmed in dump payload: ${foreman_base_dp_id}"
+      die "${BUNDLE_ADDENDA_PROFILE} base DP not confirmed in dump payload: ${addenda_base_dp_id}"
     fi
   fi
 
@@ -1557,7 +1557,7 @@ bundle_run() {
     echo "- Active draft surface: storage/dp/intake/DP.md (latest-wins); packet identity remains DP-OPS-XXXX."
     echo "- Certify requires STELA_TRACE_ID from OPEN artifact or STELA_TRACE_ID env var."
     echo "- Audit dump: ./ops/bin/bundle --profile=audit --out=auto (separate from operator session refresh)"
-    echo "- Secondary lanes: foreman/addendum (intervention), conform/conformist (normalization), execution-decision (disposable/manual)"
+    echo "- Secondary lanes: addenda/addendum (intervention), conform/conformist (normalization), execution-decision (disposable/manual)"
     echo
     echo "[DUMP]"
     echo "- Scope: ${dump_scope}"
@@ -1617,9 +1617,9 @@ bundle_run() {
       fi
       echo
     fi
-    if [[ "$resolved_profile" == "$BUNDLE_FOREMAN_PROFILE" ]]; then
-      echo "- Addendum base DP: ${foreman_base_dp_id}"
-      echo "- Base DP confirmed in dump: $([[ "$foreman_base_dp_in_dump" == "1" ]] && echo true || echo false)"
+    if [[ "$resolved_profile" == "$BUNDLE_ADDENDA_PROFILE" ]]; then
+      echo "- Addendum base DP: ${addenda_base_dp_id}"
+      echo "- Base DP confirmed in dump: $([[ "$addenda_base_dp_in_dump" == "1" ]] && echo true || echo false)"
       echo
     fi
     if [[ "$requested_profile" == "auto" && "$resolved_profile" != "planning" ]]; then
@@ -1835,12 +1835,12 @@ bundle_run() {
     echo "  },"
     echo "  \"addendum\": {"
     echo "    \"required\": $(bundle_bool "$addendum_required"),"
-    if [[ -n "$foreman_base_dp_id" ]]; then
-      echo "    \"base_dp_id\": \"$(bundle_json_escape "$foreman_base_dp_id")\","
+    if [[ -n "$addenda_base_dp_id" ]]; then
+      echo "    \"base_dp_id\": \"$(bundle_json_escape "$addenda_base_dp_id")\","
     else
       echo "    \"base_dp_id\": null,"
     fi
-    echo "    \"base_dp_in_dump\": $(bundle_bool "$foreman_base_dp_in_dump")"
+    echo "    \"base_dp_in_dump\": $(bundle_bool "$addenda_base_dp_in_dump")"
     echo "  },"
     echo "  \"package\": {"
     echo "    \"path\": \"$(bundle_json_escape "$package_rel")\"," 

@@ -25,7 +25,7 @@
 9. Enforce Baseline contract checks:
    - agent `## Identity Contract` must include `agent_id`, `runtime_role`, `stance_id`
    - allowed runtime-role values are exactly `{foreman, auditor, conformist}`
-   - allowed stance values are exactly `{foreman, audit, conformist}`
+   - allowed stance values are exactly `{addenda, audit, conformist}`
    - skill `## Method Contract` must include `skill_id`, `method`, `inputs`, `outputs`, `invariants`
    - task `## Objective Contract` must include `task_id`, `objective`, `inputs`, `outputs`, `invariants`
    - `skill_id` and `task_id` must match filename-derived IDs

@@ -79,7 +79,7 @@ identity_value() {
 stance_id_allowed() {
   local stance_id="$1"
   case "$stance_id" in
-    analyst|architect|audit|conformist|contractor|foreman)
+    addenda|analyst|architect|audit|conformist|contractor)
       return 0
       ;;
     *)

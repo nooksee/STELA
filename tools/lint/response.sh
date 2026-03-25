@@ -14,10 +14,10 @@ emit_binary_leaf "lint-response" "start"
 
 usage() {
   cat <<'USAGE'
-Usage: bash tools/lint/response.sh [--mode=dp|audit|draft|planning|foreman|conformist|execution-decision] [--test] [path|-]
+Usage: bash tools/lint/response.sh [--mode=dp|audit|draft|planning|addenda|conformist|execution-decision] [--test] [path|-]
 Default input: stdin
 Example: bash tools/lint/response.sh --mode=audit var/tmp/response-audit-valid.md
-Mode matrix freeze: draft|planning|foreman|conformist remain explicit machine-ingest modes.
+Mode matrix freeze: draft|planning|addenda|conformist remain explicit machine-ingest modes.
 USAGE
 }
 
@@ -254,7 +254,7 @@ check_planning_body_scope() {
   ' "$body_path")"
   if [[ -n "$hit" ]]; then
     IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "planning body must not contain audit/foreman decision fields at line ${line_number}: ${line_text}"
+    response_fail "planning body must not contain audit/addenda decision fields at line ${line_number}: ${line_text}"
   fi
 
   hit="$(awk '
@@ -316,7 +316,7 @@ check_planning_body_scope() {
   fi
 }
 
-check_foreman_body_scope() {
+check_addenda_body_scope() {
   local body_path="$1"
   local first_content_line
   local hit=""
@@ -329,12 +329,12 @@ check_foreman_body_scope() {
 
   first_content_line="$(awk 'NF { print; exit }' "$body_path")"
   if [[ -z "$first_content_line" ]]; then
-    response_fail "foreman body is empty"
+    response_fail "addenda body is empty"
     return 1
   fi
 
   if [[ ! "$first_content_line" =~ ^###[[:space:]]+Addendum ]]; then
-    response_fail "foreman body must start with heading format '### Addendum...'"
+    response_fail "addenda body must start with heading format '### Addendum...'"
     return 1
   fi
 
@@ -342,35 +342,35 @@ check_foreman_body_scope() {
     $0 ~ /^##[[:space:]]+A[.]1[[:space:]]+Authorization$/ { printf "%d\t%s\n", NR, $0; exit }
   ' "$body_path")"
   if [[ -z "$hit" ]]; then
-    response_fail "foreman body must include section '## A.1 Authorization'"
+    response_fail "addenda body must include section '## A.1 Authorization'"
   fi
 
   hit="$(awk '
     $0 ~ /^##[[:space:]]+A[.]2[[:space:]]+Scope[[:space:]]+Delta$/ { printf "%d\t%s\n", NR, $0; exit }
   ' "$body_path")"
   if [[ -z "$hit" ]]; then
-    response_fail "foreman body must include section '## A.2 Scope Delta'"
+    response_fail "addenda body must include section '## A.2 Scope Delta'"
   fi
 
   hit="$(awk '
     $0 ~ /^##[[:space:]]+A[.]3[[:space:]]+Addendum[[:space:]]+Objective$/ { printf "%d\t%s\n", NR, $0; exit }
   ' "$body_path")"
   if [[ -z "$hit" ]]; then
-    response_fail "foreman body must include section '## A.3 Addendum Objective'"
+    response_fail "addenda body must include section '## A.3 Addendum Objective'"
   fi
 
   hit="$(awk '
     $0 ~ /^##[[:space:]]+A[.]4[[:space:]]+Context[[:space:]]+Load$/ { printf "%d\t%s\n", NR, $0; exit }
   ' "$body_path")"
   if [[ -z "$hit" ]]; then
-    response_fail "foreman body must include section '## A.4 Context Load'"
+    response_fail "addenda body must include section '## A.4 Context Load'"
   fi
 
   hit="$(awk '
     $0 ~ /^##[[:space:]]+A[.]5[[:space:]]+Addendum[[:space:]]+Receipt[[:space:]]+[(]Proofs[[:space:]]+to[[:space:]]+collect[)][[:space:]]+-[[:space:]]+MUST[[:space:]]+RUN$/ { printf "%d\t%s\n", NR, $0; exit }
   ' "$body_path")"
   if [[ -z "$hit" ]]; then
-    response_fail "foreman body must include section '## A.5 Addendum Receipt (Proofs to collect) - MUST RUN'"
+    response_fail "addenda body must include section '## A.5 Addendum Receipt (Proofs to collect) - MUST RUN'"
   fi
 
   hit="$(awk '
@@ -378,7 +378,7 @@ check_foreman_body_scope() {
   ' "$body_path")"
   if [[ -n "$hit" ]]; then
     IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "foreman body must not contain audit verdict marker at line ${line_number}: ${line_text}"
+    response_fail "addenda body must not contain audit verdict marker at line ${line_number}: ${line_text}"
   fi
 
   hit="$(awk '
@@ -386,7 +386,7 @@ check_foreman_body_scope() {
   ' "$body_path")"
   if [[ -n "$hit" ]]; then
     IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "foreman body must not contain contractor narrative section at line ${line_number}: ${line_text}"
+    response_fail "addenda body must not contain contractor narrative section at line ${line_number}: ${line_text}"
   fi
 
   hit="$(awk '
@@ -394,14 +394,14 @@ check_foreman_body_scope() {
   ' "$body_path")"
   if [[ -n "$hit" ]]; then
     IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "foreman body must not contain audit verdict section at line ${line_number}: ${line_text}"
+    response_fail "addenda body must not contain audit verdict section at line ${line_number}: ${line_text}"
   fi
 
   decision_required_line="$(grep -E '^Decision Required:' "$body_path" | head -n 1 || true)"
   decision_leaf_line="$(grep -E '^Decision Leaf:' "$body_path" | head -n 1 || true)"
   if [[ -n "$decision_required_line" || -n "$decision_leaf_line" ]]; then
     if [[ -z "$decision_required_line" || -z "$decision_leaf_line" ]]; then
-      response_fail "foreman body decision fields must include both 'Decision Required:' and 'Decision Leaf:'"
+      response_fail "addenda body decision fields must include both 'Decision Required:' and 'Decision Leaf:'"
       return 1
     fi
 
@@ -410,18 +410,18 @@ check_foreman_body_scope() {
     case "$decision_required_value" in
       Yes)
         if [[ ! "$decision_leaf_value" =~ ^archives/decisions/RoR-[^[:space:]]+\.md$ ]]; then
-          response_fail "foreman decision coherence failed: Decision Required='Yes' requires Decision Leaf='archives/decisions/RoR-*.md'"
+          response_fail "addenda decision coherence failed: Decision Required='Yes' requires Decision Leaf='archives/decisions/RoR-*.md'"
           return 1
         fi
         ;;
       No)
         if [[ "$decision_leaf_value" != "None" ]]; then
-          response_fail "foreman decision coherence failed: Decision Required='No' requires Decision Leaf='None'"
+          response_fail "addenda decision coherence failed: Decision Required='No' requires Decision Leaf='None'"
           return 1
         fi
         ;;
       *)
-        response_fail "foreman decision coherence failed: Decision Required must be exactly 'Yes' or 'No'"
+        response_fail "addenda decision coherence failed: Decision Required must be exactly 'Yes' or 'No'"
         return 1
         ;;
     esac
@@ -653,9 +653,9 @@ lint_response_file() {
   elif [[ "$response_mode" == "planning" ]]; then
     extract_single_fenced_block "$input_path" "$body_tmp"
     check_planning_body_scope "$body_tmp"
-  elif [[ "$response_mode" == "foreman" ]]; then
+  elif [[ "$response_mode" == "addenda" ]]; then
     extract_single_fenced_block "$input_path" "$body_tmp"
-    check_foreman_body_scope "$body_tmp"
+    check_addenda_body_scope "$body_tmp"
   elif [[ "$response_mode" == "conformist" ]]; then
     extract_single_fenced_block "$input_path" "$body_tmp"
     check_conformist_body_scope "$body_tmp"
@@ -713,10 +713,10 @@ run_test() {
   local response_planning_few_options
   local response_planning_no_recommended
   local response_planning_too_many_questions
-  local response_foreman_valid
-  local response_foreman_audit_marker
-  local response_foreman_missing_sections
-  local response_foreman_decision_incoherent
+  local response_addenda_valid
+  local response_addenda_audit_marker
+  local response_addenda_missing_sections
+  local response_addenda_decision_incoherent
   local response_conformist_valid
   local response_conformist_audit_marker
   local response_conformist_addendum_marker
@@ -757,10 +757,10 @@ run_test() {
   response_planning_few_options="${test_dir}/response-planning-few-options.md"
   response_planning_no_recommended="${test_dir}/response-planning-no-recommended.md"
   response_planning_too_many_questions="${test_dir}/response-planning-too-many-questions.md"
-  response_foreman_valid="${test_dir}/response-foreman-valid.md"
-  response_foreman_audit_marker="${test_dir}/response-foreman-audit-marker.md"
-  response_foreman_missing_sections="${test_dir}/response-foreman-missing-sections.md"
-  response_foreman_decision_incoherent="${test_dir}/response-foreman-decision-incoherent.md"
+  response_addenda_valid="${test_dir}/response-addenda-valid.md"
+  response_addenda_audit_marker="${test_dir}/response-addenda-audit-marker.md"
+  response_addenda_missing_sections="${test_dir}/response-addenda-missing-sections.md"
+  response_addenda_decision_incoherent="${test_dir}/response-addenda-decision-incoherent.md"
   response_conformist_valid="${test_dir}/response-conformist-valid.md"
   response_conformist_audit_marker="${test_dir}/response-conformist-audit-marker.md"
   response_conformist_addendum_marker="${test_dir}/response-conformist-addendum-marker.md"
@@ -1134,13 +1134,13 @@ EOF_PLANNING_TOO_MANY
     failures_local=1
   fi
 
-  response_mode="foreman"
+  response_mode="addenda"
 
-  cat > "$response_foreman_valid" <<'EOF_FOREMAN_VALID'
+  cat > "$response_addenda_valid" <<'EOF_ADDENDA_VALID'
 ```markdown
 ### Addendum A to DP-OPS-9999
 Decision Required: Yes
-Decision Leaf: archives/decisions/RoR-2026-03-07-foreman-fixture.md
+Decision Leaf: archives/decisions/RoR-2026-03-07-addenda-fixture.md
 
 ## A.1 Authorization
 Operator Authorization:
@@ -1160,13 +1160,13 @@ Add addendum-only scope boundary.
 **Mandatory receipt commands (always run; do not omit):**
 - bash tools/lint/dp.sh TASK.md
 ```
-EOF_FOREMAN_VALID
-  if ! lint_response_file "$response_foreman_valid" >/dev/null 2>&1; then
-    echo "FAIL: --test expected foreman response with addendum body to pass" >&2
+EOF_ADDENDA_VALID
+  if ! lint_response_file "$response_addenda_valid" >/dev/null 2>&1; then
+    echo "FAIL: --test expected addenda response with addendum body to pass" >&2
     failures_local=1
   fi
 
-  cat > "$response_foreman_audit_marker" <<'EOF_FOREMAN_AUDIT'
+  cat > "$response_addenda_audit_marker" <<'EOF_ADDENDA_AUDIT'
 ```markdown
 ### Addendum A to DP-OPS-9999
 **AUDIT - DP-OPS-9999**
@@ -1186,26 +1186,26 @@ Objective text.
 
 ## A.5 Addendum Receipt (Proofs to collect) - MUST RUN
 ```
-EOF_FOREMAN_AUDIT
-  if lint_response_file "$response_foreman_audit_marker" >/dev/null 2>&1; then
-    echo "FAIL: --test expected foreman response with audit marker to fail" >&2
+EOF_ADDENDA_AUDIT
+  if lint_response_file "$response_addenda_audit_marker" >/dev/null 2>&1; then
+    echo "FAIL: --test expected addenda response with audit marker to fail" >&2
     failures_local=1
   fi
 
-  cat > "$response_foreman_missing_sections" <<'EOF_FOREMAN_MISSING'
+  cat > "$response_addenda_missing_sections" <<'EOF_ADDENDA_MISSING'
 ```markdown
 ### Addendum A to DP-OPS-9999
 ## A.1 Authorization
 Operator Authorization:
 > Authorized.
 ```
-EOF_FOREMAN_MISSING
-  if lint_response_file "$response_foreman_missing_sections" >/dev/null 2>&1; then
-    echo "FAIL: --test expected foreman response missing required addendum sections to fail" >&2
+EOF_ADDENDA_MISSING
+  if lint_response_file "$response_addenda_missing_sections" >/dev/null 2>&1; then
+    echo "FAIL: --test expected addenda response missing required addendum sections to fail" >&2
     failures_local=1
   fi
 
-  cat > "$response_foreman_decision_incoherent" <<'EOF_FOREMAN_DECISION'
+  cat > "$response_addenda_decision_incoherent" <<'EOF_ADDENDA_DECISION'
 ```markdown
 ### Addendum A to DP-OPS-9999
 Decision Required: No
@@ -1226,9 +1226,9 @@ Objective text.
 
 ## A.5 Addendum Receipt (Proofs to collect) - MUST RUN
 ```
-EOF_FOREMAN_DECISION
-  if lint_response_file "$response_foreman_decision_incoherent" >/dev/null 2>&1; then
-    echo "FAIL: --test expected foreman response with incoherent decision fields to fail" >&2
+EOF_ADDENDA_DECISION
+  if lint_response_file "$response_addenda_decision_incoherent" >/dev/null 2>&1; then
+    echo "FAIL: --test expected addenda response with incoherent decision fields to fail" >&2
     failures_local=1
   fi
 
@@ -1476,7 +1476,7 @@ while (($# > 0)); do
       shift
       if (($# == 0)); then
         usage >&2
-        response_fail "--mode requires one of: dp audit draft planning foreman conformist"
+        response_fail "--mode requires one of: dp audit draft planning addenda conformist"
         exit 1
       fi
       response_mode="$1"
@@ -1507,10 +1507,10 @@ while (($# > 0)); do
 done
 
 case "$response_mode" in
-  dp|audit|draft|planning|foreman|conformist|execution-decision) ;;
+  dp|audit|draft|planning|addenda|conformist|execution-decision) ;;
   *)
     usage >&2
-    response_fail "invalid mode: ${response_mode}. Use dp, audit, draft, planning, foreman, conformist, or execution-decision."
+    response_fail "invalid mode: ${response_mode}. Use dp, audit, draft, planning, addenda, conformist, or execution-decision."
     exit 1
     ;;
 esac

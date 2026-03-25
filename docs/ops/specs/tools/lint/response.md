@@ -11,13 +11,13 @@ Modes:
 2. `bash tools/lint/response.sh --mode=audit [path|-]`.
 3. `bash tools/lint/response.sh --mode=draft [path|-]`.
 4. `bash tools/lint/response.sh --mode=planning [path|-]`.
-5. `bash tools/lint/response.sh --mode=foreman [path|-]`.
+5. `bash tools/lint/response.sh --mode=addenda [path|-]`.
 6. `bash tools/lint/response.sh --mode=conformist [path|-]`.
 7. `bash tools/lint/response.sh --test` (runs deterministic fixtures for supported modes).
 
 Deterministic checks:
-1. In `dp`, `audit`, `draft`, `planning`, `foreman`, and `conformist` modes, input must contain exactly one fenced markdown code block.
-2. In `dp`, `audit`, `draft`, `planning`, `foreman`, and `conformist` modes, non-whitespace text outside the fenced block is a hard failure.
+1. In `dp`, `audit`, `draft`, `planning`, `addenda`, and `conformist` modes, input must contain exactly one fenced markdown code block.
+2. In `dp`, `audit`, `draft`, `planning`, `addenda`, and `conformist` modes, non-whitespace text outside the fenced block is a hard failure.
 3. Shared cross-stance freeze is defined in `ops/src/shared/stances.json` using keys `single_fence_contract_rules` and `non_audit_role_drift_rules`.
 4. In `dp` mode, extracted body must start with `### DP-` on the first non-empty line.
 5. In `audit` mode, extracted body must start with `**AUDIT -` (or `**AUDIT —`) on the first non-empty line.
@@ -38,21 +38,21 @@ Deterministic checks:
    - audit-verdict markers (`**AUDIT -`),
    - `## Contractor Execution Narrative`,
    - receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`),
-   - audit/foreman decision fields (`Decision Required:`, `Decision Leaf:`),
+   - audit/addenda decision fields (`Decision Required:`, `Decision Leaf:`),
    - policy-overcompensation prose (`Section 3.4.5`, `RECEIPT_EXTRA`, `ops/src/surfaces/dp.md.tpl`, or fenced-envelope instruction echo text).
 11. In `dp` mode, on envelope pass, delegate body validation to `bash tools/lint/dp.sh`.
 12. In `draft` mode, on envelope pass, delegate body validation to `bash tools/lint/dp.sh`.
-13. In `foreman` mode, extracted body must start with `### Addendum` and include required addendum headings:
+13. In `addenda` mode, extracted body must start with `### Addendum` and include required addendum headings:
    - `## A.1 Authorization`
    - `## A.2 Scope Delta`
    - `## A.3 Addendum Objective`
    - `## A.4 Context Load`
    - `## A.5 Addendum Receipt (Proofs to collect) - MUST RUN`
-14. In `foreman` mode, reject role-drift markers:
+14. In `addenda` mode, reject role-drift markers:
    - audit-verdict markers (`**AUDIT -`),
    - `## Contractor Execution Narrative`,
    - `## Verdict`.
-15. In `foreman` mode, if `Decision Required:` and `Decision Leaf:` lines appear, require coherence:
+15. In `addenda` mode, if `Decision Required:` and `Decision Leaf:` lines appear, require coherence:
    - `Decision Required: Yes` requires `Decision Leaf: archives/decisions/RoR-*.md`.
    - `Decision Required: No` requires `Decision Leaf: None`.
 16. In `conformist` mode, extracted body must start with `### DP-` and reject role-drift markers:
@@ -64,7 +64,7 @@ Deterministic checks:
 17. In `audit` mode, envelope, marker, and drift checks are authoritative.
 
 Exit behavior:
-- Pass: prints `OK: response lint passed (mode=<dp|audit|draft|planning|foreman|conformist>)`.
+- Pass: prints `OK: response lint passed (mode=<dp|audit|draft|planning|addenda|conformist>)`.
 - Fail: prints `FAIL: ...` and exits non-zero.
 
 `--test` fixtures:
@@ -73,7 +73,7 @@ Exit behavior:
 - PASS: single fenced block with valid DP body (`draft` mode).
 - PASS: single fenced block with valid final `PLAN` body (`planning` mode).
 - PASS: single fenced block with valid conversational planning body (`planning` mode).
-- PASS: single fenced block with addendum headings (`foreman` mode).
+- PASS: single fenced block with addendum headings (`addenda` mode).
 - PASS: single fenced block with valid DP heading and no drift markers (`conformist` mode).
 - FAIL: text outside fence.
 - FAIL: multiple fenced blocks.
@@ -90,9 +90,9 @@ Exit behavior:
 - FAIL: planning response containing Contractor Execution Narrative sections (`planning` mode).
 - FAIL: planning response containing policy-overcompensation prose (`planning` mode).
 - FAIL: planning response missing both valid conversational structure and valid final PLAN structure (`planning` mode).
-- FAIL: foreman response containing audit marker (`foreman` mode).
-- FAIL: foreman response missing required addendum headings (`foreman` mode).
-- FAIL: foreman response with incoherent decision fields (`foreman` mode).
+- FAIL: addenda response containing audit marker (`addenda` mode).
+- FAIL: addenda response missing required addendum headings (`addenda` mode).
+- FAIL: addenda response with incoherent decision fields (`addenda` mode).
 - FAIL: conformist response containing audit marker (`conformist` mode).
 - FAIL: conformist response containing addendum heading (`conformist` mode).
 - FAIL: conformist response containing decision fields (`conformist` mode).

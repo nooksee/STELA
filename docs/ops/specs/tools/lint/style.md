@@ -47,13 +47,13 @@ Detection logic: Extract the value block of `Create Pull Request (Description)` 
 Failure message: `CLOSING BLOCK: PR Description contains no markdown constructs. Use at least one heading (##), list item (- or 1.), or bold (**) to serve the reviewer interface.`
 Rationale: The PR Description renders in the GitHub pull request interface, which supports full markdown. A plaintext paragraph in a markdown rendering surface indicates the writer used the field as a text box rather than a structured reviewer handoff. At minimum, one markdown construct is required to demonstrate intentional use of the rendering surface.
 
-## Audit-Foreman Mode Split Guardrails
+## Audit-Addenda Mode Split Guardrails
 
 ### Guard 1: Audit stance marker in `audit.md.tpl`
 Target file: `ops/src/stances/audit.md.tpl`
-Assertion: file must include `` `--profile=foreman` is addendum-authorization mode and is never valid for audit verdict workflows. ``
+Assertion: file must include `` `--profile=addenda` is addenda mode and is never valid for audit verdict workflows. ``
 Failure message: `audit.md.tpl missing audit-verdict stance marker`
-Invariant: audit verdict flow and foreman authorization flow remain separated by explicit stance guidance.
+Invariant: audit verdict flow and addenda authorization flow remain separated by explicit stance guidance.
 
 ### Guard 2: Audit attach-only line in `audit.md.tpl`
 Target file: `ops/src/stances/audit.md.tpl`
@@ -91,11 +91,11 @@ Assertion: file must include `For allowlist interpretation, \`tools/lint/integri
 Failure message: `audit.md.tpl missing audit allowlist-authority interpretation rule line`
 Invariant: audit output does not misclassify raw comm output as a hard gate failure when authoritative checks pass.
 
-### Guard 8: Foreman stance marker in `foreman.md.tpl`
-Target file: `ops/src/stances/foreman.md.tpl`
+### Guard 8: Addenda stance marker in `addenda.md.tpl`
+Target file: `ops/src/stances/addenda.md.tpl`
 Assertion: file must include `This stance is not used for audit PASS/FAIL verdicts.`
-Failure message: `foreman.md.tpl missing addendum-authorization stance marker`
-Invariant: foreman stance remains authorization-only and never drifts into verdict behavior.
+Failure message: `addenda.md.tpl missing addendum-authorization stance marker`
+Invariant: addenda stance remains authorization-only and never drifts into verdict behavior.
 
 ### Guard 9: Canonical audit split line in bundle manifest
 Target file: `ops/lib/manifests/BUNDLE.md`
@@ -103,11 +103,11 @@ Assertion: file must include `Canonical audit verdict profile is \`audit\`.`
 Failure message: `BUNDLE.md missing canonical audit mode split line`
 Invariant: runtime policy keeps audit mode semantics explicit and enforceable.
 
-### Guard 10: Canonical foreman split line in bundle manifest
+### Guard 10: Canonical addenda split line in bundle manifest
 Target file: `ops/lib/manifests/BUNDLE.md`
-Assertion: file must include `Canonical addendum authorization profile is \`foreman\`.`
-Failure message: `BUNDLE.md missing canonical foreman mode split line`
-Invariant: runtime policy keeps foreman mode semantics explicit and enforceable.
+Assertion: file must include `Canonical addenda profile is \`addenda\`.`
+Failure message: `BUNDLE.md missing canonical addenda mode split line`
+Invariant: runtime policy keeps addenda mode semantics explicit and enforceable.
 
 ### Guard 13: Hygiene alias deprecation status key line
 Target file: `ops/lib/manifests/BUNDLE.md`

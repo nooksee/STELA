@@ -35,7 +35,7 @@ Canon agent files under `opt/_factory/agents/` must contain:
 - `## Identity Contract` with required backticked fields:
   - `agent_id` (must match filename form `r-agent-XX` -> `R-AGENT-XX`)
   - `runtime_role` (must be one of `foreman`, `auditor`, `conformist`)
-  - `stance_id` (must be one of `foreman`, `audit`, `conformist`)
+  - `stance_id` (must be one of `addenda`, `audit`, `conformist`)
 - `## Capability Tags` with at least one backticked capability token bullet.
 - `## Pointers`
 - `## Skill Bindings` with explicit `required_skills` and `optional_skills` lists.

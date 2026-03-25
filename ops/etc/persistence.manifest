@@ -21,7 +21,7 @@ profile=draft|recent_count=5|checkpoint_interval=12|cold_mode=metadata-only
 profile=audit|recent_count=2|checkpoint_interval=30|cold_mode=metadata-only
 profile=project|recent_count=4|checkpoint_interval=20|cold_mode=metadata-only
 profile=conform|recent_count=4|checkpoint_interval=16|cold_mode=metadata-only
-profile=foreman|recent_count=2|checkpoint_interval=30|cold_mode=metadata-only
+profile=addenda|recent_count=2|checkpoint_interval=30|cold_mode=metadata-only
 
 ## Archive Serialization Classes
 class=archive-pow|pattern=archives/surfaces/PoW-*.md|family=pow|kind=surface

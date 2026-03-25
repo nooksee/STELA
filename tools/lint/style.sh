@@ -230,11 +230,11 @@ check_shared_stance_contract() {
   fi
 }
 
-check_audit_foreman_mode_split() {
+check_audit_addenda_mode_split() {
   local stance_audit="${REPO_ROOT}/ops/src/stances/audit.md.tpl"
-  local stance_foreman="${REPO_ROOT}/ops/src/stances/foreman.md.tpl"
+  local stance_addenda="${REPO_ROOT}/ops/src/stances/addenda.md.tpl"
   local bundle_manifest="${REPO_ROOT}/ops/lib/manifests/BUNDLE.md"
-  local required_audit_guard='`--profile=foreman` is addendum-authorization mode and is never valid for audit verdict workflows.'
+  local required_audit_guard='`--profile=addenda` is addenda mode and is never valid for audit verdict workflows.'
   local required_audit_empty_input='If user text is empty and required attachments are present, proceed and emit only the final audit block.'
   local required_audit_output='Output only: Complete audit report.'
   local required_audit_shared_fence_include='{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}'
@@ -242,14 +242,14 @@ check_audit_foreman_mode_split() {
   local required_audit_no_citations='Do not emit citation tokens (`[cite_start]`, `[cite:`, `[/cite]`, `:contentReference[`, or `oaicite`).'
   local required_audit_authority='If interpretation conflicts with receipt command outputs, treat command outputs and lint results as authoritative and mark the interpretation as non-blocking.'
   local required_audit_allowlist_authority='For allowlist interpretation, `tools/lint/integrity.sh` plus certify changed-file subset check are authoritative; raw `comm` output is informational.'
-  local required_foreman_guard='This stance is not used for audit PASS/FAIL verdicts.'
+  local required_addenda_guard='This stance is not used for audit PASS/FAIL verdicts.'
   local required_manifest_audit='Canonical audit verdict profile is `audit`.'
-  local required_manifest_foreman='Canonical addendum authorization profile is `foreman`.'
+  local required_manifest_addenda='Canonical addenda profile is `addenda`.'
   local required_manifest_alias_hygiene_status_key='profile_alias_legacy_hygiene_deprecation_status='
   local required_manifest_alias_hygiene_remove_key='profile_alias_legacy_hygiene_remove_after_dp='
 
   [[ -f "$stance_audit" ]] || mark_failure "audit.md.tpl missing for mode split checks"
-  [[ -f "$stance_foreman" ]] || mark_failure "foreman.md.tpl missing for mode split checks"
+  [[ -f "$stance_addenda" ]] || mark_failure "addenda.md.tpl missing for mode split checks"
   [[ -f "$bundle_manifest" ]] || mark_failure "BUNDLE.md missing for mode split checks"
 
   if [[ -f "$stance_audit" ]] && ! grep -Fq -- "$required_audit_guard" "$stance_audit"; then
@@ -284,16 +284,16 @@ check_audit_foreman_mode_split() {
     mark_failure "audit.md.tpl missing audit allowlist-authority interpretation rule line"
   fi
 
-  if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_foreman_guard" "$stance_foreman"; then
-    mark_failure "foreman.md.tpl missing addendum-authorization stance marker"
+  if [[ -f "$stance_addenda" ]] && ! grep -Fq -- "$required_addenda_guard" "$stance_addenda"; then
+    mark_failure "addenda.md.tpl missing addendum-authorization stance marker"
   fi
 
   if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_audit" "$bundle_manifest"; then
     mark_failure "BUNDLE.md missing canonical audit mode split line"
   fi
 
-  if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_foreman" "$bundle_manifest"; then
-    mark_failure "BUNDLE.md missing canonical foreman mode split line"
+  if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_addenda" "$bundle_manifest"; then
+    mark_failure "BUNDLE.md missing canonical addenda mode split line"
   fi
 
   if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_alias_hygiene_status_key" "$bundle_manifest"; then
@@ -418,34 +418,34 @@ check_planning_mode_contract() {
   fi
 }
 
-check_foreman_mode_contract() {
-  local stance_foreman="${REPO_ROOT}/ops/src/stances/foreman.md.tpl"
+check_addenda_mode_contract() {
+  local stance_addenda="${REPO_ROOT}/ops/src/stances/addenda.md.tpl"
   local required_shared_fence_include='{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}'
-  local required_first='For machine-ingest foreman mode: first non-empty line inside the fenced body must start with `### Addendum`.'
-  local required_sections='For machine-ingest foreman mode: include addendum headings `## A.1 Authorization` through `## A.5 Addendum Receipt (Proofs to collect) - MUST RUN`.'
+  local required_first='For machine-ingest addenda mode: first non-empty line inside the fenced body must start with `### Addendum`.'
+  local required_sections='For machine-ingest addenda mode: include addendum headings `## A.1 Authorization` through `## A.5 Addendum Receipt (Proofs to collect) - MUST RUN`.'
   local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
-  local required_decision='For machine-ingest foreman mode: if `Decision Required:` and `Decision Leaf:` lines are present, values must be coherent (`Yes` with `archives/decisions/RoR-*.md`, `No` with `None`).'
+  local required_decision='For machine-ingest addenda mode: if `Decision Required:` and `Decision Leaf:` lines are present, values must be coherent (`Yes` with `archives/decisions/RoR-*.md`, `No` with `None`).'
 
-  [[ -f "$stance_foreman" ]] || mark_failure "foreman.md.tpl missing for mode contract checks"
+  [[ -f "$stance_addenda" ]] || mark_failure "addenda.md.tpl missing for mode contract checks"
 
-  if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_shared_fence_include" "$stance_foreman"; then
-    mark_failure "foreman.md.tpl missing shared fence include line"
+  if [[ -f "$stance_addenda" ]] && ! grep -Fq -- "$required_shared_fence_include" "$stance_addenda"; then
+    mark_failure "addenda.md.tpl missing shared fence include line"
   fi
 
-  if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_first" "$stance_foreman"; then
-    mark_failure "foreman.md.tpl missing foreman first-line marker line"
+  if [[ -f "$stance_addenda" ]] && ! grep -Fq -- "$required_first" "$stance_addenda"; then
+    mark_failure "addenda.md.tpl missing addenda first-line marker line"
   fi
 
-  if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_sections" "$stance_foreman"; then
-    mark_failure "foreman.md.tpl missing foreman required-sections line"
+  if [[ -f "$stance_addenda" ]] && ! grep -Fq -- "$required_sections" "$stance_addenda"; then
+    mark_failure "addenda.md.tpl missing addenda required-sections line"
   fi
 
-  if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_shared_non_audit_include" "$stance_foreman"; then
-    mark_failure "foreman.md.tpl missing shared non-audit include line"
+  if [[ -f "$stance_addenda" ]] && ! grep -Fq -- "$required_shared_non_audit_include" "$stance_addenda"; then
+    mark_failure "addenda.md.tpl missing shared non-audit include line"
   fi
 
-  if [[ -f "$stance_foreman" ]] && ! grep -Fq -- "$required_decision" "$stance_foreman"; then
-    mark_failure "foreman.md.tpl missing foreman decision-coherence line"
+  if [[ -f "$stance_addenda" ]] && ! grep -Fq -- "$required_decision" "$stance_addenda"; then
+    mark_failure "addenda.md.tpl missing addenda decision-coherence line"
   fi
 }
 
@@ -783,10 +783,10 @@ load_current_closing_labels
 check_markdown_contractions
 check_jargon_blacklist
 check_shared_stance_contract
-check_audit_foreman_mode_split
+check_audit_addenda_mode_split
 check_draft_mode_contract
 check_planning_mode_contract
-check_foreman_mode_contract
+check_addenda_mode_contract
 check_conformist_mode_contract
 check_open_marker_contract
 check_closing_block_lead_words
