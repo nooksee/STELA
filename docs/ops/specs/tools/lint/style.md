@@ -161,11 +161,11 @@ Assertion: file must include `For machine-ingest planning mode: do not add repos
 Failure message: `planning.md.tpl missing planning no-unsupported-operating-detail line`
 Invariant: broad planning topics do not silently expand into unsupported repo-operating detail.
 
-### Guard 22: Planning discussion-mode default line
+### Guard 22: Planning final-plan-first default line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Default planning behavior is conversational planning.`
-Failure message: `planning.md.tpl missing planning discussion-mode default line`
-Invariant: planning is not silently reduced to plan-only serialization.
+Assertion: file must include `* Primary output is the final \`storage/handoff/PLAN.md\`; emit it immediately when the topic and attached evidence settle intent.`
+Failure message: `planning.md.tpl missing planning final-plan-first default line`
+Invariant: planning defaults to final-plan-first rather than conversational-first.
 
 ### Guard 23: Planning final-plan trigger line
 Target file: `ops/src/stances/planning.md.tpl`
@@ -179,29 +179,29 @@ Assertion: file must include `For machine-ingest planning mode: when the topic i
 Failure message: `planning.md.tpl missing planning broad-topic-genericity line`
 Invariant: topic-driven planning output stays high-level when attached evidence is thin.
 
-### Guard 25: Planning discussion-mode first-line marker
+### Guard 25: Planning clarification-exception line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For conversational planning mode: first non-empty line inside the fenced body must start with \`1. Analysis and Discussion\`.`
-Failure message: `planning.md.tpl missing planning discussion-mode first-line marker line`
-Invariant: conversational planning output stays in planning mode instead of collapsing to final-plan output too early.
+Assertion: file must include `* Ask clarifying questions only when needed to write a truthful plan; prefer one real packet-boundary question; ask the minimum number needed, up to 3.`
+Failure message: `planning.md.tpl missing planning clarification-exception line`
+Invariant: clarification remains a narrow exception rather than the default mode.
 
-### Guard 26: Planning question-shape line
+### Guard 26: Planning subordinate-choices direct line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For conversational planning mode: when asking questions, use a \`2. Decision Questions\` section; allow at most 3 questions; each question must present exactly 3 meaningful options with one marked \`(Recommended)\`; end with \`Questions / Conversation:\` and a concise operator response format such as \`Q1:A, Q2:C\` or \`Use recommended options\`.`
-Failure message: `planning.md.tpl missing planning questions line`
-Invariant: planning mode invites bounded operator conversation when it helps move the decision forward.
+Assertion: file must include `* Settle subordinate choices directly when attached evidence and the narrowness constraint already make them non-blocking.`
+Failure message: `planning.md.tpl missing planning subordinate-choices direct line`
+Invariant: subordinate choices are settled directly instead of being expanded into unnecessary questions.
 
-### Guard 27: Planning weak-topic handling line
+### Guard 27: Planning after-clarification-immediate line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For conversational planning mode: if topic text is present but weak or ambiguous, interpret conservatively, state assumptions, and ask concise follow-up questions instead of forcing a final plan.`
-Failure message: `planning.md.tpl missing planning weak-topic handling line`
-Invariant: weak topics trigger bounded clarification rather than dead serialization.
+Assertion: file must include `* After clarification, emit the final plan immediately.`
+Failure message: `planning.md.tpl missing planning after-clarification-immediate line`
+Invariant: the clarification path returns immediately to final-plan output.
 
 ### Guard 28: Planning non-actionable-topic line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For conversational planning mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.`
-Failure message: `planning.md.tpl missing planning non-actionable-topic line`
-Invariant: nonsense topics stop truthfully instead of producing fabricated plans.
+Assertion: file must include `For machine-ingest question mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.`
+Failure message: `planning.md.tpl missing planning nonsensical-topic line`
+Invariant: nonsense topics still stop truthfully rather than forcing fabricated plans.
 
 ### Guard 29: Planning plan-output-only line
 Target file: `ops/src/stances/planning.md.tpl`

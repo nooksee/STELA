@@ -25,8 +25,10 @@ Define the template-backed Planning stance body used by bundle output contract r
 - Machine-ingest planning mode outputs exactly one fenced markdown code block.
 - Planning reads topic and all directly attached bundle evidence before asking anything (explore-first).
 - Material-ambiguity threshold: low-impact gaps are absorbed as smallest justified assumptions; only gaps that would materially change the plan trigger question mode.
-- Planning remains conversational while material ambiguity is still open.
-- Conversational mode first non-empty line is `1. Analysis and Discussion`.
+- Planning emits the final plan immediately when topic and evidence settle intent; clarification questions are the narrow exception, not the default mode.
+- Subordinate choices that do not change the immediate packet boundary are settled directly in the plan rather than asked as questions.
+- One real packet-boundary question is preferred over a broad questionnaire when a question is needed; up to 3 questions are permitted in a single run.
+- After clarification, emit the final plan immediately.
 - Structured question mode: at most 3 questions per run; each question presents exactly 3 meaningful, mutually exclusive options; exactly one option per question is marked `(Recommended)`.
 - Conversational mode ends with `Questions / Conversation:` when clarification, tradeoff choice, or confirmation would help.
 - Final plan mode emits only the complete `PLAN.md` draft in the canonical plan shape.

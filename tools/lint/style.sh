@@ -346,14 +346,14 @@ check_planning_mode_contract() {
   local stance_planning="${REPO_ROOT}/ops/src/stances/planning.md.tpl"
   local required_shared_fence_include='{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}'
   local required_topic='For machine-ingest planning mode: require attached `storage/handoff/TOPIC.md`; do not use inline query fallback.'
-  local required_discussion_default='* Default planning behavior is conversational planning.'
+  local required_discussion_default='* Primary output is the final `storage/handoff/PLAN.md`; emit it immediately when the topic and attached evidence settle intent.'
   local required_final_plan='* When the topic and attached evidence settle intent enough for direct draft handoff, emit the final `PLAN.md` draft in one fenced markdown block.'
   local required_no_operating_detail='For machine-ingest planning mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.'
   local required_generic_broad_topic='For machine-ingest planning mode: when the topic is broad, keep repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.'
-  local required_default_first='For conversational planning mode: first non-empty line inside the fenced body must start with `1. Analysis and Discussion`.'
-  local required_questions='For conversational planning mode: when asking questions, use a `2. Decision Questions` section; allow at most 3 questions; each question must present exactly 3 meaningful options with one marked `(Recommended)`; end with `Questions / Conversation:` and a concise operator response format such as `Q1:A, Q2:C` or `Use recommended options`.'
-  local required_weak_topic='For conversational planning mode: if topic text is present but weak or ambiguous, interpret conservatively, state assumptions, and ask concise follow-up questions instead of forcing a final plan.'
-  local required_bad_topic='For conversational planning mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.'
+  local required_clarification_exception='* Ask clarifying questions only when needed to write a truthful plan; prefer one real packet-boundary question; ask the minimum number needed, up to 3.'
+  local required_subordinate_choices='* Settle subordinate choices directly when attached evidence and the narrowness constraint already make them non-blocking.'
+  local required_after_clarification='* After clarification, emit the final plan immediately.'
+  local required_nonsensical_topic='For machine-ingest question mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.'
   local required_plan_output='For final plan mode: output only the complete PLAN markdown code block.'
   local required_plan_shape='For final plan mode: use the canonical plan template shape with `Summary`, `Key Changes`, `Test Plan`, and `Assumptions`.'
   local required_plan_direct='For final plan mode: emit the final plan only when the topic and attached evidence settle intent enough for direct draft drafting.'
@@ -366,7 +366,7 @@ check_planning_mode_contract() {
   fi
 
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_discussion_default" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning discussion-mode default line"
+    mark_failure "planning.md.tpl missing planning final-plan-first default line"
   fi
 
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_final_plan" "$stance_planning"; then
@@ -385,20 +385,20 @@ check_planning_mode_contract() {
     mark_failure "planning.md.tpl missing planning broad-topic-genericity line"
   fi
 
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_default_first" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning discussion-mode first-line marker line"
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_clarification_exception" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning clarification-exception line"
   fi
 
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_questions" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning questions line"
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_subordinate_choices" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning subordinate-choices direct line"
   fi
 
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_weak_topic" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning weak-topic handling line"
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_after_clarification" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning after-clarification-immediate line"
   fi
 
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_bad_topic" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning non-actionable-topic line"
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_nonsensical_topic" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning nonsensical-topic line"
   fi
 
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_plan_output" "$stance_planning"; then
