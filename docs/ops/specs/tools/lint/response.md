@@ -34,7 +34,7 @@ Deterministic checks:
    - reject receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`).
 9. In `planning` mode, input is accepted in one of two shapes:
    - final-plan mode: exactly one fenced markdown code block whose extracted body satisfies `bash tools/lint/plan.sh <extracted-body>`, or
-   - clarification mode: plain text with no fenced code block; the first non-empty line asks the question; each question presents 2-3 meaningful mutually exclusive options; the smallest truthful option set is preferred; optional reply instruction lines are allowed.
+   - clarification mode: plain text with no fenced code block; the first non-empty line asks the question; later questions may be plain `...?` lines or numbered `Q<n>. ...?` lines; each question presents 2-3 meaningful mutually exclusive options; the smallest truthful option set is preferred; optional reply instruction lines are allowed.
 10. In `planning` mode, reject role-drift markers:
    - audit-verdict markers (`**AUDIT -`),
    - `## Contractor Execution Narrative`,
@@ -76,6 +76,7 @@ Exit behavior:
 - PASS: single fenced block with valid final `PLAN` body (`planning` mode).
 - PASS: plain-text planning clarification with 2 options (`planning` mode).
 - PASS: plain-text planning clarification with 3 options (`planning` mode).
+- PASS: plain-text planning clarification with a plain follow-up question after the first question (`planning` mode).
 - PASS: single fenced block with addendum headings (`addenda` mode).
 - PASS: single fenced block with valid DP heading and no drift markers (`conformist` mode).
 - FAIL: text outside fence.

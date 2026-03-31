@@ -307,6 +307,21 @@ check_planning_body_scope() {
       return 0
     }
 
+    start_question_block() {
+      q_count=$(( q_count + 1 ))
+      if (( q_count > 3 )); then
+        response_fail "planning clarification mode must contain at most 3 questions"
+        return 1
+      fi
+      saw_question=1
+      option_count=0
+      recommended_count=0
+      option_scheme=""
+      expecting_option=1
+      expecting_next=""
+      return 0
+    }
+
     while IFS= read -r line || [[ -n "$line" ]]; do
       trimmed="$(trim_inline "$line")"
       if [[ -z "$trimmed" ]]; then
@@ -327,31 +342,25 @@ check_planning_body_scope() {
           response_fail "planning clarification questions must be sequential starting at Q1"
           return 1
         fi
-        q_count=$(( q_count + 1 ))
-        if (( q_count > 3 )); then
-          response_fail "planning clarification mode must contain at most 3 questions"
+        if ! start_question_block; then
           return 1
         fi
-        saw_question=1
-        option_count=0
-        recommended_count=0
-        option_scheme=""
-        expecting_option=1
-        expecting_next=""
+        continue
+      fi
+
+      if [[ "$trimmed" =~ \?$ ]]; then
+        if (( saw_question )); then
+          if ! finalize_question_block; then
+            return 1
+          fi
+        fi
+        if ! start_question_block; then
+          return 1
+        fi
         continue
       fi
 
       if (( ! saw_question )); then
-        if [[ "$trimmed" =~ \?$ ]]; then
-          q_count=1
-          saw_question=1
-          option_count=0
-          recommended_count=0
-          option_scheme=""
-          expecting_option=1
-          expecting_next=""
-          continue
-        fi
         response_fail "planning clarification mode must ask the question first"
         return 1
       fi
@@ -818,6 +827,7 @@ run_test() {
   local response_planning_policy
   local response_planning_old_wrapper
   local response_planning_three_option_valid
+  local response_planning_plain_followup_valid
   local response_planning_four_options
   local response_planning_too_many_questions
   local response_addenda_valid
@@ -861,6 +871,7 @@ run_test() {
   response_planning_policy="${test_dir}/response-planning-policy.md"
   response_planning_old_wrapper="${test_dir}/response-planning-old-wrapper.md"
   response_planning_three_option_valid="${test_dir}/response-planning-three-option-valid.md"
+  response_planning_plain_followup_valid="${test_dir}/response-planning-plain-followup-valid.md"
   response_planning_four_options="${test_dir}/response-planning-four-options.md"
   response_planning_too_many_questions="${test_dir}/response-planning-too-many-questions.md"
   response_addenda_valid="${test_dir}/response-addenda-valid.md"
@@ -1136,6 +1147,20 @@ Reply with `Q1:A`, `Q1:B`, or `Q1:C`.
 EOF_PLANNING_THREE_OPTIONS
   if ! lint_response_file "$response_planning_three_option_valid" >/dev/null 2>&1; then
     echo "FAIL: --test expected planning three-option clarification response to pass" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_planning_plain_followup_valid" <<'EOF_PLANNING_PLAIN_FOLLOWUP'
+Which immediate packet boundary should I plan?
+A. Keep `docs/MANUAL.md` as one surface.
+B. Extract Closeout into `docs/CLOSEOUT.md`.
+
+Which rollout strategy should I use after that?
+1. Update only directly coupled docs.
+2. Update coupled docs plus allowlist if needed. (Recommended)
+EOF_PLANNING_PLAIN_FOLLOWUP
+  if ! lint_response_file "$response_planning_plain_followup_valid" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning clarification response with plain follow-up question to pass" >&2
     failures_local=1
   fi
 
