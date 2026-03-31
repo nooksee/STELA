@@ -208,21 +208,17 @@ check_draft_body_scope() {
 
 check_planning_body_scope() {
   local body_path="$1"
+  local planning_shape="${2:-auto}"
   local first_content_line
   local hit=""
   local line_number=""
   local line_text=""
   local plan_lint_output=""
-  local conversational_mode=0
 
   first_content_line="$(awk 'NF { print; exit }' "$body_path")"
   if [[ -z "$first_content_line" ]]; then
     response_fail "planning body is empty"
     return 1
-  fi
-
-  if [[ "$first_content_line" =~ ^1[.][[:space:]]+Analysis[[:space:]]+and[[:space:]]+Discussion$ ]]; then
-    conversational_mode=1
   fi
 
   hit="$(awk '
@@ -265,53 +261,160 @@ check_planning_body_scope() {
     response_fail "planning body must not contain role-policy overcompensation prose at line ${line_number}: ${line_text}"
   fi
 
-  if (( conversational_mode )); then
-    if ! grep -Eq '^Questions / Conversation:[[:space:]]*$' "$body_path"; then
-      response_fail "conversational planning body must include 'Questions / Conversation:'"
+  hit="$(awk '
+    $0 ~ /^1[.][[:space:]]+Analysis[[:space:]]+and[[:space:]]+Discussion$/ ||
+    $0 ~ /^2[.][[:space:]]+Decision[[:space:]]+Questions$/ ||
+    $0 ~ /^Questions[[:space:]]*\/[[:space:]]*Conversation:[[:space:]]*$/ { printf "%d\t%s\n", NR, $0; exit }
+  ' "$body_path")"
+  if [[ -n "$hit" ]]; then
+    IFS=$'\t' read -r line_number line_text <<< "$hit"
+    response_fail "planning body must not use retired question-mode wrapper text at line ${line_number}: ${line_text}"
+    return 1
+  fi
+
+  if [[ "$planning_shape" == "final" || "$planning_shape" == "auto" ]]; then
+    if plan_lint_output="$(bash tools/lint/plan.sh "$body_path" 2>&1)"; then
+      return 0
+    fi
+    if [[ "$planning_shape" == "final" ]]; then
+      response_fail "planning final-plan body must be a valid PLAN: $(printf '%s\n' "$plan_lint_output" | tail -n 1)"
       return 1
     fi
-    local q_count
-    q_count="$(grep -cE '^Q[0-9][.][[:space:]]' "$body_path" || true)"
-    if (( q_count > 3 )); then
-      response_fail "planning conversational body must contain at most 3 questions"
-      return 1
-    fi
-    if (( q_count > 0 )); then
-      local q_num
-      for q_num in 1 2 3; do
-        if ! grep -qE "^Q${q_num}[.][[:space:]]" "$body_path"; then
+  fi
+
+  if [[ "$planning_shape" == "question" || "$planning_shape" == "auto" ]]; then
+    local q_count=0
+    local option_count=0
+    local recommended_count=0
+    local option_scheme=""
+    local expecting_option=0
+    local expecting_next=""
+    local saw_question=0
+    local line trimmed label num
+
+    finalize_question_block() {
+      if (( ! saw_question )); then
+        return 0
+      fi
+      if (( option_count < 2 || option_count > 3 )); then
+        response_fail "each planning clarification question must have 2-3 options (question ${q_count} has ${option_count})"
+        return 1
+      fi
+      if (( recommended_count > 1 )); then
+        response_fail "each planning clarification question may mark at most one option (Recommended) (question ${q_count} has ${recommended_count})"
+        return 1
+      fi
+      return 0
+    }
+
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      trimmed="$(trim_inline "$line")"
+      if [[ -z "$trimmed" ]]; then
+        continue
+      fi
+
+      if [[ "$trimmed" == *"(Recommended)"* && ! "$trimmed" =~ ^([ABC]|[123])[.][[:space:]] ]]; then
+        response_fail "planning clarification may mark (Recommended) only on an option line"
+        return 1
+      fi
+
+      if [[ "$trimmed" =~ ^Q([0-9]+)[.][[:space:]].+\?$ ]]; then
+        if ! finalize_question_block; then
+          return 1
+        fi
+        num="${BASH_REMATCH[1]}"
+        if [[ "$num" != "$(( q_count + 1 ))" ]]; then
+          response_fail "planning clarification questions must be sequential starting at Q1"
+          return 1
+        fi
+        q_count=$(( q_count + 1 ))
+        if (( q_count > 3 )); then
+          response_fail "planning clarification mode must contain at most 3 questions"
+          return 1
+        fi
+        saw_question=1
+        option_count=0
+        recommended_count=0
+        option_scheme=""
+        expecting_option=1
+        expecting_next=""
+        continue
+      fi
+
+      if (( ! saw_question )); then
+        if [[ "$trimmed" =~ \?$ ]]; then
+          q_count=1
+          saw_question=1
+          option_count=0
+          recommended_count=0
+          option_scheme=""
+          expecting_option=1
+          expecting_next=""
           continue
         fi
-        local opt_count rec_count
-        opt_count="$(awk -v q="$q_num" '
-          $0 ~ "^Q" q "[.][[:space:]]" { f=1; next }
-          f && /^Q[0-9][.][[:space:]]/ { exit }
-          f && /^Questions / { exit }
-          f && /^- [ABC][.][[:space:]]/ { c++ }
-          END { print c+0 }
-        ' "$body_path")"
-        if [[ "$opt_count" != "3" ]]; then
-          response_fail "each planning question must have exactly 3 options (Q${q_num} has ${opt_count})"
+        response_fail "planning clarification mode must ask the question first"
+        return 1
+      fi
+
+      if [[ "$trimmed" =~ ^([ABC]|[123])[.][[:space:]].+ ]]; then
+        if (( ! expecting_option )); then
+          response_fail "planning clarification option appeared before a question"
           return 1
         fi
-        rec_count="$(awk -v q="$q_num" '
-          $0 ~ "^Q" q "[.][[:space:]]" { f=1; next }
-          f && /^Q[0-9][.][[:space:]]/ { exit }
-          f && /^Questions / { exit }
-          f && /\(Recommended\)/ { c++ }
-          END { print c+0 }
-        ' "$body_path")"
-        if [[ "$rec_count" != "1" ]]; then
-          response_fail "each planning question must have exactly one (Recommended) option (Q${q_num} has ${rec_count})"
+        label="${BASH_REMATCH[1]}"
+        if [[ -z "$option_scheme" ]]; then
+          if [[ "$label" =~ [ABC] ]]; then
+            option_scheme="alpha"
+            expecting_next="A"
+          else
+            option_scheme="numeric"
+            expecting_next="1"
+          fi
+        fi
+        if [[ "$label" != "$expecting_next" ]]; then
+          response_fail "planning clarification options must use a consistent ordered 2-3 option set"
           return 1
         fi
-      done
+        option_count=$(( option_count + 1 ))
+        if [[ "$trimmed" == *"(Recommended)"* ]]; then
+          recommended_count=$(( recommended_count + 1 ))
+        fi
+        if [[ "$option_scheme" == "alpha" ]]; then
+          case "$label" in
+            A) expecting_next="B" ;;
+            B) expecting_next="C" ;;
+            C) expecting_next="D" ;;
+          esac
+        else
+          case "$label" in
+            1) expecting_next="2" ;;
+            2) expecting_next="3" ;;
+            3) expecting_next="4" ;;
+          esac
+        fi
+        continue
+      fi
+
+      if [[ "$trimmed" =~ ^(Reply|Respond)[[:space:]]+with[[:space:]] ]] || [[ "$trimmed" =~ ^Use[[:space:]]+recommended[[:space:]]+option ]]; then
+        if ! finalize_question_block; then
+          return 1
+        fi
+        expecting_option=0
+        continue
+      fi
+
+      response_fail "planning clarification mode allows only question lines, 2-3 option lines, and an optional concise reply instruction"
+      return 1
+    done < "$body_path"
+
+    if ! finalize_question_block; then
+      return 1
     fi
     return 0
   fi
 
-  if ! plan_lint_output="$(bash tools/lint/plan.sh "$body_path" 2>&1)"; then
-    response_fail "planning body must be either conversational planning or a valid final PLAN: $(printf '%s\n' "$plan_lint_output" | tail -n 1)"
+  if [[ "$planning_shape" == "auto" ]]; then
+    response_fail "planning body must be either a valid final PLAN or a valid clarification question"
     return 1
   fi
 }
@@ -651,8 +754,13 @@ lint_response_file() {
     check_dp_body_start "$body_tmp"
     check_draft_body_scope "$body_tmp"
   elif [[ "$response_mode" == "planning" ]]; then
-    extract_single_fenced_block "$input_path" "$body_tmp"
-    check_planning_body_scope "$body_tmp"
+    if grep -q '^```' "$input_path"; then
+      extract_single_fenced_block "$input_path" "$body_tmp"
+      check_planning_body_scope "$body_tmp" "final"
+    else
+      cp "$input_path" "$body_tmp"
+      check_planning_body_scope "$body_tmp" "question"
+    fi
   elif [[ "$response_mode" == "addenda" ]]; then
     extract_single_fenced_block "$input_path" "$body_tmp"
     check_addenda_body_scope "$body_tmp"
@@ -704,14 +812,13 @@ run_test() {
   local response_draft_audit_marker
   local response_draft_narrative
   local response_planning_valid
-  local response_planning_conversation_valid
+  local response_planning_binary_valid
   local response_planning_audit_marker
   local response_planning_narrative
   local response_planning_policy
-  local response_planning_missing_plan
-  local response_planning_structured_valid
-  local response_planning_few_options
-  local response_planning_no_recommended
+  local response_planning_old_wrapper
+  local response_planning_three_option_valid
+  local response_planning_four_options
   local response_planning_too_many_questions
   local response_addenda_valid
   local response_addenda_audit_marker
@@ -748,14 +855,13 @@ run_test() {
   response_draft_audit_marker="${test_dir}/response-draft-audit-marker.md"
   response_draft_narrative="${test_dir}/response-draft-narrative.md"
   response_planning_valid="${test_dir}/response-planning-valid.md"
-  response_planning_conversation_valid="${test_dir}/response-planning-conversation-valid.md"
+  response_planning_binary_valid="${test_dir}/response-planning-binary-valid.md"
   response_planning_audit_marker="${test_dir}/response-planning-audit-marker.md"
   response_planning_narrative="${test_dir}/response-planning-narrative.md"
   response_planning_policy="${test_dir}/response-planning-policy.md"
-  response_planning_missing_plan="${test_dir}/response-planning-missing-plan.md"
-  response_planning_structured_valid="${test_dir}/response-planning-structured-valid.md"
-  response_planning_few_options="${test_dir}/response-planning-few-options.md"
-  response_planning_no_recommended="${test_dir}/response-planning-no-recommended.md"
+  response_planning_old_wrapper="${test_dir}/response-planning-old-wrapper.md"
+  response_planning_three_option_valid="${test_dir}/response-planning-three-option-valid.md"
+  response_planning_four_options="${test_dir}/response-planning-four-options.md"
   response_planning_too_many_questions="${test_dir}/response-planning-too-many-questions.md"
   response_addenda_valid="${test_dir}/response-addenda-valid.md"
   response_addenda_audit_marker="${test_dir}/response-addenda-audit-marker.md"
@@ -964,24 +1070,14 @@ EOF_PLANNING_VALID
     failures_local=1
   fi
 
-  cat > "$response_planning_conversation_valid" <<'EOF_PLANNING_CONVERSATION'
-```markdown
-1. Analysis and Discussion
-The topic leaves scope ambiguity around the exact runtime reset surface.
-
-2. Decision Questions
-
-Q1. Should the reset remove generated slice handling from editor assist as well as bundle/runtime?
-- A. Reset bundle/runtime only; leave editor assist unchanged.
-- B. Reset bundle/runtime and editor assist together. (Recommended)
-- C. Reset editor assist only and defer bundle/runtime.
-
-Questions / Conversation:
-Q1:B — or: Use recommended options
-```
-EOF_PLANNING_CONVERSATION
-  if ! lint_response_file "$response_planning_conversation_valid" >/dev/null 2>&1; then
-    echo "FAIL: --test expected planning conversational response to pass" >&2
+  cat > "$response_planning_binary_valid" <<'EOF_PLANNING_BINARY'
+Q1. Which immediate packet boundary should I plan?
+A. Keep `docs/MANUAL.md` as one surface and reduce it in place.
+B. Extract Closeout into `docs/CLOSEOUT.md`. (Recommended)
+Reply with `Q1:A` or `Q1:B`.
+EOF_PLANNING_BINARY
+  if ! lint_response_file "$response_planning_binary_valid" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning binary clarification response to pass" >&2
     failures_local=1
   fi
 
@@ -1008,126 +1104,74 @@ EOF_PLANNING_NARRATIVE
   fi
 
   cat > "$response_planning_policy" <<'EOF_PLANNING_POLICY'
-```markdown
-1. Analysis and Discussion
 Section 3.4.5 requires RECEIPT_EXTRA policy wording.
-
-Questions / Conversation:
-- confirm
-```
+Q1. Should the packet proceed?
+A. Yes.
+B. No.
 EOF_PLANNING_POLICY
   if lint_response_file "$response_planning_policy" >/dev/null 2>&1; then
     echo "FAIL: --test expected planning response with policy-overcompensation prose to fail" >&2
     failures_local=1
   fi
 
-  cat > "$response_planning_missing_plan" <<'EOF_PLANNING_MISSING'
-```markdown
+  cat > "$response_planning_old_wrapper" <<'EOF_PLANNING_OLD_WRAPPER'
+Q1. Which immediate packet boundary should I plan?
 1. Analysis and Discussion
-```
-EOF_PLANNING_MISSING
-  if lint_response_file "$response_planning_missing_plan" >/dev/null 2>&1; then
-    echo "FAIL: --test expected planning response missing both final PLAN structure and conversation footer to fail" >&2
+A. Keep one surface.
+B. Split the surface.
+Questions / Conversation:
+Q1:B
+EOF_PLANNING_OLD_WRAPPER
+  if lint_response_file "$response_planning_old_wrapper" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning response using retired wrapper text to fail" >&2
     failures_local=1
   fi
 
-  cat > "$response_planning_structured_valid" <<'EOF_PLANNING_STRUCTURED'
-```markdown
-1. Analysis and Discussion
-The scope leaves two material gaps that affect implementation direction.
-
-2. Decision Questions
-
+  cat > "$response_planning_three_option_valid" <<'EOF_PLANNING_THREE_OPTIONS'
 Q1. Which reset surface should be targeted first?
-- A. Bundle/runtime reset only; defer editor assist.
-- B. Bundle/runtime and editor assist together. (Recommended)
-- C. Editor assist only; leave bundle/runtime for a follow-on packet.
-
-Q2. Should the new validation path be gated behind a feature flag?
-- A. No feature flag; ship validation as default behavior.
-- B. Feature flag for gradual rollout. (Recommended)
-- C. Validation disabled by default; operator opt-in required.
-
-Questions / Conversation:
-Q1:B, Q2:B — or: Use recommended options
-```
-EOF_PLANNING_STRUCTURED
-  if ! lint_response_file "$response_planning_structured_valid" >/dev/null 2>&1; then
-    echo "FAIL: --test expected planning structured question-mode response to pass" >&2
+A. Bundle/runtime reset only; defer editor assist.
+B. Bundle/runtime and editor assist together. (Recommended)
+C. Editor assist only; leave bundle/runtime for a follow-on packet.
+Reply with `Q1:A`, `Q1:B`, or `Q1:C`.
+EOF_PLANNING_THREE_OPTIONS
+  if ! lint_response_file "$response_planning_three_option_valid" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning three-option clarification response to pass" >&2
     failures_local=1
   fi
 
-  cat > "$response_planning_few_options" <<'EOF_PLANNING_FEW_OPTIONS'
-```markdown
-1. Analysis and Discussion
-Ambiguity remains around the target surface.
-
-2. Decision Questions
-
-Q1. Which surface should be reset?
-- A. Bundle/runtime only. (Recommended)
-- B. Editor assist only.
-
-Questions / Conversation:
-Q1:A — or: Use recommended options
-```
-EOF_PLANNING_FEW_OPTIONS
-  if lint_response_file "$response_planning_few_options" >/dev/null 2>&1; then
-    echo "FAIL: --test expected planning question with fewer than 3 options to fail" >&2
-    failures_local=1
-  fi
-
-  cat > "$response_planning_no_recommended" <<'EOF_PLANNING_NO_REC'
-```markdown
-1. Analysis and Discussion
-Ambiguity remains around the target surface.
-
-2. Decision Questions
-
-Q1. Which surface should be reset?
-- A. Bundle/runtime only.
-- B. Editor assist only.
-- C. Both together.
-
-Questions / Conversation:
-Q1:A
-```
-EOF_PLANNING_NO_REC
-  if lint_response_file "$response_planning_no_recommended" >/dev/null 2>&1; then
-    echo "FAIL: --test expected planning question with no (Recommended) option to fail" >&2
+  cat > "$response_planning_four_options" <<'EOF_PLANNING_FOUR_OPTIONS'
+Q1. Which reset surface should be targeted first?
+A. Bundle/runtime reset only.
+B. Bundle/runtime and editor assist together.
+C. Editor assist only.
+D. Defer the reset entirely.
+Reply with `Q1:A`, `Q1:B`, `Q1:C`, or `Q1:D`.
+EOF_PLANNING_FOUR_OPTIONS
+  if lint_response_file "$response_planning_four_options" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning question with 4 options to fail" >&2
     failures_local=1
   fi
 
   cat > "$response_planning_too_many_questions" <<'EOF_PLANNING_TOO_MANY'
-```markdown
-1. Analysis and Discussion
-Four gaps remain.
-
-2. Decision Questions
-
 Q1. First question?
-- A. Option one. (Recommended)
-- B. Option two.
-- C. Option three.
+A. Option one. (Recommended)
+B. Option two.
+C. Option three.
 
 Q2. Second question?
-- A. Option one.
-- B. Option two. (Recommended)
-- C. Option three.
+A. Option one.
+B. Option two. (Recommended)
+C. Option three.
 
 Q3. Third question?
-- A. Option one.
-- B. Option two.
-- C. Option three. (Recommended)
+A. Option one.
+B. Option two.
+C. Option three. (Recommended)
 
 Q4. Fourth question?
-- A. Option one. (Recommended)
-- B. Option two.
-- C. Option three.
-
-Questions / Conversation:
-Use recommended options
-```
+A. Option one. (Recommended)
+B. Option two.
+C. Option three.
 EOF_PLANNING_TOO_MANY
   if lint_response_file "$response_planning_too_many_questions" >/dev/null 2>&1; then
     echo "FAIL: --test expected planning response with 4 questions to fail" >&2
