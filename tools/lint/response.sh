@@ -348,7 +348,7 @@ check_planning_body_scope() {
         continue
       fi
 
-      if [[ "$trimmed" =~ \?$ ]]; then
+      if [[ "$trimmed" =~ \?$ && ! "$trimmed" =~ ^([ABC]|[123])[.][[:space:]].+ ]]; then
         if (( saw_question )); then
           if ! finalize_question_block; then
             return 1
@@ -828,6 +828,7 @@ run_test() {
   local response_planning_old_wrapper
   local response_planning_three_option_valid
   local response_planning_plain_followup_valid
+  local response_planning_option_question_mark_valid
   local response_planning_four_options
   local response_planning_too_many_questions
   local response_addenda_valid
@@ -872,6 +873,7 @@ run_test() {
   response_planning_old_wrapper="${test_dir}/response-planning-old-wrapper.md"
   response_planning_three_option_valid="${test_dir}/response-planning-three-option-valid.md"
   response_planning_plain_followup_valid="${test_dir}/response-planning-plain-followup-valid.md"
+  response_planning_option_question_mark_valid="${test_dir}/response-planning-option-question-mark-valid.md"
   response_planning_four_options="${test_dir}/response-planning-four-options.md"
   response_planning_too_many_questions="${test_dir}/response-planning-too-many-questions.md"
   response_addenda_valid="${test_dir}/response-addenda-valid.md"
@@ -1161,6 +1163,16 @@ Which rollout strategy should I use after that?
 EOF_PLANNING_PLAIN_FOLLOWUP
   if ! lint_response_file "$response_planning_plain_followup_valid" >/dev/null 2>&1; then
     echo "FAIL: --test expected planning clarification response with plain follow-up question to pass" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_planning_option_question_mark_valid" <<'EOF_PLANNING_OPTION_QUESTION'
+Q1. Which boundary should I plan?
+A. Keep current docs?
+B. Split docs. (Recommended)
+EOF_PLANNING_OPTION_QUESTION
+  if ! lint_response_file "$response_planning_option_question_mark_valid" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning clarification option text ending in '?' to remain a valid option" >&2
     failures_local=1
   fi
 
