@@ -16,30 +16,32 @@ Modes:
 7. `bash tools/lint/response.sh --test` (runs deterministic fixtures for supported modes).
 
 Deterministic checks:
-1. In `dp`, `audit`, `draft`, `planning`, `addenda`, and `conformist` modes, input must contain exactly one fenced markdown code block.
-2. In `dp`, `audit`, `draft`, `planning`, `addenda`, and `conformist` modes, non-whitespace text outside the fenced block is a hard failure.
-3. Shared cross-stance freeze is defined in `ops/src/shared/stances.json` using keys `single_fence_contract_rules` and `non_audit_role_drift_rules`.
-4. In `dp` mode, extracted body must start with `### DP-` on the first non-empty line.
-5. In `audit` mode, extracted body must start with `**AUDIT -` (or `**AUDIT —`) on the first non-empty line.
-6. Extracted body must not contain drift tokens:
+1. In `dp`, `audit`, `draft`, `addenda`, and `conformist` modes, input must contain exactly one fenced markdown code block.
+2. In `dp`, `audit`, `draft`, `addenda`, and `conformist` modes, non-whitespace text outside the fenced block is a hard failure.
+3. In `planning` mode, final-plan output uses exactly one fenced markdown code block; clarification output is plain text with no fenced code block.
+4. Shared cross-stance freeze is defined in `ops/src/shared/stances.json` using keys `single_fence_contract_rules` and `non_audit_role_drift_rules`.
+5. In `dp` mode, extracted body must start with `### DP-` on the first non-empty line.
+6. In `audit` mode, extracted body must start with `**AUDIT -` (or `**AUDIT —`) on the first non-empty line.
+7. Extracted body must not contain drift tokens:
    - `:contentReference[`
    - `oaicite`
    - `[cite_start]`
    - `[cite:`
    - `[/cite]`
-7. In `draft` mode, envelope and DP-start checks are required, plus role-drift rejection:
+8. In `draft` mode, envelope and DP-start checks are required, plus role-drift rejection:
    - reject audit-verdict marker lines (`**AUDIT -`),
    - reject `## Contractor Execution Narrative`,
    - reject receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`).
-8. In `planning` mode, extracted body must be either:
-   - conversational planning with first non-empty line `1. Analysis and Discussion` and a `Questions / Conversation:` footer, or
-   - a final plan body that satisfies `bash tools/lint/plan.sh <extracted-body>`.
+9. In `planning` mode, input is accepted in one of two shapes:
+   - final-plan mode: exactly one fenced markdown code block whose extracted body satisfies `bash tools/lint/plan.sh <extracted-body>`, or
+   - clarification mode: plain text with no fenced code block; the first non-empty line asks the question; each question presents 2-3 meaningful mutually exclusive options; the smallest truthful option set is preferred; optional reply instruction lines are allowed.
 10. In `planning` mode, reject role-drift markers:
    - audit-verdict markers (`**AUDIT -`),
    - `## Contractor Execution Narrative`,
    - receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`),
    - audit/addenda decision fields (`Decision Required:`, `Decision Leaf:`),
-   - policy-overcompensation prose (`Section 3.4.5`, `RECEIPT_EXTRA`, `ops/src/surfaces/dp.md.tpl`, or fenced-envelope instruction echo text).
+   - policy-overcompensation prose (`Section 3.4.5`, `RECEIPT_EXTRA`, `ops/src/surfaces/dp.md.tpl`, or fenced-envelope instruction echo text),
+   - retired planning question-mode wrappers (`1. Analysis and Discussion`, `2. Decision Questions`, `Questions / Conversation:`).
 11. In `dp` mode, on envelope pass, delegate body validation to `bash tools/lint/dp.sh`.
 12. In `draft` mode, on envelope pass, delegate body validation to `bash tools/lint/dp.sh`.
 13. In `addenda` mode, extracted body must start with `### Addendum` and include required addendum headings:
@@ -72,7 +74,8 @@ Exit behavior:
 - PASS: single fenced block with `**AUDIT -` marker (`audit` mode).
 - PASS: single fenced block with valid DP body (`draft` mode).
 - PASS: single fenced block with valid final `PLAN` body (`planning` mode).
-- PASS: single fenced block with valid conversational planning body (`planning` mode).
+- PASS: plain-text planning clarification with 2 options (`planning` mode).
+- PASS: plain-text planning clarification with 3 options (`planning` mode).
 - PASS: single fenced block with addendum headings (`addenda` mode).
 - PASS: single fenced block with valid DP heading and no drift markers (`conformist` mode).
 - FAIL: text outside fence.
@@ -89,7 +92,10 @@ Exit behavior:
 - FAIL: planning response containing audit marker (`planning` mode).
 - FAIL: planning response containing Contractor Execution Narrative sections (`planning` mode).
 - FAIL: planning response containing policy-overcompensation prose (`planning` mode).
-- FAIL: planning response missing both valid conversational structure and valid final PLAN structure (`planning` mode).
+- FAIL: planning response using retired question-mode wrapper text (`planning` mode).
+- FAIL: planning clarification response with 4 options (`planning` mode).
+- FAIL: planning clarification response with more than 3 questions (`planning` mode).
+- FAIL: planning response missing both valid clarification-question structure and valid final PLAN structure (`planning` mode).
 - FAIL: addenda response containing audit marker (`addenda` mode).
 - FAIL: addenda response missing required addendum headings (`addenda` mode).
 - FAIL: addenda response with incoherent decision fields (`addenda` mode).

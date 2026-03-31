@@ -14,7 +14,7 @@
 6a. Check that the Confirm Merge (Add a Comment) field value ends with `?`; emit failure with filename when it does not.
 6b. Check that every non-blank line in the Confirm Merge (Extended Description) field value matches a path pattern (two or more consecutive non-path tokens on a single line is a prose failure); emit failure with filename and line number for each detected prose line.
 6c. Check that the PR Description field value contains at least one markdown construct — a heading beginning with `##`, a list item beginning with `-`, `*`, or a digit followed by `.`, or a bold span (`**`); emit failure with filename when none is found.
-7. Check that `ops/src/stances/planning.md.tpl` contains the exact planning contract lines that preserve conversational planning, weak-topic handling, unsupported-detail restraint, and final-plan emission boundaries.
+7. Check that `ops/src/stances/planning.md.tpl` contains the exact planning contract lines that preserve final-plan-first behavior, weak-topic handling, bounded clarification, and the planning question-mode transport split between plain clarification output and fenced final-plan output.
 8. Aggregate failures and exit non-zero when any check reports an error.
 
 ## Anecdotal Anchor
@@ -173,49 +173,67 @@ Assertion: file must include `* When the topic and attached evidence settle inte
 Failure message: `planning.md.tpl missing planning final-plan trigger line`
 Invariant: plan-only mode remains explicit and does not erase default planning discussion behavior.
 
-### Guard 24: Planning broad-topic genericity line
+### Guard 24: Planning final-plan no-outside-text line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For final plan mode: emit no text before or after the fenced markdown code block.`
+Failure message: `planning.md.tpl missing planning final-plan no-outside-text line`
+Invariant: final-plan serialization stays fence-only even though clarification mode is plain text.
+
+### Guard 25: Planning broad-topic genericity line
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For machine-ingest planning mode: when the topic is broad, keep repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.`
 Failure message: `planning.md.tpl missing planning broad-topic-genericity line`
 Invariant: topic-driven planning output stays high-level when attached evidence is thin.
 
-### Guard 25: Planning clarification-exception line
+### Guard 26: Planning clarification-exception line
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `* Ask clarifying questions only when needed to write a truthful plan; prefer one real packet-boundary question; ask the minimum number needed, up to 3.`
 Failure message: `planning.md.tpl missing planning clarification-exception line`
 Invariant: clarification remains a narrow exception rather than the default mode.
 
-### Guard 26: Planning subordinate-choices direct line
+### Guard 27: Planning subordinate-choices direct line
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `* Settle subordinate choices directly when attached evidence and the narrowness constraint already make them non-blocking.`
 Failure message: `planning.md.tpl missing planning subordinate-choices direct line`
 Invariant: subordinate choices are settled directly instead of being expanded into unnecessary questions.
 
-### Guard 27: Planning after-clarification-immediate line
+### Guard 28: Planning after-clarification-immediate line
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `* After clarification, emit the final plan immediately.`
 Failure message: `planning.md.tpl missing planning after-clarification-immediate line`
 Invariant: the clarification path returns immediately to final-plan output.
 
-### Guard 28: Planning non-actionable-topic line
+### Guard 29: Planning question-first line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest question mode: when clarification is needed, ask the packet-boundary question first without any retired analysis preamble or other required wrapper.`
+Failure message: `planning.md.tpl missing planning question-first line`
+Invariant: clarification mode asks the blocking boundary question directly instead of reintroducing analysis wrapper text.
+
+### Guard 30: Planning question-mode no-fence line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest question mode: do not use a fenced markdown code block; fenced markdown remains the final-plan output contract only.`
+Failure message: `planning.md.tpl missing planning question-mode no-fence line`
+Invariant: clarification mode remains plain-text question transport while final-plan mode stays fenced.
+
+### Guard 31: Planning non-actionable-topic line
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For machine-ingest question mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.`
 Failure message: `planning.md.tpl missing planning nonsensical-topic line`
 Invariant: nonsense topics still stop truthfully rather than forcing fabricated plans.
 
-### Guard 29: Planning plan-output-only line
+### Guard 32: Planning plan-output-only line
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For final plan mode: output only the complete PLAN markdown code block.`
 Failure message: `planning.md.tpl missing planning plan-output-only line`
 Invariant: draft-ready plan serialization remains available once intent is settled.
 
-### Guard 30: Planning final-plan shape line
+### Guard 33: Planning final-plan shape line
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For final plan mode: use the canonical plan template shape with \`Summary\`, \`Key Changes\`, \`Test Plan\`, and \`Assumptions\`.`
 Failure message: `planning.md.tpl missing planning final-plan shape line`
 Invariant: final plan mode stays on one canonical planning surface shape.
 
-### Guard 31: Planning final-plan emission line
+### Guard 34: Planning final-plan emission line
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For final plan mode: emit the final plan only when the topic and attached evidence settle intent enough for direct draft drafting.`
 Failure message: `planning.md.tpl missing planning final-plan emit line`

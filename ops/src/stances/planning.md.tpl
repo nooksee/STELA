@@ -29,25 +29,31 @@ Steps:
    * Ask the minimum number of questions needed, up to 3.
    * Prefer one real packet-boundary question over a broad questionnaire.
    * Settle subordinate choices directly when they do not change the packet boundary.
-   * Output one fenced markdown block whose first non-empty line starts with `1. Analysis and Discussion`.
-   * Add a `2. Decision Questions` section when questions are needed.
-   * Allow at most 3 questions. Each question must present exactly 3 meaningful, mutually exclusive options. Mark exactly one option `(Recommended)`. If 3 real options do not exist, make the smallest justified assumption instead of asking.
-   * Include a concise operator response format after the options such as `Q1:A, Q2:C` or `Use recommended options`.
-   * End with `Questions / Conversation:`.
+   * Question mode must ask the question first; do not prepend any retired analysis preamble or other required wrapper.
+   * Do not use a fenced markdown block in question mode.
+   * Allow at most 3 questions. Each question must present 2-3 meaningful, mutually exclusive options. Prefer the smallest truthful option set: use 2 options for a real binary choice and 3 only when the third branch is genuinely distinct and evidence-grounded.
+   * Mark at most one option `(Recommended)` and only when attached evidence actually justifies it.
+   * Do not invent extra branches solely to satisfy formatting.
+   * A concise operator reply format may be included when useful, but is not required.
+   * Do not end with any retired question footer or other required footer wrapper.
    * After operator clarification, emit the final plan immediately.
 3. In final plan mode:
    * Use only the plan sections: `Summary`, `Key Changes`, `Test Plan`, and `Assumptions`.
    * Make the plan decision-complete enough for direct draft drafting.
 
-{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}
 For machine-ingest planning mode: require attached `storage/handoff/TOPIC.md`; do not use inline query fallback.
 For machine-ingest planning mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.
 For machine-ingest planning mode: when the topic is broad, keep repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.
 For machine-ingest planning mode: when the relevant repo surfaces are directly attached and sufficient, make concrete repo-specific claims grounded in those artifacts instead of retreating to generic high-level language.
-For machine-ingest question mode: when clarification is needed, use a `2. Decision Questions` section; allow at most 3 questions; each question must present exactly 3 meaningful, mutually exclusive options with exactly one marked `(Recommended)`; end with `Questions / Conversation:` and a concise operator response format such as `Q1:A, Q2:C` or `Use recommended options`.
+For machine-ingest question mode: when clarification is needed, ask the packet-boundary question first without any retired analysis preamble or other required wrapper.
+For machine-ingest question mode: allow at most 3 questions; each question must present 2-3 meaningful, mutually exclusive options; prefer the smallest truthful option set and use 3 options only when the third branch is genuinely distinct and evidence-grounded.
+For machine-ingest question mode: mark at most one option `(Recommended)` only when attached evidence justifies it; do not invent extra branches solely to satisfy formatting.
+For machine-ingest question mode: do not use any retired question footer; a concise operator reply format may be included when useful, but is not required.
+For machine-ingest question mode: do not use a fenced markdown code block; fenced markdown remains the final-plan output contract only.
 For machine-ingest question mode: if topic text is present but intent cannot be settled from attached evidence, ask the minimum clarifying questions needed rather than forcing a final plan.
 For machine-ingest question mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.
 For final plan mode: output only the complete PLAN markdown code block.
+For final plan mode: emit no text before or after the fenced markdown code block.
 For final plan mode: use the canonical plan template shape with `Summary`, `Key Changes`, `Test Plan`, and `Assumptions`.
 For final plan mode: when the needed repo surfaces are directly attached and sufficient, use them to make the handoff concrete rather than artificially flattening the plan to generic language.
 For final plan mode: emit the final plan only when the topic and attached evidence settle intent enough for direct draft drafting.
