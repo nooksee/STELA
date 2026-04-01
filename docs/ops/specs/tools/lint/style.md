@@ -161,17 +161,23 @@ Assertion: file must include `For machine-ingest planning mode: do not add repos
 Failure message: `planning.md.tpl missing planning no-unsupported-operating-detail line`
 Invariant: broad planning topics do not silently expand into unsupported repo-operating detail.
 
-### Guard 22: Planning final-plan-first default line
+### Guard 22: Planning evidence-first line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Primary output is the final \`storage/handoff/PLAN.md\`; emit it immediately when the topic and attached evidence settle intent.`
-Failure message: `planning.md.tpl missing planning final-plan-first default line`
-Invariant: planning defaults to final-plan-first rather than conversational-first.
+Assertion: file must include `* Use attached evidence first.`
+Failure message: `planning.md.tpl missing planning evidence-first line`
+Invariant: planning keeps bundle-attached evidence ahead of generic planner behavior.
 
-### Guard 23: Planning final-plan trigger line
+### Guard 23: Planning ambiguity-boundary emit line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* When the topic and attached evidence settle intent enough for direct draft handoff, emit the final \`PLAN.md\` draft in one fenced markdown block.`
-Failure message: `planning.md.tpl missing planning final-plan trigger line`
-Invariant: plan-only mode remains explicit and does not erase default planning discussion behavior.
+Assertion: file must include `* Emit the final \`storage/handoff/PLAN.md\` when remaining ambiguity no longer materially changes the immediate packet boundary or implementation handoff.`
+Failure message: `planning.md.tpl missing planning ambiguity-boundary emit line`
+Invariant: planning flips to final-plan output at the material-ambiguity boundary, not at a vaguer settle-intent phrase.
+
+### Guard 23a: Planning bounded-options line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* When ambiguity remains, present 2-3 bounded options to resolve it.`
+Failure message: `planning.md.tpl missing planning bounded-options line`
+Invariant: clarification remains bounded instead of expanding into open-ended questionnaires.
 
 ### Guard 24: Planning final-plan no-outside-text line
 Target file: `ops/src/stances/planning.md.tpl`
@@ -185,56 +191,50 @@ Assertion: file must include `For machine-ingest planning mode: when the topic i
 Failure message: `planning.md.tpl missing planning broad-topic-genericity line`
 Invariant: topic-driven planning output stays high-level when attached evidence is thin.
 
-### Guard 26: Planning clarification-exception line
+### Guard 26: Machine-ingest evidence-first line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Ask clarifying questions only when needed to write a truthful plan; prefer one real packet-boundary question; ask the minimum number needed, up to 3.`
-Failure message: `planning.md.tpl missing planning clarification-exception line`
-Invariant: clarification remains a narrow exception rather than the default mode.
+Assertion: file must include `For machine-ingest planning mode: use attached evidence first.`
+Failure message: `planning.md.tpl missing machine-ingest evidence-first line`
+Invariant: the machine-ingest contract explicitly keeps attached evidence ahead of generic planning priors.
 
-### Guard 27: Planning subordinate-choices direct line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Settle subordinate choices directly when attached evidence and the narrowness constraint already make them non-blocking.`
-Failure message: `planning.md.tpl missing planning subordinate-choices direct line`
-Invariant: subordinate choices are settled directly instead of being expanded into unnecessary questions.
-
-### Guard 28: Planning after-clarification-immediate line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* After clarification, emit the final plan immediately.`
-Failure message: `planning.md.tpl missing planning after-clarification-immediate line`
-Invariant: the clarification path returns immediately to final-plan output.
-
-### Guard 29: Planning question-first line
+### Guard 27: Planning question-first line
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For machine-ingest question mode: when clarification is needed, ask the packet-boundary question first without any retired analysis preamble or other required wrapper.`
 Failure message: `planning.md.tpl missing planning question-first line`
 Invariant: clarification mode asks the blocking boundary question directly instead of reintroducing analysis wrapper text.
 
-### Guard 30: Planning question-mode no-fence line
+### Guard 28: Planning question-mode no-fence line
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For machine-ingest question mode: do not use a fenced markdown code block; fenced markdown remains the final-plan output contract only.`
 Failure message: `planning.md.tpl missing planning question-mode no-fence line`
 Invariant: clarification mode remains plain-text question transport while final-plan mode stays fenced.
 
-### Guard 31: Planning non-actionable-topic line
+### Guard 29: Planning non-actionable-topic line
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For machine-ingest question mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.`
 Failure message: `planning.md.tpl missing planning nonsensical-topic line`
 Invariant: nonsense topics still stop truthfully rather than forcing fabricated plans.
 
-### Guard 32: Planning plan-output-only line
+### Guard 30: Planning broad-topic slicing line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest planning mode: when a topic spans multiple independent work families, do not force one omnibus first packet; ask one slicing question or emit a staged queue with an explicit immediate packet and deferred packets.`
+Failure message: `planning.md.tpl missing planning broad-topic-slicing line`
+Invariant: broad topics are sliced or staged rather than forced into one omnibus first packet.
+
+### Guard 31: Planning plan-output-only line
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For final plan mode: output only the complete PLAN markdown code block.`
 Failure message: `planning.md.tpl missing planning plan-output-only line`
 Invariant: draft-ready plan serialization remains available once intent is settled.
 
-### Guard 33: Planning final-plan shape line
+### Guard 32: Planning final-plan shape line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For final plan mode: use the canonical plan template shape with \`Summary\`, \`Key Changes\`, \`Test Plan\`, and \`Assumptions\`.`
+Assertion: file must include `For final plan mode: keep \`Summary\`, \`Key Changes\`, \`Test Plan\`, and \`Assumptions\` as required core sections; additional bounded sections are allowed only when needed to keep the handoff truthful and narrow.`
 Failure message: `planning.md.tpl missing planning final-plan shape line`
-Invariant: final plan mode stays on one canonical planning surface shape.
+Invariant: final plan mode keeps the required Stela handoff sections without turning them into an exclusive cage.
 
-### Guard 34: Planning final-plan emission line
+### Guard 33: Planning final-plan emission line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For final plan mode: emit the final plan only when the topic and attached evidence settle intent enough for direct draft drafting.`
+Assertion: file must include `For final plan mode: emit the final plan when remaining ambiguity no longer materially changes the immediate packet boundary or implementation handoff.`
 Failure message: `planning.md.tpl missing planning final-plan emit line`
 Invariant: final plan output happens only after the ambiguity boundary is crossed.

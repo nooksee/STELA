@@ -345,30 +345,34 @@ check_draft_mode_contract() {
 check_planning_mode_contract() {
   local stance_planning="${REPO_ROOT}/ops/src/stances/planning.md.tpl"
   local required_topic='For machine-ingest planning mode: require attached `storage/handoff/TOPIC.md`; do not use inline query fallback.'
-  local required_discussion_default='* Primary output is the final `storage/handoff/PLAN.md`; emit it immediately when the topic and attached evidence settle intent.'
-  local required_final_plan='* When the topic and attached evidence settle intent enough for direct draft handoff, emit the final `PLAN.md` draft in one fenced markdown block.'
+  local required_evidence_first='* Use attached evidence first.'
+  local required_emit_boundary='* Emit the final `storage/handoff/PLAN.md` when remaining ambiguity no longer materially changes the immediate packet boundary or implementation handoff.'
+  local required_bounded_options='* When ambiguity remains, present 2-3 bounded options to resolve it.'
   local required_final_plan_no_outside='For final plan mode: emit no text before or after the fenced markdown code block.'
   local required_no_operating_detail='For machine-ingest planning mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.'
   local required_generic_broad_topic='For machine-ingest planning mode: when the topic is broad, keep repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.'
-  local required_clarification_exception='* Ask clarifying questions only when needed to write a truthful plan; prefer one real packet-boundary question; ask the minimum number needed, up to 3.'
-  local required_subordinate_choices='* Settle subordinate choices directly when attached evidence and the narrowness constraint already make them non-blocking.'
-  local required_after_clarification='* After clarification, emit the final plan immediately.'
+  local required_slice_broad_topic='For machine-ingest planning mode: when a topic spans multiple independent work families, do not force one omnibus first packet; ask one slicing question or emit a staged queue with an explicit immediate packet and deferred packets.'
   local required_question_first='For machine-ingest question mode: when clarification is needed, ask the packet-boundary question first without any retired analysis preamble or other required wrapper.'
   local required_question_no_fence='For machine-ingest question mode: do not use a fenced markdown code block; fenced markdown remains the final-plan output contract only.'
   local required_nonsensical_topic='For machine-ingest question mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.'
   local required_plan_output='For final plan mode: output only the complete PLAN markdown code block.'
-  local required_plan_shape='For final plan mode: use the canonical plan template shape with `Summary`, `Key Changes`, `Test Plan`, and `Assumptions`.'
-  local required_plan_direct='For final plan mode: emit the final plan only when the topic and attached evidence settle intent enough for direct draft drafting.'
+  local required_plan_shape='For final plan mode: keep `Summary`, `Key Changes`, `Test Plan`, and `Assumptions` as required core sections; additional bounded sections are allowed only when needed to keep the handoff truthful and narrow.'
+  local required_plan_direct='For final plan mode: emit the final plan when remaining ambiguity no longer materially changes the immediate packet boundary or implementation handoff.'
+  local required_machine_evidence='For machine-ingest planning mode: use attached evidence first.'
   local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
 
   [[ -f "$stance_planning" ]] || mark_failure "planning.md.tpl missing for mode contract checks"
 
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_discussion_default" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning final-plan-first default line"
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_evidence_first" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning evidence-first line"
   fi
 
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_final_plan" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning final-plan trigger line"
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_emit_boundary" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning ambiguity-boundary emit line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_bounded_options" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning bounded-options line"
   fi
 
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_final_plan_no_outside" "$stance_planning"; then
@@ -387,16 +391,12 @@ check_planning_mode_contract() {
     mark_failure "planning.md.tpl missing planning broad-topic-genericity line"
   fi
 
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_clarification_exception" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning clarification-exception line"
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_evidence" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing machine-ingest evidence-first line"
   fi
 
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_subordinate_choices" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning subordinate-choices direct line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_after_clarification" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning after-clarification-immediate line"
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_slice_broad_topic" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning broad-topic-slicing line"
   fi
 
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_question_first" "$stance_planning"; then

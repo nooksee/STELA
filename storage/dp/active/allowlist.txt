@@ -463,6 +463,7 @@ archives/manifests/compile-2026-03-22T200951-d77042d1.md
 archives/surfaces/TASK-DP-OPS-0222-*.md
 archives/surfaces/TASK-DP-OPS-0223-*.md
 archives/surfaces/TASK-DP-OPS-0234-*.md
+archives/surfaces/TASK-DP-OPS-0237-*.md
 ops/src/stances/planning.md.tpl
 docs/ops/specs/stances/planning.md
 ops/src/stances/draft.md.tpl

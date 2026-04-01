@@ -21,20 +21,19 @@ Define the template-backed Planning stance body used by bundle output contract r
 - Rendered stance body text beginning at `Rules:`.
 - No unresolved include directives.
 - Machine-ingest planning mode requires attached `storage/handoff/TOPIC.md` and has no inline-query fallback.
-- Planning reads topic and all directly attached bundle evidence before asking anything (explore-first).
-- Material-ambiguity threshold: low-impact gaps are absorbed as smallest justified assumptions; only gaps that would materially change the plan trigger question mode.
-- Planning emits the final plan immediately when topic and evidence settle intent; clarification questions are the narrow exception, not the default mode.
-- Subordinate choices that do not change the immediate packet boundary are settled directly in the plan rather than asked as questions.
-- One real packet-boundary question is preferred over a broad questionnaire when a question is needed; up to 3 questions are permitted in a single run.
-- After clarification, emit the final plan immediately.
+- Planning uses attached evidence first.
+- Planning emits the final plan when remaining ambiguity no longer materially changes the immediate packet boundary or implementation handoff.
+- When ambiguity remains, planning presents 2-3 bounded options to resolve it.
+- When a topic spans multiple independent work families, planning does not force one omnibus first packet; it asks one slicing question or emits a staged queue with an explicit immediate packet and deferred packets.
 - Planning clarification mode must ask the question first; it does not require retired question-mode wrapper headings or footers.
 - Planning clarification mode does not use a fenced markdown block; fenced markdown remains the final-plan output contract only.
 - Structured question mode permits at most 3 questions per run; each question presents 2-3 meaningful, mutually exclusive options; the smallest truthful option set is preferred, so 2 options are used for a real binary choice and 3 only when the third branch is genuinely distinct and evidence-grounded.
 - Planning clarification mode marks at most one option per question `(Recommended)` and only when attached evidence actually justifies it.
-- Planning clarification mode does not invent extra branches solely to satisfy formatting; subordinate choices remain direct-settlement work unless they change the immediate packet boundary.
+- Planning clarification mode does not invent extra branches solely to satisfy formatting.
 - Final plan mode emits only the complete `PLAN.md` draft in a single fenced markdown code block using the canonical plan shape.
 - Final plan mode emits no text before or after the fenced markdown code block.
-- Final plan mode uses the headings `Summary`, `Key Changes`, `Test Plan`, and `Assumptions`.
+- Final plan mode keeps `Summary`, `Key Changes`, `Test Plan`, and `Assumptions` as required core headings.
+- Final plan mode may add bounded extra sections when needed to keep a broad-topic handoff truthful and narrow.
 - Output surface: `storage/handoff/PLAN.md` is the latest-wins model output, overwritten on each final-plan planning run.
 - Safety backup: bundle writes a disposable copy of the prior `storage/handoff/PLAN.md` to `var/tmp/PLAN.md.prev` before each planning run when that file exists.
 - Machine-ingest planning mode must not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.
