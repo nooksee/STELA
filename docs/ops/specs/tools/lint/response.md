@@ -34,7 +34,7 @@ Deterministic checks:
    - reject receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`).
 9. In `planning` mode, input is accepted in one of two shapes:
    - final-plan mode: exactly one fenced markdown code block whose extracted body satisfies `bash tools/lint/plan.sh <extracted-body>`, or
-   - clarification mode: plain text with no fenced code block; the first non-empty line asks the question; later questions may be plain `...?` lines or numbered `Q<n>. ...?` lines; option lines remain option lines even if their text ends in `?`; each question presents 2-3 meaningful mutually exclusive options; the smallest truthful option set is preferred; optional reply instruction lines are allowed.
+   - clarification mode: plain text with no fenced code block; the first non-empty line asks the question; later questions may be plain `...?` lines or numbered `Q<n>. ...?` lines; option lines remain option lines even if their text ends in `?`; each question must use the ordered short standalone `A.` / `B.` / `C.` set, where `C.` is the fixed redirect line `C. Tell Analyst to do something else instead.`; only substantive `A.` / `B.` lines may be marked `(Recommended)`; reply-instruction lines are not part of the popup-biased transport.
 10. In `planning` mode, reject role-drift markers:
    - audit-verdict markers (`**AUDIT -`),
    - `## Contractor Execution Narrative`,
@@ -74,8 +74,8 @@ Exit behavior:
 - PASS: single fenced block with `**AUDIT -` marker (`audit` mode).
 - PASS: single fenced block with valid DP body (`draft` mode).
 - PASS: single fenced block with valid final `PLAN` body (`planning` mode).
-- PASS: plain-text planning clarification with 2 options (`planning` mode).
-- PASS: plain-text planning clarification with 3 options (`planning` mode).
+- PASS: plain-text planning clarification with popup-biased `A.` / `B.` / `C.` options and fixed Analyst redirect (`planning` mode).
+- PASS: plain-text planning clarification with popup-biased `A.` / `B.` / `C.` options and one substantive `(Recommended)` marker (`planning` mode).
 - PASS: plain-text planning clarification with a plain follow-up question after the first question (`planning` mode).
 - PASS: plain-text planning clarification where an option line ends in `?` (`planning` mode).
 - PASS: single fenced block with addendum headings (`addenda` mode).
@@ -96,6 +96,8 @@ Exit behavior:
 - FAIL: planning response containing policy-overcompensation prose (`planning` mode).
 - FAIL: planning response using retired question-mode wrapper text (`planning` mode).
 - FAIL: planning clarification response with 4 options (`planning` mode).
+- FAIL: planning clarification response with a non-canonical redirect option (`planning` mode).
+- FAIL: planning clarification response with a reply-instruction line (`planning` mode).
 - FAIL: planning clarification response with more than 3 questions (`planning` mode).
 - FAIL: planning response missing both valid clarification-question structure and valid final PLAN structure (`planning` mode).
 - FAIL: addenda response containing audit marker (`addenda` mode).
