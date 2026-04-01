@@ -113,6 +113,29 @@ Replace slice machinery with direct plan-driven drafting.
 - No compatibility prose is retained.
 EOF_VALID
 
+  cat > "${test_dir}/valid-extra-sections.md" <<'EOF_VALID_EXTRA'
+# Reset Generated Planning
+
+## Summary
+Replace slice machinery with direct plan-driven drafting.
+
+## Immediate Next Packet
+- Land the narrow contract cleanup first.
+
+## Key Changes
+- Analyst stays conversational until intent is settled.
+- Architect reads the final plan directly.
+
+## Deferred
+- Leave unrelated bundle behavior untouched.
+
+## Test Plan
+- bash tools/lint/plan.sh --test
+
+## Assumptions
+- No compatibility prose is retained.
+EOF_VALID_EXTRA
+
   cat > "${test_dir}/no-heading.md" <<'EOF_NO_HEADING'
 Ship bundle routing without headings.
 EOF_NO_HEADING
@@ -143,6 +166,11 @@ EOF_MISSING_KEY_CHANGES
 
   if ! lint_plan_file "${test_dir}/valid.md" >/dev/null 2>&1; then
     echo "FAIL: --test expected valid plan to pass" >&2
+    failures=1
+  fi
+
+  if ! lint_plan_file "${test_dir}/valid-extra-sections.md" >/dev/null 2>&1; then
+    echo "FAIL: --test expected plan with additional peer sections to pass" >&2
     failures=1
   fi
 

@@ -358,6 +358,7 @@ check_planning_mode_contract() {
   local required_recommended='* Mark at most one substantive option `(Recommended)` and only when directly visible evidence justifies it.'
   local required_redirect_not_recommended='* Do not mark the redirect option `(Recommended)`.'
   local required_emit_boundary='* Once the immediate packet boundary is settled, emit the final `storage/handoff/PLAN.md`.'
+  local required_peer_sections='* When additional headings are needed, they should appear as proper peer sections rather than being buried under one of the required headings.'
   local required_final_plan_no_outside='For final plan mode: emit no text before or after the fenced markdown code block.'
   local required_no_operating_detail='For machine-ingest planning mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.'
   local required_generic_broad_topic='For machine-ingest planning mode: when the topic is broad, keep repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.'
@@ -374,8 +375,19 @@ check_planning_mode_contract() {
   local required_question_no_extra='For machine-ingest question mode: do not invent extra substantive branches solely to satisfy formatting; the third displayed choice is the standard redirect option.'
   local required_question_no_fence='For machine-ingest question mode: do not use a fenced markdown code block; fenced markdown remains the final-plan output contract only.'
   local required_nonsensical_topic='For machine-ingest question mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.'
+  local required_host_overlay='* When a host-provided single-select question tool is available, it may replace the portable A/B/C fallback using the same two substantive options and final redirect; do not also print the A/B/C lines as prose.'
+  local required_host_overlay_fallback='* If the host does not support a single-select question tool, emit the portable 4-line question output and nothing else.'
+  local required_host_overlay_caveat='* Popup rendering remains host/UI behavior and cannot be guaranteed by stance text alone.'
+  local required_claude_overlay='* When the `ask_user_input_v0` tool is available, call it with `type: single_select` using the same options derived from the portable fallback above; do not also print the A/B/C lines as prose.'
+  local required_claude_overlay_fallback='* If the tool is unavailable, emit the portable 4-line output and nothing else.'
+  local required_machine_host_overlay='For machine-ingest host overlay: when a host-provided single-select question tool is available, it may replace the portable A/B/C fallback using the same two substantive options and final redirect; do not also print the A/B/C lines as prose.'
+  local required_machine_host_overlay_fallback='For machine-ingest host overlay: if the host does not support a single-select question tool, emit the portable 4-line question output and nothing else.'
+  local required_machine_host_overlay_caveat='For machine-ingest host overlay: popup rendering remains host/UI behavior and cannot be guaranteed by stance text alone.'
+  local required_machine_claude_overlay='For machine-ingest Claude.ai overlay: when the `ask_user_input_v0` tool is available, call it with `type: single_select` using the same options derived from the portable fallback above; do not also print the A/B/C lines as prose.'
+  local required_machine_claude_overlay_fallback='For machine-ingest Claude.ai overlay: if the tool is unavailable, emit the portable 4-line output and nothing else.'
   local required_plan_output='For final plan mode: output only the complete PLAN markdown code block.'
-  local required_plan_shape='For final plan mode: keep `Summary`, `Key Changes`, `Test Plan`, and `Assumptions` as required core sections; additional bounded sections are allowed only when needed to keep the handoff truthful and narrow.'
+  local required_plan_shape='For final plan mode: keep `Summary`, `Key Changes`, `Test Plan`, and `Assumptions` as required core sections; additional peer sections are allowed when needed to keep the handoff truthful and narrow.'
+  local required_plan_peer_sections='For final plan mode: when additional headings are needed, make them proper peer sections rather than burying them under a required heading.'
   local required_plan_direct='For final plan mode: once the immediate packet boundary is settled, emit the final `storage/handoff/PLAN.md`.'
   local required_machine_evidence='For machine-ingest planning mode: use attached evidence first.'
   local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
@@ -400,6 +412,10 @@ check_planning_mode_contract() {
 
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_emit_boundary" "$stance_planning"; then
     mark_failure "planning.md.tpl missing planning settled-boundary emit line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_peer_sections" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning peer-sections line"
   fi
 
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_followup_boundary" "$stance_planning"; then
@@ -506,12 +522,56 @@ check_planning_mode_contract() {
     mark_failure "planning.md.tpl missing planning nonsensical-topic line"
   fi
 
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_host_overlay" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning host-overlay line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_host_overlay_fallback" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning host-overlay fallback line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_host_overlay_caveat" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning host-overlay caveat line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_claude_overlay" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning Claude.ai overlay line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_claude_overlay_fallback" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning Claude.ai overlay fallback line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_host_overlay" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing machine-ingest host-overlay line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_host_overlay_fallback" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing machine-ingest host-overlay fallback line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_host_overlay_caveat" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing machine-ingest host-overlay caveat line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_claude_overlay" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing machine-ingest Claude.ai overlay line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_claude_overlay_fallback" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing machine-ingest Claude.ai overlay fallback line"
+  fi
+
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_plan_output" "$stance_planning"; then
     mark_failure "planning.md.tpl missing planning plan-output-only line"
   fi
 
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_plan_shape" "$stance_planning"; then
     mark_failure "planning.md.tpl missing planning final-plan shape line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_plan_peer_sections" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning final-plan peer-sections line"
   fi
 
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_shared_non_audit_include" "$stance_planning"; then
