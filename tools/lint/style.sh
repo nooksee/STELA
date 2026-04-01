@@ -346,18 +346,29 @@ check_planning_mode_contract() {
   local stance_planning="${REPO_ROOT}/ops/src/stances/planning.md.tpl"
   local required_topic='For machine-ingest planning mode: require attached `storage/handoff/TOPIC.md`; do not use inline query fallback.'
   local required_evidence_first='* Use attached evidence first.'
-  local required_emit_boundary='* Emit the final `storage/handoff/PLAN.md` when remaining ambiguity no longer materially changes the immediate packet boundary or implementation handoff.'
-  local required_bounded_options='* When ambiguity remains, present 2-3 bounded options to resolve it.'
+  local required_question_multi_family='* If the topic spans multiple independent work families and the topic does not explicitly identify the immediate packet, ask one slicing or prioritization question before writing the final plan.'
+  local required_explicit_only='* Treat the immediate packet as explicit only if:'
+  local required_no_infer='* Do not infer or choose the immediate packet unilaterally from repo context alone when multiple work families are in scope.'
+  local required_followup_boundary='* If remaining ambiguity still materially changes the immediate packet boundary or implementation handoff, ask the minimum additional bounded clarification needed.'
+  local required_no_substitute='* Do not substitute a staged queue, proposed sequencing, or assistant-chosen first packet for a missing slicing decision.'
+  local required_bounded_options='* Each clarification question must present 2-3 meaningful, mutually exclusive options. Prefer 2 when the choice is truly binary.'
+  local required_recommended='* Mark at most one option `(Recommended)` and only when directly visible evidence justifies it.'
+  local required_emit_boundary='* Once the immediate packet boundary is settled, emit the final `storage/handoff/PLAN.md`.'
   local required_final_plan_no_outside='For final plan mode: emit no text before or after the fenced markdown code block.'
   local required_no_operating_detail='For machine-ingest planning mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.'
   local required_generic_broad_topic='For machine-ingest planning mode: when the topic is broad, keep repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.'
-  local required_slice_broad_topic='For machine-ingest planning mode: when a topic spans multiple independent work families, do not force one omnibus first packet; ask one slicing question or emit a staged queue with an explicit immediate packet and deferred packets.'
+  local required_slice_broad_topic='For machine-ingest planning mode: if the topic spans multiple independent work families and the topic does not explicitly identify the immediate packet, ask one slicing or prioritization question before writing the final plan.'
+  local required_machine_explicit='For machine-ingest planning mode: treat the immediate packet as explicit only if the topic directly names the first packet or first work family, the attached evidence directly requires a first packet ordering, or the user explicitly prioritizes one work family.'
+  local required_machine_no_infer='For machine-ingest planning mode: do not infer or choose the immediate packet unilaterally from repo context alone when multiple work families are in scope.'
+  local required_machine_threshold='For machine-ingest planning mode: three or more distinct deliverables in one topic count as multiple independent work families regardless of domain overlap.'
+  local required_machine_no_substitute='For machine-ingest planning mode: do not substitute a staged queue, proposed sequencing, or assistant-chosen first packet for a missing slicing decision.'
+  local required_machine_default_question="For machine-ingest planning mode: default to question mode for multi-family topics; only skip the slicing question when the operator's topic text directly names the immediate packet."
   local required_question_first='For machine-ingest question mode: when clarification is needed, ask the packet-boundary question first without any retired analysis preamble or other required wrapper.'
   local required_question_no_fence='For machine-ingest question mode: do not use a fenced markdown code block; fenced markdown remains the final-plan output contract only.'
   local required_nonsensical_topic='For machine-ingest question mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.'
   local required_plan_output='For final plan mode: output only the complete PLAN markdown code block.'
   local required_plan_shape='For final plan mode: keep `Summary`, `Key Changes`, `Test Plan`, and `Assumptions` as required core sections; additional bounded sections are allowed only when needed to keep the handoff truthful and narrow.'
-  local required_plan_direct='For final plan mode: emit the final plan when remaining ambiguity no longer materially changes the immediate packet boundary or implementation handoff.'
+  local required_plan_direct='For final plan mode: once the immediate packet boundary is settled, emit the final `storage/handoff/PLAN.md`.'
   local required_machine_evidence='For machine-ingest planning mode: use attached evidence first.'
   local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
 
@@ -367,12 +378,36 @@ check_planning_mode_contract() {
     mark_failure "planning.md.tpl missing planning evidence-first line"
   fi
 
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_question_multi_family" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning multi-family question-first line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_explicit_only" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning explicit-packet gate line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_no_infer" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning no-unilateral-packet-inference line"
+  fi
+
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_emit_boundary" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning ambiguity-boundary emit line"
+    mark_failure "planning.md.tpl missing planning settled-boundary emit line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_followup_boundary" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning follow-up ambiguity line"
   fi
 
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_bounded_options" "$stance_planning"; then
     mark_failure "planning.md.tpl missing planning bounded-options line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_recommended" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning recommended-option line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_no_substitute" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning no-staged-queue-substitute line"
   fi
 
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_final_plan_no_outside" "$stance_planning"; then
@@ -397,6 +432,26 @@ check_planning_mode_contract() {
 
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_slice_broad_topic" "$stance_planning"; then
     mark_failure "planning.md.tpl missing planning broad-topic-slicing line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_explicit" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing machine-ingest explicit-packet line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_no_infer" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing machine-ingest no-inference line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_threshold" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing machine-ingest multi-family-threshold line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_no_substitute" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing machine-ingest no-staged-queue-substitute line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_default_question" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing machine-ingest default-question-mode line"
   fi
 
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_question_first" "$stance_planning"; then
