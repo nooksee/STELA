@@ -167,17 +167,53 @@ Assertion: file must include `* Use attached evidence first.`
 Failure message: `planning.md.tpl missing planning evidence-first line`
 Invariant: planning keeps bundle-attached evidence ahead of generic planner behavior.
 
-### Guard 23: Planning ambiguity-boundary emit line
+### Guard 23: Planning multi-family question-first line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Emit the final \`storage/handoff/PLAN.md\` when remaining ambiguity no longer materially changes the immediate packet boundary or implementation handoff.`
-Failure message: `planning.md.tpl missing planning ambiguity-boundary emit line`
-Invariant: planning flips to final-plan output at the material-ambiguity boundary, not at a vaguer settle-intent phrase.
+Assertion: file must include `* If the topic spans multiple independent work families and the topic does not explicitly identify the immediate packet, ask one slicing or prioritization question before writing the final plan.`
+Failure message: `planning.md.tpl missing planning multi-family question-first line`
+Invariant: broad multi-family topics do not skip clarification by assistant-selected first-packet staging.
 
-### Guard 23a: Planning bounded-options line
+### Guard 23a: Planning explicit-packet gate line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* When ambiguity remains, present 2-3 bounded options to resolve it.`
+Assertion: file must include `* Treat the immediate packet as explicit only if:`
+Failure message: `planning.md.tpl missing planning explicit-packet gate line`
+Invariant: immediate-packet explicitness is defined by the contract instead of inferred loosely from topic breadth.
+
+### Guard 23b: Planning no-unilateral-packet-inference line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* Do not infer or choose the immediate packet unilaterally from repo context alone when multiple work families are in scope.`
+Failure message: `planning.md.tpl missing planning no-unilateral-packet-inference line`
+Invariant: planner autonomy does not replace operator packet selection on multi-family topics.
+
+### Guard 23c: Planning follow-up ambiguity line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* If remaining ambiguity still materially changes the immediate packet boundary or implementation handoff, ask the minimum additional bounded clarification needed.`
+Failure message: `planning.md.tpl missing planning follow-up ambiguity line`
+Invariant: after the first slicing decision, only material remaining ambiguity justifies more questions.
+
+### Guard 23d: Planning bounded-options line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* Each clarification question must present 2-3 meaningful, mutually exclusive options. Prefer 2 when the choice is truly binary.`
 Failure message: `planning.md.tpl missing planning bounded-options line`
 Invariant: clarification remains bounded instead of expanding into open-ended questionnaires.
+
+### Guard 23e: Planning recommended-option line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* Mark at most one option \`(Recommended)\` and only when directly visible evidence justifies it.`
+Failure message: `planning.md.tpl missing planning recommended-option line`
+Invariant: recommendation markup remains evidence-bound and bounded.
+
+### Guard 23f: Planning no-staged-queue-substitute line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* Do not substitute a staged queue, proposed sequencing, or assistant-chosen first packet for a missing slicing decision.`
+Failure message: `planning.md.tpl missing planning no-staged-queue-substitute line`
+Invariant: staged queues cannot replace the required slicing decision.
+
+### Guard 23g: Planning settled-boundary emit line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* Once the immediate packet boundary is settled, emit the final \`storage/handoff/PLAN.md\`.`
+Failure message: `planning.md.tpl missing planning settled-boundary emit line`
+Invariant: final-plan output happens only after the immediate packet boundary is actually settled.
 
 ### Guard 24: Planning final-plan no-outside-text line
 Target file: `ops/src/stances/planning.md.tpl`
@@ -217,9 +253,39 @@ Invariant: nonsense topics still stop truthfully rather than forcing fabricated 
 
 ### Guard 30: Planning broad-topic slicing line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest planning mode: when a topic spans multiple independent work families, do not force one omnibus first packet; ask one slicing question or emit a staged queue with an explicit immediate packet and deferred packets.`
+Assertion: file must include `For machine-ingest planning mode: if the topic spans multiple independent work families and the topic does not explicitly identify the immediate packet, ask one slicing or prioritization question before writing the final plan.`
 Failure message: `planning.md.tpl missing planning broad-topic-slicing line`
-Invariant: broad topics are sliced or staged rather than forced into one omnibus first packet.
+Invariant: machine-ingest planning asks before planning when a multi-family topic lacks an explicit first packet.
+
+### Guard 30a: Machine-ingest explicit-packet line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest planning mode: treat the immediate packet as explicit only if the topic directly names the first packet or first work family, the attached evidence directly requires a first packet ordering, or the user explicitly prioritizes one work family.`
+Failure message: `planning.md.tpl missing machine-ingest explicit-packet line`
+Invariant: machine-ingest planning uses the same narrow explicitness definition as the top-level contract.
+
+### Guard 30b: Machine-ingest no-inference line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest planning mode: do not infer or choose the immediate packet unilaterally from repo context alone when multiple work families are in scope.`
+Failure message: `planning.md.tpl missing machine-ingest no-inference line`
+Invariant: machine-ingest planning does not self-authorize first-packet choice from repo context alone.
+
+### Guard 30c: Machine-ingest multi-family threshold line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest planning mode: three or more distinct deliverables in one topic count as multiple independent work families regardless of domain overlap.`
+Failure message: `planning.md.tpl missing machine-ingest multi-family-threshold line`
+Invariant: broad single-domain omnibus topics cannot dodge multi-family handling by domain-label compression.
+
+### Guard 30d: Machine-ingest no-staged-queue-substitute line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest planning mode: do not substitute a staged queue, proposed sequencing, or assistant-chosen first packet for a missing slicing decision.`
+Failure message: `planning.md.tpl missing machine-ingest no-staged-queue-substitute line`
+Invariant: machine-ingest planning cannot satisfy a missing slicing decision by producing a staged queue.
+
+### Guard 30e: Machine-ingest default-question-mode line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest planning mode: default to question mode for multi-family topics; only skip the slicing question when the operator's topic text directly names the immediate packet.`
+Failure message: `planning.md.tpl missing machine-ingest default-question-mode line`
+Invariant: machine-ingest planning defaults to question mode on multi-family topics unless the operator has already named the immediate packet.
 
 ### Guard 31: Planning plan-output-only line
 Target file: `ops/src/stances/planning.md.tpl`
@@ -235,6 +301,6 @@ Invariant: final plan mode keeps the required Stela handoff sections without tur
 
 ### Guard 33: Planning final-plan emission line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For final plan mode: emit the final plan when remaining ambiguity no longer materially changes the immediate packet boundary or implementation handoff.`
+Assertion: file must include `For final plan mode: once the immediate packet boundary is settled, emit the final \`storage/handoff/PLAN.md\`.`
 Failure message: `planning.md.tpl missing planning final-plan emit line`
-Invariant: final plan output happens only after the ambiguity boundary is crossed.
+Invariant: final plan output happens only after the immediate packet boundary is actually settled.
