@@ -16,15 +16,16 @@ Deterministic checks:
 3. File has at least one markdown heading.
 4. File has at least one non-heading content line.
 5. File has no unresolved `{{TOKEN}}` placeholders.
-6. File contains the canonical final-plan headings:
+6. File contains the required core final-plan headings:
    - `## Summary`
    - `## Key Changes`
    - `## Test Plan`
    - `## Assumptions`
+7. Additional peer sections do not fail lint as long as the required core headings remain present.
 
 On pass, lint prints `PLAN lint: PASS (<path>)` and exits 0.
 On failure, lint prints `FAIL: ...` and exits non-zero.
-`--test` includes positive and negative fixtures for the canonical final-plan shape.
+`--test` includes positive and negative fixtures for the required core-heading floor, including a passing fixture with additional peer sections.
 
 ## Integrity Filter Warnings
 PLAN lint is a routing safety floor, not a prose/style rubric.

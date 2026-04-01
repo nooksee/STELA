@@ -8,13 +8,15 @@ It remains planning-only; execution control still lives in the DP.
 ## Operator Contract
 - Canonical template source: `ops/src/stances/plan.md.tpl`.
 - Deterministic validation: `tools/lint/plan.sh`.
+- The template provides the minimum required core-heading floor; it does not prohibit additional peer sections in authored final plans.
 - Required core headings:
   - `# <Plan Title>`
   - `## Summary`
   - `## Key Changes`
   - `## Test Plan`
   - `## Assumptions`
-- Additional bounded sections are allowed when they are needed to keep a broad-topic handoff truthful and narrow.
+- Additional headings are allowed when they are needed to keep a broad-topic handoff truthful and narrow.
+- When additional headings are needed, they should appear as proper peer sections rather than being buried under a required heading.
 
 ## Mechanics and Sequencing
 1. Planning works from `storage/handoff/TOPIC.md`.
@@ -23,7 +25,7 @@ It remains planning-only; execution control still lives in the DP.
 4. Three or more distinct deliverables in one topic count as multiple independent work families regardless of domain overlap.
 5. Planning does not substitute a staged queue, proposed sequencing, or assistant-chosen first packet for a missing slicing decision.
 6. If narrower ambiguity still materially changes the immediate packet boundary or implementation handoff after that first slicing decision, planning may ask the minimum bounded follow-up needed instead of forcing a final plan.
-7. Once the immediate packet boundary is settled, planning emits the final `PLAN.md` using the required core headings; additional bounded sections are allowed when needed to keep the handoff truthful and narrow.
+7. Once the immediate packet boundary is settled, planning emits the final `PLAN.md` using the required core headings; additional peer sections are allowed when needed to keep the handoff truthful and narrow.
 8. Architect consumes that final plan directly and drafts the DP.
 
 ## Failure States and Drift Triggers

@@ -22,19 +22,22 @@ Rules:
 * Do not infer or choose the immediate packet unilaterally from repo context alone when multiple work families are in scope.
 * If remaining ambiguity still materially changes the immediate packet boundary or implementation handoff, ask the minimum additional bounded clarification needed.
 * Do not substitute a staged queue, proposed sequencing, or assistant-chosen first packet for a missing slicing decision.
+* Once the immediate packet boundary is settled, emit the final `storage/handoff/PLAN.md`.
+* Final `PLAN.md` must include `Summary`, `Key Changes`, `Test Plan`, and `Assumptions`; additional headings are allowed when needed.
+* When additional headings are needed, they should appear as proper peer sections rather than being buried under one of the required headings.
+* `Explicit immediate packet` means the operator named it; AI inference from topic breadth or evidence does not count as explicit. When in doubt, default to question mode.
+* Three or more distinct deliverables in one topic count as multiple independent work families regardless of domain overlap.
+* Default to question mode for multi-family topics; only skip the slicing question when the operator's topic text directly names the immediate packet.
+* Logic: `PoT.md`. Reference: `docs/MAP.md` and `SoP.md`.
+* Structure output for direct operator handoff.
+
+Portable question transport:
 * Each clarification question must present exactly 2 substantive, mutually exclusive options when the decision is binary.
 * After those substantive options, always include a fixed redirect option labeled `C. Tell Analyst to do something else instead.`
 * Present options as short standalone lines with letter labels (`A.`, `B.`, `C.`) and no nested bullets under the options.
 * Keep each option concise enough to render cleanly as a clickable choice when the host UI supports it; the stance biases toward clickable rendering but does not guarantee widget behavior.
 * Mark at most one substantive option `(Recommended)` and only when directly visible evidence justifies it.
 * Do not mark the redirect option `(Recommended)`.
-* Once the immediate packet boundary is settled, emit the final `storage/handoff/PLAN.md`.
-* Final `PLAN.md` must include `Summary`, `Key Changes`, `Test Plan`, and `Assumptions`; additional bounded sections are allowed when needed.
-* `Explicit immediate packet` means the operator named it; AI inference from topic breadth or evidence does not count as explicit. When in doubt, default to question mode.
-* Three or more distinct deliverables in one topic count as multiple independent work families regardless of domain overlap.
-* Default to question mode for multi-family topics; only skip the slicing question when the operator's topic text directly names the immediate packet.
-* Logic: `PoT.md`. Reference: `docs/MAP.md` and `SoP.md`.
-* Structure output for direct operator handoff.
 
 Steps:
 0. If attached `storage/handoff/TOPIC.md` is missing: STOP and report the missing topic artifact.
@@ -45,19 +48,28 @@ Steps:
 5. Do not write a staged queue or final plan before that question is answered unless the immediate packet was already explicit.
 6. If narrower ambiguity remains after that, ask the minimum bounded follow-up needed.
 7. In question mode:
-   * ask the question first as a short prose sentence
-   * do not use a fenced markdown block
-   * immediately follow with short standalone answer choices as:
+   * emit the portable 4-line question output:
+     * one short question sentence
      * `A.` first substantive option
      * `B.` second substantive option
      * `C. Tell Analyst to do something else instead.`
-   * keep each option to one short line when possible
+   * do not use a fenced markdown block
+   * keep each line short and standalone
    * do not add analysis paragraphs between the question and the options
    * do not invent extra substantive branches solely to satisfy formatting; the third displayed choice is the standard redirect option
 8. In final plan mode:
    * emit one fenced markdown code block
    * include `Summary`, `Key Changes`, `Test Plan`, and `Assumptions`
-   * add only small bounded extra sections when they keep the handoff truthful and narrow
+   * add only small peer sections when they keep the handoff truthful and narrow
+
+Question mode (host overlay):
+* When a host-provided single-select question tool is available, it may replace the portable A/B/C fallback using the same two substantive options and final redirect; do not also print the A/B/C lines as prose.
+* If the host does not support a single-select question tool, emit the portable 4-line question output and nothing else.
+* Popup rendering remains host/UI behavior and cannot be guaranteed by stance text alone.
+
+Question mode (Claude.ai overlay):
+* When the `ask_user_input_v0` tool is available, call it with `type: single_select` using the same options derived from the portable fallback above; do not also print the A/B/C lines as prose.
+* If the tool is unavailable, emit the portable 4-line output and nothing else.
 
 For machine-ingest planning mode: require attached `storage/handoff/TOPIC.md`; do not use inline query fallback.
 For machine-ingest planning mode: use attached evidence first.
@@ -78,9 +90,15 @@ For machine-ingest question mode: do not invent extra substantive branches solel
 For machine-ingest question mode: do not use a fenced markdown code block; fenced markdown remains the final-plan output contract only.
 For machine-ingest question mode: if topic text is present but intent cannot be settled from attached evidence, ask the minimum clarifying questions needed rather than forcing a final plan.
 For machine-ingest question mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.
+For machine-ingest host overlay: when a host-provided single-select question tool is available, it may replace the portable A/B/C fallback using the same two substantive options and final redirect; do not also print the A/B/C lines as prose.
+For machine-ingest host overlay: if the host does not support a single-select question tool, emit the portable 4-line question output and nothing else.
+For machine-ingest host overlay: popup rendering remains host/UI behavior and cannot be guaranteed by stance text alone.
+For machine-ingest Claude.ai overlay: when the `ask_user_input_v0` tool is available, call it with `type: single_select` using the same options derived from the portable fallback above; do not also print the A/B/C lines as prose.
+For machine-ingest Claude.ai overlay: if the tool is unavailable, emit the portable 4-line output and nothing else.
 For final plan mode: output only the complete PLAN markdown code block.
 For final plan mode: emit no text before or after the fenced markdown code block.
-For final plan mode: keep `Summary`, `Key Changes`, `Test Plan`, and `Assumptions` as required core sections; additional bounded sections are allowed only when needed to keep the handoff truthful and narrow.
+For final plan mode: keep `Summary`, `Key Changes`, `Test Plan`, and `Assumptions` as required core sections; additional peer sections are allowed when needed to keep the handoff truthful and narrow.
+For final plan mode: when additional headings are needed, make them proper peer sections rather than burying them under a required heading.
 For final plan mode: when the needed repo surfaces are directly attached and sufficient, use them to make the handoff concrete rather than artificially flattening the plan to generic language.
 For final plan mode: once the immediate packet boundary is settled, emit the final `storage/handoff/PLAN.md`.
 {{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}

@@ -239,6 +239,12 @@ Assertion: file must include `* Once the immediate packet boundary is settled, e
 Failure message: `planning.md.tpl missing planning settled-boundary emit line`
 Invariant: final-plan output happens only after the immediate packet boundary is actually settled.
 
+### Guard 23l: Planning peer-sections line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* When additional headings are needed, they should appear as proper peer sections rather than being buried under one of the required headings.`
+Failure message: `planning.md.tpl missing planning peer-sections line`
+Invariant: the required core headings remain a floor, not an exclusive cage.
+
 ### Guard 24: Planning final-plan no-outside-text line
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For final plan mode: emit no text before or after the fenced markdown code block.`
@@ -299,6 +305,66 @@ Assertion: file must include `For machine-ingest question mode: if topic text is
 Failure message: `planning.md.tpl missing planning nonsensical-topic line`
 Invariant: nonsense topics still stop truthfully rather than forcing fabricated plans.
 
+### Guard 29a: Planning host-overlay line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* When a host-provided single-select question tool is available, it may replace the portable A/B/C fallback using the same two substantive options and final redirect; do not also print the A/B/C lines as prose.`
+Failure message: `planning.md.tpl missing planning host-overlay line`
+Invariant: host widget/tool behavior stays additive instead of being blended into the portable fallback contract.
+
+### Guard 29b: Planning host-overlay fallback line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* If the host does not support a single-select question tool, emit the portable 4-line question output and nothing else.`
+Failure message: `planning.md.tpl missing planning host-overlay fallback line`
+Invariant: portable A/B/C transport remains available when no host widget/tool is exposed.
+
+### Guard 29c: Planning host-overlay caveat line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* Popup rendering remains host/UI behavior and cannot be guaranteed by stance text alone.`
+Failure message: `planning.md.tpl missing planning host-overlay caveat line`
+Invariant: the contract stays truthful about popup determinism.
+
+### Guard 29d: Planning Claude.ai overlay line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* When the \`ask_user_input_v0\` tool is available, call it with \`type: single_select\` using the same options derived from the portable fallback above; do not also print the A/B/C lines as prose.`
+Failure message: `planning.md.tpl missing planning Claude.ai overlay line`
+Invariant: the Claude.ai overlay is explicit instead of hidden behind portable prose shaping.
+
+### Guard 29e: Planning Claude.ai overlay fallback line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* If the tool is unavailable, emit the portable 4-line output and nothing else.`
+Failure message: `planning.md.tpl missing planning Claude.ai overlay fallback line`
+Invariant: the host-specific overlay falls back cleanly to the portable transport.
+
+### Guard 29f: Machine-ingest host-overlay line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest host overlay: when a host-provided single-select question tool is available, it may replace the portable A/B/C fallback using the same two substantive options and final redirect; do not also print the A/B/C lines as prose.`
+Failure message: `planning.md.tpl missing machine-ingest host-overlay line`
+Invariant: machine-ingest text mirrors the same additive host-overlay split as the human-readable contract.
+
+### Guard 29g: Machine-ingest host-overlay fallback line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest host overlay: if the host does not support a single-select question tool, emit the portable 4-line question output and nothing else.`
+Failure message: `planning.md.tpl missing machine-ingest host-overlay fallback line`
+Invariant: machine-ingest fallback stays aligned with the human-readable transport contract.
+
+### Guard 29h: Machine-ingest host-overlay caveat line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest host overlay: popup rendering remains host/UI behavior and cannot be guaranteed by stance text alone.`
+Failure message: `planning.md.tpl missing machine-ingest host-overlay caveat line`
+Invariant: machine-ingest contract also states that popup rendering is host behavior rather than repo-owned determinism.
+
+### Guard 29i: Machine-ingest Claude.ai overlay line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest Claude.ai overlay: when the \`ask_user_input_v0\` tool is available, call it with \`type: single_select\` using the same options derived from the portable fallback above; do not also print the A/B/C lines as prose.`
+Failure message: `planning.md.tpl missing machine-ingest Claude.ai overlay line`
+Invariant: machine-ingest text exposes the concrete Claude.ai widget path when available.
+
+### Guard 29j: Machine-ingest Claude.ai overlay fallback line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest Claude.ai overlay: if the tool is unavailable, emit the portable 4-line output and nothing else.`
+Failure message: `planning.md.tpl missing machine-ingest Claude.ai overlay fallback line`
+Invariant: machine-ingest Claude.ai overlay also falls back cleanly to the portable transport.
+
 ### Guard 30: Planning broad-topic slicing line
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For machine-ingest planning mode: if the topic spans multiple independent work families and the topic does not explicitly identify the immediate packet, ask one slicing or prioritization question before writing the final plan.`
@@ -343,9 +409,15 @@ Invariant: draft-ready plan serialization remains available once intent is settl
 
 ### Guard 32: Planning final-plan shape line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For final plan mode: keep \`Summary\`, \`Key Changes\`, \`Test Plan\`, and \`Assumptions\` as required core sections; additional bounded sections are allowed only when needed to keep the handoff truthful and narrow.`
+Assertion: file must include `For final plan mode: keep \`Summary\`, \`Key Changes\`, \`Test Plan\`, and \`Assumptions\` as required core sections; additional peer sections are allowed when needed to keep the handoff truthful and narrow.`
 Failure message: `planning.md.tpl missing planning final-plan shape line`
 Invariant: final plan mode keeps the required Stela handoff sections without turning them into an exclusive cage.
+
+### Guard 32a: Planning final-plan peer-sections line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For final plan mode: when additional headings are needed, make them proper peer sections rather than burying them under a required heading.`
+Failure message: `planning.md.tpl missing planning final-plan peer-sections line`
+Invariant: additional headings stay visible as real plan structure instead of getting sandwiched into a required bucket.
 
 ### Guard 33: Planning final-plan emission line
 Target file: `ops/src/stances/planning.md.tpl`
