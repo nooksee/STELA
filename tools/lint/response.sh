@@ -291,13 +291,14 @@ check_planning_body_scope() {
     local expecting_next=""
     local saw_question=0
     local line trimmed label num
+    local redirect_label='C. Tell Analyst to do something else instead.'
 
     finalize_question_block() {
       if (( ! saw_question )); then
         return 0
       fi
-      if (( option_count < 2 || option_count > 3 )); then
-        response_fail "each planning clarification question must have 2-3 options (question ${q_count} has ${option_count})"
+      if (( option_count != 3 )); then
+        response_fail "each planning clarification question must have exactly 3 options (question ${q_count} has ${option_count})"
         return 1
       fi
       if (( recommended_count > 1 )); then
@@ -376,43 +377,35 @@ check_planning_body_scope() {
             option_scheme="alpha"
             expecting_next="A"
           else
-            option_scheme="numeric"
-            expecting_next="1"
+            response_fail "planning clarification options must use short standalone A./B./C. lines"
+            return 1
           fi
         fi
         if [[ "$label" != "$expecting_next" ]]; then
-          response_fail "planning clarification options must use a consistent ordered 2-3 option set"
+          response_fail "planning clarification options must use the ordered A./B./C. set"
           return 1
         fi
         option_count=$(( option_count + 1 ))
-        if [[ "$trimmed" == *"(Recommended)"* ]]; then
-          recommended_count=$(( recommended_count + 1 ))
-        fi
-        if [[ "$option_scheme" == "alpha" ]]; then
-          case "$label" in
-            A) expecting_next="B" ;;
-            B) expecting_next="C" ;;
-            C) expecting_next="D" ;;
-          esac
-        else
-          case "$label" in
-            1) expecting_next="2" ;;
-            2) expecting_next="3" ;;
-            3) expecting_next="4" ;;
-          esac
-        fi
-        continue
-      fi
-
-      if [[ "$trimmed" =~ ^(Reply|Respond)[[:space:]]+with[[:space:]] ]] || [[ "$trimmed" =~ ^Use[[:space:]]+recommended[[:space:]]+option ]]; then
-        if ! finalize_question_block; then
+        if [[ "$label" == "C" && "$trimmed" != "$redirect_label" ]]; then
+          response_fail "planning clarification option C must be the fixed redirect line '${redirect_label}'"
           return 1
         fi
-        expecting_option=0
+        if [[ "$trimmed" == *"(Recommended)"* ]]; then
+          if [[ "$label" == "C" ]]; then
+            response_fail "planning clarification redirect option must not be marked (Recommended)"
+            return 1
+          fi
+          recommended_count=$(( recommended_count + 1 ))
+        fi
+        case "$label" in
+          A) expecting_next="B" ;;
+          B) expecting_next="C" ;;
+          C) expecting_next="D" ;;
+        esac
         continue
       fi
 
-      response_fail "planning clarification mode allows only question lines, 2-3 option lines, and an optional concise reply instruction"
+      response_fail "planning clarification mode allows only question lines followed by short standalone A./B./C. option lines"
       return 1
     done < "$body_path"
 
@@ -875,6 +868,8 @@ run_test() {
   response_planning_plain_followup_valid="${test_dir}/response-planning-plain-followup-valid.md"
   response_planning_option_question_mark_valid="${test_dir}/response-planning-option-question-mark-valid.md"
   response_planning_four_options="${test_dir}/response-planning-four-options.md"
+  response_planning_wrong_redirect="${test_dir}/response-planning-wrong-redirect.md"
+  response_planning_reply_instruction="${test_dir}/response-planning-reply-instruction.md"
   response_planning_too_many_questions="${test_dir}/response-planning-too-many-questions.md"
   response_addenda_valid="${test_dir}/response-addenda-valid.md"
   response_addenda_audit_marker="${test_dir}/response-addenda-audit-marker.md"
@@ -1087,7 +1082,7 @@ EOF_PLANNING_VALID
 Q1. Which immediate packet boundary should I plan?
 A. Keep `docs/MANUAL.md` as one surface and reduce it in place.
 B. Extract Closeout into `docs/CLOSEOUT.md`. (Recommended)
-Reply with `Q1:A` or `Q1:B`.
+C. Tell Analyst to do something else instead.
 EOF_PLANNING_BINARY
   if ! lint_response_file "$response_planning_binary_valid" >/dev/null 2>&1; then
     echo "FAIL: --test expected planning binary clarification response to pass" >&2
@@ -1144,11 +1139,10 @@ EOF_PLANNING_OLD_WRAPPER
 Q1. Which reset surface should be targeted first?
 A. Bundle/runtime reset only; defer editor assist.
 B. Bundle/runtime and editor assist together. (Recommended)
-C. Editor assist only; leave bundle/runtime for a follow-on packet.
-Reply with `Q1:A`, `Q1:B`, or `Q1:C`.
+C. Tell Analyst to do something else instead.
 EOF_PLANNING_THREE_OPTIONS
   if ! lint_response_file "$response_planning_three_option_valid" >/dev/null 2>&1; then
-    echo "FAIL: --test expected planning three-option clarification response to pass" >&2
+    echo "FAIL: --test expected planning popup-biased clarification response to pass" >&2
     failures_local=1
   fi
 
@@ -1156,10 +1150,12 @@ EOF_PLANNING_THREE_OPTIONS
 Which immediate packet boundary should I plan?
 A. Keep `docs/MANUAL.md` as one surface.
 B. Extract Closeout into `docs/CLOSEOUT.md`.
+C. Tell Analyst to do something else instead.
 
 Which rollout strategy should I use after that?
-1. Update only directly coupled docs.
-2. Update coupled docs plus allowlist if needed. (Recommended)
+A. Update only directly coupled docs.
+B. Update coupled docs plus allowlist if needed. (Recommended)
+C. Tell Analyst to do something else instead.
 EOF_PLANNING_PLAIN_FOLLOWUP
   if ! lint_response_file "$response_planning_plain_followup_valid" >/dev/null 2>&1; then
     echo "FAIL: --test expected planning clarification response with plain follow-up question to pass" >&2
@@ -1170,6 +1166,7 @@ EOF_PLANNING_PLAIN_FOLLOWUP
 Q1. Which boundary should I plan?
 A. Keep current docs?
 B. Split docs. (Recommended)
+C. Tell Analyst to do something else instead.
 EOF_PLANNING_OPTION_QUESTION
   if ! lint_response_file "$response_planning_option_question_mark_valid" >/dev/null 2>&1; then
     echo "FAIL: --test expected planning clarification option text ending in '?' to remain a valid option" >&2
@@ -1180,12 +1177,34 @@ EOF_PLANNING_OPTION_QUESTION
 Q1. Which reset surface should be targeted first?
 A. Bundle/runtime reset only.
 B. Bundle/runtime and editor assist together.
-C. Editor assist only.
+C. Tell Analyst to do something else instead.
 D. Defer the reset entirely.
-Reply with `Q1:A`, `Q1:B`, `Q1:C`, or `Q1:D`.
 EOF_PLANNING_FOUR_OPTIONS
   if lint_response_file "$response_planning_four_options" >/dev/null 2>&1; then
     echo "FAIL: --test expected planning question with 4 options to fail" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_planning_wrong_redirect" <<'EOF_PLANNING_WRONG_REDIRECT'
+Q1. Which boundary should I plan?
+A. Keep current docs.
+B. Split docs. (Recommended)
+C. Tell GPT to do something else instead.
+EOF_PLANNING_WRONG_REDIRECT
+  if lint_response_file "$response_planning_wrong_redirect" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning clarification with wrong redirect label to fail" >&2
+    failures_local=1
+  fi
+
+  cat > "$response_planning_reply_instruction" <<'EOF_PLANNING_REPLY_INSTRUCTION'
+Q1. Which boundary should I plan?
+A. Keep current docs.
+B. Split docs. (Recommended)
+C. Tell Analyst to do something else instead.
+Reply with `Q1:A`, `Q1:B`, or `Q1:C`.
+EOF_PLANNING_REPLY_INSTRUCTION
+  if lint_response_file "$response_planning_reply_instruction" >/dev/null 2>&1; then
+    echo "FAIL: --test expected planning clarification with reply instruction line to fail" >&2
     failures_local=1
   fi
 

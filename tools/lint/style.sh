@@ -351,8 +351,12 @@ check_planning_mode_contract() {
   local required_no_infer='* Do not infer or choose the immediate packet unilaterally from repo context alone when multiple work families are in scope.'
   local required_followup_boundary='* If remaining ambiguity still materially changes the immediate packet boundary or implementation handoff, ask the minimum additional bounded clarification needed.'
   local required_no_substitute='* Do not substitute a staged queue, proposed sequencing, or assistant-chosen first packet for a missing slicing decision.'
-  local required_bounded_options='* Each clarification question must present 2-3 meaningful, mutually exclusive options. Prefer 2 when the choice is truly binary.'
-  local required_recommended='* Mark at most one option `(Recommended)` and only when directly visible evidence justifies it.'
+  local required_bounded_options='* Each clarification question must present exactly 2 substantive, mutually exclusive options when the decision is binary.'
+  local required_redirect='* After those substantive options, always include a fixed redirect option labeled `C. Tell Analyst to do something else instead.`'
+  local required_option_lines='* Present options as short standalone lines with letter labels (`A.`, `B.`, `C.`) and no nested bullets under the options.'
+  local required_click_bias='* Keep each option concise enough to render cleanly as a clickable choice when the host UI supports it; the stance biases toward clickable rendering but does not guarantee widget behavior.'
+  local required_recommended='* Mark at most one substantive option `(Recommended)` and only when directly visible evidence justifies it.'
+  local required_redirect_not_recommended='* Do not mark the redirect option `(Recommended)`.'
   local required_emit_boundary='* Once the immediate packet boundary is settled, emit the final `storage/handoff/PLAN.md`.'
   local required_final_plan_no_outside='For final plan mode: emit no text before or after the fenced markdown code block.'
   local required_no_operating_detail='For machine-ingest planning mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.'
@@ -363,7 +367,11 @@ check_planning_mode_contract() {
   local required_machine_threshold='For machine-ingest planning mode: three or more distinct deliverables in one topic count as multiple independent work families regardless of domain overlap.'
   local required_machine_no_substitute='For machine-ingest planning mode: do not substitute a staged queue, proposed sequencing, or assistant-chosen first packet for a missing slicing decision.'
   local required_machine_default_question="For machine-ingest planning mode: default to question mode for multi-family topics; only skip the slicing question when the operator's topic text directly names the immediate packet."
-  local required_question_first='For machine-ingest question mode: when clarification is needed, ask the packet-boundary question first without any retired analysis preamble or other required wrapper.'
+  local required_question_first='For machine-ingest question mode: when clarification is needed, ask the packet-boundary question first as a short prose sentence without any retired analysis preamble or other required wrapper.'
+  local required_question_choices='For machine-ingest question mode: allow at most 3 questions; each question must immediately follow the prose question with exactly 3 short standalone answer lines: `A.` first substantive option, `B.` second substantive option, and `C. Tell Analyst to do something else instead.`'
+  local required_question_no_analysis='For machine-ingest question mode: keep each option to one short line when possible; do not add analysis paragraphs between the question and the options.'
+  local required_question_recommended='For machine-ingest question mode: mark at most one substantive option `(Recommended)` only when attached evidence justifies it; never mark the redirect option `(Recommended)`.'
+  local required_question_no_extra='For machine-ingest question mode: do not invent extra substantive branches solely to satisfy formatting; the third displayed choice is the standard redirect option.'
   local required_question_no_fence='For machine-ingest question mode: do not use a fenced markdown code block; fenced markdown remains the final-plan output contract only.'
   local required_nonsensical_topic='For machine-ingest question mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.'
   local required_plan_output='For final plan mode: output only the complete PLAN markdown code block.'
@@ -402,8 +410,24 @@ check_planning_mode_contract() {
     mark_failure "planning.md.tpl missing planning bounded-options line"
   fi
 
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_redirect" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning redirect-option line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_option_lines" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning standalone-option-lines line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_click_bias" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning click-bias line"
+  fi
+
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_recommended" "$stance_planning"; then
     mark_failure "planning.md.tpl missing planning recommended-option line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_redirect_not_recommended" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning redirect-not-recommended line"
   fi
 
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_no_substitute" "$stance_planning"; then
@@ -456,6 +480,22 @@ check_planning_mode_contract() {
 
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_question_first" "$stance_planning"; then
     mark_failure "planning.md.tpl missing planning question-first line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_question_choices" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning question-choice-transport line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_question_no_analysis" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning question-mode no-analysis-paragraphs line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_question_recommended" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning question-mode recommended guard line"
+  fi
+
+  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_question_no_extra" "$stance_planning"; then
+    mark_failure "planning.md.tpl missing planning question-mode fixed-redirect line"
   fi
 
   if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_question_no_fence" "$stance_planning"; then

@@ -32,9 +32,11 @@ Define the template-backed Planning stance body used by bundle output contract r
 - If remaining ambiguity still materially changes the immediate packet boundary or implementation handoff, planning asks the minimum additional bounded clarification needed.
 - Planning clarification mode must ask the question first; it does not require retired question-mode wrapper headings or footers.
 - Planning clarification mode does not use a fenced markdown block; fenced markdown remains the final-plan output contract only.
-- Structured question mode permits at most 3 questions per run; each question presents 2-3 meaningful, mutually exclusive options; the smallest truthful option set is preferred, so 2 options are used for a real binary choice and 3 only when the third branch is genuinely distinct and evidence-grounded.
-- Planning clarification mode marks at most one option per question `(Recommended)` and only when directly visible attached evidence actually justifies it.
-- Planning clarification mode does not invent extra branches solely to satisfy formatting.
+- Structured question mode permits at most 3 questions per run; each question starts with a short prose question sentence and is followed immediately by exactly 3 short standalone answer lines: `A.` first substantive option, `B.` second substantive option, and `C. Tell Analyst to do something else instead.`.
+- Planning clarification mode keeps options concise enough to bias host UIs toward clickable rendering when supported, but the stance itself does not guarantee widget or button presentation.
+- Planning clarification mode marks at most one substantive option per question `(Recommended)` and only when directly visible attached evidence actually justifies it; the redirect option is never marked `(Recommended)`.
+- Planning clarification mode does not invent extra substantive branches solely to satisfy formatting; the third displayed choice is the standard redirect option.
+- Planning clarification mode does not add analysis paragraphs between the question sentence and the options.
 - Final plan mode emits only the complete `PLAN.md` draft in a single fenced markdown code block using the canonical plan shape.
 - Final plan mode emits no text before or after the fenced markdown code block.
 - Final plan mode keeps `Summary`, `Key Changes`, `Test Plan`, and `Assumptions` as required core headings.

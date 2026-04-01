@@ -193,23 +193,47 @@ Invariant: after the first slicing decision, only material remaining ambiguity j
 
 ### Guard 23d: Planning bounded-options line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Each clarification question must present 2-3 meaningful, mutually exclusive options. Prefer 2 when the choice is truly binary.`
+Assertion: file must include `* Each clarification question must present exactly 2 substantive, mutually exclusive options when the decision is binary.`
 Failure message: `planning.md.tpl missing planning bounded-options line`
-Invariant: clarification remains bounded instead of expanding into open-ended questionnaires.
+Invariant: popup-biased clarification keeps the substantive choice set narrow instead of expanding into open-ended questionnaires.
 
-### Guard 23e: Planning recommended-option line
+### Guard 23e: Planning redirect-option line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Mark at most one option \`(Recommended)\` and only when directly visible evidence justifies it.`
-Failure message: `planning.md.tpl missing planning recommended-option line`
-Invariant: recommendation markup remains evidence-bound and bounded.
+Assertion: file must include `* After those substantive options, always include a fixed redirect option labeled \`C. Tell Analyst to do something else instead.\``
+Failure message: `planning.md.tpl missing planning redirect-option line`
+Invariant: popup-biased clarification always exposes the same role-native escape hatch.
 
-### Guard 23f: Planning no-staged-queue-substitute line
+### Guard 23f: Planning standalone-option-lines line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* Present options as short standalone lines with letter labels (\`A.\`, \`B.\`, \`C.\`) and no nested bullets under the options.`
+Failure message: `planning.md.tpl missing planning standalone-option-lines line`
+Invariant: the option transport stays short and popup-biased instead of drifting back into prose lists.
+
+### Guard 23g: Planning click-bias line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* Keep each option concise enough to render cleanly as a clickable choice when the host UI supports it; the stance biases toward clickable rendering but does not guarantee widget behavior.`
+Failure message: `planning.md.tpl missing planning click-bias line`
+Invariant: the contract biases toward clickable rendering without pretending the repo can guarantee host UI behavior.
+
+### Guard 23h: Planning recommended-option line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* Mark at most one substantive option \`(Recommended)\` and only when directly visible evidence justifies it.`
+Failure message: `planning.md.tpl missing planning recommended-option line`
+Invariant: recommendation markup remains evidence-bound and limited to substantive choices.
+
+### Guard 23i: Planning redirect-not-recommended line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `* Do not mark the redirect option \`(Recommended)\`.`
+Failure message: `planning.md.tpl missing planning redirect-not-recommended line`
+Invariant: the standard redirect choice stays neutral.
+
+### Guard 23j: Planning no-staged-queue-substitute line
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `* Do not substitute a staged queue, proposed sequencing, or assistant-chosen first packet for a missing slicing decision.`
 Failure message: `planning.md.tpl missing planning no-staged-queue-substitute line`
 Invariant: staged queues cannot replace the required slicing decision.
 
-### Guard 23g: Planning settled-boundary emit line
+### Guard 23k: Planning settled-boundary emit line
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `* Once the immediate packet boundary is settled, emit the final \`storage/handoff/PLAN.md\`.`
 Failure message: `planning.md.tpl missing planning settled-boundary emit line`
@@ -235,11 +259,35 @@ Invariant: the machine-ingest contract explicitly keeps attached evidence ahead 
 
 ### Guard 27: Planning question-first line
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest question mode: when clarification is needed, ask the packet-boundary question first without any retired analysis preamble or other required wrapper.`
+Assertion: file must include `For machine-ingest question mode: when clarification is needed, ask the packet-boundary question first as a short prose sentence without any retired analysis preamble or other required wrapper.`
 Failure message: `planning.md.tpl missing planning question-first line`
 Invariant: clarification mode asks the blocking boundary question directly instead of reintroducing analysis wrapper text.
 
-### Guard 28: Planning question-mode no-fence line
+### Guard 28: Planning question-choice-transport line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest question mode: allow at most 3 questions; each question must immediately follow the prose question with exactly 3 short standalone answer lines: \`A.\` first substantive option, \`B.\` second substantive option, and \`C. Tell Analyst to do something else instead.\``
+Failure message: `planning.md.tpl missing planning question-choice-transport line`
+Invariant: machine-ingest clarification uses the popup-biased A/B/C transport instead of a loose generic option set.
+
+### Guard 28a: Planning question-mode no-analysis-paragraphs line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest question mode: keep each option to one short line when possible; do not add analysis paragraphs between the question and the options.`
+Failure message: `planning.md.tpl missing planning question-mode no-analysis-paragraphs line`
+Invariant: machine-ingest clarification stays question-first and transport-oriented instead of expanding into rationale between the question and choices.
+
+### Guard 28b: Planning question-mode recommended guard line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest question mode: mark at most one substantive option \`(Recommended)\` only when attached evidence justifies it; never mark the redirect option \`(Recommended)\`.`
+Failure message: `planning.md.tpl missing planning question-mode recommended guard line`
+Invariant: recommendation markup remains bounded to substantive options during popup-biased clarification.
+
+### Guard 28c: Planning question-mode fixed-redirect line
+Target file: `ops/src/stances/planning.md.tpl`
+Assertion: file must include `For machine-ingest question mode: do not invent extra substantive branches solely to satisfy formatting; the third displayed choice is the standard redirect option.`
+Failure message: `planning.md.tpl missing planning question-mode fixed-redirect line`
+Invariant: the popup-biased transport preserves a fixed third redirect choice instead of drifting back to three substantive branches.
+
+### Guard 28d: Planning question-mode no-fence line
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `For machine-ingest question mode: do not use a fenced markdown code block; fenced markdown remains the final-plan output contract only.`
 Failure message: `planning.md.tpl missing planning question-mode no-fence line`
