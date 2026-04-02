@@ -54,7 +54,7 @@ Steps:
    * Do not emit template include directives, unresolved slot tokens, or unresolved authoring markers.
    * Output only the completed worker-ready DP body.
    * Do not output audit verdict markers or audit verdict sections in draft mode.
-   * Do not output Contractor Execution Narrative sections or receipt narrative subheadings in draft mode.
+   * Do not output Worker Execution Narrative sections or receipt narrative subheadings in draft mode.
    * Do not author or populate any §3.5.1 Mandatory Closing Sidecar field at draft time.
    * Do not infer objective or authority beyond attached artifacts. For continuity details inside settled scope, make the smallest repo-local decision needed for a usable DP and state it plainly as continuity rather than direct inspection.
    * When directly visible attached artifacts show repo/runtime contract drift inside the settled plan, name the defect plainly and encode the corrective work in the DP instead of flattening the output into read-only summary.
@@ -64,4 +64,4 @@ Output only: Full DP (starting at `### DP-...`) in one markdown code block.
 {{@include:ops/src/shared/stances.json#single_fence_contract_rules}}
 First non-empty line inside the code block must start with `### DP-`.
 {{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}
-Do not emit Contractor Execution Narrative sections or receipt narrative subheadings.
+Do not emit Worker Execution Narrative sections or receipt narrative subheadings.

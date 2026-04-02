@@ -24,7 +24,7 @@ Audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto`.
 **Execution Cycle:**
 1.  **Start:** `./ops/bin/open --out=auto` (freshness gate + trace anchor; OPEN provides `STELA_TRACE_ID` required by certify).
 2.  **Draft:** `./ops/bin/bundle --profile=draft --out=auto` (generates draft bundle with embedded DP AUTHORING SCAFFOLD; deliver `DRAFT-*.txt` to Architect; Architect returns one fenced worker-ready DP body; save full output to `storage/dp/intake/DP.md`; lint immediately: `bash tools/lint/dp.sh storage/dp/intake/DP.md`; confirm PASS before dispatch).
-3.  **Capture (CDD):** `./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto` (serializes Contractor-visible state).
+3.  **Capture (CDD):** `./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto` (serializes worker-visible state).
     Note: Audit intake is bundle-first. Use `./ops/bin/bundle --profile=audit --out=auto` for audit review. Bundle dump scope is profile-mapped from `ops/lib/manifests/BUNDLE.md`; current audit mapping is `core`.
 4.  **Dispatch:** Hand DP to Worker (See Section 5).
 5.  **Review:** Verify `RECEIPT` (Proofs) vs `TASK.md` requirements.
@@ -34,7 +34,7 @@ Audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto`.
 
 **Dispatch Contract Notes:**
 - The DP Preflight Gate runs after the Freshness Gate and before any edits.
-- Worker input is DP text only; OPEN is for integrator refresh and receipt pointers and is not required reading for workers.
+- Worker input is DP text only; OPEN is for architect refresh and receipt pointers and is not required reading for workers.
 - DP structure is generated from `ops/src/surfaces/dp.md.tpl` through canonical tooling (`ops/bin/draft` for direct local rendering or the draft bundle's embedded DP authoring scaffold for Architect runs); manual structural edits are prohibited.
 
 **OPEN and OPEN-PORCELAIN Contract:**
@@ -57,13 +57,13 @@ This path is separate from bundle-mediated planning, draft, and audit transport;
 - Validated via `bash tools/lint/response.sh --mode=execution-decision`; checks required constraint-section labels and at least one complete step block.
 
 **Secondary Lanes:**
-- `addenda/addendum`: Intervention path. Contractor or auditor reports `ADDENDUM REQUIRED`. Operator generates an addenda wake-up bundle (`./ops/bin/bundle --profile=addenda --intent="ADDENDUM REQUIRED: <BASE_DP_ID> - <BLOCKER>" --out=auto`), delivers it to the foreman, and the foreman builds the addendum case from visible evidence in the dump (RESULTS, OPEN metadata, boundary condition) — no pre-existing decision leaf required. The foreman issues an authorized addendum. The authorized addendum is handed to the Contractor as a finished document. Contractor does not author addendum content.
+- `addenda/addendum`: Intervention path. Worker or auditor reports `ADDENDUM REQUIRED`. Operator generates an addenda wake-up bundle (`./ops/bin/bundle --profile=addenda --intent="ADDENDUM REQUIRED: <BASE_DP_ID> - <BLOCKER>" --out=auto`), delivers it to the supervisor, and the supervisor builds the addendum case from visible evidence in the dump (RESULTS, OPEN metadata, boundary condition) — no pre-existing decision leaf required. The supervisor issues an authorized addendum. The authorized addendum is handed to the worker as a finished document. Worker does not author addendum content.
 - `execution-decision`: See above.
 - Surface and definition rendering is centralized in `ops/bin/template` with YAML metadata parsing, include injection, and strict slot enforcement by default.
 - Bundle stance contract rendering is template-backed via `ops/src/stances/*.md.tpl` and manifest stance keys in `ops/lib/manifests/BUNDLE.md`.
 - Definition registry guidance is canonical in `docs/ops/specs/definitions/agents.md`, `docs/ops/specs/definitions/tasks.md`, and `docs/ops/specs/definitions/skills.md`. `opt/_factory/AGENTS.md`, `opt/_factory/TASKS.md`, and `opt/_factory/SKILLS.md` are pointer heads.
 - `ops/bin/draft`, `ops/lib/scripts/{agent,task,skill}.sh`, route through `ops/bin/template`.
-- Addendum authority: The Contractor receives an addendum as a finished, operator-authorized document. The Contractor does not produce, recommend, or assemble addendum content. If a boundary condition arises during execution, the Contractor stops and reports it to the Integrator.
+- Addendum authority: The worker receives an addendum as a finished, operator-authorized document. The worker does not produce, recommend, or assemble addendum content. If a boundary condition arises during execution, the worker stops and reports it to the Operator.
 
 Local hook activation (one time): run `git config core.hooksPath .github/hooks` in each clone to enable the tracked llms hook. The hook runs `ops/bin/llms` and stages `llms.txt`, `llms-core.txt`, and `llms-full.txt` before each commit so bundle freshness is enforced structurally. Registry: `docs/ops/registry/hooks.md`.
 
@@ -93,10 +93,10 @@ This is a legibility hardening change only. Guard pass/fail semantics are unchan
 ## Closeout Cycle
 #### Closing Sidecar Authorship
 
-The Contractor creates and populates `storage/handoff/CLOSING.md` before
+The Worker creates and populates `storage/handoff/CLOSING.md` before
 invoking `ops/bin/certify`. This file is not Operator-authored and is not deferred
-to a later session. The Contractor uses `ops/src/surfaces/closing.md.tpl` as the
-schema. If that template is absent, the Contractor stops and requests it from the
+to a later session. The Worker uses `ops/src/surfaces/closing.md.tpl` as the
+schema. If that template is absent, the Worker stops and requests it from the
 Operator before proceeding. Absence of the closing sidecar is a certify hard-fail;
 it is not a recoverable warning.
 
@@ -164,7 +164,7 @@ It also emits `VERIFY-LANE-ORDER: mode=<mode> order=<comma-separated-lanes>` bef
 `ops/bin/certify` runs integrity checks, executes the Section 3.4.5 verification command list, renders the RESULTS receipt from template, records authoritative delivered `dp_source` plus `dump_manifest` in Scope Verification, and runs `tools/lint/results.sh` as a hard gate. `dp_source` must record the authoritative TASK/addendum lineage path so RESULTS matches the delivered audit packet.
 After surface emission, certify verifies that the active TASK leaf is packet-consistent and runs `./ops/bin/prune --target=dump --phase=report --dry-run` so closeout always captures dump-visible pressure. The prune report is observational receipt evidence only; it does not authorize canonical archive deletion.
 Note: certify resolves the target DP from the TASK head leaf by default. Ensure the TASK head leaf is structurally valid and contains the live current DP block before running certify. If `TASK.md` is pointer-only and `--allow-intake-fallback` is explicitly enabled while the matching intake packet is present, certify may prefer the intake packet as the live rerun source instead of reusing a stale packet body embedded in the current TASK leaf. This fallback remains a recovery path only.
-`tools/lint/results.sh` enforces the RESULTS schema through `## Contractor Execution Narrative` and required Decision Leaf lines. Closing sidecar schema validation remains `ops/bin/certify` authority against `ops/lib/manifests/CLOSING.md` (Section 1).
+`tools/lint/results.sh` enforces the RESULTS schema through `## Worker Execution Narrative` and required Decision Leaf lines. Closing sidecar schema validation remains `ops/bin/certify` authority against `ops/lib/manifests/CLOSING.md` (Section 1).
 `ops/bin/certify` also emits schema-stamped surface leaves for PoW/SoP/TASK under `archives/surfaces/` and rewrites `PoW.md`, `SoP.md`, and `TASK.md` to single-line HEAD pointers to those leaves.
 If `TASK.md` does not contain the target DP block, certify now fails unless `--allow-intake-fallback` is explicitly provided.
 Default dump and bundle payloads now route archive serialization through `ops/etc/persistence.manifest`. Cold archive history remains visible by default as explicit metadata-only blocks with exact re-include instructions rather than literal full-body emission in every dump.
@@ -202,23 +202,23 @@ grep -n "^### DP-OPS-XXXX:" storage/dp/intake/DP.md
 
 If `storage/dp/intake/DP.md` is missing or no longer contains the target packet heading, restore the active draft surface first and only then rerun certify.
 
-2.5 Post-Work Audit (Integrator; mandatory before COMMIT)
-The Integrator reviews the diff (`git diff --name-only`, `git diff --stat`), the RESULTS receipt at `storage/handoff/RESULTS.md`, and the closing sidecar at `storage/handoff/CLOSING.md` against the DP scope definition (Section 3.3 In scope / Out of scope).
+2.5 Post-Work Audit (Operator; mandatory before COMMIT)
+The Operator reviews the diff (`git diff --name-only`, `git diff --stat`), the RESULTS receipt at `storage/handoff/RESULTS.md`, and the closing sidecar at `storage/handoff/CLOSING.md` against the DP scope definition (Section 3.3 In scope / Out of scope).
 
 If scope was exceeded, a boundary condition was not anticipated, or an authorization is needed for work already done or needed to complete:
-- The Integrator renders an addendum recommendation from `ops/src/stances/addendum.md.tpl` and outputs it as a markdown code block.
+- The supervisor renders an addendum recommendation from `ops/src/surfaces/addendum.md.tpl` and outputs it as a markdown code block.
 - The Operator reviews and provides the `OPERATOR_AUTHORIZATION` field content.
-- The authorized addendum is handed to the Contractor as a received, finished document.
-- The Contractor executes against the addendum only; the Contractor does not author addendum content.
+- The authorized addendum is handed to the worker as a received, finished document.
+- The worker executes against the addendum only; the worker does not author addendum content.
 
 If scope is clean: proceed to step 3.
 
-### Contractor Execution Narrative
-The Contractor Execution Narrative is collected interactively by `ops/bin/certify` at
+### Worker Execution Narrative
+The Worker Execution Narrative is collected interactively by `ops/bin/certify` at
 certify time. When certify runs, it writes a scaffold block to a temp file and opens
 the configured editor (`$EDITOR` or `vi`). The worker fills in the narrative before
 certify proceeds. The narrative is rendered into the RESULTS receipt under
-`## Contractor Execution Narrative`.
+`## Worker Execution Narrative`.
 
 Required subsections:
 - `### Preflight State` — paste the verbatim outputs of the three §3.1 freshness-gate commands (`git rev-parse --abbrev-ref HEAD`, `git rev-parse --short HEAD`, `git status --porcelain`) captured before any file edits began, plus a short preflight lint status summary. These outputs must appear here, in the narrative, not in the receipt command list. Receipt commands run at certify time against a dirty working tree and cannot prove pre-edit clean state. Summary-only prose is rejected by the editor scaffold validator and RESULTS lint.
@@ -233,7 +233,7 @@ Decision Record Trigger:
   repo-relative path under `archives/decisions/` for the decision leaf file.
 - If execution was clean and no items are unresolved, set `Decision Required: No`
   and `Decision Leaf: None`.
-- Authoring rule: when `Decision Required: Yes`, the contractor writes a decision
+- Authoring rule: when `Decision Required: Yes`, the worker writes a decision
   record leaf under `archives/decisions/` and records its path in the narrative.
 - Minimum fields for a decision leaf: `decision_id`, `trace_id`, `packet_id`,
   `decision_type`, `context`, `decision`, `consequence`, `status`, `pointer`.
@@ -248,7 +248,7 @@ template hash mismatch immediately after `ops/src/surfaces/dp.md.tpl` was edited
 current work branch.
 
 This recovery procedure is authorized for this exact trigger condition only. Any other
-`dp.sh` failure requires a stop and Integrator review, and may require an addendum before
+`dp.sh` failure requires a stop and operator review, and may require an addendum before
 work continues.
 
 **Recovery steps (run in order; do not skip):**
@@ -284,14 +284,14 @@ work continues.
 6. Re-run `bash tools/lint/dp.sh TASK.md` and confirm PASS.
 
 **Documentation requirement:** When this recovery is used, record it in the
-`### Closeout Notes` and `### Decision Leaf` subsections of the Contractor Execution
+`### Closeout Notes` and `### Decision Leaf` subsections of the Worker Execution
 Narrative at certify time. Include:
 the triggering lint failure output, the `CANONICAL_DP_TEMPLATE_SHA256` value before
 and after the update, whether a TASK rerender (step 5) was required, and the final
 `bash tools/lint/dp.sh TASK.md` PASS confirmation.
 
 **Addendum path:** If a `dp.sh` failure does not match the authorized trigger condition
-above, do not apply this recovery. Stop, report to the Integrator, and await addendum
+above, do not apply this recovery. Stop, report to the Operator, and await addendum
 authorization before proceeding.
 
 3. Harvest
@@ -329,7 +329,7 @@ If operator authorization expands scope beyond the original DP boundaries, recor
 PoW contract and schema guidance are canonical in `docs/ops/specs/surfaces/pow.md`; author PoW entry content to that spec before certification snapshotting.
 PoW entry receipt pointers must include `RESULTS` and `OPEN`. Include `DUMP` only when the current packet explicitly emitted a canonical dump artifact before certify.
 Do not reproduce the full verification command list in SoP or PoW entries; RESULTS carries the full command log with outputs. A concise functional receipt summary in SoP is acceptable when it helps explain the shipment.
-PoW entry `Notes` are artifact-level context only (scope anomalies affecting the artifact inventory). Execution narrative and anomaly resolution belong in RESULTS Contractor Execution Narrative.
+PoW entry `Notes` are artifact-level context only (scope anomalies affecting the artifact inventory). Execution narrative and anomaly resolution belong in RESULTS Worker Execution Narrative.
 Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, with reason and risk for each NOT RUN item.
 
 ### Log Step: Pre-certify single-entry head authoring (`SoP.md` and `PoW.md`)
@@ -443,14 +443,14 @@ The following named scopes define traversal boundaries. Definitions are canonica
 - `core`: All tracked text content except `projects/` and `opt/_factory/`. Use for standard operator audit dumps where factory content is not under review.
 - `platform`: All tracked text content except `projects/`. Keeps `opt/_factory/` visible. Use when factory surfaces are intentionally included in scope.
 - `factory`: Only `opt/_factory/`. Use for targeted factory-only inspection.
-- `dp+allowlist` (contractor baseline): Not a traversal scope. Uses `--selection=dp+allowlist` mode. Assembles a bounded file set from canon baseline files, DP-scoped load-order files, and explicit allowlisted additions. Forbidden-prefix behavior (`opt/_factory/`, `storage/handoff/OPEN-`) remains in effect for all contractor-authorized sessions. This is the default contractor context path.
+- `dp+allowlist` (worker baseline): Not a traversal scope. Uses `--selection=dp+allowlist` mode. Assembles a bounded file set from canon baseline files, DP-scoped load-order files, and explicit allowlisted additions. Forbidden-prefix behavior (`opt/_factory/`, `storage/handoff/OPEN-`) remains in effect for all worker-authorized sessions. This is the default worker context path.
 
 ### Factory-Only Audit Recipe and Guardrail Examples
 
 Use factory scope only when factory inspection is intentional. Factory scope is never a contractor baseline.
 
 ~~~bash
-# Contractor baseline (CDD): DP + allowlist selection (excludes opt/_factory/ by forbidden-prefix policy)
+# Worker baseline (CDD): DP + allowlist selection (excludes opt/_factory/ by forbidden-prefix policy)
 ./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto
 
 # Core audit (default operator audit baseline): excludes projects/ and opt/_factory/
@@ -465,8 +465,8 @@ When to use:
 - Use `--scope=core` for standard operator audits when factory content is not under review.
 
 Do not use:
-- Do not use `--scope=platform` or `--scope=factory` for contractor baseline dumps.
-- Contractor baseline dumps must use `--selection=dp+allowlist` with forbidden-prefix enforcement.
+- Do not use `--scope=platform` or `--scope=factory` for worker baseline dumps.
+- Worker baseline dumps must use `--selection=dp+allowlist` with forbidden-prefix enforcement.
 
 ### Map (Auto-Generated Index)
 ~~~bash
@@ -636,10 +636,10 @@ ATS rules:
 * **Rule:** If a DP includes the llms command, the allowlist must include `llms.txt`, `llms-core.txt`, and `llms-full.txt`.
 * **Rule:** `storage/dp/active/allowlist.txt` is persistent-path policy only. Do not include runtime artifact prefixes such as `storage/handoff/`, `storage/dumps/`, or `storage/dp/intake/`.
 
-### Contractor Dispatch Dump (CDD)
+### Worker Dispatch Dump (CDD)
 
-DP writer must include a `Contractor Dispatch Dump (CDD)` field in dispatch notes.
-The value is the exact `./ops/bin/dump` command used to generate the Contractor-visible dump.
+DP writer must include a `Worker Dispatch Dump (CDD)` field in dispatch notes.
+The value is the exact `./ops/bin/dump` command used to generate the worker-visible dump.
 Default recommended value for most DPs: `./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto`.
 If additional forbidden prefixes are needed for a sensitive engagement, the DP writer lists them explicitly with `--fail-on-forbidden-prefix=...`.
 
@@ -647,7 +647,7 @@ If additional forbidden prefixes are needed for a sensitive engagement, the DP w
 
 Audit visibility is intentionally bounded and documented as an allow/deny contract.
 - External reviewer receives: RESULTS receipt and native audit bundle artifacts generated by `./ops/bin/bundle --profile=audit --out=auto` (initial `AUDIT-*`, rerun `AUDIT-R*`; `.txt`, `.manifest.json`, optional `.tar`; legacy `BUNDLE-*` copies may be present during migration).
-- External reviewer does not receive by default: CDD artifacts, addendum-authorization bundles (`--profile=addenda`), or contractor-only intake artifacts.
+- External reviewer does not receive by default: CDD artifacts, addendum-authorization bundles (`--profile=addenda`), or worker-only intake artifacts.
 - Evidence surfaces for audit are SoP and PoW entries plus the committed diff, RESULTS, the active TASK leaf body, the active packet source body, and audit bundle pointers to OPEN and dump artifacts.
 
 ### Certify Compatibility Authoring Rules

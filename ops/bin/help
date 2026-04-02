@@ -284,7 +284,7 @@ ${bold}Command Index${reset}
   ${cyan}dump${reset}       Platform context capture (use --selection=dp+allowlist for CDD; --scope=core for operator audit).
   ${cyan}bundle${reset}     Delivery transport for planning, draft, audit, project, and addenda profiles.
   ${cyan}certify${reset}    Generate RESULTS receipt, emit SoP/PoW/TASK archive leaves, move DP to processed.
-  ${cyan}addendum${reset}   Issuance tool for operator/foreman-authorized addendum artifacts.
+  ${cyan}addendum${reset}   Issuance tool for operator/supervisor-authorized addendum artifacts.
   ${cyan}context${reset}    Context archive assembly.
   ${cyan}map${reset}        Refresh MAP auto-generated index block.
   ${cyan}llms${reset}       Refresh llms root bundles from One Truth manifests.

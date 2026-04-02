@@ -6,7 +6,6 @@ Define the template-backed Planning stance body used by bundle output contract r
 
 ## Invocation
 - Render path: `ops/bin/manifest render stance-planning --out=-`
-- Legacy alias: `ops/bin/manifest render stance-analyst --out=-`
 - Runtime consumer: `ops/lib/scripts/bundle.sh`
 
 ## Inputs

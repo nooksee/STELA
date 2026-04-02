@@ -38,4 +38,4 @@
 - Treat `PoW.md` and `archives/surfaces/PoW-*.md` as generated surfaces once certify snapshots are emitted.
 - Do not embed raw OPEN or DUMP payloads inside PoW entries.
 - Do not reproduce the full verification command list in PoW entries; `RESULTS.md` is the SSOT for command-by-command proof.
-- `Notes` are artifact-level context only (scope anomalies affecting the artifact inventory). Execution narrative and anomaly resolution belong in RESULTS Contractor Execution Narrative.
+- `Notes` are artifact-level context only (scope anomalies affecting the artifact inventory). Execution narrative and anomaly resolution belong in RESULTS Worker Execution Narrative.

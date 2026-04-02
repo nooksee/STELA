@@ -187,8 +187,8 @@ archives/surfaces/TASK-DP-OPS-0145-*.md
 archives/surfaces/SoP-2026-03-03-*.md
 archives/surfaces/PoW-2026-03-03-*.md
 opt/_factory/agents/r-agent-07.md
-ops/src/stances/plan.md.tpl
-docs/ops/specs/stances/plan.md
+ops/src/surfaces/plan.md.tpl
+docs/ops/specs/surfaces/plan.md
 archives/surfaces/TASK-DP-OPS-0146-*.md
 archives/surfaces/TASK-DP-OPS-0146-9f0fdc6a.md
 archives/surfaces/SoP-2026-03-03-9f0fdc6a.md
@@ -234,7 +234,8 @@ docs/ops/specs/stances/addenda.md
 archives/surfaces/TASK-DP-OPS-0151-*.md
 archives/surfaces/TASK-DP-OPS-0152-*.md
 archives/surfaces/TASK-DP-OPS-0153-*.md
-ops/src/stances/addendum.md.tpl
+ops/src/surfaces/addendum.md.tpl
+docs/ops/specs/surfaces/addendum.md
 docs/ops/specs/binaries/addendum.md
 ops/lib/scripts/editor.sh
 docs/ops/specs/scripts/editor.md
@@ -466,5 +467,6 @@ docs/ops/specs/stances/draft.md
 ops/etc/persistence.manifest
 ops/etc/retention.manifest
 docs/ops/specs/binaries/manifest.md
+docs/ops/specs/binaries/template.md
 ops/bin/open
 ops/bin/help

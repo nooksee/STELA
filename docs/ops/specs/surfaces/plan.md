@@ -6,7 +6,7 @@
 It remains planning-only; execution control still lives in the DP.
 
 ## Operator Contract
-- Canonical template source: `ops/src/stances/plan.md.tpl`.
+- Canonical template source: `ops/src/surfaces/plan.md.tpl`.
 - Deterministic validation: `tools/lint/plan.sh`.
 - The template provides the minimum required core-heading floor; it does not prohibit additional peer sections in authored final plans.
 - Required core headings:

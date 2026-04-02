@@ -41,7 +41,7 @@ Define the template-backed draft stance body used by bundle output contract rend
 Architect is the third step in the main shipping spine: `TOPIC.md` -> `PLAN.md` -> draft bundle -> embedded DP authoring scaffold -> `storage/dp/intake/DP.md` (active DP draft) -> Worker execution.
 Architect output is a worker-ready full DP body completed from the embedded authoring scaffold; the operator saves it to `storage/dp/intake/DP.md`, validates with `bash tools/lint/dp.sh storage/dp/intake/DP.md`, and dispatches the passing packet.
 `packet_id` remains process-grade as `DP-OPS-XXXX`.
-Architect is not an audit lane; its output does not contain `## Contractor Execution Narrative`, receipt narrative subheadings, or audit verdict markers.
+Architect is not an audit lane; its output does not contain `## Worker Execution Narrative`, receipt narrative subheadings, or audit verdict markers.
 
 ## Related pointers
 - `ops/lib/manifests/BUNDLE.md`

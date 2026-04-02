@@ -7,7 +7,7 @@
 
 ## Mechanics and Sequencing
 The script provides helper functions for certify and draft scaffold workflows:
-1. `editor_write_narrative_scaffold <path>` writes canonical Contractor Execution Narrative scaffold text. The `### Preflight State` instruction requires verbatim pre-edit freshness proof for `git rev-parse --abbrev-ref HEAD`, `git rev-parse --short HEAD`, and `git status --porcelain`, plus a short preflight lint status summary.
+1. `editor_write_narrative_scaffold <path>` writes canonical Worker Execution Narrative scaffold text. The `### Preflight State` instruction requires verbatim pre-edit freshness proof for `git rev-parse --abbrev-ref HEAD`, `git rev-parse --short HEAD`, and `git status --porcelain`, plus a short preflight lint status summary.
 2. `editor_resolve_command [explicit]` resolves editor command in strict order: explicit argument, `STELA_EDITOR`, `EDITOR`, fallback command.
 3. `editor_capture_narrative_interactive <scaffold_path> [explicit_editor]` prompts and launches editor command against scaffold.
 4. `editor_load_narrative_from_file <source_path> <target_path>` copies non-interactive narrative input into the working scaffold path.

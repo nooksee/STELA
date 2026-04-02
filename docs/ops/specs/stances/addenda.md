@@ -6,7 +6,6 @@ Define the template-backed addenda stance body used for `addenda` profile bundle
 
 ## Invocation
 - Canonical render path: `ops/bin/manifest render stance-addenda --out=-`
-- Legacy alias: `ops/bin/manifest render stance-authority --out=-`
 - Runtime consumer: `ops/lib/scripts/bundle.sh`
 
 ## Inputs
@@ -29,13 +28,13 @@ Define the template-backed addenda stance body used for `addenda` profile bundle
 
 ## Shipping Spine Position
 Addenda is a bounded secondary lane in the shipping spine. It is an intervention path only, not a PASS/FAIL verdict workflow. The addenda chain:
-1. Contractor or auditor reports a boundary condition to the operator.
+1. Worker or auditor reports a boundary condition to the operator.
 2. Operator runs: `./ops/bin/bundle --profile=addenda --intent="ADDENDUM REQUIRED: <BASE_DP_ID> - <BLOCKER>" --out=auto`
-3. Foreman model receives `ADDENDUM-*.txt` bundle and builds the addendum case from visible evidence in the dump (RESULTS narrative, OPEN metadata, boundary condition in intent). No pre-existing decision leaf is required.
-4. Foreman outputs an authorized addendum fenced block. Operator provides `OPERATOR_AUTHORIZATION` and issues the addendum via `ops/bin/addendum`.
-5. Contractor receives and executes the finished addendum document.
+3. Supervisor receives `ADDENDUM-*.txt` bundle and builds the addendum case from visible evidence in the dump (RESULTS narrative, OPEN metadata, boundary condition in intent). No pre-existing decision leaf is required.
+4. Supervisor outputs an authorized addendum fenced block. Operator provides `OPERATOR_AUTHORIZATION` and issues the addendum via `ops/bin/addendum`.
+5. Worker receives and executes the finished addendum document.
 
-The addenda lane does not replace RESULTS, CLOSING, or audit truth. Addendum authority flows through operator/foreman issuance only; workers do not self-authorize addendum scope.
+The addenda lane does not replace RESULTS, CLOSING, or audit truth. Addendum authority flows through operator/supervisor issuance only; workers do not self-authorize addendum scope.
 
 ## Related pointers
 - `ops/lib/manifests/BUNDLE.md`

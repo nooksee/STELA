@@ -16,7 +16,7 @@ The binary parses selection, scope, output, compression, bundling, and traversal
 - `--selection=dp` or `--selection=dp+allowlist`: bypass traversal and build the file set from canon baseline files, DP load-order entries, and explicit exact-file additions.
 
 The documented two-tier usage model is:
-- Contractor Dispatch Dump (CDD): bounded DP-selection dump, typically `./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto`.
+- Worker Dispatch Dump (CDD): bounded DP-selection dump, typically `./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto`.
 - Audit Evidence Dump: scope-based operator dump, typically `./ops/bin/dump --scope=core --format=chatgpt --out=auto`.
 
 ## Scope Taxonomy
