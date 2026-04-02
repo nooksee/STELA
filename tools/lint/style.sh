@@ -194,7 +194,7 @@ check_shared_stance_contract() {
   local required_non_audit_key='"non_audit_role_drift_rules"'
   local required_fence_line='* Emit exactly one fenced markdown code block.'
   local required_no_outside_line='* Emit no text before or after the fenced code block.'
-  local required_non_audit_line='* Do not emit audit verdict markers or Contractor Execution Narrative sections.'
+  local required_non_audit_line='* Do not emit audit verdict markers or Worker Execution Narrative sections.'
 
   [[ -f "$shared_stances" ]] || {
     mark_failure "ops/src/shared/stances.json missing for cross-stance convergence checks"
@@ -302,7 +302,7 @@ check_draft_mode_contract() {
   local required_shared_fence_include='{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}'
   local required_first='First non-empty line inside the code block must start with `### DP-`.'
   local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
-  local required_no_narrative='Do not emit Contractor Execution Narrative sections or receipt narrative subheadings.'
+  local required_no_narrative='Do not emit Worker Execution Narrative sections or receipt narrative subheadings.'
   local required_scope_only='Do not expand or replace the settled plan scope in draft mode.'
 
   [[ -f "$stance_draft" ]] || mark_failure "draft.md.tpl missing for mode contract checks"

@@ -35,7 +35,7 @@ Base HEAD: {{BASE_HEAD}}
 Freshness Stamp: {{FRESHNESS_STAMP}}
 Note: FRESHNESS_STAMP must be YYYY-MM-DD format only. No trace tokens, no timestamps, no other text. Certify rejects all other forms. dp.sh enforces at lint time.
 
-Required local re-check (worker runs before any edits; paste verbatim outputs under `## Contractor Execution Narrative` -> `### Preflight State` in RESULTS):
+Required local re-check (worker runs before any edits; paste verbatim outputs under `## Worker Execution Narrative` -> `### Preflight State` in RESULTS):
 - git rev-parse --abbrev-ref HEAD
 - git rev-parse --short HEAD
 - git status --porcelain
@@ -157,7 +157,7 @@ Note: Command substitution forms (e.g., $(pwd), $(git ...)) are rejected by cert
 
 ### 3.5.1 Mandatory Closing Sidecar
 Closing sidecar content is generated and maintained at `storage/handoff/CLOSING.md` and is validated by `ops/bin/certify` as a hard gate at certification time. Do not author, predict, populate, or approximate any sidecar-derived closeout output outside this sidecar.
-Certify separately collects contractor-authored narrative for the RESULTS Contractor Execution Narrative section at certify time via interactive editor prompt; this narrative input is independent from closing sidecar content.
+Certify separately collects worker-authored narrative for the RESULTS Worker Execution Narrative section at certify time via interactive editor prompt; this narrative input is independent from closing sidecar content.
 
 Before running certify, confirm `storage/handoff/CLOSING.md` has been maintained throughout execution and reflects observable reality only.
 

@@ -59,7 +59,7 @@ editor_invoke_command() {
 editor_capture_narrative_interactive() {
   local scaffold_path="$1"
   local explicit_editor_command="${2:-}"
-  editor_capture_scaffold_interactive "CONTRACTOR EXECUTION NARRATIVE" "$scaffold_path" "$explicit_editor_command"
+  editor_capture_scaffold_interactive "WORKER EXECUTION NARRATIVE" "$scaffold_path" "$explicit_editor_command"
 }
 
 editor_load_narrative_from_file() {
@@ -70,16 +70,16 @@ editor_load_narrative_from_file() {
 
 editor_validate_narrative_file() {
   local narrative_path="$1"
-  [[ -f "$narrative_path" ]] || die "contractor narrative file missing: ${narrative_path#${REPO_ROOT}/}"
+  [[ -f "$narrative_path" ]] || die "worker narrative file missing: ${narrative_path#${REPO_ROOT}/}"
 
   local narrative_content
   narrative_content="$(cat "$narrative_path")"
 
   [[ -n "$(printf '%s\n' "$narrative_content" | sed '/^[[:space:]]*$/d')" ]] \
-    || die "contractor narrative is empty"
+    || die "worker narrative is empty"
 
   if printf '%s\n' "$narrative_content" | grep -Eiq '\{\{|}}|\bTBD\b|\bTODO\b|PLACEHOLDER|ENTER_|REPLACE_|populate during execution|do not pre-fill|DP-XXXX'; then
-    die "contractor narrative contains placeholder text; fill in all fields before certifying"
+    die "worker narrative contains placeholder text; fill in all fields before certifying"
   fi
 
   local scaffold_line=""
@@ -92,14 +92,14 @@ editor_validate_narrative_file() {
   )
   for scaffold_line in "${scaffold_lines[@]}"; do
     if printf '%s\n' "$narrative_content" | grep -Fqx -- "$scaffold_line"; then
-      die "contractor narrative contains untouched scaffold line: ${scaffold_line}"
+      die "worker narrative contains untouched scaffold line: ${scaffold_line}"
     fi
   done
 
   local narrative_subheading=""
   for narrative_subheading in "^### Preflight State$" "^### Implemented Changes$" "^### Closeout Notes$" "^### Decision Leaf$"; do
     if ! printf '%s\n' "$narrative_content" | grep -Eq "$narrative_subheading"; then
-      die "contractor narrative missing required subheading (pattern: ${narrative_subheading})"
+      die "worker narrative missing required subheading (pattern: ${narrative_subheading})"
     fi
   done
 
@@ -111,7 +111,7 @@ editor_validate_narrative_file() {
     in_block { print }
   ')"
   [[ -n "$(printf '%s\n' "$preflight_block" | sed '/^[[:space:]]*$/d')" ]] \
-    || die "contractor narrative Preflight State subsection is empty"
+    || die "worker narrative Preflight State subsection is empty"
 
   local required_preflight_command=""
   local -a required_preflight_commands=(
@@ -121,18 +121,18 @@ editor_validate_narrative_file() {
   )
   for required_preflight_command in "${required_preflight_commands[@]}"; do
     if ! printf '%s\n' "$preflight_block" | grep -Fq -- "$required_preflight_command"; then
-      die "contractor narrative Preflight State missing required freshness command output: ${required_preflight_command}"
+      die "worker narrative Preflight State missing required freshness command output: ${required_preflight_command}"
     fi
   done
 
   if ! printf '%s\n' "$narrative_content" | grep -Eq '^Decision Required:'; then
-    die "contractor narrative Decision Leaf subsection missing 'Decision Required:' line"
+    die "worker narrative Decision Leaf subsection missing 'Decision Required:' line"
   fi
   if ! printf '%s\n' "$narrative_content" | grep -Eq '^Decision Leaf:'; then
-    die "contractor narrative Decision Leaf subsection missing 'Decision Leaf:' line"
+    die "worker narrative Decision Leaf subsection missing 'Decision Leaf:' line"
   fi
   if printf '%s\n' "$narrative_content" | grep -Eq '^/|[[:space:]]/[A-Za-z]'; then
-    die "contractor narrative contains absolute path; use repo-relative paths only"
+    die "worker narrative contains absolute path; use repo-relative paths only"
   fi
 }
 

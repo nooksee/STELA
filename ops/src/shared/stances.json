@@ -22,6 +22,6 @@
     "* Emit no text before or after the fenced code block."
   ],
   "non_audit_role_drift_rules": [
-    "* Do not emit audit verdict markers or Contractor Execution Narrative sections."
+    "* Do not emit audit verdict markers or Worker Execution Narrative sections."
   ]
 }

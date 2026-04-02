@@ -9,7 +9,7 @@ source "${SCRIPT_DIR}/../lib/scripts/common.sh"
 usage() {
   cat <<'USAGE'
 Usage:
-  ops/bin/manifest [render] <dp|results|task-surface|spec|addendum|closing|stance-planning|stance-analyst|stance-draft|stance-audit|stance-addenda|stance-authority> --out=PATH [options]
+  ops/bin/manifest [render] <dp|results|task-surface|spec|addendum|closing|stance-planning|stance-draft|stance-audit|stance-addenda> --out=PATH [options]
 
 Options:
   --slots-file=PATH          Load [TOKEN] blocks from a slots file.
@@ -43,15 +43,13 @@ declare -A TEMPLATE_PATHS=(
   [dp]="ops/src/surfaces/dp.md.tpl"
   [results]="ops/src/surfaces/results.md.tpl"
   [task-surface]="ops/src/surfaces/task.md.tpl"
-  [addendum]="ops/src/stances/addendum.md.tpl"
+  [addendum]="ops/src/surfaces/addendum.md.tpl"
   [closing]="ops/src/surfaces/closing.md.tpl"
   [spec]="ops/src/docs/spec.md.tpl"
   [stance-planning]="ops/src/stances/planning.md.tpl"
-  [stance-analyst]="ops/src/stances/planning.md.tpl"
   [stance-draft]="ops/src/stances/draft.md.tpl"
   [stance-audit]="ops/src/stances/audit.md.tpl"
   [stance-addenda]="ops/src/stances/addenda.md.tpl"
-  [stance-authority]="ops/src/stances/addenda.md.tpl"
 )
 
 declare -A SLOT_VALUES=()
@@ -674,7 +672,7 @@ parse_args() {
     esac
   done
 
-  [[ "$render_key" =~ ^(dp|results|task-surface|spec|addendum|closing|stance-planning|stance-analyst|stance-draft|stance-audit|stance-addenda|stance-authority)$ ]] || die "unknown template key '${render_key}'"
+  [[ "$render_key" =~ ^(dp|results|task-surface|spec|addendum|closing|stance-planning|stance-draft|stance-audit|stance-addenda)$ ]] || die "unknown template key '${render_key}'"
   if (( dry_run )); then
     return 0
   fi

@@ -12,7 +12,7 @@ requires_slots:
   - COMMAND_LOG
   - DIFF_NAME_ONLY
   - DIFF_STAT
-  - CONTRACTOR_NARRATIVE
+  - WORKER_NARRATIVE
 ff_target: machine-dense
 ff_band: "15-25"
 ---
@@ -46,5 +46,5 @@ ff_band: "15-25"
 {{DIFF_STAT}}
 ~~~
 
-## Contractor Execution Narrative
-{{CONTRACTOR_NARRATIVE}}
+## Worker Execution Narrative
+{{WORKER_NARRATIVE}}

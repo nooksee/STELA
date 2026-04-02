@@ -137,4 +137,4 @@ The canonical operator authorization statement used in an addendum session must 
 The verbatim text of this statement, as it appears in the session record, is the value placed in the `OPERATOR_AUTHORIZATION` slot. A contractor must not proceed with addendum execution until this authorization line exists in the session.
 
 ### `--test` Mode Addendum Hash Emission
-`dp.sh --test` emits the `CANONICAL_ADDENDUM_TEMPLATE_SHA256` constant value on a labeled line immediately after the base DP hash constant line. Both constants must be present and match the on-disk template files for `--test` to pass.
+`dp.sh --test` emits the `CANONICAL_ADDENDUM_TEMPLATE_SHA256` constant value on a labeled line immediately after the base DP hash constant line. The canonical addendum template path is `ops/src/surfaces/addendum.md.tpl`. Both constants must be present and match the on-disk template files for `--test` to pass.

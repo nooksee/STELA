@@ -1999,7 +1999,7 @@ else
   editor_capture_narrative_interactive "$NARRATIVE_SCAFFOLD_PATH"
 fi
 editor_validate_narrative_file "$NARRATIVE_SCAFFOLD_PATH"
-CONTRACTOR_NARRATIVE="$(cat "$NARRATIVE_SCAFFOLD_PATH")"
+WORKER_NARRATIVE="$(cat "$NARRATIVE_SCAFFOLD_PATH")"
 
 COMMAND_LOG=""
 CMD_INDEX=0
@@ -2272,7 +2272,7 @@ certify_set_phase "results"
   "--slot=COMMAND_LOG=${COMMAND_LOG}" \
   "--slot=DIFF_NAME_ONLY=${DIFF_NAME_ONLY}" \
   "--slot=DIFF_STAT=${DIFF_STAT}" \
-  "--slot=CONTRACTOR_NARRATIVE=${CONTRACTOR_NARRATIVE}"
+  "--slot=WORKER_NARRATIVE=${WORKER_NARRATIVE}"
 assert_no_disposable_refs "$OUT_PATH" "${OUT_PATH#${REPO_ROOT}/}"
 RESULTS_LINT_STARTED_AT="$(utc_now)"
 RESULTS_LINT_START_EPOCH="$(date +%s)"
@@ -2367,7 +2367,7 @@ for required_heading in \
   "## Git State Impact" \
   "### git diff --name-only" \
   "### git diff --stat" \
-  "## Contractor Execution Narrative"; do
+  "## Worker Execution Narrative"; do
   if ! grep -Fxq "$required_heading" "$OUT_PATH"; then
     TEMPLATE_STRUCTURE_OUTPUT="FAIL: missing required heading '${required_heading}'"
     die "$TEMPLATE_STRUCTURE_OUTPUT"
@@ -2399,7 +2399,7 @@ RESULTS_ALLOWLIST_POINTER+=$'\n'"- dump_manifest: ${DUMP_MANIFEST_POINTER}"
   "--slot=COMMAND_LOG=${COMMAND_LOG}" \
   "--slot=DIFF_NAME_ONLY=${DIFF_NAME_ONLY}" \
   "--slot=DIFF_STAT=${DIFF_STAT}" \
-  "--slot=CONTRACTOR_NARRATIVE=${CONTRACTOR_NARRATIVE}"
+  "--slot=WORKER_NARRATIVE=${WORKER_NARRATIVE}"
 assert_no_disposable_refs "$OUT_PATH" "${OUT_PATH#${REPO_ROOT}/}"
 bash "$RESULTS_LINT" "$OUT_PATH"
 DP_PACKET_MOVE_OUTPUT="DP lineage leaf emission: not applicable (base packet uses TASK leaf chain)"

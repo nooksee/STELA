@@ -17,7 +17,7 @@ Steps:
 0. **PRECONDITIONS**: Confirm intent carries `ADDENDUM REQUIRED` with a parseable base DP ID (DP-OPS-NNNN) and one-line blocker. If missing or malformed: **STOP** and request a correctly assembled addenda bundle.
 1. **EXTRACT**: From the intent line, read base DP ID and one-line blocker description.
 2. **BUILD CASE**: From visible evidence in the dump (RESULTS narrative, OPEN metadata, boundary condition in intent), identify the context, the impacted scope, and the proposed resolution. Summarize the case in A.3 Addendum Objective.
-3. **AUTHORIZE**: Produce complete addendum per `ops/src/stances/addendum.md.tpl` (A.1 Authorization through A.5 Addendum Receipt).
+3. **AUTHORIZE**: Produce complete addendum per `ops/src/surfaces/addendum.md.tpl` (A.1 Authorization through A.5 Addendum Receipt).
 4. **SCAN**: `storage/dp/intake/` for existing addenda matching `<BASE_DP_ID>-ADDENDUM-[A-Z].md` and select first available letter from `A` through `Z`.
 
 Output Structure:

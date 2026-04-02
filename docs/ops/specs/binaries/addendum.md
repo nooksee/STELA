@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/bin/addendum` exists to prevent hand-authored addendum intake drift and to preserve addendum issuance authority boundaries during post-work audit. It renders addendum artifacts from the canonical `ops/src/stances/addendum.md.tpl` template, assigns the next addendum letter automatically, and rejects incomplete or placeholder slot content before writing to `storage/dp/intake/`.
+`ops/bin/addendum` exists to prevent hand-authored addendum intake drift and to preserve addendum issuance authority boundaries during post-work audit. It renders addendum artifacts from the canonical `ops/src/surfaces/addendum.md.tpl` template, assigns the next addendum letter automatically, and rejects incomplete or placeholder slot content before writing to `storage/dp/intake/`.
 
 ## Mechanics and Sequencing
 1. Parse required arguments `--base-dp=DP-OPS-XXXX` and `--slots-file=PATH`, reject unknown arguments, and validate `--base-dp` against the canonical packet ID pattern.
@@ -45,14 +45,14 @@ The binary checks archive-lineage addenda for the base packet and the active `st
 Hard-stop errors include: missing required arguments, malformed `--base-dp`, unreadable or missing slots file, missing canonical template or template hash mismatch, base DP absent from both active intake and the TASK leaf chain, no addendum letters available, required rendered slot content missing or placeholder, rendered identity mismatch, command substitution tokens in output, and write failures.
 
 ### Role Restriction and Manual Relationship
-`ops/bin/addendum` is an Integrator/foreman issuance tool used during the `docs/MANUAL.md` Closeout Cycle Post-Work Audit step when an authorized addendum is required. The Contractor does not invoke this binary and does not author addendum content.
+`ops/bin/addendum` is a supervisor issuance tool used during the `docs/MANUAL.md` Closeout Cycle Post-Work Audit step when an authorized addendum is required. The worker does not invoke this binary and does not author addendum content.
 
 ## Addenda Intervention Chain
 The full intervention path in the shipping spine is:
-1. **Trigger:** Contractor or auditor identifies a boundary condition and reports `ADDENDUM REQUIRED: <BASE_DP_ID> - <ONE-LINE BLOCKER>` to the operator.
-2. **Addenda wake-up:** Operator generates the addenda bundle: `./ops/bin/bundle --profile=addenda --intent="ADDENDUM REQUIRED: <BASE_DP_ID> - <BLOCKER>" --out=auto`. Delivers `ADDENDUM-*.txt` to the foreman model.
-3. **Addendum issuance:** Foreman model outputs an authorized addendum fenced block. Operator reviews, provides `OPERATOR_AUTHORIZATION`, and issues the addendum artifact using: `./ops/bin/addendum --base-dp=DP-OPS-XXXX --slots-file=<path>`. The addendum is written to `storage/dp/intake/ADDENDUM.md`.
-4. **Contractor resumes:** Contractor receives the finished addendum document and executes against it. Contractor does not self-authorize addendum scope.
+1. **Trigger:** Worker or auditor identifies a boundary condition and reports `ADDENDUM REQUIRED: <BASE_DP_ID> - <ONE-LINE BLOCKER>` to the operator.
+2. **Addenda wake-up:** Operator generates the addenda bundle: `./ops/bin/bundle --profile=addenda --intent="ADDENDUM REQUIRED: <BASE_DP_ID> - <BLOCKER>" --out=auto`. Delivers `ADDENDUM-*.txt` to the supervisor.
+3. **Addendum issuance:** Supervisor outputs an authorized addendum fenced block. Operator reviews, provides `OPERATOR_AUTHORIZATION`, and issues the addendum artifact using: `./ops/bin/addendum --base-dp=DP-OPS-XXXX --slots-file=<path>`. The addendum is written to `storage/dp/intake/ADDENDUM.md`.
+4. **Worker resumes:** Worker receives the finished addendum document and executes against it. Worker does not self-authorize addendum scope.
 5. **Audit lineage:** Addendum artifacts are certify-tracked; the audit bundle includes current RESULTS and CLOSING which reference any addendum execution.
 
 This chain is a secondary lane; it does not replace RESULTS, CLOSING, or audit truth.

@@ -190,11 +190,11 @@ check_draft_body_scope() {
   fi
 
   hit="$(awk '
-    $0 ~ /^##[[:space:]]+Contractor Execution Narrative$/ { printf "%d\t%s\n", NR, $0; exit }
+    $0 ~ /^##[[:space:]]+Worker Execution Narrative$/ { printf "%d\t%s\n", NR, $0; exit }
   ' "$body_path")"
   if [[ -n "$hit" ]]; then
     IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "draft body must not contain contractor narrative section at line ${line_number}: ${line_text}"
+    response_fail "draft body must not contain worker narrative section at line ${line_number}: ${line_text}"
   fi
 
   hit="$(awk '
@@ -230,11 +230,11 @@ check_planning_body_scope() {
   fi
 
   hit="$(awk '
-    $0 ~ /^##[[:space:]]+Contractor Execution Narrative$/ { printf "%d\t%s\n", NR, $0; exit }
+    $0 ~ /^##[[:space:]]+Worker Execution Narrative$/ { printf "%d\t%s\n", NR, $0; exit }
   ' "$body_path")"
   if [[ -n "$hit" ]]; then
     IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "planning body must not contain contractor narrative section at line ${line_number}: ${line_text}"
+    response_fail "planning body must not contain worker narrative section at line ${line_number}: ${line_text}"
   fi
 
   hit="$(awk '
@@ -487,11 +487,11 @@ check_addenda_body_scope() {
   fi
 
   hit="$(awk '
-    $0 ~ /^##[[:space:]]+Contractor Execution Narrative$/ { printf "%d\t%s\n", NR, $0; exit }
+    $0 ~ /^##[[:space:]]+Worker Execution Narrative$/ { printf "%d\t%s\n", NR, $0; exit }
   ' "$body_path")"
   if [[ -n "$hit" ]]; then
     IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "addenda body must not contain contractor narrative section at line ${line_number}: ${line_text}"
+    response_fail "addenda body must not contain worker narrative section at line ${line_number}: ${line_text}"
   fi
 
   hit="$(awk '
@@ -975,12 +975,12 @@ EOF_DRAFT_AUDIT
 ```markdown
 ### DP-OPS-9999: Draft Drift Fixture
 
-## Contractor Execution Narrative
+## Worker Execution Narrative
 ### Preflight State
 ```
 EOF_DRAFT_NARRATIVE
   if lint_response_file "$response_draft_narrative" >/dev/null 2>&1; then
-    echo "FAIL: --test expected draft response with contractor narrative to fail" >&2
+    echo "FAIL: --test expected draft response with worker narrative to fail" >&2
     failures_local=1
   fi
 
@@ -1033,11 +1033,11 @@ EOF_PLANNING_AUDIT
   cat > "$response_planning_narrative" <<'EOF_PLANNING_NARRATIVE'
 ```markdown
 # Reset Generated Planning
-## Contractor Execution Narrative
+## Worker Execution Narrative
 ```
 EOF_PLANNING_NARRATIVE
   if lint_response_file "$response_planning_narrative" >/dev/null 2>&1; then
-    echo "FAIL: --test expected planning response with contractor narrative to fail" >&2
+    echo "FAIL: --test expected planning response with worker narrative to fail" >&2
     failures_local=1
   fi
 

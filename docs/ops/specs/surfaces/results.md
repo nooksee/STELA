@@ -3,7 +3,7 @@
 
 ## Constitutional Anchor
 `storage/handoff/RESULTS.md` is the generated current receipt surface, not a hand-authored narrative.
-It records certification execution details, verification command output, contractor execution narrative, and git impact.
+It records certification execution details, verification command output, worker execution narrative, and git impact.
 
 ## Operator Contract
 - Surface generator: `ops/bin/certify`.
@@ -17,17 +17,17 @@ It records certification execution details, verification command output, contrac
   - `## Git State Impact`
   - `### git diff --name-only`
   - `### git diff --stat`
-  - `## Contractor Execution Narrative`
+  - `## Worker Execution Narrative`
 - Mandatory fields:
   - DP ID, UTC certification timestamp, work branch, and git hash.
   - Scope Verification entries for Target Files allowlist pointer, authoritative delivered `dp_source`, and current `dump_manifest` pointer value.
   - Integrity-lint output.
   - Per-command verification logs with exit outcomes.
-  - Contractor Execution Narrative collected interactively at certify time with required subsections.
+  - Worker Execution Narrative collected interactively at certify time with required subsections.
   - Closing sidecar validation is certify-internal and remains a hard gate via `storage/handoff/CLOSING.md`.
 
-## Contractor Execution Narrative
-The `## Contractor Execution Narrative` section is populated at certify time by `ops/bin/certify`. Certify writes a scaffold to a temp file and delegates capture to `ops/lib/scripts/editor.sh`: interactive editor mode by default, or non-interactive ingest via `--narrative-file=PATH`. The narrative is validated for required subsections, absence of placeholder tokens, and rejection of untouched scaffold prose before being rendered into RESULTS.
+## Worker Execution Narrative
+The `## Worker Execution Narrative` section is populated at certify time by `ops/bin/certify`. Certify writes a scaffold to a temp file and delegates capture to `ops/lib/scripts/editor.sh`: interactive editor mode by default, or non-interactive ingest via `--narrative-file=PATH`. The narrative is validated for required subsections, absence of placeholder tokens, and rejection of untouched scaffold prose before being rendered into RESULTS.
 
 Required subsections:
 - `### Preflight State`
@@ -46,7 +46,7 @@ The `### Decision Leaf` subsection must contain both:
 - Missing required section headings or reordered schema.
 - Template drift between `tools/lint/results.sh` hash constant and `ops/src/surfaces/results.md.tpl`.
 - Git hash mismatch between receipt content and `git rev-parse HEAD`.
-- Missing or placeholder Contractor Execution Narrative content.
+- Missing or placeholder Worker Execution Narrative content.
 - Missing verbatim preflight proof for the three freshness-gate commands inside `### Preflight State`.
 - Missing required narrative subsections or Decision Leaf field lines.
 - Untouched narrative scaffold prose accepted as final content.
@@ -58,7 +58,7 @@ Enforcement linkage:
 ## Mechanics and Sequencing
 1. Maintain a human-authored closing sidecar at `storage/handoff/CLOSING.md`.
 2. Run `ops/bin/certify --dp=DP-OPS-XXXX --out=auto`.
-3. Certifier captures contractor execution narrative via editor helper and validates subsection structure/content, including the verbatim freshness proof requirement for `### Preflight State`.
+3. Certifier captures worker execution narrative via editor helper and validates subsection structure/content, including the verbatim freshness proof requirement for `### Preflight State`.
 4. Certifier validates the closing sidecar, runs integrity and verification gates, captures outputs, then renders RESULTS from template slots.
    - Scope Verification must record the authoritative packet source path carried in the delivered closeout packet as `dp_source`.
    - `dp_source` must record the authoritative TASK/addendum lineage path so RESULTS matches the delivered audit bundle and dump evidence.
@@ -66,8 +66,8 @@ Enforcement linkage:
 
 ## Forensic Insight
 RESULTS is the executable evidence receipt for DP closeout.
-It keeps verification outputs deterministic and replayable while embedding the contractor's execution narrative directly in the receipt, eliminating the need for a separate handoff surface and preventing drift between narrative and receipt.
-Think of RESULTS like a flight recorder that captures what actually ran, what the contractor observed, and what failed before a merge decision is made.
+It keeps verification outputs deterministic and replayable while embedding the worker execution narrative directly in the receipt, eliminating the need for a separate handoff surface and preventing drift between narrative and receipt.
+Think of RESULTS like a flight recorder that captures what actually ran, what the worker observed, and what failed before a merge decision is made.
 
 ## Mandatory Closing Sidecar Field Specifications
 

@@ -20,8 +20,8 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="e1076015c7e6a4cbb2cd050e3e40ba5ad90906697b1a78d4ccb98f605b7b8e82"
-CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/stances/addendum.md.tpl"
+CANONICAL_DP_TEMPLATE_SHA256="7657d8664199b9fc13acffdd7c0329ba7a0ec5e13bca1f8ff4e40bcb304a6ecb"
+CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/surfaces/addendum.md.tpl"
 CANONICAL_ADDENDUM_TEMPLATE_SHA256="715db3fae0598a85a0fa490c16f590dd08e6d6f02fa9b18224ce48625612f624"
 TEMPLATE_RENDER_BIN="ops/bin/template"
 ALLOWLIST_POINTER_PATH_DEFAULT="storage/dp/active/allowlist.txt"
@@ -1527,7 +1527,7 @@ tools/lint/dp.sh
 ### git diff --stat
  tools/lint/dp.sh | 1 +
 
-## Contractor Execution Narrative
+## Worker Execution Narrative
 ### Preflight State
 ~~~text
 git rev-parse --abbrev-ref HEAD
@@ -1571,7 +1571,7 @@ tools/lint/dp.sh
 ### git diff --stat
  tools/lint/dp.sh | 1 +
 
-## Contractor Execution Narrative
+## Worker Execution Narrative
 ### Preflight State
 ~~~text
 git rev-parse --abbrev-ref HEAD
@@ -1619,7 +1619,7 @@ tools/lint/dp.sh
 ### git diff --stat
  tools/lint/dp.sh | 1 +
 
-## Contractor Execution Narrative
+## Worker Execution Narrative
 ### Preflight State
 ~~~text
 git rev-parse --abbrev-ref HEAD

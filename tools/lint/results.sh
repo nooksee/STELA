@@ -54,7 +54,7 @@ extract_field_block() {
 }
 
 RESULTS_TEMPLATE_PATH="ops/src/surfaces/results.md.tpl"
-RESULTS_TEMPLATE_SHA256="a66297e37a1d3faa649b640d1d0ef2fddf2742f6120fe1b9058d87432ef3ff65"
+RESULTS_TEMPLATE_SHA256="744366096d84794478c973310c80e7e667a74d186c5e632d6953cf71a15ddc7f"
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   usage
@@ -150,7 +150,7 @@ required_headings=(
   "^## Git State Impact$"
   "^### git diff --name-only$"
   "^### git diff --stat$"
-  "^## Contractor Execution Narrative$"
+  "^## Worker Execution Narrative$"
 )
 
 unresolved_artifact_marker_regex='<PORCELAIN_ARTIFACT>|<SESSION_ARTIFACT>|<DUMP_ARTIFACT>|<[^>]*ARTIFACT[^>]*>'
@@ -214,7 +214,7 @@ for target in "${targets[@]}"; do
     fi
   done
 
-  narrative_block="$(extract_field_block "$target" '^## Contractor Execution Narrative[[:space:]]*$' '')"
+  narrative_block="$(extract_field_block "$target" '^## Worker Execution Narrative[[:space:]]*$' '')"
   scaffold_line_detected=0
   scaffold_line=""
   for scaffold_line in "${narrative_scaffold_lines[@]}"; do
@@ -225,7 +225,7 @@ for target in "${targets[@]}"; do
   done
   if (( scaffold_line_detected == 1 )); then
     if (( explicit_target || inferred_target )); then
-      fail "${rel_target}: Contractor Execution Narrative contains untouched scaffold instruction prose"
+      fail "${rel_target}: Worker Execution Narrative contains untouched scaffold instruction prose"
     else
       narrative_scaffold_skips=$((narrative_scaffold_skips + 1))
     fi
@@ -234,12 +234,12 @@ for target in "${targets[@]}"; do
   preflight_block="$(extract_field_block "$target" '^### Preflight State[[:space:]]*$' '^### Implemented Changes[[:space:]]*$')"
   preflight_proof_error=""
   if [[ -z "$(printf '%s\n' "$preflight_block" | sed '/^[[:space:]]*$/d')" ]]; then
-    preflight_proof_error="Contractor Execution Narrative Preflight State subsection is empty"
+    preflight_proof_error="Worker Execution Narrative Preflight State subsection is empty"
   else
     required_preflight_command=""
     for required_preflight_command in "${required_preflight_commands[@]}"; do
       if ! grep -Fq -- "$required_preflight_command" <<< "$preflight_block"; then
-        preflight_proof_error="Contractor Execution Narrative Preflight State missing required freshness command output: ${required_preflight_command}"
+        preflight_proof_error="Worker Execution Narrative Preflight State missing required freshness command output: ${required_preflight_command}"
         break
       fi
     done
@@ -253,10 +253,10 @@ for target in "${targets[@]}"; do
   fi
 
   if ! grep -Eq '^Decision Required:' <<< "$narrative_block"; then
-    fail "${rel_target}: Contractor Execution Narrative Decision Leaf subsection missing 'Decision Required:' line"
+    fail "${rel_target}: Worker Execution Narrative Decision Leaf subsection missing 'Decision Required:' line"
   fi
   if ! grep -Eq '^Decision Leaf:' <<< "$narrative_block"; then
-    fail "${rel_target}: Contractor Execution Narrative Decision Leaf subsection missing 'Decision Leaf:' line"
+    fail "${rel_target}: Worker Execution Narrative Decision Leaf subsection missing 'Decision Leaf:' line"
   fi
 
   decision_required_line="$(grep -E '^Decision Required:' <<< "$narrative_block" | head -n 1 || true)"

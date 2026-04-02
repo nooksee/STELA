@@ -30,14 +30,14 @@ Deterministic checks:
    - `[/cite]`
 8. In `draft` mode, envelope and DP-start checks are required, plus role-drift rejection:
    - reject audit-verdict marker lines (`**AUDIT -`),
-   - reject `## Contractor Execution Narrative`,
+   - reject `## Worker Execution Narrative`,
    - reject receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`).
 9. In `planning` mode, input is accepted in one of two shapes:
    - final-plan mode: exactly one fenced markdown code block whose extracted body satisfies `bash tools/lint/plan.sh <extracted-body>`, or
    - clarification mode: plain text with no fenced code block; the first non-empty line asks the question; later questions may be plain `...?` lines or numbered `Q<n>. ...?` lines; option lines remain option lines even if their text ends in `?`; each question must use the ordered short standalone `A.` / `B.` / `C.` set, where `C.` is the fixed redirect line `C. Tell Analyst to do something else instead.`; only substantive `A.` / `B.` lines may be marked `(Recommended)`; reply-instruction lines are not part of the popup-biased transport.
 10. In `planning` mode, reject role-drift markers:
    - audit-verdict markers (`**AUDIT -`),
-   - `## Contractor Execution Narrative`,
+   - `## Worker Execution Narrative`,
    - receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`),
    - audit/addenda decision fields (`Decision Required:`, `Decision Leaf:`),
    - policy-overcompensation prose (`Section 3.4.5`, `RECEIPT_EXTRA`, `ops/src/surfaces/dp.md.tpl`, or fenced-envelope instruction echo text),
@@ -52,7 +52,7 @@ Deterministic checks:
    - `## A.5 Addendum Receipt (Proofs to collect) - MUST RUN`
 14. In `addenda` mode, reject role-drift markers:
    - audit-verdict markers (`**AUDIT -`),
-   - `## Contractor Execution Narrative`,
+   - `## Worker Execution Narrative`,
    - `## Verdict`.
 15. In `addenda` mode, if `Decision Required:` and `Decision Leaf:` lines appear, require coherence:
    - `Decision Required: Yes` requires `Decision Leaf: archives/decisions/RoR-*.md`.
@@ -85,9 +85,9 @@ Exit behavior:
 - FAIL: missing audit marker (`audit` mode).
 - FAIL: audit citation token (`audit` mode).
 - FAIL: draft response containing audit marker (`draft` mode).
-- FAIL: draft response containing Contractor Execution Narrative sections (`draft` mode).
+- FAIL: draft response containing Worker Execution Narrative sections (`draft` mode).
 - FAIL: planning response containing audit marker (`planning` mode).
-- FAIL: planning response containing Contractor Execution Narrative sections (`planning` mode).
+- FAIL: planning response containing Worker Execution Narrative sections (`planning` mode).
 - FAIL: planning response containing policy-overcompensation prose (`planning` mode).
 - FAIL: planning response using retired question-mode wrapper text (`planning` mode).
 - FAIL: planning clarification response with 4 options (`planning` mode).
