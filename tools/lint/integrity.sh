@@ -246,6 +246,17 @@ for path in "${untracked_paths[@]}"; do
   observed["$normalized"]=1
 done
 
+path_is_deleted_tracked_in_active_diff() {
+  local path="$1"
+  if git diff --name-only --diff-filter=D -- "$path" | grep -Fxq "$path"; then
+    return 0
+  fi
+  if git diff --cached --name-only --diff-filter=D -- "$path" | grep -Fxq "$path"; then
+    return 0
+  fi
+  return 1
+}
+
 path_is_allowlisted() {
   local path="$1"
   if path_is_generated_surface_owned "$path"; then
@@ -267,6 +278,9 @@ path_is_allowlisted() {
 
 unauthorized=()
 for path in "${!observed[@]}"; do
+  if path_is_deleted_tracked_in_active_diff "$path"; then
+    continue
+  fi
   if path_is_allowlisted "$path"; then
     continue
   fi
