@@ -236,8 +236,6 @@ archives/surfaces/TASK-DP-OPS-0152-*.md
 archives/surfaces/TASK-DP-OPS-0153-*.md
 ops/src/stances/addendum.md.tpl
 docs/ops/specs/binaries/addendum.md
-ops/src/stances/contractor.md.tpl
-docs/ops/specs/stances/contractor.md
 ops/lib/scripts/editor.sh
 docs/ops/specs/scripts/editor.md
 archives/surfaces/TASK-DP-OPS-0154-*.md
