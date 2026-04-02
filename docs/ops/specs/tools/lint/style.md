@@ -137,272 +137,77 @@ Invariant: legacy header regression is blocked.
 
 ## Planning Mode Contract Guardrails
 
-### Guard 21: Planning no-unsupported-operating-detail line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest planning mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.`
-Failure message: `planning.md.tpl missing planning no-unsupported-operating-detail line`
-Invariant: broad planning topics do not silently expand into unsupported repo-operating detail.
+`check_planning_mode_contract()` treats `ops/src/stances/planning.md.tpl` as the runtime owner and verifies planning by contract families instead of freezing every sentence individually. The guardrail still fails when a required family or anchor line disappears, but it no longer requires sentence-for-sentence duplication of the entire planning template in the verifier.
 
-### Guard 22: Planning evidence-first line
+### Guard 21: Core planning decision anchors
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Use attached evidence first.`
-Failure message: `planning.md.tpl missing planning evidence-first line`
-Invariant: planning keeps bundle-attached evidence ahead of generic planner behavior.
+Assertions:
+- topic source line exists
+- evidence-first anchor exists
+- no unsupported repo-operating-detail line exists
+- multi-family ask-first, explicit-packet, no-inference, follow-up ambiguity, and no-staged-queue-substitute anchors exist
+- machine-ingest default-question-mode anchor exists
+- broad-topic genericity anchor exists
+Failure examples:
+- `planning.md.tpl missing planning topic-source line`
+- `planning.md.tpl missing planning no-unilateral-packet-inference line`
+- `planning.md.tpl missing machine-ingest default-question-mode line`
+Invariant: planning still asks before planning on unresolved multi-family topics and does not self-authorize packet choice from repo context.
 
-### Guard 23: Planning multi-family question-first line
+### Guard 22: Portable clarification transport family
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* If the topic spans multiple independent work families and the topic does not explicitly identify the immediate packet, ask one slicing or prioritization question before writing the final plan.`
-Failure message: `planning.md.tpl missing planning multi-family question-first line`
-Invariant: broad multi-family topics do not skip clarification by assistant-selected first-packet staging.
+Assertions:
+- `Portable question transport:` section exists
+- the section still requires exactly 2 substantive options
+- the fixed redirect choice remains `C. Tell Analyst to do something else instead.`
+- clickable-choice bias remains present
+Failure examples:
+- `planning.md.tpl missing portable-question-transport section`
+- `planning.md.tpl missing planning bounded-options invariant`
+- `planning.md.tpl missing planning click-bias invariant`
+Invariant: portable clarification stays bounded, popup-biased, and redirect-stable.
 
-### Guard 23a: Planning explicit-packet gate line
+### Guard 23: Machine-ingest question-mode family
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Treat the immediate packet as explicit only if:`
-Failure message: `planning.md.tpl missing planning explicit-packet gate line`
-Invariant: immediate-packet explicitness is defined by the contract instead of inferred loosely from topic breadth.
+Assertions:
+- packet-boundary question-first anchor exists
+- exact A/B/C answer-line transport anchor exists
+- no-analysis-between-question-and-options anchor exists
+- no-fence-in-question-mode anchor exists
+Failure examples:
+- `planning.md.tpl missing planning question-first line`
+- `planning.md.tpl missing planning question-choice-transport line`
+- `planning.md.tpl missing planning question-mode no-fence line`
+Invariant: machine-ingest clarification remains question-first plain-text transport rather than falling back into explanatory prose.
 
-### Guard 23b: Planning no-unilateral-packet-inference line
+### Guard 24: Host overlay family
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Do not infer or choose the immediate packet unilaterally from repo context alone when multiple work families are in scope.`
-Failure message: `planning.md.tpl missing planning no-unilateral-packet-inference line`
-Invariant: planner autonomy does not replace operator packet selection on multi-family topics.
+Assertions:
+- `Question mode (host overlay):` section exists
+- host-tool path, popup caveat, and Claude-specific tool path remain visible
+- machine-ingest host/Claude overlay anchors remain present
+Failure examples:
+- `planning.md.tpl missing planning host-overlay section`
+- `planning.md.tpl missing planning Claude.ai overlay line`
+- `planning.md.tpl missing machine-ingest host-overlay line`
+Invariant: host/widget behavior stays additive, truthful, and separate from the portable fallback.
 
-### Guard 23c: Planning follow-up ambiguity line
+### Guard 25: Final-plan family
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* If remaining ambiguity still materially changes the immediate packet boundary or implementation handoff, ask the minimum additional bounded clarification needed.`
-Failure message: `planning.md.tpl missing planning follow-up ambiguity line`
-Invariant: after the first slicing decision, only material remaining ambiguity justifies more questions.
+Assertions:
+- final-plan output-only anchor exists
+- no-text-outside-fence anchor exists
+- required core-heading floor anchor exists
+- peer-sections anchor exists
+- settled-boundary emit anchor exists
+Failure examples:
+- `planning.md.tpl missing planning plan-output-only line`
+- `planning.md.tpl missing planning final-plan shape line`
+- `planning.md.tpl missing planning final-plan emit line`
+Invariant: final plans remain fenced, bounded, and compatible with the PLAN surface contract.
 
-### Guard 23d: Planning bounded-options line
+### Guard 26: Shared non-audit include
 Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Each clarification question must present exactly 2 substantive, mutually exclusive options when the decision is binary.`
-Failure message: `planning.md.tpl missing planning bounded-options line`
-Invariant: popup-biased clarification keeps the substantive choice set narrow instead of expanding into open-ended questionnaires.
-
-### Guard 23e: Planning redirect-option line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* After those substantive options, always include a fixed redirect option labeled \`C. Tell Analyst to do something else instead.\``
-Failure message: `planning.md.tpl missing planning redirect-option line`
-Invariant: popup-biased clarification always exposes the same role-native escape hatch.
-
-### Guard 23f: Planning standalone-option-lines line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Present options as short standalone lines with letter labels (\`A.\`, \`B.\`, \`C.\`) and no nested bullets under the options.`
-Failure message: `planning.md.tpl missing planning standalone-option-lines line`
-Invariant: the option transport stays short and popup-biased instead of drifting back into prose lists.
-
-### Guard 23g: Planning click-bias line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Keep each option concise enough to render cleanly as a clickable choice when the host UI supports it; the stance biases toward clickable rendering but does not guarantee widget behavior.`
-Failure message: `planning.md.tpl missing planning click-bias line`
-Invariant: the contract biases toward clickable rendering without pretending the repo can guarantee host UI behavior.
-
-### Guard 23h: Planning recommended-option line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Mark at most one substantive option \`(Recommended)\` and only when directly visible evidence justifies it.`
-Failure message: `planning.md.tpl missing planning recommended-option line`
-Invariant: recommendation markup remains evidence-bound and limited to substantive choices.
-
-### Guard 23i: Planning redirect-not-recommended line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Do not mark the redirect option \`(Recommended)\`.`
-Failure message: `planning.md.tpl missing planning redirect-not-recommended line`
-Invariant: the standard redirect choice stays neutral.
-
-### Guard 23j: Planning no-staged-queue-substitute line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Do not substitute a staged queue, proposed sequencing, or assistant-chosen first packet for a missing slicing decision.`
-Failure message: `planning.md.tpl missing planning no-staged-queue-substitute line`
-Invariant: staged queues cannot replace the required slicing decision.
-
-### Guard 23k: Planning settled-boundary emit line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Once the immediate packet boundary is settled, emit the final \`storage/handoff/PLAN.md\`.`
-Failure message: `planning.md.tpl missing planning settled-boundary emit line`
-Invariant: final-plan output happens only after the immediate packet boundary is actually settled.
-
-### Guard 23l: Planning peer-sections line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* When additional headings are needed, they should appear as proper peer sections rather than being buried under one of the required headings.`
-Failure message: `planning.md.tpl missing planning peer-sections line`
-Invariant: the required core headings remain a floor, not an exclusive cage.
-
-### Guard 24: Planning final-plan no-outside-text line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For final plan mode: emit no text before or after the fenced markdown code block.`
-Failure message: `planning.md.tpl missing planning final-plan no-outside-text line`
-Invariant: final-plan serialization stays fence-only even though clarification mode is plain text.
-
-### Guard 25: Planning broad-topic genericity line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest planning mode: when the topic is broad, keep repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.`
-Failure message: `planning.md.tpl missing planning broad-topic-genericity line`
-Invariant: topic-driven planning output stays high-level when attached evidence is thin.
-
-### Guard 26: Machine-ingest evidence-first line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest planning mode: use attached evidence first.`
-Failure message: `planning.md.tpl missing machine-ingest evidence-first line`
-Invariant: the machine-ingest contract explicitly keeps attached evidence ahead of generic planning priors.
-
-### Guard 27: Planning question-first line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest question mode: when clarification is needed, ask the packet-boundary question first as a short prose sentence without any retired analysis preamble or other required wrapper.`
-Failure message: `planning.md.tpl missing planning question-first line`
-Invariant: clarification mode asks the blocking boundary question directly instead of reintroducing analysis wrapper text.
-
-### Guard 28: Planning question-choice-transport line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest question mode: allow at most 3 questions; each question must immediately follow the prose question with exactly 3 short standalone answer lines: \`A.\` first substantive option, \`B.\` second substantive option, and \`C. Tell Analyst to do something else instead.\``
-Failure message: `planning.md.tpl missing planning question-choice-transport line`
-Invariant: machine-ingest clarification uses the popup-biased A/B/C transport instead of a loose generic option set.
-
-### Guard 28a: Planning question-mode no-analysis-paragraphs line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest question mode: keep each option to one short line when possible; do not add analysis paragraphs between the question and the options.`
-Failure message: `planning.md.tpl missing planning question-mode no-analysis-paragraphs line`
-Invariant: machine-ingest clarification stays question-first and transport-oriented instead of expanding into rationale between the question and choices.
-
-### Guard 28b: Planning question-mode recommended guard line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest question mode: mark at most one substantive option \`(Recommended)\` only when attached evidence justifies it; never mark the redirect option \`(Recommended)\`.`
-Failure message: `planning.md.tpl missing planning question-mode recommended guard line`
-Invariant: recommendation markup remains bounded to substantive options during popup-biased clarification.
-
-### Guard 28c: Planning question-mode fixed-redirect line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest question mode: do not invent extra substantive branches solely to satisfy formatting; the third displayed choice is the standard redirect option.`
-Failure message: `planning.md.tpl missing planning question-mode fixed-redirect line`
-Invariant: the popup-biased transport preserves a fixed third redirect choice instead of drifting back to three substantive branches.
-
-### Guard 28d: Planning question-mode no-fence line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest question mode: do not use a fenced markdown code block; fenced markdown remains the final-plan output contract only.`
-Failure message: `planning.md.tpl missing planning question-mode no-fence line`
-Invariant: clarification mode remains plain-text question transport while final-plan mode stays fenced.
-
-### Guard 29: Planning non-actionable-topic line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest question mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.`
-Failure message: `planning.md.tpl missing planning nonsensical-topic line`
-Invariant: nonsense topics still stop truthfully rather than forcing fabricated plans.
-
-### Guard 29a: Planning host-overlay line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* When a host-provided single-select question tool is available, it may replace the portable A/B/C fallback using the same two substantive options and final redirect; do not also print the A/B/C lines as prose.`
-Failure message: `planning.md.tpl missing planning host-overlay line`
-Invariant: host widget/tool behavior stays additive instead of being blended into the portable fallback contract.
-
-### Guard 29b: Planning host-overlay fallback line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* If the host does not support a single-select question tool, emit the portable 4-line question output and nothing else.`
-Failure message: `planning.md.tpl missing planning host-overlay fallback line`
-Invariant: portable A/B/C transport remains available when no host widget/tool is exposed.
-
-### Guard 29c: Planning host-overlay caveat line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* Popup rendering remains host/UI behavior and cannot be guaranteed by stance text alone.`
-Failure message: `planning.md.tpl missing planning host-overlay caveat line`
-Invariant: the contract stays truthful about popup determinism.
-
-### Guard 29d: Planning Claude.ai overlay line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* When the \`ask_user_input_v0\` tool is available, call it with \`type: single_select\` using the same options derived from the portable fallback above; do not also print the A/B/C lines as prose.`
-Failure message: `planning.md.tpl missing planning Claude.ai overlay line`
-Invariant: the Claude.ai overlay is explicit instead of hidden behind portable prose shaping.
-
-### Guard 29e: Planning Claude.ai overlay fallback line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `* If the tool is unavailable, emit the portable 4-line output and nothing else.`
-Failure message: `planning.md.tpl missing planning Claude.ai overlay fallback line`
-Invariant: the host-specific overlay falls back cleanly to the portable transport.
-
-### Guard 29f: Machine-ingest host-overlay line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest host overlay: when a host-provided single-select question tool is available, it may replace the portable A/B/C fallback using the same two substantive options and final redirect; do not also print the A/B/C lines as prose.`
-Failure message: `planning.md.tpl missing machine-ingest host-overlay line`
-Invariant: machine-ingest text mirrors the same additive host-overlay split as the human-readable contract.
-
-### Guard 29g: Machine-ingest host-overlay fallback line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest host overlay: if the host does not support a single-select question tool, emit the portable 4-line question output and nothing else.`
-Failure message: `planning.md.tpl missing machine-ingest host-overlay fallback line`
-Invariant: machine-ingest fallback stays aligned with the human-readable transport contract.
-
-### Guard 29h: Machine-ingest host-overlay caveat line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest host overlay: popup rendering remains host/UI behavior and cannot be guaranteed by stance text alone.`
-Failure message: `planning.md.tpl missing machine-ingest host-overlay caveat line`
-Invariant: machine-ingest contract also states that popup rendering is host behavior rather than repo-owned determinism.
-
-### Guard 29i: Machine-ingest Claude.ai overlay line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest Claude.ai overlay: when the \`ask_user_input_v0\` tool is available, call it with \`type: single_select\` using the same options derived from the portable fallback above; do not also print the A/B/C lines as prose.`
-Failure message: `planning.md.tpl missing machine-ingest Claude.ai overlay line`
-Invariant: machine-ingest text exposes the concrete Claude.ai widget path when available.
-
-### Guard 29j: Machine-ingest Claude.ai overlay fallback line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest Claude.ai overlay: if the tool is unavailable, emit the portable 4-line output and nothing else.`
-Failure message: `planning.md.tpl missing machine-ingest Claude.ai overlay fallback line`
-Invariant: machine-ingest Claude.ai overlay also falls back cleanly to the portable transport.
-
-### Guard 30: Planning broad-topic slicing line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest planning mode: if the topic spans multiple independent work families and the topic does not explicitly identify the immediate packet, ask one slicing or prioritization question before writing the final plan.`
-Failure message: `planning.md.tpl missing planning broad-topic-slicing line`
-Invariant: machine-ingest planning asks before planning when a multi-family topic lacks an explicit first packet.
-
-### Guard 30a: Machine-ingest explicit-packet line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest planning mode: treat the immediate packet as explicit only if the topic directly names the first packet or first work family, the attached evidence directly requires a first packet ordering, or the user explicitly prioritizes one work family.`
-Failure message: `planning.md.tpl missing machine-ingest explicit-packet line`
-Invariant: machine-ingest planning uses the same narrow explicitness definition as the top-level contract.
-
-### Guard 30b: Machine-ingest no-inference line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest planning mode: do not infer or choose the immediate packet unilaterally from repo context alone when multiple work families are in scope.`
-Failure message: `planning.md.tpl missing machine-ingest no-inference line`
-Invariant: machine-ingest planning does not self-authorize first-packet choice from repo context alone.
-
-### Guard 30c: Machine-ingest multi-family threshold line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest planning mode: three or more distinct deliverables in one topic count as multiple independent work families regardless of domain overlap.`
-Failure message: `planning.md.tpl missing machine-ingest multi-family-threshold line`
-Invariant: broad single-domain omnibus topics cannot dodge multi-family handling by domain-label compression.
-
-### Guard 30d: Machine-ingest no-staged-queue-substitute line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest planning mode: do not substitute a staged queue, proposed sequencing, or assistant-chosen first packet for a missing slicing decision.`
-Failure message: `planning.md.tpl missing machine-ingest no-staged-queue-substitute line`
-Invariant: machine-ingest planning cannot satisfy a missing slicing decision by producing a staged queue.
-
-### Guard 30e: Machine-ingest default-question-mode line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For machine-ingest planning mode: default to question mode for multi-family topics; only skip the slicing question when the operator's topic text directly names the immediate packet.`
-Failure message: `planning.md.tpl missing machine-ingest default-question-mode line`
-Invariant: machine-ingest planning defaults to question mode on multi-family topics unless the operator has already named the immediate packet.
-
-### Guard 31: Planning plan-output-only line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For final plan mode: output only the complete PLAN markdown code block.`
-Failure message: `planning.md.tpl missing planning plan-output-only line`
-Invariant: draft-ready plan serialization remains available once intent is settled.
-
-### Guard 32: Planning final-plan shape line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For final plan mode: keep \`Summary\`, \`Key Changes\`, \`Test Plan\`, and \`Assumptions\` as required core sections; additional peer sections are allowed when needed to keep the handoff truthful and narrow.`
-Failure message: `planning.md.tpl missing planning final-plan shape line`
-Invariant: final plan mode keeps the required Stela handoff sections without turning them into an exclusive cage.
-
-### Guard 32a: Planning final-plan peer-sections line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For final plan mode: when additional headings are needed, make them proper peer sections rather than burying them under a required heading.`
-Failure message: `planning.md.tpl missing planning final-plan peer-sections line`
-Invariant: additional headings stay visible as real plan structure instead of getting sandwiched into a required bucket.
-
-### Guard 33: Planning final-plan emission line
-Target file: `ops/src/stances/planning.md.tpl`
-Assertion: file must include `For final plan mode: once the immediate packet boundary is settled, emit the final \`storage/handoff/PLAN.md\`.`
-Failure message: `planning.md.tpl missing planning final-plan emit line`
-Invariant: final plan output happens only after the immediate packet boundary is actually settled.
+Assertion: file must include `{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}`
+Failure message: `planning.md.tpl missing shared non-audit include line`
+Invariant: planning continues to inherit the shared non-audit role-drift guard instead of restating it ad hoc.

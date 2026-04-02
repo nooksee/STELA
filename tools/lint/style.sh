@@ -36,6 +36,17 @@ mark_failure() {
   STYLE_FAILURES=$((STYLE_FAILURES + 1))
 }
 
+require_file_contains_literal() {
+  local target="$1"
+  local needle="$2"
+  local failure_message="$3"
+
+  [[ -f "$target" ]] || return 0
+  if ! grep -Fq -- "$needle" "$target"; then
+    mark_failure "$failure_message"
+  fi
+}
+
 load_current_closing_labels() {
   local label
   if (( CLOSING_LABELS_LOADED )); then
@@ -334,243 +345,62 @@ check_draft_mode_contract() {
 
 check_planning_mode_contract() {
   local stance_planning="${REPO_ROOT}/ops/src/stances/planning.md.tpl"
-  local required_topic='For machine-ingest planning mode: require attached `storage/handoff/TOPIC.md`; do not use inline query fallback.'
-  local required_evidence_first='* Use attached evidence first.'
-  local required_question_multi_family='* If the topic spans multiple independent work families and the topic does not explicitly identify the immediate packet, ask one slicing or prioritization question before writing the final plan.'
-  local required_explicit_only='* Treat the immediate packet as explicit only if:'
-  local required_no_infer='* Do not infer or choose the immediate packet unilaterally from repo context alone when multiple work families are in scope.'
-  local required_followup_boundary='* If remaining ambiguity still materially changes the immediate packet boundary or implementation handoff, ask the minimum additional bounded clarification needed.'
-  local required_no_substitute='* Do not substitute a staged queue, proposed sequencing, or assistant-chosen first packet for a missing slicing decision.'
-  local required_bounded_options='* Each clarification question must present exactly 2 substantive, mutually exclusive options when the decision is binary.'
-  local required_redirect='* After those substantive options, always include a fixed redirect option labeled `C. Tell Analyst to do something else instead.`'
-  local required_option_lines='* Present options as short standalone lines with letter labels (`A.`, `B.`, `C.`) and no nested bullets under the options.'
-  local required_click_bias='* Keep each option concise enough to render cleanly as a clickable choice when the host UI supports it; the stance biases toward clickable rendering but does not guarantee widget behavior.'
-  local required_recommended='* Mark at most one substantive option `(Recommended)` and only when directly visible evidence justifies it.'
-  local required_redirect_not_recommended='* Do not mark the redirect option `(Recommended)`.'
-  local required_emit_boundary='* Once the immediate packet boundary is settled, emit the final `storage/handoff/PLAN.md`.'
-  local required_peer_sections='* When additional headings are needed, they should appear as proper peer sections rather than being buried under one of the required headings.'
-  local required_final_plan_no_outside='For final plan mode: emit no text before or after the fenced markdown code block.'
-  local required_no_operating_detail='For machine-ingest planning mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.'
-  local required_generic_broad_topic='For machine-ingest planning mode: when the topic is broad, keep repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.'
-  local required_slice_broad_topic='For machine-ingest planning mode: if the topic spans multiple independent work families and the topic does not explicitly identify the immediate packet, ask one slicing or prioritization question before writing the final plan.'
-  local required_machine_explicit='For machine-ingest planning mode: treat the immediate packet as explicit only if the topic directly names the first packet or first work family, the attached evidence directly requires a first packet ordering, or the user explicitly prioritizes one work family.'
-  local required_machine_no_infer='For machine-ingest planning mode: do not infer or choose the immediate packet unilaterally from repo context alone when multiple work families are in scope.'
-  local required_machine_threshold='For machine-ingest planning mode: three or more distinct deliverables in one topic count as multiple independent work families regardless of domain overlap.'
-  local required_machine_no_substitute='For machine-ingest planning mode: do not substitute a staged queue, proposed sequencing, or assistant-chosen first packet for a missing slicing decision.'
-  local required_machine_default_question="For machine-ingest planning mode: default to question mode for multi-family topics; only skip the slicing question when the operator's topic text directly names the immediate packet."
-  local required_question_first='For machine-ingest question mode: when clarification is needed, ask the packet-boundary question first as a short prose sentence without any retired analysis preamble or other required wrapper.'
-  local required_question_choices='For machine-ingest question mode: allow at most 3 questions; each question must immediately follow the prose question with exactly 3 short standalone answer lines: `A.` first substantive option, `B.` second substantive option, and `C. Tell Analyst to do something else instead.`'
-  local required_question_no_analysis='For machine-ingest question mode: keep each option to one short line when possible; do not add analysis paragraphs between the question and the options.'
-  local required_question_recommended='For machine-ingest question mode: mark at most one substantive option `(Recommended)` only when attached evidence justifies it; never mark the redirect option `(Recommended)`.'
-  local required_question_no_extra='For machine-ingest question mode: do not invent extra substantive branches solely to satisfy formatting; the third displayed choice is the standard redirect option.'
-  local required_question_no_fence='For machine-ingest question mode: do not use a fenced markdown code block; fenced markdown remains the final-plan output contract only.'
-  local required_nonsensical_topic='For machine-ingest question mode: if topic text is nonsensical or non-actionable, stop at the nearest truthful boundary and ask for clarification.'
-  local required_host_overlay='* When a host-provided single-select question tool is available, it may replace the portable A/B/C fallback using the same two substantive options and final redirect; do not also print the A/B/C lines as prose.'
-  local required_host_overlay_fallback='* If the host does not support a single-select question tool, emit the portable 4-line question output and nothing else.'
-  local required_host_overlay_caveat='* Popup rendering remains host/UI behavior and cannot be guaranteed by stance text alone.'
-  local required_claude_overlay='* When the `ask_user_input_v0` tool is available, call it with `type: single_select` using the same options derived from the portable fallback above; do not also print the A/B/C lines as prose.'
-  local required_claude_overlay_fallback='* If the tool is unavailable, emit the portable 4-line output and nothing else.'
-  local required_machine_host_overlay='For machine-ingest host overlay: when a host-provided single-select question tool is available, it may replace the portable A/B/C fallback using the same two substantive options and final redirect; do not also print the A/B/C lines as prose.'
-  local required_machine_host_overlay_fallback='For machine-ingest host overlay: if the host does not support a single-select question tool, emit the portable 4-line question output and nothing else.'
-  local required_machine_host_overlay_caveat='For machine-ingest host overlay: popup rendering remains host/UI behavior and cannot be guaranteed by stance text alone.'
-  local required_machine_claude_overlay='For machine-ingest Claude.ai overlay: when the `ask_user_input_v0` tool is available, call it with `type: single_select` using the same options derived from the portable fallback above; do not also print the A/B/C lines as prose.'
-  local required_machine_claude_overlay_fallback='For machine-ingest Claude.ai overlay: if the tool is unavailable, emit the portable 4-line output and nothing else.'
-  local required_plan_output='For final plan mode: output only the complete PLAN markdown code block.'
-  local required_plan_shape='For final plan mode: keep `Summary`, `Key Changes`, `Test Plan`, and `Assumptions` as required core sections; additional peer sections are allowed when needed to keep the handoff truthful and narrow.'
-  local required_plan_peer_sections='For final plan mode: when additional headings are needed, make them proper peer sections rather than burying them under a required heading.'
-  local required_plan_direct='For final plan mode: once the immediate packet boundary is settled, emit the final `storage/handoff/PLAN.md`.'
-  local required_machine_evidence='For machine-ingest planning mode: use attached evidence first.'
   local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
+  local -a core_literals=(
+    'For machine-ingest planning mode: require attached `storage/handoff/TOPIC.md`; do not use inline query fallback.:::planning.md.tpl missing planning topic-source line'
+    '* Use attached evidence first.:::planning.md.tpl missing planning evidence-first line'
+    'For machine-ingest planning mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.:::planning.md.tpl missing planning no-unsupported-operating-detail line'
+    '* If the topic spans multiple independent work families and the topic does not explicitly identify the immediate packet, ask one slicing or prioritization question before writing the final plan.:::planning.md.tpl missing planning multi-family question-first line'
+    '* Treat the immediate packet as explicit only if::::planning.md.tpl missing planning explicit-packet gate line'
+    '* Do not infer or choose the immediate packet unilaterally from repo context alone when multiple work families are in scope.:::planning.md.tpl missing planning no-unilateral-packet-inference line'
+    '* If remaining ambiguity still materially changes the immediate packet boundary or implementation handoff, ask the minimum additional bounded clarification needed.:::planning.md.tpl missing planning follow-up ambiguity line'
+    '* Do not substitute a staged queue, proposed sequencing, or assistant-chosen first packet for a missing slicing decision.:::planning.md.tpl missing planning no-staged-queue-substitute line'
+    'For machine-ingest planning mode: default to question mode for multi-family topics; only skip the slicing question when the operator'\''s topic text directly names the immediate packet.:::planning.md.tpl missing machine-ingest default-question-mode line'
+    'For machine-ingest planning mode: when the topic is broad, keep repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.:::planning.md.tpl missing planning broad-topic-genericity line'
+    'For machine-ingest planning mode: use attached evidence first.:::planning.md.tpl missing machine-ingest evidence-first line'
+  )
+  local -a transport_literals=(
+    'Portable question transport::::planning.md.tpl missing portable-question-transport section'
+    'exactly 2 substantive, mutually exclusive options:::planning.md.tpl missing planning bounded-options invariant'
+    'C. Tell Analyst to do something else instead.:::planning.md.tpl missing planning redirect-option invariant'
+    'clickable choice when the host UI supports it:::planning.md.tpl missing planning click-bias invariant'
+  )
+  local -a question_mode_literals=(
+    'For machine-ingest question mode: when clarification is needed, ask the packet-boundary question first as a short prose sentence without any retired analysis preamble or other required wrapper.:::planning.md.tpl missing planning question-first line'
+    'For machine-ingest question mode: allow at most 3 questions; each question must immediately follow the prose question with exactly 3 short standalone answer lines: `A.` first substantive option, `B.` second substantive option, and `C. Tell Analyst to do something else instead.`:::planning.md.tpl missing planning question-choice-transport line'
+    'For machine-ingest question mode: keep each option to one short line when possible; do not add analysis paragraphs between the question and the options.:::planning.md.tpl missing planning question-mode no-analysis-paragraphs line'
+    'For machine-ingest question mode: do not use a fenced markdown code block; fenced markdown remains the final-plan output contract only.:::planning.md.tpl missing planning question-mode no-fence line'
+  )
+  local -a overlay_literals=(
+    'Question mode (host overlay)::::planning.md.tpl missing planning host-overlay section'
+    'host-provided single-select question tool is available:::planning.md.tpl missing planning host-overlay tool line'
+    'Popup rendering remains host/UI behavior and cannot be guaranteed by stance text alone.:::planning.md.tpl missing planning host-overlay caveat line'
+    'Question mode (Claude.ai overlay)::::planning.md.tpl missing planning Claude.ai overlay section'
+    '`ask_user_input_v0` tool is available:::planning.md.tpl missing planning Claude.ai overlay line'
+    'For machine-ingest host overlay: when a host-provided single-select question tool is available:::planning.md.tpl missing machine-ingest host-overlay line'
+    'For machine-ingest Claude.ai overlay: when the `ask_user_input_v0` tool is available:::planning.md.tpl missing machine-ingest Claude.ai overlay line'
+  )
+  local -a final_plan_literals=(
+    'For final plan mode: output only the complete PLAN markdown code block.:::planning.md.tpl missing planning plan-output-only line'
+    'For final plan mode: emit no text before or after the fenced markdown code block.:::planning.md.tpl missing planning final-plan no-outside-text line'
+    'For final plan mode: keep `Summary`, `Key Changes`, `Test Plan`, and `Assumptions` as required core sections; additional peer sections are allowed when needed to keep the handoff truthful and narrow.:::planning.md.tpl missing planning final-plan shape line'
+    'For final plan mode: when additional headings are needed, make them proper peer sections rather than burying them under a required heading.:::planning.md.tpl missing planning final-plan peer-sections line'
+    'For final plan mode: once the immediate packet boundary is settled, emit the final `storage/handoff/PLAN.md`.:::planning.md.tpl missing planning final-plan emit line'
+  )
+  local entry needle failure_message
 
   [[ -f "$stance_planning" ]] || mark_failure "planning.md.tpl missing for mode contract checks"
 
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_evidence_first" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning evidence-first line"
-  fi
+  for entry in "${core_literals[@]}" "${transport_literals[@]}" "${question_mode_literals[@]}" "${overlay_literals[@]}" "${final_plan_literals[@]}"; do
+    needle="${entry%%:::*}"
+    failure_message="${entry#*:::}"
+    require_file_contains_literal "$stance_planning" "$needle" "$failure_message"
+  done
 
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_question_multi_family" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning multi-family question-first line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_explicit_only" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning explicit-packet gate line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_no_infer" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning no-unilateral-packet-inference line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_emit_boundary" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning settled-boundary emit line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_peer_sections" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning peer-sections line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_followup_boundary" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning follow-up ambiguity line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_bounded_options" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning bounded-options line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_redirect" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning redirect-option line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_option_lines" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning standalone-option-lines line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_click_bias" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning click-bias line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_recommended" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning recommended-option line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_redirect_not_recommended" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning redirect-not-recommended line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_no_substitute" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning no-staged-queue-substitute line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_final_plan_no_outside" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning final-plan no-outside-text line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_topic" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning topic-source line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_no_operating_detail" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning no-unsupported-operating-detail line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_generic_broad_topic" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning broad-topic-genericity line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_evidence" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing machine-ingest evidence-first line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_slice_broad_topic" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning broad-topic-slicing line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_explicit" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing machine-ingest explicit-packet line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_no_infer" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing machine-ingest no-inference line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_threshold" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing machine-ingest multi-family-threshold line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_no_substitute" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing machine-ingest no-staged-queue-substitute line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_default_question" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing machine-ingest default-question-mode line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_question_first" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning question-first line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_question_choices" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning question-choice-transport line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_question_no_analysis" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning question-mode no-analysis-paragraphs line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_question_recommended" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning question-mode recommended guard line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_question_no_extra" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning question-mode fixed-redirect line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_question_no_fence" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning question-mode no-fence line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_nonsensical_topic" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning nonsensical-topic line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_host_overlay" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning host-overlay line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_host_overlay_fallback" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning host-overlay fallback line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_host_overlay_caveat" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning host-overlay caveat line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_claude_overlay" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning Claude.ai overlay line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_claude_overlay_fallback" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning Claude.ai overlay fallback line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_host_overlay" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing machine-ingest host-overlay line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_host_overlay_fallback" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing machine-ingest host-overlay fallback line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_host_overlay_caveat" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing machine-ingest host-overlay caveat line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_claude_overlay" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing machine-ingest Claude.ai overlay line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_machine_claude_overlay_fallback" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing machine-ingest Claude.ai overlay fallback line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_plan_output" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning plan-output-only line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_plan_shape" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning final-plan shape line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_plan_peer_sections" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning final-plan peer-sections line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_shared_non_audit_include" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing shared non-audit include line"
-  fi
-
-  if [[ -f "$stance_planning" ]] && ! grep -Fq -- "$required_plan_direct" "$stance_planning"; then
-    mark_failure "planning.md.tpl missing planning final-plan emit line"
-  fi
+  require_file_contains_literal \
+    "$stance_planning" \
+    "$required_shared_non_audit_include" \
+    "planning.md.tpl missing shared non-audit include line"
 }
 
 check_addenda_mode_contract() {
