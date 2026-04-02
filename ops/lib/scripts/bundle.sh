@@ -70,7 +70,7 @@ BUNDLE_AUDIT_RESOLVED_OUTPUT_REL=""
 
 bundle_usage() {
   cat <<'USAGE'
-Usage: ops/bin/bundle [--profile=auto|planning|draft|audit|project|conform|hygiene|addenda] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--rerun] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
+Usage: ops/bin/bundle [--profile=auto|planning|draft|audit|project|addenda] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--rerun] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
 USAGE
 }
 
@@ -323,34 +323,8 @@ bundle_load_policy() {
   done
 
   BUNDLE_PROFILE_ALIAS_BY_INPUT=()
-  BUNDLE_PROFILE_ALIAS_BY_INPUT["hygiene"]="$(bundle_policy_scalar profile_alias_legacy_hygiene_to)"
-  [[ -n "${BUNDLE_PROFILE_ALIAS_BY_INPUT[hygiene]}" ]] || die "bundle policy missing required key: profile_alias_legacy_hygiene_to"
-  for profile in "${BUNDLE_PROFILE_ALIAS_BY_INPUT[@]}"; do
-    bundle_profile_supported "$profile" || die "bundle policy alias target is unsupported: ${profile}"
-  done
-
   BUNDLE_PROFILE_ALIAS_DEPRECATION_STATUS_BY_INPUT=()
   BUNDLE_PROFILE_ALIAS_REMOVE_AFTER_DP_BY_INPUT=()
-  for alias_name in hygiene; do
-    alias_status_key="profile_alias_legacy_${alias_name}_deprecation_status"
-    alias_remove_after_key="profile_alias_legacy_${alias_name}_remove_after_dp"
-    alias_status="$(bundle_policy_scalar "$alias_status_key")"
-    alias_remove_after_dp="$(bundle_policy_scalar "$alias_remove_after_key")"
-    [[ -n "$alias_status" ]] || die "bundle policy missing required key: ${alias_status_key}"
-    [[ -n "$alias_remove_after_dp" ]] || die "bundle policy missing required key: ${alias_remove_after_key}"
-    case "$alias_status" in
-      active|sunset)
-        ;;
-      *)
-        die "bundle policy has invalid alias deprecation status for ${alias_name}: ${alias_status}"
-        ;;
-    esac
-    if [[ ! "$alias_remove_after_dp" =~ ^DP-OPS-[0-9]{4}$ ]]; then
-      die "bundle policy has invalid alias removal target for ${alias_name}: ${alias_remove_after_dp}"
-    fi
-    BUNDLE_PROFILE_ALIAS_DEPRECATION_STATUS_BY_INPUT["$alias_name"]="$alias_status"
-    BUNDLE_PROFILE_ALIAS_REMOVE_AFTER_DP_BY_INPUT["$alias_name"]="$alias_remove_after_dp"
-  done
 
   BUNDLE_DUMP_SCOPE_BY_PROFILE=()
   BUNDLE_STANCE_TEMPLATE_BY_PROFILE=()
@@ -1557,7 +1531,7 @@ bundle_run() {
     echo "- Active draft surface: storage/dp/intake/DP.md (latest-wins); packet identity remains DP-OPS-XXXX."
     echo "- Certify requires STELA_TRACE_ID from OPEN artifact or STELA_TRACE_ID env var."
     echo "- Audit dump: ./ops/bin/bundle --profile=audit --out=auto (separate from operator session refresh)"
-    echo "- Secondary lanes: addenda/addendum (intervention), conform/conformist (normalization), execution-decision (disposable/manual)"
+    echo "- Secondary lanes: addenda/addendum (intervention), execution-decision (disposable/manual)"
     echo
     echo "[DUMP]"
     echo "- Scope: ${dump_scope}"

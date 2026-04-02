@@ -301,18 +301,6 @@ slice_route_contract() {
     [[ "$rp" == "draft" ]] || fail "route/auto-plan: resolved_profile='${rp}' expected 'draft'"
   fi
 
-  # Alias: hygiene → conform
-  clean_surfaces
-  make_topic
-  out="$(next_out conform)"
-  run_bundle "$out" --profile=hygiene
-  if [[ "$BUNDLE_LAST_STATUS" -ne 0 ]]; then
-    fail "route/alias-hygiene: expected exit 0; output: ${BUNDLE_LAST_OUTPUT}"
-  else
-    rp="$(mf_string resolved_profile "$BUNDLE_LAST_MANIFEST_ABS")"
-    [[ "$rp" == "conform" ]] || fail "route/alias-hygiene: resolved_profile='${rp}' expected 'conform'"
-  fi
-
   # Invalid profile → fail closed
   out="$(next_out planning)"
   run_bundle "$out" --profile=__invalid__
