@@ -10,7 +10,7 @@
 2. Extract the Target Files allowlist pointer from Section 3.3, normalize it, and require a reachable allowlist file.
 3. Load allowlist entries into exact-path and wildcard sets, reject forbidden runtime-prefix entries, and preserve the sanctioned closing-sidecar pattern exception.
 4. Build observed path set from `git diff --name-only --cached`, `git diff --name-only`, and `git ls-files --others --exclude-standard`.
-5. Normalize observed paths and compare each path against allowlisted exact entries plus wildcard patterns.
+5. Normalize observed paths, treat tracked deleted paths present in the active diff as structurally authorized in-flight packet state, and compare all remaining observed paths against allowlisted exact entries plus wildcard patterns.
 6. Treat the live certify-owned generated surface set as structurally authorized when, and only when, the current head pointers are in canonical generated form:
    - `PoW.md` pointer head plus its pointed leaf
    - `SoP.md` pointer head plus its pointed leaf
@@ -40,6 +40,12 @@ FAIL: CbC preflight is applicable but no cbc decision leaf entry or pattern
 then add the generated leaf path (or use the `archives/decisions/RoR-????-??-??-???-cbc-*.md`
 pattern) in the allowlist, and re-run `tools/lint/integrity.sh`.
 
+## Deletion Lifecycle Rule
+
+- Tracked deleted paths that are still present in the active staged or unstaged diff are structurally authorized during the live packet and do not require current allowlist coverage.
+- Modified paths and untracked paths remain fully allowlist-gated.
+- Post-landing stale-entry cleanup remains `tools/lint/dp.sh` authority once the delete diff is gone.
+
 ## Anecdotal Anchor
 DP-OPS-0074 recorded a session where absent runtime scope enforcement allowed an out-of-scope RESULTS artifact to be staged and only detected during later review. The current observed-path set comparison closes that gap by enforcing scope continuously rather than after receipt generation.
 
@@ -47,5 +53,7 @@ DP-OPS-0139 added the CbC preflight linkage rule after observing that tooling DP
 
 DP-OPS-0155 follow-on hardening added a governance-surface edit guard for `PoT.md` after repeated operator-facing regressions where constitutional text changed outside explicit packet scope. The rule is deliberately narrow: it does not block governance edits categorically, it requires explicit authorization in active DP scope/changelog.
 
+DP-OPS-0242 closed a deletion-lifecycle mismatch where `dp.sh` already tolerated deleted tracked files remaining in the allowlist during an active delete packet, but `integrity.sh` still required current allowlist coverage for those same deleted paths. The repair keeps in-flight delete packets coherent while leaving post-landing stale-entry cleanup to `dp.sh`.
+
 ## Integrity Filter Warnings
-Pointer extraction failures in TASK Section 3.3 are hard-stop conditions and terminate lint before path comparison starts. The script evaluates current local git state only; ignored files or external workspace mutations outside git visibility are not part of observed-path comparison. Broad wildcard entries reduce false alarms but can also mask accidental scope expansion if they are written too loosely. The certify-generated surface exception is intentionally narrow: only the live generated head pointers and their current pointer targets are structurally authorized. Absence of the CbC preflight section in TASK is treated as not applicable; the rule only fires when the section is present and the slot content does not begin with `Not applicable`. `PoT.md` authorization checks rely on canonical headings (`In scope:` and `3.4.3 Changelog` `UPDATE:`); malformed packets can trigger false negatives and are expected to fail other packet lints.
+Pointer extraction failures in TASK Section 3.3 are hard-stop conditions and terminate lint before path comparison starts. The script evaluates current local git state only; ignored files or external workspace mutations outside git visibility are not part of observed-path comparison. Broad wildcard entries reduce false alarms but can also mask accidental scope expansion if they are written too loosely. The certify-generated surface exception is intentionally narrow: only the live generated head pointers and their current pointer targets are structurally authorized. Tracked deleted paths are treated as an in-flight exception only while the delete diff is still present; once the diff is gone, stale allowlist entries fall back to `dp.sh` cleanup enforcement. Absence of the CbC preflight section in TASK is treated as not applicable; the rule only fires when the section is present and the slot content does not begin with `Not applicable`. `PoT.md` authorization checks rely on canonical headings (`In scope:` and `3.4.3 Changelog` `UPDATE:`); malformed packets can trigger false negatives and are expected to fail other packet lints.
