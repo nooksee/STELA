@@ -8,7 +8,7 @@ The canonical operator shipping chain is:
 
 `TOPIC.md` → `PLAN.md` → `storage/dp/intake/DP.md` (active draft) → Worker execution → `RESULTS` + `CLOSING` → audit bundle → merge
 
-Each stage has one obvious active surface. Secondary lanes (addenda/addendum, conform/conformist, execution-decision) are bounded sidepaths, not replacements for RESULTS, CLOSING, or audit truth.
+Each stage has one obvious active surface. Secondary lanes (addenda/addendum, execution-decision) are bounded sidepaths, not replacements for RESULTS, CLOSING, or audit truth.
 
 Active surfaces by stage:
 - **Topic input:** `storage/handoff/TOPIC.md` (latest-wins; operator writes before each planning run)
@@ -58,7 +58,6 @@ This path is separate from bundle-mediated planning, draft, and audit transport;
 
 **Secondary Lanes:**
 - `addenda/addendum`: Intervention path. Contractor or auditor reports `ADDENDUM REQUIRED`. Operator generates an addenda wake-up bundle (`./ops/bin/bundle --profile=addenda --intent="ADDENDUM REQUIRED: <BASE_DP_ID> - <BLOCKER>" --out=auto`), delivers it to the foreman, and the foreman builds the addendum case from visible evidence in the dump (RESULTS, OPEN metadata, boundary condition) — no pre-existing decision leaf required. The foreman issues an authorized addendum. The authorized addendum is handed to the Contractor as a finished document. Contractor does not author addendum content.
-- `conform/conformist`: Structure normalization lane. Does not replace RESULTS or audit truth.
 - `execution-decision`: See above.
 - Surface and definition rendering is centralized in `ops/bin/template` with YAML metadata parsing, include injection, and strict slot enforcement by default.
 - Bundle stance contract rendering is template-backed via `ops/src/stances/*.md.tpl` and manifest stance keys in `ops/lib/manifests/BUNDLE.md`.
@@ -606,11 +605,9 @@ Attachment contract defaults and profile routing semantics are governed by `ops/
 | `audit` | `./ops/bin/bundle --profile=audit --out=auto` | initial `AUDIT-*.txt`, rerun `AUDIT-R*.txt`, matching manifests, DP RESULTS receipt | Audit stance is PASS/FAIL verdict only. Use `--rerun` for resubmissions; prior local `AUDIT-*` artifacts do not trigger rerun identity. |
 | `addenda` | `./ops/bin/bundle --profile=addenda --intent="ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>" --out=auto` | `ADDENDUM-*.txt`, `ADDENDUM-*.manifest.json` | Addendum authorization intake only; not used for PASS/FAIL verdicts. |
 | `project` | `./ops/bin/bundle --profile=project --project=<name> --out=auto` | `PROJECT-*.txt`, `PROJECT-*.manifest.json` | Project-scoped dump context is embedded in the bundle metadata. |
-| `conform` | `./ops/bin/bundle --profile=conform --out=auto` | `CONFORM-*.txt`, `CONFORM-*.manifest.json`, draft DP input | Conformist stance normalizes structure without changing intent. |
 
 > **Model-compat fallback:** If tar ingestion is unreliable in a web model context, attach the dump payload (`dump-*.txt`) and dump manifest (`dump-*.manifest.txt`) directly in place of the bundle tar.
 > **Legacy compatibility:** During prefix migration, legacy `BUNDLE-*` artifacts may be emitted as compatibility copies when policy flag `compatibility_emit_legacy_bundle_artifacts=true`.
-> **Alias sunset window:** Legacy profile alias `hygiene` remains a compatibility route in `sunset` status with removal target `DP-OPS-0165`.
 > **front-door contract:** `./ops/bin/bundle` is canonical. `./ops/bin/meta <project-name> [--out=auto|PATH]` remains a project-only compatibility shim that delegates to `bundle --profile=project`.
 
 ### ATS Validation Mode (S8)

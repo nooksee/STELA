@@ -3,13 +3,13 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/bin/bundle` produces delivery packets for planning, draft, audit, project, conform, and addenda profiles. It is a transport contract, not a free-form export path: profile routing, explicit disposable inputs, dump selection, and emitted artifact identity are deterministic.
+`ops/bin/bundle` produces delivery packets for planning, draft, audit, project, and addenda profiles. It is a transport contract, not a free-form export path: profile routing, explicit disposable inputs, dump selection, and emitted artifact identity are deterministic.
 
 ## Shipping Spine Position
 Bundle sits at two points in the shipping spine:
 - **Planning/Draft input:** `--profile=planning` or `--profile=draft` delivers the context package that produces `PLAN.md` (planning) or the active DP draft at `storage/dp/intake/DP.md` (draft).
 - **Audit delivery:** `--profile=audit` packages certify-generated RESULTS and CLOSING for audit review. This is the canonical audit intake mechanism and is **separate** from operator session refresh (`ops/bin/open`, `ops/bin/dump` for CDD). Do not conflate bundle audit with standalone `ops/bin/dump --scope=core` closeout steps.
-- **Secondary lanes:** `--profile=addenda` is an intervention intake path (not a PASS/FAIL verdict workflow). `--profile=conform` is a structure normalization lane. Neither replaces RESULTS or audit truth.
+- **Secondary lanes:** `--profile=addenda` is an intervention intake path (not a PASS/FAIL verdict workflow). It does not replace RESULTS or audit truth.
 
 ## Active Surface Names
 - Planning input: `storage/handoff/TOPIC.md` (latest-wins)
@@ -30,7 +30,7 @@ Bundle sits at two points in the shipping spine:
 9. For audit reruns, emit fresh transport identity and submission lineage.
 
 ## Dump Scope Mapping
-1. `planning|draft|conform` -> `ops/bin/dump --scope=full`
+1. `planning|draft` -> `ops/bin/dump --scope=full`
 2. `audit` -> `ops/bin/dump --scope=core`
 3. `addenda` -> `ops/bin/dump --scope=core`
 4. `project` -> `ops/bin/dump --scope=project --project=<name>`

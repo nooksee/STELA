@@ -212,7 +212,7 @@ EOF
 - Active draft surface: storage/dp/intake/DP.md (latest-wins); packet identity is bundle/request-mediated.
 - Certify requires STELA_TRACE_ID from this OPEN artifact or STELA_TRACE_ID env var.
 - Audit dump: ./ops/bin/bundle --profile=audit --out=auto (separate from session refresh)
-- Secondary lanes: foreman/addendum (intervention), conform/conformist (normalization), execution-decision (disposable/manual at storage/handoff/EXECUTION-DECISION.md)
+- Secondary lanes: foreman/addendum (intervention), execution-decision (disposable/manual at storage/handoff/EXECUTION-DECISION.md)
 
 [NEXT OPERATOR MOVES]
 - ./ops/bin/bundle --profile=auto --out=auto

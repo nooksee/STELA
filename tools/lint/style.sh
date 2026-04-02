@@ -245,8 +245,6 @@ check_audit_addenda_mode_split() {
   local required_addenda_guard='This stance is not used for audit PASS/FAIL verdicts.'
   local required_manifest_audit='Canonical audit verdict profile is `audit`.'
   local required_manifest_addenda='Canonical addenda profile is `addenda`.'
-  local required_manifest_alias_hygiene_status_key='profile_alias_legacy_hygiene_deprecation_status='
-  local required_manifest_alias_hygiene_remove_key='profile_alias_legacy_hygiene_remove_after_dp='
 
   [[ -f "$stance_audit" ]] || mark_failure "audit.md.tpl missing for mode split checks"
   [[ -f "$stance_addenda" ]] || mark_failure "addenda.md.tpl missing for mode split checks"
@@ -294,14 +292,6 @@ check_audit_addenda_mode_split() {
 
   if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_addenda" "$bundle_manifest"; then
     mark_failure "BUNDLE.md missing canonical addenda mode split line"
-  fi
-
-  if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_alias_hygiene_status_key" "$bundle_manifest"; then
-    mark_failure "BUNDLE.md missing hygiene alias deprecation status key line"
-  fi
-
-  if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_alias_hygiene_remove_key" "$bundle_manifest"; then
-    mark_failure "BUNDLE.md missing hygiene alias remove-after key line"
   fi
 
 }
@@ -615,36 +605,6 @@ check_addenda_mode_contract() {
 }
 
 
-check_conformist_mode_contract() {
-  local stance_conformist="${REPO_ROOT}/ops/src/stances/conformist.md.tpl"
-  local required_scope='* This stance is not used for audit PASS/FAIL verdicts or addendum authorization outputs.'
-  local required_shared_fence_include='{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}'
-  local required_first='First non-empty line inside the code block must start with `### DP-`.'
-  local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
-  local required_no_addendum='For machine-ingest conformist mode: do not emit addendum authorization headings or decision fields (`Decision Required:`, `Decision Leaf:`).'
-
-  [[ -f "$stance_conformist" ]] || mark_failure "conformist.md.tpl missing for mode contract checks"
-
-  if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_scope" "$stance_conformist"; then
-    mark_failure "conformist.md.tpl missing conformist scope-separation line"
-  fi
-
-  if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_shared_fence_include" "$stance_conformist"; then
-    mark_failure "conformist.md.tpl missing shared fence include line"
-  fi
-
-  if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_first" "$stance_conformist"; then
-    mark_failure "conformist.md.tpl missing conformist first-line marker line"
-  fi
-
-  if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_shared_non_audit_include" "$stance_conformist"; then
-    mark_failure "conformist.md.tpl missing shared non-audit include line"
-  fi
-
-  if [[ -f "$stance_conformist" ]] && ! grep -Fq -- "$required_no_addendum" "$stance_conformist"; then
-    mark_failure "conformist.md.tpl missing conformist no-addendum-or-decision-fields line"
-  fi
-}
 check_open_marker_contract() {
   local open_binary="${REPO_ROOT}/ops/bin/open"
   local begin_marker='===== STELA OPEN PROMPT ====='
@@ -952,7 +912,6 @@ check_audit_addenda_mode_split
 check_draft_mode_contract
 check_planning_mode_contract
 check_addenda_mode_contract
-check_conformist_mode_contract
 check_open_marker_contract
 check_closing_block_lead_words
 check_closing_block_conversation_starter_question
