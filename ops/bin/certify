@@ -336,6 +336,14 @@ allowlist_contains_path() {
   return 1
 }
 
+path_is_deleted_tracked_in_active_diff() {
+  local path="$1"
+  if git -C "$REPO_ROOT" diff --name-only --diff-filter=D HEAD -- "$path" | grep -Fxq "$path"; then
+    return 0
+  fi
+  return 1
+}
+
 assert_allowlist_contains_path() {
   local path="$1"
   if ! allowlist_contains_path "$path"; then
@@ -1097,6 +1105,9 @@ verify_changed_files_subset_allowlist() {
   for path in "${changed_paths[@]}"; do
     local normalized
     normalized="$(normalize_path "$path")"
+    if path_is_deleted_tracked_in_active_diff "$normalized"; then
+      continue
+    fi
     if ! allowlist_contains_path "$normalized"; then
       unauthorized+=("$normalized")
     fi
