@@ -16,6 +16,11 @@ Define the template-backed Planning stance body used by bundle output contract r
 - Shared include source: `ops/src/shared/stances.json#stance_continuity_rules`
 - Shared include source: `ops/src/shared/stances.json#non_audit_role_drift_rules`
 
+## Ownership Model
+- Runtime owner: `ops/src/stances/planning.md.tpl` plus the included shared contract keys in `ops/src/shared/stances.json`.
+- Verifier: `tools/lint/style.sh` guards planning invariant families; it does not need to co-own every sentence of the runtime stance body.
+- Mirror: this spec summarizes the contract families and ownership split; it does not override the runtime template.
+
 ## Outputs
 - Rendered stance body text beginning at `Rules:`.
 - No unresolved include directives.
@@ -59,6 +64,7 @@ Define the template-backed Planning stance body used by bundle output contract r
 - Include expansion is strict and fail-closed.
 - Unresolved template tokens fail render in strict mode.
 - Render output is deterministic for identical repository state.
+- Verifier ownership stays thinner than runtime ownership: style lint protects planning contract families and critical anchor lines, while the full rendered prose remains owned by the runtime template.
 - Planning does not emit structureless questions; when question mode is used, the question comes first, the portable fallback stays bounded, and any host overlay preserves the same substantive choices and final redirect.
 - For multi-family topics, question mode has priority over final-plan mode unless the immediate packet is explicit under the narrow definition above.
 
