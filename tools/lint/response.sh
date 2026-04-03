@@ -175,44 +175,69 @@ check_audit_body_start() {
   fi
 }
 
-check_draft_body_scope() {
+reject_body_match() {
   local body_path="$1"
+  local awk_program="$2"
+  local failure_message="$3"
   local hit=""
   local line_number=""
   local line_text=""
 
-  hit="$(awk '
+  hit="$(awk "$awk_program" "$body_path")"
+  if [[ -n "$hit" ]]; then
+    IFS=$'\t' read -r line_number line_text <<< "$hit"
+    response_fail "${failure_message} at line ${line_number}: ${line_text}"
+  fi
+}
+
+require_body_match() {
+  local body_path="$1"
+  local awk_program="$2"
+  local failure_message="$3"
+  local hit=""
+
+  hit="$(awk "$awk_program" "$body_path")"
+  if [[ -z "$hit" ]]; then
+    response_fail "${failure_message}"
+  fi
+}
+
+check_reject_audit_verdict_marker() {
+  local body_path="$1"
+  local scope_label="$2"
+  reject_body_match "$body_path" '
     $0 ~ /^\*\*AUDIT[[:space:]]+[-—]/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -n "$hit" ]]; then
-    IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "draft body must not contain audit verdict marker at line ${line_number}: ${line_text}"
-  fi
+  ' "${scope_label} must not contain audit verdict marker"
+}
 
-  hit="$(awk '
+check_reject_worker_narrative_section() {
+  local body_path="$1"
+  local scope_label="$2"
+  reject_body_match "$body_path" '
     $0 ~ /^##[[:space:]]+Worker Execution Narrative$/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -n "$hit" ]]; then
-    IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "draft body must not contain worker narrative section at line ${line_number}: ${line_text}"
-  fi
+  ' "${scope_label} must not contain worker narrative section"
+}
 
-  hit="$(awk '
+check_reject_receipt_narrative_subheadings() {
+  local body_path="$1"
+  local scope_label="$2"
+  reject_body_match "$body_path" '
     $0 ~ /^###[[:space:]]+(Preflight State|Implemented Changes|Closeout Notes|Decision Leaf)$/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -n "$hit" ]]; then
-    IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "draft body must not contain receipt narrative subheading at line ${line_number}: ${line_text}"
-  fi
+  ' "${scope_label} must not contain receipt narrative subheading"
+}
+
+check_draft_body_scope() {
+  local body_path="$1"
+
+  check_reject_audit_verdict_marker "$body_path" "draft body"
+  check_reject_worker_narrative_section "$body_path" "draft body"
+  check_reject_receipt_narrative_subheadings "$body_path" "draft body"
 }
 
 check_planning_body_scope() {
   local body_path="$1"
   local planning_shape="${2:-auto}"
   local first_content_line
-  local hit=""
-  local line_number=""
-  local line_text=""
   local plan_lint_output=""
 
   first_content_line="$(awk 'NF { print; exit }' "$body_path")"
@@ -221,54 +246,24 @@ check_planning_body_scope() {
     return 1
   fi
 
-  hit="$(awk '
-    $0 ~ /^\*\*AUDIT[[:space:]]+[-—]/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -n "$hit" ]]; then
-    IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "planning body must not contain audit verdict marker at line ${line_number}: ${line_text}"
-  fi
+  check_reject_audit_verdict_marker "$body_path" "planning body"
+  check_reject_worker_narrative_section "$body_path" "planning body"
+  check_reject_receipt_narrative_subheadings "$body_path" "planning body"
 
-  hit="$(awk '
-    $0 ~ /^##[[:space:]]+Worker Execution Narrative$/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -n "$hit" ]]; then
-    IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "planning body must not contain worker narrative section at line ${line_number}: ${line_text}"
-  fi
-
-  hit="$(awk '
-    $0 ~ /^###[[:space:]]+(Preflight State|Implemented Changes|Closeout Notes|Decision Leaf)$/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -n "$hit" ]]; then
-    IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "planning body must not contain receipt narrative subheading at line ${line_number}: ${line_text}"
-  fi
-
-  hit="$(awk '
+  reject_body_match "$body_path" '
     tolower($0) ~ /decision[[:space:]]+required:/ || tolower($0) ~ /decision[[:space:]]+leaf:/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -n "$hit" ]]; then
-    IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "planning body must not contain audit/addenda decision fields at line ${line_number}: ${line_text}"
-  fi
+  ' "planning body must not contain audit/addenda decision fields"
 
-  hit="$(awk '
+  reject_body_match "$body_path" '
     index(tolower($0), "section 3.4.5") || index(tolower($0), "receipt_extra") || index(tolower($0), "ops/src/surfaces/dp.md.tpl") || index(tolower($0), "emit exactly one fenced markdown code block") || index(tolower($0), "do not output option menus") { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -n "$hit" ]]; then
-    IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "planning body must not contain role-policy overcompensation prose at line ${line_number}: ${line_text}"
-  fi
+  ' "planning body must not contain role-policy overcompensation prose"
 
-  hit="$(awk '
+  reject_body_match "$body_path" '
     $0 ~ /^1[.][[:space:]]+Analysis[[:space:]]+and[[:space:]]+Discussion$/ ||
     $0 ~ /^2[.][[:space:]]+Decision[[:space:]]+Questions$/ ||
     $0 ~ /^Questions[[:space:]]*\/[[:space:]]*Conversation:[[:space:]]*$/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -n "$hit" ]]; then
-    IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "planning body must not use retired question-mode wrapper text at line ${line_number}: ${line_text}"
+  ' "planning body must not use retired question-mode wrapper text"
+  if (( failures )); then
     return 1
   fi
 
@@ -424,9 +419,6 @@ check_planning_body_scope() {
 check_addenda_body_scope() {
   local body_path="$1"
   local first_content_line
-  local hit=""
-  local line_number=""
-  local line_text=""
   local decision_required_line=""
   local decision_leaf_line=""
   local decision_required_value=""
@@ -443,63 +435,33 @@ check_addenda_body_scope() {
     return 1
   fi
 
-  hit="$(awk '
+  require_body_match "$body_path" '
     $0 ~ /^##[[:space:]]+A[.]1[[:space:]]+Authorization$/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -z "$hit" ]]; then
-    response_fail "addenda body must include section '## A.1 Authorization'"
-  fi
+  ' "addenda body must include section '## A.1 Authorization'"
 
-  hit="$(awk '
+  require_body_match "$body_path" '
     $0 ~ /^##[[:space:]]+A[.]2[[:space:]]+Scope[[:space:]]+Delta$/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -z "$hit" ]]; then
-    response_fail "addenda body must include section '## A.2 Scope Delta'"
-  fi
+  ' "addenda body must include section '## A.2 Scope Delta'"
 
-  hit="$(awk '
+  require_body_match "$body_path" '
     $0 ~ /^##[[:space:]]+A[.]3[[:space:]]+Addendum[[:space:]]+Objective$/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -z "$hit" ]]; then
-    response_fail "addenda body must include section '## A.3 Addendum Objective'"
-  fi
+  ' "addenda body must include section '## A.3 Addendum Objective'"
 
-  hit="$(awk '
+  require_body_match "$body_path" '
     $0 ~ /^##[[:space:]]+A[.]4[[:space:]]+Context[[:space:]]+Load$/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -z "$hit" ]]; then
-    response_fail "addenda body must include section '## A.4 Context Load'"
-  fi
+  ' "addenda body must include section '## A.4 Context Load'"
 
-  hit="$(awk '
+  require_body_match "$body_path" '
     $0 ~ /^##[[:space:]]+A[.]5[[:space:]]+Addendum[[:space:]]+Receipt[[:space:]]+[(]Proofs[[:space:]]+to[[:space:]]+collect[)][[:space:]]+-[[:space:]]+MUST[[:space:]]+RUN$/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -z "$hit" ]]; then
-    response_fail "addenda body must include section '## A.5 Addendum Receipt (Proofs to collect) - MUST RUN'"
-  fi
+  ' "addenda body must include section '## A.5 Addendum Receipt (Proofs to collect) - MUST RUN'"
 
-  hit="$(awk '
-    $0 ~ /^\*\*AUDIT[[:space:]]+[-—]/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -n "$hit" ]]; then
-    IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "addenda body must not contain audit verdict marker at line ${line_number}: ${line_text}"
-  fi
-
-  hit="$(awk '
-    $0 ~ /^##[[:space:]]+Worker Execution Narrative$/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -n "$hit" ]]; then
-    IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "addenda body must not contain worker narrative section at line ${line_number}: ${line_text}"
-  fi
-
-  hit="$(awk '
+  check_reject_audit_verdict_marker "$body_path" "addenda body"
+  check_reject_worker_narrative_section "$body_path" "addenda body"
+  reject_body_match "$body_path" '
     $0 ~ /^##[[:space:]]+Verdict$/ { printf "%d\t%s\n", NR, $0; exit }
-  ' "$body_path")"
-  if [[ -n "$hit" ]]; then
-    IFS=$'\t' read -r line_number line_text <<< "$hit"
-    response_fail "addenda body must not contain audit verdict section at line ${line_number}: ${line_text}"
+  ' "addenda body must not contain audit verdict section"
+  if (( failures )); then
+    return 1
   fi
 
   decision_required_line="$(grep -E '^Decision Required:' "$body_path" | head -n 1 || true)"
