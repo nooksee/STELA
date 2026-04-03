@@ -17,8 +17,9 @@
 9. For RESULTS paths, delegate validation to `tools/lint/results.sh` and propagate its exit code. RESULTS schema enforcement is sourced from the canonical template plus narrative field checks.
 10. In `--test` mode, execute fixture-driven negative and positive checks that exercise template-hash drift, structure mismatch, allowlist-pointer mismatch, allowlist-file invalidity, drafting-marker word detection, foreign citation contamination detection, and delegated RESULTS validation coverage (valid fixture and deterministic invalid fixture).
 11. Enforce mandatory receipt-command shape in `3.4.5`: verify canonical mandatory command lines are present, and fail deterministically when DP-specific receipt commands are not replayable by certify.
-12. Enforce closing-sidecar non-prepopulation in `3.5.1`: reject draft payloads that provide non-empty values for canonical sidecar fields.
-13. Enforce include-metadata leakage guard in DP payload bodies: fail on first line containing `<!-- CCD:` or a raw frontmatter delimiter line `---`.
+12. Enforce delete/load-order consistency: a path declared `DELETE` in `3.4.3 Changelog` cannot still appear in `3.2.2 DP-scoped load order`.
+13. Enforce closing-sidecar non-prepopulation in `3.5.1`: reject draft payloads that provide non-empty values for canonical sidecar fields.
+14. Enforce include-metadata leakage guard in DP payload bodies: fail on first line containing `<!-- CCD:` or a raw frontmatter delimiter line `---`.
 
 ### Drafting-Marker Scan Fixtures (`--test`)
 `dp.sh --test` must cover both drafting-marker scan outcome classes:
@@ -33,6 +34,7 @@
 1. **Non-canonical closeout phrase (FAIL):** inject `- Route to worker ...` into §3.5 and require failure.
 2. **Invalid work-branch form (FAIL):** `Work Branch` does not follow `work/<DP-ID>-YYYY-MM-DD` form (PoT.md §6.2.1) and must fail.
 3. **Closing-sidecar coherence mismatch (FAIL):** a packet-scoped legacy sidecar token in §3.5.1 carries an id fragment that disagrees with the heading id.
+4. **Delete/load-order contradiction (FAIL):** add `- DELETE <path>` in `3.4.3` for a path still listed in `3.2.2 DP-scoped load order` and require failure.
 
 ### Mandatory Receipt Command Shape and Sidecar Pre-population Fixtures (`--test`)
 `dp.sh --test` must include deterministic fixtures for residual T1.1 hardening:
@@ -93,6 +95,10 @@ Allowed literal first-token families are exactly:
    - extracts §3.5 body content (between `## 3.5` and `### 3.5.1`),
    - fails when §3.5 is empty,
   - fails on non-canonical closeout shortcut phrases such as `Route to ...`, `Hand off to ...`, `Pass to ...`, or `Send to ...`.
+3. `check_delete_load_order_consistency()`:
+   - extracts `3.2.2 DP-scoped load order` bullet paths,
+   - extracts `3.4.3 Changelog` `DELETE <path>` entries,
+   - fails when the same exact path appears in both places, because a deleted path cannot remain an active required context input.
 
 ## Foreign Citation Contamination Guard
 

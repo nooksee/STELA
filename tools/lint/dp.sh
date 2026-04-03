@@ -875,6 +875,43 @@ check_closeout_section_shape() {
   done <<< "$closeout_block"
 }
 
+check_delete_load_order_consistency() {
+  local path="$1"
+  local scoped_load_order
+  local changelog_block
+  local load_order_paths
+  local deleted_path
+
+  scoped_load_order="$(extract_block "$path" '^### 3[.]2[.]2' '^## 3[.]3([.]|[[:space:]])')"
+  changelog_block="$(extract_block "$path" '^### 3[.]4[.]3' '^### 3[.]4[.]4')"
+
+  load_order_paths="$(printf '%s\n' "$scoped_load_order" | awk '
+    /^[[:space:]]*-[[:space:]]+/ {
+      line=$0
+      sub(/^[[:space:]]*-[[:space:]]+/, "", line)
+      gsub(/`/, "", line)
+      split(line, parts, /[[:space:]]+/)
+      if (parts[1] != "") print parts[1]
+    }
+  ')"
+
+  while IFS= read -r deleted_path; do
+    [[ -n "$deleted_path" ]] || continue
+    if grep -Fqx -- "$deleted_path" <<< "$load_order_paths"; then
+      fail "§3.4.3 declares DELETE path still present in §3.2.2 DP-scoped load order: ${deleted_path}"
+      return
+    fi
+  done < <(printf '%s\n' "$changelog_block" | awk '
+    /^[[:space:]]*-[[:space:]]*DELETE[[:space:]]+/ {
+      line=$0
+      sub(/^[[:space:]]*-[[:space:]]*DELETE[[:space:]]+/, "", line)
+      gsub(/`/, "", line)
+      split(line, parts, /[[:space:]]+/)
+      if (parts[1] != "") print parts[1]
+    }
+  ')
+}
+
 check_mandatory_receipt_commands() {
   local path="$1"
   local receipt_block
@@ -1235,6 +1272,7 @@ lint_payload() {
   check_template_hash_preflight
   check_structure_hash "$path"
   check_required_fields "$path"
+  check_delete_load_order_consistency "$path"
   check_allowlist_pointer_integrity "$path"
   check_dump_selection_scope "$path"
   check_freshness_stamp_format "$path"
@@ -1396,6 +1434,8 @@ run_test() {
   local tmp_results_valid
   local tmp_results_invalid
   local tmp_results_preflight_invalid
+  local tmp_results_fence_invalid
+  local tmp_delete_load_order_bad
   local tmp_proposed_marker_bad
   local tmp_proposed_prose_ok
   local tmp_proposed_schema_ok
@@ -1421,6 +1461,8 @@ run_test() {
   tmp_allowlist_file_bad="$(mktemp)"
   tmp_results_valid="$(mktemp --suffix=-RESULTS.md)"
   tmp_results_invalid="$(mktemp --suffix=-RESULTS.md)"
+  tmp_results_fence_invalid="$(mktemp --suffix=-RESULTS.md)"
+  tmp_delete_load_order_bad="$(mktemp)"
   tmp_proposed_marker_bad="$(mktemp)"
   tmp_proposed_prose_ok="$(mktemp)"
   tmp_proposed_schema_ok="$(mktemp)"
@@ -1463,6 +1505,14 @@ run_test() {
     exit 1
   fi
   rm -f "$tmp_closeout_bad"
+
+  cp "$tmp_valid" "$tmp_delete_load_order_bad"
+  sed -i '/^### 3\.4\.3/a- DELETE docs/ops/specs/tools/lint/dp.md' "$tmp_delete_load_order_bad"
+  if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_delete_load_order_bad" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_fence_invalid" "$tmp_delete_load_order_bad" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
+    echo "FAIL: --test expected delete/load-order contradiction failure" >&2
+    exit 1
+  fi
 
   tmp_coherence_bad="$(mktemp)"
   cp "$tmp_valid" "$tmp_coherence_bad"
@@ -1592,8 +1642,63 @@ None.
 Decision Required: No
 TESTRESULTS
   if lint_path "$tmp_results_invalid" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_fence_invalid" "$tmp_delete_load_order_bad" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected RESULTS validation failure" >&2
+    exit 1
+  fi
+
+  cat > "$tmp_results_fence_invalid" <<TESTRESULTS
+# DP-OPS-0099 RESULTS
+
+## Certification Metadata
+- Packet ID: DP-OPS-0099
+- Git Hash: ${current_git_hash}
+
+## Scope Verification
+### Integrity Lint Output
+PASS
+
+## Verification Command Log
+### Command 01
+- Command: \`bash tools/lint/dp.sh TASK.md\`
+- Exit Code: 0
+
+#### STDOUT
+~~~text
+OK
+~~~### Command 02
+
+## Git State Impact
+### git diff --name-only
+tools/lint/dp.sh
+
+### git diff --stat
+ tools/lint/dp.sh | 1 +
+
+## Worker Execution Narrative
+### Preflight State
+~~~text
+git rev-parse --abbrev-ref HEAD
+work/dp-ops-0099-2026-01-01
+git rev-parse --short HEAD
+abcdef1
+git status --porcelain
+~~~
+Preflight lints passed: bash tools/lint/dp.sh TASK.md; bash tools/lint/task.sh.
+
+### Implemented Changes
+Updated tools/lint/results.sh to reject malformed command-log fence boundaries.
+
+### Closeout Notes
+None.
+
+### Decision Leaf
+Decision Required: No
+Decision Leaf: None
+TESTRESULTS
+  if lint_path "$tmp_results_fence_invalid" >/dev/null 2>&1; then
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_preflight_invalid" "$tmp_results_fence_invalid" "$tmp_delete_load_order_bad" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
+    echo "FAIL: --test expected RESULTS fence-integrity validation failure" >&2
     exit 1
   fi
 
@@ -1640,7 +1745,7 @@ Decision Required: No
 Decision Leaf: None
 TESTRESULTS
   if lint_path "$tmp_results_preflight_invalid" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_preflight_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_preflight_invalid" "$tmp_results_fence_invalid" "$tmp_delete_load_order_bad" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected RESULTS preflight-proof validation failure" >&2
     exit 1
   fi
@@ -1653,12 +1758,12 @@ TESTRESULTS
   # successful --test runs do not contain contradictory FAIL/OK receipt evidence.
   check_proposed_token_scan "$tmp_proposed_marker_bad" >/dev/null 2>&1
   if (( failures == 0 )); then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_fence_invalid" "$tmp_delete_load_order_bad" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected direct PROPOSED provisional-marker scan failure" >&2
     exit 1
   fi
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_proposed_marker_bad" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_fence_invalid" "$tmp_delete_load_order_bad" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected PROPOSED provisional-marker scan failure" >&2
     exit 1
   fi
@@ -1669,7 +1774,7 @@ TESTRESULTS
   failures=0
   check_proposed_token_scan "$tmp_proposed_prose_ok" >/dev/null 2>&1
   if (( failures == 0 )); then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_fence_invalid" "$tmp_delete_load_order_bad" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected prose-only PROPOSED scan failure" >&2
     exit 1
   fi
@@ -1685,12 +1790,12 @@ TESTRESULTS
   # Expected-negative self-check: suppress emitted FAIL line from the detector.
   check_foreign_citation_contamination "$tmp_contamination_bad" >/dev/null 2>&1 || true
   if (( failures == 0 )); then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_fence_invalid" "$tmp_delete_load_order_bad" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected direct contamination scan failure" >&2
     exit 1
   fi
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_contamination_bad" >/dev/null 2>&1; then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_fence_invalid" "$tmp_delete_load_order_bad" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected contamination lint failure" >&2
     exit 1
   fi
@@ -1698,7 +1803,7 @@ TESTRESULTS
   failures=0
   check_foreign_citation_contamination "$tmp_valid" >/dev/null
   if (( failures )); then
-    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
+    rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_fence_invalid" "$tmp_delete_load_order_bad" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_contamination_bad"
     echo "FAIL: --test expected direct contamination scan clean pass" >&2
     exit 1
   fi
@@ -1762,7 +1867,7 @@ TESTRESULTS
     exit 1
   fi
 
-  rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_preflight_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
+  rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_results_preflight_invalid" "$tmp_results_fence_invalid" "$tmp_delete_load_order_bad" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad"
   echo "OK: --test passed"
 }
 
