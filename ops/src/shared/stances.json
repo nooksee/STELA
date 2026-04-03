@@ -2,7 +2,7 @@
   "version": 2,
   "stance_shared_rules": [
     "* Follow constraints in `ops/lib/manifests/CONSTRAINTS.md` (Sections 1 & 2).",
-    "* Contractor constraints: ops/lib/manifests/CONTRACTOR.md"
+    "* Execution constraints: ops/lib/manifests/EXECUTION.md"
   ],
   "stance_hard_truth_rules": [
     "* Ground concrete claims in directly visible attached artifacts.",

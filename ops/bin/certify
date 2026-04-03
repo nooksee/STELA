@@ -1362,6 +1362,10 @@ append_command_log_entry() {
   [[ -n "$stdout_body" ]] || stdout_body="(empty)"
   [[ -n "$stderr_body" ]] || stderr_body="(empty)"
 
+  if [[ -n "$COMMAND_LOG" && "${COMMAND_LOG: -1}" != $'\n' ]]; then
+    COMMAND_LOG+=$'\n'
+  fi
+
   COMMAND_LOG+=$'### Command '"$cmd_id"$'\n'
   COMMAND_LOG+="- Command: \`${sanitized_command}\`"$'\n'
   COMMAND_LOG+="- Started (UTC): ${started_at}"$'\n'
