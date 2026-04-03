@@ -245,102 +245,67 @@ check_audit_addenda_mode_split() {
   local stance_audit="${REPO_ROOT}/ops/src/stances/audit.md.tpl"
   local stance_addenda="${REPO_ROOT}/ops/src/stances/addenda.md.tpl"
   local bundle_manifest="${REPO_ROOT}/ops/lib/manifests/BUNDLE.md"
-  local required_audit_guard='`--profile=addenda` is addenda mode and is never valid for audit verdict workflows.'
-  local required_audit_empty_input='If user text is empty and required attachments are present, proceed and emit only the final audit block.'
-  local required_audit_output='Output only: Complete audit report.'
-  local required_audit_shared_fence_include='{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}'
-  local required_audit_output_first='First non-empty line inside the fenced block must start with `**AUDIT -`.'
-  local required_audit_no_citations='Do not emit citation tokens (`[cite_start]`, `[cite:`, `[/cite]`, `:contentReference[`, or `oaicite`).'
-  local required_audit_authority='If interpretation conflicts with receipt command outputs, treat command outputs and lint results as authoritative and mark the interpretation as non-blocking.'
-  local required_audit_allowlist_authority='For allowlist interpretation, `tools/lint/integrity.sh` plus certify changed-file subset check are authoritative; raw `comm` output is informational.'
-  local required_addenda_guard='This stance is not used for audit PASS/FAIL verdicts.'
-  local required_manifest_audit='Canonical audit verdict profile is `audit`.'
-  local required_manifest_addenda='Canonical addenda profile is `addenda`.'
+  local -a audit_literals=(
+    '`--profile=addenda` is addenda mode and is never valid for audit verdict workflows.:::audit.md.tpl missing audit-verdict stance marker'
+    'If user text is empty and required attachments are present, proceed and emit only the final audit block.:::audit.md.tpl missing empty-input attach-only rule line'
+    'Output only: Complete audit report.:::audit.md.tpl missing audit output contract line'
+    '{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}:::audit.md.tpl missing shared fence include line'
+    'First non-empty line inside the fenced block must start with `**AUDIT -`.:::audit.md.tpl missing audit first-line marker output line'
+    'Do not emit citation tokens (`[cite_start]`, `[cite:`, `[/cite]`, `:contentReference[`, or `oaicite`).:::audit.md.tpl missing audit no-citations output line'
+    'If interpretation conflicts with receipt command outputs, treat command outputs and lint results as authoritative and mark the interpretation as non-blocking.:::audit.md.tpl missing audit evidence-authority conflict rule line'
+    'For allowlist interpretation, `tools/lint/integrity.sh` plus certify changed-file subset check are authoritative; raw `comm` output is informational.:::audit.md.tpl missing audit allowlist-authority interpretation rule line'
+  )
+  local -a addenda_literals=(
+    'This stance is not used for audit PASS/FAIL verdicts.:::addenda.md.tpl missing addendum-authorization stance marker'
+  )
+  local -a manifest_literals=(
+    'Canonical audit verdict profile is `audit`.:::BUNDLE.md missing canonical audit mode split line'
+    'Canonical addenda profile is `addenda`.:::BUNDLE.md missing canonical addenda mode split line'
+  )
+  local entry needle failure_message
 
   [[ -f "$stance_audit" ]] || mark_failure "audit.md.tpl missing for mode split checks"
   [[ -f "$stance_addenda" ]] || mark_failure "addenda.md.tpl missing for mode split checks"
   [[ -f "$bundle_manifest" ]] || mark_failure "BUNDLE.md missing for mode split checks"
 
-  if [[ -f "$stance_audit" ]] && ! grep -Fq -- "$required_audit_guard" "$stance_audit"; then
-    mark_failure "audit.md.tpl missing audit-verdict stance marker"
-  fi
+  for entry in "${audit_literals[@]}"; do
+    needle="${entry%%:::*}"
+    failure_message="${entry#*:::}"
+    require_file_contains_literal "$stance_audit" "$needle" "$failure_message"
+  done
 
-  if [[ -f "$stance_audit" ]] && ! grep -Fq -- "$required_audit_empty_input" "$stance_audit"; then
-    mark_failure "audit.md.tpl missing empty-input attach-only rule line"
-  fi
+  for entry in "${addenda_literals[@]}"; do
+    needle="${entry%%:::*}"
+    failure_message="${entry#*:::}"
+    require_file_contains_literal "$stance_addenda" "$needle" "$failure_message"
+  done
 
-  if [[ -f "$stance_audit" ]] && ! grep -Fq -- "$required_audit_output" "$stance_audit"; then
-    mark_failure "audit.md.tpl missing audit output contract line"
-  fi
-
-  if [[ -f "$stance_audit" ]] && ! grep -Fq -- "$required_audit_shared_fence_include" "$stance_audit"; then
-    mark_failure "audit.md.tpl missing shared fence include line"
-  fi
-
-  if [[ -f "$stance_audit" ]] && ! grep -Fq -- "$required_audit_output_first" "$stance_audit"; then
-    mark_failure "audit.md.tpl missing audit first-line marker output line"
-  fi
-
-  if [[ -f "$stance_audit" ]] && ! grep -Fq -- "$required_audit_no_citations" "$stance_audit"; then
-    mark_failure "audit.md.tpl missing audit no-citations output line"
-  fi
-
-  if [[ -f "$stance_audit" ]] && ! grep -Fq -- "$required_audit_authority" "$stance_audit"; then
-    mark_failure "audit.md.tpl missing audit evidence-authority conflict rule line"
-  fi
-
-  if [[ -f "$stance_audit" ]] && ! grep -Fq -- "$required_audit_allowlist_authority" "$stance_audit"; then
-    mark_failure "audit.md.tpl missing audit allowlist-authority interpretation rule line"
-  fi
-
-  if [[ -f "$stance_addenda" ]] && ! grep -Fq -- "$required_addenda_guard" "$stance_addenda"; then
-    mark_failure "addenda.md.tpl missing addendum-authorization stance marker"
-  fi
-
-  if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_audit" "$bundle_manifest"; then
-    mark_failure "BUNDLE.md missing canonical audit mode split line"
-  fi
-
-  if [[ -f "$bundle_manifest" ]] && ! grep -Fq -- "$required_manifest_addenda" "$bundle_manifest"; then
-    mark_failure "BUNDLE.md missing canonical addenda mode split line"
-  fi
-
+  for entry in "${manifest_literals[@]}"; do
+    needle="${entry%%:::*}"
+    failure_message="${entry#*:::}"
+    require_file_contains_literal "$bundle_manifest" "$needle" "$failure_message"
+  done
 }
 
 check_draft_mode_contract() {
   local stance_draft="${REPO_ROOT}/ops/src/stances/draft.md.tpl"
-  local required_output='Output only: Full DP (starting at `### DP-...`) in one markdown code block.'
-  local required_shared_fence_include='{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}'
-  local required_first='First non-empty line inside the code block must start with `### DP-`.'
-  local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
-  local required_no_narrative='Do not emit Worker Execution Narrative sections or receipt narrative subheadings.'
-  local required_scope_only='Do not expand or replace the settled plan scope in draft mode.'
+  local -a draft_literals=(
+    'Output only: Full DP (starting at `### DP-...`) in one markdown code block.:::draft.md.tpl missing output contract line'
+    '{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}:::draft.md.tpl missing shared fence include line'
+    'First non-empty line inside the code block must start with `### DP-`.:::draft.md.tpl missing first-line marker line'
+    '{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}:::draft.md.tpl missing shared non-audit include line'
+    'Do not emit Worker Execution Narrative sections or receipt narrative subheadings.:::draft.md.tpl missing no-receipt-narrative line'
+    'Do not expand or replace the settled plan scope in draft mode.:::draft.md.tpl missing draft scope-only line'
+  )
+  local entry needle failure_message
 
   [[ -f "$stance_draft" ]] || mark_failure "draft.md.tpl missing for mode contract checks"
 
-  if [[ -f "$stance_draft" ]] && ! grep -Fq -- "$required_output" "$stance_draft"; then
-    mark_failure "draft.md.tpl missing output contract line"
-  fi
-
-  if [[ -f "$stance_draft" ]] && ! grep -Fq -- "$required_shared_fence_include" "$stance_draft"; then
-    mark_failure "draft.md.tpl missing shared fence include line"
-  fi
-
-  if [[ -f "$stance_draft" ]] && ! grep -Fq -- "$required_first" "$stance_draft"; then
-    mark_failure "draft.md.tpl missing first-line marker line"
-  fi
-
-  if [[ -f "$stance_draft" ]] && ! grep -Fq -- "$required_shared_non_audit_include" "$stance_draft"; then
-    mark_failure "draft.md.tpl missing shared non-audit include line"
-  fi
-
-  if [[ -f "$stance_draft" ]] && ! grep -Fq -- "$required_no_narrative" "$stance_draft"; then
-    mark_failure "draft.md.tpl missing no-receipt-narrative line"
-  fi
-
-  if [[ -f "$stance_draft" ]] && ! grep -Fq -- "$required_scope_only" "$stance_draft"; then
-    mark_failure "draft.md.tpl missing draft scope-only line"
-  fi
+  for entry in "${draft_literals[@]}"; do
+    needle="${entry%%:::*}"
+    failure_message="${entry#*:::}"
+    require_file_contains_literal "$stance_draft" "$needle" "$failure_message"
+  done
 }
 
 check_planning_mode_contract() {
@@ -405,33 +370,22 @@ check_planning_mode_contract() {
 
 check_addenda_mode_contract() {
   local stance_addenda="${REPO_ROOT}/ops/src/stances/addenda.md.tpl"
-  local required_shared_fence_include='{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}'
-  local required_first='For machine-ingest addenda mode: first non-empty line inside the fenced body must start with `### Addendum`.'
-  local required_sections='For machine-ingest addenda mode: include addendum headings `## A.1 Authorization` through `## A.5 Addendum Receipt (Proofs to collect) - MUST RUN`.'
-  local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
-  local required_decision='For machine-ingest addenda mode: if `Decision Required:` and `Decision Leaf:` lines are present, values must be coherent (`Yes` with `archives/decisions/RoR-*.md`, `No` with `None`).'
+  local -a addenda_literals=(
+    '{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}:::addenda.md.tpl missing shared fence include line'
+    'For machine-ingest addenda mode: first non-empty line inside the fenced body must start with `### Addendum`.:::addenda.md.tpl missing addenda first-line marker line'
+    'For machine-ingest addenda mode: include addendum headings `## A.1 Authorization` through `## A.5 Addendum Receipt (Proofs to collect) - MUST RUN`.:::addenda.md.tpl missing addenda required-sections line'
+    '{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}:::addenda.md.tpl missing shared non-audit include line'
+    'For machine-ingest addenda mode: if `Decision Required:` and `Decision Leaf:` lines are present, values must be coherent (`Yes` with `archives/decisions/RoR-*.md`, `No` with `None`).:::addenda.md.tpl missing addenda decision-coherence line'
+  )
+  local entry needle failure_message
 
   [[ -f "$stance_addenda" ]] || mark_failure "addenda.md.tpl missing for mode contract checks"
 
-  if [[ -f "$stance_addenda" ]] && ! grep -Fq -- "$required_shared_fence_include" "$stance_addenda"; then
-    mark_failure "addenda.md.tpl missing shared fence include line"
-  fi
-
-  if [[ -f "$stance_addenda" ]] && ! grep -Fq -- "$required_first" "$stance_addenda"; then
-    mark_failure "addenda.md.tpl missing addenda first-line marker line"
-  fi
-
-  if [[ -f "$stance_addenda" ]] && ! grep -Fq -- "$required_sections" "$stance_addenda"; then
-    mark_failure "addenda.md.tpl missing addenda required-sections line"
-  fi
-
-  if [[ -f "$stance_addenda" ]] && ! grep -Fq -- "$required_shared_non_audit_include" "$stance_addenda"; then
-    mark_failure "addenda.md.tpl missing shared non-audit include line"
-  fi
-
-  if [[ -f "$stance_addenda" ]] && ! grep -Fq -- "$required_decision" "$stance_addenda"; then
-    mark_failure "addenda.md.tpl missing addenda decision-coherence line"
-  fi
+  for entry in "${addenda_literals[@]}"; do
+    needle="${entry%%:::*}"
+    failure_message="${entry#*:::}"
+    require_file_contains_literal "$stance_addenda" "$needle" "$failure_message"
+  done
 }
 
 
