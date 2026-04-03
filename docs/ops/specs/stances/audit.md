@@ -32,6 +32,11 @@ Define the template-backed Audit stance body used by bundle output contract rend
 
 `MACHINE PROVENANCE` verifies the tool-owned receipt frame: certify provenance, receipt replay structure, lint/hash/integrity outputs, and other deterministic machine signals.
 
+This pass also requires explicit attestations for the currently proven machine-frame failure classes:
+- command-log fence integrity inside `## Verification Command Log`
+- `3.4.3` delete paths versus `3.2.2` load-order consistency
+- allowlist-to-diff cross-reference interpreted through the existing authoritative gate hierarchy
+
 `CLIPBOARD HYGIENE` separately inspects the human-authored fields carried inside or alongside that frame: `## Worker Execution Narrative`, closing-sidecar fields, and when present addendum or decision-leaf bodies. The machine-clean receipt frame does not delegate trust over those prose fields.
 
 ## Outputs

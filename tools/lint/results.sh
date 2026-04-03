@@ -169,6 +169,7 @@ required_preflight_commands=(
 )
 absolute_filesystem_path_regex='(^|[^[:alnum:]_.-])/[[:alnum:]_.-]+(/[[:alnum:]_.-]+)+'
 clickable_markdown_link_regex='\[[^][]+\]\([^)]*\)'
+fused_fence_heading_regex='^(~~~|```)###[[:space:]]'
 
 failures=0
 checked=0
@@ -177,6 +178,7 @@ narrative_scaffold_skips=0
 narrative_path_hygiene_skips=0
 decision_coherence_skips=0
 preflight_proof_skips=0
+command_log_fence_skips=0
 
 for target in "${targets[@]}"; do
   if [[ ! -f "$target" ]]; then
@@ -203,6 +205,19 @@ for target in "${targets[@]}"; do
       fail "${rel_target}: missing required heading matching ${heading_pattern}"
     fi
   done
+
+  command_log_block="$(extract_field_block "$target" '^## Verification Command Log[[:space:]]*$' '^## Git State Impact[[:space:]]*$')"
+  command_log_fence_error=""
+  if grep -Eq "$fused_fence_heading_regex" <<< "$command_log_block"; then
+    command_log_fence_error="Verification Command Log contains a fused fence/heading boundary; command headings must start on their own line"
+  fi
+  if [[ -n "$command_log_fence_error" ]]; then
+    if (( explicit_target || inferred_target )); then
+      fail "${rel_target}: ${command_log_fence_error}"
+    else
+      command_log_fence_skips=$((command_log_fence_skips + 1))
+    fi
+  fi
 
   narrative_required_subheadings=(
     "^### Preflight State$"
@@ -364,6 +379,9 @@ if (( decision_coherence_skips > 0 )); then
 fi
 if (( preflight_proof_skips > 0 )); then
   echo "NOTE: skipped strict Preflight State freshness-proof enforcement for ${preflight_proof_skips} historical receipt(s); pass an explicit path to enforce."
+fi
+if (( command_log_fence_skips > 0 )); then
+  echo "NOTE: skipped strict command-log fence-integrity enforcement for ${command_log_fence_skips} historical receipt(s); pass an explicit path to enforce."
 fi
 
 echo "OK: RESULTS lint passed (${checked} file(s) checked)."
