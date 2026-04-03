@@ -49,65 +49,38 @@ Rationale: The PR Description renders in the GitHub pull request interface, whic
 
 ## Audit-Addenda Mode Split Guardrails
 
-### Guard 1: Audit stance marker in `audit.md.tpl`
+`check_audit_addenda_mode_split()` treats `ops/src/stances/audit.md.tpl`, `ops/src/stances/addenda.md.tpl`, and the profile split lines in `ops/lib/manifests/BUNDLE.md` as runtime owners and verifies the audit/addenda boundary by contract families instead of freezing each sentence independently.
+
+### Guard 1: Audit verdict family
 Target file: `ops/src/stances/audit.md.tpl`
-Assertion: file must include `` `--profile=addenda` is addenda mode and is never valid for audit verdict workflows. ``
-Failure message: `audit.md.tpl missing audit-verdict stance marker`
-Invariant: audit verdict flow and addenda authorization flow remain separated by explicit stance guidance.
+Assertions:
+- audit/addenda profile split line exists
+- attach-only intake line exists
+- audit output contract line exists
+- shared fence include exists
+- first-line marker line exists
+- no-citations line exists
+- evidence-authority line exists
+- allowlist-authority line exists
+Failure examples:
+- `audit.md.tpl missing audit-verdict stance marker`
+- `audit.md.tpl missing audit output contract line`
+- `audit.md.tpl missing audit allowlist-authority interpretation rule line`
+Invariant: audit remains a deterministic verdict lane whose evidence authority is owned by tool output rather than by auditor prose.
 
-### Guard 2: Audit attach-only line in `audit.md.tpl`
-Target file: `ops/src/stances/audit.md.tpl`
-Assertion: file must include `If user text is empty and required attachments are present, proceed and emit only the final audit block.`
-Failure message: `audit.md.tpl missing empty-input attach-only rule line`
-Invariant: attach-only audit intake proceeds deterministically without requiring user text.
-
-### Guard 3: Audit output contract line in `audit.md.tpl`
-Target file: `ops/src/stances/audit.md.tpl`
-Assertion: file must include `Output only: Complete audit report.`
-Failure message: `audit.md.tpl missing audit output contract line`
-Invariant: audit output remains deterministic.
-
-### Guard 4: Audit first-line marker in `audit.md.tpl`
-Target file: `ops/src/stances/audit.md.tpl`
-Assertion: file must include `First non-empty line must start with \`**AUDIT -\`.`
-Failure message: `audit.md.tpl missing audit first-line marker output line`
-Invariant: audit output has a stable entry marker for deterministic intake checks.
-
-### Guard 5: Audit no-citations line in `audit.md.tpl`
-Target file: `ops/src/stances/audit.md.tpl`
-Assertion: file must include `Do not emit citation tokens (\`:contentReference[\` or \`oaicite\`).`
-Failure message: `audit.md.tpl missing audit no-citations output line`
-Invariant: audit output avoids citation-token contamination.
-
-### Guard 6: Audit evidence-authority conflict rule in `audit.md.tpl`
-Target file: `ops/src/stances/audit.md.tpl`
-Assertion: file must include `If interpretation conflicts with receipt command outputs, treat command outputs and lint results as authoritative and mark the interpretation as non-blocking.`
-Failure message: `audit.md.tpl missing audit evidence-authority conflict rule line`
-Invariant: audit output resolves interpretation conflicts to tool evidence instead of inventing blockers.
-
-### Guard 7: Audit allowlist-authority rule in `audit.md.tpl`
-Target file: `ops/src/stances/audit.md.tpl`
-Assertion: file must include `For allowlist interpretation, \`tools/lint/integrity.sh\` plus certify changed-file subset check are authoritative; raw \`comm\` output is informational.`
-Failure message: `audit.md.tpl missing audit allowlist-authority interpretation rule line`
-Invariant: audit output does not misclassify raw comm output as a hard gate failure when authoritative checks pass.
-
-### Guard 8: Addenda stance marker in `addenda.md.tpl`
-Target file: `ops/src/stances/addenda.md.tpl`
-Assertion: file must include `This stance is not used for audit PASS/FAIL verdicts.`
-Failure message: `addenda.md.tpl missing addendum-authorization stance marker`
-Invariant: addenda stance remains authorization-only and never drifts into verdict behavior.
-
-### Guard 9: Canonical audit split line in bundle manifest
-Target file: `ops/lib/manifests/BUNDLE.md`
-Assertion: file must include `Canonical audit verdict profile is \`audit\`.`
-Failure message: `BUNDLE.md missing canonical audit mode split line`
-Invariant: runtime policy keeps audit mode semantics explicit and enforceable.
-
-### Guard 10: Canonical addenda split line in bundle manifest
-Target file: `ops/lib/manifests/BUNDLE.md`
-Assertion: file must include `Canonical addenda profile is \`addenda\`.`
-Failure message: `BUNDLE.md missing canonical addenda mode split line`
-Invariant: runtime policy keeps addenda mode semantics explicit and enforceable.
+### Guard 2: Addenda and bundle split family
+Target files:
+- `ops/src/stances/addenda.md.tpl`
+- `ops/lib/manifests/BUNDLE.md`
+Assertions:
+- addenda stance marker exists
+- canonical audit profile line exists in the bundle manifest
+- canonical addenda profile line exists in the bundle manifest
+Failure examples:
+- `addenda.md.tpl missing addendum-authorization stance marker`
+- `BUNDLE.md missing canonical audit mode split line`
+- `BUNDLE.md missing canonical addenda mode split line`
+Invariant: addenda remains an authorization lane, and bundle profile routing keeps audit and addenda semantics separate.
 
 ## OPEN Marker Contract Guardrails
 
@@ -135,11 +108,30 @@ Assertion: file must not include `Stela OPEN PROMPT`
 Failure message: `ops/bin/open still contains legacy standalone OPEN title line`
 Invariant: legacy header regression is blocked.
 
+## Draft Mode Contract Guardrails
+
+`check_draft_mode_contract()` treats `ops/src/stances/draft.md.tpl` as the runtime owner and verifies draft by contract families instead of restating every guarded sentence as an independent verifier obligation.
+
+### Guard 21: Draft output family
+Target file: `ops/src/stances/draft.md.tpl`
+Assertions:
+- output contract line exists
+- shared fence include exists
+- first-line marker line exists
+- shared non-audit include exists
+- no-receipt-narrative line exists
+- draft scope-only line exists
+Failure examples:
+- `draft.md.tpl missing output contract line`
+- `draft.md.tpl missing no-receipt-narrative line`
+- `draft.md.tpl missing draft scope-only line`
+Invariant: draft remains a single-fence DP authoring lane that stays inside the settled plan and does not drift into receipt or audit output.
+
 ## Planning Mode Contract Guardrails
 
 `check_planning_mode_contract()` treats `ops/src/stances/planning.md.tpl` as the runtime owner and verifies planning by contract families instead of freezing every sentence individually. The guardrail still fails when a required family or anchor line disappears, but it no longer requires sentence-for-sentence duplication of the entire planning template in the verifier.
 
-### Guard 21: Core planning decision anchors
+### Guard 22: Core planning decision anchors
 Target file: `ops/src/stances/planning.md.tpl`
 Assertions:
 - topic source line exists
@@ -154,7 +146,7 @@ Failure examples:
 - `planning.md.tpl missing machine-ingest default-question-mode line`
 Invariant: planning still asks before planning on unresolved multi-family topics and does not self-authorize packet choice from repo context.
 
-### Guard 22: Portable clarification transport family
+### Guard 23: Portable clarification transport family
 Target file: `ops/src/stances/planning.md.tpl`
 Assertions:
 - `Portable question transport:` section exists
@@ -167,7 +159,7 @@ Failure examples:
 - `planning.md.tpl missing planning click-bias invariant`
 Invariant: portable clarification stays bounded, popup-biased, and redirect-stable.
 
-### Guard 23: Machine-ingest question-mode family
+### Guard 24: Machine-ingest question-mode family
 Target file: `ops/src/stances/planning.md.tpl`
 Assertions:
 - packet-boundary question-first anchor exists
@@ -180,7 +172,7 @@ Failure examples:
 - `planning.md.tpl missing planning question-mode no-fence line`
 Invariant: machine-ingest clarification remains question-first plain-text transport rather than falling back into explanatory prose.
 
-### Guard 24: Host overlay family
+### Guard 25: Host overlay family
 Target file: `ops/src/stances/planning.md.tpl`
 Assertions:
 - `Question mode (host overlay):` section exists
@@ -192,7 +184,7 @@ Failure examples:
 - `planning.md.tpl missing machine-ingest host-overlay line`
 Invariant: host/widget behavior stays additive, truthful, and separate from the portable fallback.
 
-### Guard 25: Final-plan family
+### Guard 26: Final-plan family
 Target file: `ops/src/stances/planning.md.tpl`
 Assertions:
 - final-plan output-only anchor exists
@@ -206,8 +198,26 @@ Failure examples:
 - `planning.md.tpl missing planning final-plan emit line`
 Invariant: final plans remain fenced, bounded, and compatible with the PLAN surface contract.
 
-### Guard 26: Shared non-audit include
+### Guard 27: Shared non-audit include
 Target file: `ops/src/stances/planning.md.tpl`
 Assertion: file must include `{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}`
 Failure message: `planning.md.tpl missing shared non-audit include line`
 Invariant: planning continues to inherit the shared non-audit role-drift guard instead of restating it ad hoc.
+
+## Addenda Mode Contract Guardrails
+
+`check_addenda_mode_contract()` treats `ops/src/stances/addenda.md.tpl` as the runtime owner and verifies the addenda output lane by contract families instead of treating each machine-ingest line as a separate owner of the same behavior.
+
+### Guard 28: Addenda output family
+Target file: `ops/src/stances/addenda.md.tpl`
+Assertions:
+- shared fence include exists
+- addenda first-line marker line exists
+- required addenda-sections line exists
+- shared non-audit include exists
+- decision-coherence line exists
+Failure examples:
+- `addenda.md.tpl missing addenda first-line marker line`
+- `addenda.md.tpl missing addenda required-sections line`
+- `addenda.md.tpl missing addenda decision-coherence line`
+Invariant: addenda remains a single-fence intervention lane with bounded structure and coherent decision-field semantics.

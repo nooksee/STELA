@@ -17,6 +17,11 @@ Define the template-backed draft stance body used by bundle output contract rend
 - Shared include source: `ops/src/shared/stances.json#single_fence_contract_rules`
 - Shared include source: `ops/src/shared/stances.json#non_audit_role_drift_rules`
 
+## Ownership Model
+- Runtime owner: `ops/src/stances/draft.md.tpl` plus the included shared contract keys in `ops/src/shared/stances.json`.
+- Verifier: `tools/lint/style.sh` guards draft invariant families; it does not need to co-own every sentence of the runtime stance body.
+- Mirror: this spec summarizes the draft contract families and ownership split; it does not override the runtime template.
+
 ## Outputs
 - Rendered stance body text beginning at `Rules:`.
 - No unresolved include directives.
@@ -35,6 +40,7 @@ Define the template-backed draft stance body used by bundle output contract rend
 - Include expansion is strict and fail-closed.
 - Unresolved template tokens fail render in strict mode.
 - Render output is deterministic for identical repository state.
+- Verifier ownership stays thinner than runtime ownership: style lint protects draft contract families and critical anchor lines, while the full rendered prose remains owned by the runtime template.
 - Draft bundle authoring scaffold must begin at `### DP-` and preserve the canonical DP section order from `ops/src/surfaces/dp.md.tpl`.
 
 ## Shipping Spine Position
