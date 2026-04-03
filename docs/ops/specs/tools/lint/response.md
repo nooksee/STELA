@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`tools/lint/response.sh` enforces raw-model response envelopes before intake. The goal is to fail malformed or contaminated responses early, before non-canonical payloads reach downstream contract checks. Cross-stance envelope and role-drift convergence freeze is enforced through shared stance contract keys in `ops/src/shared/stances.json`; bounded continuity behavior remains a stance-contract concern rather than a response-envelope concern.
+`tools/lint/response.sh` enforces raw-model response envelopes before intake. The goal is to fail malformed or contaminated responses early, before non-canonical payloads reach downstream contract checks. Cross-stance envelope and role-drift convergence freeze is enforced through shared stance contract keys in `ops/src/shared/stances.json`; bounded continuity behavior remains a stance-contract concern rather than a response-envelope concern. The verifier owns repeated ingress helpers once, then layers bounded mode-specific rules on top, so shared response-surface checks do not have to be re-stated per mode.
 
 ## Mechanics and Sequencing
 Modes:
@@ -28,17 +28,14 @@ Deterministic checks:
    - `[cite_start]`
    - `[cite:`
    - `[/cite]`
-8. In `draft` mode, envelope and DP-start checks are required, plus role-drift rejection:
+8. In `draft` mode, envelope and DP-start checks are required, plus the full non-audit receipt-drift family:
    - reject audit-verdict marker lines (`**AUDIT -`),
    - reject `## Worker Execution Narrative`,
    - reject receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`).
 9. In `planning` mode, input is accepted in one of two shapes:
    - final-plan mode: exactly one fenced markdown code block whose extracted body satisfies `bash tools/lint/plan.sh <extracted-body>`, or
    - clarification mode: plain text with no fenced code block; the first non-empty line asks the question; later questions may be plain `...?` lines or numbered `Q<n>. ...?` lines; option lines remain option lines even if their text ends in `?`; each question must use the ordered short standalone `A.` / `B.` / `C.` set, where `C.` is the fixed redirect line `C. Tell Analyst to do something else instead.`; only substantive `A.` / `B.` lines may be marked `(Recommended)`; reply-instruction lines are not part of the popup-biased transport.
-10. In `planning` mode, reject role-drift markers:
-   - audit-verdict markers (`**AUDIT -`),
-   - `## Worker Execution Narrative`,
-   - receipt narrative subheadings (`### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`),
+10. In `planning` mode, reuse the same non-audit receipt-drift family as `draft`, then add planning-only rejections for:
    - audit/addenda decision fields (`Decision Required:`, `Decision Leaf:`),
    - policy-overcompensation prose (`Section 3.4.5`, `RECEIPT_EXTRA`, `ops/src/surfaces/dp.md.tpl`, or fenced-envelope instruction echo text),
    - retired planning question-mode wrappers (`1. Analysis and Discussion`, `2. Decision Questions`, `Questions / Conversation:`).
@@ -50,7 +47,7 @@ Deterministic checks:
    - `## A.3 Addendum Objective`
    - `## A.4 Context Load`
    - `## A.5 Addendum Receipt (Proofs to collect) - MUST RUN`
-14. In `addenda` mode, reject role-drift markers:
+14. In `addenda` mode, reuse the shared non-audit audit-marker / worker-narrative rejection subset, then add the addenda-only verdict-section rejection:
    - audit-verdict markers (`**AUDIT -`),
    - `## Worker Execution Narrative`,
    - `## Verdict`.
