@@ -29,6 +29,8 @@ It records certification execution details, verification command output, worker 
 ## Worker Execution Narrative
 The `## Worker Execution Narrative` section is populated at certify time by `ops/bin/certify`. Certify writes a scaffold to a temp file and delegates capture to `ops/lib/scripts/editor.sh`: interactive editor mode by default, or non-interactive ingest via `--narrative-file=PATH`. The narrative is validated for required subsections, absence of placeholder tokens, and rejection of untouched scaffold prose before being rendered into RESULTS.
 
+The RESULTS frame is machine-generated provenance; the Worker Execution Narrative is clipboard-style ingested worker content nested inside that frame. Receipt generation does not delegate trust over this prose. Narrative hygiene must be enforced independently from the surrounding receipt structure.
+
 Required subsections:
 - `### Preflight State`
 - `### Implemented Changes`
@@ -41,6 +43,11 @@ The `### Decision Leaf` subsection must contain both:
 - `Decision Required: Yes|No`
 - `Decision Leaf: archives/decisions/... or None`
 
+The Worker Execution Narrative must:
+- use repo-relative path text only
+- never print absolute filesystem paths
+- never emit clickable markdown file links
+
 ## Failure States and Drift Triggers
 - Manual edits to generated RESULTS artifacts.
 - Missing required section headings or reordered schema.
@@ -50,9 +57,11 @@ The `### Decision Leaf` subsection must contain both:
 - Missing verbatim preflight proof for the three freshness-gate commands inside `### Preflight State`.
 - Missing required narrative subsections or Decision Leaf field lines.
 - Untouched narrative scaffold prose accepted as final content.
+- Absolute filesystem paths inside `## Worker Execution Narrative`.
+- Clickable markdown file links inside `## Worker Execution Narrative`.
 
 Enforcement linkage:
-- `tools/lint/results.sh` validates template hash, schema headings, narrative structure, and git hash parity.
+- `tools/lint/results.sh` validates template hash, schema headings, narrative structure, narrative path hygiene, and git hash parity.
 - `ops/bin/certify` validates the closing sidecar as a hard gate before rendering and runs `tools/lint/results.sh` after rendering.
 
 ## Mechanics and Sequencing
@@ -62,7 +71,7 @@ Enforcement linkage:
 4. Certifier validates the closing sidecar, runs integrity and verification gates, captures outputs, then renders RESULTS from template slots.
    - Scope Verification must record the authoritative packet source path carried in the delivered closeout packet as `dp_source`.
    - `dp_source` must record the authoritative TASK/addendum lineage path so RESULTS matches the delivered audit bundle and dump evidence.
-5. Certifier lints the generated RESULTS artifact and exits non-zero on any failure, including missing freshness proof inside `### Preflight State`.
+5. Certifier lints the generated RESULTS artifact and exits non-zero on any failure, including missing freshness proof inside `### Preflight State` or narrative path-hygiene violations.
 
 ## Forensic Insight
 RESULTS is the executable evidence receipt for DP closeout.

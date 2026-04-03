@@ -167,11 +167,14 @@ required_preflight_commands=(
   "git rev-parse --short HEAD"
   "git status --porcelain"
 )
+absolute_filesystem_path_regex='(^|[^[:alnum:]_.-])/[[:alnum:]_.-]+(/[[:alnum:]_.-]+)+'
+clickable_markdown_link_regex='\[[^][]+\]\([^)]*\)'
 
 failures=0
 checked=0
 hash_parity_skips=0
 narrative_scaffold_skips=0
+narrative_path_hygiene_skips=0
 decision_coherence_skips=0
 preflight_proof_skips=0
 
@@ -249,6 +252,24 @@ for target in "${targets[@]}"; do
       fail "${rel_target}: ${preflight_proof_error}"
     else
       preflight_proof_skips=$((preflight_proof_skips + 1))
+    fi
+  fi
+
+  narrative_path_hygiene_error=""
+  clickable_link_match="$(grep -En "$clickable_markdown_link_regex" <<< "$narrative_block" | head -n 1 || true)"
+  if [[ -n "$clickable_link_match" ]]; then
+    narrative_path_hygiene_error="Worker Execution Narrative contains clickable markdown links; use plain repo-relative path text only"
+  else
+    absolute_path_match="$(grep -En "$absolute_filesystem_path_regex" <<< "$narrative_block" | head -n 1 || true)"
+    if [[ -n "$absolute_path_match" ]]; then
+      narrative_path_hygiene_error="Worker Execution Narrative contains an absolute filesystem path; use repo-relative path text only"
+    fi
+  fi
+  if [[ -n "$narrative_path_hygiene_error" ]]; then
+    if (( explicit_target || inferred_target )); then
+      fail "${rel_target}: ${narrative_path_hygiene_error}"
+    else
+      narrative_path_hygiene_skips=$((narrative_path_hygiene_skips + 1))
     fi
   fi
 
@@ -334,6 +355,9 @@ if (( hash_parity_skips > 0 )); then
 fi
 if (( narrative_scaffold_skips > 0 )); then
   echo "NOTE: skipped scaffold-prose enforcement for ${narrative_scaffold_skips} historical receipt(s); pass an explicit path to enforce."
+fi
+if (( narrative_path_hygiene_skips > 0 )); then
+  echo "NOTE: skipped narrative path-hygiene enforcement for ${narrative_path_hygiene_skips} historical receipt(s); pass an explicit path to enforce."
 fi
 if (( decision_coherence_skips > 0 )); then
   echo "NOTE: skipped Decision Required/Decision Leaf coherence enforcement for ${decision_coherence_skips} historical receipt(s); pass an explicit path to enforce."

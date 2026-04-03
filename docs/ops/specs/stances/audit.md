@@ -20,6 +20,20 @@ Define the template-backed Audit stance body used by bundle output contract rend
 - Verifier: `tools/lint/style.sh` guards audit invariant families; it does not need to co-own every sentence of the runtime stance body.
 - Mirror: this spec summarizes the audit contract families and ownership split; it does not override the runtime template.
 
+## Verification Order
+- `PRECONDITIONS`
+- `PoT Compliance`
+- `DP Integrity`
+- `MACHINE PROVENANCE`
+- `CLIPBOARD HYGIENE`
+- `ALLOWLIST`
+- `DRIFT`
+- `GENERATED OUTPUTS`
+
+`MACHINE PROVENANCE` verifies the tool-owned receipt frame: certify provenance, receipt replay structure, lint/hash/integrity outputs, and other deterministic machine signals.
+
+`CLIPBOARD HYGIENE` separately inspects the human-authored fields carried inside or alongside that frame: `## Worker Execution Narrative`, closing-sidecar fields, and when present addendum or decision-leaf bodies. The machine-clean receipt frame does not delegate trust over those prose fields.
+
 ## Outputs
 - Rendered stance body text beginning at `Rules:`.
 - No unresolved include directives.
@@ -35,6 +49,7 @@ Define the template-backed Audit stance body used by bundle output contract rend
 - Unresolved template tokens fail render in strict mode.
 - Render output is deterministic for identical repository state.
 - Verifier ownership stays thinner than runtime ownership: style lint protects audit contract families and critical anchor lines, while the full rendered prose remains owned by the runtime template.
+- Audit trust boundaries stay explicit: machine provenance and clipboard hygiene are separate verification surfaces with different failure modes.
 
 ## Related pointers
 - `ops/lib/manifests/BUNDLE.md`
