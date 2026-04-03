@@ -1,5 +1,5 @@
 <!-- CCD: ff_target="machine-dense" ff_band="30-40" -->
-# Contractor Brief
+# Execution Brief
 
 ## Rules
 

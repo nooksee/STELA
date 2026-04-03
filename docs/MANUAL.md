@@ -335,7 +335,7 @@ Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, 
 ### Log Step: Pre-certify single-entry head authoring (`SoP.md` and `PoW.md`)
 1. Rule: before running `ops/bin/certify`, author `SoP.md` and `PoW.md` to contain only the single new entry for the current DP. Do not copy archive leaf history from prior `archives/surfaces/` leaves into the current head.
 2. Reason: `tools/lint/truth.sh` scans current heads and rejects historical strings from archive leaves. Those strings are tolerated in `archives/surfaces/` but are forbidden in head-lint context. Copying history into the head causes `truth.sh` to fail.
-3. Invariant: `ops/bin/certify` generates the `previous:` pointer on the new archive leaf and manages chain linkage. The contractor does not manage or reconstruct chain history manually.
+3. Invariant: `ops/bin/certify` generates the `previous:` pointer on the new archive leaf and manages chain linkage. The worker does not manage or reconstruct chain history manually.
 4. Confirmation note: DP-OPS-0116 and ADDENDUM-A confirmed that certify-managed pointer rewrites of `PoW.md`, `SoP.md`, and `TASK.md` to single-line HEAD pointers are expected closeout behavior; do not interpret those rewrites as corruption.
 5. Preflight guard: `ops/bin/certify` now hard-fails if `SoP.md` or `PoW.md` still point at a different packet instead of carrying the current packet's single-entry head content.
 6. Worked example (same pattern for both `SoP.md` and `PoW.md`):
@@ -447,7 +447,7 @@ The following named scopes define traversal boundaries. Definitions are canonica
 
 ### Factory-Only Audit Recipe and Guardrail Examples
 
-Use factory scope only when factory inspection is intentional. Factory scope is never a contractor baseline.
+Use factory scope only when factory inspection is intentional. Factory scope is never a worker baseline.
 
 ~~~bash
 # Worker baseline (CDD): DP + allowlist selection (excludes opt/_factory/ by forbidden-prefix policy)

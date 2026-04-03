@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`tools/lint/context.sh` exists to keep global session context deterministic and contamination-free. The script prevents stale or polluted manifests from injecting non-canonical state into worker sessions, which enforces PoT context hygiene directives and protects against contractor hallucination triggered by invalid pointers or pasted dump fragments.
+`tools/lint/context.sh` exists to keep global session context deterministic and contamination-free. The script prevents stale or polluted manifests from injecting non-canonical state into worker sessions, which enforces PoT context hygiene directives and protects against worker hallucination triggered by invalid pointers or pasted dump fragments.
 
 ## Mechanics and Sequencing
 1. Resolve repository root, emit lifecycle telemetry, and require `ops/lib/manifests/CONTEXT.md`.

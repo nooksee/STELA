@@ -138,7 +138,7 @@ When reporting, include:
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-04-03-9d3c74cd.md
+archives/surfaces/PoW-2026-04-03-0547c7b1.md
 
 
 ## README.md
@@ -155,11 +155,11 @@ Use [docs/MANUAL.md](docs/MANUAL.md) for command workflow and closeout routing.
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-04-03-9d3c74cd.md
+archives/surfaces/SoP-2026-04-03-0547c7b1.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0248-9d3c74cd.md
+archives/surfaces/TASK-DP-OPS-0249-0547c7b1.md
 
 
 ## docs/INDEX.md
@@ -184,7 +184,7 @@ archives/surfaces/TASK-DP-OPS-0248-9d3c74cd.md
 * [DESIGN.md](DESIGN.md) — Correct-by-Construction design discipline, retrospective audit, and decision registry.
 * [MAP.md](MAP.md) — Continuity wayfinding for cross-session state.
 * [ops/specs/surfaces/notes.md](ops/specs/surfaces/notes.md) — Contractor Notes surface contract and decision record trigger/schema documentation.
-* [ops/specs/binaries/dump.md](ops/specs/binaries/dump.md) — Dump binary specification. Includes Scope Taxonomy: named scope definitions (`core`, `platform`, `factory`) and contractor baseline (`dp+allowlist`) semantics. Default recommended operator audit scope: `--scope=core` (excludes `projects/` and `opt/_factory/`). Use `--scope=platform` or `--scope=factory` only when explicitly required.
+* [ops/specs/binaries/dump.md](ops/specs/binaries/dump.md) — Dump binary specification. Includes Scope Taxonomy: named scope definitions (`core`, `platform`, `factory`) and worker baseline (`dp+allowlist`) semantics. Default recommended operator audit scope: `--scope=core` (excludes `projects/` and `opt/_factory/`). Use `--scope=platform` or `--scope=factory` only when explicitly required.
 * [../archives/decisions/](../archives/decisions/) — Decision record archive. Structured, queryable records of scope-expansion authorizations, certify remediations, CbC verdicts, and operator-approved exceptions. Schema: `RoR-YYYY-MM-DD-<seq>-<slug>.md` with YAML frontmatter fields `trace_id`, `decision_id`, `packet_id`, `decision_type`, `created_at`, `authorized_by`; body sections `Context`, `Decision`, `Consequence`, `Pointer`, `Status`. Trigger rule: decision record required only when Contractor Notes `Anomalies Encountered` or `Open Items / Residue` is not `None.` See ops/specs/surfaces/notes.md.
 * [CONTEXT.md](CONTEXT.md) — Definition of required context artifacts.
 * [ops/specs/definitions/agents.md](ops/specs/definitions/agents.md) — Agent candidate and promotion head-chain specification.

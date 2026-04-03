@@ -17,7 +17,7 @@
 7. Remove temporary directory in trap cleanup and return non-zero on any mismatch.
 
 ## Anecdotal Anchor
-The script targets the recurring SSOT-drift class where committed llms bundles lagged manifest changes. In that state, contractor sessions consumed outdated capability and pointer data even though canonical manifests had already changed.
+The script targets the recurring SSOT-drift class where committed llms bundles lagged manifest changes. In that state, worker sessions consumed outdated capability and pointer data even though canonical manifests had already changed.
 Think of this gate like a checksum handshake that confirms the committed bundles and generated bundles still describe the same system state.
 
 ## Integrity Filter Warnings

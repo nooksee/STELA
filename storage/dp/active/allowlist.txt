@@ -9,6 +9,8 @@ docs/ops/specs/binaries/prune.md
 docs/ops/specs/tools/lint/leaf.md
 docs/ops/specs/tools/lint/style.md
 docs/ops/specs/tools/lint/integrity.md
+docs/ops/specs/tools/lint/context.md
+docs/ops/specs/tools/lint/llms.md
 docs/ops/specs/binaries/trace.md
 docs/ops/specs/binaries/decision.md
 docs/ops/specs/binaries/certify.md
@@ -45,7 +47,7 @@ llms.txt
 llms-core.txt
 llms-full.txt
 ops/lib/manifests/OPS.md
-ops/lib/manifests/CONTRACTOR.md
+ops/lib/manifests/EXECUTION.md
 ops/lib/manifests/BUNDLE.md
 ops/etc/persistence.manifest
 ops/etc/retention.manifest

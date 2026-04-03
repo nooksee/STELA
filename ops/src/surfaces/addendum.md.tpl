@@ -11,7 +11,7 @@ requires_slots:
   - ADDENDUM_RECEIPT
 includes:
   - ops/lib/manifests/CONSTRAINTS.md#section-1
-  - ops/lib/manifests/CONTRACTOR.md#rules
+  - ops/lib/manifests/EXECUTION.md#rules
 ff_target: operator-technical
 ff_band: "30-40"
 ---
@@ -33,7 +33,7 @@ Exact paths added by this addendum (one per line; no globs; no brace expansion):
 
 ## A.4 Context Load
 
-{{@include:ops/lib/manifests/CONTRACTOR.md#rules}}
+{{@include:ops/lib/manifests/EXECUTION.md#rules}}
 
 Worker Constraints (SSOT injected):
 {{@include:ops/lib/manifests/CONSTRAINTS.md#section-1}}

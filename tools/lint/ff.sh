@@ -341,7 +341,7 @@ is_wave1_hardened() {
     docs/MANUAL.md|\
     ops/lib/manifests/CONTEXT.md|\
     ops/lib/manifests/CONSTRAINTS.md|\
-    ops/lib/manifests/CONTRACTOR.md|\
+    ops/lib/manifests/EXECUTION.md|\
     ops/lib/manifests/CORE.md|\
     ops/lib/manifests/OPS.md|\
     ops/lib/manifests/DISCOVERY.md|\

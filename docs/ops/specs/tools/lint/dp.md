@@ -30,7 +30,7 @@
 ### Closeout and Coherence Fixtures (`--test`)
 `dp.sh --test` must include deterministic fixtures for contract-shape hardening:
 
-1. **Non-canonical closeout phrase (FAIL):** inject `- Route to contractor ...` into §3.5 and require failure.
+1. **Non-canonical closeout phrase (FAIL):** inject `- Route to worker ...` into §3.5 and require failure.
 2. **Invalid work-branch form (FAIL):** `Work Branch` does not follow `work/<DP-ID>-YYYY-MM-DD` form (PoT.md §6.2.1) and must fail.
 3. **Closing-sidecar coherence mismatch (FAIL):** a packet-scoped legacy sidecar token in §3.5.1 carries an id fragment that disagrees with the heading id.
 
@@ -92,7 +92,7 @@ Allowed literal first-token families are exactly:
 2. `check_closeout_section_shape()`:
    - extracts §3.5 body content (between `## 3.5` and `### 3.5.1`),
    - fails when §3.5 is empty,
-   - fails on non-canonical role-routing shortcut phrases such as `Route to ...`, `Hand off to ...`, `Pass to ...`, or `Send to ...`.
+  - fails on non-canonical closeout shortcut phrases such as `Route to ...`, `Hand off to ...`, `Pass to ...`, or `Send to ...`.
 
 ## Foreign Citation Contamination Guard
 
@@ -134,7 +134,7 @@ The canonical operator authorization statement used in an addendum session must 
 
 > Operator authorizes Addendum A to DP-OPS-XXXX. Scope expansion delta: [exact paths]. Generate addendum intake with `./ops/bin/draft --addendum=A --base-dp=DP-OPS-XXXX`.
 
-The verbatim text of this statement, as it appears in the session record, is the value placed in the `OPERATOR_AUTHORIZATION` slot. A contractor must not proceed with addendum execution until this authorization line exists in the session.
+The verbatim text of this statement, as it appears in the session record, is the value placed in the `OPERATOR_AUTHORIZATION` slot. A worker must not proceed with addendum execution until this authorization line exists in the session.
 
 ### `--test` Mode Addendum Hash Emission
 `dp.sh --test` emits the `CANONICAL_ADDENDUM_TEMPLATE_SHA256` constant value on a labeled line immediately after the base DP hash constant line. The canonical addendum template path is `ops/src/surfaces/addendum.md.tpl`. Both constants must be present and match the on-disk template files for `--test` to pass.
