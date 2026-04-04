@@ -34,8 +34,11 @@ Steps:
    * Verify `tools/lint/integrity.sh` passed (its output must appear in the receipt's Scope Verification section).
    * Reject "trust me" receipts, missing outputs, or receipts with unresolved slot tokens.
 4. **CLIPBOARD HYGIENE**: Treat human-authored fields as clipboard content whose trust is never delegated by the machine-clean RESULTS frame or bundle wrapper.
+   * Do not let a machine-layer passing signal stand in for human-authored inspection; complete the clipboard traversal before verdict.
    * Inspect `## Worker Execution Narrative` against the execution output rules and any promoted narrative lint rules.
+   * For `### Closeout Notes`, verify each named success claim against concrete command-log evidence; receipt-slot coverage is not a proxy for narrative-claim verification.
    * Inspect `storage/handoff/CLOSING.md` fields as human-authored clipboard content inside a certify-validated frame; schema presence is not a substitute for field-quality review.
+   * For `Confirm Merge (Extended Description)`, reconcile both `diff \ sidecar` and `sidecar \ diff`; do not stop after only one direction.
    * When present in the audit bundle, inspect addendum bodies and decision-leaf bodies as human-authored clipboard content rather than as machine-proven receipt structure.
 5. **ALLOWLIST**: Verify `storage/dp/active/allowlist.txt` exists and contains all changed files.
 6. **DRIFT**: No out-of-scope edits. Default dump scope is `--scope=core`, which structurally excludes `opt/_factory/`. Any session using `--scope=platform` or `--scope=factory` must carry explicit authorization.

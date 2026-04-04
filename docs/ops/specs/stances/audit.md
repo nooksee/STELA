@@ -37,7 +37,11 @@ This pass also requires explicit attestations for the currently proven machine-f
 - `3.4.3` delete paths versus `3.2.2` load-order consistency
 - allowlist-to-diff cross-reference interpreted through the existing authoritative gate hierarchy
 
-`CLIPBOARD HYGIENE` separately inspects the human-authored fields carried inside or alongside that frame: `## Worker Execution Narrative`, closing-sidecar fields, and when present addendum or decision-leaf bodies. The machine-clean receipt frame does not delegate trust over those prose fields.
+`CLIPBOARD HYGIENE` separately inspects the human-authored fields carried inside or alongside that frame: `## Worker Execution Narrative`, closing-sidecar fields, and when present addendum or decision-leaf bodies. The machine-clean receipt frame does not delegate trust over those prose fields, and an early machine-layer pass signal must not short-circuit that traversal.
+
+This pass now requires two explicit human-authored traversals before verdict:
+- claim-by-claim verification for named success claims inside `### Closeout Notes`
+- bidirectional reconciliation for `storage/handoff/CLOSING.md` `Confirm Merge (Extended Description)` path lists (`diff \ sidecar` and `sidecar \ diff`)
 
 ## Outputs
 - Rendered stance body text beginning at `Rules:`.
