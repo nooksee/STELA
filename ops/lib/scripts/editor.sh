@@ -5,7 +5,7 @@ editor_write_narrative_scaffold() {
   local target_path="$1"
   cat > "$target_path" <<'EOF'
 ### Preflight State
-Paste the verbatim outputs of git rev-parse --abbrev-ref HEAD, git rev-parse --short HEAD, and git status --porcelain captured before any edits began, then add a short preflight lint status summary.
+Paste the verbatim outputs of git rev-parse --abbrev-ref HEAD, git rev-parse --short HEAD, and git status --porcelain captured before any work-branch edits began, then add a short preflight lint status summary.
 
 ### Implemented Changes
 Describe each change made: what was modified, created, or removed, and why.
@@ -84,7 +84,7 @@ editor_validate_narrative_file() {
 
   local scaffold_line=""
   local -a scaffold_lines=(
-    "Paste the verbatim outputs of git rev-parse --abbrev-ref HEAD, git rev-parse --short HEAD, and git status --porcelain captured before any edits began, then add a short preflight lint status summary."
+    "Paste the verbatim outputs of git rev-parse --abbrev-ref HEAD, git rev-parse --short HEAD, and git status --porcelain captured before any work-branch edits began, then add a short preflight lint status summary."
     "Describe each change made: what was modified, created, or removed, and why."
     "Describe any anomalies, open items, or residue. State None. if all items are resolved."
     "Decision Required: Yes|No"
