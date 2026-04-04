@@ -131,7 +131,7 @@ What bad looks like: `Define closing sidecar field semantics for certify closeou
 ### Field: Confirm Merge (Extended Description)
 Audience: Automated tools and future archaeology.
 
-Job: A newline-separated list of file paths. Zero prose. Deliberately boring. Machine-readable and complete.
+Job: A newline-separated list of file paths. Zero prose. Deliberately boring. Machine-readable and complete within the valid public merge path class for this field. Root-level closeout surfaces excluded by closeout canon are accounted for in `RESULTS` narrative text, not here.
 
 What good looks like:
 ~~~text
