@@ -156,7 +156,7 @@ required_headings=(
 unresolved_artifact_marker_regex='<PORCELAIN_ARTIFACT>|<SESSION_ARTIFACT>|<DUMP_ARTIFACT>|<[^>]*ARTIFACT[^>]*>'
 forbidden_disposable_regex='Local artifacts:|Disposable artifact policy|storage/handoff/OPEN-|storage/handoff/OPEN-PORCELAIN-|storage/handoff/\*|storage/dumps/dump-|storage/dumps/\*|OPEN-work-dp-ops-[0-9]+|OPEN-PORCELAIN-work-dp-ops-[0-9]+|dump-platform-work-dp-ops-[0-9]+'
 narrative_scaffold_lines=(
-  "Paste the verbatim outputs of git rev-parse --abbrev-ref HEAD, git rev-parse --short HEAD, and git status --porcelain captured before any edits began, then add a short preflight lint status summary."
+  "Paste the verbatim outputs of git rev-parse --abbrev-ref HEAD, git rev-parse --short HEAD, and git status --porcelain captured before any work-branch edits began, then add a short preflight lint status summary."
   "Describe each change made: what was modified, created, or removed, and why."
   "Describe any anomalies, open items, or residue. State None. if all items are resolved."
   "Decision Required: Yes|No"
@@ -257,7 +257,7 @@ for target in "${targets[@]}"; do
     required_preflight_command=""
     for required_preflight_command in "${required_preflight_commands[@]}"; do
       if ! grep -Fq -- "$required_preflight_command" <<< "$preflight_block"; then
-        preflight_proof_error="Worker Execution Narrative Preflight State missing required freshness command output: ${required_preflight_command}"
+        preflight_proof_error="Worker Execution Narrative Preflight State missing required execution-start command output: ${required_preflight_command}"
         break
       fi
     done
@@ -378,7 +378,7 @@ if (( decision_coherence_skips > 0 )); then
   echo "NOTE: skipped Decision Required/Decision Leaf coherence enforcement for ${decision_coherence_skips} historical receipt(s); pass an explicit path to enforce."
 fi
 if (( preflight_proof_skips > 0 )); then
-  echo "NOTE: skipped strict Preflight State freshness-proof enforcement for ${preflight_proof_skips} historical receipt(s); pass an explicit path to enforce."
+  echo "NOTE: skipped strict Preflight State execution-start proof enforcement for ${preflight_proof_skips} historical receipt(s); pass an explicit path to enforce."
 fi
 if (( command_log_fence_skips > 0 )); then
   echo "NOTE: skipped strict command-log fence-integrity enforcement for ${command_log_fence_skips} historical receipt(s); pass an explicit path to enforce."

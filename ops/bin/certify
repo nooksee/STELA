@@ -568,6 +568,43 @@ extract_dp_field_value() {
   ' "$dp_path"
 }
 
+resolve_dp_open_anchor_trace_id() {
+  local dp_path="$1"
+  local trace_id=""
+  trace_id="$(trim "$(extract_dp_field_value "$dp_path" "Opening OPEN Trace ID")")"
+  [[ -n "$trace_id" ]] || return 1
+  printf '%s' "$trace_id"
+}
+
+validate_dp_open_anchor_fields() {
+  local dp_path="$1"
+  local source_label="$2"
+  local open_artifact=""
+  local open_trace_id=""
+  local open_working_tree=""
+  local populated_count=0
+
+  open_artifact="$(trim "$(extract_dp_field_value "$dp_path" "Opening OPEN Artifact")")"
+  open_trace_id="$(trim "$(extract_dp_field_value "$dp_path" "Opening OPEN Trace ID")")"
+  open_working_tree="$(trim "$(extract_dp_field_value "$dp_path" "Opening OPEN Working Tree")")"
+
+  [[ -n "$open_artifact" ]] && populated_count=$((populated_count + 1))
+  [[ -n "$open_trace_id" ]] && populated_count=$((populated_count + 1))
+  [[ -n "$open_working_tree" ]] && populated_count=$((populated_count + 1))
+
+  if (( populated_count == 0 )); then
+    return 0
+  fi
+
+  if (( populated_count != 3 )); then
+    die "${source_label} has a partial opening OPEN anchor block; artifact, trace id, and working tree must all be present together"
+  fi
+
+  if [[ "$open_working_tree" != "clean" ]]; then
+    die "${source_label} opening OPEN Working Tree is not clean: ${open_working_tree}"
+  fi
+}
+
 assert_dp_required_sections() {
   local dp_path="$1"
   local -a required_heading_patterns=(
@@ -1193,10 +1230,20 @@ extract_trace_id_from_open() {
 }
 
 resolve_trace_id() {
+  local dp_path="${1:-}"
+  local source_label="${2:-packet}"
   local trace_id="${STELA_TRACE_ID:-}"
   if [[ -n "$trace_id" ]]; then
     printf '%s' "$trace_id"
     return 0
+  fi
+
+  if [[ -n "$dp_path" && -f "$dp_path" ]]; then
+    trace_id="$(resolve_dp_open_anchor_trace_id "$dp_path" || true)"
+    if [[ -n "$trace_id" ]]; then
+      printf '%s' "$trace_id"
+      return 0
+    fi
   fi
 
   local open_path=""
@@ -1204,7 +1251,7 @@ resolve_trace_id() {
   if [[ -n "$open_path" ]]; then
     trace_id="$(extract_trace_id_from_open "$open_path" || true)"
   fi
-  [[ -n "$trace_id" ]] || die "failed to resolve STELA_TRACE_ID from environment or latest OPEN artifact; run ./ops/bin/open --out=auto"
+  [[ -n "$trace_id" ]] || die "failed to resolve STELA_TRACE_ID from ${source_label} opening OPEN anchor, environment, or current OPEN artifact; run ./ops/bin/open --out=auto"
   printf '%s' "$trace_id"
 }
 
@@ -1927,6 +1974,12 @@ else
 fi
 [[ -n "$FRESHNESS_STAMP" ]] || die "failed to extract Freshness Stamp from ${DP_SOURCE}"
 
+if [[ -n "$ADDENDUM_ID" ]]; then
+  validate_dp_open_anchor_fields "$BASE_DP_BLOCK_PATH" "$BASE_DP_SOURCE"
+else
+  validate_dp_open_anchor_fields "$DP_BLOCK_PATH" "$DP_SOURCE"
+fi
+
 ALLOWLIST_POINTER="$(extract_allowlist_pointer "$DP_BLOCK_PATH" || true)"
 if [[ -z "$ALLOWLIST_POINTER" ]]; then
   ALLOWLIST_POINTER="storage/dp/active/allowlist.txt"
@@ -1985,7 +2038,11 @@ else
   validate_surface_head_authored_for_packet "$POW_SURFACE_PATH" "$DP_ID"
 fi
 
-TRACE_ID="$(resolve_trace_id)"
+if [[ -n "$ADDENDUM_ID" ]]; then
+  TRACE_ID="$(resolve_trace_id "$BASE_DP_BLOCK_PATH" "$BASE_DP_SOURCE")"
+else
+  TRACE_ID="$(resolve_trace_id "$DP_BLOCK_PATH" "$DP_SOURCE")"
+fi
 
 if ! INTEGRITY_OUTPUT="$(bash "$INTEGRITY_LINT" 2>&1)"; then
   printf '%s\n' "$INTEGRITY_OUTPUT" >&2

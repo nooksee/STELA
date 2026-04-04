@@ -224,6 +224,122 @@ require_clean_tree() {
   return 0
 }
 
+select_latest_path_by_mtime() {
+  local latest_path=""
+  local latest_mtime=-1
+  local path=""
+  local mtime=0
+
+  for path in "$@"; do
+    [[ -f "$path" ]] || continue
+    mtime="$(stat -c %Y "$path")"
+    if (( mtime > latest_mtime )); then
+      latest_mtime="$mtime"
+      latest_path="$path"
+      continue
+    fi
+    if (( mtime == latest_mtime )) && [[ "$path" > "$latest_path" ]]; then
+      latest_path="$path"
+    fi
+  done
+
+  [[ -n "$latest_path" ]] || return 1
+  printf '%s' "$latest_path"
+}
+
+draft_select_latest_open_artifact() {
+  local -a opens=()
+  mapfile -t opens < <(
+    find "${REPO_ROOT}/storage/handoff" -maxdepth 1 -type f | awk '
+      {
+        filename=$0
+        sub(/^.*\//, "", filename)
+        if (filename ~ /^OPEN-.*\.txt$/ && filename !~ /^OPEN-PORCELAIN-/) {
+          print $0
+        }
+      }
+    '
+  )
+  if (( ${#opens[@]} == 0 )); then
+    return 1
+  fi
+  select_latest_path_by_mtime "${opens[@]}"
+}
+
+draft_extract_open_field() {
+  local open_path="$1"
+  local label="$2"
+  [[ -f "$open_path" ]] || return 1
+  local value
+  value="$(
+    awk -v label="$label" '
+      index($0, "- " label ":") == 1 {
+        line=$0
+        sub(/^- /, "", line)
+        sub(label ":[[:space:]]*", "", line)
+        print line
+        exit
+      }
+    ' "$open_path"
+  )"
+  value="$(trim "$value")"
+  printf '%s' "$value"
+}
+
+draft_open_matches_current_head() {
+  local open_path="$1"
+  local branch="$2"
+  local head_short="$3"
+  local open_branch
+  local open_head_short
+  open_branch="$(draft_extract_open_field "$open_path" "Active branch" || true)"
+  open_head_short="$(draft_extract_open_field "$open_path" "HEAD short hash" || true)"
+  [[ -n "$open_branch" && -n "$open_head_short" ]] || return 1
+  [[ "$open_branch" == "$branch" && "$open_head_short" == "$head_short" ]]
+}
+
+draft_materialize_open_artifact() {
+  local open_output=""
+  local open_rel=""
+  local open_abs=""
+
+  open_output="$("${REPO_ROOT}/ops/bin/open" --out=auto 2>&1)" \
+    || die "draft failed to refresh OPEN anchor via ops/bin/open: ${open_output}"
+
+  open_rel="$(printf '%s\n' "$open_output" | sed -n 's/^OPEN saved: //p' | tail -n 1)"
+  open_rel="$(trim "${open_rel#./}")"
+  [[ -n "$open_rel" ]] || die "draft failed to parse OPEN saved path from ops/bin/open output"
+
+  open_abs="${REPO_ROOT}/${open_rel}"
+  [[ -f "$open_abs" ]] || die "draft OPEN refresh missing emitted artifact: ${open_rel}"
+  printf '%s' "$open_abs"
+}
+
+resolve_dp_open_anchor() {
+  local current_branch=""
+  local current_head_short=""
+  local open_abs_path=""
+
+  current_branch="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
+  current_head_short="$(git -C "$REPO_ROOT" rev-parse --short HEAD)"
+
+  open_abs_path="$(draft_select_latest_open_artifact || true)"
+  if [[ -n "$open_abs_path" ]] && ! draft_open_matches_current_head "$open_abs_path" "$current_branch" "$current_head_short"; then
+    open_abs_path=""
+  fi
+  if [[ -z "$open_abs_path" ]]; then
+    open_abs_path="$(draft_materialize_open_artifact)"
+  fi
+
+  OPEN_ANCHOR_PATH="$(rel_path_for_output "$open_abs_path")"
+  OPEN_TRACE_ID="$(draft_extract_open_field "$open_abs_path" "STELA_TRACE_ID" || true)"
+  OPEN_WORKING_TREE="$(draft_extract_open_field "$open_abs_path" "Working tree" || true)"
+
+  [[ -n "$OPEN_ANCHOR_PATH" ]] || die "failed to resolve OPEN anchor path for DP rendering"
+  [[ -n "$OPEN_TRACE_ID" ]] || die "failed to resolve OPEN trace id for DP rendering"
+  [[ -n "$OPEN_WORKING_TREE" ]] || die "failed to resolve OPEN working tree status for DP rendering"
+}
+
 read_lint_constants() {
   local lint_path="$REPO_ROOT/tools/lint/dp.sh"
   local template_hash
@@ -338,6 +454,7 @@ render_dp() {
   local out_path="$1"
   local proposed_work_branch="$WORK_BRANCH"
   [[ -x "$TEMPLATE_BIN" ]] || die "template binary missing or not executable: ${TEMPLATE_BIN}"
+  resolve_dp_open_anchor
 
   local -a cmd=(
     "$TEMPLATE_BIN" render dp
@@ -348,6 +465,9 @@ render_dp() {
     "--slot=PROPOSED_WORK_BRANCH=${proposed_work_branch}"
     "--slot=BASE_HEAD=${BASE_HEAD}"
     "--slot=FRESHNESS_STAMP=${FRESHNESS_STAMP}"
+    "--slot=OPEN_ANCHOR_PATH=${OPEN_ANCHOR_PATH}"
+    "--slot=OPEN_TRACE_ID=${OPEN_TRACE_ID}"
+    "--slot=OPEN_WORKING_TREE=${OPEN_WORKING_TREE}"
     "--slot=DP_SCOPED_LOAD_ORDER=${DP_SCOPED_LOAD_ORDER}"
     "--slot=OBJECTIVE=${OBJECTIVE}"
     "--slot=IN_SCOPE=${IN_SCOPE}"
@@ -513,6 +633,9 @@ ADDENDUM_LETTER=""
 BASE_DP_ID=""
 
 DP_SCOPED_LOAD_ORDER=""
+OPEN_ANCHOR_PATH=""
+OPEN_TRACE_ID=""
+OPEN_WORKING_TREE=""
 OBJECTIVE=""
 IN_SCOPE=""
 OUT_OF_SCOPE=""

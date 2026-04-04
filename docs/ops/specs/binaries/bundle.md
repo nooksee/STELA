@@ -21,11 +21,11 @@ Bundle sits at two points in the shipping spine:
 ## Mechanics and Sequencing
 1. Validate arguments and resolve the requested profile or `auto` route.
 2. Load policy from `ops/lib/manifests/BUNDLE.md`.
-3. Resolve a real current OPEN anchor for the active branch/head. Bundle consumes the latest matching `OPEN-*.txt` artifact and refreshes it through `ops/bin/open` when absent or stale. Bundle never invents standalone pseudo-OPEN trace ids.
+3. Resolve a real current OPEN anchor for the active branch/head. Bundle consumes the current matching `OPEN-*.txt` artifact and refreshes it through `ops/bin/open` when absent or stale. Bundle never invents standalone pseudo-OPEN trace ids.
 4. Resolve stance template, artifact prefix, dump scope, and dump persistence profile from policy.
 5. Resolve profile-scoped exact-file disposable inputs.
 6. Invoke `ops/bin/dump` with explicit output path and explicit persistence profile.
-7. Render bundle text, emit manifest, and emit package tar. For `--profile=draft`, bundle text also carries an embedded `DP AUTHORING SCAFFOLD` block rendered from the canonical DP template with canon-owned text already expanded and bundle-known packet metadata already populated.
+7. Render bundle text, emit manifest, and emit package tar. For `--profile=draft`, bundle text also carries an embedded `DP AUTHORING SCAFFOLD` block rendered from the canonical DP template with canon-owned text already expanded, including the opening OPEN artifact path, trace id, and working-tree state selected for packet-start authority.
 8. The emitted `[OPEN]` block and manifest `open` object carry a pointer plus copied metadata from the real OPEN artifact; they are not an anchor substitute.
 9. For audit reruns, emit fresh transport identity and submission lineage.
 
@@ -59,10 +59,11 @@ Current live set:
 - audit: current `RESULTS`, current `CLOSING`, and active packet source file
 
 ## OPEN Anchor Contract
-- OPEN remains the sole spine-grade trace anchor for certify lineage.
+- OPEN remains the packet-start freshness and trace authority.
 - Bundle consumes a current real `OPEN-*.txt` artifact for the active branch/head.
-- If the latest OPEN is missing or stale for the current branch/head, bundle refreshes one through `ops/bin/open` before continuing.
-- Bundle text/manifest may mirror OPEN fields (`artifact_path`, `branch`, `head_short`, `trace_id`, `intent`) but those mirrors are descriptive only; they do not replace the OPEN artifact.
+- If the current OPEN is missing or stale for the current branch/head, bundle refreshes one through `ops/bin/open` before continuing.
+- For draft intake, bundle stamps the selected OPEN artifact path, trace id, and working-tree state into the authored packet so later refreshes do not rewrite packet-start truth.
+- Bundle text/manifest may mirror OPEN fields (`artifact_path`, `branch`, `head_short`, `trace_id`, `working_tree`, `intent`), but those mirrors remain descriptive; the authored packet owns packet-start authority.
 
 ## Planning Profile Surfaces
 - `storage/handoff/TOPIC.md`: required input surface; bundle fails closed if absent.

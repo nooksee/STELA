@@ -22,7 +22,7 @@ Active surfaces by stage:
 Audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto`. It is separate from operator session refresh (`./ops/bin/open --out=auto`). Do not conflate them: operator session refresh keeps state fresh for the next session; the audit bundle packages the certify-generated evidence for audit review.
 
 **Execution Cycle:**
-1.  **Start:** `./ops/bin/open --out=auto` (freshness gate + trace anchor; OPEN provides `STELA_TRACE_ID` required by certify).
+1.  **Start:** `./ops/bin/open --out=auto` (session refresh; in bundle-first intake the first packet-valid OPEN becomes the packet-start freshness and trace anchor).
 2.  **Draft:** `./ops/bin/bundle --profile=draft --out=auto` (generates draft bundle with embedded DP AUTHORING SCAFFOLD; deliver `DRAFT-*.txt` to Architect; Architect returns one fenced worker-ready DP body; save full output to `storage/dp/intake/DP.md`; lint immediately: `bash tools/lint/dp.sh storage/dp/intake/DP.md`; confirm PASS before dispatch).
 3.  **Capture (CDD):** `./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto` (serializes worker-visible state).
     Note: Audit intake is bundle-first. Use `./ops/bin/bundle --profile=audit --out=auto` for audit review. Bundle dump scope is profile-mapped from `ops/lib/manifests/BUNDLE.md`; current audit mapping is `core`.
@@ -38,8 +38,9 @@ Audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto`.
 - DP structure is generated from `ops/src/surfaces/dp.md.tpl` through canonical tooling (`ops/bin/draft` for direct local rendering or the draft bundle's embedded DP authoring scaffold for Architect runs); manual structural edits are prohibited.
 
 **OPEN and OPEN-PORCELAIN Contract:**
-- `OPEN` is spine-grade: `ops/bin/certify` requires a `STELA_TRACE_ID` sourced from `STELA_TRACE_ID` env var or the latest OPEN artifact (`storage/handoff/OPEN-*.txt`). Run `./ops/bin/open --out=auto` before certify.
-- `ops/bin/bundle` consumes a real current OPEN artifact for the active branch and HEAD. If none exists, or the latest OPEN is stale for the current branch/HEAD, bundle refreshes one through `./ops/bin/open --out=auto` before continuing. Bundle metadata may mirror OPEN fields, but it is not a substitute for the artifact.
+- `OPEN` is the freshness and trace authority for packet start. Draft intake consumes a real current OPEN artifact for the active branch and HEAD and binds its authority fields into the authored packet.
+- `ops/bin/certify` prefers the packet-bound opening OPEN trace id when present. The env var and current OPEN artifact remain recovery paths when packet-bound anchor data is unavailable.
+- `ops/bin/bundle` consumes a real current OPEN artifact for the active branch and HEAD. If none exists, or the current OPEN is stale for the current branch/HEAD, bundle refreshes one through `./ops/bin/open --out=auto` before continuing. Bundle metadata may mirror OPEN fields, but those mirrors do not replace packet-bound OPEN authority.
 - `OPEN-PORCELAIN` (`storage/handoff/OPEN-PORCELAIN-*.txt`) is conditionally emitted: it is written only when the working tree is dirty. It is not a universal shipping requirement; clean sessions suppress it by design.
 
 **Non-Bundle Repo-Sharing Path (plain session):**
@@ -221,7 +222,7 @@ certify proceeds. The narrative is rendered into the RESULTS receipt under
 `## Worker Execution Narrative`.
 
 Required subsections:
-- `### Preflight State` — paste the verbatim outputs of the three §3.1 freshness-gate commands (`git rev-parse --abbrev-ref HEAD`, `git rev-parse --short HEAD`, `git status --porcelain`) captured before any file edits began, plus a short preflight lint status summary. These outputs must appear here, in the narrative, not in the receipt command list. Receipt commands run at certify time against a dirty working tree and cannot prove pre-edit clean state. Summary-only prose is rejected by the editor scaffold validator and RESULTS lint.
+- `### Preflight State` — paste the verbatim outputs of the three §3.1 worker execution-start commands (`git rev-parse --abbrev-ref HEAD`, `git rev-parse --short HEAD`, `git status --porcelain`) captured before any work-branch edits began, plus a short preflight lint status summary. Packet-start freshness and trace authority belongs to the opening `OPEN` bound in the packet; `### Preflight State` records worker execution-start truth and must appear here, in the narrative, not in the receipt command list. Receipt commands run at certify time against a dirty working tree and cannot prove pre-edit work-branch state. Summary-only prose is rejected by the editor scaffold validator and RESULTS lint.
 - `### Implemented Changes` — describe each change made: what was modified, created, or removed, and why.
 - `### Closeout Notes` — describe anomalies, open items, or residue; state None. if all items are resolved.
 - `### Decision Leaf` — record the decision record outcome:

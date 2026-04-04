@@ -37,7 +37,7 @@ Required subsections:
 - `### Closeout Notes`
 - `### Decision Leaf`
 
-`### Preflight State` must contain the verbatim outputs of the three §3.1 freshness-gate commands (`git rev-parse --abbrev-ref HEAD`, `git rev-parse --short HEAD`, `git status --porcelain`) captured before edits began. The command log is not an acceptable substitute because replay happens at certify time against the current closeout tree, not the pre-edit tree.
+`### Preflight State` must contain the verbatim outputs of the three §3.1 worker execution-start commands (`git rev-parse --abbrev-ref HEAD`, `git rev-parse --short HEAD`, `git status --porcelain`) captured before work-branch edits began. The packet-start freshness and trace authority belongs to the opening `OPEN` anchor recorded in the packet itself; `### Preflight State` reports worker execution-start truth on the work branch. The command log is not an acceptable substitute because replay happens at certify time against the current closeout tree, not the pre-edit work-branch state.
 
 The `### Decision Leaf` subsection must contain both:
 - `Decision Required: Yes|No`
@@ -54,7 +54,7 @@ The Worker Execution Narrative must:
 - Template drift between `tools/lint/results.sh` hash constant and `ops/src/surfaces/results.md.tpl`.
 - Git hash mismatch between receipt content and `git rev-parse HEAD`.
 - Missing or placeholder Worker Execution Narrative content.
-- Missing verbatim preflight proof for the three freshness-gate commands inside `### Preflight State`.
+- Missing verbatim worker execution-start proof for the three §3.1 commands inside `### Preflight State`.
 - Missing required narrative subsections or Decision Leaf field lines.
 - Untouched narrative scaffold prose accepted as final content.
 - Absolute filesystem paths inside `## Worker Execution Narrative`.
@@ -67,11 +67,11 @@ Enforcement linkage:
 ## Mechanics and Sequencing
 1. Maintain a human-authored closing sidecar at `storage/handoff/CLOSING.md`.
 2. Run `ops/bin/certify --dp=DP-OPS-XXXX --out=auto`.
-3. Certifier captures worker execution narrative via editor helper and validates subsection structure/content, including the verbatim freshness proof requirement for `### Preflight State`.
+3. Certifier captures worker execution narrative via editor helper and validates subsection structure/content, including the verbatim worker execution-start proof requirement for `### Preflight State`.
 4. Certifier validates the closing sidecar, runs integrity and verification gates, captures outputs, then renders RESULTS from template slots.
    - Scope Verification must record the authoritative packet source path carried in the delivered closeout packet as `dp_source`.
    - `dp_source` must record the authoritative TASK/addendum lineage path so RESULTS matches the delivered audit bundle and dump evidence.
-5. Certifier lints the generated RESULTS artifact and exits non-zero on any failure, including missing freshness proof inside `### Preflight State` or narrative path-hygiene violations.
+5. Certifier lints the generated RESULTS artifact and exits non-zero on any failure, including missing worker execution-start proof inside `### Preflight State` or narrative path-hygiene violations.
 
 ## Forensic Insight
 RESULTS is the executable evidence receipt for DP closeout.

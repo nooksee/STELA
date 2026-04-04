@@ -813,6 +813,9 @@ bundle_render_draft_authoring_scaffold() {
   local base_branch="$2"
   local base_head="$3"
   local freshness_stamp="$4"
+  local open_anchor_path="$5"
+  local open_trace_id="$6"
+  local open_working_tree="$7"
   local packet_id_branch_fragment=""
   local suggested_work_branch=""
   local slots_tmp=""
@@ -866,6 +869,9 @@ EOF
       "--slot=PROPOSED_WORK_BRANCH=${suggested_work_branch}" \
       "--slot=BASE_HEAD=${base_head}" \
       "--slot=FRESHNESS_STAMP=${freshness_stamp}" \
+      "--slot=OPEN_ANCHOR_PATH=${open_anchor_path}" \
+      "--slot=OPEN_TRACE_ID=${open_trace_id}" \
+      "--slot=OPEN_WORKING_TREE=${open_working_tree}" \
       "--slots-file=${slots_tmp}" \
       --out=-
   )" || {
@@ -1260,6 +1266,7 @@ bundle_run() {
   local open_branch=""
   local open_head_short=""
   local trace_id=""
+  local open_working_tree=""
   local open_artifact_intent=""
 
   open_abs_path="$(bundle_select_latest_open_artifact || true)"
@@ -1275,11 +1282,13 @@ bundle_run() {
   open_branch="$(bundle_extract_open_field "$open_abs_path" "Active branch" || true)"
   open_head_short="$(bundle_extract_open_field "$open_abs_path" "HEAD short hash" || true)"
   trace_id="$(bundle_extract_trace_id_from_open "$open_abs_path" || true)"
+  open_working_tree="$(bundle_extract_open_field "$open_abs_path" "Working tree" || true)"
   open_artifact_intent="$(bundle_extract_open_field "$open_abs_path" "Intent for today" || true)"
 
   [[ -n "$trace_id" ]] || die "bundle OPEN anchor missing STELA_TRACE_ID: ${open_rel_path}"
   [[ "$open_branch" == "$branch" ]] || die "bundle OPEN anchor branch mismatch: expected ${branch}, found ${open_branch:-<blank>} in ${open_rel_path}"
   [[ "$open_head_short" == "$head_short" ]] || die "bundle OPEN anchor HEAD mismatch: expected ${head_short}, found ${open_head_short:-<blank>} in ${open_rel_path}"
+  [[ -n "$open_working_tree" ]] || die "bundle OPEN anchor missing Working tree field: ${open_rel_path}"
 
   local topic_rel="storage/handoff/TOPIC.md"
   local plan_rel="storage/handoff/PLAN.md"
@@ -1348,7 +1357,10 @@ bundle_run() {
       "$request_packet_id" \
       "$branch" \
       "$head_short" \
-      "$draft_freshness_stamp" > "$draft_authoring_scaffold_tmp"
+      "$draft_freshness_stamp" \
+      "$open_rel_path" \
+      "$trace_id" \
+      "$open_working_tree" > "$draft_authoring_scaffold_tmp"
   fi
 
   local stance_template_key
@@ -1510,6 +1522,7 @@ bundle_run() {
     echo "- Active branch: ${open_branch}"
     echo "- HEAD short hash: ${open_head_short}"
     echo "- STELA_TRACE_ID: ${trace_id}"
+    echo "- Working tree: ${open_working_tree}"
     echo "- Intent for today: ${open_artifact_intent}"
     echo
     echo "[SUBMISSION]"
@@ -1721,6 +1734,7 @@ bundle_run() {
     echo "    \"branch\": \"$(bundle_json_escape "$open_branch")\"," 
     echo "    \"head_short\": \"$(bundle_json_escape "$open_head_short")\"," 
     echo "    \"trace_id\": \"$(bundle_json_escape "$trace_id")\"," 
+    echo "    \"working_tree\": \"$(bundle_json_escape "$open_working_tree")\","
     echo "    \"intent\": \"$(bundle_json_escape "$open_artifact_intent")\""
     echo "  },"
     echo "  \"dump\": {"

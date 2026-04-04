@@ -9,6 +9,9 @@ requires_slots:
   - PROPOSED_WORK_BRANCH
   - BASE_HEAD
   - FRESHNESS_STAMP
+  - OPEN_ANCHOR_PATH
+  - OPEN_TRACE_ID
+  - OPEN_WORKING_TREE
   - DP_SCOPED_LOAD_ORDER
   - OBJECTIVE
   - IN_SCOPE
@@ -33,23 +36,29 @@ Base Branch: {{BASE_BRANCH}}
 Work Branch: {{PROPOSED_WORK_BRANCH}}
 Base HEAD: {{BASE_HEAD}}
 Freshness Stamp: {{FRESHNESS_STAMP}}
+Opening OPEN Artifact: {{OPEN_ANCHOR_PATH}}
+Opening OPEN Trace ID: {{OPEN_TRACE_ID}}
+Opening OPEN Working Tree: {{OPEN_WORKING_TREE}}
 Note: FRESHNESS_STAMP must be YYYY-MM-DD format only. No trace tokens, no timestamps, no other text. Certify rejects all other forms. dp.sh enforces at lint time.
+Note: The opening OPEN above is the authoritative packet-start freshness and trace anchor. Later session refreshes do not replace packet-start truth.
 
-Required local re-check (worker runs before any edits; paste verbatim outputs under `## Worker Execution Narrative` -> `### Preflight State` in RESULTS):
+Required local re-check (worker runs on the work branch before any edits; paste verbatim outputs under `## Worker Execution Narrative` -> `### Preflight State` in RESULTS):
 - git rev-parse --abbrev-ref HEAD
 - git rev-parse --short HEAD
 - git status --porcelain
 
-These three commands are freshness proof only. Do not treat §3.4.5 receipt replay as a substitute for their pre-edit outputs.
+These three commands prove worker execution-start state on the work branch. They do not replace the opening OPEN anchor, and §3.4.5 receipt replay is not a substitute for these pre-edit outputs.
 
 Preconditions:
 - No commits on main.
-- Working tree must be clean before execution begins.
+- Opening OPEN Working Tree must be clean.
+- Working tree must be clean before worker execution begins.
 - If Base HEAD changes, regenerate session artifacts from canonical tools before proceeding.
 
 STOP conditions:
 - STOP if any mismatch (branch, Base HEAD, missing work branch).
-- STOP if working tree is dirty before execution begins.
+- STOP if Opening OPEN Working Tree is not clean.
+- STOP if working tree is dirty before worker execution begins.
 - STOP if told to create or switch branches.
 
 ## 3.1.1 DP Preflight Gate (Run Before Any Edits)

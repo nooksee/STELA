@@ -20,7 +20,7 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
-CANONICAL_DP_TEMPLATE_SHA256="c72df08de1d276570d42e38718881ad784053fc6371e55fa3808f803faf98613"
+CANONICAL_DP_TEMPLATE_SHA256="0b37977494196e0b5d8b485f263459d54431de20a6081ea4a80fa258467ece60"
 CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/surfaces/addendum.md.tpl"
 CANONICAL_ADDENDUM_TEMPLATE_SHA256="3bc51a5e6eab76e353ebe571b664f70cb13b905b43c7fdb3fd8794648a7316aa"
 TEMPLATE_RENDER_BIN="ops/bin/template"
@@ -520,6 +520,18 @@ normalize_dp_structure() {
       }
       if ($0 ~ /^Freshness Stamp:[[:space:]]*/) {
         print "Freshness Stamp: {{FRESHNESS_STAMP}}"
+        next
+      }
+      if ($0 ~ /^Opening OPEN Artifact:[[:space:]]*/) {
+        print "Opening OPEN Artifact: {{OPEN_ANCHOR_PATH}}"
+        next
+      }
+      if ($0 ~ /^Opening OPEN Trace ID:[[:space:]]*/) {
+        print "Opening OPEN Trace ID: {{OPEN_TRACE_ID}}"
+        next
+      }
+      if ($0 ~ /^Opening OPEN Working Tree:[[:space:]]*/) {
+        print "Opening OPEN Working Tree: {{OPEN_WORKING_TREE}}"
         next
       }
 
@@ -1377,6 +1389,9 @@ render_fixture_from_template() {
     line="${line//'{{PROPOSED_WORK_BRANCH}}'/work/dp-ops-0000-2026-02-14}"
     line="${line//'{{BASE_HEAD}}'/d3801c3a}"
     line="${line//'{{FRESHNESS_STAMP}}'/2026-02-14}"
+    line="${line//'{{OPEN_ANCHOR_PATH}}'/storage/handoff/OPEN-main-d3801c3a.txt}"
+    line="${line//'{{OPEN_TRACE_ID}}'/stela-20260214T000000Z-fixture0001}"
+    line="${line//'{{OPEN_WORKING_TREE}}'/clean}"
 
     case "$line" in
       "{{DP_SCOPED_LOAD_ORDER}}")
