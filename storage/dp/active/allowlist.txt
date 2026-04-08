@@ -11,6 +11,7 @@ docs/ops/specs/tools/lint/style.md
 docs/ops/specs/tools/lint/integrity.md
 docs/ops/specs/tools/lint/context.md
 docs/ops/specs/tools/lint/llms.md
+docs/ops/specs/binaries/llms.md
 docs/ops/specs/binaries/trace.md
 docs/ops/specs/binaries/decision.md
 docs/ops/specs/binaries/certify.md
@@ -25,6 +26,7 @@ ops/bin/dump
 ops/bin/prune
 ops/bin/trace
 ops/bin/decision
+ops/bin/llms
 ops/src/decisions/dec.md.tpl
 ops/src/decisions/exec.md.tpl
 ops/src/decisions/cbc.md.tpl

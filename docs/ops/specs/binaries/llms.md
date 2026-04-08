@@ -3,10 +3,10 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/bin/llms` exists to keep machine discovery entry points synchronized with current manifest truth. It prevents SSOT drift where root `llms` bundles reference outdated manifest memberships or stale synthesis output.
+`ops/bin/llms` exists to keep machine discovery entry points synchronized with current manifest truth. It prevents SSOT drift where root `llms` bundles reference outdated manifest memberships or stale synthesis output while keeping receipt-facing success output aligned with the repo-relative path discipline used elsewhere in Stela.
 
 ## Mechanics and Sequencing
-The binary parses optional out directory and manifest override arguments, enforces repo-root execution, validates dependencies, and runs `ops/bin/compile` before synthesis. It synthesizes `llms-core.txt` from the core manifest and `llms-full.txt` from the discovery manifest into a temporary workspace, verifies both generated files are non-empty, constructs a fresh root `llms.txt` index with current HEAD metadata and bundle pointers, and copies all three outputs to repository root. When `--out-dir` points outside root, it also writes mirrored copies to that destination. It prints the written path set on success.
+The binary parses optional out directory and manifest override arguments, enforces repo-root execution, validates dependencies, and runs `ops/bin/compile` before synthesis. It synthesizes `llms-core.txt` from the core manifest and `llms-full.txt` from the discovery manifest into a temporary workspace, verifies both generated files are non-empty, constructs a fresh root `llms.txt` index with current HEAD metadata and bundle pointers, and copies all three outputs to repository root. When `--out-dir` points outside root, it also writes mirrored copies to that destination. On success it prints the written path set, normalizing repository-root outputs to repo-relative paths instead of absolute filesystem paths.
 
 ## Deprecated Filename Guard
 Before writing bundle outputs, `ops/bin/llms` checks the repository root for deprecated slice filenames: `llms-small.txt`, `llms-ops.txt`, and `llms-governance.txt`. The check runs after synthesis and non-empty output validation but before any bundle copy step. If any deprecated filename exists, the binary exits non-zero with an error identifying the offending path and does not write refreshed bundle files.
