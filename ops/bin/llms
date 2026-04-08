@@ -143,6 +143,11 @@ write_bundle() {
   fi
 }
 
+display_written_path() {
+  local path="$1"
+  printf '%s' "$(normalize_path_token "$path")"
+}
+
 write_bundle "$core_tmp" "llms-core.txt"
 write_bundle "$full_tmp" "llms-full.txt"
 write_bundle "$index_tmp" "llms.txt"
@@ -152,4 +157,9 @@ if [[ "$OUT_DIR" != "$ROOT_OUT_DIR" ]]; then
   written+=("${OUT_DIR}/llms-core.txt" "${OUT_DIR}/llms-full.txt" "${OUT_DIR}/llms.txt")
 fi
 
-printf 'Wrote %s\n' "${written[*]}"
+display_written=()
+for path in "${written[@]}"; do
+  display_written+=("$(display_written_path "$path")")
+done
+
+printf 'Wrote %s\n' "${display_written[*]}"

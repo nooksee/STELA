@@ -11,7 +11,7 @@
 1. Resolve repository root and require executable generator `ops/bin/llms`.
 2. Require root bundle files `llms.txt`, `llms-core.txt`, and `llms-full.txt`.
 3. Fail immediately when deprecated slice files (`llms-small.txt`, `llms-ops.txt`, `llms-governance.txt`) exist.
-4. Create temporary output directory, run generator with `--out-dir`, and print generator output.
+4. Create temporary output directory, run generator with `--out-dir`, and print generator output. Repository-root output paths in that success line are normalized to repo-relative form by the generator.
 5. Reject deprecated slice references inside both committed and generated `llms.txt`.
 6. Run unified diffs between committed and generated bundle files (`llms-core.txt`, `llms-full.txt`, `llms.txt`).
 7. Remove temporary directory in trap cleanup and return non-zero on any mismatch.
