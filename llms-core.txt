@@ -138,15 +138,15 @@ When reporting, include:
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-04-07-e94aa1ba.md
+archives/surfaces/PoW-2026-04-08-f6a44db0.md
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-04-07-e94aa1ba.md
+archives/surfaces/SoP-2026-04-08-f6a44db0.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0254-e94aa1ba.md
+archives/surfaces/TASK-DP-OPS-0255-f6a44db0.md
 
 
 ## docs/MAP.md
