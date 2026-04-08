@@ -26,6 +26,16 @@ Notes:
 USAGE
 }
 
+normalize_out_dir() {
+  local path="$1"
+  if [[ "$path" != "/" ]]; then
+    while [[ "$path" == */ ]]; do
+      path="${path%/}"
+    done
+  fi
+  printf '%s' "$path"
+}
+
 for arg in "$@"; do
   case "$arg" in
     --out-dir=*)
@@ -65,6 +75,8 @@ emit_binary_leaf "llms" "start"
 if [[ "$OUT_DIR" != /* ]]; then
   OUT_DIR="${PROJECT_REPO_ROOT}/${OUT_DIR}"
 fi
+
+OUT_DIR="$(normalize_out_dir "$OUT_DIR")"
 
 mkdir -p "$OUT_DIR"
 mkdir -p "$ROOT_OUT_DIR"
