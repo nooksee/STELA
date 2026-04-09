@@ -251,6 +251,7 @@ archives/surfaces/TASK-DP-OPS-0158-*.md
 archives/surfaces/TASK-DP-OPS-0159-*.md
 archives/surfaces/TASK-DP-OPS-0160-*.md
 tools/test/open.sh
+tools/test/results.sh
 docs/ops/specs/tools/test/open.md
 ops/src/definitions/agent.md.tpl
 tools/lint/agent.sh
