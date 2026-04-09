@@ -19,6 +19,7 @@
 9. Reject untouched narrative scaffold prose in explicit-path mode; historical scan modes report scaffold findings without blocking.
 10. Enforce `Git Hash` parity in explicit mode, and record historical parity skips in inferred/scan modes without blocking.
 11. Return non-zero when any certification-format receipt fails required checks.
+12. Dedicated synthetic regression coverage lives in `tools/test/results.sh` and exercises strict explicit-path mode with one canonical pass fixture plus deterministic failures for fused command-log fence/heading boundaries, missing required narrative subsections, missing execution-start proof, and Decision Leaf coherence drift.
 
 ## Anecdotal Anchor
 During the DP-OPS-0069 certification cutover, the absence of a dedicated RESULTS lint path allowed structurally incomplete receipts to pass closeout and created an audit gap that required retroactive correction. This script formalizes that missing gate.
@@ -35,6 +36,15 @@ RESULTS schema ends at `## Worker Execution Narrative`. Any closing sidecar vali
 The lint requires machine-frame command-log integrity:
 - `## Verification Command Log` must not contain a heading fused onto a closing fence boundary.
 - A line such as `~~~### Command 26` is a hard failure in explicit-path and inferred-active-target modes because it proves the receipt frame was malformed before acceptance.
+
+## Regression Coverage
+- `tools/test/results.sh` is the dedicated synthetic-fixture regression entrypoint for strict explicit-path behavior.
+- The harness must keep one canonical PASS fixture and deterministic FAIL fixtures for:
+  - fused fence/heading boundaries in `## Verification Command Log`
+  - missing required Worker Execution Narrative subsections
+  - missing §3.1 worker execution-start proof in `### Preflight State`
+  - Decision Required / Decision Leaf coherence drift
+- The harness calls `bash tools/lint/results.sh <fixture>` directly and does not emulate full certify replay.
 
 ## Worker Execution Narrative Validation
 The lint requires the following within the RESULTS artifact:
