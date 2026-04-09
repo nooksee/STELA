@@ -423,12 +423,10 @@ archives/manifests/compile-2026-03-17T*-7ef89be2.md
 archives/surfaces/TASK-DP-OPS-0207-*.md
 archives/surfaces/TASK-DP-OPS-0208-*.md
 .github/hooks/pre-commit
-.github/hooks/llms
 .github/hooks/pre-push
 ops/bin/hooks
 docs/MANUAL.md
 docs/ops/specs/binaries/hooks.md
-docs/ops/specs/hooks/llms.md
 docs/ops/specs/hooks/pre-commit.md
 docs/ops/specs/hooks/pre-push.md
 docs/ops/registry/hooks.md
