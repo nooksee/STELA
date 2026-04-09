@@ -205,6 +205,78 @@ path.write_text(text)
 PY
 run_expect_fail "decision leaf coherence fixture" "$decision_leaf_fixture" "Decision Required is 'No' but Decision Leaf is not 'None'"
 
+clickable_link_fixture="${RESULTS_TEST_ROOT_ABS}/clickable-link-RESULTS.md"
+cp "$valid_fixture" "$clickable_link_fixture"
+python3 - "$clickable_link_fixture" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+text = path.read_text()
+text = text.replace(
+    "No repository changes. This fixture exercises strict RESULTS lint behavior only.",
+    "[results lint spec](docs/ops/specs/tools/lint/results.md) was cited directly in the narrative.",
+    1,
+)
+path.write_text(text)
+PY
+run_expect_fail "clickable markdown link fixture" "$clickable_link_fixture" "Worker Execution Narrative contains clickable markdown links"
+
+absolute_path_fixture="${RESULTS_TEST_ROOT_ABS}/absolute-path-RESULTS.md"
+cp "$valid_fixture" "$absolute_path_fixture"
+python3 - "$absolute_path_fixture" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+text = path.read_text()
+text = text.replace(
+    "No repository changes. This fixture exercises strict RESULTS lint behavior only.",
+    "Touched /home/nos4r2/dev/stela/tools/test/results.sh directly in the narrative.",
+    1,
+)
+path.write_text(text)
+PY
+run_expect_fail "absolute filesystem path fixture" "$absolute_path_fixture" "Worker Execution Narrative contains an absolute filesystem path"
+
+scaffold_fixture="${RESULTS_TEST_ROOT_ABS}/scaffold-RESULTS.md"
+cp "$valid_fixture" "$scaffold_fixture"
+python3 - "$scaffold_fixture" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+text = path.read_text()
+text = text.replace(
+    "No repository changes. This fixture exercises strict RESULTS lint behavior only.",
+    "Describe each change made: what was modified, created, or removed, and why.",
+    1,
+)
+path.write_text(text)
+PY
+run_expect_fail "untouched scaffold fixture" "$scaffold_fixture" "Worker Execution Narrative contains untouched scaffold instruction prose"
+
+missing_decision_required_fixture="${RESULTS_TEST_ROOT_ABS}/missing-decision-required-RESULTS.md"
+cp "$valid_fixture" "$missing_decision_required_fixture"
+python3 - "$missing_decision_required_fixture" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+text = path.read_text()
+text = text.replace("Decision Required: No\n", "", 1)
+path.write_text(text)
+PY
+run_expect_fail "missing decision required fixture" "$missing_decision_required_fixture" "Worker Execution Narrative Decision Leaf subsection missing 'Decision Required:' line"
+
+missing_decision_leaf_fixture="${RESULTS_TEST_ROOT_ABS}/missing-decision-leaf-RESULTS.md"
+cp "$valid_fixture" "$missing_decision_leaf_fixture"
+python3 - "$missing_decision_leaf_fixture" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+text = path.read_text()
+text = text.replace("Decision Leaf: None\n", "", 1)
+path.write_text(text)
+PY
+run_expect_fail "missing decision leaf fixture" "$missing_decision_leaf_fixture" "Worker Execution Narrative Decision Leaf subsection missing 'Decision Leaf:' line"
+
 if (( FAILURES > 0 )); then
   exit 1
 fi

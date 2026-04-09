@@ -19,7 +19,7 @@
 9. Reject untouched narrative scaffold prose in explicit-path mode; historical scan modes report scaffold findings without blocking.
 10. Enforce `Git Hash` parity in explicit mode, and record historical parity skips in inferred/scan modes without blocking.
 11. Return non-zero when any certification-format receipt fails required checks.
-12. Dedicated synthetic regression coverage lives in `tools/test/results.sh` and exercises strict explicit-path mode with one canonical pass fixture plus deterministic failures for fused command-log fence/heading boundaries, missing required narrative subsections, missing execution-start proof, and Decision Leaf coherence drift.
+12. Dedicated synthetic regression coverage lives in `tools/test/results.sh` and exercises strict explicit-path mode with one canonical pass fixture plus deterministic failures for fused command-log fence/heading boundaries, missing required narrative subsections, missing execution-start proof, clickable markdown links, absolute filesystem paths, untouched scaffold prose, missing Decision Leaf field lines, and Decision Leaf coherence drift.
 
 ## Anecdotal Anchor
 During the DP-OPS-0069 certification cutover, the absence of a dedicated RESULTS lint path allowed structurally incomplete receipts to pass closeout and created an audit gap that required retroactive correction. This script formalizes that missing gate.
@@ -43,6 +43,10 @@ The lint requires machine-frame command-log integrity:
   - fused fence/heading boundaries in `## Verification Command Log`
   - missing required Worker Execution Narrative subsections
   - missing §3.1 worker execution-start proof in `### Preflight State`
+  - clickable markdown links inside Worker Execution Narrative
+  - absolute filesystem paths inside Worker Execution Narrative
+  - untouched Worker Execution Narrative scaffold instruction prose
+  - missing `Decision Required:` or `Decision Leaf:` field lines
   - Decision Required / Decision Leaf coherence drift
 - The harness calls `bash tools/lint/results.sh <fixture>` directly and does not emulate full certify replay.
 
@@ -52,6 +56,9 @@ The lint requires the following within the RESULTS artifact:
 - Required subsections: `### Preflight State`, `### Implemented Changes`, `### Closeout Notes`, `### Decision Leaf`.
 - `### Preflight State` must contain the verbatim outputs of the three §3.1 worker execution-start commands (`git rev-parse --abbrev-ref HEAD`, `git rev-parse --short HEAD`, `git status --porcelain`) captured before work-branch edits began. The command log is not a substitute for this proof.
 - The Decision Leaf subsection must contain both `Decision Required:` and `Decision Leaf:` field lines.
+- Worker Execution Narrative path hygiene rules:
+  - clickable markdown links are rejected in explicit and inferred-active-target modes
+  - absolute filesystem paths are rejected in explicit and inferred-active-target modes
 - Decision Leaf coherence rules:
   - `Decision Required: Yes` requires `Decision Leaf: archives/decisions/RoR-*.md`.
   - `Decision Required: No` requires `Decision Leaf: None`.
