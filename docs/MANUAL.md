@@ -312,7 +312,7 @@ Do not hand-edit `llms.txt`, `llms-core.txt`, or `llms-full.txt`; regenerate wit
 ~~~
 `ops/bin/llms` Refresh Side-Effect Notice:
 - `ops/bin/llms` is a compile event. It regenerates `ops/lib/manifests/OPS.md` in addition to `llms*.txt` bundle outputs. This is expected behavior, not a defect.
-- The pre-commit hook (`.github/hooks/llms`) protects against committing `OPS.md` out-of-scope at the commit boundary. It does not prevent the working-tree modification from occurring during Refresh.
+- The local pre-commit hook does not auto-stage `OPS.md`: `.github/hooks/pre-commit` stages only `llms.txt`, `llms-core.txt`, and `llms-full.txt` after running `ops/bin/llms`. `OPS.md` remains a working-tree refresh side effect unless you stage it separately.
 - If `OPS.md` is not in the active DP allowlist, restore it after Refresh before running `tools/lint/integrity.sh`:
   `git restore --source=HEAD --staged --worktree -- ops/lib/manifests/OPS.md`
   Then re-run `bash tools/lint/integrity.sh` to confirm clean state before proceeding.
@@ -578,7 +578,7 @@ ops/bin/hooks
 This sets `core.hooksPath = .github/hooks` so git invokes the repo hooks directory on every commit and push.
 
 Active hooks:
-- `pre-commit`: refuses commits on `main` or any non-`work/*` branch (PoT §6.2.1); then runs `ops/bin/llms` and stages `llms.txt`, `llms-core.txt`, `llms-full.txt`.
+- `pre-commit`: refuses commits on `main` or any non-`work/*` branch (PoT §6.2.1); then runs `ops/bin/llms` and stages only `llms.txt`, `llms-core.txt`, and `llms-full.txt`.
 - `pre-push`: refuses direct push to `main` (PoT §6.1).
 
 Bypass: `git commit --no-verify` or `git push --no-verify` bypasses all hooks. Use only when the guard is inapplicable (e.g., replaying a certify-controlled commit). Do not use to skip required gates.

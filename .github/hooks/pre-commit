@@ -19,4 +19,7 @@ if [[ "$branch" != "work/"* ]]; then
   hook_fail "commits must be on a work/* branch (PoT §6.2.1). Current branch: ${branch}"
 fi
 
-bash "${BASH_SOURCE[0]%/*}/llms"
+[[ -x "ops/bin/llms" ]] || hook_fail "run llms refresh failed: missing executable ops/bin/llms"
+
+./ops/bin/llms || hook_fail "run llms refresh failed: ops/bin/llms returned non-zero"
+git add llms.txt llms-core.txt llms-full.txt || hook_fail "run llms refresh failed: git add for llms bundles failed"
