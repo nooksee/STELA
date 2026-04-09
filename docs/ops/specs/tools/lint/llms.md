@@ -1,6 +1,6 @@
 <!-- CCD: ff_target="operator-technical" ff_band="45-60" -->
 <!-- SPEC-SURFACE:REQUIRED -->
-> **Retired by DP-OPS-0102 (2026-02-22).** The deprecated-filename check was absorbed into ops/bin/llms. Bundle staleness is now prevented structurally via .github/hooks/llms. This spec is retained as a historical record.
+> **Retired by DP-OPS-0102 (2026-02-22).** The deprecated-filename check was absorbed into ops/bin/llms. Bundle staleness is now prevented structurally via `.github/hooks/pre-commit`. This spec is retained as a historical record.
 
 # Technical Specification
 

@@ -24,7 +24,7 @@ This is a local `.git/config` change only. No tracked files are modified.
 
 | Hook | Trigger | Guard |
 |------|---------|-------|
-| `pre-commit` | `git commit` | Refuses commit on `main` or non-`work/*` branch (PoT §6.2.1); runs llms refresh and stages bundles |
+| `pre-commit` | `git commit` | Refuses commit on `main` or non-`work/*` branch (PoT §6.2.1); then runs `ops/bin/llms` and stages `llms.txt`, `llms-core.txt`, and `llms-full.txt` |
 | `pre-push` | `git push` | Refuses direct push to `main` (PoT §6.1) |
 
 ## Bypass
@@ -34,4 +34,5 @@ This is a local `.git/config` change only. No tracked files are modified.
 - `docs/MANUAL.md` Local Hooks Setup section
 - `.github/hooks/pre-commit`
 - `.github/hooks/pre-push`
-- `.github/hooks/llms`
+- `docs/ops/specs/hooks/pre-commit.md`
+- `docs/ops/specs/hooks/pre-push.md`
