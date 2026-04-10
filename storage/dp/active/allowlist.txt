@@ -200,6 +200,7 @@ archives/surfaces/PoW-2026-03-03-9f0fdc6a.md
 archives/manifests/compile-2026-03-03T204311-9f0fdc6a.md
 tools/verify.sh
 tools/test/bundle.sh
+tools/test/dp.sh
 docs/ops/registry/test.md
 docs/ops/specs/tools/test/bundle.md
 archives/surfaces/TASK-DP-OPS-0147-*.md

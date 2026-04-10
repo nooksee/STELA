@@ -15,7 +15,7 @@
 7. Enforce receipt dump-selection scoping in Section 3.4.5: packets `DP-OPS-0095` and newer fail if any `ops/bin/dump` command omits `--selection=dp` or `--selection=dp+allowlist`; older packets emit a grandfathered warning only.
 8. Enforce allowlist pointer integrity: exactly one pointer entry, canonical pointer path match, allowlist file existence, entry normalization, runtime-prefix restrictions, wildcard policy constraints, repository reachability checks, and the in-flight deleted-file exception.
 9. For RESULTS paths, delegate validation to `tools/lint/results.sh` and propagate its exit code. RESULTS schema enforcement is sourced from the canonical template plus narrative field checks.
-10. In `--test` mode, execute fixture-driven negative and positive checks that exercise template-hash drift, structure mismatch, allowlist-pointer mismatch, allowlist-file invalidity, drafting-marker word detection, foreign citation contamination detection, and delegated RESULTS validation coverage (valid fixture and deterministic invalid fixture).
+10. In `--test` mode, execute fixture-driven negative and positive checks that exercise template-hash drift, structure mismatch, allowlist-pointer mismatch, allowlist-file invalidity, drafting-marker word detection, foreign citation contamination detection, and delegated RESULTS validation coverage (valid fixture and deterministic invalid fixture). Dedicated explicit-path synthetic regression coverage also lives in `tools/test/dp.sh`.
 11. Enforce mandatory receipt-command shape in `3.4.5`: verify canonical mandatory command lines are present, and fail deterministically when DP-specific receipt commands are not replayable by certify.
 12. Enforce delete/load-order consistency: a path declared `DELETE` in `3.4.3 Changelog` cannot still appear in `3.2.2 DP-scoped load order`.
 13. Enforce closing-sidecar non-prepopulation in `3.5.1`: reject draft payloads that provide non-empty values for canonical sidecar fields.
@@ -35,6 +35,13 @@
 2. **Invalid work-branch form (FAIL):** `Work Branch` does not follow `work/<DP-ID>-YYYY-MM-DD` form (PoT.md §6.2.1) and must fail.
 3. **Closing-sidecar coherence mismatch (FAIL):** a packet-scoped legacy sidecar token in §3.5.1 carries an id fragment that disagrees with the heading id.
 4. **Delete/load-order contradiction (FAIL):** add `- DELETE <path>` in `3.4.3` for a path still listed in `3.2.2 DP-scoped load order` and require failure.
+
+## Regression Coverage
+- `tools/test/dp.sh` is the dedicated synthetic-fixture regression entrypoint for explicit-path DP lint behavior outside the internal `bash tools/lint/dp.sh --test` path.
+- The harness must keep:
+  - one canonical PASS fixture for a structurally clean DP
+  - one deterministic FAIL fixture for a `3.4.3 DELETE` path that still appears in `3.2.2 DP-scoped load order`
+- The harness calls `bash tools/lint/dp.sh <fixture>` directly and does not emulate certify replay.
 
 ### Mandatory Receipt Command Shape and Sidecar Pre-population Fixtures (`--test`)
 `dp.sh --test` must include deterministic fixtures for residual T1.1 hardening:
