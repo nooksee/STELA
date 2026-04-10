@@ -191,6 +191,36 @@ run_expect_fail \
   "$delete_load_order_fixture" \
   "§3.4.3 declares DELETE path still present in §3.2.2 DP-scoped load order: docs/ops/specs/tools/lint/dp.md"
 
+work_branch_fixture="${DP_TEST_ROOT_ABS}/work-branch-DP.md"
+cp "$valid_fixture" "$work_branch_fixture"
+python3 - "$work_branch_fixture" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+text = path.read_text()
+text = text.replace("Work Branch: work/dp-ops-0000-2026-04-10", "Work Branch: work/no-date-fragment", 1)
+path.write_text(text)
+PY
+run_expect_fail \
+  "invalid work branch fixture" \
+  "$work_branch_fixture" \
+  "Work Branch must follow 'work/<DP-ID>-YYYY-MM-DD' form (PoT.md §6.2.1): work/no-date-fragment"
+
+sidecar_fixture="${DP_TEST_ROOT_ABS}/sidecar-coherence-DP.md"
+cp "$valid_fixture" "$sidecar_fixture"
+python3 - "$sidecar_fixture" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+text = path.read_text()
+text = text.replace("storage/handoff/CLOSING.md", "storage/handoff/CLOSING-DP-OPS-9999.md", 1)
+path.write_text(text)
+PY
+run_expect_fail \
+  "closing sidecar coherence fixture" \
+  "$sidecar_fixture" \
+  "closing-sidecar DP id mismatch: heading uses 'DP-OPS-0000' but §3.5.1 uses 'DP-OPS-9999'"
+
 if (( FAILURES > 0 )); then
   exit 1
 fi
