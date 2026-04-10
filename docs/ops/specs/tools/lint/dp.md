@@ -43,6 +43,9 @@
   - one deterministic FAIL fixture for a `3.4.3 DELETE` path that still appears in `3.2.2 DP-scoped load order`
   - one deterministic FAIL fixture for invalid `Work Branch` form
   - one deterministic FAIL fixture for closing-sidecar coherence mismatch
+  - one deterministic FAIL fixture for forbidden drafting-marker residue in a finalized DP
+  - one deterministic FAIL fixture for foreign citation contamination
+  - one deterministic FAIL fixture for include metadata leakage
 - The harness calls `bash tools/lint/dp.sh <fixture>` directly and does not emulate certify replay.
 
 ### Mandatory Receipt Command Shape and Sidecar Pre-population Fixtures (`--test`)

@@ -221,6 +221,37 @@ run_expect_fail \
   "$sidecar_fixture" \
   "closing-sidecar DP id mismatch: heading uses 'DP-OPS-0000' but §3.5.1 uses 'DP-OPS-9999'"
 
+drafting_marker_fixture="${DP_TEST_ROOT_ABS}/drafting-marker-DP.md"
+cp "$valid_fixture" "$drafting_marker_fixture"
+python3 - "$drafting_marker_fixture" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+text = path.read_text()
+text = text.replace("Work Branch: work/dp-ops-0000-2026-04-10", "Work Branch: PROPOSED-work/dp-ops-0000-2026-04-10", 1)
+path.write_text(text)
+PY
+run_expect_fail \
+  "drafting-marker residue fixture" \
+  "$drafting_marker_fixture" \
+  "PROPOSED is a drafting marker and must not appear in a finalized DP"
+
+contamination_fixture="${DP_TEST_ROOT_ABS}/contamination-DP.md"
+cp "$valid_fixture" "$contamination_fixture"
+printf '%s\n' ':contentReference[oaicite:0]{index=0}' >> "$contamination_fixture"
+run_expect_fail \
+  "foreign citation contamination fixture" \
+  "$contamination_fixture" \
+  "dp: contamination: line"
+
+metadata_leak_fixture="${DP_TEST_ROOT_ABS}/metadata-leak-DP.md"
+cp "$valid_fixture" "$metadata_leak_fixture"
+printf '%s\n' '<!-- CCD: ff_target="test" ff_band="10-20" -->' >> "$metadata_leak_fixture"
+run_expect_fail \
+  "include metadata leakage fixture" \
+  "$metadata_leak_fixture" \
+  "dp: include metadata leakage: line"
+
 if (( FAILURES > 0 )); then
   exit 1
 fi
