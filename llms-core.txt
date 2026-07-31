@@ -12,7 +12,7 @@ PoT is the single constitutional document for Stela governance.
 - `ops/` = Run (binaries, manifests, automation).
 - `docs/` = Explain (manuals and rationale).
 - `opt/` = Isolate (JIT-only  content excluded from global context).
-- `projects/` = Work (payload code).
+- `projects/` = Work (project homes and payloads).
 - `storage/` = Payload (handoff, dumps, dp).
 - `var/tmp/` = Resume (ephemeral worker scratch and task-local workspace).
 - `logs/` = Telemetry (runtime logs and diagnostics).
@@ -21,6 +21,7 @@ PoT is the single constitutional document for Stela governance.
 ### 1.2 Axioms
 - Precedence: PoT is final authority; if conflict exists, PoT prevails.
 - SSOT: one canonical file per domain; other mentions are pointers.
+- Legibility: authority, behavior, and effects must remain inspectable and explainable to the Operator.
 - Reuse-first: search `ops/` for an existing template before creating a new artifact.
 - Drift: any divergence between canon and repository state, or duplication of canon outside SSOT, is a failure state that requires stop and correction.
 - Routing: closeout routing failure is a system failure state.
@@ -65,8 +66,9 @@ Hard constraints are: PoT.md, SoP.md, TASK.md, ops/lib/manifests/CONTEXT.md, doc
 
 ### 4.1 Staffing Protocol
 - Operator (Human): Owns final decisions, approvals, and secrets. Performs all commits, pushes, and merges.
-- Integrator (Lead AI): Maintains governance, structural integrity, and auditing. Generates Dispatch Packets and detects system drift.
-- Contractor (Guest AI): Executes the defined packet scope, implements changes, runs required checks, and reports results within the provided contract.
+- Integrator (Lead AI): Maintains governance and structural integrity, including accountability for delegated agent activity. Generates Dispatch Packets and detects system drift.
+- Contractor (Execution AI): Executes the defined packet scope, implements changes, runs required checks, and reports results within the provided contract.
+- Auditor (Review AI): Independently evaluates recorded evidence against the governing contract.
 
 ### 4.2 Behavioral Logic Standard
 - No contractions across any scope, including projects.
@@ -76,6 +78,11 @@ Hard constraints are: PoT.md, SoP.md, TASK.md, ops/lib/manifests/CONTEXT.md, doc
 - Receipts are generated artifacts produced by the system; manual fabrication is prohibited.
 - Imagine the same way an operator explains a failure, picture a concrete branch state, and consider a direct recovery action.
 - Prefer prevention over detection. Document why structural prevention is not viable.
+
+### 4.3 Authority Boundaries
+- Authority originates with the Operator and is expressed through canon and active contracts.
+- Conversation, familiarity, provider, and runtime identity confer no authority.
+- Acceptance is independent of execution and grounded in recorded evidence.
 
 ### 4.4 Entry Points
 - llms.txt
@@ -156,6 +163,7 @@ archives/surfaces/TASK-DP-OPS-0262-82bf7e63.md
 ## 0. Scope
 This map lists continuity surfaces and operator navigation pointers.
 Entry sequence is `PoT.md` -> `SoP.md` -> `PoW.md` -> `TASK.md` -> `docs/MAP.md`.
+Returning after time away: use the `docs/MANUAL.md` Cockpit Re-entry Card first.
 Use `docs/MANUAL.md` for command procedure details and `docs/CCD.md` for density policy.
 
 ## 1. The Constitution (Immutable Law)
@@ -179,6 +187,7 @@ Use `docs/MANUAL.md` for command procedure details and `docs/CCD.md` for density
 ## 4. The Bridge (Ingestion Tools)
 *Mechanisms that move state from disk to context.*
 * **Proof-First Read Order:** `PoT.md` → `SoP.md` → `PoW.md` → `TASK.md` → `docs/MAP.md`.
+* **Repository Agent Guidance:** [`../../AGENTS.md`](../../AGENTS.md) — Codex runtime instructions that defer to PoT and bind delegated-agent transparency inside Stela.
 * **Generation:** [`../../ops/bin/open`](../../ops/bin/open) — Creates the session prompt and trace anchor (`STELA_TRACE_ID`).
 * **Capture:** [`../../ops/bin/dump`](../../ops/bin/dump) — Serializes the platform.
 * **Validation:** [`../../ops/lib/manifests/CONTEXT.md`](../../ops/lib/manifests/CONTEXT.md) — The required context checklist.
@@ -186,31 +195,36 @@ Use `docs/MANUAL.md` for command procedure details and `docs/CCD.md` for density
 ## 5. The Shipping Spine (Operator Chain)
 *End-to-end delivery chain from topic to merge.*
 
-`TOPIC.md` → `PLAN.md` → `storage/dp/intake/DP.md` → execution → `RESULTS` + `CLOSING` → audit bundle → merge
+Durable collaboration and fluid exploration may precede this chain. Conversation can develop experience and intent, but mutation authority begins only when captured by the proper artifact boundary.
+
+exploration → `TOPIC.md` → `PLAN.md` → Integrator (Architect stance) → `storage/dp/intake/DP.md` → packet-authorized Worker → `RESULTS` + `CLOSING` → independent Audit → `PASS` / `FAIL` → merge or correction
 
 * **Topic:** `storage/handoff/TOPIC.md` — latest-wins planning input.
 * **Plan:** `storage/handoff/PLAN.md` — latest-wins planning output, draft input.
-* **Active DP draft:** `storage/dp/intake/DP.md` — latest-wins operator surface.
+* **Integrator:** Performs the Architect draft stance from generated artifacts. Web UI and repo-native runtimes are equivalent when the same input and output contract is preserved; free-form Operator draft prompt text required: `0`.
+* **Active DP draft:** `storage/dp/intake/DP.md` — latest-wins worker-ready operator surface.
+* **Worker:** Executes the validated DP under fresh packet-scoped authority, an exact writer claim, and a DP-authorized context boundary. Worker identity and project familiarity may be durable; prior conversation grants current execution authority `0` times.
 * **Packet/process identity:** `DP-OPS-XXXX` — retained in the TASK leaf chain for base packets, addendum lineage leaves for addenda, certify receipts, and telemetry. Draft dispatch allocates the next packet id from the current certified TASK packet id plus one.
 * **Certify:** `ops/bin/certify` — generates `RESULTS`, emits SoP/PoW/TASK archive leaves, requires `STELA_TRACE_ID` from latest OPEN artifact.
-* **Audit bundle:** `storage/handoff/AUDIT-*.txt` (initial) / `storage/handoff/AUDIT-R*.txt` (rerun) — generated by `ops/bin/bundle --profile=audit`.
-* **Merge:** Operator commits work branch, opens PR per `CLOSING` sidecar, merges to main.
+* **Audit bundle:** `storage/handoff/AUDIT-*.txt` (initial) / `storage/handoff/AUDIT-R*.txt` (rerun) — generated by `ops/bin/bundle --profile=audit` and reviewed independently for `PASS` or `FAIL`.
+* **Verdict routing:** `PASS` permits Operator commit, PR, and merge after gates. `FAIL` returns bounded findings for correction or addendum authorization, followed by an audit rerun.
+* **Runtime boundary:** Roles are logical, not provider-specific. Canon and generated artifacts carry authority; unrecorded conversation does not. Generated planning, draft, Worker-dispatch, and audit artifacts are the launch prompts; free-form Operator prompt text required to start each main-lane role run: `0`.
 * **Secondary lanes:** `addenda/addendum` (intervention), `execution-decision` (disposable/manual) — bounded sidepaths, not replacements for RESULTS or audit truth.
-* **Delivery mechanics:** `docs/MANUAL.md`.
+* **Delivery mechanics:** `docs/MANUAL.md#cockpit-re-entry-card`.
 
-## 5. Unified Jurisdiction
+## 6. Unified Jurisdiction
 *Policy of Truth governs all scopes without parallel authority.*
 * **Single Authority:** PoT is the sole authority across `ops/`, `docs/`, `opt/`, and `projects/`.
 * **Project Position:** Projects are payloads operating under PoT, not a separate provider or consumer tier.
 
-## 6. Auto-Generated Index
+## 7. Auto-Generated Index
 <!-- MAP-GENERATED:BEGIN -->
 ### Directory Index
 - ops/ - Run (binaries, manifests, automation).
 - tools/ - Lints and verification tooling.
 - docs/ - Manuals, specs, and governance surfaces.
 - opt/ - Isolated definition surfaces (JIT-only, excluded from global context).
-- projects/ - Work payload code.
+- projects/ - Project homes and payloads.
 - storage/ - Payload surfaces (handoff, dumps, dp).
 - var/tmp/ - Resume workspace (ephemeral task scratch).
 - logs/ - Telemetry streams and diagnostics.

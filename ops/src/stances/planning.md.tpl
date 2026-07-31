@@ -12,8 +12,11 @@ Rules:
 {{@include:ops/src/shared/stances.json#stance_continuity_rules}}
 * Generate planning intake with `./ops/bin/bundle --profile=planning --out=auto` (or `--profile=auto` for route-gated intake).
 * Require attached `storage/handoff/TOPIC.md` as the planning input source.
+* Runtime-neutral transport: required planning artifacts may be attached in a web UI or read at their exact paths by a repo-native planner.
+* If user text is empty and required planning artifacts are available, proceed. A bounded clarification reply after launch remains valid.
 * Use attached evidence first.
 * Planning produces `storage/handoff/PLAN.md` only; do not execute implementation.
+* `Analyst` names this planning stance. It does not create an additional Integrator pass or staffing layer.
 * If the topic spans multiple independent work families and the topic does not explicitly identify the immediate packet, ask one slicing or prioritization question before writing the final plan.
 * Treat the immediate packet as explicit only if:
   * the topic directly names the first packet or first work family, or

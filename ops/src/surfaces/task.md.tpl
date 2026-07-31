@@ -41,7 +41,7 @@ Repo verify: tools/verify.sh
 ## 3. Current Dispatch Packet (DP)
 
 Section-by-section authoring protocol:
-- Generate DP structure via `./ops/bin/bundle --profile=draft --out=auto` (standard operator path: Architect completes the embedded DP AUTHORING SCAFFOLD; save the returned DP body to `storage/dp/intake/DP.md`) or locally via `ops/bin/draft` (template render only).
+- Generate DP structure via `./ops/bin/bundle --profile=draft --out=auto` (standard Operator path: the Integrator performs the Architect stance, completes the embedded DP AUTHORING SCAFFOLD, and saves or returns the DP body for `storage/dp/intake/DP.md`) or locally via `ops/bin/draft` (template render only).
 - Do not hand-edit DP structural boilerplate in `TASK.md` after generation.
 - Manual edits are limited to slot content only (objective, scope, safety, plan body, receipt body).
 - Freeze each completed subsection in order (3.1 -> 3.2 -> 3.3 -> 3.4.x).

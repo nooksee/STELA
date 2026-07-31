@@ -61,7 +61,9 @@ dump_scope_addenda=core
   - audit and addenda still use `--scope=core`
   - persistence-tier compaction happens inside dump serialization, not traverse selection
 
-## Profile Attachment Contract
+## Profile Transport Contract
+- Bundle transport is runtime-neutral. Web runtimes receive the exact generated files as attachments; repo-native runtimes read those same files at their emitted paths.
+- Generated planning, draft, Worker-dispatch, and audit artifacts carry their launch instructions. Free-form Operator prompt text required to start any main-lane role run: `0`. A bounded planning clarification after launch remains valid.
 - planning: `PLANNING-*.txt`, `PLANNING-*.manifest.json`, transport-managed `storage/handoff/TOPIC.md`
 - draft: `DRAFT-*.txt`, `DRAFT-*.manifest.json`, transport-managed `storage/handoff/PLAN.md` with request metadata (`plan_source`, `packet_id`, `closing_sidecar`, `dp_draft_path`)
 - audit: initial `AUDIT-*.txt`, rerun `AUDIT-R*-*.txt`, matching `.manifest.json`/`.tar`, transport-managed current DP `storage/handoff/RESULTS.md` and `storage/handoff/CLOSING.md`
@@ -89,7 +91,8 @@ dump_scope_addenda=core
 - Planning package members include `storage/handoff/TOPIC.md` and omit `storage/handoff/PLAN.md`.
 - Planning `PLAN.md` is output only and is never transported as planning input context.
 - `storage/handoff/TOPIC.md` is the latest-wins input surface; the operator replaces its content before each planning run.
-- `storage/handoff/PLAN.md` is the latest-wins output surface written by the Analyst after each planning run.
+- `storage/handoff/PLAN.md` is the latest-wins output surface written by the planning stance after each planning run.
+- `Analyst` is the planning stance name. It does not add a separate Integrator pass to the relay.
 - Before each planning run, bundle writes a disposable copy of the prior `storage/handoff/PLAN.md` to `var/tmp/PLAN.md.prev` if that file exists. This copy is a scratch artifact only; certify has no dependency on it and prune may remove it.
 
 ## Draft Transport Contract
@@ -100,13 +103,15 @@ dump_scope_addenda=core
 - `closing_sidecar` is the active latest-wins sidecar `storage/handoff/CLOSING.md`; packet identity remains explicit in request metadata and sidecar content.
 - `storage/handoff/PLAN.md` is the latest-wins draft plan input surface.
 - Draft bundle text includes an embedded `DP AUTHORING SCAFFOLD` block generated from the canonical DP template with canon-owned text already expanded and bundle-known packet metadata already populated.
-- `storage/dp/intake/DP.md` is the deterministic active DP draft surface; Architect completes the embedded authoring scaffold into a worker-ready full DP body, operator saves it directly to this path, and validates with `tools/lint/dp.sh` before dispatch.
+- `storage/dp/intake/DP.md` is the deterministic active DP draft surface; the Integrator performs the Architect stance, completes the embedded authoring scaffold into a worker-ready full DP body, and saves or returns it for Operator placement at this path before `tools/lint/dp.sh` validation.
+- `Architect` names the Integrator draft stance, not another staffing layer.
 
 ## Audit Transport Contract
 - Audit resolves the current certified packet id from the current TASK surface.
 - Audit requires `storage/handoff/RESULTS.md` and `storage/handoff/CLOSING.md` for that current packet and fails closed when either file is missing.
 - Audit invokes the core dump with explicit inclusion of those two files, the authoritative current packet source file, and existing exact-file entries from the active packet's `3.2.2 DP-Scoped Load Order` so new packet-substantive canon files are inspectable even when they are not yet tracked.
 - Audit package members include the resolved current `RESULTS` and `CLOSING` files.
+- Audit runs in a review context independent of Worker execution and emits the contracted `PASS` or `FAIL` report. It may use the same model or provider, but not the Worker conversation or unrecorded execution memory.
 - Audit reruns must emit fresh artifact identity under `audit_resubmission_prefix` and record submission lineage in the emitted manifest.
 - Audit rerun identity is gated on explicit `--rerun` intent. Prior local `AUDIT-*` artifacts do not force rerun naming without `--rerun`. Explicit `--rerun` still emits rerun identity when no local predecessor exists; in that case `supersedes_bundle_path` remains null and the first rerun index is `1`.
 
@@ -115,12 +120,13 @@ dump_scope_addenda=core
 - Smoke outputs are resume/scratch artifacts under `var/tmp/`, not payload artifacts under `storage/`.
 
 ## Shipping Spine Contract
-The canonical operator shipping chain uses bundle at two points:
-- `--profile=planning`: deliver context + TOPIC.md to the Analyst; Analyst writes PLAN.md
-- `--profile=draft`: deliver context + PLAN.md plus the embedded DP authoring scaffold to the Architect; Architect emits a worker-ready full DP body, operator saves it to `storage/dp/intake/DP.md`, validates with `tools/lint/dp.sh`, and packet identity remains `DP-OPS-XXXX`
-- Worker executes DP; certify generates RESULTS + emits surface leaves
-- `--profile=audit`: package RESULTS + CLOSING for audit review; audit bundle dump is the canonical audit evidence payload
-- Operator commits on work branch, opens PR per CLOSING sidecar, merges to main
+The canonical Operator shipping chain uses bundle for three artifact transitions:
+- `--profile=planning`: deliver context + `TOPIC.md` to the planning stance; planning writes `PLAN.md`
+- `--profile=draft`: deliver context + `PLAN.md` plus the embedded DP authoring scaffold to the Integrator; the Integrator performs the Architect stance and emits a worker-ready full DP body; Operator saves it to `storage/dp/intake/DP.md`, validates with `tools/lint/dp.sh`, and packet identity remains `DP-OPS-XXXX`
+- Fresh packet-scoped Worker executes the validated DP without inherited planning or Integrator conversation; certify generates RESULTS and emits surface leaves
+- `--profile=audit`: package RESULTS + CLOSING for a review context independent of Worker execution; the audit bundle dump is the canonical audit evidence payload and the output is `PASS` or `FAIL`
+- `PASS`: Operator commits on the work branch, opens the PR per CLOSING sidecar, and merges after gates
+- `FAIL`: return bounded findings for correction or addendum authorization, then generate an explicit `--rerun` audit bundle
 
 Secondary lanes are bounded and do not replace RESULTS or audit truth:
 - `--profile=addenda`: intervention intake only (not PASS/FAIL); intent form must be `ADDENDUM REQUIRED: <BASE_DP_ID> - <BLOCKER>`

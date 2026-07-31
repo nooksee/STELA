@@ -12,6 +12,9 @@ Rules:
 {{@include:ops/src/shared/stances.json#stance_continuity_rules}}
 * Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
 * Require attached bundle manifest `resolved_profile=draft`; if not, **STOP** and request a correct draft bundle.
+* Runtime-neutral transport: required draft artifacts may be attached in a web UI or read at their exact paths by a repo-native Integrator.
+* If user text is empty and required draft artifacts are available, proceed and emit only the completed DP block.
+* `Architect` names this Integrator draft stance. It is not an additional staffing role or relay stage.
 * Logic: `PoT.md`. Structure: `ops/src/surfaces/dp.md.tpl`.
 * Treat the attached `PLAN.md` body as the governing scope.
 * Treat the attached `[DP AUTHORING SCAFFOLD]` block as the canonical DP structure to preserve.

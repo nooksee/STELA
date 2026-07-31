@@ -46,10 +46,14 @@ This pass now requires two explicit human-authored traversals before verdict:
 ## Outputs
 - Rendered stance body text beginning at `Rules:`.
 - No unresolved include directives.
+- Runtime transport is host-neutral: a web UI may receive generated audit artifacts as attachments, while a repo-native reviewer may read the same exact files at their emitted paths.
+- Empty user text is valid when all required audit artifacts are available; the generated package carries the instruction.
+- Audit runs in a review context independent of Worker execution. Model or provider identity may be reused, but Worker conversation and unrecorded execution memory are not evidence.
 - Output contract requires exactly one fenced markdown code block.
 - Output contract requires no text before or after the fenced code block.
 - First line must be ```markdown.
 - First non-empty line inside the fenced body must start with `**AUDIT -`.
+- The audit heading verdict is `PASS` or `FAIL`.
 - Last line must be ``` .
 - Output contract rejects citation-token strings (`[cite_start]`, `[cite:`, `[/cite]`, `:contentReference[`, `oaicite`).
 
@@ -59,6 +63,7 @@ This pass now requires two explicit human-authored traversals before verdict:
 - Render output is deterministic for identical repository state.
 - Verifier ownership stays thinner than runtime ownership: style lint protects audit contract families and critical anchor lines, while the full rendered prose remains owned by the runtime template.
 - Audit trust boundaries stay explicit: machine provenance and clipboard hygiene are separate verification surfaces with different failure modes.
+- Audit context independence prevents the Worker execution conversation from becoming an undeclared evidence source.
 
 ## Related pointers
 - `ops/lib/manifests/BUNDLE.md`

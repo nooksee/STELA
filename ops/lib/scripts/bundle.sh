@@ -1540,7 +1540,11 @@ bundle_run() {
     fi
     echo
     echo "[SPINE]"
-    echo "- Main chain: TOPIC.md -> PLAN.md -> storage/dp/intake/DP.md -> execution -> RESULTS + CLOSING -> audit bundle -> merge"
+    echo "- Main chain: exploration -> TOPIC.md -> PLAN.md -> Integrator -> storage/dp/intake/DP.md -> packet-authorized Worker -> RESULTS + CLOSING -> independent Audit -> PASS/FAIL -> merge or correction."
+    echo "- Role chain: planning -> Integrator (Architect stance) -> packet-authorized Worker -> independent Audit -> PASS/FAIL."
+    echo "- Experience boundary: durable collaboration may precede TOPIC; prior conversation grants current execution authority 0 times."
+    echo "- Runtime boundary: web attachment or exact repo-native file access; generated artifacts carry authority, not unrecorded conversation."
+    echo "- Generated planning, draft, Worker-dispatch, and audit artifacts require no free-form Operator prompt text to start their main-lane role runs."
     echo "- Active draft surface: storage/dp/intake/DP.md (latest-wins); packet identity remains DP-OPS-XXXX."
     echo "- Certify requires STELA_TRACE_ID from OPEN artifact or STELA_TRACE_ID env var."
     echo "- Audit dump: ./ops/bin/bundle --profile=audit --out=auto (separate from operator session refresh)"

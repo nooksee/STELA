@@ -229,21 +229,32 @@ show_doctrine() {
 }
 
 show_curriculum() {
-  say "Curriculum mode: guided startup and closeout sequences."
+  say "Curriculum mode: complete cockpit and closeout sequences."
 
   cat <<EOF_CURRICULUM
-${bold}Startup Sequence${reset}
-1. Open freshness snapshot:
-   ${green}./ops/bin/open --out=auto --dp="DP-OPS-XXXX"${reset}
-2. Capture Ops state:
-   ${green}./ops/bin/dump --scope=core --format=chatgpt --out=auto --bundle${reset}
-3. Run dispatch preflight gates before edits:
-   ${green}bash tools/lint/dp.sh --test${reset}
-   ${green}bash tools/lint/dp.sh TASK.md${reset}
-   ${green}bash tools/lint/task.sh${reset}
-4. Load canon in order:
-   ${green}PoT.md -> SoP.md -> TASK.md -> docs/MAP.md -> docs/MANUAL.md -> ops/lib/manifests/CONTEXT.md${reset}
-5. Execute DP Section 3 in order and keep freeze discipline.
+${bold}Cockpit Sequence${reset}
+0. Explore: develop the idea fluidly; conversation grants mutation authority 0 times.
+1. Topic: capture the idea in ${green}storage/handoff/TOPIC.md${reset} when formal planning should begin.
+2. Plan: run ${green}./ops/bin/bundle --profile=planning --out=auto${reset}; the generated package is the launch prompt; save the returned final plan to ${green}storage/handoff/PLAN.md${reset}.
+3. Integrate: run ${green}./ops/bin/bundle --profile=draft --out=auto${reset}; deliver generated artifacts to the Integrator with no free-form Operator prompt; save the returned DP to ${green}storage/dp/intake/DP.md${reset}; lint it.
+4. Execute: establish fresh packet-scoped Worker authority; Worker identity and project familiarity may be durable, but prior conversation grants current execution authority 0 times.
+5. Audit: run ${green}./ops/bin/bundle --profile=audit --out=auto${reset}; deliver it to a context independent of Worker execution; require ${green}PASS${reset} or ${green}FAIL${reset}.
+6. Route: PASS permits commit, PR, and merge after gates; FAIL returns bounded findings for correction or addendum, followed by ${green}--rerun${reset}.
+
+${bold}Boundary Rules${reset}
+- Architect is the Integrator draft stance, not another actor.
+- Web attachment and exact repo-native file access are equivalent transport choices.
+- Generated planning, draft, Worker-dispatch, and audit artifacts are the launch prompts. Free-form Operator prompt text required to start each main-lane role run: 0.
+- OPEN, dump, lint, allowlist, and certify are supporting machinery, not extra relay stages.
+
+${bold}Packet Mechanics${reset}
+1. Freshness: ${green}./ops/bin/open --out=auto${reset}
+2. Draft bundle: ${green}./ops/bin/bundle --profile=draft --out=auto${reset}
+3. Validate returned DP: ${green}bash tools/lint/dp.sh storage/dp/intake/DP.md${reset}
+4. Capture Worker-visible state: ${green}./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto${reset}
+5. Pre-certify dry-run: ${green}./ops/bin/allowlist${reset}
+6. Certify: ${green}./ops/bin/certify --dp=DP-OPS-XXXX --out=auto${reset}
+7. Audit bundle: ${green}./ops/bin/bundle --profile=audit --out=auto${reset}
 
 ${bold}Closeout Sequence${reset}
 1. Verify:
@@ -251,15 +262,16 @@ ${bold}Closeout Sequence${reset}
    ${green}bash tools/lint/truth.sh${reset}
    ${green}bash tools/lint/style.sh${reset}
    ${green}bash tools/lint/dp.sh TASK.md${reset}
+2. Generate the machine receipt:
+   ${green}./ops/bin/allowlist${reset}
+   ${green}./ops/bin/certify --dp=DP-OPS-XXXX --out=auto${reset}
    ${green}bash tools/lint/results.sh storage/handoff/RESULTS.md${reset}
-2. Record proof and history:
-   - Update RESULTS receipts.
-   - Append SoP history entry.
-   - Append PoW proof entry with RESULTS, OPEN, and DUMP pointers.
-3. Refresh navigation bundles when applicable:
+3. Generate and deliver the independent audit bundle:
+   ${green}./ops/bin/bundle --profile=audit --out=auto${reset}
+4. Refresh navigation bundles when the active packet requires it:
    ${green}./ops/bin/map${reset}
    ${green}./ops/bin/llms --out-dir="$(pwd)"${reset}
-4. Prune last:
+5. Prune last:
    ${green}./ops/bin/prune --scrub${reset}
 
 ${bold}Routing References${reset}
@@ -276,7 +288,7 @@ ${bold}Stela Help${reset}
 ${dim}CLI wayfinding surface aligned with docs/MAP.md.${reset}
 
 ${bold}Shipping Spine${reset}
-  ${dim}TOPIC.md -> PLAN.md -> DP.md -> execution -> RESULTS + CLOSING -> audit bundle -> merge${reset}
+  ${dim}exploration -> TOPIC.md -> PLAN.md -> Integrator -> DP.md -> packet-authorized Worker -> RESULTS + CLOSING -> independent Audit -> PASS/FAIL -> merge or correction${reset}
 
 ${bold}Command Index${reset}
   ${cyan}open${reset}       Session freshness and trace anchor (STELA_TRACE_ID required by certify).
@@ -299,13 +311,13 @@ ${bold}Help Modes${reset}
   ${cyan}<term>${reset}      Specs-first docs search.
 
 ${bold}Quick Start (Main Spine)${reset}
-  1) Read constitution and active contract: ${green}PoT.md${reset}, ${green}TASK.md${reset}
-  2) Open session: ${green}./ops/bin/open --out=auto${reset}
-  3) Draft: ${green}./ops/bin/bundle --profile=draft --out=auto${reset} (Architect completes scaffold; save DP to ${green}storage/dp/intake/DP.md${reset}; lint before dispatch)
-  4) Run preflight gates: ${green}bash tools/lint/dp.sh --test${reset}, ${green}bash tools/lint/dp.sh TASK.md${reset}, ${green}bash tools/lint/task.sh${reset}
-  5) Execute DP. Certify: ${green}./ops/bin/certify --dp=DP-OPS-XXXX --out=auto${reset}
-  6) Audit: ${green}./ops/bin/bundle --profile=audit --out=auto${reset}
-  7) Operator: commit, PR, merge per CLOSING sidecar.
+  0) Explore: develop the idea fluidly; conversation grants mutation authority 0 times
+  1) Topic: capture the idea in ${green}storage/handoff/TOPIC.md${reset}
+  2) Plan: ${green}./ops/bin/bundle --profile=planning --out=auto${reset}; generated artifacts are the prompt; save final output to ${green}storage/handoff/PLAN.md${reset}
+  3) Integrate: ${green}./ops/bin/bundle --profile=draft --out=auto${reset}; generated artifacts are the prompt; save DP to ${green}storage/dp/intake/DP.md${reset}; lint before dispatch
+  4) Execute: deliver the validated DP under fresh packet-scoped Worker authority; durable identity or familiarity cannot expand scope or replace evidence
+  5) Audit: ${green}./ops/bin/bundle --profile=audit --out=auto${reset}; independent review returns PASS or FAIL
+  6) Route: PASS -> commit, PR, merge per CLOSING; FAIL -> bounded correction or addendum, then audit ${green}--rerun${reset}
 
 ${bold}Wayfinding${reset}
   MAP analogue: ${green}./ops/bin/help${reset}

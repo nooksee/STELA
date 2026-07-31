@@ -1,7 +1,7 @@
 <!-- CCD: ff_target="discovery" ff_band="30-50" -->
 # projects/
 
-This directory holds project payloads.
+This directory holds project homes and payloads.
 
 - Registered projects are tracked in `docs/ops/registry/projects.md`.
 - Use `./ops/bin/project init <name> --dry-run` to preview creation.

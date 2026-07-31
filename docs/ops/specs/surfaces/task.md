@@ -33,7 +33,7 @@ Think of `TASK.md` like the control desk card that shows which packet is active 
 
 ## DP Generation Contract
 - DP structure is immutable and generated from `ops/src/surfaces/dp.md.tpl`.
-- Standard operator generation flow is bundle-first: `./ops/bin/bundle --profile=draft --out=auto`; Architect completes the embedded DP AUTHORING SCAFFOLD and returns a fenced worker-ready DP body; operator saves it to `storage/dp/intake/DP.md` and lints with `bash tools/lint/dp.sh storage/dp/intake/DP.md`. Local generation via `./ops/bin/draft` remains available as a template-render alternative.
+- Standard Operator generation flow is bundle-first: `./ops/bin/bundle --profile=draft --out=auto`; the Integrator performs the Architect stance, completes the embedded DP AUTHORING SCAFFOLD, and saves or returns a fenced worker-ready DP body for `storage/dp/intake/DP.md`; the Operator then lints with `bash tools/lint/dp.sh storage/dp/intake/DP.md`. Local generation via `./ops/bin/draft` remains available as a template-render alternative.
 - Manual edits after generation are limited to slot content only; structural heading/label edits are prohibited.
 - `tools/lint/dp.sh` enforces canonical template hash and normalized structure-hash parity.
 

@@ -25,9 +25,12 @@ Define the template-backed Planning stance body used by bundle output contract r
 - Rendered stance body text beginning at `Rules:`.
 - No unresolved include directives.
 - Core planning contract:
+  - Runtime transport is host-neutral: a web UI may receive generated planning artifacts as attachments, while a repo-native planner may read the same exact files at their emitted paths.
+  - Empty user text is valid at launch when all required planning artifacts are available; the generated package carries the instruction. A bounded clarification reply after launch remains valid.
   - Machine-ingest planning mode requires attached `storage/handoff/TOPIC.md` and has no inline-query fallback.
   - Planning uses attached evidence first.
   - Planning produces `storage/handoff/PLAN.md` only; it does not execute implementation.
+  - `Analyst` names the planning stance; it does not create an additional Integrator pass or staffing layer.
   - If a topic spans multiple independent work families and the topic does not explicitly identify the immediate packet, planning asks one slicing or prioritization question before writing the final plan.
   - The immediate packet is explicit only if the topic directly names the first packet or first work family, the attached evidence directly requires a first packet ordering, or the user explicitly prioritizes one work family.
   - Planning does not infer or choose the immediate packet unilaterally from repo context alone when multiple work families are in scope.

@@ -11,7 +11,9 @@ Rules:
 * Use native profile-prefixed filenames from bundle output (`AUDIT-*` for audit profile); do not relabel artifacts.
 * Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
 * Require attached bundle manifest `resolved_profile=audit`; if not, **STOP** and request a correct audit bundle.
-* If user text is empty and required attachments are present, proceed and emit only the final audit block.
+* Runtime-neutral transport: required audit artifacts may be attached in a web UI or read at their exact paths by a repo-native reviewer.
+* If user text is empty and required audit artifacts are available, proceed and emit only the final audit block.
+* Audit from a review context independent of Worker execution. Reusing a model or provider is permitted; using Worker conversation or unrecorded execution memory as evidence is not.
 * `--profile=addenda` is addenda mode and is never valid for audit verdict workflows.
 * If interpretation conflicts with receipt command outputs, treat command outputs and lint results as authoritative and mark the interpretation as non-blocking.
 * For allowlist interpretation, `tools/lint/integrity.sh` plus certify changed-file subset check are authoritative; raw `comm` output is informational.
@@ -49,5 +51,6 @@ Output only: Complete audit report.
 First line must be ```markdown.
 First non-empty line inside the fenced block must start with `**AUDIT -`.
 Last line must be ``` .
+The audit heading verdict must be `PASS` or `FAIL`.
 Do not render markdown outside the fence; emit all report characters literally inside the fenced block.
 Do not emit citation tokens (`[cite_start]`, `[cite:`, `[/cite]`, `:contentReference[`, or `oaicite`).

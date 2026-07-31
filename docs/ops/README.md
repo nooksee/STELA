@@ -12,7 +12,7 @@ Operator-deployed external runtime adapters live under `ops/src/runbook/`; they 
 ## 2. Core Subsystems
 Context Bundler (`ops/bin/llms`) compiles canonical and supporting surfaces into session bundles while enforcing context hazard exclusion rules.
 
-Workflow Bundler (`ops/bin/bundle`) emits deterministic handoff artifacts that bind OPEN freshness state, dump pointers, prompt stance text, and routing metadata for Analyst, Architect, Audit, and Project profiles.
+Workflow Bundler (`ops/bin/bundle`) emits deterministic handoff artifacts that bind OPEN freshness state, dump pointers, prompt stance text, and routing metadata for planning, Integrator draft, independent Audit, and Project profiles. Analyst and Architect are stance names, not additional staffing layers; web attachment and exact repo-native file access are equivalent transports.
 
 ## 3. Registries
 The authoritative operational registries live in `docs/ops/registry/`.

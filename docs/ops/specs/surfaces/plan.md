@@ -26,7 +26,7 @@ It remains planning-only; execution control still lives in the DP.
 5. Planning does not substitute a staged queue, proposed sequencing, or assistant-chosen first packet for a missing slicing decision.
 6. If narrower ambiguity still materially changes the immediate packet boundary or implementation handoff after that first slicing decision, planning may ask the minimum bounded follow-up needed instead of forcing a final plan.
 7. Once the immediate packet boundary is settled, planning emits the final `PLAN.md` using the required core headings; additional peer sections are allowed when needed to keep the handoff truthful and narrow.
-8. Architect consumes that final plan directly and drafts the DP.
+8. The Integrator performs the Architect stance, consumes that final plan directly, and drafts the DP.
 
 ## Failure States and Drift Triggers
 - Missing any required core heading.

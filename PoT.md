@@ -11,7 +11,7 @@ PoT is the single constitutional document for Stela governance.
 - `ops/` = Run (binaries, manifests, automation).
 - `docs/` = Explain (manuals and rationale).
 - `opt/` = Isolate (JIT-only  content excluded from global context).
-- `projects/` = Work (payload code).
+- `projects/` = Work (project homes and payloads).
 - `storage/` = Payload (handoff, dumps, dp).
 - `var/tmp/` = Resume (ephemeral worker scratch and task-local workspace).
 - `logs/` = Telemetry (runtime logs and diagnostics).
@@ -20,6 +20,7 @@ PoT is the single constitutional document for Stela governance.
 ### 1.2 Axioms
 - Precedence: PoT is final authority; if conflict exists, PoT prevails.
 - SSOT: one canonical file per domain; other mentions are pointers.
+- Legibility: authority, behavior, and effects must remain inspectable and explainable to the Operator.
 - Reuse-first: search `ops/` for an existing template before creating a new artifact.
 - Drift: any divergence between canon and repository state, or duplication of canon outside SSOT, is a failure state that requires stop and correction.
 - Routing: closeout routing failure is a system failure state.
@@ -64,8 +65,9 @@ Hard constraints are: PoT.md, SoP.md, TASK.md, ops/lib/manifests/CONTEXT.md, doc
 
 ### 4.1 Staffing Protocol
 - Operator (Human): Owns final decisions, approvals, and secrets. Performs all commits, pushes, and merges.
-- Integrator (Lead AI): Maintains governance, structural integrity, and auditing. Generates Dispatch Packets and detects system drift.
-- Contractor (Guest AI): Executes the defined packet scope, implements changes, runs required checks, and reports results within the provided contract.
+- Integrator (Lead AI): Maintains governance and structural integrity, including accountability for delegated agent activity. Generates Dispatch Packets and detects system drift.
+- Contractor (Execution AI): Executes the defined packet scope, implements changes, runs required checks, and reports results within the provided contract.
+- Auditor (Review AI): Independently evaluates recorded evidence against the governing contract.
 
 ### 4.2 Behavioral Logic Standard
 - No contractions across any scope, including projects.
@@ -75,6 +77,11 @@ Hard constraints are: PoT.md, SoP.md, TASK.md, ops/lib/manifests/CONTEXT.md, doc
 - Receipts are generated artifacts produced by the system; manual fabrication is prohibited.
 - Imagine the same way an operator explains a failure, picture a concrete branch state, and consider a direct recovery action.
 - Prefer prevention over detection. Document why structural prevention is not viable.
+
+### 4.3 Authority Boundaries
+- Authority originates with the Operator and is expressed through canon and active contracts.
+- Conversation, familiarity, provider, and runtime identity confer no authority.
+- Acceptance is independent of execution and grounded in recorded evidence.
 
 ### 4.4 Entry Points
 - llms.txt

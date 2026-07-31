@@ -247,7 +247,8 @@ check_audit_addenda_mode_split() {
   local bundle_manifest="${REPO_ROOT}/ops/lib/manifests/BUNDLE.md"
   local -a audit_literals=(
     '`--profile=addenda` is addenda mode and is never valid for audit verdict workflows.:::audit.md.tpl missing audit-verdict stance marker'
-    'If user text is empty and required attachments are present, proceed and emit only the final audit block.:::audit.md.tpl missing empty-input attach-only rule line'
+    'If user text is empty and required audit artifacts are available, proceed and emit only the final audit block.:::audit.md.tpl missing empty-input artifact-first rule line'
+    'Audit from a review context independent of Worker execution. Reusing a model or provider is permitted; using Worker conversation or unrecorded execution memory as evidence is not.:::audit.md.tpl missing independent-review boundary line'
     'Output only: Complete audit report.:::audit.md.tpl missing audit output contract line'
     '{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}:::audit.md.tpl missing shared fence include line'
     'First non-empty line inside the fenced block must start with `**AUDIT -`.:::audit.md.tpl missing audit first-line marker output line'
@@ -290,6 +291,8 @@ check_audit_addenda_mode_split() {
 check_draft_mode_contract() {
   local stance_draft="${REPO_ROOT}/ops/src/stances/draft.md.tpl"
   local -a draft_literals=(
+    'If user text is empty and required draft artifacts are available, proceed and emit only the completed DP block.:::draft.md.tpl missing empty-input artifact-first rule line'
+    '`Architect` names this Integrator draft stance. It is not an additional staffing role or relay stage.:::draft.md.tpl missing Integrator-to-Architect stance mapping'
     'Output only: Full DP (starting at `### DP-...`) in one markdown code block.:::draft.md.tpl missing output contract line'
     '{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}:::draft.md.tpl missing shared fence include line'
     'First non-empty line inside the code block must start with `### DP-`.:::draft.md.tpl missing first-line marker line'
@@ -313,6 +316,7 @@ check_planning_mode_contract() {
   local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
   local -a core_literals=(
     'For machine-ingest planning mode: require attached `storage/handoff/TOPIC.md`; do not use inline query fallback.:::planning.md.tpl missing planning topic-source line'
+    'If user text is empty and required planning artifacts are available, proceed. A bounded clarification reply after launch remains valid.:::planning.md.tpl missing empty-input artifact-first launch rule'
     '* Use attached evidence first.:::planning.md.tpl missing planning evidence-first line'
     'For machine-ingest planning mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.:::planning.md.tpl missing planning no-unsupported-operating-detail line'
     '* If the topic spans multiple independent work families and the topic does not explicitly identify the immediate packet, ask one slicing or prioritization question before writing the final plan.:::planning.md.tpl missing planning multi-family question-first line'

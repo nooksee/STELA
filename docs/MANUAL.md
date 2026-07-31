@@ -3,16 +3,55 @@
 
 ## 0. Mechanical Workflow
 
-### Shipping Spine (End-to-End Chain)
-The canonical operator shipping chain is:
+### Cockpit Re-entry Card
 
-`TOPIC.md` → `PLAN.md` → `storage/dp/intake/DP.md` (active draft) → Worker execution → `RESULTS` + `CLOSING` → audit bundle → merge
+Stela is an explainability-first, AI-powered dream factory. Its shipping spine is an artifact relay: the repository owns durable memory and authority, generated artifacts cross role boundaries, and conversation carries experience without silently becoming canon. Runtime choice is replaceable: a web UI, repo-native agent, or continuing collaborator may perform a role when the same artifact and authority contracts are preserved.
 
-Each stage has one obvious active surface. Secondary lanes (addenda/addendum, execution-decision) are bounded sidepaths, not replacements for RESULTS, CLOSING, or audit truth.
+`Analyst`, `Architect`, and `Audit` are bundle stances. They are not extra staffing stages. The Architect stance is the Integrator converting the settled plan into a worker-ready DP. Worker is the execution label for the Contractor role.
+
+0. **Explore — develop the idea fluidly.** The Operator and durable collaborators may build familiarity, experience, and intent through conversation. Exploration grants mutation authority `0` times.
+1. **Topic — capture the idea.** When the Operator chooses to enter the formal planning lane, replace the contents of `storage/handoff/TOPIC.md` with the current idea or problem.
+2. **Plan — generate the settled plan.** Run `./ops/bin/bundle --profile=planning --out=auto`. Deliver the generated planning artifact to a planning-capable runtime by web attachment or exact repo-native file access. The generated package is the launch prompt; free-form Operator prompt text required to start: `0`. Save its final fenced plan body to `storage/handoff/PLAN.md`, or allow a repo-native runtime to write that exact surface. If planning asks a bounded clarification after launch, answer it within this same transformation. This is one `TOPIC.md` to `PLAN.md` transformation, not an Integrator pass.
+3. **Integrate — turn the plan into the DP.** Run `./ops/bin/bundle --profile=draft --out=auto`. Deliver the generated draft artifacts to the Integrator by web attachment or exact repo-native file access. The generated package is the prompt; free-form Operator prompt text required: `0`. The Integrator performs the Architect stance and returns one fenced worker-ready DP. Save it to `storage/dp/intake/DP.md`, then run `bash tools/lint/dp.sh storage/dp/intake/DP.md` and require PASS.
+4. **Execute — establish packet-fresh Worker authority.** Give the validated DP to a new Worker thread or a durable Worker operating under an equivalent fresh packet-scoped authority and DP-authorized context boundary. Worker identity and project familiarity may persist, but prior conversation grants current execution authority `0` times and cannot expand the packet or replace evidence. The DP and its authorized dispatch artifacts are the prompt; free-form Operator prompt text required to start: `0`. The Worker executes, maintains `storage/handoff/CLOSING.md`, verifies the work, runs the required allowlist and certify closeout, and produces the generated `RESULTS` receipt.
+5. **Audit — review the receipt independently.** Run `./ops/bin/bundle --profile=audit --out=auto`. Deliver the generated audit artifacts to a review context independent of Worker execution. The package is the prompt; free-form Operator prompt text required: `0`. Audit returns the contracted `PASS` or `FAIL` report.
+6. **Route the verdict.** On `PASS`, the Operator commits on the work branch, opens the PR per `CLOSING`, and merges after gates pass. On `FAIL`, preserve the findings, return only the bounded defects for correction or authorize an addendum when scope must change, then generate `./ops/bin/bundle --profile=audit --rerun --out=auto`.
+
+The canonical relay is:
+
+exploration → `TOPIC.md` → `PLAN.md` → Integrator (Architect stance) → `DP.md` → packet-authorized Worker → `RESULTS` + `CLOSING` → independent Audit → `PASS` / `FAIL` → merge or correction
+
+`open`, `dump`, DP lint, `allowlist`, and `certify` are supporting machinery inside these transitions. They do not create additional actors or relay stages.
+
+### Delegated-Agent Transparency
+
+Within Stela, the Operator grants standing authorization for bounded subagent use when the Integrator or Contractor determines that delegation materially improves speed, isolation, review, or continuity. Subagents are an execution mechanism, not additional constitutional offices. The spawning role remains immediately accountable for its descendants, and the Integrator retains accountability for delegated activity across the operation.
+
+Before or at each spawn, explicitly tell the Operator the number created, each agent's name or identifier, assigned role, task, read/write scope, authority, context-fork state, and model override when one exists. Tool chrome, logs, and a provider activity panel do not replace this disclosure.
+
+While descendants exist, every material status report and final closeout must include exact counts for agents spawned this turn, session total, running, completed-open, closed, failed or interrupted, and unresolved writer claims. Report `0` values rather than omitting fields. If token or cost data is not exposed, state `not exposed` rather than infer or omit it.
+
+At completion, report what each agent did, files changed, checks run, deviations, integration status, and final disposition. Close the agent or explicitly appoint or hand it off. A spawned descendant cannot independently audit its parent. Explain in plain language who was created, why, what authority it received, what it did, and whether it still exists; the Operator must not need a magic command or a log inspection to discover staffing.
+
+Compact packet-mechanics card:
+
+```bash
+./ops/bin/open --out=auto
+./ops/bin/bundle --profile=draft --out=auto
+bash tools/lint/dp.sh storage/dp/intake/DP.md
+./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto
+./ops/bin/allowlist
+./ops/bin/certify --dp=DP-OPS-XXXX --out=auto
+./ops/bin/bundle --profile=audit --out=auto
+```
+
+The DP supplies the packet-specific commands, paths, and acceptance gates. Use `./ops/bin/certify --dp=DP-OPS-XXXX --allow-intake-fallback --out=auto` only for the documented active-intake recovery route.
+
+### Active Surfaces
 
 Active surfaces by stage:
 - **Topic input:** `storage/handoff/TOPIC.md` (latest-wins; operator writes before each planning run)
-- **Plan output:** `storage/handoff/PLAN.md` (latest-wins; Analyst writes this)
+- **Plan output:** `storage/handoff/PLAN.md` (latest-wins; planning stance writes this)
 - **Active DP draft:** `storage/dp/intake/DP.md` (latest-wins operator surface; draft output is saved here)
 - **Packet/process identity:** `DP-OPS-XXXX` (retained in the packet body, TASK/addendum lineage path, RESULTS content, CLOSING content, audit transport, and telemetry)
 - **Audit bundle:** `storage/handoff/AUDIT-*.txt` (initial) or `storage/handoff/AUDIT-R*.txt` (rerun)
@@ -21,21 +60,13 @@ Active surfaces by stage:
 
 Audit dump generation is owned by `./ops/bin/bundle --profile=audit --out=auto`. It is separate from operator session refresh (`./ops/bin/open --out=auto`). Do not conflate them: operator session refresh keeps state fresh for the next session; the audit bundle packages the certify-generated evidence for audit review.
 
-**Execution Cycle:**
-1.  **Start:** `./ops/bin/open --out=auto` (session refresh; in bundle-first intake the first packet-valid OPEN becomes the packet-start freshness and trace anchor).
-2.  **Draft:** `./ops/bin/bundle --profile=draft --out=auto` (generates draft bundle with embedded DP AUTHORING SCAFFOLD; deliver `DRAFT-*.txt` to Architect; Architect returns one fenced worker-ready DP body; save full output to `storage/dp/intake/DP.md`; lint immediately: `bash tools/lint/dp.sh storage/dp/intake/DP.md`; confirm PASS before dispatch).
-3.  **Capture (CDD):** `./ops/bin/dump --selection=dp+allowlist --from-dp=auto --format=chatgpt --out=auto` (serializes worker-visible state).
-    Note: Audit intake is bundle-first. Use `./ops/bin/bundle --profile=audit --out=auto` for audit review. Bundle dump scope is profile-mapped from `ops/lib/manifests/BUNDLE.md`; current audit mapping is `core`.
-4.  **Dispatch:** Hand DP to Worker (See Section 5).
-5.  **Review:** Verify `RECEIPT` (Proofs) vs `TASK.md` requirements.
-6.  **Certify:** `./ops/bin/certify --dp=DP-OPS-XXXX --out=auto` (generates RESULTS, emits SoP/PoW/TASK archive leaves, keeps base packet authority on the TASK leaf chain, and emits addendum lineage under `archives/surfaces/` only when an addendum is being certified).
-7.  **Audit:** `./ops/bin/bundle --profile=audit --out=auto` then deliver bundle for audit review.
-8.  **Merge:** Operator commits on work branch, opens PR per CLOSING sidecar, merges to main.
-
 **Dispatch Contract Notes:**
 - The DP Preflight Gate runs after the Freshness Gate and before any edits.
-- Worker input is DP text only; OPEN is for architect refresh and receipt pointers and is not required reading for workers.
-- DP structure is generated from `ops/src/surfaces/dp.md.tpl` through canonical tooling (`ops/bin/draft` for direct local rendering or the draft bundle's embedded DP authoring scaffold for Architect runs); manual structural edits are prohibited.
+- `Architect` means the Integrator operating in the draft stance; it is not an additional staffing or handoff stage.
+- Worker input is the validated DP plus only DP-authorized context. OPEN is for Integrator refresh and receipt pointers and is not required Worker reading.
+- Worker identity and project familiarity may be durable, but execution authority, writer claim, and authorized context are fresh for each packet. Prior planning, Integrator, or Worker conversation grants current execution authority `0` times.
+- Web attachment and exact repo-native file access are equivalent transport choices when they expose the same generated artifacts without operator-authored prompt replacement.
+- DP structure is generated from `ops/src/surfaces/dp.md.tpl` through canonical tooling (`ops/bin/draft` for direct local rendering or the draft bundle's embedded DP authoring scaffold for Integrator runs); manual structural edits are prohibited.
 
 **OPEN and OPEN-PORCELAIN Contract:**
 - `OPEN` is the freshness and trace authority for packet start. Draft intake consumes a real current OPEN artifact for the active branch and HEAD and binds its authority fields into the authored packet.
@@ -392,7 +423,7 @@ OPEN de-dup contract:
   --work-branch=work/dp-ops-0065-2026-02-14 --base-head=d3801c3a \
   --slots-file=storage/dp/intake/DP-OPS-0065.slots
 
-# Emit plan scaffold for Analyst/Architect draft authoring
+# Emit plan scaffold for planning and Integrator draft stances
 ./ops/bin/draft --emit-plan-scaffold=var/tmp/plan-scaffold.md
 
 # Emit DP slots scaffold for sidecar authoring
@@ -528,45 +559,48 @@ ops/lib/scripts/task.sh harvest --id B-TASK-01 --name "task-title" --objective "
 ops/lib/scripts/task.sh promote archives/definitions/task-candidate-YYYY-MM-DD-<suffix>-B-TASK-01.md
 ~~~
 
-### Analyst Workflow
-Canonical operator flow for an analyst session:
+### Planning Workflow
+Canonical Operator flow for the single topic-to-plan transformation:
 
 1. Write the topic to `storage/handoff/TOPIC.md`.
 2. Generate the planning bundle:
 ~~~bash
 ./ops/bin/bundle --profile=planning --out=auto
 ~~~
-3. Deliver the bundle artifact (`PLANNING-*.txt` or `PLANNING-*.tar`) to the Analyst.
-4. Read the model output from `storage/handoff/PLAN.md`.
+3. Deliver the generated artifact (`PLANNING-*.txt` or `PLANNING-*.tar`) to a planning-capable runtime by web attachment or exact repo-native file access. The package is the launch prompt; add no free-form Operator prompt text.
+4. If the planning stance asks a bounded clarification question, answer it and continue the same planning transformation.
+5. Save the final fenced plan body to `storage/handoff/PLAN.md`, or allow a repo-native runtime to write that exact surface.
 
 Surface contract:
-- `storage/handoff/TOPIC.md`: latest-wins input; operator replaces content before each run.
-- `storage/handoff/PLAN.md`: latest-wins model output; overwritten after each planning run.
+- `storage/handoff/TOPIC.md`: latest-wins input; Operator replaces content before each run.
+- `storage/handoff/PLAN.md`: latest-wins planning output; overwritten after each completed planning run.
 - `var/tmp/PLAN.md.prev`: disposable safety backup of the prior `PLAN.md` written by bundle before each run. Not a certify input; prune may remove it.
+- `Analyst`: name of the planning stance, not a separate Integrator pass or durable staffing requirement.
 
 ### Draft Workflow
-Canonical operator flow for a draft session:
+Canonical Operator flow for the Integrator draft session:
 
 1. Confirm `storage/handoff/PLAN.md` is the final settled plan for the current topic.
 2. Generate the draft bundle:
 ~~~bash
 ./ops/bin/bundle --profile=draft --out=auto
 ~~~
-3. Deliver the bundle artifact (`DRAFT-*.txt` or `DRAFT-*.tar`) to the Architect.
-4. Use the embedded `DP AUTHORING SCAFFOLD` block in the bundle as the canonical full-DP scaffold; Architect returns one fenced worker-ready DP body completed from that scaffold.
+3. Deliver the generated artifacts (`DRAFT-*.txt` and its manifest, or `DRAFT-*.tar`) to the Integrator by web attachment or exact repo-native file access. The complete bundle is the prompt; add no free-form Operator prompt text.
+4. The Integrator performs the Architect stance, uses the embedded `DP AUTHORING SCAFFOLD` as the canonical full-DP scaffold, and returns one fenced worker-ready DP body.
 5. Save the full DP output directly to `storage/dp/intake/DP.md`.
 6. Validate the intake immediately:
 ~~~bash
 bash tools/lint/dp.sh storage/dp/intake/DP.md
 ~~~
 Confirm PASS before dispatch.
-7. Dispatch the DP per Section 2 Dispatch Packet Mechanics.
+7. Dispatch the validated DP to a new Worker thread or a durable Worker operating under fresh packet-scoped authority and a DP-authorized context boundary per Section 2 Dispatch Packet Mechanics.
 
 Surface contract:
-- `storage/handoff/PLAN.md`: latest-wins plan input; Analyst writes this; operator delivers it to the Architect as the primary handoff surface.
+- `storage/handoff/PLAN.md`: latest-wins plan input; planning writes this and the Operator delivers it to the Integrator as the primary handoff surface.
 - `DRAFT-*.txt`: emitted bundle artifact; contains the dump payload, stance contract, and embedded `DP AUTHORING SCAFFOLD` block.
-- `storage/dp/intake/DP.md`: latest-wins active DP draft surface; operator saves the validated full DP output here after the draft run.
+- `storage/dp/intake/DP.md`: latest-wins active DP draft surface; Operator saves the validated full DP output here after the draft run.
 - `DP-OPS-XXXX`: packet identity printed by bundle and retained in TASK/addendum lineage, certify receipts, and telemetry. Bundle resolves the next packet id from the current certified TASK packet id plus one.
+- `Architect`: the Integrator draft stance, not an additional role or handoff.
 
 ### Local Hooks Setup
 Run once after clone, and after any machine where the repo is checked out:
@@ -595,19 +629,19 @@ Bypass: `git commit --no-verify` or `git push --no-verify` bypasses all hooks. U
 **Operator Prompts:**
 * `ops/src/stances` — Operator stance templates and usage.
 
-### Attachment Contract Table
+### Bundle Transport Contract Table
 
-Attachment contract defaults and profile routing semantics are governed by `ops/lib/manifests/BUNDLE.md`.
+Transport defaults and profile routing semantics are governed by `ops/lib/manifests/BUNDLE.md`. In a web runtime, deliver means attach the listed artifacts. In a repo-native runtime, deliver means expose the exact generated files for direct reading. The artifact set and output contract are identical. Planning, draft, Worker-dispatch, and audit artifacts carry their own launch instructions; free-form Operator prompt text required to start a main-lane role run: `0`.
 
-| Profile | Bundle Command | Required Attachments | Notes |
+| Profile | Bundle Command | Required Transport | Notes |
 | --- | --- | --- | --- |
-| `planning` | `./ops/bin/bundle --profile=planning --out=auto` | `PLANNING-*.txt`, `PLANNING-*.manifest.json`, `storage/handoff/TOPIC.md` | Analyst reads `TOPIC.md` and emits `PLAN.md`; attach `PLANNING-*.tar` when the model session reliably ingests tar artifacts. |
-| `draft` | `./ops/bin/bundle --profile=draft --out=auto` | `DRAFT-*.txt`, `DRAFT-*.manifest.json`, `storage/handoff/PLAN.md` | PLAN-driven drafting reads the final plan body directly. |
-| `audit` | `./ops/bin/bundle --profile=audit --out=auto` | initial `AUDIT-*.txt`, rerun `AUDIT-R*.txt`, matching manifests, DP RESULTS receipt | Audit stance is PASS/FAIL verdict only. Use `--rerun` for resubmissions; prior local `AUDIT-*` artifacts do not trigger rerun identity. |
+| `planning` | `./ops/bin/bundle --profile=planning --out=auto` | `PLANNING-*.txt`, `PLANNING-*.manifest.json`, `storage/handoff/TOPIC.md` | Planning stance reads `TOPIC.md` and emits `PLAN.md`; use `PLANNING-*.tar` when the runtime reliably ingests tar artifacts. |
+| `draft` | `./ops/bin/bundle --profile=draft --out=auto` | `DRAFT-*.txt`, `DRAFT-*.manifest.json`, `storage/handoff/PLAN.md` | Integrator performs the Architect stance and emits the worker-ready DP. |
+| `audit` | `./ops/bin/bundle --profile=audit --out=auto` | initial `AUDIT-*.txt`, rerun `AUDIT-R*.txt`, matching manifests, DP RESULTS receipt | Independent Audit stance emits the `PASS` or `FAIL` report only. Use `--rerun` for resubmissions; prior local `AUDIT-*` artifacts do not trigger rerun identity. |
 | `addenda` | `./ops/bin/bundle --profile=addenda --intent="ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>" --out=auto` | `ADDENDUM-*.txt`, `ADDENDUM-*.manifest.json` | Addendum authorization intake only; not used for PASS/FAIL verdicts. |
 | `project` | `./ops/bin/bundle --profile=project --project=<name> --out=auto` | `PROJECT-*.txt`, `PROJECT-*.manifest.json` | Project-scoped dump context is embedded in the bundle metadata. |
 
-> **Model-compat fallback:** If tar ingestion is unreliable in a web model context, attach the dump payload (`dump-*.txt`) and dump manifest (`dump-*.manifest.txt`) directly in place of the bundle tar.
+> **Runtime-compat fallback:** If tar ingestion is unreliable, provide the dump payload (`dump-*.txt`) and dump manifest (`dump-*.manifest.txt`) directly in place of the bundle tar.
 > **Legacy compatibility:** During prefix migration, legacy `BUNDLE-*` artifacts may be emitted as compatibility copies when policy flag `compatibility_emit_legacy_bundle_artifacts=true`.
 > **front-door contract:** `./ops/bin/bundle` is canonical. `./ops/bin/meta <project-name> [--out=auto|PATH]` remains a project-only compatibility shim that delegates to `bundle --profile=project`.
 
@@ -647,8 +681,9 @@ If additional forbidden prefixes are needed for a sensitive engagement, the DP w
 ### Audit Visibility
 
 Audit visibility is intentionally bounded and documented as an allow/deny contract.
-- External reviewer receives: RESULTS receipt and native audit bundle artifacts generated by `./ops/bin/bundle --profile=audit --out=auto` (initial `AUDIT-*`, rerun `AUDIT-R*`; `.txt`, `.manifest.json`, optional `.tar`; legacy `BUNDLE-*` copies may be present during migration).
-- External reviewer does not receive by default: CDD artifacts, addendum-authorization bundles (`--profile=addenda`), or worker-only intake artifacts.
+- Independent reviewer receives: RESULTS receipt and native audit bundle artifacts generated by `./ops/bin/bundle --profile=audit --out=auto` (initial `AUDIT-*`, rerun `AUDIT-R*`; `.txt`, `.manifest.json`, optional `.tar`; legacy `BUNDLE-*` copies may be present during migration).
+- Independent reviewer does not receive Worker conversation or unrecorded execution memory. It does not receive by default: CDD artifacts, addendum-authorization bundles (`--profile=addenda`), or worker-only intake artifacts.
+- Review may run in a web UI or repo-native runtime, but it must remain context-independent from Worker execution and return the contracted `PASS` or `FAIL` report.
 - Evidence surfaces for audit are SoP and PoW entries plus the committed diff, RESULTS, the active TASK leaf body, the active packet source body, and audit bundle pointers to OPEN and dump artifacts.
 
 ### Certify Compatibility Authoring Rules
