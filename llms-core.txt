@@ -66,7 +66,7 @@ Hard constraints are: PoT.md, SoP.md, TASK.md, ops/lib/manifests/CONTEXT.md, doc
 
 ### 4.1 Staffing Protocol
 - Operator (Human): Owns final decisions, approvals, and secrets. Performs all commits, pushes, and merges.
-- Integrator (Lead AI): Maintains governance and structural integrity, including accountability for delegated agent activity. Generates Dispatch Packets and detects system drift.
+- Integrator (Lead AI): Maintains governance and structural integrity. Generates Dispatch Packets and detects system drift.
 - Contractor (Execution AI): Executes the defined packet scope, implements changes, runs required checks, and reports results within the provided contract.
 - Auditor (Review AI): Independently evaluates recorded evidence against the governing contract.
 
@@ -187,7 +187,6 @@ Use `docs/MANUAL.md` for command procedure details and `docs/CCD.md` for density
 ## 4. The Bridge (Ingestion Tools)
 *Mechanisms that move state from disk to context.*
 * **Proof-First Read Order:** `PoT.md` → `SoP.md` → `PoW.md` → `TASK.md` → `docs/MAP.md`.
-* **Repository Agent Guidance:** [`../../AGENTS.md`](../../AGENTS.md) — Codex runtime instructions that defer to PoT and bind delegated-agent transparency inside Stela.
 * **Generation:** [`../../ops/bin/open`](../../ops/bin/open) — Creates the session prompt and trace anchor (`STELA_TRACE_ID`).
 * **Capture:** [`../../ops/bin/dump`](../../ops/bin/dump) — Serializes the platform.
 * **Validation:** [`../../ops/lib/manifests/CONTEXT.md`](../../ops/lib/manifests/CONTEXT.md) — The required context checklist.

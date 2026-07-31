@@ -521,6 +521,26 @@ if [[ ! -d "storage/dp" ]]; then
   fail "Missing required storage: 'storage/dp/'"
 fi
 
+handoff_directories=()
+handoff_executables=()
+if [[ -d "storage/handoff" ]]; then
+  while IFS= read -r -d '' handoff_path; do
+    handoff_directories+=("$handoff_path")
+  done < <(find storage/handoff -mindepth 1 -type d -print0)
+
+  while IFS= read -r -d '' handoff_path; do
+    handoff_executables+=("$handoff_path")
+  done < <(find storage/handoff -type f -perm /111 -print0)
+fi
+
+if (( ${#handoff_directories[@]} > 0 )); then
+  fail "Storage handoff must remain a flat payload lane; subdirectories are forbidden: ${handoff_directories[*]}"
+fi
+
+if (( ${#handoff_executables[@]} > 0 )); then
+  fail "Storage handoff must remain program-free; executable files are forbidden: ${handoff_executables[*]}"
+fi
+
 mapfile -t tracked_intake_packets < <(
   git ls-files storage/dp/intake \
     | awk '/^storage\/dp\/intake\/(DP\.md|ADDENDUM\.md|DP-[A-Z]+-[0-9]{4,}\.md|DP-[A-Z]+-[0-9]{4,}-ADDENDUM-[A-Z]\.md)$/ { print }'

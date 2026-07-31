@@ -65,7 +65,7 @@ Hard constraints are: PoT.md, SoP.md, TASK.md, ops/lib/manifests/CONTEXT.md, doc
 
 ### 4.1 Staffing Protocol
 - Operator (Human): Owns final decisions, approvals, and secrets. Performs all commits, pushes, and merges.
-- Integrator (Lead AI): Maintains governance and structural integrity, including accountability for delegated agent activity. Generates Dispatch Packets and detects system drift.
+- Integrator (Lead AI): Maintains governance and structural integrity. Generates Dispatch Packets and detects system drift.
 - Contractor (Execution AI): Executes the defined packet scope, implements changes, runs required checks, and reports results within the provided contract.
 - Auditor (Review AI): Independently evaluates recorded evidence against the governing contract.
 

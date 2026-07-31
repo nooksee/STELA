@@ -10,6 +10,7 @@
 2. Verify factory heads and pointer reachability.
 3. Enforce payload/runtime hygiene:
    - require `storage/handoff`, `storage/dumps`, and `storage/dp`
+   - fail subdirectories or executable files under `storage/handoff/`; handoff is a flat, program-free payload lane
    - fail tracked intake DP surfaces under `storage/dp/intake/` (`DP.md`, `ADDENDUM.md`, and any legacy packet-scoped intake packets)
    - require `var/tmp`, `logs`, archive subdirectories, and required `.gitkeep` placeholders
 4. Apply filing doctrine content checks.

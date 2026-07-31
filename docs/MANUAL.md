@@ -25,13 +25,13 @@ exploration → `TOPIC.md` → `PLAN.md` → Integrator (Architect stance) → `
 
 ### Delegated-Agent Transparency
 
-Within Stela, the Operator grants standing authorization for bounded subagent use when the Integrator or Contractor determines that delegation materially improves speed, isolation, review, or continuity. Subagents are an execution mechanism, not additional constitutional offices. The spawning role remains immediately accountable for its descendants, and the Integrator retains accountability for delegated activity across the operation.
+Bounded subagent use is an execution mechanism available to any active role within that role's existing authority and current contract. It creates no additional constitutional office, authority, scope, or evidence. The spawning role remains accountable for every descendant it creates.
 
 Before or at each spawn, explicitly tell the Operator the number created, each agent's name or identifier, assigned role, task, read/write scope, authority, context-fork state, and model override when one exists. Tool chrome, logs, and a provider activity panel do not replace this disclosure.
 
 While descendants exist, every material status report and final closeout must include exact counts for agents spawned this turn, session total, running, completed-open, closed, failed or interrupted, and unresolved writer claims. Report `0` values rather than omitting fields. If token or cost data is not exposed, state `not exposed` rather than infer or omit it.
 
-At completion, report what each agent did, files changed, checks run, deviations, integration status, and final disposition. Close the agent or explicitly appoint or hand it off. A spawned descendant cannot independently audit its parent. Explain in plain language who was created, why, what authority it received, what it did, and whether it still exists; the Operator must not need a magic command or a log inspection to discover staffing.
+At completion, report what each agent did, files changed, checks run, deviations, integration status, and final disposition. Close the agent or explicitly appoint or hand it off. A spawned descendant cannot independently audit the work of the role that spawned it. Explain in plain language who was created, why, what authority it received, what it did, and whether it still exists; the Operator must not need a magic command or a log inspection to discover staffing.
 
 Compact packet-mechanics card:
 

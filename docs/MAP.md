@@ -28,7 +28,6 @@ Use `docs/MANUAL.md` for command procedure details and `docs/CCD.md` for density
 ## 4. The Bridge (Ingestion Tools)
 *Mechanisms that move state from disk to context.*
 * **Proof-First Read Order:** `PoT.md` → `SoP.md` → `PoW.md` → `TASK.md` → `docs/MAP.md`.
-* **Repository Agent Guidance:** [`../../AGENTS.md`](../../AGENTS.md) — Codex runtime instructions that defer to PoT and bind delegated-agent transparency inside Stela.
 * **Generation:** [`../../ops/bin/open`](../../ops/bin/open) — Creates the session prompt and trace anchor (`STELA_TRACE_ID`).
 * **Capture:** [`../../ops/bin/dump`](../../ops/bin/dump) — Serializes the platform.
 * **Validation:** [`../../ops/lib/manifests/CONTEXT.md`](../../ops/lib/manifests/CONTEXT.md) — The required context checklist.
