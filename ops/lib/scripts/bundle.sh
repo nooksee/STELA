@@ -830,7 +830,7 @@ bundle_render_draft_authoring_scaffold() {
 - Replace with the minimal DP-scoped load order required for this packet.
 
 [OBJECTIVE]
-Replace with a 1-3 line objective grounded in the attached PLAN.md and directly visible bundle artifacts.
+Replace with a 1-3 line objective grounded in the bundle-provided PLAN.md and directly visible bundle artifacts.
 
 [IN_SCOPE]
 - Replace with the exact repo-relative files and bounded change intent.
@@ -842,7 +842,7 @@ Replace with a 1-3 line objective grounded in the attached PLAN.md and directly 
 - Replace with hard safety constraints, no-edit zones, and allowlist requirements.
 
 [PLAN_STATE]
-- Replace with the current repo state and visible baseline facts from attached artifacts only.
+- Replace with the current repo state and visible baseline facts from delivered bundle artifacts only.
 
 [PLAN_REQUEST]
 - Replace with deterministic worker requirements translated from PLAN.md.

@@ -13,7 +13,7 @@ Define the template-backed Audit stance body used by bundle output contract rend
 - Template source: `ops/src/stances/audit.md.tpl`
 - Shared include source: `ops/src/shared/stances.json#stance_shared_rules`
 - Shared include source: `ops/src/shared/stances.json#single_fence_contract_rules`
-- TASK evidence source is dump payload context; direct TASK attachment wording is not required.
+- TASK evidence source is bundle-provided dump payload context; a separate TASK delivery control is not required.
 
 ## Ownership Model
 - Runtime owner: `ops/src/stances/audit.md.tpl` plus the included shared contract keys in `ops/src/shared/stances.json`.

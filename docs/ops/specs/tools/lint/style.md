@@ -15,7 +15,8 @@
 6b. Check that every non-blank line in the Confirm Merge (Extended Description) field value matches a path pattern (two or more consecutive non-path tokens on a single line is a prose failure); emit failure with filename and line number for each detected prose line.
 6c. Check that the PR Description field value contains at least one markdown construct — a heading beginning with `##`, a list item beginning with `-`, `*`, or a digit followed by `.`, or a bold span (`**`); emit failure with filename when none is found.
 7. Check that `ops/src/stances/planning.md.tpl` contains the exact planning contract lines that preserve final-plan-first behavior, weak-topic handling, bounded clarification, and the planning question-mode transport split between plain clarification output and fenced final-plan output.
-8. Aggregate failures and exit non-zero when any check reports an error.
+8. Reject attachment terminology from the explicit active-core bundle and stance surface set while excluding provider adapters and the manual external-web procedure.
+9. Aggregate failures and exit non-zero when any check reports an error.
 
 ## Anecdotal Anchor
 DP-OPS-0082 introduced spec-surface enforcement and anti-jargon checks after repeated review churn on docs that passed operational gates but still carried ambiguous structure or promotional language. Later packets used this gate to block malformed spec edits before certification.
@@ -55,7 +56,7 @@ Rationale: The PR Description renders in the GitHub pull request interface, whic
 Target file: `ops/src/stances/audit.md.tpl`
 Assertions:
 - audit/addenda profile split line exists
-- attach-only intake line exists
+- bundle-delivery intake line exists
 - audit output contract line exists
 - shared fence include exists
 - first-line marker line exists
@@ -81,6 +82,26 @@ Failure examples:
 - `BUNDLE.md missing canonical audit mode split line`
 - `BUNDLE.md missing canonical addenda mode split line`
 Invariant: addenda remains an authorization lane, and bundle profile routing keeps audit and addenda semantics separate.
+
+## Active Core Delivery Vocabulary Guardrail
+
+`check_active_core_transport_neutrality()` rejects `attach` and `attachment` terminology from this explicit active-core set:
+
+- `ops/lib/manifests/BUNDLE.md`
+- `ops/lib/scripts/bundle.sh`
+- `ops/src/shared/stances.json`
+- `ops/src/stances/planning.md.tpl`
+- `ops/src/stances/draft.md.tpl`
+- `ops/src/stances/audit.md.tpl`
+- `ops/src/stances/addenda.md.tpl`
+- `docs/ops/specs/stances/planning.md`
+- `docs/ops/specs/stances/draft.md`
+- `docs/ops/specs/stances/audit.md`
+- `docs/ops/specs/stances/addenda.md`
+- `docs/ops/specs/surfaces/plan.md`
+- `tools/lint/response.sh`
+
+The guard deliberately excludes `docs/MANUAL.md`, provider runbooks, provider specifications, and the runbook registry. Those surfaces own the current external-web adapter procedure. The active core uses delivered or bundle-provided artifact vocabulary instead.
 
 ## OPEN Marker Contract Guardrails
 

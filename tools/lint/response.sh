@@ -956,7 +956,7 @@ EOF_DRAFT_NARRATIVE
 Planning output is rendered as a plan surface.
 
 ## Key Changes
-- Produce a deterministic plan draft from the attached topic.
+- Produce a deterministic plan draft from the bundle-provided topic.
 
 ## Test Plan
 - bash tools/lint/response.sh --test
