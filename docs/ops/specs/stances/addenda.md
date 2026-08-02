@@ -10,6 +10,7 @@ Define the template-backed addenda stance body used for `addenda` profile bundle
 
 ## Inputs
 - Template source: `ops/src/stances/addenda.md.tpl`
+- Delivery evidence source: bundle-provided OPEN metadata and dump payload.
 - Shared include source: `ops/src/shared/stances.json#stance_shared_rules`
 - Shared include source: `ops/src/shared/stances.json#single_fence_contract_rules`
 - Shared include source: `ops/src/shared/stances.json#non_audit_role_drift_rules`

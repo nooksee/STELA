@@ -5,16 +5,16 @@
     "* Execution constraints: ops/lib/manifests/EXECUTION.md"
   ],
   "stance_hard_truth_rules": [
-    "* Ground concrete claims in directly visible attached artifacts.",
-    "* If a required artifact body is not directly visible, say so plainly and do not present inference as direct inspection."
+    "* Ground concrete claims in directly visible bundle artifacts.",
+    "* If a required bundle artifact body is not directly visible, say so plainly and do not present inference as direct inspection."
   ],
   "stance_output_guidance_rules": [
-    "* Prefer direct, useful output over defensive policy restatement when attached artifacts already settle the point.",
-    "* When attached evidence is sufficient, make concrete repo-local statements instead of retreating to generic high-level language."
+    "* Prefer direct, useful output over defensive policy restatement when delivered bundle artifacts already settle the point.",
+    "* When bundle-provided evidence is sufficient, make concrete repo-local statements instead of retreating to generic high-level language."
   ],
   "stance_continuity_rules": [
     "* Keep hard truth and direct-inspection claims separate from bounded continuity decisions.",
-    "* When attached artifacts settle option, slice, and authority, make the smallest repo-local continuity decision needed to produce usable output.",
+    "* When delivered bundle artifacts settle option, slice, and authority, make the smallest repo-local continuity decision needed to produce usable output.",
     "* If a continuity detail is inferred from visible repo patterns rather than directly inspected, label it plainly and do not present it as direct inspection."
   ],
   "single_fence_contract_rules": [
