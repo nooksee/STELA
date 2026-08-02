@@ -23,16 +23,13 @@ PoT is the single constitutional document for Stela governance.
 - Reuse-first: search `ops/` for an existing template before creating a new artifact.
 - Drift: any divergence between canon and repository state, or duplication of canon outside SSOT, is a failure state that requires stop and correction.
 - Routing: closeout routing failure is a system failure state.
-- RoR: decision ledger only; authorization and anomaly records live there.
-- SoP: history ledger only; no permanent rules live there.
-- PoW: proof ledger only; execution evidence pointers live there.
 
 ### 1.3 Canon Surfaces
 - `PoT.md` — constitution, staffing, jurisdiction, and enforcement (SSOT).
 - `TASK.md` — active work surface and DP contract.
-- `SoP.md` — history ledger and shipment record.
-- `PoW.md` — proof ledger and execution evidence pointers.
-- `RoR.md` — decision ledger and anomaly record pointer surface.
+- `SoP.md` — history ledger only; no permanent rules live there.
+- `PoW.md` — proof ledger only; execution evidence pointers live there.
+- `RoR.md` — decision ledger only; authorization and anomaly records live there.
 - `docs/MANUAL.md` — operator mechanics.
 - `docs/MAP.md` — context wayfinding.
 - `ops/lib/manifests/CONTEXT.md` — required context set.
@@ -66,6 +63,7 @@ Hard constraints are: PoT.md, SoP.md, TASK.md, ops/lib/manifests/CONTEXT.md, doc
 - Operator (Human): Owns final decisions, approvals, and secrets. Performs all commits, pushes, and merges.
 - Integrator (Lead AI): Maintains governance, structural integrity, and auditing. Generates Dispatch Packets and detects system drift.
 - Contractor (Guest AI): Executes the defined packet scope, implements changes, runs required checks, and reports results within the provided contract.
+- Auditor (Independent AI): Reviews completed work and generated evidence against the Dispatch Packet, reports PASS or FAIL with exact boundary conditions.
 
 ### 4.2 Behavioral Logic Standard
 - No contractions across any scope, including projects.
