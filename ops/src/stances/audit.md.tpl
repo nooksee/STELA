@@ -9,9 +9,9 @@ Rules:
 {{@include:ops/src/shared/stances.json#stance_shared_rules}}
 * Generate audit intake with `./ops/bin/bundle --profile=audit --out=auto`.
 * Use native profile-prefixed filenames from bundle output (`AUDIT-*` for audit profile); do not relabel artifacts.
-* Refresh state using delivered bundle artifacts (OPEN and dump pointers come from the bundle).
-* Require the delivered bundle manifest to state `resolved_profile=audit`; if not, **STOP** and request a correct audit bundle.
-* If user text is empty and required bundle artifacts are present, proceed and emit only the final audit block.
+* Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
+* Require attached bundle manifest `resolved_profile=audit`; if not, **STOP** and request a correct audit bundle.
+* If user text is empty and required attachments are present, proceed and emit only the final audit block.
 * `--profile=addenda` is addenda mode and is never valid for audit verdict workflows.
 * If interpretation conflicts with receipt command outputs, treat command outputs and lint results as authoritative and mark the interpretation as non-blocking.
 * For allowlist interpretation, `tools/lint/integrity.sh` plus certify changed-file subset check are authoritative; raw `comm` output is informational.

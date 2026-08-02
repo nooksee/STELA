@@ -247,7 +247,7 @@ check_audit_addenda_mode_split() {
   local bundle_manifest="${REPO_ROOT}/ops/lib/manifests/BUNDLE.md"
   local -a audit_literals=(
     '`--profile=addenda` is addenda mode and is never valid for audit verdict workflows.:::audit.md.tpl missing audit-verdict stance marker'
-    'If user text is empty and required bundle artifacts are present, proceed and emit only the final audit block.:::audit.md.tpl missing empty-input bundle-delivery rule line'
+    'If user text is empty and required attachments are present, proceed and emit only the final audit block.:::audit.md.tpl missing empty-input attach-only rule line'
     'Output only: Complete audit report.:::audit.md.tpl missing audit output contract line'
     '{{@include:ops/src/shared/stances.json#single_fence_contract_rules}}:::audit.md.tpl missing shared fence include line'
     'First non-empty line inside the fenced block must start with `**AUDIT -`.:::audit.md.tpl missing audit first-line marker output line'
@@ -312,9 +312,9 @@ check_planning_mode_contract() {
   local stance_planning="${REPO_ROOT}/ops/src/stances/planning.md.tpl"
   local required_shared_non_audit_include='{{@include:ops/src/shared/stances.json#non_audit_role_drift_rules}}'
   local -a core_literals=(
-    'For machine-ingest planning mode: require bundle-provided `storage/handoff/TOPIC.md`; do not use inline query fallback.:::planning.md.tpl missing planning topic-source line'
-    '* Use delivered bundle evidence first.:::planning.md.tpl missing planning evidence-first line'
-    'For machine-ingest planning mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in delivered bundle artifacts.:::planning.md.tpl missing planning no-unsupported-operating-detail line'
+    'For machine-ingest planning mode: require attached `storage/handoff/TOPIC.md`; do not use inline query fallback.:::planning.md.tpl missing planning topic-source line'
+    '* Use attached evidence first.:::planning.md.tpl missing planning evidence-first line'
+    'For machine-ingest planning mode: do not add repository-operating details, workflow examples, command families, or GitHub action lists unless they are directly visible in the attached artifacts.:::planning.md.tpl missing planning no-unsupported-operating-detail line'
     '* If the topic spans multiple independent work families and the topic does not explicitly identify the immediate packet, ask one slicing or prioritization question before writing the final plan.:::planning.md.tpl missing planning multi-family question-first line'
     '* Treat the immediate packet as explicit only if::::planning.md.tpl missing planning explicit-packet gate line'
     '* Do not infer or choose the immediate packet unilaterally from repo context alone when multiple work families are in scope.:::planning.md.tpl missing planning no-unilateral-packet-inference line'
@@ -322,7 +322,7 @@ check_planning_mode_contract() {
     '* Do not substitute a staged queue, proposed sequencing, or assistant-chosen first packet for a missing slicing decision.:::planning.md.tpl missing planning no-staged-queue-substitute line'
     'For machine-ingest planning mode: default to question mode for multi-family topics; only skip the slicing question when the operator'\''s topic text directly names the immediate packet.:::planning.md.tpl missing machine-ingest default-question-mode line'
     'For machine-ingest planning mode: when the topic is broad, keep repo-specific claims generic and high-level rather than converting thin evidence into specific operating facts.:::planning.md.tpl missing planning broad-topic-genericity line'
-    'For machine-ingest planning mode: use delivered bundle evidence first.:::planning.md.tpl missing machine-ingest evidence-first line'
+    'For machine-ingest planning mode: use attached evidence first.:::planning.md.tpl missing machine-ingest evidence-first line'
   )
   local -a transport_literals=(
     'Portable question transport::::planning.md.tpl missing portable-question-transport section'
@@ -366,38 +366,6 @@ check_planning_mode_contract() {
     "$stance_planning" \
     "$required_shared_non_audit_include" \
     "planning.md.tpl missing shared non-audit include line"
-}
-
-check_active_core_transport_neutrality() {
-  local -a active_core_transport_files=(
-    ops/lib/manifests/BUNDLE.md
-    ops/lib/scripts/bundle.sh
-    ops/src/shared/stances.json
-    ops/src/stances/planning.md.tpl
-    ops/src/stances/draft.md.tpl
-    ops/src/stances/audit.md.tpl
-    ops/src/stances/addenda.md.tpl
-    docs/ops/specs/stances/planning.md
-    docs/ops/specs/stances/draft.md
-    docs/ops/specs/stances/audit.md
-    docs/ops/specs/stances/addenda.md
-    docs/ops/specs/surfaces/plan.md
-    tools/lint/response.sh
-  )
-  local path=""
-  local hits=""
-
-  for path in "${active_core_transport_files[@]}"; do
-    if [[ ! -f "$path" ]]; then
-      mark_failure "active core transport surface missing: ${path}"
-    fi
-  done
-
-  hits="$(grep -nEi -- 'attach|attachment' "${active_core_transport_files[@]}" 2>/dev/null || true)"
-  if [[ -n "$hits" ]]; then
-    mark_failure "attachment terminology found in active core bundle or stance surfaces:"
-    echo "$hits" >&2
-  fi
 }
 
 check_addenda_mode_contract() {
@@ -728,7 +696,6 @@ check_audit_addenda_mode_split
 check_draft_mode_contract
 check_planning_mode_contract
 check_addenda_mode_contract
-check_active_core_transport_neutrality
 check_open_marker_contract
 check_closing_block_lead_words
 check_closing_block_conversation_starter_question

@@ -595,25 +595,19 @@ Bypass: `git commit --no-verify` or `git push --no-verify` bypasses all hooks. U
 **Operator Prompts:**
 * `ops/src/stances` — Operator stance templates and usage.
 
-### Delivery Contract Table
+### Attachment Contract Table
 
-Delivery contract defaults and profile routing semantics are governed by `ops/lib/manifests/BUNDLE.md`.
+Attachment contract defaults and profile routing semantics are governed by `ops/lib/manifests/BUNDLE.md`.
 
-| Profile | Bundle Command | Required Delivered Artifacts | Notes |
+| Profile | Bundle Command | Required Attachments | Notes |
 | --- | --- | --- | --- |
-| `planning` | `./ops/bin/bundle --profile=planning --out=auto` | `PLANNING-*.txt`, `PLANNING-*.manifest.json`, `storage/handoff/TOPIC.md` | Analyst reads `TOPIC.md` and emits `PLAN.md`; the `.tar` package is also usable when the receiving session reliably ingests tar artifacts. |
+| `planning` | `./ops/bin/bundle --profile=planning --out=auto` | `PLANNING-*.txt`, `PLANNING-*.manifest.json`, `storage/handoff/TOPIC.md` | Analyst reads `TOPIC.md` and emits `PLAN.md`; attach `PLANNING-*.tar` when the model session reliably ingests tar artifacts. |
 | `draft` | `./ops/bin/bundle --profile=draft --out=auto` | `DRAFT-*.txt`, `DRAFT-*.manifest.json`, `storage/handoff/PLAN.md` | PLAN-driven drafting reads the final plan body directly. |
 | `audit` | `./ops/bin/bundle --profile=audit --out=auto` | initial `AUDIT-*.txt`, rerun `AUDIT-R*.txt`, matching manifests, DP RESULTS receipt | Audit stance is PASS/FAIL verdict only. Use `--rerun` for resubmissions; prior local `AUDIT-*` artifacts do not trigger rerun identity. |
 | `addenda` | `./ops/bin/bundle --profile=addenda --intent="ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>" --out=auto` | `ADDENDUM-*.txt`, `ADDENDUM-*.manifest.json` | Addendum authorization intake only; not used for PASS/FAIL verdicts. |
 | `project` | `./ops/bin/bundle --profile=project --project=<name> --out=auto` | `PROJECT-*.txt`, `PROJECT-*.manifest.json` | Project-scoped dump context is embedded in the bundle metadata. |
 
-#### Current External-Web Attachment Procedure
-
-- In a current external-web model session, attach every artifact listed for the selected profile under `Required Delivered Artifacts`.
-- For planning, attach `PLANNING-*.tar` when the receiving session reliably ingests tar artifacts.
-- If tar ingestion is unreliable, attach the dump payload (`dump-*.txt`) and dump manifest (`dump-*.manifest.txt`) directly in place of the bundle tar.
-- This procedure is an adapter path. It does not redefine the transport-neutral core delivery contract.
-
+> **Model-compat fallback:** If tar ingestion is unreliable in a web model context, attach the dump payload (`dump-*.txt`) and dump manifest (`dump-*.manifest.txt`) directly in place of the bundle tar.
 > **Legacy compatibility:** During prefix migration, legacy `BUNDLE-*` artifacts may be emitted as compatibility copies when policy flag `compatibility_emit_legacy_bundle_artifacts=true`.
 > **front-door contract:** `./ops/bin/bundle` is canonical. `./ops/bin/meta <project-name> [--out=auto|PATH]` remains a project-only compatibility shim that delegates to `bundle --profile=project`.
 
