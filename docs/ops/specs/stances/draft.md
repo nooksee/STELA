@@ -32,7 +32,7 @@ Define the template-backed draft stance body used by bundle output contract rend
 - Output contract requires no text before or after the fenced code block.
 - First non-empty line inside the fenced body must start with `### DP-`.
 - Architect reads the final plan body directly and uses `Summary`, `Key Changes`, `Test Plan`, and `Assumptions` when present to complete the DP from the embedded authoring scaffold.
-- Architect may make the smallest bridge decisions needed to realize the settled plan when delivered bundle artifacts settle intent and authority.
+- Architect may make the smallest bridge decisions needed to realize the settled plan when attached artifacts settle intent and authority.
 - Architect does not expand or replace the settled plan scope.
 - Operator saves the full DP output directly to `storage/dp/intake/DP.md` and validates it with `bash tools/lint/dp.sh storage/dp/intake/DP.md` before dispatch.
 

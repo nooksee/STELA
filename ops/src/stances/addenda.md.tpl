@@ -7,8 +7,8 @@ ff_band: "25-40"
 ---
 Rules:
 {{@include:ops/src/shared/stances.json#stance_shared_rules}}
-* Refresh state using delivered bundle artifacts (OPEN and dump pointers come from the bundle).
-* Require the delivered bundle manifest to state `resolved_profile=addenda`; if not, **STOP** and request a correct addenda bundle.
+* Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).
+* Require attached bundle manifest `resolved_profile=addenda`; if not, **STOP** and request a correct addenda bundle.
 * This stance is not used for audit PASS/FAIL verdicts.
 * Require `ADDENDUM REQUIRED:` intent in bundle OPEN metadata carrying a canonical base DP ID (DP-OPS-NNNN) and one-line blocker description.
 * Build the addendum case from visible evidence in the bundle dump: RESULTS narrative, OPEN metadata, and the boundary condition stated in the intent. No pre-existing decision leaf is required.

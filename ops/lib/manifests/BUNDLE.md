@@ -61,12 +61,12 @@ dump_scope_addenda=core
   - audit and addenda still use `--scope=core`
   - persistence-tier compaction happens inside dump serialization, not traverse selection
 
-## Profile Delivery Contract
-- planning: delivered `PLANNING-*.txt`, `PLANNING-*.manifest.json`, and bundle-provided `storage/handoff/TOPIC.md`
-- draft: delivered `DRAFT-*.txt`, `DRAFT-*.manifest.json`, and bundle-provided `storage/handoff/PLAN.md` with request metadata (`plan_source`, `packet_id`, `closing_sidecar`, `dp_draft_path`)
-- audit: delivered initial `AUDIT-*.txt` or rerun `AUDIT-R*-*.txt`, matching `.manifest.json`/`.tar`, and bundle-provided current DP `storage/handoff/RESULTS.md` and `storage/handoff/CLOSING.md`
-- addenda: delivered `ADDENDUM-*.txt` and `ADDENDUM-*.manifest.json`
-- project: delivered `PROJECT-*.txt` and `PROJECT-*.manifest.json`
+## Profile Attachment Contract
+- planning: `PLANNING-*.txt`, `PLANNING-*.manifest.json`, transport-managed `storage/handoff/TOPIC.md`
+- draft: `DRAFT-*.txt`, `DRAFT-*.manifest.json`, transport-managed `storage/handoff/PLAN.md` with request metadata (`plan_source`, `packet_id`, `closing_sidecar`, `dp_draft_path`)
+- audit: initial `AUDIT-*.txt`, rerun `AUDIT-R*-*.txt`, matching `.manifest.json`/`.tar`, transport-managed current DP `storage/handoff/RESULTS.md` and `storage/handoff/CLOSING.md`
+- addenda: `ADDENDUM-*.txt`, `ADDENDUM-*.manifest.json`
+- project: `PROJECT-*.txt`, `PROJECT-*.manifest.json`
 
 ## Disposable Transport Contract
 - Disposable transport is profile-scoped exact-file wiring only. No directory sweeps, globs, or generic `storage/` capture are allowed.
