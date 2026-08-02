@@ -49,7 +49,7 @@ Hard-stop errors include: missing required arguments, malformed `--base-dp`, unr
 
 ## Addenda Intervention Chain
 The full intervention path in the shipping spine is:
-1. **Trigger:** Worker or auditor identifies a boundary condition and reports `ADDENDUM REQUIRED: <BASE_DP_ID> - <ONE-LINE BLOCKER>` to the operator.
+1. **Trigger:** Worker or Auditor identifies a boundary condition and reports `ADDENDUM REQUIRED: <BASE_DP_ID> - <ONE-LINE BLOCKER>` to the operator.
 2. **Addenda wake-up:** Operator generates the addenda bundle: `./ops/bin/bundle --profile=addenda --intent="ADDENDUM REQUIRED: <BASE_DP_ID> - <BLOCKER>" --out=auto`. Delivers `ADDENDUM-*.txt` to the supervisor.
 3. **Addendum issuance:** Supervisor outputs an authorized addendum fenced block. Operator reviews, provides `OPERATOR_AUTHORIZATION`, and issues the addendum artifact using: `./ops/bin/addendum --base-dp=DP-OPS-XXXX --slots-file=<path>`. The addendum is written to `storage/dp/intake/ADDENDUM.md`.
 4. **Worker resumes:** Worker receives the finished addendum document and executes against it. Worker does not self-authorize addendum scope.

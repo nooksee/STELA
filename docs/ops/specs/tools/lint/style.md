@@ -66,7 +66,7 @@ Failure examples:
 - `audit.md.tpl missing audit-verdict stance marker`
 - `audit.md.tpl missing audit output contract line`
 - `audit.md.tpl missing audit allowlist-authority interpretation rule line`
-Invariant: audit remains a deterministic verdict lane whose evidence authority is owned by tool output rather than by auditor prose.
+Invariant: audit remains a deterministic verdict lane whose evidence authority is owned by tool output rather than by Auditor prose.
 
 ### Guard 2: Addenda and bundle split family
 Target files:
