@@ -22,7 +22,7 @@ Factory testing gate execution and deterministic assembly verification.
 
 ## Identity Contract
 - `agent_id`: `R-AGENT-09`
-- `runtime_role`: `conformist`
+- `runtime_role`: `worker`
 - `stance_id`: `conformist`
 
 ## Capability Tags

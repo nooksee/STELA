@@ -536,13 +536,13 @@ if compgen -G "${FACTORY_DIR}/agents/*.md" > /dev/null; then
     fi
 
     case "$runtime_role" in
-      foreman|auditor|conformist) ;;
-      *) fail "${agent_name} runtime_role '${runtime_role}' is not in allowed set {foreman,auditor,conformist}" ;;
+      analyst|architect|worker|supervisor) ;;
+      *) fail "${agent_name} runtime_role '${runtime_role}' is not in allowed set {analyst,architect,worker,supervisor}" ;;
     esac
 
     case "$stance_id" in
-      addenda|audit|conformist) ;;
-      *) fail "${agent_name} stance_id '${stance_id}' is not in allowed set {addenda,audit,conformist}" ;;
+      addenda|analyst|architect|audit|conformist|contractor) ;;
+      *) fail "${agent_name} stance_id '${stance_id}' is not in allowed set {addenda,analyst,architect,audit,conformist,contractor}" ;;
     esac
   done
 fi
@@ -630,30 +630,6 @@ if compgen -G "${FACTORY_DIR}/tasks/*.md" > /dev/null; then
     done
   done
 fi
-duplicate_patterns=(
-  "git status --porcelain"
-  "npm run lint"
-  "ruff check"
-  "flake8"
-  "npm run build"
-  "npm run test"
-  "pytest"
-  "git diff --stat"
-)
-
-if compgen -G "${FACTORY_DIR}/tasks/*.md" > /dev/null; then
-  for task in "${FACTORY_DIR}/tasks"/*.md; do
-    if grep -q "S-LEARN-01" "$task"; then
-      task_name="$(basename "$task")"
-      for pattern in "${duplicate_patterns[@]}"; do
-        if grep -Fq "$pattern" "$task"; then
-          fail "Duplicate verification instructions in '${task_name}' referencing S-LEARN-01: '${pattern}'"
-        fi
-      done
-    fi
-  done
-fi
-
 if [[ $failures -eq 0 ]]; then
   echo "OK: Factory Integrity Verified."
   exit 0

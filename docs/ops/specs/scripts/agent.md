@@ -12,12 +12,13 @@
    - `promote`: validate candidate and materialize canonical agent.
    - `check`: run guardrail checks on existing agent canon.
 2. `harvest` sequence:
-   - Require `--name` and `--dp`.
+   - Require `--name`, `--dp`, `--runtime-role`, and `--stance-id`.
    - Resolve OPEN and dump paths from most recent artifacts unless explicit `--open` or `--dump` is provided.
    - Derive objective from `TASK.md` when omitted.
    - Build provenance block through `heuristics.sh`.
    - Resolve `packet_id` and `trace_id`, read current `candidate:` pointer, compute `previous`, and derive candidate leaf path.
-   - Normalize `--skill` and `--skills` values into canonical `opt/_factory/skills/S-LEARN-XX.md` pointers.
+   - Validate workflow-role and stance vocabulary.
+   - Normalize `--skill` and `--skills` values into canonical lowercase `opt/_factory/skills/s-learn-XX.md` pointers; emit explicit `(none)` when no evidence-backed Skill is supplied.
    - Render `ops/src/definitions/agent.md.tpl` through `ops/bin/template`, redact output, write archive leaf, and rewrite `candidate:` pointer in `opt/_factory/AGENTS.md`.
 3. `harvest-check` sequence:
    - Read recent SoP entries.
@@ -28,8 +29,8 @@
    - Resolve draft path explicitly or by latest timestamp.
    - Enforce draft schema sections, required pointers, non-placeholder specialization, and valid DP-ID.
    - Apply `context_hazard_check` and `pot_duplication_linter`.
-   - Allocate next `R-AGENT-XX` identifier from canon files plus registry state.
-   - Rewrite draft into promoted agent form (header rewrite, `Context Sources` strip), write canonical file, insert registry row, emit promotion leaf, and rewrite `promotion:` pointer.
+   - Allocate the next `R-AGENT-XX` identifier from active and retired registry state.
+   - Rewrite the draft into promoted agent form, bind the allocated identifier, strip `Context Sources`, write the lowercase canonical path, insert the complete registry row, emit the promotion leaf, and rewrite the `promotion:` pointer.
 5. `check` sequence:
    - Verify each canonical agent includes `## Scope Boundary`.
    - Reject any agent that points into agent-definition directories, which would create recursive context hazards.

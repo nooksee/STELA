@@ -9,7 +9,7 @@
 
 ## Orchestration
 - **Primary Agent:** R-AGENT-09 (factory-testing-gatekeeper)
-- **Supporting Agents:** R-AGENT-04 (integrator)
+- **Supporting Agents:** R-AGENT-13 (supervisor)
 
 ## Objective Contract
 - `task_id`: `B-TASK-09`

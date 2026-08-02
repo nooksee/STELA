@@ -271,15 +271,18 @@ No projects discovered.
 This index is navigation-only. Canon registries in `docs/ops/registry/` are the source of truth for active definitions.
 
 ## Contract Baseline
-- Agents carry identity and boundary contract fields.
+- Agent cards carry temporary workflow-role and boundary contract fields. They grant constitutional authority `0` times.
 - Skills carry method contract fields.
 - Tasks carry objective contract fields.
 - Stance behavior is referenced through `stance_id`; stance prose is not duplicated in agent leaves.
 
 ## Runtime Role Naming Map
-- `foreman` -> planning and integration authority paths.
-- `auditor` -> review and risk-assessment paths.
-- `conformist` -> implementation and standards-conformance paths.
+- `analyst` -> topic and evidence synthesis into a reviewable plan.
+- `architect` -> accepted-plan translation into a Dispatch Packet.
+- `worker` -> bounded execution under an active task contract.
+- `supervisor` -> blocker analysis and addendum proposal preparation.
+
+Constitutional seats and persistent resident identities remain outside Factory role cards.
 
 ## Canon Surfaces
 - `PoT.md` — policy and jurisdiction.

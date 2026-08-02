@@ -276,7 +276,7 @@ hydrate_task_draft_defaults() {
   awk '
     {
       if ($0 == "- **Primary Agent:** Not provided") {
-        print "- **Primary Agent:** R-AGENT-01"
+        print "- **Primary Agent:** R-AGENT-12"
         next
       }
       if ($0 == "- **Supporting Agents:** Not provided") {

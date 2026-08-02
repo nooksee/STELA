@@ -4,16 +4,14 @@
 Authoritative registry for canon agents.
 
 ## Registry Interpretation
-This table is the canonical roster for agent identity, runtime role naming, stance envelope binding, and provenance.
+This table is the canonical roster for active Agent definitions, workflow-role naming, stance-envelope binding, and provenance.
 
-| ID | Name | Runtime Role | Stance ID | Provenance (DP) | Specialization |
+| ID | Name | Runtime Role | Stance ID | Provenance | Specialization |
 | --- | --- | --- | --- | --- | --- |
-| R-AGENT-09 | factory-testing-gatekeeper | conformist | conformist | DP-OPS-0181 | Factory ATS triplet smoke validation and execution-gate enforcement |
-| R-AGENT-08 | bundle-coordinator | foreman | addenda | DP-OPS-0145 | Bundle artifact coordination and routing governance |
-| R-AGENT-07 | factory-chain-agent-test | conformist | conformist | DP-OPS-0074 | Factory chain pointer remediation validation |
-| R-AGENT-01 | architect | foreman | addenda | DP-OPS-0042 | Architecture planning and system design |
-| R-AGENT-02 | code-reviewer | auditor | audit | DP-OPS-0042 | Code review for quality, security, and maintainability |
-| R-AGENT-03 | doc-updater | conformist | conformist | DP-OPS-0042 | Documentation and codemap maintenance |
-| R-AGENT-04 | integrator | foreman | addenda | DP-OPS-0042 | Planning and integration for complex changes |
-| R-AGENT-05 | refactor-cleaner | conformist | conformist | DP-OPS-0042 | Refactor and dead-code cleanup |
-| R-AGENT-06 | security-reviewer | auditor | audit | DP-OPS-0042 | Security review and vulnerability detection |
+| R-AGENT-13 | supervisor | supervisor | addenda | NON-DP-CONSULTING-2026-08-02 | Blocker diagnosis, authority-boundary reconciliation, and addendum proposal preparation. |
+| R-AGENT-12 | worker | worker | contractor | NON-DP-CONSULTING-2026-08-02 | Contract-bounded execution and evidence-producing verification. |
+| R-AGENT-11 | architect | architect | architect | NON-DP-CONSULTING-2026-08-02 | Execution-contract design, scope decomposition, and packet authorship. |
+| R-AGENT-10 | analyst | analyst | analyst | NON-DP-CONSULTING-2026-08-02 | Topic decomposition, evidence reconciliation, and plan authorship. |
+| R-AGENT-09 | factory-testing-gatekeeper | worker | conformist | DP-OPS-0181 | Factory ATS triplet smoke validation and execution-gate enforcement |
+| R-AGENT-08 | bundle-coordinator | supervisor | addenda | DP-OPS-0145 | Bundle artifact coordination and routing governance |
+| R-AGENT-07 | factory-chain-agent-test | worker | conformist | DP-OPS-0074 | Factory chain pointer remediation validation |

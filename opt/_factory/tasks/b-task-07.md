@@ -9,7 +9,7 @@
 
 ## Orchestration
 - **Primary Agent:** R-AGENT-07 (factory-chain-agent-test)
-- **Supporting Agents:** R-AGENT-04 (integrator)
+- **Supporting Agents:** R-AGENT-13 (supervisor)
 
 ## Objective Contract
 - `task_id`: `B-TASK-07`

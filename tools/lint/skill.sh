@@ -108,10 +108,12 @@ if [[ ! -d "$SKILLS_DIR" ]]; then
   fail "Skills directory missing at ${SKILLS_DIR}"
 fi
 
-if compgen -G "${SKILLS_DIR}/S-LEARN-*.md" > /dev/null; then
-  for skill in "${SKILLS_DIR}"/S-LEARN-*.md; do
+skill_count=0
+if compgen -G "${SKILLS_DIR}/s-learn-*.md" > /dev/null; then
+  for skill in "${SKILLS_DIR}"/s-learn-*.md; do
+    skill_count=$((skill_count + 1))
     skill_name="$(basename "$skill")"
-    skill_id="${skill_name%.md}"
+    skill_id="$(printf '%s' "${skill_name%.md}" | tr '[:lower:]' '[:upper:]')"
 
     if [[ -z "${registry_ids[$skill_id]+set}" ]]; then
       fail "Ghost skill file '${skill}' is not registered in ${SKILLS_REGISTRY}"
@@ -156,6 +158,8 @@ if compgen -G "${SKILLS_DIR}/S-LEARN-*.md" > /dev/null; then
 else
   echo "No skill files found in ${SKILLS_DIR}."
 fi
+
+echo "Inspected skill files: ${skill_count}"
 
 if (( failures > 0 )); then
   echo "FAILED: ${failures} error(s) detected." >&2

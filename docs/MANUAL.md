@@ -522,10 +522,10 @@ Tasks remain on-demand only and must not be placed in `ops/lib/manifests/CONTEXT
 ops/lib/scripts/task.sh check
 
 # Draft a task candidate
-ops/lib/scripts/task.sh harvest --id B-TASK-01 --name "task-title" --objective "one sentence objective"
+ops/lib/scripts/task.sh harvest --id B-TASK-XX --name "task-title" --objective "one sentence objective"
 
 # Promote the draft into opt/_factory/tasks and register it
-ops/lib/scripts/task.sh promote archives/definitions/task-candidate-YYYY-MM-DD-<suffix>-B-TASK-01.md
+ops/lib/scripts/task.sh promote archives/definitions/task-candidate-YYYY-MM-DD-<suffix>-B-TASK-XX.md
 ~~~
 
 ### Analyst Workflow
@@ -616,7 +616,7 @@ Attachment contract defaults and profile routing semantics are governed by `ops/
 Bundle supports optional ATS triplet validation:
 
 ~~~bash
-./ops/bin/bundle --profile=planning --agent-id=R-AGENT-01 --skill-id=S-LEARN-08 --task-id=B-TASK-08 --out=auto
+./ops/bin/bundle --profile=planning --agent-id=R-AGENT-10 --skill-id=S-LEARN-08 --task-id=B-TASK-08 --out=auto
 ~~~
 
 ATS rules:

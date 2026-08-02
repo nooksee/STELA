@@ -88,6 +88,61 @@ stance_id_allowed() {
   esac
 }
 
+runtime_role_allowed() {
+  local runtime_role="$1"
+  case "$runtime_role" in
+    analyst|architect|worker|supervisor)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+extract_skill_binding_list() {
+  local key="$1"
+  local section="$2"
+  printf '%s\n' "$section" | awk -v key="$key" '
+    $0 ~ "^[[:space:]]*-[[:space:]]*`" key "`:[[:space:]]*$" { in_list=1; next }
+    in_list && $0 ~ "^[[:space:]]*-[[:space:]]*`(required_skills|optional_skills)`:[[:space:]]*$" { exit }
+    in_list { print }
+  '
+}
+
+validate_skill_binding_list() {
+  local agent_name="$1"
+  local label="$2"
+  local list_body="$3"
+  local valid_count
+  valid_count="$(printf '%s\n' "$list_body" | grep -Ec '^[[:space:]]*-[[:space:]]*`opt/_factory/skills/s-learn-[0-9]{2}[.]md`[[:space:]]*$|^[[:space:]]*-[[:space:]]*[(]none[)][[:space:]]*$' || true)"
+  if [[ "$valid_count" -lt 1 ]]; then
+    fail "Level 1: ${agent_name} ${label} must contain canonical skill paths or explicit '(none)'"
+  fi
+
+  local invalid_count
+  invalid_count="$(printf '%s\n' "$list_body" | sed '/^[[:space:]]*$/d' | grep -Evc '^[[:space:]]*-[[:space:]]*`opt/_factory/skills/s-learn-[0-9]{2}[.]md`[[:space:]]*$|^[[:space:]]*-[[:space:]]*[(]none[)][[:space:]]*$' || true)"
+  if [[ "$invalid_count" -gt 0 ]]; then
+    fail "Level 1: ${agent_name} ${label} contains noncanonical entries"
+  fi
+
+  local none_count
+  local path_count
+  none_count="$(printf '%s\n' "$list_body" | grep -Ec '^[[:space:]]*-[[:space:]]*[(]none[)][[:space:]]*$' || true)"
+  path_count="$(printf '%s\n' "$list_body" | grep -Ec '^[[:space:]]*-[[:space:]]*`opt/_factory/skills/s-learn-[0-9]{2}[.]md`[[:space:]]*$' || true)"
+  if [[ "$none_count" -gt 0 && "$path_count" -gt 0 ]]; then
+    fail "Level 1: ${agent_name} ${label} mixes '(none)' with skill paths"
+  fi
+
+  local skill_path
+  while IFS= read -r skill_path; do
+    [[ -n "$skill_path" ]] || continue
+    if [[ ! -f "$REPO_ROOT/$skill_path" ]]; then
+      fail "Level 3: ${agent_name} ${label} references missing Skill '${skill_path}'"
+    fi
+  done < <(printf '%s\n' "$list_body" | grep -oE 'opt/_factory/skills/s-learn-[0-9]{2}[.]md' || true)
+}
+
 section_has_content() {
   local section="$1"
   local path="$2"
@@ -216,6 +271,13 @@ if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
       fi
     fi
 
+    declared_runtime_role="$(trim "$(identity_value "runtime_role" "$agent")")"
+    if [[ -z "$declared_runtime_role" ]]; then
+      fail "Level 1: ${agent_name} missing Identity Contract field 'runtime_role'"
+    elif ! runtime_role_allowed "$declared_runtime_role"; then
+      fail "Level 1: ${agent_name} runtime_role '${declared_runtime_role}' is not one of analyst, architect, worker, supervisor"
+    fi
+
     declared_stance_id="$(trim "$(identity_value "stance_id" "$agent")")"
     if [[ -z "$declared_stance_id" ]]; then
       fail "Level 1: ${agent_name} missing Identity Contract field 'stance_id'"
@@ -293,14 +355,10 @@ if compgen -G "${AGENTS_DIR}/*.md" > /dev/null; then
     if ! grep -Eq '^[[:space:]]*-[[:space:]]*`optional_skills`:[[:space:]]*$' <<< "$skill_bindings_section"; then
       fail "Level 1: ${agent_name} Skill Bindings section missing '`optional_skills`' label"
     fi
-    required_skill_count="$(printf '%s\n' "$skill_bindings_section" | grep -Ec '^[[:space:]]*-[[:space:]]*`opt/_factory/skills/s-learn-[0-9]{2}[.]md`[[:space:]]*$' || true)"
-    if [[ "$required_skill_count" -lt 1 ]]; then
-      fail "Level 1: ${agent_name} Skill Bindings must include at least one required skill path"
-    fi
-    optional_skill_valid_count="$(printf '%s\n' "$skill_bindings_section" | grep -Ec '^[[:space:]]*-[[:space:]]*`opt/_factory/skills/s-learn-[0-9]{2}[.]md`[[:space:]]*$|^[[:space:]]*-[[:space:]]*[(]none[)]$' || true)"
-    if [[ "$optional_skill_valid_count" -lt 1 ]]; then
-      fail "Level 1: ${agent_name} Skill Bindings optional list must contain skill paths or '(none)'"
-    fi
+    required_skill_list="$(extract_skill_binding_list "required_skills" "$skill_bindings_section")"
+    optional_skill_list="$(extract_skill_binding_list "optional_skills" "$skill_bindings_section")"
+    validate_skill_binding_list "$agent_name" "required_skills" "$required_skill_list"
+    validate_skill_binding_list "$agent_name" "optional_skills" "$optional_skill_list"
 
     envelope_pattern='Output only:|Emit exactly one fenced markdown code block|First non-empty line inside the code block'
     if grep -nE "$envelope_pattern" "$agent" >/dev/null; then
