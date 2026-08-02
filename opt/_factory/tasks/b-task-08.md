@@ -9,7 +9,7 @@
 
 ## Orchestration
 - **Primary Agent:** R-AGENT-08 (bundle-coordinator)
-- **Supporting Agents:** R-AGENT-01 (architect)
+- **Supporting Agents:** R-AGENT-11 (architect)
 
 ## Objective Contract
 - `task_id`: `B-TASK-08`

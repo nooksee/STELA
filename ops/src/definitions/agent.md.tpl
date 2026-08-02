@@ -11,6 +11,8 @@ requires_slots:
   - PROVENANCE_BLOCK
   - ROLE_SUMMARY
   - SPECIALIZATION
+  - RUNTIME_ROLE
+  - STANCE_ID
   - SKILL_LINES
   - OPEN_PATH
   - DUMP_PATH
@@ -39,11 +41,11 @@ previous: {{PREVIOUS}}
 
 ## Identity Contract
 - `agent_id`: `R-AGENT-XX`
-- `runtime_role`: `conformist`
-- `stance_id`: `conformist`
+- `runtime_role`: `{{RUNTIME_ROLE}}`
+- `stance_id`: `{{STANCE_ID}}`
 
 ## Capability Tags
-- `capability-tag`
+- `{{RUNTIME_ROLE}}-workflow`
 
 ## Pointers
 - Constitution: `PoT.md`

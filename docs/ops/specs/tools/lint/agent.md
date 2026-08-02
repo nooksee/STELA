@@ -14,11 +14,12 @@
 6. Enforce required Provenance fields (`Captured`, `DP-ID`, `Branch`, `HEAD`, `Objective`).
 7. Parse `## Identity Contract` and enforce:
    - ``agent_id`` exists, is backticked, matches filename-derived ID, and exists in registry.
+   - ``runtime_role`` exists, is backticked, and is in the workflow-role set (`analyst`, `architect`, `worker`, `supervisor`).
    - ``stance_id`` exists, is backticked, and is in the canonical allowed set (`addenda`, `analyst`, `architect`, `audit`, `conformist`, `contractor`).
 8. Parse `## Capability Tags` and require at least one backticked tag bullet.
 9. Parse `## Pointers`, enforce required pointer tokens (`PoT.md`, `docs/GOVERNANCE.md`, `TASK.md`), reject legacy `JIT skills` pointer blocks, validate all backticked paths, and reject absolute or home-path tokens.
 10. Enforce authorized toolchain tokens by allowing only `ops/bin/*`, `tools/lint/*`, `tools/test/*`, and `tools/verify.sh`, while verifying target files exist.
-11. Parse `## Skill Bindings` and enforce explicit labels (``required_skills``, ``optional_skills``) plus deterministic skill-path bullets under `opt/_factory/skills/`.
+11. Parse `## Skill Bindings` and enforce explicit labels (``required_skills``, ``optional_skills``). Each list contains deterministic Skill paths under `opt/_factory/skills/` or the explicit literal `(none)`, never both.
 12. Reject stance-envelope directives, disposable artifact references, and recursive context-expansion patterns, then return non-zero when any failure accumulated.
 
 ## Anecdotal Anchor

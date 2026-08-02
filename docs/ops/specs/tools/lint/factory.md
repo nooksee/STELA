@@ -24,15 +24,14 @@
    - every direct runtime reference under `ops/`, `tools/`, and `docs/` to `opt/_factory/(agents|skills|tasks)/*.md` resolves to a census row
 9. Enforce Baseline contract checks:
    - agent `## Identity Contract` must include `agent_id`, `runtime_role`, `stance_id`
-   - allowed runtime-role values are exactly `{foreman, auditor, conformist}`
-   - allowed stance values are exactly `{addenda, audit, conformist}`
+   - allowed runtime-role values are exactly `{analyst, architect, worker, supervisor}`
+   - allowed stance values are exactly `{addenda, analyst, architect, audit, conformist, contractor}`
    - skill `## Method Contract` must include `skill_id`, `method`, `inputs`, `outputs`, `invariants`
    - task `## Objective Contract` must include `task_id`, `objective`, `inputs`, `outputs`, `invariants`
    - `skill_id` and `task_id` must match filename-derived IDs
 10. Apply additional guardrails:
     - skill pointer-token reachability
     - numbered-list rejection in skills
-    - duplicate verification-pattern checks in tasks that already invoke `S-LEARN-01`
 11. Apply anti-drift retirement gates:
     - Remove-disposition on-disk check: for each census row with disposition=remove, fail if the file still exists at the recorded path.
     - Retired-ID anti-reappearance check: parse the ## Retired Definitions table from docs/ops/registry/factory.md; for each retired row, fail if a file exists at the former path.

@@ -22,7 +22,7 @@ Factory chain pointer remediation validation.
 
 ## Identity Contract
 - `agent_id`: `R-AGENT-07`
-- `runtime_role`: `conformist`
+- `runtime_role`: `worker`
 - `stance_id`: `conformist`
 
 ## Capability Tags
@@ -37,7 +37,7 @@ Factory chain pointer remediation validation.
 
 ## Skill Bindings
 - `required_skills`:
-  - `opt/_factory/skills/s-learn-06.md`
+  - `opt/_factory/skills/s-learn-07.md`
 - `optional_skills`:
   - (none)
 

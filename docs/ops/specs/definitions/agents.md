@@ -34,16 +34,17 @@ Canon agent files under `opt/_factory/agents/` must contain:
 - `## Specialization`
 - `## Identity Contract` with required backticked fields:
   - `agent_id` (must match filename form `r-agent-XX` -> `R-AGENT-XX`)
-  - `runtime_role` (must be one of `foreman`, `auditor`, `conformist`)
-  - `stance_id` (must be one of `addenda`, `audit`, `conformist`)
+  - `runtime_role` (must be one of `analyst`, `architect`, `worker`, `supervisor`)
+  - `stance_id` (must be one of `addenda`, `analyst`, `architect`, `audit`, `conformist`, `contractor`)
 - `## Capability Tags` with at least one backticked capability token bullet.
 - `## Pointers`
-- `## Skill Bindings` with explicit `required_skills` and `optional_skills` lists.
+- `## Skill Bindings` with explicit `required_skills` and `optional_skills` lists. Either list may use the literal `(none)` when no evidence-backed binding exists.
 - `## Scope Boundary`
 
 Role-boundary split is strict:
-- agent files define identity, authority boundary, pointers, and skill binding.
-- `runtime_role` keeps the actor noun (`auditor`) while `stance_id` carries the task/stance noun (`audit`) when those differ.
+- agent files define a temporary workflow role, its boundary, pointers, and Skill bindings. A card does not grant constitutional authority.
+- `runtime_role` names the workflow role. `stance_id` names the output-envelope behavior used for that assignment.
+- Constitutional seats and persistent resident identities do not belong in Factory role cards.
 - skill files define method contract.
 - task files define objective contract.
 - stance templates define output-envelope behavior.

@@ -5,6 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 AGENTS_DIR="${REPO_ROOT}/opt/_factory/agents"
 AGENTS_REGISTRY="${REPO_ROOT}/docs/ops/registry/agents.md"
+FACTORY_REGISTRY="${REPO_ROOT}/docs/ops/registry/factory.md"
 AGENTS_LEDGER="${REPO_ROOT}/opt/_factory/AGENTS.md"
 SOP_FILE="${REPO_ROOT}/SoP.md"
 TASK_FILE="${REPO_ROOT}/TASK.md"
@@ -34,7 +35,7 @@ source "${SCRIPT_DIR}/factory.sh"
 usage() {
   cat <<'USAGE'
 Usage:
-  ops/lib/scripts/agent.sh harvest --name "..." --dp "DP-OPS-XXXX" [--specialization "..."] [--summary "..."] [--skill S-LEARN-01] [--skills S-LEARN-01,S-LEARN-02] [--open PATH] [--dump PATH] [--objective "..."]
+  ops/lib/scripts/agent.sh harvest --name "..." --dp "DP-OPS-XXXX" --runtime-role ROLE --stance-id STANCE [--specialization "..."] [--summary "..."] [--skill S-LEARN-XX] [--skills S-LEARN-XX,S-LEARN-YY] [--open PATH] [--dump PATH] [--objective "..."]
   ops/lib/scripts/agent.sh harvest-check|--harvest-check
   ops/lib/scripts/agent.sh promote <draft_path> [--delete-draft]
   ops/lib/scripts/agent.sh check|--check
@@ -542,18 +543,47 @@ normalize_skill() {
     return 0
   fi
   if [[ "$skill" =~ ^S-LEARN-[0-9]+$ ]]; then
-    printf 'opt/_factory/skills/%s.md' "$skill"
+    printf 'opt/_factory/skills/%s.md' "${skill,,}"
     return 0
   fi
-  if [[ "$skill" =~ ^opt/_factory/skills/S-LEARN-[0-9]+\.md$ ]]; then
-    printf '%s' "$skill"
+  if [[ "$skill" =~ ^opt/_factory/skills/[Ss]-[Ll][Ee][Aa][Rr][Nn]-[0-9]+\.md$ ]]; then
+    printf '%s' "${skill,,}"
     return 0
   fi
-  if [[ "$skill" =~ ^docs//skills/S-LEARN-[0-9]+\.md$ ]]; then
-    printf '%s' "${skill/docs\//opt\/_factory}"
+  if [[ "$skill" =~ ^docs//skills/[Ss]-[Ll][Ee][Aa][Rr][Nn]-[0-9]+\.md$ ]]; then
+    skill="${skill/docs\//opt\/_factory}"
+    printf '%s' "${skill,,}"
     return 0
   fi
   printf '%s' "$skill"
+}
+
+runtime_role_allowed() {
+  case "$1" in
+    analyst|architect|worker|supervisor) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+stance_id_allowed() {
+  case "$1" in
+    addenda|analyst|architect|audit|conformist|contractor) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+identity_contract_value() {
+  local key="$1"
+  local path="$2"
+  extract_section "## Identity Contract" "$path" | awk -v key="$key" '
+    $0 ~ "^[[:space:]]*-[[:space:]]*`" key "`:[[:space:]]*`[^`]+`[[:space:]]*$" {
+      line=$0
+      sub("^[[:space:]]*-[[:space:]]*`" key "`:[[:space:]]*`", "", line)
+      sub("`[[:space:]]*$", "", line)
+      print line
+      exit
+    }
+  '
 }
 
 context_hazard_check() {
@@ -630,6 +660,44 @@ section_has_content() {
   fi
 }
 
+extract_section() {
+  local section="$1"
+  local path="$2"
+  awk -v section="$section" '
+    BEGIN { in_section=0 }
+    $0 == section { in_section=1; next }
+    in_section && /^## / { exit }
+    in_section { print }
+  ' "$path"
+}
+
+extract_skill_binding_list() {
+  local key="$1"
+  local section="$2"
+  printf '%s\n' "$section" | awk -v key="$key" '
+    $0 ~ "^[[:space:]]*-[[:space:]]*`" key "`:[[:space:]]*$" { in_list=1; next }
+    in_list && $0 ~ "^[[:space:]]*-[[:space:]]*`(required_skills|optional_skills)`:[[:space:]]*$" { exit }
+    in_list { print }
+  '
+}
+
+skill_binding_list_valid() {
+  local list_body="$1"
+  local valid_count
+  local invalid_count
+  local none_count
+  local path_count
+
+  valid_count="$(printf '%s\n' "$list_body" | grep -Ec '^[[:space:]]*-[[:space:]]*`opt/_factory/skills/s-learn-[0-9]{2}[.]md`[[:space:]]*$|^[[:space:]]*-[[:space:]]*[(]none[)][[:space:]]*$' || true)"
+  invalid_count="$(printf '%s\n' "$list_body" | sed '/^[[:space:]]*$/d' | grep -Evc '^[[:space:]]*-[[:space:]]*`opt/_factory/skills/s-learn-[0-9]{2}[.]md`[[:space:]]*$|^[[:space:]]*-[[:space:]]*[(]none[)][[:space:]]*$' || true)"
+  none_count="$(printf '%s\n' "$list_body" | grep -Ec '^[[:space:]]*-[[:space:]]*[(]none[)][[:space:]]*$' || true)"
+  path_count="$(printf '%s\n' "$list_body" | grep -Ec '^[[:space:]]*-[[:space:]]*`opt/_factory/skills/s-learn-[0-9]{2}[.]md`[[:space:]]*$' || true)"
+
+  [[ "$valid_count" -gt 0 && "$invalid_count" -eq 0 ]] || return 1
+  [[ "$none_count" -eq 0 || "$path_count" -eq 0 ]] || return 1
+  return 0
+}
+
 read_section_first_line() {
   local section="$1"
   local path="$2"
@@ -649,7 +717,7 @@ validate_candidate() {
     die "Draft not found: $path"
   fi
 
-  if grep -nE '\bTODO\b|\bTBD\b|ENTER_|REPLACE_|\[ID\]|\[TITLE\]' "$path" >/dev/null; then
+  if grep -nE '\bTODO\b|\bTBD\b|ENTER_|REPLACE_|\[ID\]|\[TITLE\]|`capability-tag`' "$path" >/dev/null; then
     die "Draft contains placeholder markers. Clean the draft before promotion."
   fi
 
@@ -672,8 +740,29 @@ validate_candidate() {
   if ! grep -q 'TASK.md' "$path"; then
     die "Draft missing TASK.md pointer in Pointers section."
   fi
-  if ! grep -q 'opt/_factory/skills/S-LEARN-' "$path"; then
-    die "Draft missing JIT skill pointers (opt/_factory/skills/S-LEARN-XX.md)."
+  local runtime_role
+  runtime_role="$(trim "$(identity_contract_value "runtime_role" "$path")")"
+  if ! runtime_role_allowed "$runtime_role"; then
+    die "Draft runtime_role '${runtime_role}' is not one of analyst, architect, worker, supervisor."
+  fi
+
+  local stance_id
+  stance_id="$(trim "$(identity_contract_value "stance_id" "$path")")"
+  if ! stance_id_allowed "$stance_id"; then
+    die "Draft stance_id '${stance_id}' is not canonical."
+  fi
+
+  local skill_bindings
+  skill_bindings="$(extract_section "## Skill Bindings" "$path")"
+  local required_skill_list
+  required_skill_list="$(extract_skill_binding_list "required_skills" "$skill_bindings")"
+  local optional_skill_list
+  optional_skill_list="$(extract_skill_binding_list "optional_skills" "$skill_bindings")"
+  if ! skill_binding_list_valid "$required_skill_list"; then
+    die "Draft required_skills must contain canonical skill paths or explicit '(none)', never both."
+  fi
+  if ! skill_binding_list_valid "$optional_skill_list"; then
+    die "Draft optional_skills must contain canonical skill paths or explicit '(none)', never both."
   fi
 
   local specialization
@@ -691,16 +780,16 @@ next_agent_id() {
     while IFS= read -r file; do
       local base
       base="$(basename "$file")"
-      if [[ "$base" =~ R-AGENT-([0-9]+)\.md ]]; then
+      if [[ "$base" =~ r-agent-([0-9]+)\.md ]]; then
         local num="${BASH_REMATCH[1]}"
         if ((10#$num > max_id)); then
           max_id=$((10#$num))
         fi
       fi
-    done < <(find "$AGENTS_DIR" -maxdepth 1 -type f -name 'R-AGENT-*.md')
+    done < <(find "$AGENTS_DIR" -maxdepth 1 -type f -name 'r-agent-*.md')
   fi
 
-  if [[ -f "$AGENTS_REGISTRY" ]]; then
+  if [[ -f "$AGENTS_REGISTRY" || -f "$FACTORY_REGISTRY" ]]; then
     while IFS= read -r match; do
       if [[ "$match" =~ R-AGENT-([0-9]+) ]]; then
         local num="${BASH_REMATCH[1]}"
@@ -708,7 +797,7 @@ next_agent_id() {
           max_id=$((10#$num))
         fi
       fi
-    done < <(grep -oE 'R-AGENT-[0-9]+' "$AGENTS_REGISTRY" 2>/dev/null || true)
+    done < <(grep -hoE 'R-AGENT-[0-9]+' "$AGENTS_REGISTRY" "$FACTORY_REGISTRY" 2>/dev/null || true)
   fi
 
   local next_id=$((max_id + 1))
@@ -756,6 +845,8 @@ cmd_harvest() {
   local objective=""
   local open_path=""
   local dump_path=""
+  local runtime_role=""
+  local stance_id=""
   local skills=()
 
   while [[ $# -gt 0 ]]; do
@@ -778,6 +869,14 @@ cmd_harvest() {
         ;;
       --objective)
         objective="$2"
+        shift 2
+        ;;
+      --runtime-role)
+        runtime_role="$2"
+        shift 2
+        ;;
+      --stance-id)
+        stance_id="$2"
         shift 2
         ;;
       --skill)
@@ -815,6 +914,14 @@ cmd_harvest() {
 
   if [[ -z "$dp_id" ]]; then
     die "--dp is required"
+  fi
+
+  if ! runtime_role_allowed "$runtime_role"; then
+    die "--runtime-role must be one of analyst, architect, worker, supervisor"
+  fi
+
+  if ! stance_id_allowed "$stance_id"; then
+    die "--stance-id must be one of addenda, analyst, architect, audit, conformist, contractor"
   fi
 
   if [[ -z "$open_path" ]]; then
@@ -869,11 +976,11 @@ cmd_harvest() {
     local normalized
     normalized="$(normalize_skill "$skill")"
     if [[ -n "$normalized" ]]; then
-      skill_lines+=("- \`${normalized}\`")
+      skill_lines+=("  - \`${normalized}\`")
     fi
   done
   if (( ${#skill_lines[@]} == 0 )); then
-    skill_lines+=("- (none provided)")
+    skill_lines+=("  - (none)")
   fi
 
   local tmp
@@ -893,6 +1000,8 @@ cmd_harvest() {
     "PROVENANCE_BLOCK" "$provenance_block" \
     "ROLE_SUMMARY" "$summary" \
     "SPECIALIZATION" "$specialization" \
+    "RUNTIME_ROLE" "$runtime_role" \
+    "STANCE_ID" "$stance_id" \
     "SKILL_LINES" "$skill_lines_block" \
     "OPEN_PATH" "$open_path" \
     "DUMP_PATH" "$dump_path" \
@@ -944,9 +1053,10 @@ select_latest_draft() {
 materialize_promoted_agent() {
   local draft_path="$1"
   local name="$2"
-  local output_path="$3"
+  local agent_id="$3"
+  local output_path="$4"
 
-  awk -v header="# Agent: ${name}" '
+  awk -v header="# Agent: ${name}" -v agent_id="$agent_id" '
     BEGIN { replaced=0; skip_context=0 }
     /^## Context Sources$/ {
       skip_context=1
@@ -965,6 +1075,10 @@ materialize_promoted_agent() {
         replaced=1
         next
       }
+    }
+    /^[[:space:]]*-[[:space:]]*`agent_id`:[[:space:]]*`R-AGENT-XX`[[:space:]]*$/ {
+      print "- `agent_id`: `" agent_id "`"
+      next
     }
     { print }
     END { if (!replaced) exit 1 }
@@ -1057,7 +1171,7 @@ cmd_promote() {
   local agent_id
   agent_id="$(next_agent_id)"
   local agent_path
-  agent_path="${AGENTS_DIR}/${agent_id}.md"
+  agent_path="${AGENTS_DIR}/${agent_id,,}.md"
 
   if [[ -e "$agent_path" ]]; then
     die "Agent file already exists: $agent_path"
@@ -1065,7 +1179,7 @@ cmd_promote() {
 
   local tmp_agent
   tmp_agent="$(mktemp)"
-  materialize_promoted_agent "$draft_path" "$name" "$tmp_agent" || die "Failed to rewrite promoted agent body"
+  materialize_promoted_agent "$draft_path" "$name" "$agent_id" "$tmp_agent" || die "Failed to rewrite promoted agent body"
 
   mv "$tmp_agent" "$agent_path"
 
@@ -1074,7 +1188,11 @@ cmd_promote() {
   fi
 
   local registry_row
-  registry_row="| ${agent_id} | ${name} | ${dp_id} | ${specialization} |"
+  local runtime_role
+  runtime_role="$(trim "$(identity_contract_value "runtime_role" "$draft_path")")"
+  local stance_id
+  stance_id="$(trim "$(identity_contract_value "stance_id" "$draft_path")")"
+  registry_row="| ${agent_id} | ${name} | ${runtime_role} | ${stance_id} | ${dp_id} | ${specialization} |"
   insert_registry_entry "$registry_row"
 
   local packet_id
