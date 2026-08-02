@@ -7,6 +7,7 @@ ff_band: "25-40"
 ---
 Rules:
 {{@include:ops/src/shared/stances.json#stance_shared_rules}}
+* The reviewing actor is the independent Auditor defined in `PoT.md` Section 4.1.
 * Generate audit intake with `./ops/bin/bundle --profile=audit --out=auto`.
 * Use native profile-prefixed filenames from bundle output (`AUDIT-*` for audit profile); do not relabel artifacts.
 * Refresh state using attached bundle artifacts (OPEN and dump pointers come from the bundle).

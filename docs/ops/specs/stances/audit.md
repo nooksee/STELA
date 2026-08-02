@@ -17,6 +17,7 @@ Define the template-backed Audit stance body used by bundle output contract rend
 
 ## Ownership Model
 - Runtime owner: `ops/src/stances/audit.md.tpl` plus the included shared contract keys in `ops/src/shared/stances.json`.
+- Reviewing actor: the independent Auditor defined in `PoT.md` Section 4.1.
 - Verifier: `tools/lint/style.sh` guards audit invariant families; it does not need to co-own every sentence of the runtime stance body.
 - Mirror: this spec summarizes the audit contract families and ownership split; it does not override the runtime template.
 

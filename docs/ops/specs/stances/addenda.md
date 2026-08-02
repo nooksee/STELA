@@ -34,7 +34,7 @@ Define the template-backed addenda stance body used for `addenda` profile bundle
 
 ## Shipping Spine Position
 Addenda is a bounded secondary lane in the shipping spine. It is an intervention path only, not a PASS/FAIL verdict workflow. The addenda chain:
-1. Worker or auditor reports a boundary condition to the operator.
+1. Worker or Auditor reports a boundary condition to the operator.
 2. Operator runs: `./ops/bin/bundle --profile=addenda --intent="ADDENDUM REQUIRED: <BASE_DP_ID> - <BLOCKER>" --out=auto`
 3. Supervisor receives `ADDENDUM-*.txt` bundle and builds the addendum case from visible evidence in the dump (RESULTS narrative, OPEN metadata, boundary condition in intent). No pre-existing decision leaf is required.
 4. Supervisor outputs an authorized addendum fenced block. Operator provides `OPERATOR_AUTHORIZATION` and issues the addendum via `ops/bin/addendum`.
