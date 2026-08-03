@@ -611,13 +611,9 @@ Attachment contract defaults and profile routing semantics are governed by `ops/
 > **Legacy compatibility:** During prefix migration, legacy `BUNDLE-*` artifacts may be emitted as compatibility copies when policy flag `compatibility_emit_legacy_bundle_artifacts=true`.
 > **front-door contract:** `./ops/bin/bundle` is canonical. `./ops/bin/meta <project-name> [--out=auto|PATH]` remains a project-only compatibility shim that delegates to `bundle --profile=project`.
 
-### ATS Validation Mode (S8)
+### ATS Validation Mode
 
-Bundle supports optional ATS triplet validation:
-
-~~~bash
-./ops/bin/bundle --profile=planning --agent-id=R-AGENT-10 --skill-id=S-LEARN-08 --task-id=B-TASK-08 --out=auto
-~~~
+Bundle supports optional ATS triplet validation when evidence-backed Agent, Skill, and Task definitions are all active. The current baseline has active Tasks `0` and active Skills `0`, so no canonical ATS invocation exists. Do not invent definitions to satisfy the triplet shape.
 
 ATS rules:
 - `--agent-id`, `--skill-id`, and `--task-id` are all-or-none.

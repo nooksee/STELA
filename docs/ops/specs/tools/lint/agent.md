@@ -15,7 +15,7 @@
 7. Parse `## Identity Contract` and enforce:
    - ``agent_id`` exists, is backticked, matches filename-derived ID, and exists in registry.
    - ``runtime_role`` exists, is backticked, and is in the workflow-role set (`analyst`, `architect`, `worker`, `supervisor`).
-   - ``stance_id`` exists, is backticked, and is in the canonical allowed set (`addenda`, `analyst`, `architect`, `audit`, `conformist`, `contractor`).
+   - ``stance_id`` exists, is backticked, and is in the canonical allowed set (`addenda`, `analyst`, `architect`, `audit`, `contractor`).
 8. Parse `## Capability Tags` and require at least one backticked tag bullet.
 9. Parse `## Pointers`, enforce required pointer tokens (`PoT.md`, `docs/GOVERNANCE.md`, `TASK.md`), reject legacy `JIT skills` pointer blocks, validate all backticked paths, and reject absolute or home-path tokens.
 10. Enforce authorized toolchain tokens by allowing only `ops/bin/*`, `tools/lint/*`, `tools/test/*`, and `tools/verify.sh`, while verifying target files exist.

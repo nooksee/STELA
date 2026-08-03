@@ -16,11 +16,24 @@ declare -A CLEANUP_SEEN=()
 FAILURES=0
 RUN_OUTPUT=""
 RUN_STATUS=0
-PLAN_BACKUP=""
-PLAN_RESTORE=0
 BUNDLE_POLICY_REL="ops/lib/manifests/BUNDLE.md"
 SMOKE_HANDOFF_ROOT="$(awk -F'=' '$1=="smoke_handoff_root" { print substr($0, index($0, "=") + 1); exit }' "${REPO_ROOT}/${BUNDLE_POLICY_REL}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
 SMOKE_DUMP_ROOT="$(awk -F'=' '$1=="smoke_dump_root" { print substr($0, index($0, "=") + 1); exit }' "${REPO_ROOT}/${BUNDLE_POLICY_REL}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
+FIXTURE_REL="var/tmp/_smoke/factory-fixture-$$"
+FIXTURE_ABS="${REPO_ROOT}/${FIXTURE_REL}"
+FIXTURE_HANDOFF_ABS="${FIXTURE_ABS}/handoff"
+FIXTURE_POLICY_REL="${FIXTURE_REL}/ASSEMBLY.md"
+FIXTURE_POLICY_ABS="${REPO_ROOT}/${FIXTURE_POLICY_REL}"
+FIXTURE_AGENT_ID="R-AGENT-90"
+FIXTURE_SKILL_ID="S-LEARN-90"
+FIXTURE_TASK_ID="B-TASK-90"
+LIVE_REGISTRIES=(
+  "docs/ops/registry/agents.md"
+  "docs/ops/registry/skills.md"
+  "docs/ops/registry/tasks.md"
+)
+GIT_STATUS_BEFORE="$(git status --porcelain)"
+LIVE_REGISTRY_HASHES_BEFORE="$(sha256sum "${LIVE_REGISTRIES[@]}")"
 
 cleanup_generated() {
   local rel_path
@@ -30,19 +43,10 @@ cleanup_generated() {
       rm -f -- "${REPO_ROOT}/${rel_path}"
     fi
   done
+  rm -rf -- "$FIXTURE_ABS"
 }
 
-restore_fixture_overrides() {
-  local plan_rel="storage/handoff/PLAN.md"
-  local plan_abs="${REPO_ROOT}/${plan_rel}"
-
-  if (( PLAN_RESTORE )) && [[ -n "$PLAN_BACKUP" && -f "$PLAN_BACKUP" ]]; then
-    cp "$PLAN_BACKUP" "$plan_abs"
-    rm -f "$PLAN_BACKUP"
-  fi
-}
-
-trap 'restore_fixture_overrides; cleanup_generated; emit_binary_leaf "test-factory" "finish"' EXIT
+trap 'cleanup_generated; emit_binary_leaf "test-factory" "finish"' EXIT
 emit_binary_leaf "test-factory" "start"
 
 fail() {
@@ -75,10 +79,10 @@ queue_cleanup_path() {
   [[ -n "$rel_path" ]] || return 0
 
   case "$rel_path" in
-    storage/*|var/tmp/*)
+    var/tmp/*)
       ;;
     *)
-      fail "refusing to queue cleanup path outside storage/ or var/tmp/: ${rel_path}"
+      fail "refusing to queue cleanup path outside var/tmp/: ${rel_path}"
       return 1
       ;;
   esac
@@ -87,35 +91,6 @@ queue_cleanup_path() {
     CLEANUP_SEEN["$rel_path"]=1
     CLEANUP_PATHS+=("$rel_path")
   fi
-}
-
-ensure_planning_topic_fixture() {
-  local topic_rel="storage/handoff/TOPIC.md"
-  local topic_abs="${REPO_ROOT}/${topic_rel}"
-
-  if [[ -f "$topic_abs" ]]; then
-    return 0
-  fi
-
-  mkdir -p "$(dirname "$topic_abs")"
-  cat > "$topic_abs" <<'EOF'
-Factory ATS smoke topic fixture.
-EOF
-  queue_cleanup_path "$topic_rel"
-}
-
-ensure_plan_absent_fixture() {
-  local plan_rel="storage/handoff/PLAN.md"
-  local plan_abs="${REPO_ROOT}/${plan_rel}"
-
-  if (( PLAN_RESTORE == 0 )) && [[ -f "$plan_abs" ]]; then
-    mkdir -p "${REPO_ROOT}/var/tmp"
-    PLAN_BACKUP="$(mktemp "${REPO_ROOT}/var/tmp/factory-plan-backup.XXXXXX")"
-    cp "$plan_abs" "$PLAN_BACKUP"
-    PLAN_RESTORE=1
-  fi
-
-  rm -f -- "$plan_abs"
 }
 
 next_bundle_output_path() {
@@ -129,7 +104,7 @@ parse_bundle_output_path() {
 
 assert_file_exists() {
   local rel_path="$1"
-  [[ -f "${REPO_ROOT}/${rel_path}" ]] || fail "expected file missing: ${rel_path}"
+  [[ -n "$rel_path" && -f "${REPO_ROOT}/${rel_path}" ]] || fail "expected file missing: ${rel_path:-<empty>}"
 }
 
 assert_manifest_has() {
@@ -171,10 +146,62 @@ extract_pointer_path() {
   ' "${REPO_ROOT}/${manifest_rel}" | head -n 1
 }
 
-ensure_planning_topic_fixture
-ensure_plan_absent_fixture
+create_fixture_registry() {
+  local path="$1"
+  local id="$2"
+  local name="$3"
+  mkdir -p "$(dirname "$path")"
+  {
+    printf '# Disposable Factory Test Registry\n\n'
+    printf '| ID | Name | Fixture |\n'
+    printf '| --- | --- | --- |\n'
+    printf '| %s | %s | true |\n' "$id" "$name"
+  } > "$path"
+}
 
-run_capture ./ops/bin/bundle --profile=auto --agent-id=R-AGENT-09 --skill-id=S-LEARN-09 --task-id=B-TASK-09 "--out=$(next_bundle_output_path)"
+mkdir -p "$FIXTURE_HANDOFF_ABS"
+printf 'Factory ATS isolated smoke topic fixture.\n' > "${FIXTURE_HANDOFF_ABS}/TOPIC.md"
+create_fixture_registry "${FIXTURE_ABS}/agents.md" "$FIXTURE_AGENT_ID" "disposable-agent"
+create_fixture_registry "${FIXTURE_ABS}/skills.md" "$FIXTURE_SKILL_ID" "disposable-skill"
+create_fixture_registry "${FIXTURE_ABS}/tasks.md" "$FIXTURE_TASK_ID" "disposable-task"
+
+sed \
+  -e "s#^registry_agents_path=.*#registry_agents_path=${FIXTURE_REL}/agents.md#" \
+  -e "s#^registry_skills_path=.*#registry_skills_path=${FIXTURE_REL}/skills.md#" \
+  -e "s#^registry_tasks_path=.*#registry_tasks_path=${FIXTURE_REL}/tasks.md#" \
+  "${REPO_ROOT}/ops/lib/manifests/ASSEMBLY.md" > "$FIXTURE_POLICY_ABS"
+
+for fixture_id in "$FIXTURE_AGENT_ID" "$FIXTURE_SKILL_ID" "$FIXTURE_TASK_ID"; do
+  if grep -Fq -- "$fixture_id" "${LIVE_REGISTRIES[@]}"; then
+    fail "disposable fixture ID appears in live registry: ${fixture_id}"
+  fi
+done
+
+run_capture env -u BUNDLE_TEST_HANDOFF_ROOT \
+  "BUNDLE_TEST_ASSEMBLY_POLICY_PATH=${FIXTURE_POLICY_ABS}" \
+  ./ops/bin/bundle --profile=planning "--out=$(next_bundle_output_path)"
+if (( RUN_STATUS == 0 )) || [[ "$RUN_OUTPUT" != *"BUNDLE_TEST_ASSEMBLY_POLICY_PATH requires BUNDLE_TEST_HANDOFF_ROOT"* ]]; then
+  fail "test assembly policy override was not rejected without handoff isolation"
+fi
+
+run_capture env \
+  "BUNDLE_TEST_HANDOFF_ROOT=${FIXTURE_HANDOFF_ABS}" \
+  "BUNDLE_TEST_ASSEMBLY_POLICY_PATH=${REPO_ROOT}/ops/lib/manifests/ASSEMBLY.md" \
+  ./ops/bin/bundle --profile=planning "--out=$(next_bundle_output_path)"
+if (( RUN_STATUS == 0 )) || [[ "$RUN_OUTPUT" != *"test assembly policy must resolve under var/tmp/"* ]]; then
+  fail "test assembly policy override was not rejected outside var/tmp"
+fi
+
+run_capture env \
+  "BUNDLE_TEST_HANDOFF_ROOT=${FIXTURE_HANDOFF_ABS}" \
+  "BUNDLE_TEST_ASSEMBLY_POLICY_PATH=${FIXTURE_POLICY_ABS}" \
+  ./ops/bin/bundle \
+  --profile=auto \
+  "--agent-id=${FIXTURE_AGENT_ID}" \
+  "--skill-id=${FIXTURE_SKILL_ID}" \
+  "--task-id=${FIXTURE_TASK_ID}" \
+  "--out=$(next_bundle_output_path)"
+
 if (( RUN_STATUS != 0 )); then
   fail "factory ATS smoke bundle invocation failed: ${RUN_OUTPUT}"
   echo "FAILED: ${FAILURES} issue(s) detected." >&2
@@ -186,37 +213,20 @@ manifest_rel="$(normalize_rel_path "$(parse_bundle_output_path "Bundle manifest"
 package_rel="$(normalize_rel_path "$(parse_bundle_output_path "Bundle package")")"
 
 if [[ -z "$artifact_rel" || -z "$manifest_rel" || -z "$package_rel" ]]; then
-  fail "bundle output missing artifact/manifest/package paths"
+  fail "bundle output missing artifact, manifest, or package path"
 else
-  case "$artifact_rel" in
-    ${SMOKE_HANDOFF_ROOT}/*)
-      ;;
-    *)
-      fail "factory smoke artifact should be under ${SMOKE_HANDOFF_ROOT}/: ${artifact_rel}"
-      ;;
-  esac
-  case "$manifest_rel" in
-    ${SMOKE_HANDOFF_ROOT}/*)
-      ;;
-    *)
-      fail "factory smoke manifest should be under ${SMOKE_HANDOFF_ROOT}/: ${manifest_rel}"
-      ;;
-  esac
-  case "$package_rel" in
-    ${SMOKE_HANDOFF_ROOT}/*)
-      ;;
-    *)
-      fail "factory smoke package should be under ${SMOKE_HANDOFF_ROOT}/: ${package_rel}"
-      ;;
-  esac
-  queue_cleanup_path "$artifact_rel"
-  queue_cleanup_path "$manifest_rel"
-  queue_cleanup_path "$package_rel"
+  for rel_path in "$artifact_rel" "$manifest_rel" "$package_rel"; do
+    case "$rel_path" in
+      "${SMOKE_HANDOFF_ROOT}/"*)
+        ;;
+      *)
+        fail "factory smoke output should be under ${SMOKE_HANDOFF_ROOT}/: ${rel_path}"
+        ;;
+    esac
+    queue_cleanup_path "$rel_path"
+    assert_file_exists "$rel_path"
+  done
 fi
-
-assert_file_exists "$artifact_rel"
-assert_file_exists "$manifest_rel"
-assert_file_exists "$package_rel"
 
 resolved_profile="$(extract_manifest_scalar "$manifest_rel" "resolved_profile")"
 if [[ "$resolved_profile" != "planning" ]]; then
@@ -225,28 +235,18 @@ fi
 
 payload_rel="$(extract_manifest_scalar "$manifest_rel" "payload_path")"
 dump_manifest_rel="$(extract_manifest_scalar "$manifest_rel" "manifest_path")"
-if [[ -n "$payload_rel" ]]; then
-  case "$payload_rel" in
-    ${SMOKE_DUMP_ROOT}/*)
+for rel_path in "$payload_rel" "$dump_manifest_rel"; do
+  [[ -n "$rel_path" ]] || continue
+  case "$rel_path" in
+    "${SMOKE_DUMP_ROOT}/"*)
       ;;
     *)
-      fail "factory smoke dump payload should be under ${SMOKE_DUMP_ROOT}/: ${payload_rel}"
+      fail "factory smoke dump output should be under ${SMOKE_DUMP_ROOT}/: ${rel_path}"
       ;;
   esac
-  queue_cleanup_path "$payload_rel"
-  assert_file_exists "$payload_rel"
-fi
-if [[ -n "$dump_manifest_rel" ]]; then
-  case "$dump_manifest_rel" in
-    ${SMOKE_DUMP_ROOT}/*)
-      ;;
-    *)
-      fail "factory smoke dump manifest should be under ${SMOKE_DUMP_ROOT}/: ${dump_manifest_rel}"
-      ;;
-  esac
-  queue_cleanup_path "$dump_manifest_rel"
-  assert_file_exists "$dump_manifest_rel"
-fi
+  queue_cleanup_path "$rel_path"
+  assert_file_exists "$rel_path"
+done
 
 pointer_rel="$(extract_pointer_path "$manifest_rel")"
 if [[ -n "$pointer_rel" ]]; then
@@ -255,23 +255,31 @@ if [[ -n "$pointer_rel" ]]; then
 fi
 
 assert_manifest_has "$manifest_rel" '"applied": true'
-assert_manifest_has "$manifest_rel" '"agent_id": "R-AGENT-09"'
-assert_manifest_has "$manifest_rel" '"skill_id": "S-LEARN-09"'
-assert_manifest_has "$manifest_rel" '"task_id": "B-TASK-09"'
+assert_manifest_has "$manifest_rel" "\"policy_manifest\": \"${FIXTURE_POLICY_REL}\""
+assert_manifest_has "$manifest_rel" "\"agent_id\": \"${FIXTURE_AGENT_ID}\""
+assert_manifest_has "$manifest_rel" "\"skill_id\": \"${FIXTURE_SKILL_ID}\""
+assert_manifest_has "$manifest_rel" "\"task_id\": \"${FIXTURE_TASK_ID}\""
 assert_manifest_has "$manifest_rel" '"emitted": true'
-assert_manifest_has "$manifest_rel" "\"path\": \"${SMOKE_HANDOFF_ROOT}/"
 
 if ! grep -Fq '[ASSEMBLY]' "${REPO_ROOT}/${artifact_rel}"; then
   fail "bundle artifact missing [ASSEMBLY] block"
 fi
-if ! grep -Fq 'agent_id: R-AGENT-09' "${REPO_ROOT}/${artifact_rel}"; then
-  fail "bundle artifact missing agent_id: R-AGENT-09"
+for expected in \
+  "agent_id: ${FIXTURE_AGENT_ID}" \
+  "skill_id: ${FIXTURE_SKILL_ID}" \
+  "task_id: ${FIXTURE_TASK_ID}"; do
+  if ! grep -Fq -- "$expected" "${REPO_ROOT}/${artifact_rel}"; then
+    fail "bundle artifact missing ${expected}"
+  fi
+done
+
+if [[ "$(sha256sum "${LIVE_REGISTRIES[@]}")" != "$LIVE_REGISTRY_HASHES_BEFORE" ]]; then
+  fail "factory smoke test changed a live Factory registry"
 fi
-if ! grep -Fq 'skill_id: S-LEARN-09' "${REPO_ROOT}/${artifact_rel}"; then
-  fail "bundle artifact missing skill_id: S-LEARN-09"
-fi
-if ! grep -Fq 'task_id: B-TASK-09' "${REPO_ROOT}/${artifact_rel}"; then
-  fail "bundle artifact missing task_id: B-TASK-09"
+
+cleanup_generated
+if [[ "$(git status --porcelain)" != "$GIT_STATUS_BEFORE" ]]; then
+  fail "factory smoke test changed tracked or untracked repository state"
 fi
 
 if (( FAILURES > 0 )); then
@@ -279,4 +287,4 @@ if (( FAILURES > 0 )); then
   exit 1
 fi
 
-echo "PASS: factory smoke test"
+echo "PASS: factory smoke test; isolated ATS fixture 1/1; isolation guards 2/2; live registry parity 3/3"
