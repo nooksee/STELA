@@ -6,7 +6,7 @@
 `tools/lint/task.sh` protects the highest-risk planning surfaces by enforcing both task-definition schema integrity and TASK dashboard container integrity. The script exists to prevent ambiguous dispatch contracts that trigger misexecution or STOP states, directly addressing the PoT Section 2 Ambiguity failure mode.
 
 ## Mechanics and Sequencing
-1. Resolve repository root, emit telemetry, and require task registry plus task directory.
+1. Resolve repository root, emit telemetry, and require the task registry. Treat an absent `opt/_factory/tasks` directory as a valid zero-definition state only when no active `B-TASK-*` registry row exists; promotion recreates the directory before publishing a definition.
 2. Lint task-definition corpus:
    - Reject contractions and legacy inline-session-state phrases.
    - Parse registry rows and enforce unique IDs, unique paths, and reachable files.

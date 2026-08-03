@@ -477,10 +477,6 @@ check_task_dashboard() {
 
 require_file "$TASKS_REGISTRY"
 
-if [[ ! -d "$TASKS_DIR" ]]; then
-  fail "Tasks directory missing at ${TASKS_DIR}"
-fi
-
 contraction_pattern="\\b(don\\x27t|can\\x27t|won\\x27t|it\\x27s|shouldn\\x27t|didn\\x27t|doesn\\x27t|isn\\x27t|aren\\x27t|wasn\\x27t|weren\\x27t|haven\\x27t|hasn\\x27t|hadn\\x27t|wouldn\\x27t|couldn\\x27t|mustn\\x27t|shan\\x27t|let\\x27s|they\\x27re|we\\x27re|you\\x27re|i\\x27m|i\\x27ve|i\\x27ll|i\\x27d)\\b"
 contraction_hits="$(search_regex_with_fallback --ignore-case "$contraction_pattern" "$TASKS_DIR")"
 if [[ -n "$contraction_hits" ]]; then

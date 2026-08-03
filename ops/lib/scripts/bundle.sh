@@ -13,9 +13,9 @@ if ! declare -F die >/dev/null 2>&1; then
   source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 fi
 
-# Test-only isolation override. When BUNDLE_TEST_HANDOFF_ROOT is set (by
-# tools/test/bundle.sh only), input surface reads redirect to that root so the
-# test never touches live storage/handoff/ or TASK.md.
+# Test-only isolation override. When BUNDLE_TEST_HANDOFF_ROOT is set by a
+# bundle test, input surface reads redirect to that root so the test never
+# touches live storage/handoff/ or TASK.md.
 BUNDLE_HANDOFF_BASE="${BUNDLE_TEST_HANDOFF_ROOT:-${REPO_ROOT}/storage/handoff}"
 
 BUNDLE_POLICY_PATH="${REPO_ROOT}/ops/lib/manifests/BUNDLE.md"
@@ -372,7 +372,21 @@ bundle_load_policy() {
   BUNDLE_AUDIT_REFRESH_REASON_RERUN="$(bundle_policy_scalar audit_refresh_reason_rerun)"
   BUNDLE_ASSEMBLY_POLICY_MANIFEST="$(bundle_policy_scalar assembly_policy_manifest)"
   [[ -n "$BUNDLE_ASSEMBLY_POLICY_MANIFEST" ]] || die "bundle policy missing required key: assembly_policy_manifest"
-  ASSEMBLY_POLICY_PATH="${REPO_ROOT}/$(bundle_to_rel_path "$BUNDLE_ASSEMBLY_POLICY_MANIFEST")"
+
+  if [[ -n "${BUNDLE_TEST_ASSEMBLY_POLICY_PATH:-}" ]]; then
+    [[ -n "${BUNDLE_TEST_HANDOFF_ROOT:-}" ]] || die "BUNDLE_TEST_ASSEMBLY_POLICY_PATH requires BUNDLE_TEST_HANDOFF_ROOT"
+    ASSEMBLY_POLICY_PATH="$(realpath -m -- "$BUNDLE_TEST_ASSEMBLY_POLICY_PATH")"
+    case "$ASSEMBLY_POLICY_PATH" in
+      "${REPO_ROOT}/var/tmp/"*)
+        ;;
+      *)
+        die "test assembly policy must resolve under var/tmp/: ${ASSEMBLY_POLICY_PATH}"
+        ;;
+    esac
+    BUNDLE_ASSEMBLY_POLICY_MANIFEST="$(bundle_to_rel_path "$ASSEMBLY_POLICY_PATH")"
+  else
+    ASSEMBLY_POLICY_PATH="${REPO_ROOT}/$(bundle_to_rel_path "$BUNDLE_ASSEMBLY_POLICY_MANIFEST")"
+  fi
   [[ -f "$ASSEMBLY_POLICY_PATH" ]] || die "assembly policy missing: ${ASSEMBLY_POLICY_PATH#${REPO_ROOT}/}"
   if [[ ! "$BUNDLE_COMPAT_LEGACY_PREFIX" =~ ^[A-Z][A-Z0-9-]*$ ]]; then
     die "bundle policy has invalid compatibility legacy prefix: ${BUNDLE_COMPAT_LEGACY_PREFIX}"

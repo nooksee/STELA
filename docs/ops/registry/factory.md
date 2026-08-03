@@ -19,7 +19,7 @@ This registry classifies each definition as `keep`, `replace`, or `remove` with 
 ## Disposition Summary
 | Disposition | Count |
 | --- | ---: |
-| keep | 14 |
+| keep | 4 |
 | replace | 0 |
 | remove | 0 |
 
@@ -30,20 +30,11 @@ This registry classifies each definition as `keep`, `replace`, or `remove` with 
 | agent | R-AGENT-12 | opt/_factory/agents/r-agent-12.md | keep | K-ACTIVE-CONTRACT | 0/0/0 | 1/0/1 | 1/0 |
 | agent | R-AGENT-11 | opt/_factory/agents/r-agent-11.md | keep | K-ACTIVE-CONTRACT | 0/0/0 | 0/0/1 | 1/0 |
 | agent | R-AGENT-10 | opt/_factory/agents/r-agent-10.md | keep | K-ACTIVE-CONTRACT | 0/0/0 | 0/0/2 | 1/0 |
-| agent | R-AGENT-07 | opt/_factory/agents/r-agent-07.md | keep | K-ACTIVE-CONTRACT | 0/0/0 | 0/0/1 | 1/0 |
-| agent | R-AGENT-08 | opt/_factory/agents/r-agent-08.md | keep | K-ACTIVE-CONTRACT | 0/0/0 | 0/0/1 | 1/0 |
-| agent | R-AGENT-09 | opt/_factory/agents/r-agent-09.md | keep | K-ACTIVE-CONTRACT | 0/0/0 | 1/1/2 | 1/0 |
-| skill | S-LEARN-06 | opt/_factory/skills/s-learn-06.md | keep | K-ACTIVE-CONTRACT | 0/0/1 | 0/0/1 | 1/1 |
-| skill | S-LEARN-07 | opt/_factory/skills/s-learn-07.md | keep | K-ACTIVE-CONTRACT | 0/0/1 | 0/0/1 | 1/1 |
-| skill | S-LEARN-08 | opt/_factory/skills/s-learn-08.md | keep | K-ACTIVE-CONTRACT | 0/0/1 | 0/0/2 | 1/1 |
-| skill | S-LEARN-09 | opt/_factory/skills/s-learn-09.md | keep | K-ACTIVE-CONTRACT | 0/0/1 | 0/1/2 | 1/1 |
-| task | B-TASK-07 | opt/_factory/tasks/b-task-07.md | keep | K-ACTIVE-CONTRACT | 0/0/1 | 0/0/1 | 1/1 |
-| task | B-TASK-08 | opt/_factory/tasks/b-task-08.md | keep | K-ACTIVE-CONTRACT | 0/0/2 | 0/0/2 | 1/1 |
-| task | B-TASK-09 | opt/_factory/tasks/b-task-09.md | keep | K-ACTIVE-CONTRACT | 0/1/2 | 0/1/2 | 1/1 |
 
 ## Scope Notes
 - Active Agent cards describe temporary workflow roles and grant constitutional authority `0` times.
-- Imported prototypes are preserved in Git history and listed below, not retained as active definitions.
+- Retired prototypes and development definitions are preserved in Git history and listed below, not retained as active definitions.
+- Active Tasks and Skills are both `0`; future definitions require evidence-backed promotion.
 - Factory runtime orchestration and broader Task and Skill harvesting remain deferred.
 - Any runtime reference to `opt/_factory/agents/*.md`, `opt/_factory/skills/*.md`, or `opt/_factory/tasks/*.md` must resolve to a matrix row above.
 
@@ -69,3 +60,13 @@ Permanently retired definition IDs. Any re-creation of a path listed here withou
 | skill | S-LEARN-03 | opt/_factory/skills/s-learn-03.md | NON-DP-CONSULTING-2026-08-02 | Imported prototype retired during workflow-role vocabulary reset. |
 | skill | S-LEARN-04 | opt/_factory/skills/s-learn-04.md | NON-DP-CONSULTING-2026-08-02 | Imported prototype retired during workflow-role vocabulary reset. |
 | skill | S-LEARN-05 | opt/_factory/skills/s-learn-05.md | NON-DP-CONSULTING-2026-08-02 | Imported prototype retired during workflow-role vocabulary reset. |
+| agent | R-AGENT-07 | opt/_factory/agents/r-agent-07.md | NON-DP-CONSULTING-2026-08-02 | Development validation card retired from active canon; history preserved. |
+| agent | R-AGENT-08 | opt/_factory/agents/r-agent-08.md | NON-DP-CONSULTING-2026-08-02 | Development bundle-coordination card retired from active canon; history preserved. |
+| agent | R-AGENT-09 | opt/_factory/agents/r-agent-09.md | NON-DP-CONSULTING-2026-08-02 | Test-only gatekeeper card retired from active canon; history preserved. |
+| task | B-TASK-07 | opt/_factory/tasks/b-task-07.md | NON-DP-CONSULTING-2026-08-02 | Development validation Task retired from active canon; history preserved. |
+| task | B-TASK-08 | opt/_factory/tasks/b-task-08.md | NON-DP-CONSULTING-2026-08-02 | Development bundle-orchestration Task retired from active canon; history preserved. |
+| task | B-TASK-09 | opt/_factory/tasks/b-task-09.md | NON-DP-CONSULTING-2026-08-02 | Test-only Factory gate Task retired from active canon; history preserved. |
+| skill | S-LEARN-06 | opt/_factory/skills/s-learn-06.md | NON-DP-CONSULTING-2026-08-02 | Experimental harvest result retired pending evidence-backed reharvest. |
+| skill | S-LEARN-07 | opt/_factory/skills/s-learn-07.md | NON-DP-CONSULTING-2026-08-02 | Development validation Skill retired from active canon; history preserved. |
+| skill | S-LEARN-08 | opt/_factory/skills/s-learn-08.md | NON-DP-CONSULTING-2026-08-02 | Development bundle-governance Skill retired from active canon; history preserved. |
+| skill | S-LEARN-09 | opt/_factory/skills/s-learn-09.md | NON-DP-CONSULTING-2026-08-02 | Test-only Factory gate Skill retired from active canon; history preserved. |

@@ -441,7 +441,11 @@ while IFS= read -r file; do
   if [[ -z "${skill_path_map[$rel_path]+set}" ]]; then
     fail "Ghost Artifact: '${rel_path}' exists but is not registered in SKILLS.md"
   fi
-done < <(find "${FACTORY_DIR}/skills" -type f -name "*.md")
+done < <(
+  if [[ -d "${FACTORY_DIR}/skills" ]]; then
+    find "${FACTORY_DIR}/skills" -type f -name "*.md"
+  fi
+)
 
 skills_meta="${FACTORY_DIR}/SKILLS.md"
 if [[ -f "$skills_meta" ]]; then
@@ -458,7 +462,11 @@ while IFS= read -r file; do
   if [[ -z "${task_path_map[$rel_path]+set}" ]]; then
     fail "Ghost Artifact: '${rel_path}' exists but is not registered in TASKS.md"
   fi
-done < <(find "${FACTORY_DIR}/tasks" -type f -name "*.md")
+done < <(
+  if [[ -d "${FACTORY_DIR}/tasks" ]]; then
+    find "${FACTORY_DIR}/tasks" -type f -name "*.md"
+  fi
+)
 
 mapfile -t runtime_factory_paths < <(collect_runtime_factory_paths | sort -u)
 for runtime_path in "${runtime_factory_paths[@]}"; do
@@ -541,8 +549,8 @@ if compgen -G "${FACTORY_DIR}/agents/*.md" > /dev/null; then
     esac
 
     case "$stance_id" in
-      addenda|analyst|architect|audit|conformist|contractor) ;;
-      *) fail "${agent_name} stance_id '${stance_id}' is not in allowed set {addenda,analyst,architect,audit,conformist,contractor}" ;;
+      addenda|analyst|architect|audit|contractor) ;;
+      *) fail "${agent_name} stance_id '${stance_id}' is not in allowed set {addenda,analyst,architect,audit,contractor}" ;;
     esac
   done
 fi

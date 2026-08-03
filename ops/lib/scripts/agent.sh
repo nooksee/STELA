@@ -567,7 +567,7 @@ runtime_role_allowed() {
 
 stance_id_allowed() {
   case "$1" in
-    addenda|analyst|architect|audit|conformist|contractor) return 0 ;;
+    addenda|analyst|architect|audit|contractor) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -921,7 +921,7 @@ cmd_harvest() {
   fi
 
   if ! stance_id_allowed "$stance_id"; then
-    die "--stance-id must be one of addenda, analyst, architect, audit, conformist, contractor"
+    die "--stance-id must be one of addenda, analyst, architect, audit, contractor"
   fi
 
   if [[ -z "$open_path" ]]; then

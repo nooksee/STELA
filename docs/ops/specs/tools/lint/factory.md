@@ -12,6 +12,7 @@
 4. Validate `candidate:` and `promotion:` values as either exact origin sentinels or reachable `archives/definitions/*` leaf paths.
 5. Invoke delegated linters (`tools/lint/agent.sh`, `tools/lint/task.sh`) and fail factory lint when either delegated gate fails.
 6. Parse registry rows and verify all referenced files exist; detect ghost files under `opt/_factory/agents`, `opt/_factory/skills`, and `opt/_factory/tasks`.
+   - An absent Task or Skill definition directory represents a valid zero-definition state only when its registry contains no corresponding canonical IDs.
 7. Parse census matrix rows from `docs/ops/registry/factory.md` and validate row schema:
    - kind in `{agent, skill, task}`
    - ID format aligned to kind (`R-AGENT-##`, `S-LEARN-##`, `B-TASK-##`)
@@ -25,7 +26,7 @@
 9. Enforce Baseline contract checks:
    - agent `## Identity Contract` must include `agent_id`, `runtime_role`, `stance_id`
    - allowed runtime-role values are exactly `{analyst, architect, worker, supervisor}`
-   - allowed stance values are exactly `{addenda, analyst, architect, audit, conformist, contractor}`
+   - allowed stance values are exactly `{addenda, analyst, architect, audit, contractor}`
    - skill `## Method Contract` must include `skill_id`, `method`, `inputs`, `outputs`, `invariants`
    - task `## Objective Contract` must include `task_id`, `objective`, `inputs`, `outputs`, `invariants`
    - `skill_id` and `task_id` must match filename-derived IDs

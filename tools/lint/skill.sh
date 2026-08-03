@@ -104,10 +104,6 @@ for row in "${registry_rows[@]}"; do
 
 done
 
-if [[ ! -d "$SKILLS_DIR" ]]; then
-  fail "Skills directory missing at ${SKILLS_DIR}"
-fi
-
 skill_count=0
 if compgen -G "${SKILLS_DIR}/s-learn-*.md" > /dev/null; then
   for skill in "${SKILLS_DIR}"/s-learn-*.md; do

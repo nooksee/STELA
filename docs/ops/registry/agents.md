@@ -12,6 +12,3 @@ This table is the canonical roster for active Agent definitions, workflow-role n
 | R-AGENT-12 | worker | worker | contractor | NON-DP-CONSULTING-2026-08-02 | Contract-bounded execution and evidence-producing verification. |
 | R-AGENT-11 | architect | architect | architect | NON-DP-CONSULTING-2026-08-02 | Execution-contract design, scope decomposition, and packet authorship. |
 | R-AGENT-10 | analyst | analyst | analyst | NON-DP-CONSULTING-2026-08-02 | Topic decomposition, evidence reconciliation, and plan authorship. |
-| R-AGENT-09 | factory-testing-gatekeeper | worker | conformist | DP-OPS-0181 | Factory ATS triplet smoke validation and execution-gate enforcement |
-| R-AGENT-08 | bundle-coordinator | supervisor | addenda | DP-OPS-0145 | Bundle artifact coordination and routing governance |
-| R-AGENT-07 | factory-chain-agent-test | worker | conformist | DP-OPS-0074 | Factory chain pointer remediation validation |
