@@ -4,7 +4,7 @@ source "$(git rev-parse --show-toplevel)/ops/lib/scripts/common.sh"
 
 usage() {
   cat <<'USAGE'
-Usage: tools/lint/schema.sh
+Usage: tools/lint/schema.sh [--test]
 USAGE
 }
 
@@ -66,10 +66,22 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   exit 0
 fi
 
-if [[ "$#" -gt 0 ]]; then
+schema_test_mode=0
+if [[ "$#" -gt 1 ]]; then
   usage >&2
   exit 1
 fi
+case "${1:-}" in
+  "")
+    ;;
+  --test)
+    schema_test_mode=1
+    ;;
+  *)
+    usage >&2
+    exit 1
+    ;;
+esac
 
 if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   REPO_ROOT="$(git rev-parse --show-toplevel)"
@@ -325,6 +337,188 @@ lint_current_task_pointer_contract() {
     || fail "pointer-head TASK must declare packet_state: completed in ${source_path#${REPO_ROOT}/}"
 }
 
+lint_current_ror_leaf_contract() {
+  local source_path="$1"
+  local source_rel="$2"
+  local frontmatter=""
+  local trace_id=""
+  local decision_id=""
+  local packet_id=""
+  local decision_type=""
+  local created_at=""
+  local authorized_by=""
+  local filename="${source_rel##*/}"
+  local expected_decision_id=""
+  local label=""
+  local count=0
+  local line_no=0
+  local previous_line=0
+  local status_value=""
+  local -a labels=("Context" "Decision" "Consequence" "Pointer" "Status")
+
+  [[ "$filename" =~ ^(RoR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3})-[a-z0-9][a-z0-9-]*[.]md$ ]] \
+    || fail "current RoR target filename is invalid: ${source_rel}"
+  expected_decision_id="${BASH_REMATCH[1]}"
+
+  frontmatter="$(extract_frontmatter "$source_path")" \
+    || fail "current RoR target lacks valid frontmatter: ${source_rel}"
+  trace_id="$(trim "$(frontmatter_value "trace_id" "$frontmatter")")"
+  decision_id="$(trim "$(frontmatter_value "decision_id" "$frontmatter")")"
+  packet_id="$(trim "$(frontmatter_value "packet_id" "$frontmatter")")"
+  decision_type="$(trim "$(frontmatter_value "decision_type" "$frontmatter")")"
+  created_at="$(trim "$(frontmatter_value "created_at" "$frontmatter")")"
+  authorized_by="$(trim "$(frontmatter_value "authorized_by" "$frontmatter")")"
+
+  [[ -n "$trace_id" ]] || fail "current RoR target is missing trace_id: ${source_rel}"
+  [[ "$decision_id" == "$expected_decision_id" ]] \
+    || fail "current RoR decision_id does not match its filename: ${source_rel}"
+  [[ "$packet_id" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]] \
+    || fail "current RoR packet_id is invalid: ${source_rel}"
+  [[ "$decision_type" =~ ^[a-z0-9][a-z0-9-]*$ ]] \
+    || fail "current RoR decision_type is invalid: ${source_rel}"
+  [[ "$created_at" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]] \
+    || fail "current RoR created_at must use ISO-8601 UTC format with Z suffix: ${source_rel}"
+  [[ "$authorized_by" =~ ^(Operator|Integrator|Contractor|Auditor)$ ]] \
+    || fail "current RoR authorized_by value is invalid: ${source_rel}"
+  if [[ "$decision_type" == "op" && "$authorized_by" != "Operator" ]]; then
+    fail "current RoR Operator decision must declare authorized_by: Operator: ${source_rel}"
+  fi
+
+  if grep -Eiq 'Populate during execution[.]|(^|[^[:alnum:]])(TBD|TODO|PLACEHOLDER|REPLACE_ME)([^[:alnum:]]|$)' "$source_path"; then
+    fail "current RoR target contains unresolved scaffold text: ${source_rel}"
+  fi
+
+  for label in "${labels[@]}"; do
+    count="$(grep -cE "^##[[:space:]]+${label}[[:space:]]*$" "$source_path" || true)"
+    [[ "$count" == "1" ]] \
+      || fail "current RoR section must appear exactly once: section=${label} count=${count} source=${source_rel}"
+    line_no="$(grep -nE "^##[[:space:]]+${label}[[:space:]]*$" "$source_path" | cut -d: -f1)"
+    (( line_no > previous_line )) \
+      || fail "current RoR sections are out of order at ${label}: ${source_rel}"
+    previous_line="$line_no"
+  done
+
+  status_value="$(awk '
+    /^##[[:space:]]+Status[[:space:]]*$/ { in_status=1; next }
+    in_status && /^[[:space:]]*$/ { next }
+    in_status { print; exit }
+  ' "$source_path")"
+  status_value="$(trim "$status_value")"
+  [[ -n "$status_value" ]] || fail "current RoR status is empty: ${source_rel}"
+  case "${status_value,,}" in
+    draft*|pending*|proposed*)
+      fail "current RoR status is provisional: status=${status_value} source=${source_rel}"
+      ;;
+  esac
+}
+
+resolve_current_ror_source() {
+  local root_path="$1"
+  local line_count=""
+  local pointer=""
+
+  [[ -f "$root_path" ]] || fail "missing current surface: ${root_path#${REPO_ROOT}/}"
+  line_count="$(awk 'END { print NR }' "$root_path")"
+  [[ "$line_count" == "1" ]] \
+    || fail "current RoR must be a single pointer head: ${root_path#${REPO_ROOT}/}"
+  pointer="$(trim "$(cat "$root_path")")"
+  pointer="${pointer#./}"
+  [[ "$pointer" =~ ^archives/decisions/RoR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}-[a-z0-9][a-z0-9-]*[.]md$ ]] \
+    || fail "current RoR pointer is invalid: ${root_path#${REPO_ROOT}/} -> ${pointer}"
+  [[ -f "${REPO_ROOT}/${pointer}" ]] \
+    || fail "current RoR pointer target is missing: ${root_path#${REPO_ROOT}/} -> ${pointer}"
+  printf '%s' "${REPO_ROOT}/${pointer}"
+}
+
+write_ror_test_leaf() {
+  local path="$1"
+  local decision_id="$2"
+  local authorized_by="$3"
+  local decision_text="$4"
+  local status="$5"
+  cat > "$path" <<EOF
+---
+trace_id: schema-ror-test
+decision_id: ${decision_id}
+packet_id: DP-OPS-9999
+decision_type: op
+created_at: 2026-08-04T12:00:00Z
+authorized_by: ${authorized_by}
+---
+
+## Context
+
+Bounded schema test context.
+
+## Decision
+
+${decision_text}
+
+## Consequence
+
+Bounded schema test consequence.
+
+## Pointer
+
+- Authorized by: ${authorized_by}
+
+## Status
+
+${status}
+EOF
+}
+
+run_ror_contract_self_test() {
+  local fixture_root=""
+  local valid_rel="archives/decisions/RoR-2026-08-04-001-op-9999.md"
+  local placeholder_rel="archives/decisions/RoR-2026-08-04-002-op-9999.md"
+  local authority_rel="archives/decisions/RoR-2026-08-04-003-op-9999.md"
+  local pending_rel="archives/decisions/RoR-2026-08-04-004-op-9999.md"
+  local mismatch_rel="archives/decisions/RoR-2026-08-04-005-op-9999.md"
+  local passed=0
+
+  mkdir -p "${REPO_ROOT}/var/tmp"
+  fixture_root="$(mktemp -d "${REPO_ROOT}/var/tmp/schema-ror.XXXXXX")"
+  mkdir -p "${fixture_root}/archives/decisions"
+  write_ror_test_leaf "${fixture_root}/${valid_rel}" "RoR-2026-08-04-001" "Operator" "Approve the bounded test." "approved"
+  write_ror_test_leaf "${fixture_root}/${placeholder_rel}" "RoR-2026-08-04-002" "Operator" "Populate during execution." "approved"
+  write_ror_test_leaf "${fixture_root}/${authority_rel}" "RoR-2026-08-04-003" "Integrator" "Approve the bounded test." "approved"
+  write_ror_test_leaf "${fixture_root}/${pending_rel}" "RoR-2026-08-04-004" "Operator" "Approve the bounded test." "pending"
+  write_ror_test_leaf "${fixture_root}/${mismatch_rel}" "RoR-2026-08-04-999" "Operator" "Approve the bounded test." "approved"
+
+  printf '%s\n' "$valid_rel" > "${fixture_root}/RoR.md"
+  if (REPO_ROOT="$fixture_root"; source_path="$(resolve_current_ror_source "${fixture_root}/RoR.md")"; lint_current_ror_leaf_contract "$source_path" "$valid_rel"); then
+    passed=$((passed + 1))
+  else
+    fail "RoR self-test expected a settled Operator decision to pass"
+  fi
+
+  printf '%s\n%s\n' "$valid_rel" "$placeholder_rel" > "${fixture_root}/RoR.md"
+  if (REPO_ROOT="$fixture_root"; resolve_current_ror_source "${fixture_root}/RoR.md" >/dev/null 2>&1); then
+    fail "RoR self-test expected a multi-line pointer head to fail"
+  fi
+  passed=$((passed + 1))
+
+  for test_rel in "$placeholder_rel" "$authority_rel" "$pending_rel" "$mismatch_rel"; do
+    printf '%s\n' "$test_rel" > "${fixture_root}/RoR.md"
+    if (REPO_ROOT="$fixture_root"; source_path="$(resolve_current_ror_source "${fixture_root}/RoR.md")"; lint_current_ror_leaf_contract "$source_path" "$test_rel" >/dev/null 2>&1); then
+      fail "RoR self-test expected invalid fixture to fail: ${test_rel}"
+    fi
+    passed=$((passed + 1))
+  done
+
+  rm -r "$fixture_root"
+  [[ "$passed" == "6" ]] || fail "RoR self-test count mismatch: expected=6 actual=${passed}"
+  echo "OK: current RoR contract tests passed (${passed}/6)."
+}
+
+if (( schema_test_mode == 1 )); then
+  run_ror_contract_self_test
+  exit 0
+fi
+
+run_ror_contract_self_test >/dev/null
+
 definitions_checked=0
 surfaces_checked=0
 manifests_checked=0
@@ -382,6 +576,9 @@ lint_current_pow_contract "${REPO_ROOT}/PoW.md" "$current_pow_source"
 
 current_task_source="$(resolve_current_surface_source "${REPO_ROOT}/TASK.md")"
 lint_current_task_pointer_contract "${REPO_ROOT}/TASK.md" "$current_task_source"
+
+current_ror_source="$(resolve_current_ror_source "${REPO_ROOT}/RoR.md")"
+lint_current_ror_leaf_contract "$current_ror_source" "${current_ror_source#${REPO_ROOT}/}"
 
 checked=$((definitions_checked + surfaces_checked + manifests_checked))
 echo "OK: schema lint passed (${checked} file(s) checked: definitions=${definitions_checked}, surfaces=${surfaces_checked}, manifests=${manifests_checked})."

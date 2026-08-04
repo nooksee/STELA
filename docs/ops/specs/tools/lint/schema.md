@@ -18,10 +18,12 @@
 7. When TASK is a pointer head, require its current target frontmatter to declare `routing_state: idle` and `packet_state: completed`.
 8. Require the current PoW target to declare `proof_model: durable-v1` and `proof_state: complete|legacy-gap`. Complete proof must name durable RESULTS and packet lineage targets; a legacy gap must use the exact unavailable-results statement and retain packet lineage.
 9. Permit a not-yet-materialized complete-proof target only while PoW or its new leaf has an active working-tree change. Clean committed state requires both targets to exist.
-10. Fail immediately on first malformed candidate and print file-scoped error text.
+10. Require `RoR.md` to be a single pointer to an existing decision leaf whose filename identity, frontmatter, section order, settled status, and authority metadata are coherent. Reject unresolved scaffold markers. An `op` decision must declare `authorized_by: Operator`.
+11. Run the six-case current-RoR regression contract during normal lint. `--test` runs that contract directly and covers valid settlement, pointer shape, scaffold rejection, Operator authority, provisional status, and filename identity.
+12. Fail immediately on first malformed candidate and print file-scoped error text.
 
 ## Anecdotal Anchor
 This gate addresses the incident class where malformed or missing `previous` values broke head-chain reconstruction during regression tracing across multiple DP sessions. Without schema enforcement, archive continuity had to be rebuilt manually from unrelated receipts.
 
 ## Integrity Filter Warnings
-The script exits on first failure, so additional invalid leaves remain undiscovered until subsequent reruns. Candidate policies intentionally skip non-matching filenames, which means off-policy archival files are outside scan scope. Front-matter parsing evaluates the first YAML block only. A full authored TASK body is validated by task lint; schema lint applies the idle/completed frontmatter rule only when the root is a pointer head.
+The script exits on first failure, so additional invalid leaves remain undiscovered until subsequent reruns. Candidate policies intentionally skip non-matching filenames, which means off-policy archival files are outside scan scope. Front-matter parsing evaluates the first YAML block only. A full authored TASK body is validated by task lint; schema lint applies the idle/completed frontmatter rule only when the root is a pointer head. RoR validation governs the current pointer and target, not every historical decision leaf. Authority metadata is checked for structural coherence; the linter does not manufacture or infer Operator approval.
