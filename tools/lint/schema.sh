@@ -4,7 +4,7 @@ source "$(git rev-parse --show-toplevel)/ops/lib/scripts/common.sh"
 
 usage() {
   cat <<'USAGE'
-Usage: tools/lint/schema.sh [--test]
+Usage: tools/lint/schema.sh [--test] [--paths-file=PATH] [--added-paths-file=PATH]
 USAGE
 }
 
@@ -67,21 +67,37 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
 fi
 
 schema_test_mode=0
-if [[ "$#" -gt 1 ]]; then
-  usage >&2
-  exit 1
+paths_file_arg=""
+added_paths_file_arg=""
+for arg in "$@"; do
+  case "$arg" in
+    --test)
+      (( schema_test_mode == 0 )) || fail "duplicate --test argument"
+      schema_test_mode=1
+      ;;
+    --paths-file=*)
+      [[ -z "$paths_file_arg" ]] || fail "duplicate --paths-file argument"
+      paths_file_arg="${arg#--paths-file=}"
+      [[ -n "$paths_file_arg" ]] || fail "--paths-file requires a non-empty path"
+      ;;
+    --added-paths-file=*)
+      [[ -z "$added_paths_file_arg" ]] || fail "duplicate --added-paths-file argument"
+      added_paths_file_arg="${arg#--added-paths-file=}"
+      [[ -n "$added_paths_file_arg" ]] || fail "--added-paths-file requires a non-empty path"
+      ;;
+    *)
+      usage >&2
+      exit 1
+      ;;
+  esac
+done
+
+if (( schema_test_mode == 1 )) && { [[ -n "$paths_file_arg" ]] || [[ -n "$added_paths_file_arg" ]]; }; then
+  fail "--test cannot be combined with candidate path inventories"
 fi
-case "${1:-}" in
-  "")
-    ;;
-  --test)
-    schema_test_mode=1
-    ;;
-  *)
-    usage >&2
-    exit 1
-    ;;
-esac
+if [[ -n "$added_paths_file_arg" && -z "$paths_file_arg" ]]; then
+  fail "--added-paths-file requires --paths-file"
+fi
 
 if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   REPO_ROOT="$(git rev-parse --show-toplevel)"
@@ -412,6 +428,139 @@ lint_current_ror_leaf_contract() {
   esac
 }
 
+extract_ror_decision_block() {
+  local source_path="$1"
+  awk '
+    /^##[[:space:]]+Decision[[:space:]]*$/ { in_decision=1; next }
+    in_decision && /^##[[:space:]]+/ { exit }
+    in_decision { print }
+  ' "$source_path"
+}
+
+normalize_candidate_path() {
+  local value="$1"
+  value="$(trim "$value")"
+  value="${value#./}"
+  [[ -n "$value" ]] || return 1
+  [[ "$value" != /* ]] || fail "candidate path must be repository-relative: ${value}"
+  if [[ "$value" == ".." || "$value" == ../* || "$value" == */../* || "$value" == */.. ]]; then
+    fail "candidate path must not contain '..' segments: ${value}"
+  fi
+  printf '%s' "$value"
+}
+
+lint_authority_candidate_coupling() {
+  local paths_file="$1"
+  local added_paths_file="$2"
+  local current_ror_source="$3"
+  local current_ror_rel="${current_ror_source#${REPO_ROOT}/}"
+  local raw_path=""
+  local candidate_path=""
+  local results_leaf=""
+  local results_required_count=0
+  local results_leaf_count=0
+  local packet_id=""
+  local current_frontmatter=""
+  local current_packet_id=""
+  local current_decision_type=""
+  local current_authorized_by=""
+  local pot_trigger=0
+  local authority_trigger=0
+  local decision_block=""
+  local -A candidate_paths=()
+  local -A added_paths=()
+  local -A required_packets=()
+
+  if [[ "$paths_file" != /* ]]; then
+    paths_file="${REPO_ROOT}/${paths_file}"
+  fi
+  [[ -f "$paths_file" ]] || fail "candidate paths file is missing: ${paths_file#${REPO_ROOT}/}"
+
+  while IFS= read -r raw_path || [[ -n "$raw_path" ]]; do
+    [[ -n "$(trim "$raw_path")" ]] || continue
+    candidate_path="$(normalize_candidate_path "$raw_path")"
+    candidate_paths["$candidate_path"]=1
+  done < "$paths_file"
+
+  if [[ -n "$added_paths_file" ]]; then
+    if [[ "$added_paths_file" != /* ]]; then
+      added_paths_file="${REPO_ROOT}/${added_paths_file}"
+    fi
+    [[ -f "$added_paths_file" ]] || fail "added paths file is missing: ${added_paths_file#${REPO_ROOT}/}"
+    while IFS= read -r raw_path || [[ -n "$raw_path" ]]; do
+      [[ -n "$(trim "$raw_path")" ]] || continue
+      candidate_path="$(normalize_candidate_path "$raw_path")"
+      added_paths["$candidate_path"]=1
+    done < "$added_paths_file"
+  fi
+
+  for candidate_path in "${!candidate_paths[@]}"; do
+    if [[ "$candidate_path" == "PoT.md" ]]; then
+      authority_trigger=1
+      pot_trigger=1
+      continue
+    fi
+
+    if [[ -f "${REPO_ROOT}/${candidate_path}" \
+      && "$candidate_path" =~ ^archives/surfaces/ADDENDUM-(DP-[A-Z]+-[0-9]{4,})-[0-9a-f]{7,}[.]md$ ]]; then
+      authority_trigger=1
+      required_packets["${BASH_REMATCH[1]}"]=1
+      continue
+    fi
+
+    if [[ -f "${REPO_ROOT}/${candidate_path}" \
+      && "$candidate_path" =~ ^archives/surfaces/RESULTS-(DP-[A-Z]+-[0-9]{4,})(-ADDENDUM-[A-Z])?-[0-9a-f]{7,}[.]md$ ]]; then
+      results_required_count="$(grep -cE '^Decision Required:[[:space:]]+Yes[[:space:]]*$' "${REPO_ROOT}/${candidate_path}" || true)"
+      if [[ "$results_required_count" == "0" ]]; then
+        continue
+      fi
+      [[ "$results_required_count" == "1" ]] \
+        || fail "authority-bearing RESULTS must contain exactly one 'Decision Required: Yes' line: ${candidate_path}"
+      results_leaf_count="$(grep -cE '^Decision Leaf:[[:space:]]+' "${REPO_ROOT}/${candidate_path}" || true)"
+      [[ "$results_leaf_count" == "1" ]] \
+        || fail "authority-bearing RESULTS must contain exactly one Decision Leaf line: ${candidate_path}"
+      results_leaf="$(grep -E '^Decision Leaf:[[:space:]]+' "${REPO_ROOT}/${candidate_path}" | sed -E 's/^Decision Leaf:[[:space:]]+//')"
+      results_leaf="${results_leaf#\`}"
+      results_leaf="${results_leaf%\`}"
+      results_leaf="$(trim "$results_leaf")"
+      [[ "$results_leaf" == "$current_ror_rel" ]] \
+        || fail "authority-bearing RESULTS Decision Leaf must equal the current RoR target: results=${candidate_path} decision=${results_leaf} current=${current_ror_rel}"
+      authority_trigger=1
+      required_packets["${BASH_REMATCH[1]}"]=1
+    fi
+  done
+
+  (( authority_trigger == 1 )) || return 0
+
+  [[ -n "${candidate_paths[RoR.md]+set}" ]] \
+    || fail "authority-bearing candidate must change RoR.md in the same pull request"
+  [[ -n "${candidate_paths[$current_ror_rel]+set}" ]] \
+    || fail "authority-bearing candidate must include its current RoR decision leaf: ${current_ror_rel}"
+  [[ -n "$added_paths_file" ]] \
+    || fail "authority-bearing candidate requires an added-path inventory"
+  [[ -n "${added_paths[$current_ror_rel]+set}" ]] \
+    || fail "authority-bearing candidate current RoR decision leaf must be newly added: ${current_ror_rel}"
+
+  current_frontmatter="$(extract_frontmatter "$current_ror_source")" \
+    || fail "authority-bearing candidate current RoR target lacks valid frontmatter: ${current_ror_rel}"
+  current_packet_id="$(trim "$(frontmatter_value "packet_id" "$current_frontmatter")")"
+  current_decision_type="$(trim "$(frontmatter_value "decision_type" "$current_frontmatter")")"
+  current_authorized_by="$(trim "$(frontmatter_value "authorized_by" "$current_frontmatter")")"
+  [[ "$current_decision_type" == "op" && "$current_authorized_by" == "Operator" ]] \
+    || fail "authority-bearing candidate requires a current Operator decision leaf: ${current_ror_rel}"
+
+  for packet_id in "${!required_packets[@]}"; do
+    [[ "$current_packet_id" == "$packet_id" ]] \
+      || fail "authority-bearing candidate packet does not match current RoR decision: candidate=${packet_id} decision=${current_packet_id}"
+  done
+
+  if (( pot_trigger == 1 )); then
+    decision_block="$(extract_ror_decision_block "$current_ror_source")"
+    grep -Fq 'PoT.md' <<< "$decision_block" \
+      || fail "constitutional candidate requires the current RoR Decision section to name PoT.md: ${current_ror_rel}"
+  fi
+}
+
 resolve_current_ror_source() {
   local root_path="$1"
   local line_count=""
@@ -433,14 +582,15 @@ resolve_current_ror_source() {
 write_ror_test_leaf() {
   local path="$1"
   local decision_id="$2"
-  local authorized_by="$3"
-  local decision_text="$4"
-  local status="$5"
+  local packet_id="$3"
+  local authorized_by="$4"
+  local decision_text="$5"
+  local status="$6"
   cat > "$path" <<EOF
 ---
 trace_id: schema-ror-test
 decision_id: ${decision_id}
-packet_id: DP-OPS-9999
+packet_id: ${packet_id}
 decision_type: op
 created_at: 2026-08-04T12:00:00Z
 authorized_by: ${authorized_by}
@@ -480,11 +630,11 @@ run_ror_contract_self_test() {
   mkdir -p "${REPO_ROOT}/var/tmp"
   fixture_root="$(mktemp -d "${REPO_ROOT}/var/tmp/schema-ror.XXXXXX")"
   mkdir -p "${fixture_root}/archives/decisions"
-  write_ror_test_leaf "${fixture_root}/${valid_rel}" "RoR-2026-08-04-001" "Operator" "Approve the bounded test." "approved"
-  write_ror_test_leaf "${fixture_root}/${placeholder_rel}" "RoR-2026-08-04-002" "Operator" "Populate during execution." "approved"
-  write_ror_test_leaf "${fixture_root}/${authority_rel}" "RoR-2026-08-04-003" "Integrator" "Approve the bounded test." "approved"
-  write_ror_test_leaf "${fixture_root}/${pending_rel}" "RoR-2026-08-04-004" "Operator" "Approve the bounded test." "pending"
-  write_ror_test_leaf "${fixture_root}/${mismatch_rel}" "RoR-2026-08-04-999" "Operator" "Approve the bounded test." "approved"
+  write_ror_test_leaf "${fixture_root}/${valid_rel}" "RoR-2026-08-04-001" "DP-OPS-9999" "Operator" "Approve the bounded test." "approved"
+  write_ror_test_leaf "${fixture_root}/${placeholder_rel}" "RoR-2026-08-04-002" "DP-OPS-9999" "Operator" "Populate during execution." "approved"
+  write_ror_test_leaf "${fixture_root}/${authority_rel}" "RoR-2026-08-04-003" "DP-OPS-9999" "Integrator" "Approve the bounded test." "approved"
+  write_ror_test_leaf "${fixture_root}/${pending_rel}" "RoR-2026-08-04-004" "DP-OPS-9999" "Operator" "Approve the bounded test." "pending"
+  write_ror_test_leaf "${fixture_root}/${mismatch_rel}" "RoR-2026-08-04-999" "DP-OPS-9999" "Operator" "Approve the bounded test." "approved"
 
   printf '%s\n' "$valid_rel" > "${fixture_root}/RoR.md"
   if (REPO_ROOT="$fixture_root"; source_path="$(resolve_current_ror_source "${fixture_root}/RoR.md")"; lint_current_ror_leaf_contract "$source_path" "$valid_rel"); then
@@ -512,12 +662,131 @@ run_ror_contract_self_test() {
   echo "OK: current RoR contract tests passed (${passed}/6)."
 }
 
+run_authority_coupling_self_test() {
+  local fixture_root=""
+  local valid_rel="archives/decisions/RoR-2026-08-04-010-op-9999.md"
+  local unrelated_rel="archives/decisions/RoR-2026-08-04-011-op-9999.md"
+  local paths_file=""
+  local added_paths_file=""
+  local addendum_rel=""
+  local wrong_addendum_rel=""
+  local results_rel=""
+  local passed=0
+
+  mkdir -p "${REPO_ROOT}/var/tmp"
+  fixture_root="$(mktemp -d "${REPO_ROOT}/var/tmp/schema-authority.XXXXXX")"
+  mkdir -p "${fixture_root}/archives/decisions" "${fixture_root}/archives/surfaces"
+  write_ror_test_leaf "${fixture_root}/${valid_rel}" "RoR-2026-08-04-010" "DP-OPS-9999" "Operator" "Approve the bounded PoT.md change." "approved"
+  write_ror_test_leaf "${fixture_root}/${unrelated_rel}" "RoR-2026-08-04-011" "DP-OPS-9999" "Operator" "Approve an unrelated bounded change." "approved"
+  printf '%s\n' "$valid_rel" > "${fixture_root}/RoR.md"
+  paths_file="${fixture_root}/candidate-paths.txt"
+  added_paths_file="${fixture_root}/added-paths.txt"
+  : > "$added_paths_file"
+
+  printf '%s\n' 'docs/MAP.md' > "$paths_file"
+  if (REPO_ROOT="$fixture_root"; lint_authority_candidate_coupling "$paths_file" "$added_paths_file" "${fixture_root}/${valid_rel}"); then
+    passed=$((passed + 1))
+  else
+    fail "authority coupling self-test expected an ordinary candidate to pass"
+  fi
+
+  printf '%s\n' 'PoT.md' > "$paths_file"
+  if (REPO_ROOT="$fixture_root"; lint_authority_candidate_coupling "$paths_file" "$added_paths_file" "${fixture_root}/${valid_rel}" >/dev/null 2>&1); then
+    fail "authority coupling self-test expected PoT.md without RoR.md to fail"
+  fi
+  passed=$((passed + 1))
+
+  printf '%s\n' 'PoT.md' 'RoR.md' > "$paths_file"
+  if (REPO_ROOT="$fixture_root"; lint_authority_candidate_coupling "$paths_file" "$added_paths_file" "${fixture_root}/${valid_rel}" >/dev/null 2>&1); then
+    fail "authority coupling self-test expected a missing current decision leaf to fail"
+  fi
+  passed=$((passed + 1))
+
+  printf '%s\n' 'PoT.md' 'RoR.md' "$valid_rel" > "$paths_file"
+  : > "$added_paths_file"
+  if (REPO_ROOT="$fixture_root"; lint_authority_candidate_coupling "$paths_file" "$added_paths_file" "${fixture_root}/${valid_rel}" >/dev/null 2>&1); then
+    fail "authority coupling self-test expected a modified existing decision leaf to fail"
+  fi
+  passed=$((passed + 1))
+
+  printf '%s\n' "$valid_rel" > "$added_paths_file"
+  if (REPO_ROOT="$fixture_root"; lint_authority_candidate_coupling "$paths_file" "$added_paths_file" "${fixture_root}/${valid_rel}"); then
+    passed=$((passed + 1))
+  else
+    fail "authority coupling self-test expected a fresh constitutional decision to pass"
+  fi
+
+  printf '%s\n' "$unrelated_rel" > "${fixture_root}/RoR.md"
+  printf '%s\n' 'PoT.md' 'RoR.md' "$unrelated_rel" > "$paths_file"
+  printf '%s\n' "$unrelated_rel" > "$added_paths_file"
+  if (REPO_ROOT="$fixture_root"; lint_authority_candidate_coupling "$paths_file" "$added_paths_file" "${fixture_root}/${unrelated_rel}" >/dev/null 2>&1); then
+    fail "authority coupling self-test expected an unrelated decision to fail PoT.md coupling"
+  fi
+  passed=$((passed + 1))
+
+  printf '%s\n' "$valid_rel" > "${fixture_root}/RoR.md"
+  addendum_rel="archives/surfaces/ADDENDUM-DP-OPS-9999-deadbee.md"
+  printf '%s\n' 'Addendum fixture.' > "${fixture_root}/${addendum_rel}"
+  printf '%s\n' "$addendum_rel" 'RoR.md' "$valid_rel" > "$paths_file"
+  printf '%s\n' "$valid_rel" > "$added_paths_file"
+  if (REPO_ROOT="$fixture_root"; lint_authority_candidate_coupling "$paths_file" "$added_paths_file" "${fixture_root}/${valid_rel}"); then
+    passed=$((passed + 1))
+  else
+    fail "authority coupling self-test expected a matching addendum decision to pass"
+  fi
+
+  wrong_addendum_rel="archives/surfaces/ADDENDUM-DP-OPS-8888-deadbee.md"
+  printf '%s\n' 'Addendum fixture.' > "${fixture_root}/${wrong_addendum_rel}"
+  printf '%s\n' "$wrong_addendum_rel" 'RoR.md' "$valid_rel" > "$paths_file"
+  if (REPO_ROOT="$fixture_root"; lint_authority_candidate_coupling "$paths_file" "$added_paths_file" "${fixture_root}/${valid_rel}" >/dev/null 2>&1); then
+    fail "authority coupling self-test expected an addendum packet mismatch to fail"
+  fi
+  passed=$((passed + 1))
+
+  results_rel="archives/surfaces/RESULTS-DP-OPS-9999-deadbee.md"
+  cat > "${fixture_root}/${results_rel}" <<EOF
+Decision Required: Yes
+Decision Leaf: ${valid_rel}
+EOF
+  printf '%s\n' "$results_rel" 'RoR.md' "$valid_rel" > "$paths_file"
+  if (REPO_ROOT="$fixture_root"; lint_authority_candidate_coupling "$paths_file" "$added_paths_file" "${fixture_root}/${valid_rel}"); then
+    passed=$((passed + 1))
+  else
+    fail "authority coupling self-test expected matching required-decision RESULTS to pass"
+  fi
+
+  sed "s#${valid_rel}#${unrelated_rel}#" "${fixture_root}/${results_rel}" > "${fixture_root}/${results_rel}.next"
+  mv "${fixture_root}/${results_rel}.next" "${fixture_root}/${results_rel}"
+  if (REPO_ROOT="$fixture_root"; lint_authority_candidate_coupling "$paths_file" "$added_paths_file" "${fixture_root}/${valid_rel}" >/dev/null 2>&1); then
+    fail "authority coupling self-test expected stale RESULTS decision linkage to fail"
+  fi
+  passed=$((passed + 1))
+
+  cat > "${fixture_root}/${results_rel}" <<EOF
+Decision Required: No
+Decision Leaf: None
+EOF
+  printf '%s\n' "$results_rel" > "$paths_file"
+  : > "$added_paths_file"
+  if (REPO_ROOT="$fixture_root"; lint_authority_candidate_coupling "$paths_file" "$added_paths_file" "${fixture_root}/${valid_rel}"); then
+    passed=$((passed + 1))
+  else
+    fail "authority coupling self-test expected non-authority RESULTS to pass without a decision change"
+  fi
+
+  rm -r "$fixture_root"
+  [[ "$passed" == "11" ]] || fail "authority coupling self-test count mismatch: expected=11 actual=${passed}"
+  echo "OK: authority candidate coupling tests passed (${passed}/11)."
+}
+
 if (( schema_test_mode == 1 )); then
   run_ror_contract_self_test
+  run_authority_coupling_self_test
   exit 0
 fi
 
 run_ror_contract_self_test >/dev/null
+run_authority_coupling_self_test >/dev/null
 
 definitions_checked=0
 surfaces_checked=0
@@ -579,6 +848,9 @@ lint_current_task_pointer_contract "${REPO_ROOT}/TASK.md" "$current_task_source"
 
 current_ror_source="$(resolve_current_ror_source "${REPO_ROOT}/RoR.md")"
 lint_current_ror_leaf_contract "$current_ror_source" "${current_ror_source#${REPO_ROOT}/}"
+if [[ -n "$paths_file_arg" ]]; then
+  lint_authority_candidate_coupling "$paths_file_arg" "$added_paths_file_arg" "$current_ror_source"
+fi
 
 checked=$((definitions_checked + surfaces_checked + manifests_checked))
 echo "OK: schema lint passed (${checked} file(s) checked: definitions=${definitions_checked}, surfaces=${surfaces_checked}, manifests=${manifests_checked})."
