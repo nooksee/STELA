@@ -13,6 +13,7 @@ archives/surfaces/*
 !archives/surfaces/PoW-????-??-??-*.md
 !archives/surfaces/SoP-????-??-??-*.md
 !archives/surfaces/TASK-DP-OPS-*.md
+!archives/surfaces/RESULTS-DP-OPS-*.md
 !archives/definitions/
 archives/definitions/*
 !archives/definitions/.gitkeep

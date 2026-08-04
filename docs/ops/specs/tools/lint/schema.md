@@ -16,7 +16,9 @@
 5. Validate `created_at` against UTC ISO-8601 with `Z` suffix and validate `previous` as `(none)` or a repository-relative `.md` path with safe characters.
 6. Resolve the current SoP root and require exactly one non-empty value for each present-state field plus exactly one latest-shipment entry. A pointer-head SoP target must also declare `state_model: present-v1`.
 7. When TASK is a pointer head, require its current target frontmatter to declare `routing_state: idle` and `packet_state: completed`.
-8. Fail immediately on first malformed candidate and print file-scoped error text.
+8. Require the current PoW target to declare `proof_model: durable-v1` and `proof_state: complete|legacy-gap`. Complete proof must name durable RESULTS and packet lineage targets; a legacy gap must use the exact unavailable-results statement and retain packet lineage.
+9. Permit a not-yet-materialized complete-proof target only while PoW or its new leaf has an active working-tree change. Clean committed state requires both targets to exist.
+10. Fail immediately on first malformed candidate and print file-scoped error text.
 
 ## Anecdotal Anchor
 This gate addresses the incident class where malformed or missing `previous` values broke head-chain reconstruction during regression tracing across multiple DP sessions. Without schema enforcement, archive continuity had to be rebuilt manually from unrelated receipts.

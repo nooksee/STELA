@@ -277,6 +277,81 @@ path.write_text(text)
 PY
 run_expect_fail "missing decision leaf fixture" "$missing_decision_leaf_fixture" "Worker Execution Narrative Decision Leaf subsection missing 'Decision Leaf:' line"
 
+source_certify_function() {
+  local function_name="$1"
+  local function_path="${RESULTS_TEST_ROOT_ABS}/${function_name}.sh"
+  awk -v function_name="$function_name" '
+    $0 ~ ("^" function_name "[(][)] [{]$") { in_function=1 }
+    in_function { print }
+    in_function && /^}$/ { exit }
+  ' ops/bin/certify > "$function_path"
+  if [[ ! -s "$function_path" ]]; then
+    fail "certify helper extraction failed: ${function_name}"
+    return 1
+  fi
+  # shellcheck source=/dev/null
+  source "$function_path"
+}
+
+source_certify_function results_lineage_leaf_rel
+source_certify_function extract_markdown_body_for_snapshot
+source_certify_function render_pow_snapshot_body
+source_certify_function archive_results_receipt
+
+TMP_DIR="$RESULTS_TEST_ROOT_ABS"
+RESULTS_LINT="${REPO_ROOT}/tools/lint/results.sh"
+die() {
+  fail "$*"
+  return 1
+}
+assert_allowlist_contains_path() {
+  return 0
+}
+
+base_results_rel="$(results_lineage_leaf_rel "DP-OPS-9999" "abcdef12")"
+[[ "$base_results_rel" == "archives/surfaces/RESULTS-DP-OPS-9999-abcdef12.md" ]] \
+  || fail "base RESULTS archive name mismatch: ${base_results_rel}"
+addendum_results_rel="$(results_lineage_leaf_rel "DP-OPS-9999" "abcdef12" "B")"
+[[ "$addendum_results_rel" == "archives/surfaces/RESULTS-DP-OPS-9999-ADDENDUM-B-abcdef12.md" ]] \
+  || fail "addendum RESULTS archive name mismatch: ${addendum_results_rel}"
+
+pow_source_fixture="${RESULTS_TEST_ROOT_ABS}/PoW-source.md"
+pow_output_fixture="${RESULTS_TEST_ROOT_ABS}/PoW-output.md"
+cat > "$pow_source_fixture" <<'EOF'
+---
+trace_id: fixture
+packet_id: DP-OPS-9999
+created_at: 2026-08-04T00:00:00Z
+previous: (none)
+---
+## 2026-08-04 00:00:00 UTC - DP-OPS-9999 fixture
+
+- Receipt pointers:
+  - RESULTS: `storage/handoff/RESULTS.md`
+  - OPEN: `storage/handoff/OPEN-main-abcdef12.txt`
+- Notes:
+  - fixture
+EOF
+render_pow_snapshot_body \
+  "$pow_source_fixture" \
+  "$pow_output_fixture" \
+  "$base_results_rel" \
+  "archives/surfaces/TASK-DP-OPS-9999-abcdef12.md"
+grep -Fqx "  - RESULTS: \`${base_results_rel}\`" "$pow_output_fixture" \
+  || fail "PoW snapshot did not publish the durable RESULTS pointer"
+grep -Fqx '  - PACKET: `archives/surfaces/TASK-DP-OPS-9999-abcdef12.md`' "$pow_output_fixture" \
+  || fail "PoW snapshot did not publish the durable packet pointer"
+if grep -Fq 'storage/handoff/' "$pow_output_fixture"; then
+  fail "PoW snapshot retained a disposable handoff pointer"
+fi
+
+archive_rel="${RESULTS_TEST_ROOT}/archived-RESULTS.md"
+archive_output="$(archive_results_receipt "$valid_fixture" "$archive_rel")"
+[[ "$archive_output" == "RESULTS archived: ${archive_rel}" ]] \
+  || fail "RESULTS archive output mismatch"
+cmp -s "$valid_fixture" "${REPO_ROOT}/${archive_rel}" \
+  || fail "RESULTS archive byte parity failed in regression fixture"
+
 if (( FAILURES > 0 )); then
   exit 1
 fi
