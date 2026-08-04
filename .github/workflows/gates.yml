@@ -86,6 +86,9 @@ jobs:
       - name: LLMS content freshness
         run: bash tools/lint/llms.sh
 
+      - name: Help doctrine contract
+        run: ./ops/bin/help --test
+
       - name: Agent lint
         run: bash tools/lint/agent.sh
 
