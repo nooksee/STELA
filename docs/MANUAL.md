@@ -66,11 +66,11 @@ This path is separate from bundle-mediated planning, draft, and audit transport;
 - `ops/bin/draft`, `ops/lib/scripts/{agent,task,skill}.sh`, route through `ops/bin/template`.
 - Addendum authority: The worker receives an addendum as a finished, operator-authorized document. The worker does not produce, recommend, or assemble addendum content. If a boundary condition arises during execution, the worker stops and reports it to the Operator.
 
-Local hook activation (one time): run `git config core.hooksPath .github/hooks` in each clone to enable the tracked llms hook. The hook runs `ops/bin/llms` and stages `llms.txt`, `llms-core.txt`, and `llms-full.txt` before each commit so bundle freshness is enforced structurally. Registry: `docs/ops/registry/hooks.md`.
+Local hook activation (one time): run `ops/bin/hooks` in each clone to set `core.hooksPath = .github/hooks`. The pre-commit hook runs the read-only LLMS parity gate. It rejects stale generated context and stages files `0` times. Registry: `docs/ops/registry/hooks.md`.
 
 - Disable: `git config --unset core.hooksPath` restores the default hooks path and deactivates all tracked hooks.
-- Troubleshoot: if the hook aborts a commit with `ERROR: run llms refresh failed`, confirm `ops/bin/llms` is executable (`chmod +x ops/bin/llms`) and that the invocation is not in a detached HEAD state. Run `./ops/bin/llms` directly to isolate the failure.
-- CI fallback: the hook is local only; CI does not run `ops/bin/llms`. A contributor who commits without the hook active can produce stale bundles. The DP integrity lint gate (`tools/lint/integrity.sh`) and DP preflight provide the detection backstop.
+- Troubleshoot: if the hook reports stale generated context, run `./ops/bin/llms`, inspect every generated change, stage the intended files explicitly, and retry the commit. Use `ops/bin/hooks --test` to exercise hook activation and transaction behavior in isolation.
+- CI backstop: GitHub runs the same read-only LLMS parity gate on pull requests and merged `main`, so missing local activation cannot silently bypass generated-context freshness.
 
 **Anchor Hygiene:**
 - Refresh anchors when Base HEAD changes or when a new OPEN artifact is generated. Update TASK.md pointer references to the newest OPEN artifact and RESULTS receipts before any work continues; do not rewrite inline branch/hash state in TASK.md.
@@ -314,7 +314,7 @@ Do not hand-edit `llms.txt`, `llms-core.txt`, or `llms-full.txt`; regenerate wit
 ~~~
 `ops/bin/llms` Refresh Side-Effect Notice:
 - `ops/bin/llms` is a compile event. It regenerates `ops/lib/manifests/OPS.md` in addition to `llms*.txt` bundle outputs. This is expected behavior, not a defect.
-- The local pre-commit hook does not auto-stage `OPS.md`: `.github/hooks/pre-commit` stages only `llms.txt`, `llms-core.txt`, and `llms-full.txt` after running `ops/bin/llms`. `OPS.md` remains a working-tree refresh side effect unless you stage it separately.
+- The local pre-commit hook does not run Refresh or stage any file. It invokes the read-only LLMS parity gate. Every `ops/bin/llms` output, including `OPS.md` and the compile snapshot, remains visible for explicit review and staging.
 - If `OPS.md` is not in the active DP allowlist, restore it after Refresh before running `tools/lint/integrity.sh`:
   `git restore --source=HEAD --staged --worktree -- ops/lib/manifests/OPS.md`
   Then re-run `bash tools/lint/integrity.sh` to confirm clean state before proceeding.
@@ -586,7 +586,7 @@ ops/bin/hooks
 This sets `core.hooksPath = .github/hooks` so git invokes the repo hooks directory on every commit and push.
 
 Active hooks:
-- `pre-commit`: refuses commits on `main` or any non-`work/*` branch (PoT §6.2.1); then runs `ops/bin/llms` and stages only `llms.txt`, `llms-core.txt`, and `llms-full.txt`.
+- `pre-commit`: refuses commits on `main` or any non-`work/*` branch (PoT §6.2.1); then runs the read-only LLMS parity gate and rejects stale generated context without staging files.
 - `pre-push`: refuses direct push to `main` (PoT §6.1).
 
 Bypass: `git commit --no-verify` or `git push --no-verify` bypasses all hooks. Use only when the guard is inapplicable (e.g., replaying a certify-controlled commit). Do not use to skip required gates.

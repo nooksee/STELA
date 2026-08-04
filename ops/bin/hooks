@@ -7,12 +7,153 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 cd "${REPO_ROOT}"
 
-trap 'emit_binary_leaf "hooks" "finish"' EXIT
+fixture_root=""
+
+usage() {
+  cat <<'USAGE'
+Usage: ops/bin/hooks [--test]
+
+With no arguments, activate the tracked hooks for the current clone.
+--test verifies activation, branch guards, transaction cleanliness, and stale-context failure behavior in an isolated repository.
+USAGE
+}
+
+configure_hooks() {
+  local repository="$1"
+  git -C "$repository" config core.hooksPath .github/hooks
+}
+
+compile_inventory_sha256() {
+  local repository="$1"
+  (
+    cd "$repository"
+    find archives/manifests -maxdepth 1 -type f -name 'compile-*.md' -print0 \
+      | LC_ALL=C sort -z \
+      | while IFS= read -r -d '' path; do
+          sha256sum "$path"
+        done
+  ) | sha256sum | awk '{print $1}'
+}
+
+candidate_state_sha256() {
+  local repository="$1"
+  {
+    git -C "$repository" status --porcelain=v1 -uall
+    git -C "$repository" diff --binary
+    git -C "$repository" diff --cached --binary
+    compile_inventory_sha256 "$repository"
+  } | sha256sum | awk '{print $1}'
+}
+
+run_self_test() {
+  local fixture_repo=""
+  local baseline_status=""
+  local post_commit_status=""
+  local compile_before=""
+  local compile_after=""
+  local state_before=""
+  local state_after=""
+  local changed_paths=""
+  local stale_output=""
+  local passed=0
+
+  fixture_root="$(mktemp -d "${TMPDIR:-/tmp}/stela-hooks-test.XXXXXX")"
+  fixture_repo="${fixture_root}/repo"
+  stale_output="${fixture_root}/stale-check.txt"
+
+  git init --quiet "$fixture_repo"
+  git -C "$fixture_repo" fetch --quiet --no-tags "$REPO_ROOT" HEAD
+  git -C "$fixture_repo" checkout --quiet --detach FETCH_HEAD
+  git -C "$fixture_repo" switch --quiet -c main
+  git -C "$fixture_repo" config user.name "STELA Hook Contract"
+  git -C "$fixture_repo" config user.email "hook-contract@invalid.example"
+
+  cp "${REPO_ROOT}/.github/hooks/pre-commit" "${fixture_repo}/.github/hooks/pre-commit"
+  chmod +x "${fixture_repo}/.github/hooks/pre-commit"
+  configure_hooks "$fixture_repo"
+  [[ "$(git -C "$fixture_repo" config --get core.hooksPath)" == ".github/hooks" ]] \
+    || die "hook self-test failed to activate the tracked hook path"
+  passed=$((passed + 1))
+
+  if (cd "$fixture_repo" && .github/hooks/pre-commit >/dev/null 2>&1); then
+    die "hook self-test expected main branch rejection"
+  fi
+  passed=$((passed + 1))
+
+  git -C "$fixture_repo" switch --quiet -c feature/hook-contract
+  if (cd "$fixture_repo" && .github/hooks/pre-commit >/dev/null 2>&1); then
+    die "hook self-test expected non-work branch rejection"
+  fi
+  passed=$((passed + 1))
+
+  git -C "$fixture_repo" switch --quiet main
+  git -C "$fixture_repo" switch --quiet -c work/hook-contract
+  baseline_status="$(git -C "$fixture_repo" status --porcelain=v1 -uall)"
+  compile_before="$(compile_inventory_sha256 "$fixture_repo")"
+  printf 'transaction fixture\n' > "${fixture_repo}/hook-transaction-fixture.txt"
+  git -C "$fixture_repo" add -- hook-transaction-fixture.txt
+  git -C "$fixture_repo" commit --quiet -m "Exercise hook transaction" -- hook-transaction-fixture.txt
+  changed_paths="$(git -C "$fixture_repo" diff-tree --no-commit-id --name-only -r HEAD)"
+  post_commit_status="$(git -C "$fixture_repo" status --porcelain=v1 -uall)"
+  compile_after="$(compile_inventory_sha256 "$fixture_repo")"
+  [[ "$changed_paths" == "hook-transaction-fixture.txt" ]] \
+    || die "hook self-test path-limited commit changed an unexpected path"
+  [[ "$post_commit_status" == "$baseline_status" ]] \
+    || die "hook self-test path-limited commit left candidate residue"
+  [[ "$compile_after" == "$compile_before" ]] \
+    || die "hook self-test path-limited commit changed compile evidence"
+  passed=$((passed + 1))
+
+  printf '\n# stale hook fixture\n' >> "${fixture_repo}/llms.txt"
+  git -C "$fixture_repo" add -- llms.txt
+  state_before="$(candidate_state_sha256 "$fixture_repo")"
+  if (cd "$fixture_repo" && .github/hooks/pre-commit >"$stale_output" 2>&1); then
+    die "hook self-test expected stale generated context rejection"
+  fi
+  state_after="$(candidate_state_sha256 "$fixture_repo")"
+  [[ "$state_after" == "$state_before" ]] \
+    || die "hook self-test stale-context rejection mutated the candidate"
+  grep -Fq 'generated context is stale' "$stale_output" \
+    || die "hook self-test stale-context rejection omitted recovery guidance"
+  passed=$((passed + 1))
+
+  [[ "$passed" == "5" ]] || die "hook self-test count mismatch: expected=5 actual=${passed}"
+  echo "OK: hook transaction contract passed (${passed}/5)."
+}
+
+cleanup() {
+  [[ -z "$fixture_root" || ! -d "$fixture_root" ]] || rm -rf "$fixture_root"
+  emit_binary_leaf "hooks" "finish"
+}
+
+trap cleanup EXIT
 emit_binary_leaf "hooks" "start"
 
-git config core.hooksPath .github/hooks
-echo "Hooks configured: core.hooksPath = .github/hooks"
-echo ""
-echo "Active hooks:"
-echo "  pre-commit  PoT branch guard (work/* only, no main) + llms refresh"
-echo "  pre-push    main push guard (no direct push to main)"
+case "${1:-}" in
+  "")
+    [[ "$#" == "0" ]] || {
+      usage >&2
+      exit 1
+    }
+    configure_hooks "$REPO_ROOT"
+    echo "Hooks configured: core.hooksPath = .github/hooks"
+    echo ""
+    echo "Active hooks:"
+    echo "  pre-commit  PoT branch guard (work/* only, no main) + read-only LLMS freshness"
+    echo "  pre-push    main push guard (no direct push to main)"
+    ;;
+  --test)
+    [[ "$#" == "1" ]] || {
+      usage >&2
+      exit 1
+    }
+    run_self_test
+    ;;
+  -h|--help)
+    usage
+    ;;
+  *)
+    usage >&2
+    exit 1
+    ;;
+esac

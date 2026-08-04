@@ -1,3 +1,5 @@
+<!-- CCD: ff_target="operator-technical" ff_band="45-60" -->
+<!-- SPEC-SURFACE:REQUIRED -->
 # ops/bin/hooks
 
 ## Purpose
@@ -7,9 +9,10 @@ One-time local configuration to wire the repo hooks directory into git. Sets `co
 
 ~~~bash
 ops/bin/hooks
+ops/bin/hooks --test
 ~~~
 
-No arguments. Run once after clone and on any additional checkout machine.
+Run without arguments once after clone and on any additional checkout machine. Use `--test` to exercise the tracked hook contract without changing the active clone configuration or tracked files.
 
 ## Mechanics
 Resolves `REPO_ROOT` via `BASH_SOURCE`, `cd`s to it, then runs:
@@ -20,11 +23,13 @@ git config core.hooksPath .github/hooks
 
 This is a local `.git/config` change only. No tracked files are modified.
 
+Test mode creates an isolated temporary repository from current `HEAD`, copies the candidate pre-commit hook into that repository, and verifies five behaviors: activation, rejection on `main`, rejection on a non-`work/*` branch, a residue-free path-limited commit, and stale-context rejection without candidate mutation. Temporary storage is removed at exit.
+
 ## Active Hooks
 
 | Hook | Trigger | Guard |
 |------|---------|-------|
-| `pre-commit` | `git commit` | Refuses commit on `main` or non-`work/*` branch (PoT §6.2.1); then runs `ops/bin/llms` and stages `llms.txt`, `llms-core.txt`, and `llms-full.txt` |
+| `pre-commit` | `git commit` | Refuses commit on `main` or non-`work/*` branch (PoT §6.2.1); then runs the read-only LLMS parity gate and rejects stale generated context |
 | `pre-push` | `git push` | Refuses direct push to `main` (PoT §6.1) |
 
 ## Bypass
