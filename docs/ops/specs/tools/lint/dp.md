@@ -11,7 +11,7 @@
 3. For DP payloads, run a drafting-marker scan as the first `lint_payload()` check before template-hash verification and structural validation. The scan is pattern-aware (PoT.md §6.2.2): before testing each line for the drafting-marker keyword, occurrences of the schema-identifier form — the keyword immediately followed by an underscore and one or more uppercase letters or underscores — are stripped via sed; a line where the keyword only appears within such schema identifiers passes; a line where the keyword remains after stripping fails, with the line number and original content reported to stderr. The `Work Branch` field in a finalized DP must carry the bare `work/<DP-ID>-YYYY-MM-DD` value only. Historical surfaces that still spell the field as `Required Work Branch` are normalized to `Work Branch` before structure comparison and field extraction; the value rule is identical. There is no prose-only exception for value-level usage.
 4. Run foreign citation contamination scan against DP body text. Reject the first line containing `:contentReference[` with a deterministic line-number failure.
 5. Render canonical DP in non-strict mode, normalize both canonical and payload structures, hash both normalized forms, and fail on mismatch.
-6. Validate required fields and section blocks, including heading ID/title shape, base branch metadata, scoped load-order content, plan slots, and receipt slot non-placeholder content.
+6. Validate required fields and section blocks, including heading ID/title shape, base branch metadata, scoped load-order content, plan slots, and receipt slot non-placeholder content. Parse `3.4.3 Changelog` into a unique exact mutation set; reject globs, traversal, duplicate paths, and trailing prose that is not parenthetical.
 7. Enforce receipt dump-selection scoping in Section 3.4.5: packets `DP-OPS-0095` and newer fail if any `ops/bin/dump` command omits `--selection=dp` or `--selection=dp+allowlist`; older packets emit a grandfathered warning only.
 8. Enforce allowlist pointer integrity: exactly one pointer entry, canonical pointer path match, allowlist file existence, entry normalization, runtime-prefix restrictions, wildcard policy constraints, repository reachability checks, the in-flight deleted-file exception, and exact retired-Factory-definition reconciliation against `docs/ops/registry/factory.md`.
 9. For RESULTS paths, delegate validation to `tools/lint/results.sh` and propagate its exit code. RESULTS schema enforcement is sourced from the canonical template plus narrative field checks.
@@ -43,6 +43,9 @@
   - one deterministic FAIL fixture for a `3.4.3 DELETE` path that still appears in `3.2.2 DP-scoped load order`
   - one deterministic FAIL fixture for invalid `Work Branch` form
   - one deterministic FAIL fixture for closing-sidecar coherence mismatch
+  - one deterministic FAIL fixture for wildcard mutation scope
+  - one deterministic FAIL fixture for duplicate mutation scope
+  - one deterministic FAIL fixture for non-parenthetical scope annotation
   - one deterministic FAIL fixture for forbidden drafting-marker residue in a finalized DP
   - one deterministic FAIL fixture for foreign citation contamination
   - one deterministic FAIL fixture for include metadata leakage

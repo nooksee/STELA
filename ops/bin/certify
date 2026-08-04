@@ -264,6 +264,9 @@ load_closing_labels_current() {
 
 declare -A ALLOWLIST_ENTRIES=()
 declare -a ALLOWLIST_PATTERNS=()
+declare -A ALLOWLIST_HEAD_ENTRIES=()
+declare -a ALLOWLIST_HEAD_PATTERNS=()
+declare -A PACKET_SCOPE_ENTRIES=()
 
 load_allowlist_entries() {
   local pointer="$1"
@@ -275,6 +278,8 @@ load_allowlist_entries() {
 
   ALLOWLIST_ENTRIES=()
   ALLOWLIST_PATTERNS=()
+  ALLOWLIST_HEAD_ENTRIES=()
+  ALLOWLIST_HEAD_PATTERNS=()
 
   local raw_line=""
   while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
@@ -303,31 +308,27 @@ load_allowlist_entries() {
     fi
     ALLOWLIST_ENTRIES["$entry"]=1
   done < "$allowlist_path"
+
+  local pointer_rel
+  pointer_rel="$(normalize_path "$pointer")"
+  if git -C "$REPO_ROOT" cat-file -e "HEAD:${pointer_rel}" 2>/dev/null; then
+    while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
+      local entry
+      entry="$(normalize_path "$raw_line")"
+      [[ -n "$entry" ]] || continue
+      [[ "$entry" == \#* ]] && continue
+      if [[ "$entry" == *"*"* || "$entry" == *"?"* || "$entry" == *"["* ]]; then
+        ALLOWLIST_HEAD_PATTERNS+=("$entry")
+        continue
+      fi
+      ALLOWLIST_HEAD_ENTRIES["$entry"]=1
+    done < <(git -C "$REPO_ROOT" show "HEAD:${pointer_rel}")
+  fi
 }
 
 extract_addendum_scope_delta() {
   local intake_path="$1"
-  [[ -f "$intake_path" ]] || die "addendum intake missing for SCOPE_DELTA extraction: ${intake_path#${REPO_ROOT}/}"
-  awk '
-    BEGIN { in_block=0 }
-    /^SCOPE_DELTA[[:space:]]*$|^- SCOPE_DELTA[[:space:]]*$|^[[:space:]]*SCOPE_DELTA:[[:space:]]*$/ {
-      in_block=1; next
-    }
-    in_block && /^[A-Z_]+:[[:space:]]*$|^- [A-Z_]+[[:space:]]*$/ { in_block=0 }
-    in_block {
-      line=$0
-      sub(/^[[:space:]]*-[[:space:]]*/, "", line)
-      sub(/^[[:space:]]+/, "", line)
-      sub(/[[:space:]]+$/, "", line)
-      if (length(line) > 0) print line
-    }
-  ' "$intake_path" | while IFS= read -r path_entry || [[ -n "$path_entry" ]]; do
-    [[ -n "$path_entry" ]] || continue
-    if [[ "$path_entry" == *"*"* || "$path_entry" == *"?"* || "$path_entry" == *"["* || "$path_entry" == *"{"* || "$path_entry" == *"}"* ]]; then
-      die "addendum SCOPE_DELTA entry contains forbidden glob or brace expansion token: ${path_entry}"
-    fi
-    printf '%s\n' "$path_entry"
-  done
+  packet_scope_extract_addendum_paths "$intake_path" "$DP_ID"
 }
 
 allowlist_contains_path() {
@@ -335,18 +336,7 @@ allowlist_contains_path() {
   if path_is_certify_generated "$path"; then
     return 0
   fi
-  if [[ -n "${ALLOWLIST_ENTRIES[$path]+set}" ]]; then
-    return 0
-  fi
-
-  local pattern=""
-  for pattern in "${ALLOWLIST_PATTERNS[@]}"; do
-    if [[ "$path" == $pattern ]]; then
-      return 0
-    fi
-  done
-
-  return 1
+  path_matches_policy_set "$path" ALLOWLIST_ENTRIES ALLOWLIST_PATTERNS
 }
 
 path_is_deleted_tracked_in_active_diff() {
@@ -1164,30 +1154,51 @@ EOF
 }
 
 verify_changed_files_subset_allowlist() {
-  mapfile -t changed_paths < <(git -C "$REPO_ROOT" diff --name-only HEAD | sort)
-  local -a unauthorized=()
+  mapfile -t changed_paths < <(
+    {
+      git -C "$REPO_ROOT" diff --name-only HEAD
+      git -C "$REPO_ROOT" ls-files --others --exclude-standard
+    } | sort -u
+  )
+  local -a missing_packet_scope=()
+  local -a missing_persistent_policy=()
   local path=""
+  local is_deleted=0
 
   for path in "${changed_paths[@]}"; do
     local normalized
     normalized="$(normalize_path "$path")"
-    if path_is_deleted_tracked_in_active_diff "$normalized"; then
+    if path_is_certify_generated "$normalized"; then
       continue
     fi
-    if ! allowlist_contains_path "$normalized"; then
-      unauthorized+=("$normalized")
+    if ! packet_scope_path_is_authorized "$normalized" "packet-exact" PACKET_SCOPE_ENTRIES; then
+      missing_packet_scope+=("$normalized")
+    fi
+    is_deleted=0
+    if path_is_deleted_tracked_in_active_diff "$normalized"; then
+      is_deleted=1
+    fi
+    if ! persistent_policy_path_is_authorized \
+      "$normalized" "$is_deleted" \
+      ALLOWLIST_ENTRIES ALLOWLIST_PATTERNS ALLOWLIST_HEAD_ENTRIES ALLOWLIST_HEAD_PATTERNS; then
+      missing_persistent_policy+=("$normalized")
     fi
   done
 
-  if (( ${#unauthorized[@]} > 0 )); then
-    echo "Changed files not present in allowlist:"
-    for path in "${unauthorized[@]}"; do
-      printf -- "- %s\n" "$path"
-    done
+  if (( ${#missing_packet_scope[@]} > 0 || ${#missing_persistent_policy[@]} > 0 )); then
+    if (( ${#missing_packet_scope[@]} > 0 )); then
+      echo "Changed files absent from packet exact mutation scope:"
+      printf -- '- %s\n' "${missing_packet_scope[@]}"
+    fi
+    if (( ${#missing_persistent_policy[@]} > 0 )); then
+      echo "Changed files absent from persistent path policy:"
+      printf -- '- %s\n' "${missing_persistent_policy[@]}"
+    fi
     return 1
   fi
 
-  echo "Changed-file subset check: PASS"
+  echo "Changed-file dual-scope check: PASS"
+  echo "Packet exact paths: ${#PACKET_SCOPE_ENTRIES[@]}"
   echo "Changed files:"
   if (( ${#changed_paths[@]} == 0 )); then
     echo "- (none)"
@@ -2010,27 +2021,45 @@ else
   validate_dp_open_anchor_fields "$DP_BLOCK_PATH" "$DP_SOURCE"
 fi
 
-ALLOWLIST_POINTER="$(extract_allowlist_pointer "$DP_BLOCK_PATH" || true)"
+SCOPE_BASE_PATH="$DP_BLOCK_PATH"
+if [[ -n "$ADDENDUM_ID" ]]; then
+  SCOPE_BASE_PATH="$BASE_DP_BLOCK_PATH"
+fi
+
+PACKET_SCOPE_ENTRIES=()
+packet_scope_output="$(packet_scope_extract_changelog_paths "$SCOPE_BASE_PATH")" \
+  || die "base packet Changelog does not provide a valid exact mutation scope"
+while IFS= read -r scoped_path || [[ -n "$scoped_path" ]]; do
+  [[ -n "$scoped_path" ]] || continue
+  PACKET_SCOPE_ENTRIES["$scoped_path"]=1
+done <<< "$packet_scope_output"
+if (( ${#PACKET_SCOPE_ENTRIES[@]} == 0 )); then
+  die "base packet Changelog contains no exact mutation paths"
+fi
+
+ALLOWLIST_POINTER="$(extract_allowlist_pointer "$SCOPE_BASE_PATH" || true)"
 if [[ -z "$ALLOWLIST_POINTER" ]]; then
   ALLOWLIST_POINTER="storage/dp/active/allowlist.txt"
 fi
 load_allowlist_entries "$ALLOWLIST_POINTER"
 if [[ -n "$ADDENDUM_ID" ]]; then
   SCOPE_DELTA_ADDED=()
+  addendum_scope_output="$(extract_addendum_scope_delta "$ADDENDUM_INTAKE_PATH")" \
+    || die "addendum does not provide a valid exact scope delta"
   while IFS= read -r delta_path || [[ -n "$delta_path" ]]; do
     [[ -n "$delta_path" ]] || continue
-    if [[ -z "${ALLOWLIST_ENTRIES[$delta_path]+set}" ]]; then
-      ALLOWLIST_ENTRIES["$delta_path"]=1
+    if [[ -z "${PACKET_SCOPE_ENTRIES[$delta_path]+set}" ]]; then
+      PACKET_SCOPE_ENTRIES["$delta_path"]=1
       SCOPE_DELTA_ADDED+=("$delta_path")
     fi
-  done < <(extract_addendum_scope_delta "$ADDENDUM_INTAKE_PATH")
-  echo "Addendum SCOPE_DELTA Extension:"
+  done <<< "$addendum_scope_output"
+  echo "Addendum exact-scope extension:"
   if (( ${#SCOPE_DELTA_ADDED[@]} > 0 )); then
     for delta_path in "${SCOPE_DELTA_ADDED[@]}"; do
       printf -- "- %s\n" "$delta_path"
     done
   else
-    echo "- (none added; all delta paths already in base allowlist)"
+    echo "- (none added; all delta paths already appear in the base packet scope)"
   fi
 fi
 

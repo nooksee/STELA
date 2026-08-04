@@ -178,20 +178,67 @@ is_pot_change_authorized() {
 
 TASK_SOURCE_PATH="$(resolve_task_surface_path "${REPO_ROOT}/TASK.md")"
 
+routing_state="$(awk '/^Routing State:[[:space:]]*/ { line=$0; sub(/^Routing State:[[:space:]]*/, "", line); print line; exit }' "$TASK_SOURCE_PATH")"
+packet_state="$(awk '/^Packet State:[[:space:]]*/ { line=$0; sub(/^Packet State:[[:space:]]*/, "", line); print line; exit }' "$TASK_SOURCE_PATH")"
+active_packet_id="$(awk '/^Packet ID:[[:space:]]*/ { line=$0; sub(/^Packet ID:[[:space:]]*/, "", line); print line; exit }' "$TASK_SOURCE_PATH")"
+
+scope_mode=""
+case "${routing_state}/${packet_state}" in
+  ACTIVE/ACTIVE)
+    scope_mode="packet-exact"
+    ;;
+  IDLE/COMPLETED)
+    scope_mode="maintenance-idle"
+    ;;
+  *)
+    die "TASK lifecycle does not permit integrity evaluation: routing=${routing_state:-missing} packet=${packet_state:-missing}"
+    ;;
+esac
+
+if [[ ! "$active_packet_id" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]]; then
+  die "TASK Packet ID is invalid for integrity evaluation: ${active_packet_id:-missing}"
+fi
+
+declare -A packet_scoped=()
+packet_scope_count=0
+addendum_scope_count=0
+if [[ "$scope_mode" == "packet-exact" ]]; then
+  packet_scope_output="$(packet_scope_extract_changelog_paths "$TASK_SOURCE_PATH")" \
+    || die "active packet Changelog does not provide an exact mutation scope"
+  while IFS= read -r path || [[ -n "$path" ]]; do
+    [[ -n "$path" ]] || continue
+    packet_scoped["$path"]=1
+    packet_scope_count=$((packet_scope_count + 1))
+  done <<< "$packet_scope_output"
+
+  active_addendum_path="${REPO_ROOT}/storage/dp/intake/ADDENDUM.md"
+  if [[ -f "$active_addendum_path" ]]; then
+    addendum_scope_output="$(packet_scope_extract_addendum_paths "$active_addendum_path" "$active_packet_id")" \
+      || die "active addendum does not provide a valid exact scope delta"
+    while IFS= read -r path || [[ -n "$path" ]]; do
+      [[ -n "$path" ]] || continue
+      packet_scoped["$path"]=1
+      addendum_scope_count=$((addendum_scope_count + 1))
+    done <<< "$addendum_scope_output"
+  fi
+elif [[ -f "${REPO_ROOT}/storage/dp/intake/ADDENDUM.md" ]]; then
+  die "addendum scope exists while TASK routing is IDLE"
+fi
+
 pointer_line="$(extract_allowlist_pointer "$TASK_SOURCE_PATH")"
 [[ -n "$pointer_line" ]] || die "failed to find Target Files allowlist pointer in ${TASK_SOURCE_PATH#${REPO_ROOT}/}"
 
-pointer_path="$(printf '%s' "$pointer_line" | sed -E 's/^[[:space:]]*-[[:space:]]+//')"
-pointer_path="$(normalize_path "$pointer_path")"
-[[ -n "$pointer_path" ]] || die "resolved allowlist pointer is empty"
+pointer_rel="$(printf '%s' "$pointer_line" | sed -E 's/^[[:space:]]*-[[:space:]]+//')"
+pointer_rel="$(normalize_path "$pointer_rel")"
+[[ -n "$pointer_rel" ]] || die "resolved allowlist pointer is empty"
 
-if [[ "$pointer_path" != /* ]]; then
-  pointer_path="${REPO_ROOT}/${pointer_path}"
-fi
+pointer_path="${REPO_ROOT}/${pointer_rel}"
 [[ -f "$pointer_path" ]] || die "allowlist pointer file missing: ${pointer_path#${REPO_ROOT}/}"
 
 declare -A allowlisted=()
 declare -a allowlist_patterns=()
+declare -A allowlisted_head=()
+declare -a allowlist_head_patterns=()
 while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
   entry="$(normalize_path "$raw_line")"
   [[ -n "$entry" ]] || continue
@@ -217,6 +264,19 @@ while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
   fi
   allowlisted["$entry"]=1
 done < "$pointer_path"
+
+if git cat-file -e "HEAD:${pointer_rel}" 2>/dev/null; then
+  while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
+    entry="$(normalize_path "$raw_line")"
+    [[ -n "$entry" ]] || continue
+    [[ "$entry" == \#* ]] && continue
+    if [[ "$entry" == *"*"* || "$entry" == *"?"* || "$entry" == *"["* ]]; then
+      allowlist_head_patterns+=("$entry")
+      continue
+    fi
+    allowlisted_head["$entry"]=1
+  done < <(git show "HEAD:${pointer_rel}")
+fi
 
 if [[ "${#allowlisted[@]}" -eq 0 && "${#allowlist_patterns[@]}" -eq 0 ]]; then
   die "allowlist pointer file is empty: ${pointer_path#${REPO_ROOT}/}"
@@ -257,40 +317,36 @@ path_is_deleted_tracked_in_active_diff() {
   return 1
 }
 
-path_is_allowlisted() {
-  local path="$1"
-  if path_is_generated_surface_owned "$path"; then
-    return 0
-  fi
-  if [[ -n "${allowlisted[$path]+set}" ]]; then
-    return 0
-  fi
-
-  local pattern=""
-  for pattern in "${allowlist_patterns[@]}"; do
-    if [[ "$path" == $pattern ]]; then
-      return 0
-    fi
-  done
-
-  return 1
-}
-
-unauthorized=()
+missing_packet_scope=()
+missing_persistent_policy=()
 for path in "${!observed[@]}"; do
+  if path_is_generated_surface_owned "$path"; then
+    continue
+  fi
+  if ! packet_scope_path_is_authorized "$path" "$scope_mode" packet_scoped; then
+    missing_packet_scope+=("$path")
+  fi
+  is_deleted=0
   if path_is_deleted_tracked_in_active_diff "$path"; then
-    continue
+    is_deleted=1
   fi
-  if path_is_allowlisted "$path"; then
-    continue
+  if ! persistent_policy_path_is_authorized \
+    "$path" "$is_deleted" \
+    allowlisted allowlist_patterns allowlisted_head allowlist_head_patterns; then
+    missing_persistent_policy+=("$path")
   fi
-  unauthorized+=("$path")
 done
 
-if [[ "${#unauthorized[@]}" -gt 0 ]]; then
+if [[ "${#missing_packet_scope[@]}" -gt 0 || "${#missing_persistent_policy[@]}" -gt 0 ]]; then
   {
-    echo "FAIL: unauthorized path(s) not present in allowlist:"
-    printf '%s\n' "${unauthorized[@]}" | sort
+    if [[ "${#missing_packet_scope[@]}" -gt 0 ]]; then
+      echo "FAIL: path(s) absent from the active packet exact mutation scope:"
+      printf '%s\n' "${missing_packet_scope[@]}" | sort
+    fi
+    if [[ "${#missing_persistent_policy[@]}" -gt 0 ]]; then
+      echo "FAIL: path(s) absent from persistent path policy:"
+      printf '%s\n' "${missing_persistent_policy[@]}" | sort
+    fi
   } >&2
   exit 1
 fi
@@ -364,4 +420,7 @@ if [[ "$cbc_applicable" -eq 1 ]]; then
   fi
 fi
 
+echo "Integrity scope mode: ${scope_mode}"
+echo "Packet scope paths: ${packet_scope_count}"
+echo "Addendum scope paths: ${addendum_scope_count}"
 echo "OK: integrity lint passed (${#observed[@]} observed paths)."
