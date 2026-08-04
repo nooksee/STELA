@@ -106,10 +106,10 @@ Deletion Test: **C.** Without `leaf.sh`, `emit_binary_leaf` wiring gaps in `ops/
 Registry: C — Keep. Structural redesign evaluated and rejected in DP-OPS-0109 pre-draft analysis.
 Leaf: archives/decisions/RoR-2026-03-01-010-cbc-0140.md
 
-**`tools/lint/llms.sh` — 78 lines**
-Generates `llms.txt`, `llms-core.txt`, and `llms-full.txt` into a temp directory, diffs against committed versions, and fails on divergence. Also detects deprecated filename references. The structural fix: a llms hook runs `ops/bin/llms` and stages the output before every commit, making staleness structurally impossible; the deprecated filename check is absorbed into `ops/bin/llms` directly.
-Deletion Test: **B.** LLMS hook plus generator-absorbed deprecation check makes the linter fully redundant when both changes land.
-Registry: B — Keep until llms hook is implemented. Cleanest B-to-deletion pipeline in the queue. DP-OPS-0102 implements the structural fix and retires the linter.
+**`tools/lint/llms.sh`**
+Invokes the pure llms check path, which first verifies compiled-manifest parity and then compares `llms.txt`, `llms-core.txt`, and `llms-full.txt` with deterministic temporary renders. The pre-commit hook remains useful for generation, but it cannot place the future commit hash inside a tracked file and cannot prove post-merge freshness. Content-derived identity and pull-request plus merged-main checks close that gap.
+Deletion Test: **C.** Without an independent read-only gate, bypassed hooks, merge resolution, or stale committed output can present coherent but outdated context.
+Registry: C — Reactivated by the C-03 audit repair. The prior DP-OPS-0102 retirement remains historical evidence of the superseded hook-only assumption.
 Leaf: archives/decisions/RoR-2026-03-01-011-cbc-0140.md
 
 **`tools/lint/project.sh` — 120 lines**

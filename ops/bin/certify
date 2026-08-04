@@ -1163,99 +1163,6 @@ Phase 2 surface leaves emitted:
 EOF
 }
 
-normalize_unallowlisted_llms_drift() {
-  local -a llms_paths=(
-    "llms.txt"
-    "llms-core.txt"
-    "llms-full.txt"
-  )
-
-  local -a normalized_paths=()
-  local -a skipped_allowlisted_paths=()
-  local -a no_drift_paths=()
-  local -a missing_head_paths=()
-  local path=""
-
-  echo "Candidate selection pattern:"
-  echo "- llms.txt"
-  echo "- llms-core.txt"
-  echo "- llms-full.txt"
-  echo "Candidate evaluation:"
-
-  for path in "${llms_paths[@]}"; do
-    local allowlisted_status="no"
-    local drift_status="no"
-    local action_line=""
-
-    if allowlist_contains_path "$path"; then
-      allowlisted_status="yes"
-      skipped_allowlisted_paths+=("$path")
-      action_line="skipped because allowlisted"
-      printf -- "- file=%s allowlisted=%s drift=%s action=%s\n" "$path" "$allowlisted_status" "$drift_status" "$action_line"
-      continue
-    fi
-
-    if git -C "$REPO_ROOT" cat-file -e "HEAD:${path}" >/dev/null 2>&1; then
-      if git -C "$REPO_ROOT" diff --quiet HEAD -- "$path"; then
-        no_drift_paths+=("$path")
-        action_line="no normalization required"
-        printf -- "- file=%s allowlisted=%s drift=%s action=%s\n" "$path" "$allowlisted_status" "$drift_status" "$action_line"
-        continue
-      fi
-      drift_status="yes"
-      if git -C "$REPO_ROOT" restore --source=HEAD --staged --worktree -- "$path" >/dev/null 2>&1; then
-        action_line="git restore --source=HEAD --staged --worktree -- ${path}"
-      else
-        git -C "$REPO_ROOT" reset -q HEAD -- "$path"
-        git -C "$REPO_ROOT" checkout -- "$path"
-        action_line="git reset -q HEAD -- ${path} && git checkout -- ${path}"
-      fi
-      normalized_paths+=("$path")
-      printf -- "- file=%s allowlisted=%s drift=%s action=%s\n" "$path" "$allowlisted_status" "$drift_status" "$action_line"
-      continue
-    fi
-    missing_head_paths+=("$path")
-    action_line="skipped because file is absent in HEAD"
-    printf -- "- file=%s allowlisted=%s drift=%s action=%s\n" "$path" "$allowlisted_status" "$drift_status" "$action_line"
-  done
-
-  if (( ${#normalized_paths[@]} > 0 )); then
-    echo "Normalized files:"
-    for path in "${normalized_paths[@]}"; do
-      printf -- "- %s\n" "$path"
-    done
-  else
-    echo "Normalized files: (none)"
-  fi
-
-  if (( ${#skipped_allowlisted_paths[@]} > 0 )); then
-    echo "Skipped allowlisted files:"
-    for path in "${skipped_allowlisted_paths[@]}"; do
-      printf -- "- %s\n" "$path"
-    done
-  else
-    echo "Skipped allowlisted files: (none)"
-  fi
-
-  if (( ${#no_drift_paths[@]} > 0 )); then
-    echo "No-drift files:"
-    for path in "${no_drift_paths[@]}"; do
-      printf -- "- %s\n" "$path"
-    done
-  else
-    echo "No-drift files: (none)"
-  fi
-
-  if (( ${#missing_head_paths[@]} > 0 )); then
-    echo "Missing-from-HEAD files:"
-    for path in "${missing_head_paths[@]}"; do
-      printf -- "- %s\n" "$path"
-    done
-  else
-    echo "Missing-from-HEAD files: (none)"
-  fi
-}
-
 verify_changed_files_subset_allowlist() {
   mapfile -t changed_paths < <(git -C "$REPO_ROOT" diff --name-only HEAD | sort)
   local -a unauthorized=()
@@ -2248,26 +2155,6 @@ while IFS= read -r command || [[ -n "$command" ]]; do
   if [[ "$EXIT_CODE" -ne 0 ]]; then
     printf '%s' "$COMMAND_LOG" >&2
     die "verification command failed (command ${CMD_ID}): ${command}"
-  fi
-
-  if [[ "$command" =~ (^|[[:space:]])bash[[:space:]]+tools/lint/llms[.]sh([[:space:]]|$) ]]; then
-    CMD_INDEX=$((CMD_INDEX + 1))
-    CMD_ID="$(printf '%02d' "$CMD_INDEX")"
-    NORMALIZE_STARTED_AT="$(utc_now)"
-    NORMALIZE_START_EPOCH="$(date +%s)"
-    NORMALIZE_STDOUT="$(normalize_unallowlisted_llms_drift)"
-    NORMALIZE_FINISHED_AT="$(utc_now)"
-    NORMALIZE_FINISH_EPOCH="$(date +%s)"
-    NORMALIZE_DURATION_SECONDS=$((NORMALIZE_FINISH_EPOCH - NORMALIZE_START_EPOCH))
-    append_command_log_entry \
-      "$CMD_ID" \
-      "internal: normalize unallowlisted llms outputs to HEAD (allowlist guard)" \
-      "$NORMALIZE_STARTED_AT" \
-      "$NORMALIZE_FINISHED_AT" \
-      "$NORMALIZE_DURATION_SECONDS" \
-      "0" \
-      "$NORMALIZE_STDOUT" \
-      "(empty)"
   fi
 
   VERIFICATION_COMMAND_COUNT=$((VERIFICATION_COMMAND_COUNT + 1))

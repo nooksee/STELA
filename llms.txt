@@ -1,7 +1,8 @@
 # Stela llms.txt
-# HEAD: 9b8e24c4
-# HEAD commit time: 2026-08-04T11:55:33-04:00
-# Refresh: ./ops/bin/llms
+# Content identity: content-v1
+# llms-core SHA-256: 80758710083ff0bdef4212357b2efc4ea7701bc0df0ed816cd96df937c1874e0
+# llms-full SHA-256: fdeb33595bb12833d9d88e0f21cce4a5a199a7a1faddf06afb6c9929963251dd
+# Freshness check: ./ops/bin/llms --check
 # One Truth bundle index.
 
 ## 0. Root Bundles

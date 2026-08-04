@@ -83,6 +83,9 @@ jobs:
       - name: Context lint
         run: bash tools/lint/context.sh
 
+      - name: LLMS content freshness
+        run: bash tools/lint/llms.sh
+
       - name: Agent lint
         run: bash tools/lint/agent.sh
 
