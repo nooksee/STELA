@@ -252,6 +252,30 @@ run_expect_fail \
   "$metadata_leak_fixture" \
   "dp: include metadata leakage: line"
 
+glob_scope_fixture="${DP_TEST_ROOT_ABS}/glob-scope-DP.md"
+cp "$valid_fixture" "$glob_scope_fixture"
+sed -i 's|- ADD tools/test/dp.sh|- ADD tools/test/*.sh|' "$glob_scope_fixture"
+run_expect_fail \
+  "packet scope wildcard fixture" \
+  "$glob_scope_fixture" \
+  "packet scope path must be one exact literal path"
+
+duplicate_scope_fixture="${DP_TEST_ROOT_ABS}/duplicate-scope-DP.md"
+cp "$valid_fixture" "$duplicate_scope_fixture"
+sed -i 's|- UPDATE docs/ops/specs/tools/lint/dp.md|- UPDATE tools/test/dp.sh|' "$duplicate_scope_fixture"
+run_expect_fail \
+  "duplicate packet scope fixture" \
+  "$duplicate_scope_fixture" \
+  "packet scope path is declared more than once"
+
+prose_scope_fixture="${DP_TEST_ROOT_ABS}/prose-scope-DP.md"
+cp "$valid_fixture" "$prose_scope_fixture"
+sed -i 's|- ADD tools/test/dp.sh|- ADD tools/test/dp.sh changed by fixture|' "$prose_scope_fixture"
+run_expect_fail \
+  "non-parenthetical packet scope annotation fixture" \
+  "$prose_scope_fixture" \
+  "packet scope annotation must be parenthetical"
+
 if (( FAILURES > 0 )); then
   exit 1
 fi

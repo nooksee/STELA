@@ -285,6 +285,10 @@ lint_addendum_intake() {
     fi
   done <<< "$scope_delta"
 
+  if ! packet_scope_extract_addendum_paths "$path" "$base_dp_value" >/dev/null; then
+    fail "addendum intake exact scope contract is invalid"
+  fi
+
   check_receipt_block_replayability "$receipt_block" "Addendum receipt command"
 }
 
@@ -1329,6 +1333,13 @@ check_include_metadata_leakage() {
   return 0
 }
 
+check_packet_scope_contract() {
+  local path="$1"
+  if ! packet_scope_extract_changelog_paths "$path" >/dev/null; then
+    fail "3.4.3 Changelog must define a unique exact mutation path for every ADD, NEW, UPDATE, or DELETE entry"
+  fi
+}
+
 lint_payload() {
   local path="$1"
   failures=0
@@ -1339,6 +1350,7 @@ lint_payload() {
   check_template_hash_preflight
   check_structure_hash "$path"
   check_required_fields "$path"
+  check_packet_scope_contract "$path"
   check_delete_load_order_consistency "$path"
   check_allowlist_pointer_integrity "$path"
   check_dump_selection_scope "$path"

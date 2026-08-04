@@ -29,6 +29,232 @@ normalize_path_token() {
   printf '%s' "$value"
 }
 
+packet_scope_validate_literal_path() {
+  local raw_value="$1"
+  local value
+  value="$(normalize_path_token "$raw_value")"
+
+  if [[ -z "$value" ]]; then
+    echo "ERROR: packet scope path is empty" >&2
+    return 1
+  fi
+  if [[ "$value" == /* || "$value" == */../* || "$value" == ../* || "$value" == *'/..' ]]; then
+    echo "ERROR: packet scope path must remain repository-relative: ${value}" >&2
+    return 1
+  fi
+  if [[ "$value" =~ [[:space:]] || "$value" == *"*"* || "$value" == *"?"* || "$value" == *"["* || "$value" == *"{"* || "$value" == *"}"* ]]; then
+    echo "ERROR: packet scope path must be one exact literal path: ${value}" >&2
+    return 1
+  fi
+  if [[ ! "$value" =~ ^[A-Za-z0-9._/-]+$ || "$value" == *//* || "$value" == */ ]]; then
+    echo "ERROR: packet scope path contains invalid syntax: ${value}" >&2
+    return 1
+  fi
+
+  printf '%s' "$value"
+}
+
+packet_scope_parse_declared_path() {
+  local declaration="$1"
+  local path_token=""
+  local remainder=""
+
+  declaration="$(trim "$declaration")"
+  if [[ "$declaration" == \`* ]]; then
+    if [[ ! "$declaration" =~ ^\`([^\`]+)\`([[:space:]]+(.*))?$ ]]; then
+      echo "ERROR: packet scope declaration has malformed backticks: ${declaration}" >&2
+      return 1
+    fi
+    path_token="${BASH_REMATCH[1]}"
+    remainder="${BASH_REMATCH[3]:-}"
+  else
+    path_token="${declaration%%[[:space:]]*}"
+    if [[ "$declaration" == *[[:space:]]* ]]; then
+      remainder="${declaration#"$path_token"}"
+      remainder="$(trim "$remainder")"
+    fi
+  fi
+
+  if [[ -n "$remainder" && ! "$remainder" =~ ^\([^\r\n]*\)$ ]]; then
+    echo "ERROR: packet scope annotation must be parenthetical: ${declaration}" >&2
+    return 1
+  fi
+
+  packet_scope_validate_literal_path "$path_token"
+}
+
+packet_scope_extract_changelog_paths() {
+  local source_path="$1"
+  [[ -f "$source_path" ]] || {
+    echo "ERROR: packet scope source is missing: ${source_path}" >&2
+    return 1
+  }
+
+  local changelog_block
+  changelog_block="$(awk '
+    /^### 3[.]4[.]3[[:space:]]+Changelog[[:space:]]*$/ { in_block=1; found=1; next }
+    in_block && /^### 3[.]4[.]4([[:space:]]|$)/ { in_block=0; exit }
+    in_block { print }
+    END { if (!found) exit 2 }
+  ' "$source_path")" || {
+    echo "ERROR: packet scope source is missing section 3.4.3 Changelog" >&2
+    return 1
+  }
+
+  local line=""
+  local mode=""
+  local declaration=""
+  local path=""
+  local mutation_count=0
+  declare -A seen_paths=()
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="$(trim "$line")"
+    [[ -n "$line" ]] || continue
+
+    case "$line" in
+      UPDATE:|ADD:|NEW:|DELETE:|NO-CHANGE:)
+        mode="${line%:}"
+        continue
+        ;;
+    esac
+
+    if [[ "$line" =~ ^-[[:space:]]+(UPDATE|ADD|NEW|DELETE|NO-CHANGE)[[:space:]]+(.+)$ ]]; then
+      mode="${BASH_REMATCH[1]}"
+      declaration="${BASH_REMATCH[2]}"
+    elif [[ -n "$mode" && "$line" =~ ^-[[:space:]]+(.+)$ ]]; then
+      declaration="${BASH_REMATCH[1]}"
+    else
+      echo "ERROR: packet scope changelog line is not an exact mutation declaration: ${line}" >&2
+      return 1
+    fi
+
+    path="$(packet_scope_parse_declared_path "$declaration")" || return 1
+    if [[ "$mode" == "NO-CHANGE" ]]; then
+      continue
+    fi
+    if [[ -n "${seen_paths[$path]+set}" ]]; then
+      echo "ERROR: packet scope path is declared more than once: ${path}" >&2
+      return 1
+    fi
+    seen_paths["$path"]=1
+    mutation_count=$((mutation_count + 1))
+    printf '%s\n' "$path"
+  done <<< "$changelog_block"
+
+  if (( mutation_count == 0 )); then
+    echo "ERROR: packet scope changelog contains no mutation paths" >&2
+    return 1
+  fi
+}
+
+packet_scope_extract_addendum_paths() {
+  local source_path="$1"
+  local expected_packet_id="${2:-}"
+  [[ -f "$source_path" ]] || {
+    echo "ERROR: addendum scope source is missing: ${source_path}" >&2
+    return 1
+  }
+
+  local base_packet
+  base_packet="$(awk '/^Base Packet:[[:space:]]*/ { line=$0; sub(/^Base Packet:[[:space:]]*/, "", line); print line; exit }' "$source_path")"
+  base_packet="$(trim "$base_packet")"
+  if [[ ! "$base_packet" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]]; then
+    echo "ERROR: addendum scope has an invalid Base Packet: ${base_packet}" >&2
+    return 1
+  fi
+  if [[ -n "$expected_packet_id" && "$base_packet" != "$expected_packet_id" ]]; then
+    echo "ERROR: addendum scope base packet mismatch: expected ${expected_packet_id}, found ${base_packet}" >&2
+    return 1
+  fi
+
+  local scope_block
+  scope_block="$(awk '
+    /^Exact paths added by this addendum [(]one per line; no globs; no brace expansion[)]:[[:space:]]*$/ { in_block=1; found=1; next }
+    in_block && /^## A[.]3([[:space:]]|$)/ { in_block=0; exit }
+    in_block { print }
+    END { if (!found) exit 2 }
+  ' "$source_path")" || {
+    echo "ERROR: addendum scope is missing the exact-path block" >&2
+    return 1
+  }
+
+  local line=""
+  local path=""
+  local count=0
+  declare -A seen_paths=()
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="$(trim "$line")"
+    [[ -n "$line" ]] || continue
+    line="${line#- }"
+    path="$(packet_scope_parse_declared_path "$line")" || return 1
+    if [[ -n "${seen_paths[$path]+set}" ]]; then
+      echo "ERROR: addendum scope path is declared more than once: ${path}" >&2
+      return 1
+    fi
+    seen_paths["$path"]=1
+    count=$((count + 1))
+    printf '%s\n' "$path"
+  done <<< "$scope_block"
+
+  if (( count == 0 )); then
+    echo "ERROR: addendum scope contains no exact paths" >&2
+    return 1
+  fi
+}
+
+path_matches_policy_set() {
+  local path="$1"
+  local exact_name="$2"
+  local patterns_name="$3"
+  local -n exact_ref="$exact_name"
+  local -n patterns_ref="$patterns_name"
+
+  if [[ -n "${exact_ref[$path]+set}" ]]; then
+    return 0
+  fi
+
+  local pattern=""
+  for pattern in "${patterns_ref[@]}"; do
+    if [[ "$path" == $pattern ]]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+packet_scope_path_is_authorized() {
+  local path="$1"
+  local scope_mode="$2"
+  local packet_scope_name="$3"
+  local -n packet_scope_ref="$packet_scope_name"
+
+  if [[ "$scope_mode" == "maintenance-idle" ]]; then
+    return 0
+  fi
+  [[ "$scope_mode" == "packet-exact" ]] || return 1
+  [[ -n "${packet_scope_ref[$path]+set}" ]]
+}
+
+persistent_policy_path_is_authorized() {
+  local path="$1"
+  local is_deleted="$2"
+  local current_exact_name="$3"
+  local current_patterns_name="$4"
+  local head_exact_name="$5"
+  local head_patterns_name="$6"
+
+  if path_matches_policy_set "$path" "$current_exact_name" "$current_patterns_name"; then
+    return 0
+  fi
+  if [[ "$is_deleted" == "1" ]] \
+    && path_matches_policy_set "$path" "$head_exact_name" "$head_patterns_name"; then
+    return 0
+  fi
+  return 1
+}
+
 rewrite_task_lifecycle_fields() {
   local source_path="$1"
   local out_path="$2"

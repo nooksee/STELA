@@ -197,6 +197,7 @@ archives/manifests/compile-2026-03-03T204311-9f0fdc6a.md
 tools/verify.sh
 tools/test/bundle.sh
 tools/test/dp.sh
+tools/test/integrity.sh
 docs/ops/registry/test.md
 docs/ops/specs/tools/test/bundle.md
 archives/surfaces/TASK-DP-OPS-0147-*.md
@@ -408,6 +409,10 @@ docs/ops/registry/hooks.md
 archives/manifests/compile-2026-03-17T*-c6ac87bc.md
 archives/surfaces/TASK-DP-OPS-0209-*.md
 ops/bin/help
+docs/ops/specs/binaries/allowlist.md
+docs/ops/specs/scripts/common.md
+docs/ops/specs/tools/test/integrity.md
+ops/lib/scripts/common.sh
 ops/bin/draft
 docs/MAP.md
 ops/bin/certify

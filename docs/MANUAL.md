@@ -127,9 +127,7 @@ Keep `storage/handoff/CLOSING.md` populated throughout execution.
 2. Generate Results
 #### Pre-Certify Allowlist Declaration (required when DP scope includes closeout)
 
-Before invoking `ops/bin/certify`, run `./ops/bin/allowlist` as a required pre-certify dry-run. This helper
-reproduces the RESULTS allowlist subset checks for tracked-changed and untracked
-paths and prints ready-to-paste allowlist lines for any missing entries.
+Before invoking `ops/bin/certify`, run `./ops/bin/allowlist` as a required pre-certify dry-run. The helper delegates to the authoritative integrity lint. During an active packet, every ordinary staged, unstaged, or untracked path must appear in both the packet or addendum exact mutation scope and persistent path policy. The command reports each missing class separately.
 
 Rationale: `ops/bin/certify` now structurally owns its exact current-run generated
 surface set:
@@ -139,9 +137,7 @@ surface set:
 - the three active `archives/surfaces/...` leaves it emits
 - the durable archived RESULTS receipt it emits
 
-Those exact current-run generated paths no longer require packet-specific allowlist
-entries. All other touched tracked files still require normal allowlist coverage
-before certify runs.
+Those exact current-run generated paths do not require packet-specific mutation or policy entries. Every other changed path must satisfy both gates before certify runs.
 
 `storage/handoff/CLOSING.md` is a latest-wins disposable surface. Certify reads and validates it in place; it does not rename or archive it to a per-packet path. Do not add `storage/handoff/CLOSING-DP-OPS-*.md` entries to the allowlist.
 
@@ -639,7 +635,9 @@ ATS rules:
 
 **Allowlist Rule:**
 * **Rule:** If a DP includes the llms command, the allowlist must include `llms.txt`, `llms-core.txt`, and `llms-full.txt`.
-* **Rule:** `storage/dp/active/allowlist.txt` is persistent-path policy only. Do not include runtime artifact prefixes such as `storage/handoff/`, `storage/dumps/`, or `storage/dp/intake/`.
+* **Rule:** `storage/dp/active/allowlist.txt` is persistent-path policy only. It is a ceiling, not active packet scope. Do not include runtime artifact prefixes such as `storage/handoff/`, `storage/dumps/`, or `storage/dp/intake/`.
+* **Rule:** `3.4.3 Changelog` is the base packet exact mutation scope. A validated active addendum may extend it by exact paths only. An ordinary change must satisfy both this scope and persistent policy.
+* **Rule:** `IDLE/COMPLETED` maintenance is reported explicitly and uses persistent policy without pretending that a completed packet authorizes new work.
 
 ### Worker Dispatch Dump (CDD)
 

@@ -5,7 +5,7 @@ usage() {
   cat <<'USAGE'
 Usage: ops/bin/allowlist
 
-Checks tracked-changed and untracked paths against storage/dp/active/allowlist.txt.
+Runs the authoritative integrity scope check as a pre-certification dry run.
 USAGE
 }
 
@@ -41,77 +41,12 @@ source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 trap 'emit_binary_leaf "allowlist" "finish"' EXIT
 emit_binary_leaf "allowlist" "start"
 
-allowlist_path="storage/dp/active/allowlist.txt"
-[[ -f "$allowlist_path" ]] || die "allowlist file missing: ${allowlist_path}"
-
-declare -A allow_exact=()
-declare -a allow_patterns=()
-
-while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
-  entry="$(trim "$raw_line")"
-  [[ -n "$entry" ]] || continue
-  [[ "$entry" == \#* ]] && continue
-
-  # Support inline markdown-code allowlist entries.
-  entry="${entry#\`}"
-  entry="${entry%\`}"
-  entry="${entry#./}"
-
-  if [[ "$entry" == *"*"* || "$entry" == *"?"* || "$entry" == *"["* ]]; then
-    allow_patterns+=("$entry")
-    continue
-  fi
-
-  allow_exact["$entry"]=1
-done < "$allowlist_path"
-
-allowlist_contains_path() {
-  local path="$1"
-  if [[ -n "${allow_exact[$path]+set}" ]]; then
-    return 0
-  fi
-
-  local pattern
-  for pattern in "${allow_patterns[@]}"; do
-    if [[ "$path" == $pattern ]]; then
-      return 0
-    fi
-  done
-
-  return 1
-}
-
-missing_tracked_changed=()
-while IFS= read -r changed_path; do
-  [[ -n "$changed_path" ]] || continue
-  if ! allowlist_contains_path "$changed_path"; then
-    missing_tracked_changed+=("$changed_path")
-  fi
-done < <(git diff --name-only | sort)
-
-missing_untracked=()
-while IFS= read -r untracked_path; do
-  [[ -n "$untracked_path" ]] || continue
-  if ! allowlist_contains_path "$untracked_path"; then
-    missing_untracked+=("$untracked_path")
-  fi
-done < <(git ls-files --others --exclude-standard | sort)
-
-printf 'tracked-changed missing count: %d\n' "${#missing_tracked_changed[@]}"
-printf 'untracked missing count: %d\n' "${#missing_untracked[@]}"
-
-if (( ${#missing_tracked_changed[@]} > 0 )); then
-  printf '\ntracked-changed ready-to-paste:\n'
-  printf '%s\n' "${missing_tracked_changed[@]}"
-fi
-
-if (( ${#missing_untracked[@]} > 0 )); then
-  printf '\nuntracked ready-to-paste:\n'
-  printf '%s\n' "${missing_untracked[@]}"
-fi
-
-if (( ${#missing_tracked_changed[@]} > 0 || ${#missing_untracked[@]} > 0 )); then
+integrity_output=""
+if ! integrity_output="$(bash "${REPO_ROOT}/tools/lint/integrity.sh" 2>&1)"; then
+  printf '%s\n' "$integrity_output" >&2
+  echo "FAIL: pre-certification scope dry run" >&2
   exit 1
 fi
 
-exit 0
+printf '%s\n' "$integrity_output"
+echo "OK: pre-certification scope dry run passed"
