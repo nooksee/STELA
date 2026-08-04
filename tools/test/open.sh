@@ -139,8 +139,12 @@ if [[ -n "$open_path" ]]; then
   assert_contains "$open_path" "- Porcelain entries:"
   assert_contains "$open_path" "- Porcelain artifact: emitted"
   assert_contains "$open_path" "- Porcelain saved: ${OPEN_TEST_ROOT}/OPEN-PORCELAIN-open-test-"
+  assert_contains "$open_path" "Constitutional seats: Operator, Integrator, Contractor, and Auditor."
+  assert_contains "$open_path" "PoT.md Section 4.1 defines authority; the active work contract defines the assigned seat."
   assert_absent "$open_path" "- Porcelain (git status --porcelain):"
   assert_absent "$open_path" "- Porcelain preview (truncated to 50 lines):"
+  assert_absent "$open_path" "Integrator (operator):"
+  assert_absent "$open_path" "Contractor (assistant):"
 
   porcelain_ref="$(sed -n 's/^- Porcelain saved:[[:space:]]*//p' "${REPO_ROOT}/${open_path}" | head -n 1)"
   porcelain_ref="$(normalize_rel_path "$porcelain_ref")"

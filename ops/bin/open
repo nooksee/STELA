@@ -162,8 +162,8 @@ $mode_line
 - STELA_TRACE_ID: $STELA_TRACE_ID
 
 [ROLE CONTRACT]
-Integrator (operator): Owns scope, priorities, and approvals.
-Contractor (assistant): Executes tasks, flags risks, asks when blocked.
+Constitutional seats: Operator, Integrator, Contractor, and Auditor.
+PoT.md Section 4.1 defines authority; the active work contract defines the assigned seat.
 AI stance: Canon-first, explicit about unknowns, no invention.
 
 [DO / DO NOT]
