@@ -18,12 +18,13 @@ emit_binary_leaf "verify" "start"
 
 usage() {
   cat <<'EOF'
-Usage: bash tools/verify.sh [--mode=full|gates|certify-critical] [--paths-file=PATH]
+Usage: bash tools/verify.sh [--mode=full|gates|certify-critical] [--paths-file=PATH] [--inventory]
 EOF
 }
 
 VERIFY_MODE="full"
 VERIFY_PATHS_FILE=""
+VERIFY_INVENTORY=0
 for arg in "$@"; do
   case "$arg" in
     --mode=*)
@@ -31,6 +32,9 @@ for arg in "$@"; do
       ;;
     --paths-file=*)
       VERIFY_PATHS_FILE="${arg#--paths-file=}"
+      ;;
+    --inventory)
+      VERIFY_INVENTORY=1
       ;;
     -h|--help)
       usage
@@ -99,6 +103,362 @@ trim_verify_value() {
   value="${value%"${value##*[![:space:]]}"}"
   printf '%s' "$value"
 }
+
+declare -a INVENTORY_KINDS=(
+  binary
+  lint
+  test
+  hook
+  script
+  tool
+  runbook
+  template
+)
+declare -A INVENTORY_ROOTS=(
+  [binary]="ops/bin"
+  [lint]="tools/lint"
+  [test]="tools/test"
+  [hook]=".github/hooks"
+  [script]="ops/lib/scripts"
+  [tool]="tools"
+  [runbook]="ops/src/runbook"
+  [template]="ops/src"
+)
+declare -A INVENTORY_REGISTRIES=(
+  [binary]="docs/ops/registry/binaries.md"
+  [lint]="docs/ops/registry/lint.md"
+  [test]="docs/ops/registry/test.md"
+  [hook]="docs/ops/registry/hooks.md"
+  [script]="docs/ops/registry/scripts.md"
+  [tool]="docs/ops/registry/tools.md"
+  [runbook]="docs/ops/registry/runbook.md"
+  [template]="docs/ops/registry/templates.md"
+)
+declare -A INVENTORY_REGISTRY_PREFIXES=(
+  [binary]="OPS-BIN-"
+  [lint]="LINT-"
+  [test]="TEST-"
+  [hook]="HOOK-"
+  [script]="SCRIPT-"
+  [tool]="TOOL-"
+  [runbook]="RUNBOOK-"
+  [template]="TPL-"
+)
+declare -A INVENTORY_REGISTRY_PATH_COLUMNS=(
+  [binary]=4
+  [lint]=4
+  [test]=4
+  [hook]=4
+  [script]=4
+  [tool]=4
+  [runbook]=4
+  [template]=3
+)
+declare -A INVENTORY_SPEC_ROOTS=(
+  [binary]="docs/ops/specs/binaries"
+  [lint]="docs/ops/specs/tools/lint"
+  [test]="docs/ops/specs/tools/test"
+  [hook]="docs/ops/specs/hooks"
+  [script]="docs/ops/specs/scripts"
+  [tool]="docs/ops/specs/tools"
+  [runbook]="docs/ops/specs/runbook"
+  [template]=""
+)
+
+inventory_error() {
+  echo "ERROR: inventory: $*" >&2
+  return 1
+}
+
+inventory_actual_paths() {
+  local kind="$1"
+  local root="${INVENTORY_ROOTS[$kind]}"
+
+  [[ -d "${REPO_ROOT}/${root}" ]] || return 0
+  if [[ "$kind" == "template" ]]; then
+    find "${REPO_ROOT}/${root}" -type f -name '*.tpl' -printf '%P\n' \
+      | sed "s#^#${root}/#" \
+      | LC_ALL=C sort
+    return 0
+  fi
+
+  find "${REPO_ROOT}/${root}" -maxdepth 1 -type f -printf '%f\n' \
+    | sed "s#^#${root}/#" \
+    | LC_ALL=C sort
+}
+
+inventory_registry_rows() {
+  local kind="$1"
+  local registry="${INVENTORY_REGISTRIES[$kind]}"
+  local prefix="${INVENTORY_REGISTRY_PREFIXES[$kind]}"
+  local path_column="${INVENTORY_REGISTRY_PATH_COLUMNS[$kind]}"
+  local registry_abs="${REPO_ROOT}/${registry}"
+
+  [[ -f "$registry_abs" ]] || inventory_error "missing registry: ${registry}"
+  awk -F'|' -v prefix="$prefix" -v path_column="$path_column" -v kind="$kind" '
+    function clean(value) {
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+      return value
+    }
+    /^\|/ {
+      identifier=clean($2)
+      if (index(identifier, prefix) != 1) {
+        next
+      }
+      path=clean($path_column)
+      router="na"
+      if (kind == "template") {
+        router=clean($6)
+      }
+      printf "%s\t%s\n", path, router
+    }
+  ' "$registry_abs"
+}
+
+inventory_spec_path() {
+  local kind="$1"
+  local path="$2"
+  local spec_root="${INVENTORY_SPEC_ROOTS[$kind]}"
+  local base=""
+
+  if [[ "$kind" == "template" ]]; then
+    printf 'none'
+    return 0
+  fi
+
+  base="$(basename "$path")"
+  base="${base%.sh}"
+  base="${base%.yaml}"
+  printf '%s/%s.md' "$spec_root" "$base"
+}
+
+inventory_policy_reference_count() {
+  local path="$1"
+  local policy_path="${REPO_ROOT}/ops/etc/verification.manifest"
+  local count=0
+
+  if [[ -f "$policy_path" ]]; then
+    count="$(grep -F -c -- "$path" "$policy_path" || true)"
+  fi
+  printf '%s' "$count"
+}
+
+inventory_literal_consumer_count() {
+  local path="$1"
+  local -a references=()
+
+  if command -v rg >/dev/null 2>&1; then
+    mapfile -t references < <(
+      rg -l -F -- "$path" \
+        "${REPO_ROOT}/ops/bin" \
+        "${REPO_ROOT}/ops/lib/scripts" \
+        "${REPO_ROOT}/tools" \
+        2>/dev/null || true
+    )
+  else
+    mapfile -t references < <(
+      grep -RFl -- "$path" \
+        "${REPO_ROOT}/ops/bin" \
+        "${REPO_ROOT}/ops/lib/scripts" \
+        "${REPO_ROOT}/tools" \
+        2>/dev/null || true
+    )
+  fi
+  printf '%s' "${#references[@]}"
+}
+
+inventory_template_metadata_complete() {
+  local path="$1"
+  local template_abs="${REPO_ROOT}/${path}"
+
+  [[ -f "$template_abs" ]] || {
+    printf 'na'
+    return 0
+  }
+  if grep -Eq '^template_id:[[:space:]]*[^[:space:]]' "$template_abs" \
+    && grep -Eq '^ff_target:[[:space:]]*[^[:space:]]' "$template_abs" \
+    && grep -Eq '^ff_band:[[:space:]]*[^[:space:]]' "$template_abs"; then
+    printf '1'
+  else
+    printf '0'
+  fi
+}
+
+emit_inventory_report() {
+  local kind=""
+  local path=""
+  local router=""
+  local row=""
+  local expected_root=""
+  local present=0
+  local registered=0
+  local executable="na"
+  local spec="na"
+  local spec_path="none"
+  local policy_refs=0
+  local literal_consumers="na"
+  local metadata="na"
+  local present_count=0
+  local registered_count=0
+  local present_registered_count=0
+  local present_unregistered_count=0
+  local registered_missing_count=0
+  local spec_missing_count=0
+  local metadata_missing_count=0
+  local registry_output=""
+  local kind_present=0
+  local kind_registered=0
+  local kind_present_registered=0
+  local kind_present_unregistered=0
+  local kind_registered_missing=0
+  local kind_spec_missing=0
+  local kind_metadata_missing=0
+  local -a actual_paths=()
+  local -a registry_rows=()
+  local -a union_paths=()
+  local -A registered_paths=()
+
+  if [[ -n "$VERIFY_PATHS_FILE" || "$VERIFY_MODE" != "full" ]]; then
+    inventory_error "--inventory cannot be combined with --paths-file or a non-full verification mode"
+    return 1
+  fi
+
+  printf 'INVENTORY-CONTRACT version=1 mode=report-only lifecycle_inference=0\n'
+  for kind in "${INVENTORY_KINDS[@]}"; do
+    registered_paths=()
+    actual_paths=()
+    registry_rows=()
+    union_paths=()
+    expected_root="${INVENTORY_ROOTS[$kind]}"
+
+    mapfile -t actual_paths < <(inventory_actual_paths "$kind")
+    if ! registry_output="$(inventory_registry_rows "$kind")"; then
+      return 1
+    fi
+    if [[ -n "$registry_output" ]]; then
+      mapfile -t registry_rows <<< "$registry_output"
+    fi
+    for row in "${registry_rows[@]}"; do
+      IFS=$'\t' read -r path router <<< "$row"
+      [[ -n "$path" ]] || {
+        inventory_error "empty path in ${INVENTORY_REGISTRIES[$kind]}"
+        return 1
+      }
+      if [[ "$path" == /* || "$path" == *"//"* || "/${path}/" == *"/../"* || "/${path}/" == *"/./"* ]]; then
+        inventory_error "unsafe ${kind} registry path: ${path}"
+        return 1
+      fi
+      case "$path" in
+        "${expected_root}"/*)
+          ;;
+        *)
+          inventory_error "${kind} registry path escapes ${expected_root}: ${path}"
+          return 1
+          ;;
+      esac
+      if [[ -n "${registered_paths[$path]+x}" ]]; then
+        inventory_error "duplicate ${kind} registry path: ${path}"
+        return 1
+      fi
+      registered_paths["$path"]="$router"
+    done
+
+    mapfile -t union_paths < <(
+      {
+        printf '%s\n' "${actual_paths[@]}"
+        printf '%s\n' "${!registered_paths[@]}"
+      } | sed '/^$/d' | LC_ALL=C sort -u
+    )
+
+    kind_present=0
+    kind_registered="${#registered_paths[@]}"
+    kind_present_registered=0
+    kind_present_unregistered=0
+    kind_registered_missing=0
+    kind_spec_missing=0
+    kind_metadata_missing=0
+
+    for path in "${union_paths[@]}"; do
+      present=0
+      registered=0
+      executable="na"
+      spec="na"
+      spec_path="none"
+      router="na"
+      literal_consumers="na"
+      metadata="na"
+
+      if [[ -f "${REPO_ROOT}/${path}" ]]; then
+        present=1
+        kind_present=$((kind_present + 1))
+      fi
+      if [[ -n "${registered_paths[$path]+x}" ]]; then
+        registered=1
+        router="${registered_paths[$path]}"
+      elif [[ "$kind" == "template" ]]; then
+        router="none"
+      fi
+
+      if (( present == 1 && registered == 1 )); then
+        kind_present_registered=$((kind_present_registered + 1))
+      elif (( present == 1 )); then
+        kind_present_unregistered=$((kind_present_unregistered + 1))
+      else
+        kind_registered_missing=$((kind_registered_missing + 1))
+      fi
+
+      if [[ "$kind" != "template" && "$kind" != "runbook" ]]; then
+        if [[ -x "${REPO_ROOT}/${path}" ]]; then
+          executable=1
+        else
+          executable=0
+        fi
+      fi
+
+      if [[ "$kind" == "template" ]]; then
+        literal_consumers="$(inventory_literal_consumer_count "$path")"
+        metadata="$(inventory_template_metadata_complete "$path")"
+        if [[ "$metadata" == "0" ]]; then
+          kind_metadata_missing=$((kind_metadata_missing + 1))
+        fi
+      else
+        spec_path="$(inventory_spec_path "$kind" "$path")"
+        if [[ -f "${REPO_ROOT}/${spec_path}" ]]; then
+          spec=1
+        else
+          spec=0
+          if (( present == 1 )); then
+            kind_spec_missing=$((kind_spec_missing + 1))
+          fi
+        fi
+      fi
+
+      policy_refs="$(inventory_policy_reference_count "$path")"
+      printf 'INVENTORY-ITEM kind=%s path=%s present=%s registered=%s executable=%s spec=%s spec_path=%s policy_refs=%s declared_router=%s literal_consumers=%s metadata_complete=%s lifecycle=unclassified\n' \
+        "$kind" "$path" "$present" "$registered" "$executable" "$spec" "$spec_path" "$policy_refs" "$router" "$literal_consumers" "$metadata"
+    done
+
+    printf 'INVENTORY-SUMMARY kind=%s present=%s registered=%s present_registered=%s present_unregistered=%s registered_missing=%s spec_missing=%s metadata_missing=%s\n' \
+      "$kind" "$kind_present" "$kind_registered" "$kind_present_registered" "$kind_present_unregistered" "$kind_registered_missing" "$kind_spec_missing" "$kind_metadata_missing"
+
+    present_count=$((present_count + kind_present))
+    registered_count=$((registered_count + kind_registered))
+    present_registered_count=$((present_registered_count + kind_present_registered))
+    present_unregistered_count=$((present_unregistered_count + kind_present_unregistered))
+    registered_missing_count=$((registered_missing_count + kind_registered_missing))
+    spec_missing_count=$((spec_missing_count + kind_spec_missing))
+    metadata_missing_count=$((metadata_missing_count + kind_metadata_missing))
+  done
+
+  printf 'INVENTORY-TOTAL kinds=%s present=%s registered=%s present_registered=%s present_unregistered=%s registered_missing=%s spec_missing=%s metadata_missing=%s\n' \
+    "${#INVENTORY_KINDS[@]}" "$present_count" "$registered_count" "$present_registered_count" "$present_unregistered_count" "$registered_missing_count" "$spec_missing_count" "$metadata_missing_count"
+  printf 'INVENTORY-STATUS mismatches=report-only lifecycle_decisions=0 repository_mutations=0\n'
+}
+
+if (( VERIFY_INVENTORY == 1 )); then
+  emit_inventory_report
+  exit $?
+fi
 
 registry_importance_for_path() {
   local registry_table="$1"
