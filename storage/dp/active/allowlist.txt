@@ -457,3 +457,6 @@ docs/ops/specs/binaries/manifest.md
 docs/ops/specs/binaries/template.md
 ops/bin/open
 ops/bin/help
+tools/test/inventory.sh
+docs/ops/specs/tools/test/inventory.md
+docs/ops/registry/tools.md

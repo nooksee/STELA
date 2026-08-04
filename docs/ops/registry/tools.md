@@ -5,4 +5,4 @@ Authoritative registry for shared verification entrypoints under `tools/`.
 
 | ID | Name | File Path | Notes |
 | --- | --- | --- | --- |
-| TOOL-01 | Repository Verify | tools/verify.sh | Spec: `docs/ops/specs/tools/verify.md`. Enforces filing doctrine and platform-structure hygiene checks; used in the Verify phase before certify-driven RESULTS generation and surface-head rewrites. |
+| TOOL-01 | Repository Verify | tools/verify.sh | Spec: `docs/ops/specs/tools/verify.md`. Enforces filing doctrine and platform-structure hygiene checks, runs policy-selected verification lanes, and emits a report-only runtime inventory without inferring lifecycle state. |
