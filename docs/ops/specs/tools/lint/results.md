@@ -7,7 +7,7 @@
 
 ## Mechanics and Sequencing
 1. Resolve repository root, emit telemetry, and enforce canonical hash parity for `ops/src/surfaces/results.md.tpl`.
-2. Resolve lint target mode: explicit path, `--all` scan, active-branch inferred path, or single discovered receipt fallback.
+2. Resolve lint target mode: explicit path, `--all` scan, active-branch inferred path, or single discovered receipt fallback. `--all` includes durable `archives/surfaces/RESULTS-DP-OPS-*.md` receipts.
 3. For each target file, distinguish certification format from legacy format and skip legacy only in non-explicit historical scan modes.
 4. Enforce required heading set and reject unresolved artifact placeholders or forbidden disposable-artifact references.
 5. Enforce command-log fence integrity within `## Verification Command Log`: explicit-path and inferred-active-target modes fail if a heading is fused onto a closing fence boundary (for example `~~~### Command 26`); `--all` historical scans report the finding as a skip note.
@@ -48,6 +48,7 @@ The lint requires machine-frame command-log integrity:
   - untouched Worker Execution Narrative scaffold instruction prose
   - missing `Decision Required:` or `Decision Leaf:` field lines
   - Decision Required / Decision Leaf coherence drift
+- The harness also extracts the production certifier proof helpers and verifies base and addendum archive naming, disposable-to-durable PoW receipt rewriting, and byte-identical RESULTS archival.
 - The harness calls `bash tools/lint/results.sh <fixture>` directly and does not emulate full certify replay.
 
 ## Worker Execution Narrative Validation

@@ -137,6 +137,7 @@ surface set:
 - `SoP.md`
 - `TASK.md`
 - the three active `archives/surfaces/...` leaves it emits
+- the durable archived RESULTS receipt it emits
 
 Those exact current-run generated paths no longer require packet-specific allowlist
 entries. All other touched tracked files still require normal allowlist coverage
@@ -167,6 +168,7 @@ After surface emission, certify verifies that the active TASK leaf is packet-con
 Note: certify resolves the target DP from the TASK head leaf by default. Ensure the TASK head leaf is structurally valid and contains the live current DP block before running certify. If `TASK.md` is pointer-only and `--allow-intake-fallback` is explicitly enabled while the matching intake packet is present, certify may prefer the intake packet as the live rerun source instead of reusing a stale packet body embedded in the current TASK leaf. This fallback remains a recovery path only.
 `tools/lint/results.sh` enforces the RESULTS schema through `## Worker Execution Narrative` and required Decision Leaf lines. Closing sidecar schema validation remains `ops/bin/certify` authority against `ops/lib/manifests/CLOSING.md` (Section 1).
 `ops/bin/certify` also emits schema-stamped surface leaves for PoW/SoP/TASK under `archives/surfaces/` and rewrites `PoW.md`, `SoP.md`, and `TASK.md` to single-line HEAD pointers to those leaves.
+It also archives the final generated RESULTS bytes under `archives/surfaces/` and rewrites the PoW receipt block to point to that durable receipt plus the authoritative TASK or addendum lineage leaf. The latest-wins `storage/handoff/RESULTS.md` remains the active audit transport copy.
 If `TASK.md` does not contain the target DP block, certify now fails unless `--allow-intake-fallback` is explicitly provided.
 Default dump and bundle payloads now route archive serialization through `ops/etc/persistence.manifest`. Cold archive history remains visible by default as explicit metadata-only blocks with exact re-include instructions rather than literal full-body emission in every dump.
 `bash tools/lint/results.sh` without arguments targets the active branch packet receipt when resolvable; use `--all` only for full historical receipt scans.

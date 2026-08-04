@@ -4,6 +4,7 @@
 ## Constitutional Anchor
 `storage/handoff/RESULTS.md` is the generated current receipt surface, not a hand-authored narrative.
 It records certification execution details, verification command output, worker execution narrative, and git impact.
+After final validation, `ops/bin/certify` copies the exact bytes to `archives/surfaces/RESULTS-DP-OPS-XXXX[-ADDENDUM-X]-<hash>.md`. The current handoff copy remains latest-wins transport; the archive copy is durable proof addressed by PoW.
 
 ## Operator Contract
 - Surface generator: `ops/bin/certify`.
@@ -72,6 +73,7 @@ Enforcement linkage:
    - Scope Verification must record the authoritative packet source path carried in the delivered closeout packet as `dp_source`.
    - `dp_source` must record the authoritative TASK/addendum lineage path so RESULTS matches the delivered audit bundle and dump evidence.
 5. Certifier lints the generated RESULTS artifact and exits non-zero on any failure, including missing worker execution-start proof inside `### Preflight State` or narrative path-hygiene violations.
+6. Certifier validates and atomically publishes the byte-identical archived RESULTS leaf, verifies byte parity, emits any addendum lineage leaf, and runs schema lint so the final PoW pointers are reachable.
 
 ## Forensic Insight
 RESULTS is the executable evidence receipt for DP closeout.

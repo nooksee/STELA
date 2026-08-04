@@ -10,6 +10,7 @@ TASK_PATH="${REPO_ROOT}/TASK.md"
 TEMPLATE_BIN="${REPO_ROOT}/ops/bin/template"
 INTEGRITY_LINT="${REPO_ROOT}/tools/lint/integrity.sh"
 RESULTS_LINT="${REPO_ROOT}/tools/lint/results.sh"
+SCHEMA_LINT="${REPO_ROOT}/tools/lint/schema.sh"
 HANDOFF_DIR="${REPO_ROOT}/storage/handoff"
 DP_INTAKE_DIR="${REPO_ROOT}/storage/dp/intake"
 ACTIVE_DP_REL="storage/dp/intake/DP.md"
@@ -119,6 +120,17 @@ addendum_lineage_leaf_rel() {
   printf 'archives/surfaces/ADDENDUM-%s-%s.md' "$dp_id" "$git_short_hash"
 }
 
+results_lineage_leaf_rel() {
+  local dp_id="$1"
+  local git_short_hash="$2"
+  local addendum_id="${3:-}"
+  if [[ -n "$addendum_id" ]]; then
+    printf 'archives/surfaces/RESULTS-%s-ADDENDUM-%s-%s.md' "$dp_id" "$addendum_id" "$git_short_hash"
+    return 0
+  fi
+  printf 'archives/surfaces/RESULTS-%s-%s.md' "$dp_id" "$git_short_hash"
+}
+
 task_lineage_leaf_contains_packet() {
   local source_path="$1"
   local dp_id="$2"
@@ -179,6 +191,7 @@ register_certify_generated_surface_paths() {
   register_certify_generated_path "archives/surfaces/PoW-${freshness_stamp}-${git_short_hash}.md"
   register_certify_generated_path "archives/surfaces/SoP-${freshness_stamp}-${git_short_hash}.md"
   register_certify_generated_path "$(task_lineage_leaf_rel "$packet_id" "$git_short_hash")"
+  register_certify_generated_path "$(results_lineage_leaf_rel "$packet_id" "$git_short_hash" "$addendum_id")"
   if [[ -n "$addendum_id" ]]; then
     register_certify_generated_path "$(addendum_lineage_leaf_rel "$packet_id" "$git_short_hash")"
   fi
@@ -943,6 +956,23 @@ resolve_authoritative_dp_source_for_results() {
   task_lineage_leaf_rel "$dp_id" "$git_short_hash"
 }
 
+archive_results_receipt() {
+  local source_path="$1"
+  local archive_rel="$2"
+  local archive_abs="${REPO_ROOT}/${archive_rel}"
+  local archive_tmp="${TMP_DIR}/results-archive.md"
+
+  [[ -f "$source_path" ]] || die "generated RESULTS missing before archival: ${source_path#${REPO_ROOT}/}"
+  assert_allowlist_contains_path "$archive_rel"
+  cp "$source_path" "$archive_tmp"
+  bash "$RESULTS_LINT" "$archive_tmp" >/dev/null
+  mkdir -p "$(dirname "$archive_abs")"
+  mv "$archive_tmp" "$archive_abs"
+  cmp -s "$source_path" "$archive_abs" \
+    || die "archived RESULTS byte parity failed: ${archive_rel}"
+  printf 'RESULTS archived: %s\n' "$archive_rel"
+}
+
 assert_dp_matches_work_branch() {
   local dp_id="$1"
   local branch_name
@@ -980,6 +1010,41 @@ run_closing_validator_negative_self_check() {
   fi
 }
 
+render_pow_snapshot_body() {
+  local source_path="$1"
+  local output_path="$2"
+  local results_archive_rel="$3"
+  local packet_lineage_rel="$4"
+  local source_body="${TMP_DIR}/snapshot-PoW.source"
+
+  extract_markdown_body_for_snapshot "$source_path" > "$source_body" \
+    || die "failed to extract PoW body from ${source_path#${REPO_ROOT}/}"
+
+  awk -v results_path="$results_archive_rel" -v packet_path="$packet_lineage_rel" '
+    /^-[[:space:]]+Receipt pointers:[[:space:]]*$/ {
+      count++
+      in_receipts=1
+      print
+      print "  - RESULTS: `" results_path "`"
+      print "  - PACKET: `" packet_path "`"
+      next
+    }
+    in_receipts && /^-[[:space:]]+Notes:[[:space:]]*$/ {
+      in_receipts=0
+      print
+      next
+    }
+    in_receipts { next }
+    { print }
+    END {
+      if (count != 1 || in_receipts) {
+        exit 41
+      }
+    }
+  ' "$source_body" > "$output_path" \
+    || die "PoW receipt-pointer rewrite requires exactly one bounded Receipt pointers block"
+}
+
 emit_surface_leaf_and_pointer() {
   local surface_abs_path="$1"
   local leaf_rel_path="$2"
@@ -987,6 +1052,8 @@ emit_surface_leaf_and_pointer() {
   local packet_id="$4"
   local created_at="$5"
   local task_replacement_dp_path="${6:-}"
+  local results_archive_rel="${7:-}"
+  local packet_lineage_rel="${8:-}"
   local surface_rel_path="${surface_abs_path#${REPO_ROOT}/}"
   local updated_date="${created_at%%T*}"
 
@@ -1029,7 +1096,11 @@ emit_surface_leaf_and_pointer() {
   fi
 
   local body_tmp="${TMP_DIR}/snapshot-${surface_rel_path##*/}.body"
-  if [[ "$surface_rel_path" == "TASK.md" && -n "$task_replacement_dp_path" ]]; then
+  if [[ "$surface_rel_path" == "PoW.md" ]]; then
+    [[ -n "$results_archive_rel" ]] || die "PoW snapshot missing durable RESULTS destination"
+    [[ -n "$packet_lineage_rel" ]] || die "PoW snapshot missing durable packet destination"
+    render_pow_snapshot_body "$source_path" "$body_tmp" "$results_archive_rel" "$packet_lineage_rel"
+  elif [[ "$surface_rel_path" == "TASK.md" && -n "$task_replacement_dp_path" ]]; then
     render_task_snapshot_body "$source_path" "$task_replacement_dp_path" "$body_tmp" "$packet_id" "$updated_date"
   elif ! extract_markdown_body_for_snapshot "$source_path" > "$body_tmp"; then
     die "failed to extract snapshot body from ${source_path#${REPO_ROOT}/}"
@@ -1045,7 +1116,9 @@ packet_id: ${packet_id}
 created_at: ${created_at}
 previous: ${previous}
 EOF
-    if [[ "$surface_rel_path" == "TASK.md" ]]; then
+    if [[ "$surface_rel_path" == "PoW.md" ]]; then
+      printf '%s\n' 'proof_model: durable-v1' 'proof_state: complete'
+    elif [[ "$surface_rel_path" == "TASK.md" ]]; then
       printf '%s\n' 'routing_state: idle' 'packet_state: completed'
     elif [[ "$surface_rel_path" == "SoP.md" ]]; then
       printf '%s\n' 'state_model: present-v1'
@@ -1072,8 +1145,12 @@ emit_surface_leaves_phase() {
   local pow_leaf_rel="archives/surfaces/PoW-${freshness_stamp}-${git_short_hash}.md"
   local sop_leaf_rel="archives/surfaces/SoP-${freshness_stamp}-${git_short_hash}.md"
   local task_leaf_rel="archives/surfaces/TASK-${packet_id}-${git_short_hash}.md"
+  local results_leaf_rel
+  results_leaf_rel="$(results_lineage_leaf_rel "$packet_id" "$git_short_hash" "$ADDENDUM_ID")"
+  local packet_leaf_rel
+  packet_leaf_rel="$(resolve_authoritative_dp_source_for_results "$packet_id" "$git_short_hash" "$ADDENDUM_ID")"
 
-  emit_surface_leaf_and_pointer "$POW_SURFACE_PATH" "$pow_leaf_rel" "$trace_id" "$packet_id" "$created_at"
+  emit_surface_leaf_and_pointer "$POW_SURFACE_PATH" "$pow_leaf_rel" "$trace_id" "$packet_id" "$created_at" "" "$results_leaf_rel" "$packet_leaf_rel"
   emit_surface_leaf_and_pointer "$SOP_SURFACE_PATH" "$sop_leaf_rel" "$trace_id" "$packet_id" "$created_at"
   emit_surface_leaf_and_pointer "$TASK_SURFACE_PATH" "$task_leaf_rel" "$trace_id" "$packet_id" "$created_at" "$task_replacement_dp_path"
 
@@ -1082,6 +1159,7 @@ Phase 2 surface leaves emitted:
 - PoW.md -> ${pow_leaf_rel}
 - SoP.md -> ${sop_leaf_rel}
 - TASK.md -> ${task_leaf_rel}
+- durable RESULTS destination -> ${results_leaf_rel}
 EOF
 }
 
@@ -1921,6 +1999,7 @@ fi
 [[ -x "$TEMPLATE_BIN" ]] || die "template binary missing or not executable: ${TEMPLATE_BIN}"
 [[ -x "$INTEGRITY_LINT" ]] || die "integrity lint missing or not executable: ${INTEGRITY_LINT}"
 [[ -x "$RESULTS_LINT" ]] || die "results lint missing or not executable: ${RESULTS_LINT}"
+[[ -x "$SCHEMA_LINT" ]] || die "schema lint missing or not executable: ${SCHEMA_LINT}"
 [[ -f "$TASK_PATH" ]] || die "missing TASK surface: ${TASK_PATH}"
 certify_set_phase "preflight"
 
@@ -2511,6 +2590,9 @@ DP_PACKET_MOVE_OUTPUT="DP lineage leaf emission: not applicable (base packet use
 if [[ -n "$ADDENDUM_ID" ]]; then
   DP_PACKET_MOVE_OUTPUT="$(emit_addendum_lineage_leaf "$DP_ID" "$DP_BLOCK_PATH" "$GIT_SHORT_HASH")"
 fi
+RESULTS_ARCHIVE_REL="$(results_lineage_leaf_rel "$DP_ID" "$GIT_SHORT_HASH" "$ADDENDUM_ID")"
+RESULTS_ARCHIVE_OUTPUT="$(archive_results_receipt "$OUT_PATH" "$RESULTS_ARCHIVE_REL")"
+bash "$SCHEMA_LINT" >/dev/null
 
 certify_finalize_phase_timing
 CERTIFY_TOTAL_DURATION_SECONDS=$(( $(date +%s) - CERTIFY_RUN_STARTED_EPOCH ))
@@ -2544,5 +2626,6 @@ TELEMETRY_LEAF="$(
 echo "DP replay source: ${DP_SOURCE}"
 echo "DP source: ${RESULTS_DP_SOURCE}"
 echo "RESULTS saved: ${OUT_PATH#${REPO_ROOT}/}"
+echo "${RESULTS_ARCHIVE_OUTPUT}"
 echo "${DP_PACKET_MOVE_OUTPUT}"
 echo "Telemetry leaf: ${TELEMETRY_LEAF}"

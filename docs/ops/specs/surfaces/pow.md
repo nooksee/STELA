@@ -13,6 +13,8 @@
   - `packet_id`
   - `created_at`
   - `previous`
+  - `proof_model: durable-v1`
+  - `proof_state: complete|legacy-gap`
 - Each PoW leaf body must contain one PoW entry block only (header + fields), with no global guidance preamble.
 
 ## PoW Entry Contract (Canonical)
@@ -25,17 +27,17 @@
   - `Base HEAD`
   - `Scope`
   - `Target Files allowlist`
-  - `Receipt pointers` (`RESULTS`, `OPEN`; `DUMP` only when the packet explicitly emitted a canonical dump artifact before certify)
+  - `Receipt pointers` (`RESULTS`, `PACKET`)
   - `Notes`
 - Receipt pointer expectations:
-  - `RESULTS`: `storage/handoff/RESULTS.md`
-  - `OPEN`: `storage/handoff/OPEN-*.txt`
-  - `DUMP`: optional `storage/dumps/dump-*.txt` when the current packet intentionally emitted a canonical dump artifact before certify
+  - `RESULTS`: `archives/surfaces/RESULTS-DP-OPS-XXXX[-ADDENDUM-X]-<hash>.md`
+  - `PACKET`: the authoritative `archives/surfaces/TASK-...` or `archives/surfaces/ADDENDUM-...` lineage leaf
+- `proof_state: complete` requires both durable pointer targets. `proof_state: legacy-gap` is reserved for an explicitly identified historical receipt body that was not retained; it must say `RESULTS: unavailable (legacy body not retained)` and must still carry the durable packet pointer.
 
 ## Operator Guidance
 - Author PoW entry content before running `ops/bin/certify`.
 - The pre-certify single-entry-head authoring rule and a worked example are documented in `docs/MANUAL.md` in the Log step section of the Closeout Cycle.
 - Treat `PoW.md` and `archives/surfaces/PoW-*.md` as generated surfaces once certify snapshots are emitted.
-- Do not embed raw OPEN or DUMP payloads inside PoW entries.
-- Do not reproduce the full verification command list in PoW entries; `RESULTS.md` is the SSOT for command-by-command proof.
+- Do not embed raw OPEN or other transport payloads inside PoW entries. The durable packet leaf retains opening authority.
+- Do not reproduce the full verification command list in PoW entries; the archived RESULTS leaf is the SSOT for command-by-command proof.
 - `Notes` are artifact-level context only (scope anomalies affecting the artifact inventory). Execution narrative and anomaly resolution belong in RESULTS Worker Execution Narrative.

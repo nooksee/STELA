@@ -119,6 +119,9 @@ if (( scan_all )); then
   while IFS= read -r path; do
     targets+=("$path")
   done < <(find "${REPO_ROOT}/storage/handoff" -maxdepth 1 -type f -name 'DP-OPS-*-RESULTS*.md' | sort)
+  while IFS= read -r path; do
+    targets+=("$path")
+  done < <(find "${REPO_ROOT}/archives/surfaces" -maxdepth 1 -type f -name 'RESULTS-DP-OPS-*.md' | sort)
 elif (( explicit_target == 0 )); then
   active_target="${REPO_ROOT}/storage/handoff/RESULTS.md"
   if [[ -f "$active_target" ]]; then
@@ -138,7 +141,7 @@ elif (( explicit_target == 0 )); then
 fi
 
 if [[ "${#targets[@]}" -eq 0 ]]; then
-  echo "OK: no RESULTS receipts found under storage/handoff/"
+  echo "OK: no RESULTS receipts found in the selected scope"
   exit 0
 fi
 

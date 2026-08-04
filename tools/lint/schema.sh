@@ -218,6 +218,90 @@ lint_current_sop_contract() {
     || fail "current SoP must contain exactly one latest-shipment entry: count=${shipment_count} source=${source_path#${REPO_ROOT}/}"
 }
 
+extract_pow_receipt_value() {
+  local source_path="$1"
+  local field="$2"
+  awk -v field="$field" '
+    /^-[[:space:]]+Receipt pointers:[[:space:]]*$/ { in_receipts=1; next }
+    in_receipts && /^-[[:space:]]+Notes:[[:space:]]*$/ { exit }
+    in_receipts && $0 ~ "^[[:space:]]+-[[:space:]]+" field ":[[:space:]]*" {
+      line=$0
+      sub("^[[:space:]]+-[[:space:]]+" field ":[[:space:]]*", "", line)
+      print line
+    }
+  ' "$source_path"
+}
+
+normalize_pow_receipt_value() {
+  local value="$1"
+  value="$(trim "$value")"
+  value="${value#\`}"
+  value="${value%\`}"
+  printf '%s' "$value"
+}
+
+pow_transition_is_in_progress() {
+  local source_path="$1"
+  local source_rel="${source_path#${REPO_ROOT}/}"
+  if ! git diff --quiet HEAD -- PoW.md "$source_rel"; then
+    return 0
+  fi
+  if git ls-files --others --exclude-standard -- "$source_rel" | grep -Fqx "$source_rel"; then
+    return 0
+  fi
+  return 1
+}
+
+lint_current_pow_contract() {
+  local root_path="$1"
+  local source_path="$2"
+  local line_count=""
+  local frontmatter=""
+  local proof_model=""
+  local proof_state=""
+  local results_value=""
+  local packet_value=""
+
+  line_count="$(awk 'END { print NR }' "$root_path")"
+  [[ "$line_count" == "1" ]] \
+    || fail "current PoW must be a single pointer head: ${root_path#${REPO_ROOT}/}"
+  frontmatter="$(extract_frontmatter "$source_path")" \
+    || fail "current PoW pointer target lacks valid frontmatter: ${source_path#${REPO_ROOT}/}"
+  proof_model="$(trim "$(frontmatter_value "proof_model" "$frontmatter")")"
+  proof_state="$(trim "$(frontmatter_value "proof_state" "$frontmatter")")"
+  [[ "$proof_model" == "durable-v1" ]] \
+    || fail "current PoW pointer target must declare proof_model: durable-v1 in ${source_path#${REPO_ROOT}/}"
+  [[ "$proof_state" == "complete" || "$proof_state" == "legacy-gap" ]] \
+    || fail "current PoW pointer target must declare proof_state: complete or legacy-gap in ${source_path#${REPO_ROOT}/}"
+
+  results_value="$(normalize_pow_receipt_value "$(extract_pow_receipt_value "$source_path" "RESULTS")")"
+  packet_value="$(normalize_pow_receipt_value "$(extract_pow_receipt_value "$source_path" "PACKET")")"
+  [[ -n "$results_value" ]] || fail "current PoW is missing one RESULTS receipt pointer"
+  [[ -n "$packet_value" ]] || fail "current PoW is missing one PACKET receipt pointer"
+  [[ "$(extract_pow_receipt_value "$source_path" "RESULTS" | wc -l)" == "1" ]] \
+    || fail "current PoW must contain exactly one RESULTS receipt pointer"
+  [[ "$(extract_pow_receipt_value "$source_path" "PACKET" | wc -l)" == "1" ]] \
+    || fail "current PoW must contain exactly one PACKET receipt pointer"
+
+  [[ "$packet_value" =~ ^archives/surfaces/(TASK|ADDENDUM)-DP-[A-Z]+-[0-9]{4,}(-ADDENDUM-[A-Z])?-[0-9a-f]{7,}[.]md$ ]] \
+    || fail "current PoW PACKET pointer is not a durable TASK or ADDENDUM leaf: ${packet_value}"
+  if [[ ! -f "${REPO_ROOT}/${packet_value}" ]] && ! pow_transition_is_in_progress "$source_path"; then
+    fail "current PoW PACKET pointer target is missing: ${packet_value}"
+  fi
+
+  if [[ "$proof_state" == "legacy-gap" ]]; then
+    [[ "$results_value" == "unavailable (legacy body not retained)" ]] \
+      || fail "legacy-gap PoW must report the exact unavailable RESULTS state"
+    return 0
+  fi
+
+  [[ "$results_value" =~ ^archives/surfaces/RESULTS-DP-[A-Z]+-[0-9]{4,}(-ADDENDUM-[A-Z])?-[0-9a-f]{7,}[.]md$ ]] \
+    || fail "current PoW RESULTS pointer is not a durable archived receipt: ${results_value}"
+  if [[ ! -f "${REPO_ROOT}/${results_value}" ]] && ! pow_transition_is_in_progress "$source_path"; then
+    fail "current PoW RESULTS pointer target is missing: ${results_value}"
+  fi
+}
+
 lint_current_task_pointer_contract() {
   local root_path="$1"
   local source_path="$2"
@@ -292,6 +376,9 @@ done
 
 current_sop_source="$(resolve_current_surface_source "${REPO_ROOT}/SoP.md")"
 lint_current_sop_contract "${REPO_ROOT}/SoP.md" "$current_sop_source"
+
+current_pow_source="$(resolve_current_surface_source "${REPO_ROOT}/PoW.md")"
+lint_current_pow_contract "${REPO_ROOT}/PoW.md" "$current_pow_source"
 
 current_task_source="$(resolve_current_surface_source "${REPO_ROOT}/TASK.md")"
 lint_current_task_pointer_contract "${REPO_ROOT}/TASK.md" "$current_task_source"
