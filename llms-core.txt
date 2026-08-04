@@ -168,7 +168,7 @@ Use `docs/MANUAL.md` for command procedure details and `docs/CCD.md` for density
 *Living records of what has happened and what is happening.*
 * **State of Play:** [`../../SoP.md`](../../SoP.md) — Durable current objective, accepted baseline, unresolved tensions, rejected directions, exact next action, and latest shipment.
 * **Proof:** [`../../PoW.md`](../../PoW.md) — Proof of Work ledger. (What evidence was produced and where it is stored).
-* **Decisions:** [`../../RoR.md`](../../RoR.md) — Record of Record. Pointer head to the most recent decision leaf under `archives/decisions/`.
+* **Decisions:** [`../../RoR.md`](../../RoR.md) — Record of Record. Pointer head to the current settled decision leaf under `archives/decisions/`.
 * **Routing Contract:** [`../../TASK.md`](../../TASK.md) — Explicit routing and packet lifecycle state plus the active or latest completed Dispatch Packet.
 
 ## 3. The Interface (Wayfinding)

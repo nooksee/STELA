@@ -7,8 +7,8 @@
 It prevents ad hoc filenames and schema drift by generating archive leaves from
 canonical taxonomy templates and a stable naming contract. New leaves receive
 `RoR-` prefixed IDs and filenames. On every successful write, `RoR.md` is updated
-to point at the newly written leaf so the Record of Record pointer head is always
-current.
+to point at the newly written working leaf. Generation records a decision claim for
+completion and review; it does not create decision authority.
 
 ## Mechanics and Sequencing
 Command form:
@@ -50,6 +50,9 @@ Create flow:
    `archives/decisions/RoR-YYYY-MM-DD-NNN-<slug>.md`.
 8. For explicit `--out` paths, reject any path outside `archives/decisions/`.
 9. Write `RoR.md` to contain the repo-relative path of the newly written leaf.
+10. Complete the generated scaffold before acceptance. `tools/lint/schema.sh` rejects
+    unresolved scaffold text, provisional status, malformed identity or section order,
+    and an `op` decision not attributed to the Operator.
 
 Leaf naming contract:
 - New leaves: `archives/decisions/RoR-YYYY-MM-DD-NNN-<type>-<dp_suffix>.md`
@@ -58,8 +61,11 @@ Leaf naming contract:
 
 RoR.md update:
 After each successful `create` invocation, `RoR.md` is overwritten with a single line
-containing the repo-relative path of the written leaf. This keeps the Record of Record
-pointer head current without requiring manual edits.
+containing the repo-relative path of the written leaf. This makes the new working leaf
+visible without requiring a manual pointer edit. The pointer update is not evidence of
+approval. A clean accepted state requires the pointed leaf to satisfy the current-RoR
+contract in `tools/lint/schema.sh`; Operator authorization remains an external fact that
+the completed record must report truthfully.
 
 Rendered decision leaf schema (exec type):
 - YAML frontmatter fields:
@@ -107,4 +113,6 @@ The binary fails on unknown flags, invalid `--dp` format, empty slug after
 `--type` normalization, missing template, unresolved slot markers after render, and
 `--out` paths outside `archives/decisions/`. `--out` must be `auto` or a repo-relative
 path under `archives/decisions/`. Legacy non-taxonomy types are silently routed to
-the `exec` template; no warning is emitted.
+the `exec` template; no warning is emitted. Generated leaves are working scaffolds and
+will fail the current-RoR schema contract until their required content and settled status
+are supplied.
