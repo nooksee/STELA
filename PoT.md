@@ -24,13 +24,13 @@ PoT is the single constitutional document for Stela governance.
 - Drift: any divergence between canon and repository state, or duplication of canon outside SSOT, is a failure state that requires stop and correction.
 - Routing: closeout routing failure is a system failure state.
 - RoR: decision ledger only; authorization and anomaly records live there.
-- SoP: history ledger only; no permanent rules live there.
+- SoP: durable present-state orientation and shipment-history ledger; no permanent rules live there.
 - PoW: proof ledger only; execution evidence pointers live there.
 
 ### 1.3 Canon Surfaces
 - `PoT.md` — constitution, staffing, jurisdiction, and enforcement (SSOT).
-- `TASK.md` — active work surface and DP contract.
-- `SoP.md` — history ledger and shipment record.
+- `TASK.md` — routing state, packet lifecycle, and DP contract.
+- `SoP.md` — durable present-state orientation and shipment-history head.
 - `PoW.md` — proof ledger and execution evidence pointers.
 - `RoR.md` — decision ledger and anomaly record pointer surface.
 - `docs/MANUAL.md` — operator mechanics.
@@ -40,9 +40,9 @@ PoT is the single constitutional document for Stela governance.
 
 **Source of Truth Read-in Order**:
 1. `PoT.md`: The Constitution. Physical laws, staffing, jurisdiction. The final authority.
-2. `SoP.md`: The History. State of Play ledger. Context on *why* things are the way they are.
+2. `SoP.md`: The State of Play. Current objective, accepted baseline, provisional work, unresolved tensions, rejected directions, exact next action, and latest shipment history.
 3. `PoW.md`: The Proof Ledger. Validate evidence pointers before state-changing maintenance.
-4. `TASK.md`: The Contract. Active work surface. Contains the current Dispatch Packet (DP).
+4. `TASK.md`: The Contract. Routing state and packet lifecycle surface. Contains active work when routing is active and the latest completed packet when routing is idle.
 5. `docs/MAP.md`: The Terrain. Continuity map for navigating the repository context.
 
 ## 2. Enforcement

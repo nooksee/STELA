@@ -13,6 +13,8 @@
    - Detect ghost task files not present in the registry.
    - For each task file, enforce header identity, required sections, non-placeholder required fields, pointer token reachability, referenced agent/skill existence, and execution-logic constraints including mandatory final closeout pointer to `TASK.md` Section 3.5.
 3. Resolve TASK dashboard path (direct file or archives pointer target), then lint container contract:
+   - Require current TASK routing, packet-state, and packet-identity fields.
+   - Accept only `ACTIVE/ACTIVE` or `IDLE/COMPLETED` and require `Packet ID` to match the retained DP body.
    - Enforce required heading set and order.
    - Reject forbidden legacy sections and inline branch/hash mirrors.
    - Enforce canonical seven-item load order and receipt command contract in Section 3.4.5.

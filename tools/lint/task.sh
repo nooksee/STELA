@@ -242,8 +242,44 @@ check_forbidden_task_versioning() {
 
 check_task_dashboard() {
   local path="$1"
+  local require_current_lifecycle="${2:-0}"
   require_file "$path"
   check_forbidden_task_versioning "$path"
+
+  local routing_state=""
+  local packet_state=""
+  local packet_id=""
+  local body_packet_id=""
+  routing_state="$(sed -nE 's/^Routing State:[[:space:]]*//p' "$path")"
+  packet_state="$(sed -nE 's/^Packet State:[[:space:]]*//p' "$path")"
+  packet_id="$(sed -nE 's/^Packet ID:[[:space:]]*//p' "$path")"
+
+  if (( require_current_lifecycle )) || [[ -n "$routing_state$packet_state$packet_id" ]]; then
+    [[ "$(grep -c '^Routing State:' "$path" || true)" == "1" ]] || fail "TASK requires exactly one Routing State field"
+    [[ "$(grep -c '^Packet State:' "$path" || true)" == "1" ]] || fail "TASK requires exactly one Packet State field"
+    [[ "$(grep -c '^Packet ID:' "$path" || true)" == "1" ]] || fail "TASK requires exactly one Packet ID field"
+
+    case "${routing_state}/${packet_state}" in
+      ACTIVE/ACTIVE|IDLE/COMPLETED)
+        ;;
+      *)
+        fail "TASK lifecycle pair is invalid: routing=${routing_state:-missing} packet=${packet_state:-missing}"
+        ;;
+    esac
+
+    body_packet_id="$(awk '
+      /^###[[:space:]]+DP-[A-Z]+-[0-9]{4,}:/ {
+        line=$0
+        sub(/^###[[:space:]]+/, "", line)
+        sub(/:.*/, "", line)
+        print line
+        exit
+      }
+    ' "$path")"
+    if [[ -z "$body_packet_id" || "$packet_id" != "$body_packet_id" ]]; then
+      fail "TASK Packet ID must match the retained DP body: field=${packet_id:-missing} body=${body_packet_id:-missing}"
+    fi
+  fi
 
   local -a labels=(
     "## 1. Session State (The Anchor)"
@@ -681,8 +717,12 @@ if (( $# == 1 )); then
   task_dashboard_path="$1"
 fi
 
+require_current_lifecycle=0
+if [[ "$task_dashboard_path" == "TASK.md" ]]; then
+  require_current_lifecycle=1
+fi
 if resolved_task_dashboard_path="$(resolve_task_surface_path "$task_dashboard_path")"; then
-  check_task_dashboard "$resolved_task_dashboard_path"
+  check_task_dashboard "$resolved_task_dashboard_path" "$require_current_lifecycle"
 fi
 
 if (( failures > 0 )); then
