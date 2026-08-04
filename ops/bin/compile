@@ -20,12 +20,15 @@ declare -a COMPILE_RESOLVED_PATHS=()
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/compile
+Usage: ops/bin/compile [--check]
 
 Compiles manifest templates from ops/src/manifests/*.md.tpl into
 explicit manifests under ops/lib/manifests/*.md.
 Each successful compile also emits a schema-stamped snapshot leaf in
 archives/manifests/ before runtime manifests are updated.
+
+--check renders into temporary storage and verifies byte parity without
+emitting a snapshot leaf or changing runtime manifests.
 USAGE
 }
 
@@ -371,9 +374,45 @@ promote_compiled_manifests() {
   done
 }
 
+verify_compiled_manifests() {
+  local compile_tmp_root="$1"
+  local -a compiled_paths=()
+  local compiled_path=""
+  local expected_path=""
+  local current_path=""
+  local checked=0
+
+  mapfile -t compiled_paths < <(find "${compile_tmp_root}/${OUTPUT_DIR}" -maxdepth 1 -type f -name '*.md' -printf '%P\n' | LC_ALL=C sort)
+  if (( ${#compiled_paths[@]} == 0 )); then
+    project_die "no compiled manifests found in temporary output"
+  fi
+
+  for compiled_path in "${compiled_paths[@]}"; do
+    expected_path="${compile_tmp_root}/${OUTPUT_DIR}/${compiled_path}"
+    current_path="${PROJECT_REPO_ROOT}/${OUTPUT_DIR}/${compiled_path}"
+    [[ -f "$current_path" ]] || project_die "compiled manifest missing from runtime output: ${OUTPUT_DIR}/${compiled_path}"
+    if ! cmp -s "$current_path" "$expected_path"; then
+      diff -u \
+        --label "${OUTPUT_DIR}/${compiled_path} (current)" \
+        --label "${OUTPUT_DIR}/${compiled_path} (generated)" \
+        "$current_path" \
+        "$expected_path" || true
+      project_die "compiled manifest differs from template output: ${OUTPUT_DIR}/${compiled_path}"
+    fi
+    checked=$((checked + 1))
+  done
+
+  printf 'OK: compiled manifests match template output (%s/%s).\n' "$checked" "${#compiled_paths[@]}"
+}
+
 main() {
+  local check_mode=0
   for arg in "$@"; do
     case "$arg" in
+      --check)
+        (( check_mode == 0 )) || project_die "duplicate --check argument"
+        check_mode=1
+        ;;
       -h|--help)
         usage
         exit 0
@@ -392,7 +431,11 @@ main() {
   fi
 
   local manifests_abs="${PROJECT_REPO_ROOT}/${ARCHIVE_MANIFESTS_DIR}"
-  mkdir -p "$manifests_abs"
+  if (( check_mode == 1 )); then
+    [[ -d "$manifests_abs" ]] || project_die "missing archive manifest directory: ${ARCHIVE_MANIFESTS_DIR}"
+  else
+    mkdir -p "$manifests_abs"
+  fi
 
   load_tracked_files
 
@@ -431,6 +474,11 @@ main() {
     mapfile -t members < <(resolve_template_members "$template_rel")
     render_compiled_manifest "$template_rel" "$output_rel" "$compile_tmp_root" "${members[@]}"
   done
+
+  if (( check_mode == 1 )); then
+    verify_compiled_manifests "$compile_tmp_root"
+    return 0
+  fi
 
   local trace_id
   trace_id="$(resolve_trace_id)"

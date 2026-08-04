@@ -13,7 +13,7 @@ Every CbC decision made against a named tool gets a row. Entries are updated whe
 | tools/lint/factory.sh | C | Keep | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-008-cbc-0140.md |
 | tools/lint/integrity.sh | C | Keep | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-009-cbc-0140.md |
 | tools/lint/leaf.sh | C | Keep; structural redesign evaluated and rejected in DP-OPS-0109. Common.sh auto-invoke cannot replicate the EXIT trap in the caller execution context. Scaffold injection not applicable: ops/bin/scaffold does not generate shell scripts. Linter retained as permanent safety net for pre-scaffold and manually authored scripts. | DP-OPS-0101, DP-OPS-0109 | Active | archives/decisions/RoR-2026-03-01-010-cbc-0140.md |
-| tools/lint/llms.sh | A (closed) | Deprecated — llms hook + generator absorption | DP-OPS-0102 | Deprecated | archives/decisions/RoR-2026-03-01-011-cbc-0140.md |
+| tools/lint/llms.sh | C | Reactivated as a pure content-parity gate after audit proved hook-only freshness incomplete; prior retirement basis retained as history | Audit C-03 | Active | archives/decisions/RoR-2026-03-01-011-cbc-0140.md |
 | tools/lint/project.sh (README check) | B | Keep; redesign queued: scaffold guarantee | DP-OPS-0101 | Improvement queued | archives/decisions/RoR-2026-03-01-012-cbc-0140.md |
 | tools/lint/project.sh (structural checks) | C | Keep | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-013-cbc-0140.md |
 | tools/lint/results.sh | C | Keep | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-014-cbc-0140.md |

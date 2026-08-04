@@ -15,14 +15,19 @@ FULL_MANIFEST="ops/lib/manifests/DISCOVERY.md"
 OUT_DIR="${REPO_ROOT}"
 ROOT_OUT_DIR="${REPO_ROOT}"
 work_dir=""
+CHECK_MODE=0
+TEST_MODE=0
+CUSTOM_INPUTS=0
 
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/llms [--out-dir=PATH] [--core-manifest=PATH] [--full-manifest=PATH]
+Usage: ops/bin/llms [--check|--test] [--out-dir=PATH] [--core-manifest=PATH] [--full-manifest=PATH]
 
 Notes:
 - Root outputs are always refreshed: llms.txt, llms-core.txt, llms-full.txt.
 - If --out-dir is non-root, mirrored copies are also written there.
+- --check verifies compiled manifests and root bundle parity without changing tracked files.
+- --test runs the fail-closed comparison contract without changing tracked files.
 USAGE
 }
 
@@ -36,16 +41,120 @@ normalize_out_dir() {
   printf '%s' "$path"
 }
 
+sha256_file() {
+  local path="$1"
+  sha256sum "$path" | awk '{print $1}'
+}
+
+render_index() {
+  local destination="$1"
+  local core_sha256="$2"
+  local full_sha256="$3"
+
+  {
+    echo "# Stela llms.txt"
+    echo "# Content identity: content-v1"
+    echo "# llms-core SHA-256: ${core_sha256}"
+    echo "# llms-full SHA-256: ${full_sha256}"
+    echo "# Freshness check: ./ops/bin/llms --check"
+    echo "# One Truth bundle index."
+    echo
+    echo "## 0. Root Bundles"
+    echo "- llms-core.txt - Layer 0 (CORE) synthesis output."
+    echo "- llms-full.txt - Layer 2 (DISCOVERY) synthesis output."
+    echo "- llms.txt - This pointer index."
+    echo
+    echo "## 1. Manifest Hierarchy"
+    echo "- ops/src/manifests/*.md.tpl - Manifest template source of truth."
+    echo "- ops/lib/manifests/CORE.md - Immutable Physical Laws manifest."
+    echo "- ops/lib/manifests/OPS.md - Session operations manifest (inherits CORE)."
+    echo "- ops/lib/manifests/DISCOVERY.md - Discovery manifest (inherits CORE)."
+    echo "- ops/lib/manifests/CONTEXT.md - Canonical layer pointer surface."
+    echo "- ops/bin/compile - Deterministic compiler from templates to manifests."
+    echo
+    echo "## 2. Synthesis Engine"
+    echo "- ops/lib/scripts/synthesize.sh - Unified parser, hazard enforcement, and emitter."
+    echo "- ops/bin/context - Session wrapper over synthesize.sh (OPS default + OPEN state)."
+    echo "- ops/bin/llms - Static bundle wrapper over synthesize.sh (CORE and DISCOVERY)."
+    echo
+    echo "## 3. Core Pointers"
+    echo "- PoT.md"
+    echo "- SoP.md"
+    echo "- PoW.md"
+    echo "- TASK.md"
+    echo "- docs/MAP.md"
+  } > "$destination"
+}
+
+compare_generated_file() {
+  local current_path="$1"
+  local expected_path="$2"
+  local label="$3"
+
+  [[ -f "$current_path" ]] || project_die "missing root bundle: ${label}"
+  if ! cmp -s "$current_path" "$expected_path"; then
+    diff -u --label "${label} (current)" --label "${label} (generated)" "$current_path" "$expected_path" || true
+    project_die "root bundle differs from generated content: ${label}"
+  fi
+}
+
+run_check_self_test() {
+  local fixture_root="$1"
+  local current_path="${fixture_root}/current.txt"
+  local expected_path="${fixture_root}/expected.txt"
+  local index_path="${fixture_root}/llms.txt"
+  local fixture_sha=""
+  local passed=0
+
+  printf 'alpha\n' > "$current_path"
+  printf 'alpha\n' > "$expected_path"
+  compare_generated_file "$current_path" "$expected_path" "fixture"
+  passed=$((passed + 1))
+
+  printf 'beta\n' > "$current_path"
+  if (compare_generated_file "$current_path" "$expected_path" "fixture" >/dev/null 2>&1); then
+    project_die "llms self-test expected content mismatch to fail"
+  fi
+  passed=$((passed + 1))
+
+  if (compare_generated_file "${fixture_root}/missing.txt" "$expected_path" "missing-fixture" >/dev/null 2>&1); then
+    project_die "llms self-test expected missing bundle to fail"
+  fi
+  passed=$((passed + 1))
+
+  fixture_sha="$(sha256_file "$expected_path")"
+  render_index "$index_path" "$fixture_sha" "$fixture_sha"
+  grep -Fxq '# Content identity: content-v1' "$index_path" \
+    && grep -Fxq "# llms-core SHA-256: ${fixture_sha}" "$index_path" \
+    && grep -Fxq "# llms-full SHA-256: ${fixture_sha}" "$index_path" \
+    || project_die "llms self-test expected content identity headers"
+  passed=$((passed + 1))
+
+  [[ "$passed" == "4" ]] || project_die "llms self-test count mismatch: expected=4 actual=${passed}"
+  echo "OK: llms check contract tests passed (${passed}/4)."
+}
+
 for arg in "$@"; do
   case "$arg" in
+    --check)
+      (( CHECK_MODE == 0 )) || project_die "duplicate --check argument"
+      CHECK_MODE=1
+      ;;
+    --test)
+      (( TEST_MODE == 0 )) || project_die "duplicate --test argument"
+      TEST_MODE=1
+      ;;
     --out-dir=*)
       OUT_DIR="${arg#--out-dir=}"
+      CUSTOM_INPUTS=1
       ;;
     --core-manifest=*)
       CORE_MANIFEST="${arg#--core-manifest=}"
+      CUSTOM_INPUTS=1
       ;;
     --full-manifest=*)
       FULL_MANIFEST="${arg#--full-manifest=}"
+      CUSTOM_INPUTS=1
       ;;
     -h|--help)
       usage
@@ -56,6 +165,13 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+if (( CHECK_MODE == 1 && TEST_MODE == 1 )); then
+  project_die "--check and --test are mutually exclusive"
+fi
+if (( (CHECK_MODE == 1 || TEST_MODE == 1) && CUSTOM_INPUTS == 1 )); then
+  project_die "--check and --test do not accept output or manifest overrides"
+fi
 
 project_require_repo_root
 project_require_executable "$COMPILE_BIN"
@@ -70,7 +186,18 @@ cleanup() {
 trap cleanup EXIT
 emit_binary_leaf "llms" "start"
 
-"$COMPILE_BIN" >/dev/null
+work_dir="$(mktemp -d)"
+
+if (( TEST_MODE == 1 )); then
+  run_check_self_test "$work_dir"
+  exit 0
+fi
+
+if (( CHECK_MODE == 1 )); then
+  "$COMPILE_BIN" --check
+else
+  "$COMPILE_BIN" >/dev/null
+fi
 
 if [[ "$OUT_DIR" != /* ]]; then
   OUT_DIR="${PROJECT_REPO_ROOT}/${OUT_DIR}"
@@ -78,10 +205,10 @@ fi
 
 OUT_DIR="$(normalize_out_dir "$OUT_DIR")"
 
-mkdir -p "$OUT_DIR"
-mkdir -p "$ROOT_OUT_DIR"
-
-work_dir="$(mktemp -d)"
+if (( CHECK_MODE == 0 )); then
+  mkdir -p "$OUT_DIR"
+  mkdir -p "$ROOT_OUT_DIR"
+fi
 
 core_tmp="${work_dir}/llms-core.txt"
 full_tmp="${work_dir}/llms-full.txt"
@@ -109,41 +236,17 @@ for file in "${deprecated_files[@]}"; do
   fi
 done
 
-head_short="$(git -C "${PROJECT_REPO_ROOT}" rev-parse --short HEAD)"
-head_time="$(git -C "${PROJECT_REPO_ROOT}" show -s --format=%cI HEAD)"
+core_sha256="$(sha256_file "$core_tmp")"
+full_sha256="$(sha256_file "$full_tmp")"
+render_index "$index_tmp" "$core_sha256" "$full_sha256"
 
-{
-  echo "# Stela llms.txt"
-  echo "# HEAD: ${head_short}"
-  echo "# HEAD commit time: ${head_time}"
-  echo "# Refresh: ./ops/bin/llms"
-  echo "# One Truth bundle index."
-  echo
-  echo "## 0. Root Bundles"
-  echo "- llms-core.txt - Layer 0 (CORE) synthesis output."
-  echo "- llms-full.txt - Layer 2 (DISCOVERY) synthesis output."
-  echo "- llms.txt - This pointer index."
-  echo
-  echo "## 1. Manifest Hierarchy"
-  echo "- ops/src/manifests/*.md.tpl - Manifest template source of truth."
-  echo "- ops/lib/manifests/CORE.md - Immutable Physical Laws manifest."
-  echo "- ops/lib/manifests/OPS.md - Session operations manifest (inherits CORE)."
-  echo "- ops/lib/manifests/DISCOVERY.md - Discovery manifest (inherits CORE)."
-  echo "- ops/lib/manifests/CONTEXT.md - Canonical layer pointer surface."
-  echo "- ops/bin/compile - Deterministic compiler from templates to manifests."
-  echo
-  echo "## 2. Synthesis Engine"
-  echo "- ops/lib/scripts/synthesize.sh - Unified parser, hazard enforcement, and emitter."
-  echo "- ops/bin/context - Session wrapper over synthesize.sh (OPS default + OPEN state)."
-  echo "- ops/bin/llms - Static bundle wrapper over synthesize.sh (CORE and DISCOVERY)."
-  echo
-  echo "## 3. Core Pointers"
-  echo "- PoT.md"
-  echo "- SoP.md"
-  echo "- PoW.md"
-  echo "- TASK.md"
-  echo "- docs/MAP.md"
-} > "$index_tmp"
+if (( CHECK_MODE == 1 )); then
+  compare_generated_file "${ROOT_OUT_DIR}/llms-core.txt" "$core_tmp" "llms-core.txt"
+  compare_generated_file "${ROOT_OUT_DIR}/llms-full.txt" "$full_tmp" "llms-full.txt"
+  compare_generated_file "${ROOT_OUT_DIR}/llms.txt" "$index_tmp" "llms.txt"
+  echo "OK: root llms bundles match generated content (3/3)."
+  exit 0
+fi
 
 write_bundle() {
   local src="$1"
