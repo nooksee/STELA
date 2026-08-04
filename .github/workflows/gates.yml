@@ -21,7 +21,9 @@ jobs:
           set -euo pipefail
           mkdir -p var/tmp
           git diff --name-only --diff-filter=ACMR "origin/${{ github.base_ref }}"...HEAD > var/tmp/gates-paths.txt
+          git diff --name-only --diff-filter=A "origin/${{ github.base_ref }}"...HEAD > var/tmp/gates-added-paths.txt
           echo "changed_paths_file=var/tmp/gates-paths.txt" >> "$GITHUB_OUTPUT"
+          echo "added_paths_file=var/tmp/gates-added-paths.txt" >> "$GITHUB_OUTPUT"
           echo "changed_count=$(wc -l < var/tmp/gates-paths.txt)" >> "$GITHUB_OUTPUT"
 
       - name: Surface HEAD pointer reachability
@@ -66,7 +68,14 @@ jobs:
         run: bash tools/lint/truth.sh
 
       - name: Enforce schema integrity on surface leaves
-        run: bash tools/lint/schema.sh
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            bash tools/lint/schema.sh \
+              --paths-file="${{ steps.changed_paths.outputs.changed_paths_file }}" \
+              --added-paths-file="${{ steps.changed_paths.outputs.added_paths_file }}"
+          else
+            bash tools/lint/schema.sh
+          fi
 
       - name: Enforce Linguistic Precision mandate
         run: bash tools/lint/style.sh
