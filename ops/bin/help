@@ -6,9 +6,11 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # shellcheck source=/dev/null
 source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 
+READ_ORDER_HEADING_REGEX='^(Source of Truth Read-in Order:|[*][*]Source of Truth Read-in Order[*][*]:)$'
+
 usage() {
   cat <<'USAGE'
-Usage: ops/bin/help [specs|doctrine|curriculum|term]
+Usage: ops/bin/help [specs|doctrine|curriculum|--test|term]
 USAGE
 }
 
@@ -162,70 +164,236 @@ extract_lines_between() {
   local stop_regex="$3"
 
   awk -v start="$start_regex" -v stop="$stop_regex" '
-    BEGIN { in_block=0 }
-    $0 ~ start { in_block=1; next }
-    in_block && $0 ~ stop { exit }
+    BEGIN { in_block=0; start_count=0; stop_found=0 }
+    $0 ~ start {
+      start_count++
+      if (start_count > 1) {
+        exit 4
+      }
+      in_block=1
+      next
+    }
+    in_block && $0 ~ stop {
+      stop_found=1
+      exit
+    }
     in_block { print }
+    END {
+      if (start_count != 1 || stop_found != 1) {
+        exit 3
+      }
+    }
   ' "$file"
+}
+
+require_unique_heading() {
+  local file="$1"
+  local heading_regex="$2"
+  local label="$3"
+  local count=""
+
+  count="$(awk -v heading="$heading_regex" '$0 ~ heading { count++ } END { print count + 0 }' "$file")"
+  [[ "$count" == "1" ]] || die "Doctrine parse failed: expected exactly one ${label}; found ${count}."
+}
+
+require_nonempty_block() {
+  local content="$1"
+  local label="$2"
+
+  [[ -n "$(printf '%s\n' "$content" | sed '/^[[:space:]]*$/d')" ]] \
+    || die "Doctrine parse failed: ${label} is empty."
 }
 
 extract_read_order() {
   local file="$1"
-  awk '
-    /^Source of Truth Read-in Order:/ { in_block=1; next }
-    in_block && /^## / { exit }
-    in_block && /^[0-9]+\./ { print }
-  ' "$file"
-}
+  local block=""
+  local line=""
+  local expected=1
+  local actual=0
+  local count=0
 
-print_or_fallback() {
-  local content="$1"
-  local fallback="$2"
-
-  if [[ -n "$(printf '%s\n' "$content" | sed '/^[[:space:]]*$/d')" ]]; then
-    printf '%s\n' "$content"
-  else
-    printf '%s\n' "$fallback"
+  require_unique_heading "$file" "$READ_ORDER_HEADING_REGEX" "Source of Truth Read-in Order heading"
+  if ! block="$(extract_lines_between "$file" "$READ_ORDER_HEADING_REGEX" '^## ' )"; then
+    die "Doctrine parse failed: read-order block is missing its next level-two boundary."
   fi
+  require_nonempty_block "$block" "read-order block"
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ -n "$(printf '%s' "$line" | sed 's/[[:space:]]//g')" ]] || continue
+    if [[ ! "$line" =~ ^([0-9]+)\.[[:space:]]+ ]]; then
+      die "Doctrine parse failed: read-order entry is not numbered: ${line}"
+    fi
+    actual=$((10#${BASH_REMATCH[1]}))
+    [[ "$actual" == "$expected" ]] \
+      || die "Doctrine parse failed: expected read-order entry ${expected}; found ${actual}."
+    printf '%s\n' "$line"
+    expected=$((expected + 1))
+    count=$((count + 1))
+  done <<< "$block"
+
+  (( count > 0 )) || die "Doctrine parse failed: read-order block contains no numbered entries."
 }
 
 show_doctrine() {
-  local pot_file="PoT.md"
+  local pot_file="${1:-PoT.md}"
   local filing=""
   local axioms=""
   local canon=""
   local read_order=""
 
   if [[ ! -f "$pot_file" ]]; then
-    die "PoT.md not found. Doctrine mode requires PoT.md."
+    die "Doctrine source not found: ${pot_file}"
   fi
 
-  filing="$(extract_lines_between "$pot_file" '^### 1\\.1 Filing Doctrine$' '^### 1\\.2 ' )"
-  axioms="$(extract_lines_between "$pot_file" '^### 1\\.2 Axioms$' '^### 1\\.3 ' )"
-  canon="$(extract_lines_between "$pot_file" '^### 1\\.3 Canon Surfaces$' '^Source of Truth Read-in Order:' )"
-  read_order="$(extract_read_order "$pot_file")"
+  require_unique_heading "$pot_file" '^### 1\\.1 Filing Doctrine$' "Filing Doctrine heading"
+  require_unique_heading "$pot_file" '^### 1\\.2 Axioms$' "Axioms heading"
+  require_unique_heading "$pot_file" '^### 1\\.3 Canon Surfaces$' "Canon Surfaces heading"
+
+  if ! filing="$(extract_lines_between "$pot_file" '^### 1\\.1 Filing Doctrine$' '^### 1\\.2 Axioms$' )"; then
+    die "Doctrine parse failed: Filing Doctrine is not bounded by Axioms."
+  fi
+  if ! axioms="$(extract_lines_between "$pot_file" '^### 1\\.2 Axioms$' '^### 1\\.3 Canon Surfaces$' )"; then
+    die "Doctrine parse failed: Axioms is not bounded by Canon Surfaces."
+  fi
+  if ! canon="$(extract_lines_between "$pot_file" '^### 1\\.3 Canon Surfaces$' "$READ_ORDER_HEADING_REGEX" )"; then
+    die "Doctrine parse failed: Canon Surfaces is not bounded by the read-order heading."
+  fi
+  if ! read_order="$(extract_read_order "$pot_file")"; then
+    return 1
+  fi
+
+  require_nonempty_block "$filing" "Filing Doctrine"
+  require_nonempty_block "$axioms" "Axioms"
+  require_nonempty_block "$canon" "Canon Surfaces"
 
   say "Doctrine mode: constitutional operator guidance from PoT."
 
   printf '%sFiling Doctrine%s\n' "$bold" "$reset"
-  print_or_fallback "$filing" '- See PoT.md Section 1.1.'
+  printf '%s\n' "$filing"
   printf '\n'
 
   printf '%sAxioms%s\n' "$bold" "$reset"
-  print_or_fallback "$axioms" '- See PoT.md Section 1.2.'
+  printf '%s\n' "$axioms"
   printf '\n'
 
   printf '%sCanon Surfaces%s\n' "$bold" "$reset"
-  print_or_fallback "$canon" '- See PoT.md Section 1.3.'
+  printf '%s\n' "$canon"
   printf '\n'
 
   printf '%sRead Sequence%s\n' "$bold" "$reset"
-  print_or_fallback "$read_order" '1. PoT.md\n2. SoP.md\n3. PoW.md\n4. TASK.md\n5. docs/MAP.md'
+  printf '%s\n' "$read_order"
   printf '\n'
 
   printf '%sOperator Reminder%s\n' "$bold" "$reset"
   printf '%s\n' '- Enforce pointer-first workflow: OPEN and RESULTS are artifacts, TASK is routing, PoW is proof.'
   printf '%s\n' '- If canon conflicts with execution intent, stop and resolve with PoT authority first.'
+}
+
+write_doctrine_fixture() {
+  local destination="$1"
+  local heading_mode="$2"
+  local second_number="${3:-2}"
+  local read_heading="Source of Truth Read-in Order:"
+
+  if [[ "$heading_mode" == "bold" || "$heading_mode" == "duplicate" ]]; then
+    read_heading="**Source of Truth Read-in Order**:"
+  elif [[ "$heading_mode" == "missing" ]]; then
+    read_heading="Read-in Order:"
+  fi
+
+  {
+    cat <<'EOF_FIXTURE'
+# Policy of Truth
+
+## 1. Physical Laws
+
+### 1.1 Filing Doctrine
+- `ops/` = Run.
+
+### 1.2 Axioms
+- Truth is required.
+
+### 1.3 Canon Surfaces
+- `PoT.md` = Constitution.
+
+EOF_FIXTURE
+    printf '%s\n' "$read_heading"
+    if [[ "$heading_mode" == "duplicate" ]]; then
+      printf '%s\n' "$read_heading"
+    fi
+    printf '1. PoT.md\n'
+    printf '%s. SoP.md\n' "$second_number"
+    cat <<'EOF_FIXTURE'
+
+## 2. Enforcement
+- Boundary marker.
+EOF_FIXTURE
+  } > "$destination"
+}
+
+assert_doctrine_output() {
+  local output="$1"
+  local expected_entries="$2"
+  local entry_count=""
+
+  [[ "$(printf '%s\n' "$output" | grep -Fxc 'Canon Surfaces')" == "1" ]] \
+    || die "Help doctrine self-test expected one Canon Surfaces label."
+  [[ "$(printf '%s\n' "$output" | grep -Fxc 'Read Sequence')" == "1" ]] \
+    || die "Help doctrine self-test expected one Read Sequence label."
+  ! printf '%s\n' "$output" | grep -Fq '## 2. Enforcement' \
+    || die "Help doctrine self-test detected content beyond the doctrine boundary."
+  ! printf '%s\n' "$output" | grep -Fq '\n' \
+    || die "Help doctrine self-test detected a literal escaped newline."
+  entry_count="$(printf '%s\n' "$output" | grep -Ec '^[0-9]+[.] ')"
+  [[ "$entry_count" == "$expected_entries" ]] \
+    || die "Help doctrine self-test entry count mismatch: expected=${expected_entries} actual=${entry_count}."
+}
+
+run_doctrine_self_test() {
+  local fixture_root=""
+  local fixture_path=""
+  local output=""
+  local passed=0
+
+  fixture_root="$(mktemp -d "${TMPDIR:-/tmp}/stela-help-test.XXXXXX")"
+  fixture_path="${fixture_root}/PoT.md"
+
+  output="$(show_doctrine PoT.md)"
+  assert_doctrine_output "$output" "5"
+  passed=$((passed + 1))
+
+  write_doctrine_fixture "$fixture_path" "bold"
+  output="$(show_doctrine "$fixture_path")"
+  assert_doctrine_output "$output" "2"
+  passed=$((passed + 1))
+
+  write_doctrine_fixture "$fixture_path" "plain"
+  output="$(show_doctrine "$fixture_path")"
+  assert_doctrine_output "$output" "2"
+  passed=$((passed + 1))
+
+  write_doctrine_fixture "$fixture_path" "missing"
+  if (show_doctrine "$fixture_path" >/dev/null 2>&1); then
+    die "Help doctrine self-test expected a missing read-order heading to fail."
+  fi
+  passed=$((passed + 1))
+
+  write_doctrine_fixture "$fixture_path" "plain" "3"
+  if (show_doctrine "$fixture_path" >/dev/null 2>&1); then
+    die "Help doctrine self-test expected nonconsecutive numbering to fail."
+  fi
+  passed=$((passed + 1))
+
+  write_doctrine_fixture "$fixture_path" "duplicate"
+  if (show_doctrine "$fixture_path" >/dev/null 2>&1); then
+    die "Help doctrine self-test expected duplicate read-order headings to fail."
+  fi
+  passed=$((passed + 1))
+
+  rm -rf "$fixture_root"
+  [[ "$passed" == "6" ]] \
+    || die "Help doctrine self-test count mismatch: expected=6 actual=${passed}."
+  echo "OK: help doctrine contract tests passed (${passed}/6)."
 }
 
 show_curriculum() {
@@ -336,6 +504,9 @@ case "${1:-}" in
     ;;
   doctrine)
     show_doctrine
+    ;;
+  --test)
+    run_doctrine_self_test
     ;;
   curriculum)
     show_curriculum
