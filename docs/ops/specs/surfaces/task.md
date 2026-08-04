@@ -3,10 +3,17 @@
 
 ## Purpose
 `TASK.md` is the canonical task-routing and DP contract surface.
-Think of `TASK.md` like the control desk card that shows which packet is active and which checks must run before closeout.
+It distinguishes current routing state from the lifecycle state of the packet body retained for execution or lineage.
+
+## Lifecycle Contract
+- `Routing State: IDLE` with `Packet State: COMPLETED` means no packet is active. The retained DP body is the latest completed packet and provides immutable lineage for next-packet derivation.
+- `Routing State: ACTIVE` with `Packet State: ACTIVE` means the DP body is the current executable assignment on a work branch.
+- A proposed packet in `storage/dp/intake/DP.md` does not change TASK routing state until `ops/bin/draft` activates it.
+- A completed packet becomes historically superseded when a later TASK leaf points back through the immutable `previous` chain. Historical leaves are never rewritten merely to change their label.
+- Any other routing and packet-state combination is invalid.
 
 ## Surface Roles
-- `TASK.md`: Dispatch contract template and active thread routing surface.
+- `TASK.md`: Current routing surface. It contains active work or points to the latest completed packet while idle.
 - DP body (`TASK.md` Section 3): Worker-facing executable assignment.
 - `storage/handoff/RESULTS.md`: Pointer-first execution receipt with certify replay outputs plus the certify-collected narrative. The three worker execution-start commands belong verbatim under `### Preflight State`, not in the replay command list.
 - `OPEN` and `DUMP` artifacts: Generated state artifacts used for refresh and receipt pointers.
@@ -15,7 +22,8 @@ Think of `TASK.md` like the control desk card that shows which packet is active 
 - `tools/lint/task.sh`: Enforces TASK surface schema and TASK-only container rules.
 - `tools/lint/dp.sh`: Enforces DP transaction rules in Section 3.
 - `tools/lint/results.sh`: Validates RESULTS artifacts.
-- `ops/bin/draft`: Generates canonical DP structure from `ops/src/surfaces/dp.md.tpl` and updates `TASK.md`.
+- `ops/bin/draft`: Generates canonical DP structure from `ops/src/surfaces/dp.md.tpl`, installs the new DP body, and activates routing and packet state.
+- `ops/bin/certify`: Completes packet state and returns routing to idle when it emits the immutable TASK leaf.
 - Separation of concerns is strict: DP lint does not duplicate TASK container validation.
 
 ## Prune Sequencing

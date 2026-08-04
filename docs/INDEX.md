@@ -10,8 +10,8 @@
 * [GOVERNANCE.md](GOVERNANCE.md) — Project coherence, tone lanes, and non-negotiables.
 
 ## 2. The Ledger (State)
-* [../SoP.md](../SoP.md) — State of Play: The history of what shipped and why.
-* [../TASK.md](../TASK.md) — The active work surface and Dispatch Packet contract.
+* [../SoP.md](../SoP.md) — State of Play: current orientation, exact next action, and latest shipment history.
+* [../TASK.md](../TASK.md) — The routing state, packet lifecycle, and Dispatch Packet contract.
 
 ## 3. Operations & Maps (Deep Dives)
 * [ops/README.md](ops/README.md) — Ops Kernel architecture and subsystem overview.

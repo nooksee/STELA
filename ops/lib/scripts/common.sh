@@ -29,6 +29,48 @@ normalize_path_token() {
   printf '%s' "$value"
 }
 
+rewrite_task_lifecycle_fields() {
+  local source_path="$1"
+  local out_path="$2"
+  local routing_state="$3"
+  local packet_state="$4"
+  local packet_id="$5"
+  local updated_date="$6"
+
+  [[ -f "$source_path" ]] || die "TASK lifecycle source missing: ${source_path}"
+  case "${routing_state}/${packet_state}" in
+    ACTIVE/ACTIVE|IDLE/COMPLETED)
+      ;;
+    *)
+      die "invalid TASK lifecycle pair: routing=${routing_state} packet=${packet_state}"
+      ;;
+  esac
+  [[ "$packet_id" =~ ^DP-[A-Z]+-[0-9]{4,}$ ]] || die "invalid TASK lifecycle packet id: ${packet_id}"
+  [[ "$updated_date" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || die "invalid TASK lifecycle update date: ${updated_date}"
+
+  awk -v routing_state="$routing_state" -v packet_state="$packet_state" -v packet_id="$packet_id" -v updated_date="$updated_date" '
+    /^Status:[[:space:]]*/ {
+      print "Routing State: " routing_state
+      print "Packet State: " packet_state
+      print "Packet ID: " packet_id
+      next
+    }
+    /^Routing State:[[:space:]]*/ { print "Routing State: " routing_state; next }
+    /^Packet State:[[:space:]]*/ { print "Packet State: " packet_state; next }
+    /^Packet ID:[[:space:]]*/ { print "Packet ID: " packet_id; next }
+    /^Last Updated:[[:space:]]*/ { print "Last Updated: " updated_date; next }
+    { print }
+  ' "$source_path" > "$out_path"
+
+  [[ "$(grep -c '^Routing State:' "$out_path" || true)" == "1" ]] || die "TASK lifecycle rewrite did not produce exactly one Routing State field"
+  [[ "$(grep -c '^Packet State:' "$out_path" || true)" == "1" ]] || die "TASK lifecycle rewrite did not produce exactly one Packet State field"
+  [[ "$(grep -c '^Packet ID:' "$out_path" || true)" == "1" ]] || die "TASK lifecycle rewrite did not produce exactly one Packet ID field"
+  grep -Fxq "Routing State: ${routing_state}" "$out_path" || die "TASK lifecycle routing rewrite failed"
+  grep -Fxq "Packet State: ${packet_state}" "$out_path" || die "TASK lifecycle packet-state rewrite failed"
+  grep -Fxq "Packet ID: ${packet_id}" "$out_path" || die "TASK lifecycle packet-id rewrite failed"
+  return 0
+}
+
 emit_diag_field() {
   local key="$1"
   local value="${2-}"

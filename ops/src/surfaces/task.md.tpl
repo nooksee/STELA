@@ -6,7 +6,9 @@ ff_target: machine-dense
 ff_band: "15-25"
 ---
 # STELA TASK DASHBOARD
-Status: ACTIVE
+Routing State: ACTIVE
+Packet State: ACTIVE
+Packet ID: DP-XXXX
 Owner: Integrator
 Last Updated: 2026-02-14
 
@@ -19,6 +21,7 @@ Session State contract:
 - OPEN (and OPEN-PORCELAIN when dirty) is the session state snapshot.
 - RESULTS is the audit record for the DP.
 - TASK is the stable routing surface.
+- A pointer-head TASK is idle. Its body is the latest completed packet retained for lineage and next-packet derivation, not active work.
 
 ## 2. Logic Pointers
 Primary Constraint: PoT.md (Policy of Truth).

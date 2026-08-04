@@ -324,7 +324,7 @@ Compile snapshot policy:
 - Allowlist policy entries may use wildcard paths (for example `archives/manifests/compile-*.md`) to cover generated compile leaves.
 
 5. Log
-Prepare SoP/PoW ledger updates before running certify so the emitted leaf snapshots capture the intended entry content.
+Prepare the SoP current-state fields, SoP latest-shipment entry, and PoW proof entry before running certify so the emitted leaves capture the intended post-merge orientation and evidence.
 After certify, treat `PoW.md`, `SoP.md`, and `TASK.md` as pointer heads; do not manually edit pointer lines or emitted `archives/surfaces/*` leaves.
 If operator authorization expands scope beyond the original DP boundaries, record that authorization explicitly in SoP and PoW entry content and mirror it in the closing sidecar.
 PoW contract and schema guidance are canonical in `docs/ops/specs/surfaces/pow.md`; author PoW entry content to that spec before certification snapshotting.
@@ -333,29 +333,35 @@ Do not reproduce the full verification command list in SoP or PoW entries; RESUL
 PoW entry `Notes` are artifact-level context only (scope anomalies affecting the artifact inventory). Execution narrative and anomaly resolution belong in RESULTS Worker Execution Narrative.
 Ensure the RESULTS receipt uses RUN or NOT RUN status per verification command, with reason and risk for each NOT RUN item.
 
-### Log Step: Pre-certify single-entry head authoring (`SoP.md` and `PoW.md`)
-1. Rule: before running `ops/bin/certify`, author `SoP.md` and `PoW.md` to contain only the single new entry for the current DP. Do not copy archive leaf history from prior `archives/surfaces/` leaves into the current head.
-2. Reason: `tools/lint/truth.sh` scans current heads and rejects historical strings from archive leaves. Those strings are tolerated in `archives/surfaces/` but are forbidden in head-lint context. Copying history into the head causes `truth.sh` to fail.
-3. Invariant: `ops/bin/certify` generates the `previous:` pointer on the new archive leaf and manages chain linkage. The worker does not manage or reconstruct chain history manually.
-4. Confirmation note: DP-OPS-0116 and ADDENDUM-A confirmed that certify-managed pointer rewrites of `PoW.md`, `SoP.md`, and `TASK.md` to single-line HEAD pointers are expected closeout behavior; do not interpret those rewrites as corruption.
-5. Preflight guard: `ops/bin/certify` now hard-fails if `SoP.md` or `PoW.md` still point at a different packet instead of carrying the current packet's single-entry head content.
-6. Worked example (same pattern for both `SoP.md` and `PoW.md`):
+### Log Step: Pre-certify current-state and shipment authoring
+1. Before running `ops/bin/certify`, replace the SoP pointer temporarily with one authored body for the current packet. Include all six required present-state fields followed by one latest-shipment entry. Write the fields as the intended post-merge baseline.
+2. Author `PoW.md` with only the current packet proof entry. Do not copy historical archive bodies into either current authoring surface.
+3. `tools/lint/truth.sh` scans authored heads and rejects prohibited historical strings. `tools/lint/schema.sh` validates the SoP present-state contract after certification emits the immutable leaf.
+4. `ops/bin/certify` generates each `previous:` pointer and manages chain linkage. The worker does not reconstruct chain history manually.
+5. Certification completes the TASK packet, returns TASK routing to idle, and rewrites SoP, PoW, and TASK roots to their new immutable leaves.
+6. Certification fails when the authored SoP lacks a required field, carries more than one shipment entry, or identifies a packet other than the packet being certified.
+7. SoP worked example:
 
 ~~~md
-# Correct single-entry head (current DP only)
-## <timestamp> UTC - DP-OPS-0113 <summary>
-...current DP entry fields only...
+# STELA STATE OF PLAY
+
+- Current objective: <durable objective>
+- Accepted baseline: <post-merge baseline>
+- Provisional work: <none or bounded proposal>
+- Unresolved tensions: <known unresolved matters>
+- Rejected directions: <rejected routes that should not be rediscovered>
+- Exact next action: <one concrete next move>
+
+## <timestamp> UTC - DP-OPS-XXXX <summary>
+...current shipment narrative only...
 ~~~
+
+8. PoW worked example:
 
 ~~~md
-# Incorrect full-history head (copied archive history)
-## <timestamp> UTC - DP-OPS-0113 <summary>
-...current DP entry fields...
-
-## <older timestamp> UTC - DP-OPS-XXXX <prior summary>
-...copied prior archive leaf entry...
-~~~
-
+# Current proof entry only
+## <timestamp> UTC - DP-OPS-XXXX <summary>
+...current proof fields only...
 ~~~
 
 Generate Audit Bundle

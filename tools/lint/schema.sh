@@ -154,6 +154,93 @@ is_manifest_schema_candidate() {
   return 1
 }
 
+resolve_current_surface_source() {
+  local root_path="$1"
+  local line_count=""
+  local pointer=""
+
+  [[ -f "$root_path" ]] || fail "missing current surface: ${root_path#${REPO_ROOT}/}"
+  line_count="$(awk 'END { print NR }' "$root_path")"
+  if [[ "$line_count" != "1" ]]; then
+    printf '%s' "$root_path"
+    return 0
+  fi
+
+  pointer="$(trim "$(cat "$root_path")")"
+  pointer="${pointer#./}"
+  [[ "$pointer" =~ ^archives/surfaces/[A-Za-z0-9._/-]+\.md$ ]] \
+    || fail "current surface pointer is invalid: ${root_path#${REPO_ROOT}/} -> ${pointer}"
+  [[ -f "${REPO_ROOT}/${pointer}" ]] \
+    || fail "current surface pointer target is missing: ${root_path#${REPO_ROOT}/} -> ${pointer}"
+  printf '%s' "${REPO_ROOT}/${pointer}"
+}
+
+lint_current_sop_contract() {
+  local root_path="$1"
+  local source_path="$2"
+  local -a labels=(
+    "Current objective"
+    "Accepted baseline"
+    "Provisional work"
+    "Unresolved tensions"
+    "Rejected directions"
+    "Exact next action"
+  )
+  local label=""
+  local count=0
+  local value=""
+  local shipment_count=0
+  local line_count=""
+  local frontmatter=""
+  local state_model=""
+
+  line_count="$(awk 'END { print NR }' "$root_path")"
+  if [[ "$line_count" == "1" ]]; then
+    frontmatter="$(extract_frontmatter "$source_path")" \
+      || fail "current SoP pointer target lacks valid frontmatter: ${source_path#${REPO_ROOT}/}"
+    state_model="$(trim "$(frontmatter_value "state_model" "$frontmatter")")"
+    [[ "$state_model" == "present-v1" ]] \
+      || fail "current SoP pointer target must declare state_model: present-v1 in ${source_path#${REPO_ROOT}/}"
+  fi
+
+  for label in "${labels[@]}"; do
+    count="$(grep -cE "^-[[:space:]]+${label}:[[:space:]]*[^[:space:]].*$" "$source_path" || true)"
+    [[ "$count" == "1" ]] \
+      || fail "current SoP field must appear exactly once: field=${label} count=${count} source=${source_path#${REPO_ROOT}/}"
+    value="$(sed -nE "s/^-[[:space:]]+${label}:[[:space:]]*//p" "$source_path")"
+    if grep -Eiq '(^|[^[:alnum:]])(TBD|TODO|PLACEHOLDER|REPLACE_ME)([^[:alnum:]]|$)' <<< "$value"; then
+      fail "current SoP field contains placeholder text: field=${label} source=${source_path#${REPO_ROOT}/}"
+    fi
+  done
+
+  shipment_count="$(grep -cE '^##[[:space:]]+[0-9]{4}-[0-9]{2}-[0-9]{2}.*DP-[A-Z]+-[0-9]{4,}' "$source_path" || true)"
+  [[ "$shipment_count" == "1" ]] \
+    || fail "current SoP must contain exactly one latest-shipment entry: count=${shipment_count} source=${source_path#${REPO_ROOT}/}"
+}
+
+lint_current_task_pointer_contract() {
+  local root_path="$1"
+  local source_path="$2"
+  local line_count=""
+  local frontmatter=""
+  local routing_state=""
+  local packet_state=""
+
+  line_count="$(awk 'END { print NR }' "$root_path")"
+  if [[ "$line_count" != "1" ]]; then
+    return 0
+  fi
+
+  frontmatter="$(extract_frontmatter "$source_path")" \
+    || fail "current TASK pointer target lacks valid frontmatter: ${source_path#${REPO_ROOT}/}"
+  routing_state="$(trim "$(frontmatter_value "routing_state" "$frontmatter")")"
+  packet_state="$(trim "$(frontmatter_value "packet_state" "$frontmatter")")"
+  [[ "$routing_state" == "idle" ]] \
+    || fail "pointer-head TASK must declare routing_state: idle in ${source_path#${REPO_ROOT}/}"
+  [[ "$packet_state" == "completed" ]] \
+    || fail "pointer-head TASK must declare packet_state: completed in ${source_path#${REPO_ROOT}/}"
+}
+
 definitions_checked=0
 surfaces_checked=0
 manifests_checked=0
@@ -202,6 +289,12 @@ for path in "${manifest_candidates[@]}"; do
   lint_schema_leaf "$path" "$rel_path"
   manifests_checked=$((manifests_checked + 1))
 done
+
+current_sop_source="$(resolve_current_surface_source "${REPO_ROOT}/SoP.md")"
+lint_current_sop_contract "${REPO_ROOT}/SoP.md" "$current_sop_source"
+
+current_task_source="$(resolve_current_surface_source "${REPO_ROOT}/TASK.md")"
+lint_current_task_pointer_contract "${REPO_ROOT}/TASK.md" "$current_task_source"
 
 checked=$((definitions_checked + surfaces_checked + manifests_checked))
 echo "OK: schema lint passed (${checked} file(s) checked: definitions=${definitions_checked}, surfaces=${surfaces_checked}, manifests=${manifests_checked})."

@@ -461,6 +461,10 @@ validate_surface_head_authored_for_packet() {
     source_rel_path="$head_pointer"
   fi
 
+  if [[ "$surface_rel_path" == "SoP.md" ]]; then
+    validate_sop_present_state_contract "$source_path" "$source_rel_path"
+  fi
+
   local entry_count
   entry_count="$(count_surface_entry_headers "$source_path")"
   [[ "$entry_count" == "1" ]] || die "${surface_rel_path} current source must contain exactly one entry before certify: source=${source_rel_path} entry_count=${entry_count}"
@@ -475,6 +479,31 @@ validate_surface_head_authored_for_packet() {
     fi
     die "${surface_rel_path} current entry does not match ${expected_packet_id}; author the current single-entry head before certify"
   fi
+}
+
+validate_sop_present_state_contract() {
+  local source_path="$1"
+  local source_label="$2"
+  local -a labels=(
+    "Current objective"
+    "Accepted baseline"
+    "Provisional work"
+    "Unresolved tensions"
+    "Rejected directions"
+    "Exact next action"
+  )
+  local label=""
+  local count=0
+  local value=""
+
+  for label in "${labels[@]}"; do
+    count="$(grep -cE "^-[[:space:]]+${label}:[[:space:]]*[^[:space:]].*$" "$source_path" || true)"
+    [[ "$count" == "1" ]] || die "SoP present-state field must appear exactly once: field=${label} source=${source_label} count=${count}"
+    value="$(sed -nE "s/^-[[:space:]]+${label}:[[:space:]]*//p" "$source_path")"
+    if grep -Eiq '(^|[^[:alnum:]])(TBD|TODO|PLACEHOLDER|REPLACE_ME)([^[:alnum:]]|$)' <<< "$value"; then
+      die "SoP present-state field contains placeholder text: field=${label} source=${source_label}"
+    fi
+  done
 }
 
 extract_markdown_body_for_snapshot() {
@@ -514,7 +543,10 @@ render_task_snapshot_body() {
   local source_path="$1"
   local replacement_dp_path="$2"
   local out_path="$3"
+  local packet_id="$4"
+  local updated_date="$5"
   local source_body_tmp="${TMP_DIR}/task-snapshot-source.body"
+  local lifecycle_body_tmp="${TMP_DIR}/task-snapshot-lifecycle.body"
   local wrote_marker_path="${TMP_DIR}/task-snapshot-replaced.marker"
 
   if ! extract_markdown_body_for_snapshot "$source_path" > "$source_body_tmp"; then
@@ -522,6 +554,8 @@ render_task_snapshot_body() {
   fi
 
   rm -f "$wrote_marker_path"
+  rewrite_task_lifecycle_fields "$source_body_tmp" "$lifecycle_body_tmp" "IDLE" "COMPLETED" "$packet_id" "$updated_date"
+
   awk -v replacement="$replacement_dp_path" -v wrote_marker="$wrote_marker_path" '
     BEGIN {
       in_section=0
@@ -548,7 +582,7 @@ render_task_snapshot_body() {
     }
     skip_rest { next }
     { print }
-  ' "$source_body_tmp" > "$out_path"
+  ' "$lifecycle_body_tmp" > "$out_path"
 
   if [[ ! -s "$wrote_marker_path" ]]; then
     die "failed to locate active DP heading inside TASK section 3 while materializing TASK snapshot"
@@ -954,6 +988,7 @@ emit_surface_leaf_and_pointer() {
   local created_at="$5"
   local task_replacement_dp_path="${6:-}"
   local surface_rel_path="${surface_abs_path#${REPO_ROOT}/}"
+  local updated_date="${created_at%%T*}"
 
   [[ -f "$surface_abs_path" ]] || die "surface missing: ${surface_rel_path}"
   assert_allowlist_contains_path "$surface_rel_path"
@@ -995,22 +1030,31 @@ emit_surface_leaf_and_pointer() {
 
   local body_tmp="${TMP_DIR}/snapshot-${surface_rel_path##*/}.body"
   if [[ "$surface_rel_path" == "TASK.md" && -n "$task_replacement_dp_path" ]]; then
-    render_task_snapshot_body "$source_path" "$task_replacement_dp_path" "$body_tmp"
+    render_task_snapshot_body "$source_path" "$task_replacement_dp_path" "$body_tmp" "$packet_id" "$updated_date"
   elif ! extract_markdown_body_for_snapshot "$source_path" > "$body_tmp"; then
     die "failed to extract snapshot body from ${source_path#${REPO_ROOT}/}"
   fi
 
   local leaf_abs_path="${REPO_ROOT}/${leaf_rel_path}"
   mkdir -p "$(dirname "$leaf_abs_path")"
-  cat <<EOF > "$leaf_abs_path"
+  {
+    cat <<EOF
 ---
 trace_id: ${trace_id}
 packet_id: ${packet_id}
 created_at: ${created_at}
 previous: ${previous}
+EOF
+    if [[ "$surface_rel_path" == "TASK.md" ]]; then
+      printf '%s\n' 'routing_state: idle' 'packet_state: completed'
+    elif [[ "$surface_rel_path" == "SoP.md" ]]; then
+      printf '%s\n' 'state_model: present-v1'
+    fi
+    cat <<EOF
 ---
 EOF
-  cat "$body_tmp" >> "$leaf_abs_path"
+    cat "$body_tmp"
+  } > "$leaf_abs_path"
   printf '%s\n' "$leaf_rel_path" > "$surface_abs_path"
 }
 

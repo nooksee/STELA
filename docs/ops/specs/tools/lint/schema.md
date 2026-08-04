@@ -14,10 +14,12 @@
 3. Exclude `.gitkeep`, non-markdown files, and non-policy filenames.
 4. For each candidate, parse the first YAML front-matter block and require keys `trace_id`, `packet_id`, `created_at`, and `previous`.
 5. Validate `created_at` against UTC ISO-8601 with `Z` suffix and validate `previous` as `(none)` or a repository-relative `.md` path with safe characters.
-6. Fail immediately on first malformed candidate and print file-scoped error text.
+6. Resolve the current SoP root and require exactly one non-empty value for each present-state field plus exactly one latest-shipment entry. A pointer-head SoP target must also declare `state_model: present-v1`.
+7. When TASK is a pointer head, require its current target frontmatter to declare `routing_state: idle` and `packet_state: completed`.
+8. Fail immediately on first malformed candidate and print file-scoped error text.
 
 ## Anecdotal Anchor
 This gate addresses the incident class where malformed or missing `previous` values broke head-chain reconstruction during regression tracing across multiple DP sessions. Without schema enforcement, archive continuity had to be rebuilt manually from unrelated receipts.
 
 ## Integrity Filter Warnings
-The script exits on first failure, so additional invalid leaves remain undiscovered until subsequent reruns. Candidate policies intentionally skip non-matching filenames, which means off-policy archival files are outside scan scope. Front-matter parsing evaluates the first YAML block only.
+The script exits on first failure, so additional invalid leaves remain undiscovered until subsequent reruns. Candidate policies intentionally skip non-matching filenames, which means off-policy archival files are outside scan scope. Front-matter parsing evaluates the first YAML block only. A full authored TASK body is validated by task lint; schema lint applies the idle/completed frontmatter rule only when the root is a pointer head.

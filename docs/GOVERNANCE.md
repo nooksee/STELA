@@ -6,7 +6,7 @@ This file is a pointer. Canonical governance lives in PoT.md.
 
 ## 1. Canon Pointers
 PoT.md is the constitutional source for staffing, jurisdiction, and enforcement rules.
-SoP.md records operational history and the reason each governance move was taken.
+SoP.md carries durable present-state orientation and the latest shipment narrative; its immutable leaf chain preserves why each governance move was taken.
 TASK.md defines the active contract that constrains current execution scope and proofs.
 docs/MAP.md provides continuity routing so state reload remains stable across sessions.
 

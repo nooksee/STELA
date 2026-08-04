@@ -16,6 +16,8 @@ The binary parses format, intent, DP label, output mode, and optional tag. It em
 
 The generated role contract names the four constitutional seats without assigning them by human or assistant identity. It points authority to `PoT.md` Section 4.1 and assigned-seat selection to the active work contract. OPEN does not redefine constitutional prose or infer that the Operator is the Integrator or that every assistant is the Contractor.
 
+OPEN also resolves the current `SoP.md` and `TASK.md` heads and reports a bounded present-state summary. It carries the SoP current objective, accepted baseline, and exact next action, followed by TASK routing state, packet state, and packet identity. OPEN does not become a new authority surface; it reports the current canonical values alongside volatile Git and working-tree state. Missing fields or unreachable pointers fail closed.
+
 Draft path: OPEN detects `storage/handoff/PLAN.md` presence and reflects its status in `[NEXT OPERATOR MOVES]` so the operator can see whether the draft plan input surface is ready. The operator move is `./ops/bin/bundle --profile=draft --out=auto`. Draft surface details (`packet_id`, `dp_draft_path=storage/dp/intake/DP.md`, `closing_sidecar`) are bundle-mediated and appear in the bundle `[REQUEST]` block, not in OPEN output.
 - `===== STELA OPEN PROMPT =====`
 - `===== END STELA OPEN PROMPT =====`

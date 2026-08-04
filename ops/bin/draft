@@ -564,13 +564,20 @@ update_task() {
   local rendered_path="$1"
   local task_path="$REPO_ROOT/TASK.md"
   local source_path
+  local lifecycle_source_path
   local tmp_path
   local wrote_marker_path
+  local updated_date
+
+  updated_date="$(date -u +%F)"
 
   resolve_task_surface_source "$task_path"
   source_path="$TASK_SURFACE_CONTENT_PATH"
+  lifecycle_source_path="$(mktemp)"
   tmp_path="$(mktemp)"
   wrote_marker_path="$(mktemp)"
+
+  rewrite_task_lifecycle_fields "$source_path" "$lifecycle_source_path" "ACTIVE" "ACTIVE" "$DP_ID" "$updated_date"
 
   awk -v replacement="$rendered_path" -v wrote_marker="$wrote_marker_path" '
     BEGIN {
@@ -602,10 +609,10 @@ update_task() {
     {
       print
     }
-  ' "$source_path" > "$tmp_path"
+  ' "$lifecycle_source_path" > "$tmp_path"
 
   if [[ ! -s "$wrote_marker_path" ]]; then
-    rm -f "$tmp_path" "$wrote_marker_path"
+    rm -f "$tmp_path" "$wrote_marker_path" "$lifecycle_source_path"
     cleanup_task_surface_context
     die_guard_failure \
       "failed to locate active DP heading inside TASK section 3" \
@@ -616,6 +623,7 @@ update_task() {
   fi
 
   rm -f "$wrote_marker_path"
+  rm -f "$lifecycle_source_path"
 
   mv "$tmp_path" "$task_path"
   cleanup_task_surface_context

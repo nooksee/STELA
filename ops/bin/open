@@ -129,6 +129,32 @@ for path in "${required_files[@]}"; do
   fi
 done
 
+resolve_current_surface_source() {
+  local root_path="$1"
+  local line_count=""
+  local pointer=""
+
+  line_count="$(awk 'END { print NR }' "$root_path")"
+  if [[ "$line_count" != "1" ]]; then
+    printf '%s' "$root_path"
+    return 0
+  fi
+
+  pointer="$(trim "$(cat "$root_path")")"
+  pointer="$(normalize_path_token "$pointer")"
+  [[ "$pointer" =~ ^archives/surfaces/[A-Za-z0-9._/-]+\.md$ ]] \
+    || die "current surface pointer is invalid: ${root_path#${REPO_ROOT}/} -> ${pointer}"
+  [[ -f "${REPO_ROOT}/${pointer}" ]] \
+    || die "current surface pointer target is missing: ${root_path#${REPO_ROOT}/} -> ${pointer}"
+  printf '%s' "${REPO_ROOT}/${pointer}"
+}
+
+surface_field_value() {
+  local source_path="$1"
+  local label="$2"
+  sed -nE "s/^(-[[:space:]]+)?${label}:[[:space:]]*//p" "$source_path"
+}
+
 if (( ${#missing[@]} > 0 )); then
   echo "ERROR: expected files missing. Run from repo root." >&2
   for path in "${missing[@]}"; do
@@ -136,6 +162,23 @@ if (( ${#missing[@]} > 0 )); then
   done
   exit 1
 fi
+
+sop_source_path="$(resolve_current_surface_source "${REPO_ROOT}/SoP.md")"
+task_source_path="$(resolve_current_surface_source "${REPO_ROOT}/TASK.md")"
+
+current_objective="$(surface_field_value "$sop_source_path" "Current objective")"
+accepted_baseline="$(surface_field_value "$sop_source_path" "Accepted baseline")"
+exact_next_action="$(surface_field_value "$sop_source_path" "Exact next action")"
+task_routing_state="$(surface_field_value "$task_source_path" "Routing State")"
+task_packet_state="$(surface_field_value "$task_source_path" "Packet State")"
+task_packet_id="$(surface_field_value "$task_source_path" "Packet ID")"
+
+[[ -n "$current_objective" ]] || die "current SoP is missing Current objective"
+[[ -n "$accepted_baseline" ]] || die "current SoP is missing Accepted baseline"
+[[ -n "$exact_next_action" ]] || die "current SoP is missing Exact next action"
+[[ -n "$task_routing_state" ]] || die "current TASK is missing Routing State"
+[[ -n "$task_packet_state" ]] || die "current TASK is missing Packet State"
+[[ -n "$task_packet_id" ]] || die "current TASK is missing Packet ID"
 
 mode_line="Mode: collaborator stance. Follow repo canon and request missing context."
 
@@ -176,6 +219,14 @@ Do not:
 
 [CONSTITUTION / FOCUS]
 - PoT.md
+
+[PRESENT STATE]
+- Current objective: $current_objective
+- Accepted baseline: $accepted_baseline
+- Exact next action: $exact_next_action
+- TASK routing state: $task_routing_state
+- TASK packet state: $task_packet_state
+- TASK packet id: $task_packet_id
 
 [PRIMARY WORK SURFACE]
 - TASK.md (DP template + active work log)
