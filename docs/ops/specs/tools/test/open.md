@@ -2,7 +2,7 @@
 # Technical Specification: tools/test/open.sh
 
 ## Purpose
-Run deterministic checks for OPEN de-dup policy in `ops/bin/open`: OPEN must include porcelain summary and pointer fields only, while OPEN-PORCELAIN retains detailed porcelain payload content. The test also exercises the internal `OPEN_HANDOFF_BASE` override used by smoke/runtime helpers so OPEN can be materialized under an alternate repo-relative handoff root without touching live `storage/handoff/`.
+Run deterministic checks for OPEN de-dup policy and constitutional-seat vocabulary in `ops/bin/open`: OPEN must include porcelain summary and pointer fields only, while OPEN-PORCELAIN retains detailed porcelain payload content. The role contract must name all four constitutional seats, delegate authority to PoT, delegate assignment to the active work contract, and reject the retired human/assistant conflation. The test also exercises the internal `OPEN_HANDOFF_BASE` override used by smoke/runtime helpers so OPEN can be materialized under an alternate repo-relative handoff root without touching live `storage/handoff/`.
 
 ## Invocation
 - Command: `bash tools/test/open.sh`
@@ -33,6 +33,9 @@ Run deterministic checks for OPEN de-dup policy in `ops/bin/open`: OPEN must inc
 - OPEN must reference an emitted OPEN-PORCELAIN path for dirty-state runs.
 - Referenced OPEN-PORCELAIN artifact must exist and be non-empty.
 - Emitted OPEN and OPEN-PORCELAIN paths must remain under the smoke root provided through `OPEN_HANDOFF_BASE`; the test must not touch live `storage/handoff/`.
+- OPEN must name Operator, Integrator, Contractor, and Auditor as the constitutional seats.
+- OPEN must point authority to `PoT.md` Section 4.1 and assigned-seat selection to the active work contract.
+- OPEN must not emit `Integrator (operator)` or `Contractor (assistant)`.
 
 ## Anecdotal Anchor
 This test is the S5 payload-duplication tripwire. If OPEN starts inlining full porcelain data again, the test fails before certify.
