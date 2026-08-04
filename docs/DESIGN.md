@@ -107,7 +107,7 @@ Registry: C — Keep. Structural redesign evaluated and rejected in DP-OPS-0109 
 Leaf: archives/decisions/RoR-2026-03-01-010-cbc-0140.md
 
 **`tools/lint/llms.sh`**
-Invokes the pure llms check path, which first verifies compiled-manifest parity and then compares `llms.txt`, `llms-core.txt`, and `llms-full.txt` with deterministic temporary renders. The pre-commit hook remains useful for generation, but it cannot place the future commit hash inside a tracked file and cannot prove post-merge freshness. Content-derived identity and pull-request plus merged-main checks close that gap.
+Invokes the pure llms check path, which first verifies compiled-manifest parity and then compares `llms.txt`, `llms-core.txt`, and `llms-full.txt` with deterministic temporary renders. The pre-commit hook invokes this same read-only check at the local commit boundary and stages files `0` times. Content-derived identity and pull-request plus merged-main checks provide independent freshness proof.
 Deletion Test: **C.** Without an independent read-only gate, bypassed hooks, merge resolution, or stale committed output can present coherent but outdated context.
 Registry: C — Reactivated by the C-03 audit repair. The prior DP-OPS-0102 retirement remains historical evidence of the superseded hook-only assumption.
 Leaf: archives/decisions/RoR-2026-03-01-011-cbc-0140.md

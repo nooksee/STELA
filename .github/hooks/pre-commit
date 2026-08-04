@@ -19,7 +19,7 @@ if [[ "$branch" != "work/"* ]]; then
   hook_fail "commits must be on a work/* branch (PoT §6.2.1). Current branch: ${branch}"
 fi
 
-[[ -x "ops/bin/llms" ]] || hook_fail "run llms refresh failed: missing executable ops/bin/llms"
+[[ -f "tools/lint/llms.sh" ]] || hook_fail "generated context check is missing: tools/lint/llms.sh"
 
-./ops/bin/llms || hook_fail "run llms refresh failed: ops/bin/llms returned non-zero"
-git add llms.txt llms-core.txt llms-full.txt || hook_fail "run llms refresh failed: git add for llms bundles failed"
+bash tools/lint/llms.sh \
+  || hook_fail "generated context is stale; run ./ops/bin/llms, review every generated change, stage the intended files explicitly, and retry the commit"
