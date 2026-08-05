@@ -460,3 +460,4 @@ ops/bin/help
 tools/test/inventory.sh
 docs/ops/specs/tools/test/inventory.md
 docs/ops/registry/tools.md
+ops/src/surfaces/closing.md.tpl

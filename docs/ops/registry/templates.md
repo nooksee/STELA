@@ -28,3 +28,8 @@ FF% field documentation: `docs/ops/specs/binaries/template.md`.
 | TPL-20 | ops/src/decisions/op.md.tpl | operator-technical | 25–40% | decision |
 | TPL-21 | ops/src/surfaces/plan.md.tpl | operator-technical | 30–45% | manifest |
 | TPL-22 | ops/src/surfaces/addendum.md.tpl | operator-technical | 30–40% | manifest |
+| TPL-23 | ops/src/surfaces/closing.md.tpl | operator-technical | 30–45% | manifest |
+| TPL-24 | ops/src/stances/planning.md.tpl | operator-technical | 25–40% | manifest |
+| TPL-25 | ops/src/stances/draft.md.tpl | operator-technical | 25–40% | manifest |
+| TPL-26 | ops/src/stances/audit.md.tpl | operator-technical | 25–40% | manifest |
+| TPL-27 | ops/src/stances/addenda.md.tpl | operator-technical | 25–40% | manifest |
