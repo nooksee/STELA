@@ -1,3 +1,10 @@
+---
+template_type: surface
+template_id: closing
+template_version: 1
+ff_target: operator-technical
+ff_band: "30-45"
+---
 # Closing Block Sidecar — {{DP_ID}}
 
 Identify the change, not the motivation. Write a concise summary (ideally under 50 characters) in the imperative mood (e.g., "Add," "Fix," "Refactor") that completes the sentence: "If applied, this commit will [your message]". Focus strictly on what changed, as the how is visible in the diff and the why belongs in the commit body.

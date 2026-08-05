@@ -45,6 +45,7 @@ second_status=0
 decision_template="ops/src/decisions/"'dec.md.tpl'
 documentation_template="ops/src/docs/"'readme.md.tpl'
 closing_template="ops/src/surfaces/"'closing.md.tpl'
+planning_template="ops/src/stances/"'planning.md.tpl'
 
 if first_output="$(cd "$SOURCE_ROOT" && bash tools/verify.sh --inventory 2>&1)"; then
   first_status=0
@@ -78,21 +79,25 @@ fi
 assert_contains "contract" "$first_output" \
   "INVENTORY-CONTRACT version=1 mode=report-only lifecycle_inference=0"
 assert_contains "binary summary" "$first_output" \
-  "INVENTORY-SUMMARY kind=binary present=23 registered=21 present_registered=21 present_unregistered=2 registered_missing=0 spec_missing=0 metadata_missing=0"
+  "INVENTORY-SUMMARY kind=binary present=23 registered=23 present_registered=23 present_unregistered=0 registered_missing=0 spec_missing=0 metadata_missing=0"
 assert_contains "test summary" "$first_output" \
   "INVENTORY-SUMMARY kind=test present=9 registered=7 present_registered=7 present_unregistered=2 registered_missing=0 spec_missing=2 metadata_missing=0"
 assert_contains "template summary" "$first_output" \
-  "INVENTORY-SUMMARY kind=template present=27 registered=21 present_registered=21 present_unregistered=6 registered_missing=0 spec_missing=0 metadata_missing=1"
+  "INVENTORY-SUMMARY kind=template present=27 registered=26 present_registered=26 present_unregistered=1 registered_missing=0 spec_missing=0 metadata_missing=0"
 assert_contains "total summary" "$first_output" \
-  "INVENTORY-TOTAL kinds=8 present=95 registered=85 present_registered=85 present_unregistered=10 registered_missing=0 spec_missing=2 metadata_missing=1"
+  "INVENTORY-TOTAL kinds=8 present=95 registered=92 present_registered=92 present_unregistered=3 registered_missing=0 spec_missing=2 metadata_missing=0"
 assert_contains "report-only status" "$first_output" \
   "INVENTORY-STATUS mismatches=report-only lifecycle_decisions=0 repository_mutations=0"
-assert_contains "unregistered binary" "$first_output" \
-  "INVENTORY-ITEM kind=binary path=ops/bin/hygiene present=1 registered=0"
+assert_contains "registered hygiene binary" "$first_output" \
+  "INVENTORY-ITEM kind=binary path=ops/bin/hygiene present=1 registered=1"
+assert_contains "registered trace binary" "$first_output" \
+  "INVENTORY-ITEM kind=binary path=ops/bin/trace present=1 registered=1"
 assert_contains "unregistered test" "$first_output" \
   "INVENTORY-ITEM kind=test path=tools/test/dp.sh present=1 registered=0"
-assert_contains "unregistered closing template" "$first_output" \
-  "INVENTORY-ITEM kind=template path=${closing_template} present=1 registered=0"
+assert_contains "registered closing template" "$first_output" \
+  "INVENTORY-ITEM kind=template path=${closing_template} present=1 registered=1 executable=na spec=na spec_path=none policy_refs=0 declared_router=manifest literal_consumers=1 metadata_complete=1"
+assert_contains "registered planning stance" "$first_output" \
+  "INVENTORY-ITEM kind=template path=${planning_template} present=1 registered=1"
 assert_contains "registered unused documentation template" "$first_output" \
   "INVENTORY-ITEM kind=template path=${documentation_template} present=1 registered=1"
 assert_contains "unregistered decision template" "$first_output" \
