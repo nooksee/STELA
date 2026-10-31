@@ -393,7 +393,7 @@ OPEN de-dup contract:
 ~~~bash
 # Generate DP-OPS-0065 from canonical template with slot sidecar input
 ./ops/bin/draft --id=DP-OPS-0065 --title="Immutable workflow adoption" \
-  --work-branch=work/dp-ops-0065-2026-02-14 --base-head=d3801c3a \
+  --work-branch=agent/dp-ops-0065-2026-02-14 --base-head=d3801c3a \
   --slots-file=storage/dp/intake/DP-OPS-0065.slots
 
 # Emit plan scaffold for Analyst/Architect draft authoring
@@ -582,7 +582,7 @@ ops/bin/hooks
 This sets `core.hooksPath = .github/hooks` so git invokes the repo hooks directory on every commit and push.
 
 Active hooks:
-- `pre-commit`: refuses commits on `main` or any non-`work/*` branch (PoT §6.2.1); then runs the read-only LLMS parity gate and rejects stale generated context without staging files.
+- `pre-commit`: refuses commits on `main` or any non-`agent/*` branch (PoT §5.1); then runs the read-only LLMS parity gate and rejects stale generated context without staging files.
 - `pre-push`: refuses direct push to `main` (PoT §6.1).
 
 Bypass: `git commit --no-verify` or `git push --no-verify` bypasses all hooks. Use only when the guard is inapplicable (e.g., replaying a certify-controlled commit). Do not use to skip required gates.

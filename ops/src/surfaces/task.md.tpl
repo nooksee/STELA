@@ -28,10 +28,10 @@ Primary Constraint: PoT.md (Policy of Truth).
 Surface Contract Spec: docs/ops/specs/surfaces/task.md.
 
 ### 2.1 Governance Pointers
-Jurisdiction: PoT.md Section 3.
-Git Authority: PoT.md Section 4.1.
-Behavioral Standard: PoT.md Section 4.2.
-Staffing Protocol: PoT.md Section 4.1.
+Jurisdiction: PoT.md Section 1.2.
+Git Authority: PoT.md Section 3.2.
+Behavioral Standard: PoT.md Section 3.3.
+Staffing Protocol: PoT.md Section 3.1.
 
 ### 2.2 Enforcement and Gates
 Style: tools/lint/style.sh
@@ -69,7 +69,7 @@ Input discipline (hard rule):
 
 ## 3.1 Freshness Gate (Must Pass Before Work)
 Base Branch: main
-Work Branch: work/<DP-ID>-YYYY-MM-DD
+Work Branch: agent/<DP-ID>-YYYY-MM-DD
 Base HEAD: 0000000 (Must match session context output)
 
 Required local re-check (worker runs; paste outputs in RESULTS):

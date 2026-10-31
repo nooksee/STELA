@@ -95,7 +95,7 @@ inferred_target=0
 
 branch_name="$(git rev-parse --abbrev-ref HEAD)"
 active_dp_id=""
-if [[ "$branch_name" =~ ^work/(dp-[a-z0-9]+-[0-9]{4,})-[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+if [[ "$branch_name" =~ ^agent/(dp-[a-z0-9]+-[0-9]{4,})-[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
   active_dp_id="$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:lower:]' '[:upper:]')"
 fi
 

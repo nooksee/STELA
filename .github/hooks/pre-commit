@@ -12,11 +12,11 @@ cd "${repo_root}"
 branch="$(git rev-parse --abbrev-ref HEAD)"
 
 if [[ "$branch" == "main" ]]; then
-  hook_fail "direct commits to main are forbidden (PoT §6.2.1). Work on a work/* branch."
+  hook_fail "direct commits to main are forbidden (PoT §5.1). Work on an agent/* branch."
 fi
 
-if [[ "$branch" != "work/"* ]]; then
-  hook_fail "commits must be on a work/* branch (PoT §6.2.1). Current branch: ${branch}"
+if [[ "$branch" != "agent/"* ]]; then
+  hook_fail "commits must be on an agent/* branch (PoT §5.1). Current branch: ${branch}"
 fi
 
 [[ -f "tools/lint/llms.sh" ]] || hook_fail "generated context check is missing: tools/lint/llms.sh"

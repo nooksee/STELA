@@ -194,7 +194,7 @@ emit() {
   cat <<EOF
 ===== STELA OPEN PROMPT =====
 
-Adhere to the Behavioral Logic Standards defined in PoT.md.
+Adhere to the Behavioral Standard defined in PoT.md.
 $mode_line
 
 [FRESHNESS GATE]

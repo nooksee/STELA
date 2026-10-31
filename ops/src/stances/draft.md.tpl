@@ -35,7 +35,7 @@ Steps:
    * Replace only the authoring markers and packet-specific section content using `PLAN.md` plus directly visible attached artifacts.
 4. **CONTENT REQUIREMENTS**:
    * Title line: replace the title marker with a concise worker-facing packet title while preserving the packet id from the scaffold.
-   * `Work Branch`: author the work branch following PoT.md §6.2.1 form `work/<DP-ID>-YYYY-MM-DD`; fill in the current packet id and freshness stamp date.
+   * `Work Branch`: author the work branch following PoT.md §5.1 form `agent/<DP-ID>-YYYY-MM-DD`; fill in the current packet id and freshness stamp date.
    * `3.2.2 DP-scoped load order`: fill with the minimal canon docs/specs/lints the worker must load.
    * `Objective`: 1-3 lines.
    * `In scope`: explicit boundaries plus context hazard exclusions.
