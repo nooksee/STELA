@@ -24,8 +24,10 @@ Before replay begins, certify computes the exact certify-owned generated surface
 - `archives/surfaces/SoP-<freshness>-<short-hash>.md`
 - `archives/surfaces/TASK-<packet-id>-<short-hash>.md`
 - `archives/surfaces/RESULTS-<packet-id>[-ADDENDUM-<letter>]-<short-hash>.md`
+- `llms.txt`, `llms-core.txt`, `llms-full.txt` and `ops/lib/manifests/OPS.md`, the outputs of the mandatory `./ops/bin/llms` receipt command that the replay itself triggers
+- every untracked `archives/manifests/compile-*.md` leaf present at postflight, the timestamp-named output of that same compile event, registered before the changed-file subset check because its name cannot be declared before the run exists
 
-These paths are structurally owned by certify for the active run and therefore do not require packet-specific mutation or policy entries. Every unrelated changed path remains subject to both gates.
+These paths are structurally owned by certify for the active run and therefore do not require packet-specific mutation entries; persistent path policy still applies to the llms outputs and the compile leaves. Every unrelated changed path remains subject to both gates.
 For base DP runs, certify materializes the archived `TASK` leaf body from the current active DP block before writing the new pointer head so prior-packet body text cannot be carried forward by an old TASK pointer target.
 When `PoW.md` or `SoP.md` has been authored as a multi-line pre-certify current-entry head, certify preserves archive chain linkage by deriving `previous:` from the committed HEAD pointer for that surface while snapshotting the current working-tree body into the new leaf.
 The PoW snapshot replaces transport-only receipt pointers with the deterministic archived RESULTS path and authoritative TASK or addendum lineage path. Its frontmatter records `proof_model: durable-v1` and `proof_state: complete`. During replay the future archive path is allowed only as an in-progress PoW transition; final certification publishes and validates the target before success.

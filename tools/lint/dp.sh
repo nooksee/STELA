@@ -1434,8 +1434,8 @@ render_fixture_from_template() {
   safety='- Keep deterministic outputs and pointer-first allowlist mode.'
   plan_state='- DP lint now validates structure through canonical template hashing.'
   plan_request='- Confirm template hash, structure hash, and required-field integrity checks.'
-  plan_changelog='- Updated tools/lint/dp.sh
-- Added ops/src/surfaces/dp.md.tpl'
+  plan_changelog='- UPDATE tools/lint/dp.sh
+- ADD ops/src/surfaces/dp.md.tpl'
   plan_patch='- Implemented structure hashing
 - Added allowlist pointer integrity checks'
   receipt_extra='- ops/bin/manifest stance-fixture --out=-

@@ -136,8 +136,9 @@ surface set:
 - `TASK.md`
 - the three active `archives/surfaces/...` leaves it emits
 - the durable archived RESULTS receipt it emits
+- `llms.txt`, `llms-core.txt`, `llms-full.txt`, `ops/lib/manifests/OPS.md` and the untracked `archives/manifests/compile-*.md` leaves that its mandatory `./ops/bin/llms` replay writes
 
-Those exact current-run generated paths do not require packet-specific mutation or policy entries. Every other changed path must satisfy both gates before certify runs.
+Those exact current-run generated paths do not require packet-specific mutation entries; the llms outputs and compile leaves remain under persistent path policy. Every other changed path must satisfy both gates before certify runs.
 
 `storage/handoff/CLOSING.md` is a latest-wins disposable surface. Certify reads and validates it in place; it does not rename or archive it to a per-packet path. Do not add `storage/handoff/CLOSING-DP-OPS-*.md` entries to the allowlist.
 

@@ -139,7 +139,7 @@ When reporting, include:
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-08-04-b4c01d5f.md
+archives/surfaces/PoW-2026-11-02-1edd08a4.md
 
 
 ## README.md
@@ -156,11 +156,11 @@ Use [docs/MANUAL.md](docs/MANUAL.md) for command workflow and closeout routing.
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-08-04-cc589e79.md
+archives/surfaces/SoP-2026-11-02-1edd08a4.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0262-cc589e79.md
+archives/surfaces/TASK-DP-OPS-0264-1edd08a4.md
 
 
 ## docs/INDEX.md

@@ -195,6 +195,24 @@ register_certify_generated_surface_paths() {
   if [[ -n "$addendum_id" ]]; then
     register_certify_generated_path "$(addendum_lineage_leaf_rel "$packet_id" "$git_short_hash")"
   fi
+  # Outputs of the mandatory ./ops/bin/llms receipt command, a compile event the
+  # replay itself triggers: the root bundles and the compiled OPS manifest.
+  register_certify_generated_path "llms.txt"
+  register_certify_generated_path "llms-core.txt"
+  register_certify_generated_path "llms-full.txt"
+  register_certify_generated_path "ops/lib/manifests/OPS.md"
+}
+
+# Compile leaves are immutable, timestamp-named outputs of the same compile
+# event; their names cannot be declared before the run exists, so every
+# untracked archives/manifests/compile-*.md present at postflight is treated as
+# certify-generated for the packet-exact check (persistent policy still applies).
+register_untracked_compile_leaves() {
+  local rel=""
+  while IFS= read -r rel || [[ -n "$rel" ]]; do
+    [[ -n "$rel" ]] || continue
+    register_certify_generated_path "$rel"
+  done < <(git -C "$REPO_ROOT" ls-files --others --exclude-standard -- 'archives/manifests/compile-*.md')
 }
 
 build_generated_surface_policy_output() {
@@ -203,6 +221,7 @@ build_generated_surface_policy_output() {
   for path in "${CERTIFY_GENERATED_PATH_ORDER[@]}"; do
     printf -- "- %s\n" "$path"
   done
+  echo "- archives/manifests/compile-*.md (untracked compile leaves written by the replayed ops/bin/llms command)"
 }
 
 die() {
@@ -1154,6 +1173,7 @@ EOF
 }
 
 verify_changed_files_subset_allowlist() {
+  register_untracked_compile_leaves
   mapfile -t changed_paths < <(
     {
       git -C "$REPO_ROOT" diff --name-only HEAD
