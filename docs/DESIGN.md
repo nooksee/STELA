@@ -3,7 +3,7 @@
 
 ## 0. Purpose and Constitutional Anchor
 
-This document is the canonical SSOT for the Correct-by-Construction (CbC) design discipline as applied to Stela enforcement tooling. It is referenced from `PoT.md` §4.2 Operational Directives and activated structurally at `TASK.md` §3.1.1 (the DP Preflight Gate).
+This document is the canonical SSOT for the Correct-by-Construction (CbC) design discipline as applied to Stela enforcement tooling. It is referenced from `PoT.md` §3.3 Behavioral Standard and activated structurally at `TASK.md` §3.1.1 (the DP Preflight Gate).
 
 The discipline has one governing question: before building a detection mechanism, have you documented why structural prevention is not viable? If structural prevention is viable and proportionate, the structure must be built before or instead of the detector. If it is not viable, the detector is justified — but the justification must be recorded.
 

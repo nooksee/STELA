@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`tools/lint/truth.sh` enforces canon spelling integrity by rejecting forbidden platform-name variants and legacy phrase tokens before they propagate into authoritative surfaces. This supports PoT Section 4.2 Linguistic Precision and Absolute Literalism by keeping terminology deterministic for both operators and automated parsers.
+`tools/lint/truth.sh` enforces canon spelling integrity by rejecting forbidden platform-name variants and legacy phrase tokens before they propagate into authoritative surfaces. This supports PoT Section 3.3 Linguistic Precision and Absolute Literalism by keeping terminology deterministic for both operators and automated parsers.
 
 ## Mechanics and Sequencing
 1. Resolve repository root, emit telemetry, and build scan list from tracked files under `docs/`, `opt/`, `tools/`, `.github/`, and `ops/`, plus selected root canon files when present.

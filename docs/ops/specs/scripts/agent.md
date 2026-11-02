@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/lib/scripts/agent.sh` enforces a single lifecycle path for agent definitions so role creation, validation, and promotion stay aligned with PoT.md Section 4.1 staffing boundaries and Section 1.2 SSOT drift controls. The script exists to prevent direct edits to agent definitions and registries that bypass lint gates, pointer ledgers, and provenance metadata.
+`ops/lib/scripts/agent.sh` enforces a single lifecycle path for agent definitions so role creation, validation, and promotion stay aligned with PoT.md Section 3.1 staffing boundaries and Section 1.3 SSOT drift controls. The script exists to prevent direct edits to agent definitions and registries that bypass lint gates, pointer ledgers, and provenance metadata.
 
 ## Mechanics and Sequencing
 1. Entry dispatch:

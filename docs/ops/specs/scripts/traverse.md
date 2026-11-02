@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/lib/scripts/traverse.sh` exists to enforce PoT.md Section 1.1 filing doctrine and Section 1.2 drift prevention during file selection. Dump and synthesis tooling requires a deterministic topology walk so scope boundaries stay explicit as repository layout grows.
+`ops/lib/scripts/traverse.sh` exists to enforce PoT.md Section 1.1 filing doctrine and Section 1.3 drift prevention during file selection. Dump and synthesis tooling requires a deterministic topology walk so scope boundaries stay explicit as repository layout grows.
 
 ## Mechanics and Sequencing
 1. Parse CLI arguments for `--scope`, `--project`, `--include-dir`, `--exclude-dir`, and `--ignore-file`, then reject illegal scope and target combinations.

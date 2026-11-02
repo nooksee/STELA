@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/bin/certify` exists to enforce PoT Section 4.2 Generation Mandate at closeout time. The binary prevents a failure mode where receipt evidence is hand-assembled, scope checks are skipped, or proof surfaces diverge from recorded execution. It protects equilibrium maintenance by requiring deterministic receipt command execution, allowlist subset enforcement, structurally owned pointer-first surface emission for `PoW.md`, `SoP.md`, and `TASK.md`, and packet-consistent TASK archival.
+`ops/bin/certify` exists to enforce PoT Section 3.3 Generation Mandate at closeout time. The binary prevents a failure mode where receipt evidence is hand-assembled, scope checks are skipped, or proof surfaces diverge from recorded execution. It protects equilibrium maintenance by requiring deterministic receipt command execution, allowlist subset enforcement, structurally owned pointer-first surface emission for `PoW.md`, `SoP.md`, and `TASK.md`, and packet-consistent TASK archival.
 
 Certification also closes the present-state transition. Before snapshotting SoP, it requires the six durable orientation fields and one shipment entry for the packet being certified. Before emitting the TASK leaf, it rewrites routing to `IDLE`, packet state to `COMPLETED`, and packet identity to the certified DP. The immutable TASK body remains available for lineage and next-packet derivation, but it no longer claims to be active work.
 

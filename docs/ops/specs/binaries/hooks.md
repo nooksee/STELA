@@ -30,7 +30,7 @@ Test mode creates an isolated temporary repository from current `HEAD`, copies t
 | Hook | Trigger | Guard |
 |------|---------|-------|
 | `pre-commit` | `git commit` | Refuses commit on `main` or non-`agent/*` branch (PoT §5.1); then runs the read-only LLMS parity gate and rejects stale generated context |
-| `pre-push` | `git push` | Refuses direct push to `main` (PoT §6.1) |
+| `pre-push` | `git push` | Refuses direct push to `main` (PoT §5.1) |
 
 ## Bypass
 `git commit --no-verify` and `git push --no-verify` bypass all hooks. This is by design; use only when the hook guard is inapplicable.

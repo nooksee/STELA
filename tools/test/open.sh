@@ -169,7 +169,7 @@ if [[ -n "$open_path" ]]; then
   assert_contains "$open_path" "- Porcelain artifact: emitted"
   assert_contains "$open_path" "- Porcelain saved: ${OPEN_TEST_ROOT}/OPEN-PORCELAIN-open-test-"
   assert_contains "$open_path" "Constitutional seats: Operator, Integrator, Contractor, and Auditor."
-  assert_contains "$open_path" "PoT.md Section 4.1 defines authority; the active work contract defines the assigned seat."
+  assert_contains "$open_path" "PoT.md Section 3.1 defines authority; the active work contract defines the assigned seat."
   assert_contains "$open_path" "[PRESENT STATE]"
   assert_contains "$open_path" "- Current objective:"
   assert_contains "$open_path" "- Accepted baseline:"

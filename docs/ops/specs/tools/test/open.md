@@ -34,7 +34,7 @@ Run deterministic checks for OPEN de-dup policy and constitutional-seat vocabula
 - Referenced OPEN-PORCELAIN artifact must exist and be non-empty.
 - Emitted OPEN and OPEN-PORCELAIN paths must remain under the smoke root provided through `OPEN_HANDOFF_BASE`; the test must not touch live `storage/handoff/`.
 - OPEN must name Operator, Integrator, Contractor, and Auditor as the constitutional seats.
-- OPEN must point authority to `PoT.md` Section 4.1 and assigned-seat selection to the active work contract.
+- OPEN must point authority to `PoT.md` Section 3.1 and assigned-seat selection to the active work contract.
 - OPEN must resolve SoP current objective, accepted baseline, and exact next action.
 - OPEN must report TASK routing state, packet state, and packet identity.
 - The test must exercise the shared TASK lifecycle rewrite helper for active, completed, and invalid state pairs.

@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/lib/scripts/common.sh` exists to enforce PoT.md Section 1.2 SSOT and Drift axioms for shared shell primitives. Without one canonical utility layer, each caller drifts toward local variants for path normalization, fatal-exit text, and telemetry leaf writing, which breaks proof parity and weakens cross-script behavior guarantees.
+`ops/lib/scripts/common.sh` exists to enforce PoT.md Section 1.3 SSOT and Drift axioms for shared shell primitives. Without one canonical utility layer, each caller drifts toward local variants for path normalization, fatal-exit text, and telemetry leaf writing, which breaks proof parity and weakens cross-script behavior guarantees.
 
 ## Mechanics and Sequencing
 1. `die` prints `ERROR:` to stderr and exits with code `1`, which gives every caller one fatal path contract.

@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/lib/scripts/synthesize.sh` is the context assembly boundary that enforces PoT.md Section 1.2 SSOT and context-hazard doctrine for worker-facing bundles. `ops/bin/context` and `ops/bin/llms` depend on this script so manifest intent, include resolution, and emitted context bytes stay deterministic and auditable.
+`ops/lib/scripts/synthesize.sh` is the context assembly boundary that enforces PoT.md Section 1.3 SSOT and context-hazard doctrine for worker-facing bundles. `ops/bin/context` and `ops/bin/llms` depend on this script so manifest intent, include resolution, and emitted context bytes stay deterministic and auditable.
 
 ## Mechanics and Sequencing
 1. Parse CLI arguments:

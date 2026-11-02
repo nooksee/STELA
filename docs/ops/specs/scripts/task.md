@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/lib/scripts/task.sh` enforces canonical task lifecycle control so task definitions enter and leave canon through template-driven gates with provenance, scope boundaries, and registry continuity. This aligns with PoT.md Section 1.3 contract authority for `TASK.md` and Section 1.2 drift prevention by blocking ad hoc task-definition writes.
+`ops/lib/scripts/task.sh` enforces canonical task lifecycle control so task definitions enter and leave canon through template-driven gates with provenance, scope boundaries, and registry continuity. This aligns with PoT.md Section 1.4 contract authority for `TASK.md` and Section 1.3 drift prevention by blocking ad hoc task-definition writes.
 
 ## Mechanics and Sequencing
 1. Entry dispatch accepts `harvest`, `promote`, and `check`.

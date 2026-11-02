@@ -583,7 +583,7 @@ This sets `core.hooksPath = .github/hooks` so git invokes the repo hooks directo
 
 Active hooks:
 - `pre-commit`: refuses commits on `main` or any non-`agent/*` branch (PoT §5.1); then runs the read-only LLMS parity gate and rejects stale generated context without staging files.
-- `pre-push`: refuses direct push to `main` (PoT §6.1).
+- `pre-push`: refuses direct push to `main` (PoT §5.1).
 
 Bypass: `git commit --no-verify` or `git push --no-verify` bypasses all hooks. Use only when the guard is inapplicable (e.g., replaying a certify-controlled commit). Do not use to skip required gates.
 

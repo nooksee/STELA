@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`tools/lint/integrity.sh` is the runtime scope guard for DP execution. During an active packet it requires two independent approvals for every ordinary staged, unstaged, or untracked path: exact declaration in the packet or active addendum, and coverage by persistent path policy. This directly protects the PoT Section 1.2 Drift axiom by preventing accumulated policy from silently widening one packet. It also enforces the CbC Design Discipline Preflight linkage contract.
+`tools/lint/integrity.sh` is the runtime scope guard for DP execution. During an active packet it requires two independent approvals for every ordinary staged, unstaged, or untracked path: exact declaration in the packet or active addendum, and coverage by persistent path policy. This directly protects the PoT Section 1.3 Drift axiom by preventing accumulated policy from silently widening one packet. It also enforces the CbC Design Discipline Preflight linkage contract.
 
 ## Mechanics and Sequencing
 1. Resolve repository root, emit telemetry, and resolve `TASK.md` to either the live dashboard or its archives pointer target.
