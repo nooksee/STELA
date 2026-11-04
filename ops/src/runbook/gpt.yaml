@@ -3,7 +3,7 @@
 # PROOF: Operator-visible project settings + behavior probes
 name: gpt-adapter
 description: "External runtime adapter for ChatGPT-based Stela sessions."
-version: 1.0.0
+version: 1.1.0
 adapter_class: external-runtime-adapter
 status: active
 
@@ -25,17 +25,21 @@ scope:
     - attachment-startup-fallback
     - ask-back
     - upload-summary-chatter
+    - expired-upload-notice-fallback
+    - evidence-free-audit-output
 
 instruction_text: |
-  PRIORITY DIRECTIVE: Verify and use current-turn attachments first; execute the implied task immediately; never ask-back or summarize uploads; only request re-upload after an explicit file-access failure check.
+  PRIORITY DIRECTIVE: Verify and use current-turn attachments first; ignore generic notices that previously uploaded files expired when the required current-turn attachments are present and accessible; execute the implied task immediately; cross-reference and present evidence for audit.
 
 validation:
   behavior_probe: |
-    Use current attachments first. Execute now. No ask-back. Re-upload only on verified access failure.
+    Use current attachments first. Ignore generic expired-upload notices when the current-turn files are present and accessible. Execute now. No ask-back. Cross-reference and present evidence for audit.
   expected_signals:
     - "Model begins task from current-turn attachments without upload-summary chatter."
     - "Model does not ask what to do with uploaded files when task intent is already implied by the bundle."
     - "Model treats re-upload as a verified file-access failure path, not a startup default."
+    - "Model does not stop on a generic notice that earlier uploads expired when the required current-turn attachments are present and accessible."
+    - "Model cross-references its claims against the attached artifacts and presents that evidence in audit outputs."
 
 sunset_condition: "Retire when ChatGPT attachment-first execution is stable for two consecutive validation rounds without adapter assistance."
 notes:

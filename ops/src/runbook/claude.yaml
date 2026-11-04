@@ -1,16 +1,16 @@
-# STATUS: Reserve
+# STATUS: Active
 # DEPLOYMENT: Claude Project instructions
 # PROOF: Operator-visible project settings + behavior probes
 name: claude-adapter
-description: "External runtime adapter for Claude-based Stela sessions when platform behavior needs normalization."
-version: 1.0.0
+description: "External runtime adapter for Claude-based Stela sessions: attachment-first startup from current-turn files."
+version: 1.1.0
 adapter_class: external-runtime-adapter
-status: reserve
+status: active
 
 deployment:
   platform: "Claude"
   surface: "Project instructions"
-  operator_action: "Do nothing while status is reserve. Add instruction_text only in a later activation step if operator validation says the adapter is needed."
+  operator_action: "Paste instruction_text into the active Claude project instructions."
   proof_model:
     source_proof: "Operator-visible project settings text or screenshot."
     supporting_evidence:
@@ -25,6 +25,9 @@ scope:
     - attachment-startup-ambiguity
     - role-output-chatter
 
+instruction_text: |
+  PRIORITY DIRECTIVE:  Verify and use current-turn attachments first; infer the task from current-turn attachments and thread context; execute the implied task immediately.
+
 validation:
   behavior_probe: |
     Use current attachments first. Execute the implied task. No upload summary. No follow-on prompt unless a required attachment is inaccessible.
@@ -32,7 +35,8 @@ validation:
     - "Model executes from attachments without startup clarification chatter."
     - "Model emits the requested artifact directly when the Stela transport packet is sufficient."
 
-sunset_condition: "Keep unused until Claude shows a platform-specific startup failure that repo-local canon cannot correct."
+sunset_condition: "Retire when Claude attachment-first execution is stable for two consecutive validation rounds without adapter assistance."
 notes:
-  - "Reserve adapter: no instruction_text is carried while undeployed."
-  - "Add instruction_text only when Claude-specific activation is explicitly chosen."
+  - "Activated on 2026-11-04 by Operator choice; the reserve period (DP-OPS-0184 to DP-OPS-0266) carried no instruction_text."
+  - "This adapter is an external deployment artifact, not constitutional canon."
+  - "Repo correctness remains defined by Stela canon, lints, manifests, and receipts."

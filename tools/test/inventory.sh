@@ -85,7 +85,7 @@ assert_contains "test summary" "$first_output" \
 assert_contains "template summary" "$first_output" \
   "INVENTORY-SUMMARY kind=template present=27 registered=27 present_registered=27 present_unregistered=0 registered_missing=0 spec_missing=0 metadata_missing=0"
 assert_contains "total summary" "$first_output" \
-  "INVENTORY-TOTAL kinds=8 present=95 registered=93 present_registered=93 present_unregistered=2 registered_missing=0 spec_missing=2 metadata_missing=0"
+  "INVENTORY-TOTAL kinds=8 present=96 registered=94 present_registered=94 present_unregistered=2 registered_missing=0 spec_missing=2 metadata_missing=0"
 assert_contains "report-only status" "$first_output" \
   "INVENTORY-STATUS mismatches=report-only lifecycle_decisions=0 repository_mutations=0"
 assert_contains "registered hygiene binary" "$first_output" \

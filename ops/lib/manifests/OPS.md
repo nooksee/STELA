@@ -47,6 +47,7 @@
 - `docs/ops/specs/manifests/verification.md`
 - `docs/ops/specs/runbook/claude.md`
 - `docs/ops/specs/runbook/execution-decision.md`
+- `docs/ops/specs/runbook/gemini.md`
 - `docs/ops/specs/runbook/gpt.md`
 - `docs/ops/specs/scripts/agent.md`
 - `docs/ops/specs/scripts/bundle.md`
