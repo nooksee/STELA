@@ -83,9 +83,9 @@ assert_contains "binary summary" "$first_output" \
 assert_contains "test summary" "$first_output" \
   "INVENTORY-SUMMARY kind=test present=9 registered=7 present_registered=7 present_unregistered=2 registered_missing=0 spec_missing=2 metadata_missing=0"
 assert_contains "template summary" "$first_output" \
-  "INVENTORY-SUMMARY kind=template present=27 registered=26 present_registered=26 present_unregistered=1 registered_missing=0 spec_missing=0 metadata_missing=0"
+  "INVENTORY-SUMMARY kind=template present=27 registered=27 present_registered=27 present_unregistered=0 registered_missing=0 spec_missing=0 metadata_missing=0"
 assert_contains "total summary" "$first_output" \
-  "INVENTORY-TOTAL kinds=8 present=95 registered=92 present_registered=92 present_unregistered=3 registered_missing=0 spec_missing=2 metadata_missing=0"
+  "INVENTORY-TOTAL kinds=8 present=95 registered=93 present_registered=93 present_unregistered=2 registered_missing=0 spec_missing=2 metadata_missing=0"
 assert_contains "report-only status" "$first_output" \
   "INVENTORY-STATUS mismatches=report-only lifecycle_decisions=0 repository_mutations=0"
 assert_contains "registered hygiene binary" "$first_output" \
@@ -100,8 +100,8 @@ assert_contains "registered planning stance" "$first_output" \
   "INVENTORY-ITEM kind=template path=${planning_template} present=1 registered=1"
 assert_contains "registered unused documentation template" "$first_output" \
   "INVENTORY-ITEM kind=template path=${documentation_template} present=1 registered=1"
-assert_contains "unregistered decision template" "$first_output" \
-  "INVENTORY-ITEM kind=template path=${decision_template} present=1 registered=0"
+assert_contains "registered decision template" "$first_output" \
+  "INVENTORY-ITEM kind=template path=${decision_template} present=1 registered=1 executable=na spec=na spec_path=none policy_refs=0 declared_router=decision literal_consumers=1 metadata_complete=1"
 
 summary_count="$(printf '%s\n' "$first_output" | grep -c '^INVENTORY-SUMMARY ' || true)"
 if [[ "$summary_count" == "8" ]]; then

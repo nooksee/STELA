@@ -96,6 +96,7 @@
 - `docs/ops/specs/tools/test/inventory.md`
 - `docs/ops/specs/tools/test/open.md`
 - `docs/ops/specs/tools/verify.md`
+- `docs/ops/specs/workflows/gates.md`
 - `ops/bin/addendum`
 - `ops/bin/allowlist`
 - `ops/bin/bundle`

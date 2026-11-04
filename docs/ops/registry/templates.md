@@ -4,6 +4,8 @@
 Authoritative registry for all template files in `ops/src/`.
 New templates must be registered here before use.
 FF% field documentation: `docs/ops/specs/binaries/template.md`.
+Retired identifiers are not reused: `TPL-14` was `ops/src/docs/runbook.md.tpl`, removed in DP-OPS-0184.
+`TPL-28` is the legacy-type fallback template that `ops/bin/decision` renders for non-taxonomy `--type` values.
 
 | ID | Template File | Tier | Band | Router |
 | --- | --- | --- | --- | --- |
@@ -33,3 +35,4 @@ FF% field documentation: `docs/ops/specs/binaries/template.md`.
 | TPL-25 | ops/src/stances/draft.md.tpl | operator-technical | 25–40% | manifest |
 | TPL-26 | ops/src/stances/audit.md.tpl | operator-technical | 25–40% | manifest |
 | TPL-27 | ops/src/stances/addenda.md.tpl | operator-technical | 25–40% | manifest |
+| TPL-28 | ops/src/decisions/dec.md.tpl | operator-technical | 25–40% | decision |
