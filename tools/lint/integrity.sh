@@ -124,6 +124,27 @@ path_is_generated_surface_owned() {
   return 1
 }
 
+# A compile snapshot leaf is emitted by ops/bin/compile on every run, and
+# ops/bin/llms (a mandatory receipt command) runs compile. The leaf name carries
+# a run timestamp and the HEAD short hash, so a packet cannot declare it in
+# advance and 3.4.3 Changelog forbids globs. An untracked leaf stamped with the
+# current HEAD is current-run generated output; a tracked leaf, or one stamped
+# with any other hash, is ordinary archive content and stays packet-gated.
+CURRENT_HEAD_HASH="$(git rev-parse HEAD 2>/dev/null || true)"
+current_run_compile_leaf_count=0
+path_is_current_run_compile_leaf() {
+  local path="$1"
+  local normalized
+  normalized="$(normalize_path "$path")"
+  [[ "$normalized" =~ ^archives/manifests/compile-[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}-([0-9a-f]{7,})\.md$ ]] || return 1
+  local leaf_hash="${BASH_REMATCH[1]}"
+  [[ -n "$CURRENT_HEAD_HASH" && "$CURRENT_HEAD_HASH" == "$leaf_hash"* ]] || return 1
+  if git ls-files --error-unmatch -- "$normalized" >/dev/null 2>&1; then
+    return 1
+  fi
+  return 0
+}
+
 extract_allowlist_pointer() {
   local source_path="$1"
   awk '
@@ -323,6 +344,10 @@ for path in "${!observed[@]}"; do
   if path_is_generated_surface_owned "$path"; then
     continue
   fi
+  if [[ "$scope_mode" == "packet-exact" ]] && path_is_current_run_compile_leaf "$path"; then
+    current_run_compile_leaf_count=$((current_run_compile_leaf_count + 1))
+    continue
+  fi
   if ! packet_scope_path_is_authorized "$path" "$scope_mode" packet_scoped; then
     missing_packet_scope+=("$path")
   fi
@@ -423,4 +448,5 @@ fi
 echo "Integrity scope mode: ${scope_mode}"
 echo "Packet scope paths: ${packet_scope_count}"
 echo "Addendum scope paths: ${addendum_scope_count}"
+echo "Current-run compile leaves: ${current_run_compile_leaf_count}"
 echo "OK: integrity lint passed (${#observed[@]} observed paths)."

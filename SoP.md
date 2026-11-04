@@ -1,1 +1,1 @@
-archives/surfaces/SoP-2026-08-04-cc589e79.md
+archives/surfaces/SoP-2026-11-04-93a16ad2.md

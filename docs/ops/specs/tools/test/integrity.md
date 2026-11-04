@@ -19,7 +19,9 @@ The matrix must prove:
 5. A declared deletion may remove its own prior persistent entry while the deletion remains visible against `HEAD`.
 6. A matching addendum extends packet scope by exact path.
 7. A mismatched addendum fails closed.
-8. `IDLE/COMPLETED` maintenance uses persistent policy transparently.
-9. An addendum is rejected while routing is idle.
+8. An untracked compile leaf stamped with the fixture `HEAD` is reported as current-run output and passes without a packet declaration.
+9. A compile leaf stamped with any other hash fails packet scope.
+10. `IDLE/COMPLETED` maintenance uses persistent policy transparently.
+11. An addendum is rejected while routing is idle.
 
 Any failed assertion exits nonzero and reports pass and fail counts.
