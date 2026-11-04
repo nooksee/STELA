@@ -464,3 +464,6 @@ ops/src/surfaces/closing.md.tpl
 storage/README.md
 docs/ops/specs/workflows/gates.md
 docs/ops/registry/workflows.md
+projects/README.md
+ops/lib/project/README.md
+docs/ops/registry/projects.md

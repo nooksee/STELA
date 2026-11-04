@@ -15,7 +15,7 @@ Required policy keys:
 - `frontdoor_meta_remove_after_dp` (non-empty)
 
 ## Draft Routing
-`ops/bin/meta` is project-scoped only and does not handle draft routing. Draft sessions use `ops/bin/bundle --profile=draft --slice=<SLICE_ID>` directly. Meta produces no draft-facing surface summary; canonical draft surfaces (`storage/handoff/PLAN.md`, `storage/dp/intake/<packet_id>.md`) are described in `docs/ops/specs/binaries/bundle.md`.
+`ops/bin/meta` is project-scoped only and does not handle draft routing. Draft sessions use `ops/bin/bundle --profile=draft --out=auto` directly; the bundle reads `storage/handoff/PLAN.md` and the operator saves the returned packet to `storage/dp/intake/DP.md`. Meta produces no draft-facing surface summary; the draft surfaces are described in `docs/ops/specs/binaries/bundle.md`.
 
 ## Anecdotal Anchor
 A recurring project-context failure class involved manual capture runs where one of the required artifacts was missing. The original meta wrapper solved this for OPEN + dump; bundle integration extends the same protection to prompt stance and routing metadata without changing operator-facing meta ergonomics.
