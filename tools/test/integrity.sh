@@ -159,6 +159,17 @@ printf 'new\n' > "${repo}/data/addendum.txt"
 } > "${repo}/storage/dp/intake/ADDENDUM.md"
 expect_fail "mismatched addendum fails closed" "$repo" "active addendum does not provide a valid exact scope delta"
 
+repo="$(make_case compile-leaf-current ACTIVE ACTIVE $'data/declared.txt\nstorage/dp/active/allowlist.txt' data/declared.txt)"
+mkdir -p "${repo}/archives/manifests"
+fixture_head="$(git -C "$repo" rev-parse --short HEAD)"
+printf 'snapshot\n' > "${repo}/archives/manifests/compile-2026-01-01T000000-${fixture_head}.md"
+expect_pass "untracked compile leaf stamped with HEAD is current-run output" "$repo" "Current-run compile leaves: 1"
+
+repo="$(make_case compile-leaf-foreign ACTIVE ACTIVE $'data/declared.txt\nstorage/dp/active/allowlist.txt' data/declared.txt)"
+mkdir -p "${repo}/archives/manifests"
+printf 'snapshot\n' > "${repo}/archives/manifests/compile-2026-01-01T000000-0badc0de.md"
+expect_fail "compile leaf stamped with another hash stays packet-gated" "$repo" "absent from the active packet exact mutation scope"
+
 repo="$(make_case idle-maintenance IDLE COMPLETED $'data/historical.txt\nstorage/dp/active/allowlist.txt' data/declared.txt)"
 printf 'change\n' >> "${repo}/data/historical.txt"
 expect_pass "idle maintenance uses persistent policy transparently" "$repo" "Integrity scope mode: maintenance-idle"

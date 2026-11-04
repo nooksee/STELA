@@ -97,9 +97,12 @@ This is a legibility hardening change only. Guard pass/fail semantics are unchan
 The Worker creates and populates `storage/handoff/CLOSING.md` before
 invoking `ops/bin/certify`. This file is not Operator-authored and is not deferred
 to a later session. The Worker uses `ops/src/surfaces/closing.md.tpl` as the
-schema. If that template is absent, the Worker stops and requests it from the
-Operator before proceeding. Absence of the closing sidecar is a certify hard-fail;
-it is not a recoverable warning.
+schema: render it with `./ops/bin/template render closing --out=storage/handoff/CLOSING.md --slot=DP_ID=DP-OPS-XXXX`,
+write each field under its label, then delete the guidance paragraphs. Certify
+rejects a sidecar that still carries guidance text or any brace, bracket, asterisk,
+backtick, or command-substitution character. If that template is absent, the Worker
+stops and requests it from the Operator before proceeding. Absence of the closing
+sidecar is a certify hard-fail; it is not a recoverable warning.
 
 Finalization protocol order is strict: Verify -> Generate Results -> Generate Audit Bundle -> COMMIT (Operator Only) -> Prune.
 Mandatory Closing Sidecar schema is defined in `TASK.md` Section 3.5.1.
@@ -137,7 +140,7 @@ surface set:
 - the three active `archives/surfaces/...` leaves it emits
 - the durable archived RESULTS receipt it emits
 
-Those exact current-run generated paths do not require packet-specific mutation or policy entries. Every other changed path must satisfy both gates before certify runs.
+Those exact current-run generated paths do not require packet-specific mutation or policy entries once they are in pointer form. The authored `SoP.md` and `PoW.md` heads that exist before certify are not in pointer form, so declare `SoP.md` and `PoW.md` in `3.4.3 Changelog`; both are covered by persistent policy. Untracked `archives/manifests/compile-*.md` leaves stamped with the current `HEAD` are current-run output of `./ops/bin/llms` and need no declaration. Every other changed path must satisfy both gates before certify runs.
 
 `storage/handoff/CLOSING.md` is a latest-wins disposable surface. Certify reads and validates it in place; it does not rename or archive it to a per-packet path. Do not add `storage/handoff/CLOSING-DP-OPS-*.md` entries to the allowlist.
 

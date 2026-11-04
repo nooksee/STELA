@@ -1,1 +1,1 @@
-archives/decisions/RoR-2026-10-31-001-op-0263.md
+archives/decisions/RoR-2026-11-04-002-op-0264.md
