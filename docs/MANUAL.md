@@ -150,6 +150,10 @@ Run:
 ./ops/bin/certify --dp=DP-OPS-XXXX --out=auto
 bash tools/lint/results.sh storage/handoff/RESULTS.md
 ~~~
+Certify options:
+- `--narrative-file=PATH` loads the Worker Execution Narrative from a file instead of opening the editor; the file must fill the same four subsections and passes the same validator.
+- `--addendum=A` certifies the base packet together with the active addendum in `storage/dp/intake/ADDENDUM.md`; the receipt plan is the addendum A.5 list, and the run emits `archives/surfaces/ADDENDUM-DP-OPS-XXXX-<git-short-hash>.md` and `archives/surfaces/RESULTS-DP-OPS-XXXX-ADDENDUM-A-<git-short-hash>.md`.
+- `--allow-intake-fallback` is the rerun recovery path described under Certify Rerun.
 `ops/bin/certify` now fails in explicit phases: `preflight`, `replay`, `verify`, `postflight`, and `results`. Cheap closeout defects such as malformed closing sidecar content, malformed narrative scaffolds, missing trace / OPEN prerequisites, or obviously stale receipt-command shapes must fail in `preflight` before long replay begins. Certify emits `Certify phase: <phase>` on phase changes and phase-tags hard-fail output as `ERROR [<phase>]`.
 At the end of a run, certify also emits stable timing summaries:
 - `CERTIFY-PHASE: name=<phase> duration_seconds=<N>`
@@ -415,7 +419,12 @@ OPEN de-dup contract:
 # Explicit scaffold validation entrypoints
 ./ops/bin/draft --validate-plan-scaffold=var/tmp/plan-scaffold.md
 ./ops/bin/draft --validate-dp-slots-scaffold=var/tmp/dp-slots-scaffold.md
+
+# Render an addendum intake and closing scaffold for an existing base packet
+# (the supervisor issuance path is ./ops/bin/addendum --base-dp=DP-OPS-XXXX --slots-file=<path>)
+./ops/bin/draft --addendum=A --base-dp=DP-OPS-XXXX --slots-file=<slots-file>
 ~~~
+Addendum slots files carry `[OPERATOR_AUTHORIZATION]`, `[SCOPE_DELTA]` (bare repo-relative paths, one per line, no bullets), `[ADDENDUM_OBJECTIVE]`, and `[ADDENDUM_RECEIPT]`.
 
 ### Template Renderer
 ~~~bash
@@ -494,6 +503,7 @@ Do not use:
 ### Documentation (Help)
 ~~~bash
 ./ops/bin/help              # Show menu
+./ops/bin/help specs        # Recursive spec index grouped by category
 ./ops/bin/help continuity   # Grep docs for "continuity"
 ~~~
 
@@ -575,6 +585,20 @@ Surface contract:
 - `storage/dp/intake/DP.md`: latest-wins active DP draft surface; operator saves the validated full DP output here after the draft run.
 - `DP-OPS-XXXX`: packet identity printed by bundle and retained in TASK/addendum lineage, certify receipts, and telemetry. Bundle resolves the next packet id from the current certified TASK packet id plus one.
 
+### Collab-Mode (Operator plus Worker, no Integrator)
+Canonical flow when one session drafts and executes without a separate Integrator:
+
+1. `./ops/bin/open --out=auto`, then `./ops/bin/draft --id=DP-OPS-XXXX --title="..." --work-branch=agent/dp-ops-xxxx-YYYY-MM-DD --base-head=<hash> --slots-file=<slots-file>`; validate with `bash tools/lint/dp.sh TASK.md` and `bash tools/lint/task.sh`.
+2. Commit the packet-open state (`TASK.md`, regenerated `llms*.txt`, the compile leaf) so the worker starts from a clean tree; capture the three §3.1 preflight commands before any edit.
+3. Execute; keep `storage/handoff/CLOSING.md` current; declare `SoP.md` and `PoW.md` in `3.4.3 Changelog` and author them before certify.
+4. `./ops/bin/allowlist`, then `./ops/bin/certify --dp=DP-OPS-XXXX --narrative-file=var/tmp/narrative-XXXX.md --out=auto`; `### Preflight State` in the narrative pastes the verbatim outputs of `git rev-parse --abbrev-ref HEAD`, `git rev-parse --short HEAD`, and `git status --porcelain` captured in step 2.
+5. `bash tools/lint/results.sh storage/handoff/RESULTS.md`, `./ops/bin/bundle --profile=audit --out=auto`, commit, push, open the pull request from the closing sidecar.
+
+Recovery render only (intake surface, `TASK.md` untouched):
+~~~bash
+./ops/bin/template render dp --out=storage/dp/intake/DP.md --slot=DP_ID=DP-OPS-XXXX --slot=DP_TITLE="..." --slot=BASE_BRANCH=main --slot=PROPOSED_WORK_BRANCH=agent/dp-ops-xxxx-YYYY-MM-DD --slot=BASE_HEAD=<hash> --slot=FRESHNESS_STAMP=<YYYY-MM-DD> --slot=OPEN_ANCHOR_PATH=<open-artifact> --slot=OPEN_TRACE_ID=<trace-id> --slot=OPEN_WORKING_TREE=clean --slots-file=<slots-file>
+~~~
+
 ### Local Hooks Setup
 Run once after clone, and after any machine where the repo is checked out:
 
@@ -613,6 +637,7 @@ Attachment contract defaults and profile routing semantics are governed by `ops/
 | `audit` | `./ops/bin/bundle --profile=audit --out=auto` | initial `AUDIT-*.txt`, rerun `AUDIT-R*.txt`, matching manifests, DP RESULTS receipt | Audit stance is PASS/FAIL verdict only. Use `--rerun` for resubmissions; prior local `AUDIT-*` artifacts do not trigger rerun identity. |
 | `addenda` | `./ops/bin/bundle --profile=addenda --intent="ADDENDUM REQUIRED: <DECISION_ID> - <ONE-LINE BLOCKER>" --out=auto` | `ADDENDUM-*.txt`, `ADDENDUM-*.manifest.json` | Addendum authorization intake only; not used for PASS/FAIL verdicts. |
 | `project` | `./ops/bin/bundle --profile=project --project=<name> --out=auto` | `PROJECT-*.txt`, `PROJECT-*.manifest.json` | Project-scoped dump context is embedded in the bundle metadata. |
+| `auto` | `./ops/bin/bundle --profile=auto --out=auto` | as resolved | Routes to `draft` when `storage/handoff/PLAN.md` exists and passes `tools/lint/plan.sh`, otherwise to `planning`; the bundle metadata records the route reason. Policy keys `auto_default_profile` and `auto_plan_profile` in `ops/lib/manifests/BUNDLE.md`. |
 
 > **Model-compat fallback:** If tar ingestion is unreliable in a web model context, attach the dump payload (`dump-*.txt`) and dump manifest (`dump-*.manifest.txt`) directly in place of the bundle tar.
 > **Legacy compatibility:** During prefix migration, legacy `BUNDLE-*` artifacts may be emitted as compatibility copies when policy flag `compatibility_emit_legacy_bundle_artifacts=true`.

@@ -1,3 +1,4 @@
+<!-- CCD: ff_target="discovery" ff_band="30-50" -->
 # storage
 
 Runtime/meta storage for development and DP closeout artifacts.

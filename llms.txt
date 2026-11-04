@@ -1,7 +1,7 @@
 # Stela llms.txt
 # Content identity: content-v1
-# llms-core SHA-256: 64063d22de7c967bbab40cf1c5c3f9fe9e46afe8373c34604fbc1a5e41dbdf24
-# llms-full SHA-256: 10043ff0a51d76cf43b0d411e32362404b2abb12f00f1750b983e3273c44de83
+# llms-core SHA-256: 0c043eb62baa051485730175c3495c0585ee03840331965490d4d40bee6721a3
+# llms-full SHA-256: 2550ed6047d5567e5ae4ba206a58b081200ce3cfcddf6cf6493650d72caa96da
 # Freshness check: ./ops/bin/llms --check
 # One Truth bundle index.
 

@@ -461,3 +461,6 @@ tools/test/inventory.sh
 docs/ops/specs/tools/test/inventory.md
 docs/ops/registry/tools.md
 ops/src/surfaces/closing.md.tpl
+storage/README.md
+docs/ops/specs/workflows/gates.md
+docs/ops/registry/workflows.md

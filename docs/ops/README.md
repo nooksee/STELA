@@ -24,6 +24,7 @@ The authoritative operational registries live in `docs/ops/registry/`.
 - `docs/ops/registry/tools.md`
 - `docs/ops/registry/scripts.md`
 - `docs/ops/registry/hooks.md`
+- `docs/ops/registry/workflows.md`
 
 ## 4. Specifications
 Technical specifications are pointer-first and grouped by executable surface.
@@ -33,6 +34,7 @@ Technical specifications are pointer-first and grouped by executable surface.
 - Tool specs: `docs/ops/specs/tools/`
 - Script specs: `docs/ops/specs/scripts/`
 - Hook specs: `docs/ops/specs/hooks/`
+- Workflow specs: `docs/ops/specs/workflows/`
 
 ## 5. Interface Contract
 The Ops Kernel is the executable companion to docs. Documentation explains and justifies; ops runs. New operational capability must ship as executable logic with a registry entry and spec pointer. External runtime adapters are the exception: they are operator-deployed runbook assets, must still carry a registry entry and spec pointer, and must not redefine repo correctness.
