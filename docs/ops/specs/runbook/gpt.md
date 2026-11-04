@@ -13,9 +13,14 @@
    - attachment-first startup from current-turn files,
    - no upload-summary chatter,
    - no ask-back fallback when bundle intent is already sufficient,
-   - re-upload mentioned only after verified current-turn file-access failure.
+   - re-upload mentioned only after verified current-turn file-access failure,
+   - no stop on a generic notice that earlier uploads expired while the required current-turn attachments are present and accessible,
+   - claims cross-referenced against the attached artifacts and that evidence presented in audit outputs.
 5. Model self-report from execution-decision logs is supporting evidence only and is not part of adapter proof.
 6. The adapter does not redefine Stela correctness; repo canon, lints, manifests, and receipts remain authoritative.
+
+## Anecdotal Anchor
+Version 1.1.0 (DP-OPS-0267) added the expired-upload clause and the evidence clause after operator sessions stalled on a platform notice about expired earlier uploads while the current-turn files were present, and after audit outputs restated conclusions without the attached evidence.
 
 ## Integrity Filter Warnings
 The adapter is external runtime code with manual deployment. Presence of the YAML file does not prove deployment. Treat operator-visible settings plus behavior probes as proof; treat execution-decision self-report as corroboration only.
