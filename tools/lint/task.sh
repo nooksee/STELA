@@ -365,7 +365,7 @@ check_task_dashboard() {
   if grep -nE '^[[:space:]]*(Active Branch|Branch|Base HEAD):' <<< "$session_block" >/dev/null; then
     fail "TASK Session State must not mirror inline branch/hash fields"
   fi
-  if grep -nE 'work/[[:alnum:]_.-]+' <<< "$session_block" >/dev/null; then
+  if grep -nE '(agent|work)/[[:alnum:]_.-]+' <<< "$session_block" >/dev/null; then
     fail "TASK Session State must not include work branch mirrors"
   fi
   if grep -nE '[0-9a-f]{7,}' <<< "$session_block" >/dev/null; then

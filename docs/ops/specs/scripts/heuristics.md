@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/lib/scripts/heuristics.sh` supplies deterministic scoring and collision checks for lifecycle scripts so provenance and routing decisions follow one measurable logic path. This aligns with PoT.md Section 4.2 quantitative-reporting discipline by replacing ad hoc judgment calls with reproducible git-derived signals and explicit keyword thresholds.
+`ops/lib/scripts/heuristics.sh` supplies deterministic scoring and collision checks for lifecycle scripts so provenance and routing decisions follow one measurable logic path. This aligns with PoT.md Section 3.3 quantitative-reporting discipline by replacing ad hoc judgment calls with reproducible git-derived signals and explicit keyword thresholds.
 
 ## Mechanics and Sequencing
 1. `detect_hot_zone`:

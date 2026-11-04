@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`tools/lint/ff.sh` enforces Calibrated Canonical Density declarations on tracked markdown surfaces so density expectations move from implicit review judgment to explicit contract enforcement. The gate exists to preserve context-window efficiency and to prevent low-signal prose from displacing operational truth in canonical loading paths. This aligns with PoT Section 4.2 linguistic precision and relatability mandates: writing must remain exact, testable, and readable to intended operators. CCD resolves the expert-versus-consumer conflict with a domain-includes-consumer rule: domain correctness remains mandatory, but shared governance writing must stay legible for its declared audience.
+`tools/lint/ff.sh` enforces Calibrated Canonical Density declarations on tracked markdown surfaces so density expectations move from implicit review judgment to explicit contract enforcement. The gate exists to preserve context-window efficiency and to prevent low-signal prose from displacing operational truth in canonical loading paths. This aligns with PoT Section 3.3 linguistic precision and relatability mandates: writing must remain exact, testable, and readable to intended operators. CCD resolves the expert-versus-consumer conflict with a domain-includes-consumer rule: domain correctness remains mandatory, but shared governance writing must stay legible for its declared audience.
 
 ## Mechanics and Sequencing
 1. Enumerate tracked markdown scope with `git ls-files '*.md'` from repository root.

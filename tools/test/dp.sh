@@ -85,7 +85,7 @@ write_valid_dp_fixture() {
     line="${line//'{{DP_ID}}'/DP-OPS-0000}"
     line="${line//'{{DP_TITLE}}'/Fixture explicit-path delete-load-order coverage}"
     line="${line//'{{BASE_BRANCH}}'/main}"
-    line="${line//'{{PROPOSED_WORK_BRANCH}}'/work/dp-ops-0000-2026-04-10}"
+    line="${line//'{{PROPOSED_WORK_BRANCH}}'/agent/dp-ops-0000-2026-04-10}"
     line="${line//'{{BASE_HEAD}}'/ba4f936c}"
     line="${line//'{{FRESHNESS_STAMP}}'/2026-04-10}"
     line="${line//'{{OPEN_ANCHOR_PATH}}'/storage/handoff/OPEN-main-ba4f936c.txt}"
@@ -198,13 +198,13 @@ from pathlib import Path
 import sys
 path = Path(sys.argv[1])
 text = path.read_text()
-text = text.replace("Work Branch: work/dp-ops-0000-2026-04-10", "Work Branch: work/no-date-fragment", 1)
+text = text.replace("Work Branch: agent/dp-ops-0000-2026-04-10", "Work Branch: agent/no-date-fragment", 1)
 path.write_text(text)
 PY
 run_expect_fail \
   "invalid work branch fixture" \
   "$work_branch_fixture" \
-  "Work Branch must follow 'work/<DP-ID>-YYYY-MM-DD' form (PoT.md §6.2.1): work/no-date-fragment"
+  "Work Branch must follow 'agent/<DP-ID>-YYYY-MM-DD' form (PoT.md §5.1): agent/no-date-fragment"
 
 sidecar_fixture="${DP_TEST_ROOT_ABS}/sidecar-coherence-DP.md"
 cp "$valid_fixture" "$sidecar_fixture"
@@ -228,7 +228,7 @@ from pathlib import Path
 import sys
 path = Path(sys.argv[1])
 text = path.read_text()
-text = text.replace("Work Branch: work/dp-ops-0000-2026-04-10", "Work Branch: PROPOSED-work/dp-ops-0000-2026-04-10", 1)
+text = text.replace("Work Branch: agent/dp-ops-0000-2026-04-10", "Work Branch: PROPOSED-agent/dp-ops-0000-2026-04-10", 1)
 path.write_text(text)
 PY
 run_expect_fail \

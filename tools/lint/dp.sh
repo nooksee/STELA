@@ -20,6 +20,9 @@ trap 'emit_binary_leaf "lint-dp" "finish"' EXIT
 emit_binary_leaf "lint-dp" "start"
 
 CANONICAL_DP_TEMPLATE_PATH="ops/src/surfaces/dp.md.tpl"
+# Path of the surface currently being linted (set by lint_path before payload checks);
+# the retired work/ branch namespace is accepted only when this path is an archived surface.
+LINT_SOURCE_PATH=""
 CANONICAL_DP_TEMPLATE_SHA256="0b37977494196e0b5d8b485f263459d54431de20a6081ea4a80fa258467ece60"
 CANONICAL_ADDENDUM_TEMPLATE_PATH="ops/src/surfaces/addendum.md.tpl"
 CANONICAL_ADDENDUM_TEMPLATE_SHA256="3bc51a5e6eab76e353ebe571b664f70cb13b905b43c7fdb3fd8794648a7316aa"
@@ -1075,8 +1078,13 @@ check_dp_packet_coherence() {
     work_branch="$(trim "$(strip_backticks "$(extract_field_value "Required Work Branch" "$path")")")"
   fi
   if [[ -n "$work_branch" ]] && ! contains_placeholder "$work_branch"; then
-    if [[ ! "$work_branch" =~ ^work/[^[:space:]]+-[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
-      fail "Work Branch must follow 'work/<DP-ID>-YYYY-MM-DD' form (PoT.md §6.2.1): ${work_branch}"
+    if [[ "$work_branch" =~ ^agent/[^[:space:]]+-[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+      :
+    elif [[ "$work_branch" =~ ^work/[^[:space:]]+-[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] \
+      && [[ "${LINT_SOURCE_PATH:-$path}" == "${REPO_ROOT}/archives/"* || "${LINT_SOURCE_PATH:-$path}" == archives/* ]]; then
+      : # retired work/ namespace: accepted on archived surfaces only
+    else
+      fail "Work Branch must follow 'agent/<DP-ID>-YYYY-MM-DD' form (PoT.md §5.1): ${work_branch}"
     fi
   fi
 
@@ -1401,6 +1409,7 @@ lint_path() {
     return 1
   fi
 
+  LINT_SOURCE_PATH="$source_path"
   if ! lint_payload "$payload_tmp"; then
     rm -f "$payload_tmp"
     return 1
@@ -1453,7 +1462,7 @@ render_fixture_from_template() {
     line="${line//'{{DP_ID}}'/DP-OPS-0000}"
     line="${line//'{{DP_TITLE}}'/Fixture structure-hash lint coverage}"
     line="${line//'{{BASE_BRANCH}}'/main}"
-    line="${line//'{{PROPOSED_WORK_BRANCH}}'/work/dp-ops-0000-2026-02-14}"
+    line="${line//'{{PROPOSED_WORK_BRANCH}}'/agent/dp-ops-0000-2026-02-14}"
     line="${line//'{{BASE_HEAD}}'/d3801c3a}"
     line="${line//'{{FRESHNESS_STAMP}}'/2026-02-14}"
     line="${line//'{{OPEN_ANCHOR_PATH}}'/storage/handoff/OPEN-main-d3801c3a.txt}"
@@ -1621,7 +1630,7 @@ run_test() {
 
   tmp_coherence_bad="$(mktemp)"
   cp "$tmp_valid" "$tmp_coherence_bad"
-  sed -i 's#^Work Branch: .*#Work Branch: work/no-date-fragment#' "$tmp_coherence_bad"
+  sed -i 's#^Work Branch: .*#Work Branch: agent/no-date-fragment#' "$tmp_coherence_bad"
   if DP_ALLOWLIST_POINTER_OVERRIDE="$tmp_allowlist_valid" lint_path "$tmp_coherence_bad" >/dev/null 2>&1; then
     rm -f "$tmp_allowlist_valid" "$tmp_allowlist_bad" "$tmp_valid" "$tmp_structure_bad" "$tmp_pointer_bad" "$tmp_allowlist_file_bad" "$tmp_results_valid" "$tmp_results_invalid" "$tmp_proposed_marker_bad" "$tmp_proposed_prose_ok" "$tmp_proposed_schema_ok" "$tmp_contamination_bad" "$tmp_coherence_bad"
     echo "FAIL: --test expected packet-coherence work-branch form failure" >&2
@@ -1686,7 +1695,7 @@ tools/lint/dp.sh
 ### Preflight State
 ~~~text
 git rev-parse --abbrev-ref HEAD
-work/dp-ops-0099-2026-01-01
+agent/dp-ops-0099-2026-01-01
 git rev-parse --short HEAD
 abcdef1
 git status --porcelain
@@ -1730,7 +1739,7 @@ tools/lint/dp.sh
 ### Preflight State
 ~~~text
 git rev-parse --abbrev-ref HEAD
-work/dp-ops-0099-2026-01-01
+agent/dp-ops-0099-2026-01-01
 git rev-parse --short HEAD
 abcdef1
 git status --porcelain
@@ -1784,7 +1793,7 @@ tools/lint/dp.sh
 ### Preflight State
 ~~~text
 git rev-parse --abbrev-ref HEAD
-work/dp-ops-0099-2026-01-01
+agent/dp-ops-0099-2026-01-01
 git rev-parse --short HEAD
 abcdef1
 git status --porcelain
@@ -1833,7 +1842,7 @@ tools/lint/dp.sh
 ### Preflight State
 ~~~text
 git rev-parse --abbrev-ref HEAD
-work/dp-ops-0099-2026-01-01
+agent/dp-ops-0099-2026-01-01
 git rev-parse --short HEAD
 abcdef1
 ~~~
@@ -1857,7 +1866,7 @@ TESTRESULTS
 
   # Disallowed provisional-marker form must fail.
   cp "$tmp_valid" "$tmp_proposed_marker_bad"
-  sed -i 's#^Work Branch: .*#Work Branch: PROPOSED-work/dp-ops-0000-2026-02-14#' "$tmp_proposed_marker_bad"
+  sed -i 's#^Work Branch: .*#Work Branch: PROPOSED-agent/dp-ops-0000-2026-02-14#' "$tmp_proposed_marker_bad"
   failures=0
   # Expected-negative self-check: suppress emitted FAIL lines from the detector so
   # successful --test runs do not contain contradictory FAIL/OK receipt evidence.

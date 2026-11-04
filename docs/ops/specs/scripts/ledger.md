@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/lib/scripts/ledger.sh` preserves PoT.md Section 1.2 role separation for SoP and PoW by enforcing prune-time proof integrity before archival. The script exists because direct pruning or freeform ledger rewrites can erase receipt links, which violates SSOT evidence continuity and makes historical entries non-auditable.
+`ops/lib/scripts/ledger.sh` preserves PoT.md Section 1.3 role separation for SoP and PoW by enforcing prune-time proof integrity before archival. The script exists because direct pruning or freeform ledger rewrites can erase receipt links, which violates SSOT evidence continuity and makes historical entries non-auditable.
 
 ## Mechanics and Sequencing
 1. `ledger_entry_count` counts dated entry headings (`## YYYY-MM-DD ...`) in a target ledger.

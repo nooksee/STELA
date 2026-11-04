@@ -14,7 +14,7 @@ Validation steps:
 2. Parse entry rows and reject malformed column counts.
 3. Validate DP identifiers (`DP-OPS-####`) for `added_in` and `remove_by_dp` on non-sentinel rows.
 4. Enforce status values (`active` or `resolved`).
-5. Resolve current packet number from active work branch (`work/dp-ops-####-...`) with TASK fallback.
+5. Resolve current packet number from active work branch (`agent/dp-ops-####-...`) with TASK fallback.
 6. Fail when an `active` row has `current_dp > remove_by_dp`.
 
 `--test` runs deterministic fixtures for malformed rows, valid active rows, and stale active rows.

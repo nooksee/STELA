@@ -87,7 +87,7 @@ run_self_test() {
   passed=$((passed + 1))
 
   git -C "$fixture_repo" switch --quiet main
-  git -C "$fixture_repo" switch --quiet -c work/hook-contract
+  git -C "$fixture_repo" switch --quiet -c agent/hook-contract
   baseline_status="$(git -C "$fixture_repo" status --porcelain=v1 -uall)"
   compile_before="$(compile_inventory_sha256 "$fixture_repo")"
   printf 'transaction fixture\n' > "${fixture_repo}/hook-transaction-fixture.txt"
@@ -139,7 +139,7 @@ case "${1:-}" in
     echo "Hooks configured: core.hooksPath = .github/hooks"
     echo ""
     echo "Active hooks:"
-    echo "  pre-commit  PoT branch guard (work/* only, no main) + read-only LLMS freshness"
+    echo "  pre-commit  PoT branch guard (agent/* only, no main) + read-only LLMS freshness"
     echo "  pre-push    main push guard (no direct push to main)"
     ;;
   --test)

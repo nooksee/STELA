@@ -12,13 +12,13 @@ source "${SCRIPT_DIR}/../lib/scripts/editor.sh"
 usage() {
   cat <<'USAGE'
 Usage:
-  ops/bin/draft --id=DP-OPS-XXXX --title="..." --work-branch=work/... --base-head=<hash> [options]
+  ops/bin/draft --id=DP-OPS-XXXX --title="..." --work-branch=agent/... --base-head=<hash> [options]
   ops/bin/draft --addendum=A --base-dp=DP-OPS-XXXX
 
 Required:
 - --id=DP-OPS-XXXX
 - --title="..."
-- --work-branch=work/...
+- --work-branch=agent/...
 - --base-head=<hash>
 
 Addendum generation mode (all required):

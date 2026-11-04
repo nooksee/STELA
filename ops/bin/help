@@ -6,7 +6,11 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # shellcheck source=/dev/null
 source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 
-READ_ORDER_HEADING_REGEX='^(Source of Truth Read-in Order:|[*][*]Source of Truth Read-in Order[*][*]:)$'
+FILING_HEADING_REGEX='^### 1\\.1 Filing Doctrine$'
+JURISDICTION_HEADING_REGEX='^### 1\\.2 Jurisdiction$'
+AXIOMS_HEADING_REGEX='^### 1\\.3 Axioms$'
+CANON_HEADING_REGEX='^### 1\\.4 Canon Surfaces$'
+LEVEL_TWO_HEADING_REGEX='^## '
 
 usage() {
   cat <<'USAGE'
@@ -204,39 +208,56 @@ require_nonempty_block() {
     || die "Doctrine parse failed: ${label} is empty."
 }
 
+trim_cell() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
 extract_read_order() {
-  local file="$1"
-  local block=""
+  local canon_block="$1"
   local line=""
+  local row=""
+  local order_cell=""
+  local surface_cell=""
+  local constraint_cell=""
+  local holds_cell=""
   local expected=1
   local actual=0
   local count=0
 
-  require_unique_heading "$file" "$READ_ORDER_HEADING_REGEX" "Source of Truth Read-in Order heading"
-  if ! block="$(extract_lines_between "$file" "$READ_ORDER_HEADING_REGEX" '^## ' )"; then
-    die "Doctrine parse failed: read-order block is missing its next level-two boundary."
-  fi
-  require_nonempty_block "$block" "read-order block"
-
   while IFS= read -r line || [[ -n "$line" ]]; do
-    [[ -n "$(printf '%s' "$line" | sed 's/[[:space:]]//g')" ]] || continue
-    if [[ ! "$line" =~ ^([0-9]+)\.[[:space:]]+ ]]; then
-      die "Doctrine parse failed: read-order entry is not numbered: ${line}"
-    fi
-    actual=$((10#${BASH_REMATCH[1]}))
+    [[ "$line" =~ ^[[:space:]]*\| ]] || continue
+    row="$(trim_cell "$line")"
+    row="${row#|}"
+    row="${row%|}"
+    IFS='|' read -r order_cell surface_cell constraint_cell holds_cell <<< "$row"
+    order_cell="$(trim_cell "$order_cell")"
+    [[ "$order_cell" =~ ^[0-9]+$ ]] || continue
+    surface_cell="$(trim_cell "$surface_cell")"
+    holds_cell="$(trim_cell "$holds_cell")"
+    [[ -n "$surface_cell" ]] \
+      || die "Doctrine parse failed: read-order row ${order_cell} has no surface."
+    actual=$((10#${order_cell}))
     [[ "$actual" == "$expected" ]] \
       || die "Doctrine parse failed: expected read-order entry ${expected}; found ${actual}."
-    printf '%s\n' "$line"
+    if [[ -n "$holds_cell" ]]; then
+      printf '%s. %s - %s\n' "$actual" "$surface_cell" "$holds_cell"
+    else
+      printf '%s. %s\n' "$actual" "$surface_cell"
+    fi
     expected=$((expected + 1))
     count=$((count + 1))
-  done <<< "$block"
+  done <<< "$canon_block"
 
-  (( count > 0 )) || die "Doctrine parse failed: read-order block contains no numbered entries."
+  (( count > 0 )) || die "Doctrine parse failed: Canon Surfaces table contains no numbered read-order rows."
 }
 
 show_doctrine() {
   local pot_file="${1:-PoT.md}"
   local filing=""
+  local jurisdiction=""
   local axioms=""
   local canon=""
   local read_order=""
@@ -245,31 +266,41 @@ show_doctrine() {
     die "Doctrine source not found: ${pot_file}"
   fi
 
-  require_unique_heading "$pot_file" '^### 1\\.1 Filing Doctrine$' "Filing Doctrine heading"
-  require_unique_heading "$pot_file" '^### 1\\.2 Axioms$' "Axioms heading"
-  require_unique_heading "$pot_file" '^### 1\\.3 Canon Surfaces$' "Canon Surfaces heading"
+  require_unique_heading "$pot_file" "$FILING_HEADING_REGEX" "Filing Doctrine heading"
+  require_unique_heading "$pot_file" "$JURISDICTION_HEADING_REGEX" "Jurisdiction heading"
+  require_unique_heading "$pot_file" "$AXIOMS_HEADING_REGEX" "Axioms heading"
+  require_unique_heading "$pot_file" "$CANON_HEADING_REGEX" "Canon Surfaces heading"
 
-  if ! filing="$(extract_lines_between "$pot_file" '^### 1\\.1 Filing Doctrine$' '^### 1\\.2 Axioms$' )"; then
-    die "Doctrine parse failed: Filing Doctrine is not bounded by Axioms."
+  if ! filing="$(extract_lines_between "$pot_file" "$FILING_HEADING_REGEX" "$JURISDICTION_HEADING_REGEX" )"; then
+    die "Doctrine parse failed: Filing Doctrine is not bounded by Jurisdiction."
   fi
-  if ! axioms="$(extract_lines_between "$pot_file" '^### 1\\.2 Axioms$' '^### 1\\.3 Canon Surfaces$' )"; then
+  if ! jurisdiction="$(extract_lines_between "$pot_file" "$JURISDICTION_HEADING_REGEX" "$AXIOMS_HEADING_REGEX" )"; then
+    die "Doctrine parse failed: Jurisdiction is not bounded by Axioms."
+  fi
+  if ! axioms="$(extract_lines_between "$pot_file" "$AXIOMS_HEADING_REGEX" "$CANON_HEADING_REGEX" )"; then
     die "Doctrine parse failed: Axioms is not bounded by Canon Surfaces."
   fi
-  if ! canon="$(extract_lines_between "$pot_file" '^### 1\\.3 Canon Surfaces$' "$READ_ORDER_HEADING_REGEX" )"; then
-    die "Doctrine parse failed: Canon Surfaces is not bounded by the read-order heading."
-  fi
-  if ! read_order="$(extract_read_order "$pot_file")"; then
-    return 1
+  if ! canon="$(extract_lines_between "$pot_file" "$CANON_HEADING_REGEX" "$LEVEL_TWO_HEADING_REGEX" )"; then
+    die "Doctrine parse failed: Canon Surfaces is not bounded by the next level-two heading."
   fi
 
   require_nonempty_block "$filing" "Filing Doctrine"
+  require_nonempty_block "$jurisdiction" "Jurisdiction"
   require_nonempty_block "$axioms" "Axioms"
   require_nonempty_block "$canon" "Canon Surfaces"
+
+  if ! read_order="$(extract_read_order "$canon")"; then
+    return 1
+  fi
 
   say "Doctrine mode: constitutional operator guidance from PoT."
 
   printf '%sFiling Doctrine%s\n' "$bold" "$reset"
   printf '%s\n' "$filing"
+  printf '\n'
+
+  printf '%sJurisdiction%s\n' "$bold" "$reset"
+  printf '%s\n' "$jurisdiction"
   printf '\n'
 
   printf '%sAxioms%s\n' "$bold" "$reset"
@@ -291,14 +322,15 @@ show_doctrine() {
 
 write_doctrine_fixture() {
   local destination="$1"
-  local heading_mode="$2"
+  local fixture_mode="$2"
   local second_number="${3:-2}"
-  local read_heading="Source of Truth Read-in Order:"
+  local canon_heading="### 1.4 Canon Surfaces"
+  local second_order="$second_number"
 
-  if [[ "$heading_mode" == "bold" || "$heading_mode" == "duplicate" ]]; then
-    read_heading="**Source of Truth Read-in Order**:"
-  elif [[ "$heading_mode" == "missing" ]]; then
-    read_heading="Read-in Order:"
+  if [[ "$fixture_mode" == "missing" ]]; then
+    canon_heading="### 1.4 Canon Surface List"
+  elif [[ "$fixture_mode" == "no-rows" ]]; then
+    second_order="—"
   fi
 
   {
@@ -310,20 +342,29 @@ write_doctrine_fixture() {
 ### 1.1 Filing Doctrine
 - `ops/` = Run.
 
-### 1.2 Axioms
+### 1.2 Jurisdiction
+Scope: every path in §1.1.
+
+### 1.3 Axioms
 - Truth is required.
 
-### 1.3 Canon Surfaces
-- `PoT.md` = Constitution.
-
 EOF_FIXTURE
-    printf '%s\n' "$read_heading"
-    if [[ "$heading_mode" == "duplicate" ]]; then
-      printf '%s\n' "$read_heading"
+    printf '%s\n' "$canon_heading"
+    if [[ "$fixture_mode" == "duplicate" ]]; then
+      printf '%s\n' "$canon_heading"
     fi
-    printf '1. PoT.md\n'
-    printf '%s. SoP.md\n' "$second_number"
     cat <<'EOF_FIXTURE'
+| Order | Surface | Hard constraint | Holds |
+|---|---|---|---|
+EOF_FIXTURE
+    if [[ "$fixture_mode" == "no-rows" ]]; then
+      printf '| — | `PoT.md` | Yes | Constitution. |\n'
+    else
+      printf '| 1 | `PoT.md` | Yes | Constitution. |\n'
+    fi
+    printf '| %s | `SoP.md` | Yes | State of Play. |\n' "$second_order"
+    cat <<'EOF_FIXTURE'
+| — | `llms.txt` | No | Discovery entry point. |
 
 ## 2. Enforcement
 - Boundary marker.
@@ -336,6 +377,8 @@ assert_doctrine_output() {
   local expected_entries="$2"
   local entry_count=""
 
+  [[ "$(printf '%s\n' "$output" | grep -Fxc 'Jurisdiction')" == "1" ]] \
+    || die "Help doctrine self-test expected one Jurisdiction label."
   [[ "$(printf '%s\n' "$output" | grep -Fxc 'Canon Surfaces')" == "1" ]] \
     || die "Help doctrine self-test expected one Canon Surfaces label."
   [[ "$(printf '%s\n' "$output" | grep -Fxc 'Read Sequence')" == "1" ]] \
@@ -362,31 +405,32 @@ run_doctrine_self_test() {
   assert_doctrine_output "$output" "5"
   passed=$((passed + 1))
 
-  write_doctrine_fixture "$fixture_path" "bold"
-  output="$(show_doctrine "$fixture_path")"
-  assert_doctrine_output "$output" "2"
-  passed=$((passed + 1))
-
-  write_doctrine_fixture "$fixture_path" "plain"
+  write_doctrine_fixture "$fixture_path" "valid"
   output="$(show_doctrine "$fixture_path")"
   assert_doctrine_output "$output" "2"
   passed=$((passed + 1))
 
   write_doctrine_fixture "$fixture_path" "missing"
   if (show_doctrine "$fixture_path" >/dev/null 2>&1); then
-    die "Help doctrine self-test expected a missing read-order heading to fail."
-  fi
-  passed=$((passed + 1))
-
-  write_doctrine_fixture "$fixture_path" "plain" "3"
-  if (show_doctrine "$fixture_path" >/dev/null 2>&1); then
-    die "Help doctrine self-test expected nonconsecutive numbering to fail."
+    die "Help doctrine self-test expected a missing Canon Surfaces heading to fail."
   fi
   passed=$((passed + 1))
 
   write_doctrine_fixture "$fixture_path" "duplicate"
   if (show_doctrine "$fixture_path" >/dev/null 2>&1); then
-    die "Help doctrine self-test expected duplicate read-order headings to fail."
+    die "Help doctrine self-test expected duplicate Canon Surfaces headings to fail."
+  fi
+  passed=$((passed + 1))
+
+  write_doctrine_fixture "$fixture_path" "valid" "3"
+  if (show_doctrine "$fixture_path" >/dev/null 2>&1); then
+    die "Help doctrine self-test expected nonconsecutive read-order numbering to fail."
+  fi
+  passed=$((passed + 1))
+
+  write_doctrine_fixture "$fixture_path" "no-rows"
+  if (show_doctrine "$fixture_path" >/dev/null 2>&1); then
+    die "Help doctrine self-test expected a Canon Surfaces table without numbered rows to fail."
   fi
   passed=$((passed + 1))
 

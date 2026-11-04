@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/lib/scripts/project.sh` supplies hard preconditions for repo-root execution and project identifier validity so project-scoped binaries cannot run against ambiguous working directories. This enforces PoT.md Section 1.1 filing doctrine and Section 1.2 drift constraints by guaranteeing that scaffold and context tooling resolve paths from one canonical root.
+`ops/lib/scripts/project.sh` supplies hard preconditions for repo-root execution and project identifier validity so project-scoped binaries cannot run against ambiguous working directories. This enforces PoT.md Section 1.1 filing doctrine and Section 1.3 drift constraints by guaranteeing that scaffold and context tooling resolve paths from one canonical root.
 
 ## Mechanics and Sequencing
 1. `project_require_realpath` verifies `realpath` exists and returns the canonical absolute path for a given input.

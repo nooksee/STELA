@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`tools/lint/schema.sh` enforces archive-leaf provenance schema so reverse-link reconstruction remains possible across definitions, surfaces, and compile manifests. The gate protects the PoT Section 1.3 proof-ledger requirement by requiring parseable front matter and valid `previous` chain metadata on eligible archival leaves.
+`tools/lint/schema.sh` enforces archive-leaf provenance schema so reverse-link reconstruction remains possible across definitions, surfaces, and compile manifests. The gate protects the PoT Section 1.4 proof-ledger requirement by requiring parseable front matter and valid `previous` chain metadata on eligible archival leaves.
 
 ## Mechanics and Sequencing
 1. Resolve repository root, emit telemetry, and require `archives/definitions`, `archives/surfaces`, and `archives/manifests`.

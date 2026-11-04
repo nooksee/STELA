@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/lib/scripts/skill.sh` enforces a canonical skill lifecycle so reusable guidance enters canon through one promotion gate with provenance and pointer-head continuity. This protects PoT.md Section 1.2 Reuse-first and Drift axioms by preventing unsupervised edits to skill files and registry rows.
+`ops/lib/scripts/skill.sh` enforces a canonical skill lifecycle so reusable guidance enters canon through one promotion gate with provenance and pointer-head continuity. This protects PoT.md Section 1.3 Reuse-first and Drift axioms by preventing unsupervised edits to skill files and registry rows.
 
 ## Mechanics and Sequencing
 1. Entry dispatch accepts four routes: `harvest`, `promote`, `check`, and a legacy three-positional alias that forwards into `harvest`.

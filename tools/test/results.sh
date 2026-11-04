@@ -48,7 +48,7 @@ write_valid_results_fixture() {
 ## Certification Metadata
 - DP ID: DP-OPS-9999
 - Certified At (UTC): 2026-04-09T00:00:00Z
-- Branch: work/dp-ops-9999-2026-04-09
+- Branch: agent/dp-ops-9999-2026-04-09
 - Git Hash: ${git_hash}
 
 ## Scope Verification
@@ -91,7 +91,7 @@ OK: Task lint checks passed.
 ## Worker Execution Narrative
 ### Preflight State
 git rev-parse --abbrev-ref HEAD
-work/dp-ops-9999-2026-04-09
+agent/dp-ops-9999-2026-04-09
 
 git rev-parse --short HEAD
 296404e6

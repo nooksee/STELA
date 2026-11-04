@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`tools/lint/agent.sh` exists to prevent unregistered or malformed agent definitions from entering the active execution surface. The script protects two constitutional invariants: SSOT alignment between `docs/ops/registry/agents.md` and `opt/_factory/agents/*.md`, and the Generation Mandate in `PoT.md` Section 4.2 that forbids fabricated execution context pointers. Without this gate, an agent file can advertise non-existent pointers or unauthorized toolchain paths and still appear valid to a worker.
+`tools/lint/agent.sh` exists to prevent unregistered or malformed agent definitions from entering the active execution surface. The script protects two constitutional invariants: SSOT alignment between `docs/ops/registry/agents.md` and `opt/_factory/agents/*.md`, and the Generation Mandate in `PoT.md` Section 3.3 that forbids fabricated execution context pointers. Without this gate, an agent file can advertise non-existent pointers or unauthorized toolchain paths and still appear valid to a worker.
 
 ## Mechanics and Sequencing
 1. Resolve repository root, emit lifecycle telemetry, and require `docs/ops/registry/agents.md`.

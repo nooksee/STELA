@@ -3,7 +3,7 @@
 # Technical Specification
 
 ## First Principles Rationale
-`ops/bin/draft` exists to prevent manual DP structure drift and to enforce PoT Section 4.2 generation rules for packet structure. It protects TASK structural invariants by generating the packet body from canonical template slots, then replacing only the active DP block in Section 3.
+`ops/bin/draft` exists to prevent manual DP structure drift and to enforce PoT Section 3.3 generation rules for packet structure. It protects TASK structural invariants by generating the packet body from canonical template slots, then replacing only the active DP block in Section 3.
 
 ## Mechanics and Sequencing
 The binary supports three modes.

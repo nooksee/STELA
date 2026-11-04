@@ -967,7 +967,7 @@ assert_dp_matches_work_branch() {
   local dp_id="$1"
   local branch_name
   branch_name="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
-  if [[ "$branch_name" =~ ^work/(dp-[a-z0-9]+-[0-9]{4,})-[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+  if [[ "$branch_name" =~ ^agent/(dp-[a-z0-9]+-[0-9]{4,})-[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
     local branch_dp_id
     branch_dp_id="$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:lower:]' '[:upper:]')"
     if [[ "$dp_id" != "$branch_dp_id" ]]; then
