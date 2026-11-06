@@ -7,10 +7,6 @@ if ! command -v git >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! command -v rg >/dev/null 2>&1; then
-  echo "ERROR: rg is required but was not found on PATH" >&2
-  exit 1
-fi
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
 if [[ -z "$REPO_ROOT" ]]; then
@@ -86,21 +82,21 @@ fail() {
 for stela in "${stela_files[@]}"; do
   rel_stela="${stela#${REPO_ROOT}/}"
 
-  mapfile -t agent_refs < <(rg -o "R-AGENT-[0-9]{2,}" "$stela" | sort -u)
+  mapfile -t agent_refs < <(grep -oE "R-AGENT-[0-9]{2,}" "$stela" | sort -u || true)
   for ref in "${agent_refs[@]}"; do
     if [[ -z "${valid_agents[$ref]+set}" ]]; then
       fail "Dead Pointer: ${rel_stela} references unknown agent ${ref}"
     fi
   done
 
-  mapfile -t task_refs < <(rg -o "B-TASK-[0-9]{2,}" "$stela" | sort -u)
+  mapfile -t task_refs < <(grep -oE "B-TASK-[0-9]{2,}" "$stela" | sort -u || true)
   for ref in "${task_refs[@]}"; do
     if [[ -z "${valid_tasks[$ref]+set}" ]]; then
       fail "Dead Pointer: ${rel_stela} references unknown task ${ref}"
     fi
   done
 
-  mapfile -t skill_refs < <(rg -o "S-LEARN-[0-9]{2,}" "$stela" | sort -u)
+  mapfile -t skill_refs < <(grep -oE "S-LEARN-[0-9]{2,}" "$stela" | sort -u || true)
   for ref in "${skill_refs[@]}"; do
     if [[ -z "${valid_skills[$ref]+set}" ]]; then
       fail "Dead Pointer: ${rel_stela} references unknown skill ${ref}"

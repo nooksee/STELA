@@ -649,3 +649,6 @@ docs/ops/specs/tools/test/scaffold.md
 docs/ops/specs/binaries/scaffold.md
 archives/decisions/RoR-2026-11-06-011-cbc-0273.md
 archives/decisions/RoR-2026-11-06-012-op-0273.md
+archives/decisions/RoR-2026-11-06-013-cbc-0274.md
+tools/lint/project.sh
+docs/ops/specs/tools/lint/project.md

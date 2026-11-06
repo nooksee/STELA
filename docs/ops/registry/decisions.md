@@ -12,6 +12,7 @@ Every CbC decision made against a named tool gets a row. Entries are updated whe
 | ops/lib/scripts/common.sh, tools/lint/integrity.sh, ops/bin/certify (dual scope) | C | Keep; one `dual_scope_check_paths` helper replaces the two loops, certify gains `--dry-run`, and `tools/test/integrity.sh` runs a certify dry run on a synthetic packet | DP-OPS-0271 | Active | archives/decisions/RoR-2026-11-06-007-cbc-0271.md |
 | ops/bin/help (self-test colors) | C | Keep; `--test` renders without terminal colors so the exact label match cannot depend on `TERM` | DP-OPS-0272 | Active | archives/decisions/RoR-2026-11-06-009-cbc-0272.md |
 | ops/bin/scaffold (three jobs) | C | Keep; one call writes the tree, both copies with tokens resolved, and the registry row, every refusal before the first write; proved by the `project-lane-contract` lane | DP-OPS-0273 | Active | archives/decisions/RoR-2026-11-06-011-cbc-0273.md |
+| tools/lint/project.sh (ripgrep dependency) | C | Keep; identifier extraction with `grep -oE` so the lint runs on the gates runner, which has no `rg` | DP-OPS-0274 | Active | archives/decisions/RoR-2026-11-06-013-cbc-0274.md |
 | tools/lint/dp.sh | C | Keep; refactor candidate (extract test fixture) | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-004-cbc-0140.md |
 | tools/lint/agent.sh | C | Keep | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-005-cbc-0140.md |
 | tools/lint/context.sh (artifact existence, contamination) | C | Keep | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-006-cbc-0140.md |
