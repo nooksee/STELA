@@ -5,8 +5,8 @@
 Source files for the project lane. Nothing here executes; the binaries that read these files are `ops/bin/scaffold` and `ops/bin/bundle` (through `ops/bin/meta`).
 
 ## Structure
-- `SCAFFOLD.md`: the scaffold spec. `ops/bin/scaffold <name>` creates one directory for every `- <dirname>/` line and copies the file into the new project as `projects/<name>/SCAFFOLD.md`.
-- `STELA.md`: the project contract template. Copy it to `projects/<name>/STELA.md`; `docs/MAP.md` discovers projects by that file and `tools/lint/project.sh` validates the registry identifiers it names.
+- `SCAFFOLD.md`: the scaffold spec. `ops/bin/scaffold <name>` creates one directory for every `- <dirname>/` line and writes the file into the new project as `projects/<name>/SCAFFOLD.md` with its three tokens resolved.
+- `STELA.md`: the project contract template (purpose, target root, bindings, entrypoints, allowed commands, conventions; advisory authority). `ops/bin/scaffold` writes it as `projects/<name>/STELA.md`; `docs/MAP.md` discovers projects by that file and `tools/lint/project.sh` validates the registry identifiers it names.
 - `README.md`: this file.
 
 ## Entry Point

@@ -588,6 +588,14 @@ Surface contract:
 - `storage/dp/intake/DP.md`: latest-wins active DP draft surface; operator saves the validated full DP output here after the draft run.
 - `DP-OPS-XXXX`: packet identity printed by bundle and retained in TASK/addendum lineage, certify receipts, and telemetry. Bundle resolves the next packet id from the current certified TASK packet id plus one.
 
+### Session Classes
+Two session classes exist at the Operator level (DP-OPS-0273; PoT 3.2 gives the Contractor end-to-end git access, which makes the distinction load-bearing).
+
+- Trusted full-access collaborator: a session the Operator opens on a full clone with the Contractor's git access. Its scope is the active packet and its exact mutation scope; its authority is `PoT.md`. It may touch platform surfaces (`ops/`, `docs/`, `tools/`, `opt/`) when the packet names them. Collab-Mode below is this class with no separate Integrator.
+- Repo-resident project contractor: a session delivered a project-targeted packet through `./ops/bin/bundle --profile=project --project=<name>` and executed under the `dp+allowlist` worker baseline. Its envelope is the minimum canon set (`PoT.md`, the active TASK leaf, the active allowlist), the target `projects/<name>/` tree, and the files the packet names. Work outside the envelope is invalid; `tools/lint/integrity.sh` packet-exact scope detects an undeclared path, and a project packet that must touch a platform surface needs its own packet. `projects/<name>/STELA.md` is advisory and subordinate to `PoT.md` and the packet until a packet ratifies it as a gating input.
+
+This is bounded authorization, not sandboxing: nothing keeps a contractor inside `projects/<name>/` except the packet, the allowlist, and the gates that check them. Factory definitions (`opt/_factory/`) give a session its behavioral role; the packet gives it scope; `opt/_factory/` is never project baseline context.
+
 ### Collab-Mode (Operator plus Worker, no Integrator)
 Canonical flow when one session drafts and executes without a separate Integrator:
 
