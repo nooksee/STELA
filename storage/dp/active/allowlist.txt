@@ -631,3 +631,7 @@ archives/decisions/RoR-2026-11-06-002-op-0268.md
 ops/bin/map
 archives/decisions/RoR-2026-11-06-003-cbc-0269.md
 archives/decisions/RoR-2026-11-06-004-op-0269.md
+tools/lint/records.sh
+docs/ops/specs/tools/lint/records.md
+archives/decisions/RoR-2026-11-06-005-cbc-0270.md
+archives/decisions/RoR-2026-11-06-006-op-0270.md
