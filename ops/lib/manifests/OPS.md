@@ -82,6 +82,7 @@
 - `docs/ops/specs/tools/lint/llms.md`
 - `docs/ops/specs/tools/lint/plan.md`
 - `docs/ops/specs/tools/lint/project.md`
+- `docs/ops/specs/tools/lint/records.md`
 - `docs/ops/specs/tools/lint/response.md`
 - `docs/ops/specs/tools/lint/results.md`
 - `docs/ops/specs/tools/lint/schema.md`
