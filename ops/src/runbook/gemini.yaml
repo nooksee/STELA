@@ -59,6 +59,7 @@ consult:
   received_handoff: "storage/handoff/CONSULT-gemini.md"
   surface_contract: "docs/ops/specs/surfaces/consult.md"
   placement_contract: "disposable/manual; latest-wins per adapter; git-ignored; not a certify input; subordinate to RESULTS, CLOSING, audit verdicts, and Operator approval"
+  bundle_command: "./ops/bin/bundle --profile=consult --intent=\"CONSULT: gemini - <one-line question>\" --out=auto"
   lint_command: "bash tools/lint/response.sh --mode=consult storage/handoff/CONSULT-gemini.md"
   pass_condition: "OK: response lint passed (mode=consult)"
   disposition_record: "RESULTS narrative of the packet the consult fed, or that packet's op decision leaf when the consult changed scope; never SoP.md"

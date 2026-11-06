@@ -657,3 +657,7 @@ ops/src/runbook/gemini.yaml
 docs/ops/specs/runbook/gemini.md
 archives/decisions/RoR-2026-11-06-014-cbc-0275.md
 archives/decisions/RoR-2026-11-06-015-op-0275.md
+ops/src/stances/consult.md.tpl
+docs/ops/specs/stances/consult.md
+archives/decisions/RoR-2026-11-06-016-cbc-0276.md
+archives/decisions/RoR-2026-11-06-017-op-0276.md

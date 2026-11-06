@@ -7,13 +7,18 @@ Stance contract bodies are rendered from `ops/src/stances/*.md.tpl` through `ops
 ATS schema policy is loaded from `ops/lib/manifests/ASSEMBLY.md` through the key `assembly_policy_manifest`.
 
 bundle_manifest_version=1
-supported_profiles=planning,draft,audit,project,addenda
+supported_profiles=planning,draft,audit,project,addenda,consult
 auto_default_profile=planning
 auto_plan_profile=draft
 project_profile=project
 audit_profile=audit
 addenda_profile=addenda
 addenda_intent_form=ADDENDUM REQUIRED: <BASE_DP_ID> - <ONE-LINE BLOCKER>
+consult_profile=consult
+consult_intent_form=CONSULT: <ADAPTER> - <ONE-LINE QUESTION>
+consult_question_surface=storage/handoff/QUESTION.md
+consult_adapter_root=ops/src/runbook
+consult_output_surface_pattern=storage/handoff/CONSULT-<ADAPTER>.md
 handoff_omit_profiles=audit,addenda
 
 stance_template_planning=stance-planning
@@ -21,12 +26,14 @@ stance_template_draft=stance-draft
 stance_template_audit=stance-audit
 stance_template_project=stance-planning
 stance_template_addenda=stance-addenda
+stance_template_consult=stance-consult
 
 artifact_prefix_planning=PLANNING
 artifact_prefix_draft=DRAFT
 artifact_prefix_audit=AUDIT
 artifact_prefix_project=PROJECT
 artifact_prefix_addenda=ADDENDUM
+artifact_prefix_consult=CONSULT
 compatibility_legacy_bundle_prefix=BUNDLE
 compatibility_emit_legacy_bundle_artifacts=false
 smoke_handoff_root=var/tmp/_smoke/handoff
@@ -47,6 +54,7 @@ dump_scope_draft=full
 dump_scope_audit=core
 dump_scope_project=project
 dump_scope_addenda=core
+dump_scope_consult=core
 
 ## Persistence-Tier Routing Contract
 - Bundle does not serialize cold archive policy itself. It routes a persistence profile into `ops/bin/dump`, and `ops/bin/dump` resolves tiered archive serialization from `ops/etc/persistence.manifest`.
@@ -56,9 +64,10 @@ dump_scope_addenda=core
   - audit -> `--persistence-profile=audit`
   - project -> `--persistence-profile=project`
   - addenda -> `--persistence-profile=addenda`
+  - consult -> `--persistence-profile=consult`
 - Scope and persistence profile are independent:
   - planning and draft still use `--scope=full`
-  - audit and addenda still use `--scope=core`
+  - audit, addenda, and consult still use `--scope=core`
   - persistence-tier compaction happens inside dump serialization, not traverse selection
 
 ## Profile Attachment Contract
@@ -67,6 +76,7 @@ dump_scope_addenda=core
 - audit: initial `AUDIT-*.txt`, rerun `AUDIT-R*-*.txt`, matching `.manifest.json`/`.tar`, transport-managed current DP `storage/handoff/RESULTS.md` and `storage/handoff/CLOSING.md`
 - addenda: `ADDENDUM-*.txt`, `ADDENDUM-*.manifest.json`
 - project: `PROJECT-*.txt`, `PROJECT-*.manifest.json`
+- consult: `CONSULT-*.txt`, `CONSULT-*.manifest.json`, `CONSULT-*.tar`, transport-managed `storage/handoff/QUESTION.md`; the adapter answer lands at `storage/handoff/CONSULT-<adapter>.md` (`.md`, named by adapter), which is not a bundle artifact
 
 ## Disposable Transport Contract
 - Disposable transport is profile-scoped exact-file wiring only. No directory sweeps, globs, or generic `storage/` capture are allowed.
@@ -74,6 +84,7 @@ dump_scope_addenda=core
   - planning: `storage/handoff/TOPIC.md`
   - draft: `storage/handoff/PLAN.md`
   - audit: current `storage/handoff/RESULTS.md` and `storage/handoff/CLOSING.md`
+  - consult: `storage/handoff/QUESTION.md`
 - Future disposable additions must be exact file paths added deliberately in runtime wiring, specs, and smoke tests.
 
 ## OPEN Anchor Contract
@@ -110,6 +121,14 @@ dump_scope_addenda=core
 - Audit reruns must emit fresh artifact identity under `audit_resubmission_prefix` and record submission lineage in the emitted manifest.
 - Audit rerun identity is gated on explicit `--rerun` intent. Prior local `AUDIT-*` artifacts do not force rerun naming without `--rerun`. Explicit `--rerun` still emits rerun identity when no local predecessor exists; in that case `supersedes_bundle_path` remains null and the first rerun index is `1`.
 
+## Consult Transport Contract
+- Consult requires `storage/handoff/QUESTION.md` (the bounded question, latest-wins, operator-written) and fails closed when it is absent.
+- Consult requires `--intent` in the form `consult_intent_form`; the adapter token must name a file `<consult_adapter_root>/<adapter>.yaml` with `adapter_class: external-runtime-adapter`, or bundle fails closed.
+- Consult invokes the core dump with explicit `storage/handoff/QUESTION.md` inclusion; package members include `storage/handoff/QUESTION.md`.
+- Bundle text carries a `[CONSULT]` block: adapter, adapter source, question source, attachment budget (the package member count), output surface, lint command, disposition rule. The manifest carries the same fields in its `consult` object.
+- The adapter answers in the consult envelope of `docs/ops/specs/surfaces/consult.md`; the operator places the answer at the output surface and validates it with `bash tools/lint/response.sh --mode=consult`.
+- Consult output is advisory and subordinate to RESULTS, CLOSING, audit verdicts, and Operator approval; the bundle ships the question, never an authority.
+
 ## Smoke Transport Contract
 - Quarantined smoke outputs use `smoke_handoff_root` and `smoke_dump_root`.
 - Smoke outputs are resume/scratch artifacts under `var/tmp/`, not payload artifacts under `storage/`.
@@ -125,6 +144,7 @@ The canonical operator shipping chain uses bundle at two points:
 Secondary lanes are bounded and do not replace RESULTS or audit truth:
 - `--profile=addenda`: intervention intake only (not PASS/FAIL); intent form must be `ADDENDUM REQUIRED: <BASE_DP_ID> - <BLOCKER>`
 - execution-decision: disposable/manual placement, not a bundle profile
+- `--profile=consult`: bounded question transport to an external runtime adapter; intent form must be `CONSULT: <ADAPTER> - <ONE-LINE QUESTION>`; the answer is advisory
 
 Audit dump generation is owned by `--profile=audit`. Standalone `ops/bin/dump --scope=core` in DP closeout is not a universal requirement and is not equivalent to the audit bundle dump.
 

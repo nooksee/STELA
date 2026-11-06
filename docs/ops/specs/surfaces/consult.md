@@ -5,6 +5,7 @@
 `storage/handoff/CONSULT-<adapter>.md` is the landing surface for a bounded question put to an external runtime adapter (`ops/src/runbook/gpt.yaml`, `ops/src/runbook/claude.yaml`, `ops/src/runbook/gemini.yaml`). Latest-wins per adapter; disposable; git-ignored under `storage/handoff/`. One schema serves every adapter: adapters differ in role, not in what a bounded question needs.
 
 ## Operator Contract
+- Transport: `./ops/bin/bundle --profile=consult --intent="CONSULT: <adapter> - <one-line question>" --out=auto` ships `storage/handoff/QUESTION.md`, the core dump, and the consult stance as `CONSULT-*.txt`, naming the attachment budget (`docs/ops/specs/stances/consult.md`).
 - Placement: manual. Operator pastes the adapter's fenced response to `storage/handoff/CONSULT-<adapter>.md`; `<adapter>` is the adapter source basename (`gpt`, `claude`, `gemini`).
 - Validator: `bash tools/lint/response.sh --mode=consult storage/handoff/CONSULT-<adapter>.md`, before the artifact is read for a decision.
 - Envelope: exactly one fenced markdown code block; nothing outside it.
@@ -23,7 +24,7 @@
 - Rejected in the body: audit verdict markers, `## Worker Execution Narrative`, receipt narrative subheadings, `Decision Required:` and `Decision Leaf:` fields, shared drift tokens.
 
 ## Mechanics and Sequencing
-1. Operator writes the bounded question, picks attachments inside the declared budget, picks the context mode.
+1. Operator writes the bounded question to `storage/handoff/QUESTION.md` and ships it with the consult bundle profile; the bundle declares the attachment budget.
 2. Adapter answers in the envelope above; disposition stays `pending`.
 3. Operator places the response at `storage/handoff/CONSULT-<adapter>.md` and runs the validator. A failing artifact is not read for a decision.
 4. Operator disposes of the consult, records the disposition per the rule above, updates both C.7 lines, runs the validator again.
@@ -39,6 +40,7 @@
 
 ## Related Pointers
 - `docs/ops/specs/tools/lint/response.md`
+- `docs/ops/specs/stances/consult.md`
 - `docs/ops/specs/runbook/gemini.md`
 - `docs/ops/registry/runbook.md`
 - `docs/MANUAL.md` (Consult Handling)

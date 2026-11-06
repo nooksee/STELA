@@ -63,6 +63,7 @@
 - `docs/ops/specs/scripts/traverse.md`
 - `docs/ops/specs/stances/addenda.md`
 - `docs/ops/specs/stances/audit.md`
+- `docs/ops/specs/stances/consult.md`
 - `docs/ops/specs/stances/draft.md`
 - `docs/ops/specs/stances/planning.md`
 - `docs/ops/specs/surfaces/addendum.md`

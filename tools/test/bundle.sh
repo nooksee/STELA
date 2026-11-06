@@ -9,7 +9,7 @@ source "${REPO_ROOT}/ops/lib/scripts/common.sh"
 
 usage() {
   cat <<'EOF'
-Usage: bash tools/test/bundle.sh [--mode=full|certify-critical] [--slice=route-contract|package-contract|fail-closed|rerun-lineage]
+Usage: bash tools/test/bundle.sh [--mode=full|certify-critical] [--slice=route-contract|package-contract|fail-closed|rerun-lineage|consult-contract]
 EOF
 }
 
@@ -31,7 +31,7 @@ esac
 
 if [[ -n "$BUNDLE_TEST_SLICE" ]]; then
   case "$BUNDLE_TEST_SLICE" in
-    route-contract|package-contract|fail-closed|rerun-lineage) ;;
+    route-contract|package-contract|fail-closed|rerun-lineage|consult-contract) ;;
     *) echo "ERROR: invalid --slice value: ${BUNDLE_TEST_SLICE}" >&2; exit 1 ;;
   esac
 fi
@@ -201,11 +201,17 @@ make_closing() {
     > "${EPHEMERAL_ROOT_ABS}/CLOSING.md"
 }
 
+make_question() {
+  printf '# Question\nSynthetic bounded question for bundle smoke testing.\n' \
+    > "${EPHEMERAL_ROOT_ABS}/QUESTION.md"
+}
+
 clean_surfaces() {
   rm -f "${EPHEMERAL_ROOT_ABS}/TOPIC.md" \
         "${EPHEMERAL_ROOT_ABS}/PLAN.md" \
         "${EPHEMERAL_ROOT_ABS}/RESULTS.md" \
-        "${EPHEMERAL_ROOT_ABS}/CLOSING.md"
+        "${EPHEMERAL_ROOT_ABS}/CLOSING.md" \
+        "${EPHEMERAL_ROOT_ABS}/QUESTION.md"
 }
 
 # ===== Slices =====
@@ -491,6 +497,91 @@ slice_rerun_lineage() {
   echo "--- slice: rerun-lineage done"
 }
 
+slice_consult_contract() {
+  echo "--- slice: consult-contract"
+  local out mf rp budget member_count bundle_txt
+  make_task
+
+  # Consult: explicit profile, valid intent, QUESTION.md present
+  make_question
+  out="$(next_out consult)"
+  run_bundle "$out" --profile=consult --intent="CONSULT: gemini - smoke question"
+  if [[ "$BUNDLE_LAST_STATUS" -ne 0 ]]; then
+    fail "consult/valid: expected exit 0; output: ${BUNDLE_LAST_OUTPUT}"
+  else
+    mf="$BUNDLE_LAST_MANIFEST_ABS"
+    rp="$(mf_string resolved_profile "$mf")"
+    [[ "$rp" == "consult" ]] || fail "consult/valid: resolved_profile='${rp}' expected 'consult'"
+    [[ "$out" == "${SMOKE_HANDOFF_ROOT}/CONSULT-"* ]] \
+      || fail "consult/valid: artifact prefix wrong: ${out}"
+    [[ "$(mf_string_in_block dump scope "$mf")" == "core" ]] \
+      || fail "consult/valid: dump scope must be core"
+    [[ "$(mf_string_in_block stance stance_template_key "$mf")" == "stance-consult" ]] \
+      || fail "consult/valid: stance template key must be stance-consult"
+    [[ "$(mf_bool_in_block consult requested "$mf")" == "true" ]] \
+      || fail "consult/valid: manifest consult.requested must be true"
+    [[ "$(mf_string_in_block consult adapter "$mf")" == "gemini" ]] \
+      || fail "consult/valid: manifest consult.adapter must be gemini"
+    [[ "$(mf_string_in_block consult output_surface "$mf")" == "storage/handoff/CONSULT-gemini.md" ]] \
+      || fail "consult/valid: manifest consult.output_surface wrong"
+    pkg_contains "${EPHEMERAL_ROOT}/QUESTION.md" "$mf" \
+      || fail "consult/valid: package missing QUESTION.md"
+    budget="$(mf_int_in_block consult attachment_budget "$mf")"
+    member_count="$(awk '/"files": \[/{f=1;next} f&&/^[[:space:]]*\]/{exit} f&&/"/{n++} END{print n+0}' "$mf")"
+    [[ -n "$budget" && "$budget" == "$member_count" ]] \
+      || fail "consult/valid: attachment_budget='${budget}' must equal package member count '${member_count}'"
+    bundle_txt="${REPO_ROOT}/${out}"
+    grep -qF "[CONSULT]" "$bundle_txt" \
+      || fail "consult/valid: bundle text missing [CONSULT] block"
+    grep -qF "Output surface: storage/handoff/CONSULT-gemini.md" "$bundle_txt" \
+      || fail "consult/valid: bundle text missing output surface line"
+    grep -qF "Lint command: bash tools/lint/response.sh --mode=consult storage/handoff/CONSULT-gemini.md" "$bundle_txt" \
+      || fail "consult/valid: bundle text missing lint command line"
+    grep -qF "First non-empty line inside the code block must start with \`### CONSULT\`." "$bundle_txt" \
+      || fail "consult/valid: stance contract missing consult header rule"
+  fi
+
+  # Non-consult manifest carries consult.requested=false
+  make_topic
+  out="$(next_out planning)"
+  run_bundle "$out" --profile=planning
+  if [[ "$BUNDLE_LAST_STATUS" -ne 0 ]]; then
+    fail "consult/planning-manifest: expected exit 0; output: ${BUNDLE_LAST_OUTPUT}"
+  else
+    [[ "$(mf_bool_in_block consult requested "$BUNDLE_LAST_MANIFEST_ABS")" == "false" ]] \
+      || fail "consult/planning-manifest: consult.requested must be false"
+  fi
+
+  # Missing QUESTION.md -> fail closed
+  clean_surfaces
+  out="$(next_out consult)"
+  run_bundle "$out" --profile=consult --intent="CONSULT: gemini - smoke question"
+  [[ "$BUNDLE_LAST_STATUS" -ne 0 ]] \
+    || fail "consult/no-question: expected nonzero exit"
+
+  # Malformed intent -> fail closed
+  make_question
+  out="$(next_out consult)"
+  run_bundle "$out" --profile=consult --intent="ask gemini something"
+  [[ "$BUNDLE_LAST_STATUS" -ne 0 ]] \
+    || fail "consult/bad-intent: expected nonzero exit"
+
+  # Adapter without a runbook source -> fail closed
+  out="$(next_out consult)"
+  run_bundle "$out" --profile=consult --intent="CONSULT: nobody - smoke question"
+  [[ "$BUNDLE_LAST_STATUS" -ne 0 ]] \
+    || fail "consult/unknown-adapter: expected nonzero exit"
+
+  # Runbook source that is not an external runtime adapter -> fail closed
+  out="$(next_out consult)"
+  run_bundle "$out" --profile=consult --intent="CONSULT: execution-decision - smoke question"
+  [[ "$BUNDLE_LAST_STATUS" -ne 0 ]] \
+    || fail "consult/non-adapter-source: expected nonzero exit"
+
+  clean_surfaces
+  echo "--- slice: consult-contract done"
+}
+
 # ===== certify-critical gate =====
 declare -a _WATCHED_PATHS=(
   "ops/bin/bundle"
@@ -518,6 +609,7 @@ _run_all() {
   slice_package_contract
   slice_fail_closed
   slice_rerun_lineage
+  slice_consult_contract
 }
 
 if [[ -n "$BUNDLE_TEST_SLICE" ]]; then
@@ -526,6 +618,7 @@ if [[ -n "$BUNDLE_TEST_SLICE" ]]; then
     package-contract) slice_package_contract ;;
     fail-closed)      slice_fail_closed ;;
     rerun-lineage)    slice_rerun_lineage ;;
+    consult-contract) slice_consult_contract ;;
   esac
 else
   case "$TEST_MODE" in

@@ -35,6 +35,13 @@ BUNDLE_PROJECT_PROFILE=""
 BUNDLE_AUDIT_PROFILE=""
 BUNDLE_ADDENDA_PROFILE=""
 BUNDLE_ADDENDA_INTENT_FORM=""
+BUNDLE_CONSULT_PROFILE=""
+BUNDLE_CONSULT_INTENT_FORM=""
+BUNDLE_CONSULT_QUESTION_SURFACE=""
+BUNDLE_CONSULT_ADAPTER_ROOT=""
+BUNDLE_CONSULT_OUTPUT_PATTERN=""
+BUNDLE_CONSULT_ADAPTER=""
+BUNDLE_CONSULT_QUESTION_LINE=""
 BUNDLE_COMPAT_LEGACY_PREFIX=""
 BUNDLE_COMPAT_EMIT_LEGACY=""
 BUNDLE_ASSEMBLY_POLICY_MANIFEST=""
@@ -70,7 +77,7 @@ BUNDLE_AUDIT_RESOLVED_OUTPUT_REL=""
 
 bundle_usage() {
   cat <<'USAGE'
-Usage: ops/bin/bundle [--profile=auto|planning|draft|audit|project|addenda] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--rerun] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
+Usage: ops/bin/bundle [--profile=auto|planning|draft|audit|project|addenda|consult] [--out=auto|PATH] [--project=<name>] [--intent=<text>] [--rerun] [--agent-id=<R-AGENT-..> --skill-id=<S-LEARN-..> --task-id=<B-TASK-..>]
 USAGE
 }
 
@@ -312,13 +319,26 @@ bundle_load_policy() {
   BUNDLE_ADDENDA_INTENT_FORM="$(bundle_policy_scalar addenda_intent_form)"
   [[ -n "$BUNDLE_ADDENDA_PROFILE" ]] || die "bundle policy missing required key: addenda_profile"
   [[ -n "$BUNDLE_ADDENDA_INTENT_FORM" ]] || die "bundle policy missing required key: addenda_intent_form"
+  BUNDLE_CONSULT_PROFILE="$(bundle_policy_scalar consult_profile)"
+  BUNDLE_CONSULT_INTENT_FORM="$(bundle_policy_scalar consult_intent_form)"
+  BUNDLE_CONSULT_QUESTION_SURFACE="$(bundle_policy_scalar consult_question_surface)"
+  BUNDLE_CONSULT_ADAPTER_ROOT="$(bundle_policy_scalar consult_adapter_root)"
+  BUNDLE_CONSULT_OUTPUT_PATTERN="$(bundle_policy_scalar consult_output_surface_pattern)"
+  [[ -n "$BUNDLE_CONSULT_PROFILE" ]] || die "bundle policy missing required key: consult_profile"
+  [[ -n "$BUNDLE_CONSULT_INTENT_FORM" ]] || die "bundle policy missing required key: consult_intent_form"
+  [[ -n "$BUNDLE_CONSULT_QUESTION_SURFACE" ]] || die "bundle policy missing required key: consult_question_surface"
+  [[ -n "$BUNDLE_CONSULT_ADAPTER_ROOT" ]] || die "bundle policy missing required key: consult_adapter_root"
+  [[ -n "$BUNDLE_CONSULT_OUTPUT_PATTERN" ]] || die "bundle policy missing required key: consult_output_surface_pattern"
+  [[ "$BUNDLE_CONSULT_QUESTION_SURFACE" == storage/handoff/* ]] || die "bundle policy consult_question_surface must be under storage/handoff/: ${BUNDLE_CONSULT_QUESTION_SURFACE}"
+  [[ "$BUNDLE_CONSULT_OUTPUT_PATTERN" == storage/handoff/*\<ADAPTER\>* ]] || die "bundle policy consult_output_surface_pattern must be under storage/handoff/ and carry <ADAPTER>: ${BUNDLE_CONSULT_OUTPUT_PATTERN}"
 
   for profile in \
     "$BUNDLE_AUTO_DEFAULT_PROFILE" \
     "$BUNDLE_AUTO_PLAN_PROFILE" \
     "$BUNDLE_PROJECT_PROFILE" \
     "$BUNDLE_AUDIT_PROFILE" \
-    "$BUNDLE_ADDENDA_PROFILE"; do
+    "$BUNDLE_ADDENDA_PROFILE" \
+    "$BUNDLE_CONSULT_PROFILE"; do
     bundle_profile_supported "$profile" || die "bundle policy references unsupported profile: ${profile}"
   done
 
@@ -907,6 +927,35 @@ bundle_parse_addenda_intent() {
   return 1
 }
 
+bundle_parse_consult_intent() {
+  local intent_text="$1"
+  if [[ "$intent_text" =~ ^CONSULT:[[:space:]]+([a-z][a-z0-9-]*)[[:space:]]+-[[:space:]]+(.+)$ ]]; then
+    BUNDLE_CONSULT_ADAPTER="${BASH_REMATCH[1]}"
+    BUNDLE_CONSULT_QUESTION_LINE="${BASH_REMATCH[2]}"
+    return 0
+  fi
+  return 1
+}
+
+bundle_consult_adapter_source_rel() {
+  local adapter="$1"
+  printf '%s/%s.yaml' "$BUNDLE_CONSULT_ADAPTER_ROOT" "$adapter"
+}
+
+bundle_validate_consult_adapter() {
+  local adapter="$1"
+  local source_rel
+  source_rel="$(bundle_consult_adapter_source_rel "$adapter")"
+  [[ -f "${REPO_ROOT}/${source_rel}" ]] || die "${BUNDLE_CONSULT_PROFILE} adapter has no runbook source: ${source_rel}"
+  grep -qE '^adapter_class:[[:space:]]+external-runtime-adapter[[:space:]]*$' "${REPO_ROOT}/${source_rel}" \
+    || die "${BUNDLE_CONSULT_PROFILE} adapter source is not an external-runtime-adapter: ${source_rel}"
+}
+
+bundle_consult_output_surface_rel() {
+  local adapter="$1"
+  printf '%s' "${BUNDLE_CONSULT_OUTPUT_PATTERN//<ADAPTER>/${adapter}}"
+}
+
 bundle_packet_id_increment() {
   local seed="$1"
   local offset="$2"
@@ -1105,6 +1154,7 @@ bundle_collect_profile_disposable_inputs() {
   local results_rel=""
   local closing_rel=""
   local packet_source_rel=""
+  local question_name=""
 
   case "$profile" in
     planning)
@@ -1127,6 +1177,11 @@ bundle_collect_profile_disposable_inputs() {
         "$(bundle_to_rel_path "${BUNDLE_HANDOFF_BASE}/RESULTS.md")" \
         "$(bundle_to_rel_path "${BUNDLE_HANDOFF_BASE}/CLOSING.md")" \
         "$packet_source_rel"
+      ;;
+    consult)
+      question_name="${BUNDLE_CONSULT_QUESTION_SURFACE##*/}"
+      [[ -f "${BUNDLE_HANDOFF_BASE}/${question_name}" ]] || die "consult requires ${BUNDLE_CONSULT_QUESTION_SURFACE}"
+      printf '%s\n' "$(bundle_to_rel_path "${BUNDLE_HANDOFF_BASE}/${question_name}")"
       ;;
   esac
 }
@@ -1455,6 +1510,25 @@ bundle_run() {
     addenda_base_dp_id="$BUNDLE_ADDENDA_BASE_DP_ID"
   fi
 
+  local consult_requested=0
+  local consult_adapter=""
+  local consult_adapter_source_rel=""
+  local consult_question_rel=""
+  local consult_output_surface_rel=""
+  local consult_attachment_budget=0
+  local consult_lint_command=""
+  if [[ "$resolved_profile" == "$BUNDLE_CONSULT_PROFILE" ]]; then
+    consult_requested=1
+    if ! bundle_parse_consult_intent "$bundle_intent"; then
+      die "${BUNDLE_CONSULT_PROFILE} intent must match: ${BUNDLE_CONSULT_INTENT_FORM}"
+    fi
+    consult_adapter="$BUNDLE_CONSULT_ADAPTER"
+    bundle_validate_consult_adapter "$consult_adapter"
+    consult_adapter_source_rel="$(bundle_consult_adapter_source_rel "$consult_adapter")"
+    consult_output_surface_rel="$(bundle_consult_output_surface_rel "$consult_adapter")"
+    consult_lint_command="bash tools/lint/response.sh --mode=consult ${consult_output_surface_rel}"
+  fi
+
   local dump_scope
   dump_scope="$(bundle_dump_scope_for_profile "$resolved_profile")"
   local dump_persistence_profile="$resolved_profile"
@@ -1482,6 +1556,15 @@ bundle_run() {
     [[ -n "$disposable_rel" ]] || continue
     dump_args+=("--include-file=${disposable_rel}")
   done
+
+  if (( consult_requested )); then
+    consult_question_rel="${profile_disposable_files[0]:-}"
+    consult_attachment_budget=$(( 4 + assembly_pointer_emitted ))
+    for disposable_rel in "${profile_disposable_files[@]}"; do
+      [[ -n "$disposable_rel" ]] || continue
+      consult_attachment_budget=$(( consult_attachment_budget + 1 ))
+    done
+  fi
 
   local dump_output
   if [[ "$dump_scope" == "project" ]]; then
@@ -1558,7 +1641,7 @@ bundle_run() {
     echo "- Active draft surface: storage/dp/intake/DP.md (latest-wins); packet identity remains DP-OPS-XXXX."
     echo "- Certify requires STELA_TRACE_ID from OPEN artifact or STELA_TRACE_ID env var."
     echo "- Audit dump: ./ops/bin/bundle --profile=audit --out=auto (separate from operator session refresh)"
-    echo "- Secondary lanes: addenda/addendum (intervention), execution-decision (disposable/manual)"
+    echo "- Secondary lanes: addenda/addendum (intervention), execution-decision (disposable/manual), consult (advisory question transport)"
     echo
     echo "[DUMP]"
     echo "- Scope: ${dump_scope}"
@@ -1621,6 +1704,20 @@ bundle_run() {
     if [[ "$resolved_profile" == "$BUNDLE_ADDENDA_PROFILE" ]]; then
       echo "- Addendum base DP: ${addenda_base_dp_id}"
       echo "- Base DP confirmed in dump: $([[ "$addenda_base_dp_in_dump" == "1" ]] && echo true || echo false)"
+      echo
+    fi
+    if (( consult_requested )); then
+      echo "[CONSULT]"
+      echo "- Adapter: ${consult_adapter}"
+      echo "- Adapter source: ${consult_adapter_source_rel}"
+      echo "- Question source: ${consult_question_rel}"
+      echo "- Question: ${BUNDLE_CONSULT_QUESTION_LINE}"
+      echo "- Attachment budget: ${consult_attachment_budget}"
+      echo "- Output surface: ${consult_output_surface_rel}"
+      echo "- Lint command: ${consult_lint_command}"
+      echo "- Surface contract: docs/ops/specs/surfaces/consult.md"
+      echo "- Disposition record: RESULTS narrative of the packet the consult fed, or that packet's op decision leaf when the consult changed scope; never SoP.md"
+      echo "- Authority: advisory; subordinate to RESULTS, CLOSING, audit verdicts, and Operator approval"
       echo
     fi
     if [[ "$requested_profile" == "auto" && "$resolved_profile" != "planning" ]]; then
@@ -1843,6 +1940,24 @@ bundle_run() {
       echo "    \"base_dp_id\": null,"
     fi
     echo "    \"base_dp_in_dump\": $(bundle_bool "$addenda_base_dp_in_dump")"
+    echo "  },"
+    echo "  \"consult\": {"
+    echo "    \"requested\": $(bundle_bool "$consult_requested"),"
+    if (( consult_requested )); then
+      echo "    \"adapter\": \"$(bundle_json_escape "$consult_adapter")\","
+      echo "    \"adapter_source\": \"$(bundle_json_escape "$consult_adapter_source_rel")\","
+      echo "    \"question_source\": \"$(bundle_json_escape "$consult_question_rel")\","
+      echo "    \"attachment_budget\": ${consult_attachment_budget},"
+      echo "    \"output_surface\": \"$(bundle_json_escape "$consult_output_surface_rel")\","
+      echo "    \"lint_command\": \"$(bundle_json_escape "$consult_lint_command")\""
+    else
+      echo "    \"adapter\": null,"
+      echo "    \"adapter_source\": null,"
+      echo "    \"question_source\": null,"
+      echo "    \"attachment_budget\": null,"
+      echo "    \"output_surface\": null,"
+      echo "    \"lint_command\": null"
+    fi
     echo "  },"
     echo "  \"package\": {"
     echo "    \"path\": \"$(bundle_json_escape "$package_rel")\"," 
