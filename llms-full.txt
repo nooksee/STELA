@@ -124,7 +124,7 @@ Executed by the Contractor (§3.2).
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-11-04-d68c49c5.md
+archives/surfaces/PoW-2026-11-06-9230368f.md
 
 
 ## README.md
@@ -141,11 +141,11 @@ Use [docs/MANUAL.md](docs/MANUAL.md) for command workflow and closeout routing.
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-11-04-d68c49c5.md
+archives/surfaces/SoP-2026-11-06-9230368f.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0267-d68c49c5.md
+archives/surfaces/TASK-DP-OPS-0268-9230368f.md
 
 
 ## docs/INDEX.md
@@ -175,6 +175,7 @@ archives/surfaces/TASK-DP-OPS-0267-d68c49c5.md
 * [ops/specs/definitions/agents.md](ops/specs/definitions/agents.md) — Agent candidate and promotion head-chain specification.
 * [ops/specs/definitions/tasks.md](ops/specs/definitions/tasks.md) — Task candidate and promotion head-chain specification.
 * [ops/specs/definitions/skills.md](ops/specs/definitions/skills.md) — Skill candidate and promotion head-chain specification.
+* [RESEARCH.md](RESEARCH.md) — Research corpus catalog: 156 PDF records under `opt/_research/` in fourteen topic clusters, each with what current main does and where.
 
 
 ## docs/MAP.md
