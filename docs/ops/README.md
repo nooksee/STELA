@@ -1,43 +1,24 @@
-<!-- CCD: ff_target="operator-technical" ff_band="30-40" -->
+<!-- CCD: ff_target="discovery" ff_band="30-50" -->
 # Ops Kernel (Run)
 
-## 0. Philosophy
-**Ops is the runtime kernel.**
-Under the Filing Doctrine, `ops/` is Run: executable logic, manifests, and automation that enforce the Policy of Truth and the platform boundary.
+## Purpose
+Under the Filing Doctrine, `ops/` is Run: the executable logic, manifests, and automation that turn the Policy of Truth into action and hold the platform boundary. Documentation explains and justifies; ops runs.
 
-## 1. Architecture
-The Ops Kernel is the executable layer that turns governance into action. It owns binaries, shared scripts, and manifests that drive platform behavior. Runtime logic belongs in `ops/` and `tools/` with pointer-first documentation in `docs/ops/`.
-Operator-deployed external runtime adapters live under `ops/src/runbook/`; they are operational deployment assets, not constitutional canon or repo-executed binaries.
+## Structure
+- `ops/bin/`: the binaries. The Context Bundler (`ops/bin/llms`) compiles canonical and supporting surfaces into session bundles under the context hazard rules; the Workflow Bundler (`ops/bin/bundle`) emits handoff artifacts that bind OPEN freshness, dump pointers, stance text, and routing for the planning, draft, audit, addenda, and project profiles.
+- `ops/lib/scripts/`: shared shell libraries; `ops/lib/manifests/`: compiled context manifests; `ops/src/`: templates, stances, and runbook adapters; `ops/etc/`: policy manifests.
+- `ops/src/runbook/`: Operator-deployed external runtime adapters. They are deployment assets, not constitutional canon and not repo-executed binaries.
 
-## 2. Core Subsystems
-Context Bundler (`ops/bin/llms`) compiles canonical and supporting surfaces into session bundles while enforcing context hazard exclusion rules.
+## Entry Point
+`./ops/bin/help <term>` locates operational guidance and prioritizes the specs and registries under `docs/ops/`; `./ops/bin/help --test` proves the help surfaces resolve.
 
-Workflow Bundler (`ops/bin/bundle`) emits deterministic handoff artifacts that bind OPEN freshness state, dump pointers, prompt stance text, and routing metadata for Analyst, Architect, Audit, and Project profiles.
+## Constraints
+New operational capability ships as executable logic with a registry entry and a spec pointer. External runtime adapters are the exception: they are Operator-deployed runbook assets, they still carry a registry entry and a spec pointer, and they never redefine repository correctness.
 
-## 3. Registries
-The authoritative operational registries live in `docs/ops/registry/`.
+## Canonical Pointer
+The registries under `docs/ops/registry/` are the record of what exists: `binaries.md`, `lint.md`, `test.md`, `tools.md`, `scripts.md`, `hooks.md`, `workflows.md`, `runbook.md`, `templates.md`, and `decisions.md`. The specifications under `docs/ops/specs/` are grouped by executable surface: `binaries/`, `tools/lint/`, `tools/test/`, `scripts/`, `hooks/`, `workflows/`, `runbook/`, plus `definitions/`, `surfaces/`, `manifests/`, and `stances/`.
 
-- `docs/ops/registry/runbook.md`
-- `docs/ops/registry/binaries.md`
-- `docs/ops/registry/lint.md`
-- `docs/ops/registry/test.md`
-- `docs/ops/registry/tools.md`
-- `docs/ops/registry/scripts.md`
-- `docs/ops/registry/hooks.md`
-- `docs/ops/registry/workflows.md`
-
-## 4. Specifications
-Technical specifications are pointer-first and grouped by executable surface.
-
-- Binary specs: `docs/ops/specs/binaries/`
-- Runbook specs: `docs/ops/specs/runbook/`
-- Tool specs: `docs/ops/specs/tools/`
-- Script specs: `docs/ops/specs/scripts/`
-- Hook specs: `docs/ops/specs/hooks/`
-- Workflow specs: `docs/ops/specs/workflows/`
-
-## 5. Interface Contract
-The Ops Kernel is the executable companion to docs. Documentation explains and justifies; ops runs. New operational capability must ship as executable logic with a registry entry and spec pointer. External runtime adapters are the exception: they are operator-deployed runbook assets, must still carry a registry entry and spec pointer, and must not redefine repo correctness.
-
-## 6. Help and Discovery
-Use `./ops/bin/help <term>` to locate operational guidance. `./ops/bin/help` prioritizes specs and registry surfaces under `docs/ops/`.
+## Where to Look Next
+- `docs/MANUAL.md` for the operator workflow that drives these binaries.
+- `docs/CONTEXT.md` for the context engine and its hazard rules.
+- `docs/DESIGN.md` for the Correct-by-Construction discipline every tool change answers to.

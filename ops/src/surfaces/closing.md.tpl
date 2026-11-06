@@ -1,9 +1,11 @@
 ---
 template_type: surface
 template_id: closing
-template_version: 3
+template_version: 4
 ff_target: operator-technical
 ff_band: "30-45"
+requires_slots:
+  - DP_ID
 ---
 # Closing Block Sidecar — {{DP_ID}}
 

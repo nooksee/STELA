@@ -6,6 +6,7 @@ New templates must be registered here before use.
 FF% field documentation: `docs/ops/specs/binaries/template.md`.
 Retired identifiers are not reused: `TPL-14` was `ops/src/docs/runbook.md.tpl`, removed in DP-OPS-0184.
 `TPL-28` is the legacy-type fallback template that `ops/bin/decision` renders for non-taxonomy `--type` values.
+Metadata rule (DP-OPS-0272): every template declares `template_type`, `template_id`, `template_version`, `ff_target`, and `ff_band`; a template that renders slot markers also declares `requires_slots` naming every marker (include directives are not slots). The runtime inventory report measures the rule as `metadata_complete`; 27 of 27 templates satisfy it.
 
 | ID | Template File | Tier | Band | Router |
 | --- | --- | --- | --- | --- |
@@ -20,7 +21,7 @@ Retired identifiers are not reused: `TPL-14` was `ops/src/docs/runbook.md.tpl`, 
 | TPL-09 | ops/src/surfaces/dp.md.tpl | operator-technical | 30–40% | manifest |
 | TPL-10 | ops/src/surfaces/results.md.tpl | machine-dense | 15–25% | manifest |
 | TPL-11 | ops/src/surfaces/task.md.tpl | machine-dense | 15–25% | manifest |
-| TPL-12 | ops/src/docs/readme.md.tpl | discovery | 55–70% | docs |
+| TPL-12 | ops/src/docs/readme.md.tpl | discovery | 30–50% | docs |
 | TPL-13 | ops/src/docs/adr.md.tpl | governance-narrative | 55–70% | docs |
 | TPL-15 | ops/src/docs/microdoc.md.tpl | machine-dense | 5–15% | docs |
 | TPL-16 | ops/src/docs/changelog.md.tpl | discovery | 30–45% | docs |
