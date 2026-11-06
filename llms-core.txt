@@ -124,15 +124,15 @@ Executed by the Contractor (§3.2).
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-11-06-d65cb05d.md
+archives/surfaces/PoW-2026-11-06-c3a1aa07.md
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-11-06-d65cb05d.md
+archives/surfaces/SoP-2026-11-06-c3a1aa07.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0271-d65cb05d.md
+archives/surfaces/TASK-DP-OPS-0272-c3a1aa07.md
 
 
 ## docs/MAP.md

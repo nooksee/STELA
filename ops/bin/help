@@ -550,6 +550,13 @@ case "${1:-}" in
     show_doctrine
     ;;
   --test)
+    # The self-test matches rendered labels exactly, so it renders without
+    # terminal colors whatever TERM says (DP-OPS-0272).
+    bold=""
+    dim=""
+    green=""
+    cyan=""
+    reset=""
     run_doctrine_self_test
     ;;
   curriculum)
