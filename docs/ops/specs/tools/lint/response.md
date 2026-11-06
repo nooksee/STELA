@@ -13,11 +13,12 @@ Modes:
 4. `bash tools/lint/response.sh --mode=planning [path|-]`.
 5. `bash tools/lint/response.sh --mode=addenda [path|-]`.
 6. `bash tools/lint/response.sh --mode=execution-decision [path|-]`.
-7. `bash tools/lint/response.sh --test` (runs deterministic fixtures for supported modes).
+7. `bash tools/lint/response.sh --mode=consult [path|-]`.
+8. `bash tools/lint/response.sh --test` (runs deterministic fixtures for supported modes).
 
 Deterministic checks:
-1. In `dp`, `audit`, `draft`, `addenda`, and `execution-decision` modes, input must contain exactly one fenced markdown code block.
-2. In `dp`, `audit`, `draft`, `addenda`, and `execution-decision` modes, non-whitespace text outside the fenced block is a hard failure.
+1. In `dp`, `audit`, `draft`, `addenda`, `execution-decision`, and `consult` modes, input must contain exactly one fenced markdown code block.
+2. In `dp`, `audit`, `draft`, `addenda`, `execution-decision`, and `consult` modes, non-whitespace text outside the fenced block is a hard failure.
 3. In `planning` mode, final-plan output uses exactly one fenced markdown code block; clarification output is plain text with no fenced code block.
 4. Shared cross-stance freeze is defined in `ops/src/shared/stances.json` using keys `single_fence_contract_rules` and `non_audit_role_drift_rules`.
 5. In `dp` mode, extracted body must start with `### DP-` on the first non-empty line.
@@ -56,9 +57,12 @@ Deterministic checks:
    - `Decision Required: No` requires `Decision Leaf: None`.
 16. In `execution-decision` mode, input must contain one fenced markdown code block whose body includes the required constraint labels and at least one complete step block.
 17. In `audit` mode, envelope, marker, and drift checks are authoritative.
+18. In `consult` mode, extracted body must start with `### CONSULT <adapter> <YYYY-MM-DD>` where `ops/src/runbook/<adapter>.yaml` exists with `adapter_class: external-runtime-adapter`, and must include each of `## C.1 Question`, `## C.2 Attachments`, `## C.3 Context Mode`, `## C.4 Findings`, `## C.5 Recommendation`, `## C.6 Authority`, `## C.7 Disposition` exactly once, in that order, none empty.
+19. In `consult` mode, field rules: `## C.2 Attachments` declares `Budget: <non-negative integer>` and lists no more `- ` items than the budget (`- none` is not counted); `## C.3 Context Mode` reads exactly `in_thread` or `fresh_thread`; `## C.6 Authority` contains the sentence `Advisory. Subordinate to RESULTS, CLOSING, audit verdicts, and Operator approval.`; `## C.7 Disposition` carries `Disposition:` (`adopt`, `adapt`, `reject`, `pending`) and `Recorded in:` with coherence: `pending` requires `none`; `adopt` and `adapt` require `RESULTS narrative of DP-OPS-NNNN` or `archives/decisions/RoR-*-op-NNNN.md`; `reject` accepts `none` or either pointer.
+20. In `consult` mode, reuse the non-audit receipt-drift family (audit-verdict marker, `## Worker Execution Narrative`, receipt narrative subheadings) and reject `Decision Required:` and `Decision Leaf:` lines; the surface contract is `docs/ops/specs/surfaces/consult.md`.
 
 Exit behavior:
-- Pass: prints `OK: response lint passed (mode=<dp|audit|draft|planning|addenda|execution-decision>)`.
+- Pass: prints `OK: response lint passed (mode=<dp|audit|draft|planning|addenda|execution-decision|consult>)`.
 - Fail: prints `FAIL: ...` and exits non-zero.
 
 `--test` fixtures:
@@ -72,6 +76,7 @@ Exit behavior:
 - PASS: plain-text planning clarification where an option line ends in `?` (`planning` mode).
 - PASS: single fenced block with addendum headings (`addenda` mode).
 - PASS: single fenced block with required constraint labels and one complete step block (`execution-decision` mode).
+- PASS: single fenced block with the consult header, seven sections in order, budget-bounded attachments, a named context mode, the authority sentence, and a coherent pending disposition (`consult` mode).
 - FAIL: text outside fence.
 - FAIL: multiple fenced blocks.
 - FAIL: drift token present.
@@ -97,8 +102,17 @@ Exit behavior:
 - FAIL: addenda response with incoherent decision fields (`addenda` mode).
 - FAIL: execution-decision response missing one required constraint label (`execution-decision` mode).
 - FAIL: execution-decision response missing a complete seven-label step block (`execution-decision` mode).
+- FAIL: consult response missing a required section (`consult` mode).
+- FAIL: consult response with sections out of order (`consult` mode).
+- FAIL: consult response with an empty section (`consult` mode).
+- FAIL: consult response listing more attachments than its budget (`consult` mode).
+- FAIL: consult response with an unknown context mode (`consult` mode).
+- FAIL: consult response without the authority sentence (`consult` mode).
+- FAIL: consult response with `adopt` and `Recorded in: none` (`consult` mode).
+- FAIL: consult response naming a header adapter with no external-runtime-adapter source (`consult` mode).
+- FAIL: consult response carrying `Decision Required:` and `Decision Leaf:` fields (`consult` mode).
 - FAIL: trailing text outside fence.
 
 ## Integrity Filter Warnings
-`response.sh` is an ingress contract gate. In `dp` and `draft` modes, structural DP validation remains authoritative in `tools/lint/dp.sh` after envelope checks. In `audit` mode, strict single-fence envelope checks plus marker and drift checks are the hard floor.
+`response.sh` is an ingress contract gate. In `dp` and `draft` modes, structural DP validation remains authoritative in `tools/lint/dp.sh` after envelope checks. In `audit` mode, strict single-fence envelope checks plus marker and drift checks are the hard floor. In `consult` mode, a passing artifact is still advisory; the lint proves shape and coherence, not the disposition itself, which lives in the RESULTS narrative or an `op` leaf.
 UI-level "thinking" or progress text shown by model hosts is not part of the response payload contract; the payload contract applies to the emitted response body only.

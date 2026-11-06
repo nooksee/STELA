@@ -55,6 +55,14 @@ validation:
     - "Model emits no synthetic citation tokens, fake references, meta-process lists, or filler."
     - "Model redirects off-topic requests to the research objective and proposes no repo edits or authoritative plans."
 
+consult:
+  received_handoff: "storage/handoff/CONSULT-gemini.md"
+  surface_contract: "docs/ops/specs/surfaces/consult.md"
+  placement_contract: "disposable/manual; latest-wins per adapter; git-ignored; not a certify input; subordinate to RESULTS, CLOSING, audit verdicts, and Operator approval"
+  lint_command: "bash tools/lint/response.sh --mode=consult storage/handoff/CONSULT-gemini.md"
+  pass_condition: "OK: response lint passed (mode=consult)"
+  disposition_record: "RESULTS narrative of the packet the consult fed, or that packet's op decision leaf when the consult changed scope; never SoP.md"
+
 sunset_condition: "Retire or narrow once Gemini produces two consecutive clean validation rounds without stale-context, local-truth, or citation-token failures."
 notes:
   - "Reintroduced on 2026-11-04 by Operator choice as a research-only adapter; the earlier experimental architect and audit adapter was retired in DP-OPS-0188."

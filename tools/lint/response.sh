@@ -14,9 +14,10 @@ emit_binary_leaf "lint-response" "start"
 
 usage() {
   cat <<'USAGE'
-Usage: bash tools/lint/response.sh [--mode=dp|audit|draft|planning|addenda|execution-decision] [--test] [path|-]
+Usage: bash tools/lint/response.sh [--mode=dp|audit|draft|planning|addenda|execution-decision|consult] [--test] [path|-]
 Default input: stdin
 Example: bash tools/lint/response.sh --mode=audit var/tmp/response-audit-valid.md
+Example: bash tools/lint/response.sh --mode=consult storage/handoff/CONSULT-gemini.md
 Mode matrix freeze: draft|planning|addenda remain explicit machine-ingest modes.
 USAGE
 }
@@ -638,6 +639,148 @@ check_execution_decision_schema() {
   return 0
 }
 
+consult_section_body() {
+  local body_path="$1"
+  local section_id="$2"
+  awk -v id="$section_id" '
+    $0 ~ "^##[[:space:]]+" id "[[:space:]]" { in_section = 1; next }
+    in_section && $0 ~ /^##[[:space:]]/ { exit }
+    in_section { print }
+  ' "$body_path"
+}
+
+check_consult_body_scope() {
+  local body_path="$1"
+  local first_content_line
+  local adapter_id=""
+  local adapter_source=""
+  local -a section_ids=("C.1" "C.2" "C.3" "C.4" "C.5" "C.6" "C.7")
+  local -a section_titles=("Question" "Attachments" "Context Mode" "Findings" "Recommendation" "Authority" "Disposition")
+  local index heading_pattern heading_count heading_line previous_line=0
+  local section_text budget_line budget_value attachment_count context_mode_value
+  local disposition_line disposition_value recorded_line recorded_value
+  local authority_sentence="Advisory. Subordinate to RESULTS, CLOSING, audit verdicts, and Operator approval."
+
+  first_content_line="$(awk 'NF { print; exit }' "$body_path")"
+  if [[ -z "$first_content_line" ]]; then
+    response_fail "consult body is empty"
+    return 1
+  fi
+
+  if [[ ! "$first_content_line" =~ ^###[[:space:]]+CONSULT[[:space:]]+([a-z][a-z0-9-]*)[[:space:]]+[0-9]{4}-[0-9]{2}-[0-9]{2}[[:space:]]*$ ]]; then
+    response_fail "consult body must start with heading format '### CONSULT <adapter> <YYYY-MM-DD>'"
+    return 1
+  fi
+  adapter_id="${BASH_REMATCH[1]}"
+  adapter_source="ops/src/runbook/${adapter_id}.yaml"
+  if [[ ! -f "$adapter_source" ]] || ! grep -qE '^adapter_class:[[:space:]]+external-runtime-adapter[[:space:]]*$' "$adapter_source"; then
+    response_fail "consult adapter '${adapter_id}' has no external-runtime-adapter source at ${adapter_source}"
+    return 1
+  fi
+
+  for index in "${!section_ids[@]}"; do
+    heading_pattern="^##[[:space:]]+${section_ids[$index]//./[.]}[[:space:]]+${section_titles[$index]// /[[:space:]]+}[[:space:]]*$"
+    heading_count="$(grep -cE "$heading_pattern" "$body_path" || true)"
+    if [[ "$heading_count" != "1" ]]; then
+      response_fail "consult body must include section '## ${section_ids[$index]} ${section_titles[$index]}' exactly once (found ${heading_count})"
+      continue
+    fi
+    heading_line="$(grep -nE "$heading_pattern" "$body_path" | head -n 1 | cut -d: -f1)"
+    if (( heading_line <= previous_line )); then
+      response_fail "consult section '## ${section_ids[$index]} ${section_titles[$index]}' is out of order"
+    fi
+    previous_line="$heading_line"
+    section_text="$(consult_section_body "$body_path" "${section_ids[$index]}")"
+    if [[ -z "$(awk 'NF { print; exit }' <<< "$section_text")" ]]; then
+      response_fail "consult section '## ${section_ids[$index]} ${section_titles[$index]}' is empty"
+    fi
+  done
+  if (( failures )); then
+    return 1
+  fi
+
+  section_text="$(consult_section_body "$body_path" "C.2")"
+  budget_line="$(grep -E '^Budget:' <<< "$section_text" | head -n 1 || true)"
+  if [[ -z "$budget_line" ]]; then
+    response_fail "consult section '## C.2 Attachments' must declare 'Budget: <count>'"
+    return 1
+  fi
+  budget_value="$(normalize_field_value "${budget_line#Budget:}")"
+  if [[ ! "$budget_value" =~ ^[0-9]+$ ]]; then
+    response_fail "consult attachment budget must be a non-negative integer, found '${budget_value}'"
+    return 1
+  fi
+  attachment_count="$(grep -cE '^-[[:space:]]+' <<< "$section_text" || true)"
+  if grep -qE '^-[[:space:]]+none[[:space:]]*$' <<< "$section_text"; then
+    attachment_count=$(( attachment_count - 1 ))
+  fi
+  if (( attachment_count > budget_value )); then
+    response_fail "consult attachments exceed the declared budget: ${attachment_count} listed, Budget: ${budget_value}"
+    return 1
+  fi
+
+  section_text="$(consult_section_body "$body_path" "C.3")"
+  context_mode_value="$(normalize_field_value "$(awk 'NF { print; exit }' <<< "$section_text")")"
+  case "$context_mode_value" in
+    in_thread|fresh_thread) ;;
+    *)
+      response_fail "consult section '## C.3 Context Mode' must read exactly 'in_thread' or 'fresh_thread', found '${context_mode_value}'"
+      return 1
+      ;;
+  esac
+
+  section_text="$(consult_section_body "$body_path" "C.6")"
+  if ! grep -qF -- "$authority_sentence" <<< "$section_text"; then
+    response_fail "consult section '## C.6 Authority' must contain the sentence '${authority_sentence}'"
+    return 1
+  fi
+
+  section_text="$(consult_section_body "$body_path" "C.7")"
+  disposition_line="$(grep -E '^Disposition:' <<< "$section_text" | head -n 1 || true)"
+  recorded_line="$(grep -E '^Recorded in:' <<< "$section_text" | head -n 1 || true)"
+  if [[ -z "$disposition_line" || -z "$recorded_line" ]]; then
+    response_fail "consult section '## C.7 Disposition' must include both 'Disposition:' and 'Recorded in:'"
+    return 1
+  fi
+  disposition_value="$(normalize_field_value "${disposition_line#Disposition:}")"
+  recorded_value="$(normalize_field_value "${recorded_line#Recorded in:}")"
+  case "$disposition_value" in
+    pending)
+      if [[ "$recorded_value" != "none" ]]; then
+        response_fail "consult disposition coherence failed: Disposition='pending' requires Recorded in='none'"
+        return 1
+      fi
+      ;;
+    adopt|adapt)
+      if [[ ! "$recorded_value" =~ ^RESULTS[[:space:]]narrative[[:space:]]of[[:space:]]DP-OPS-[0-9]{4}$ && ! "$recorded_value" =~ ^archives/decisions/RoR-[^[:space:]]+-op-[0-9]{4}\.md$ ]]; then
+        response_fail "consult disposition coherence failed: Disposition='${disposition_value}' requires Recorded in='RESULTS narrative of DP-OPS-NNNN' or an op leaf path 'archives/decisions/RoR-*-op-NNNN.md'"
+        return 1
+      fi
+      ;;
+    reject)
+      if [[ "$recorded_value" != "none" && ! "$recorded_value" =~ ^RESULTS[[:space:]]narrative[[:space:]]of[[:space:]]DP-OPS-[0-9]{4}$ && ! "$recorded_value" =~ ^archives/decisions/RoR-[^[:space:]]+-op-[0-9]{4}\.md$ ]]; then
+        response_fail "consult disposition coherence failed: Disposition='reject' requires Recorded in='none', a RESULTS narrative pointer, or an op leaf path"
+        return 1
+      fi
+      ;;
+    *)
+      response_fail "consult disposition must be exactly one of adopt, adapt, reject, pending; found '${disposition_value}'"
+      return 1
+      ;;
+  esac
+
+  check_reject_audit_verdict_marker "$body_path" "consult body"
+  check_reject_worker_narrative_section "$body_path" "consult body"
+  check_reject_receipt_narrative_subheadings "$body_path" "consult body"
+  reject_body_match "$body_path" '
+    tolower($0) ~ /^decision[[:space:]]+required:/ || tolower($0) ~ /^decision[[:space:]]+leaf:/ { printf "%d\t%s\n", NR, $0; exit }
+  ' "consult body must not carry audit/addenda decision fields"
+  if (( failures )); then
+    return 1
+  fi
+  return 0
+}
+
 lint_response_file() {
   local input_path="$1"
   local body_tmp
@@ -675,6 +818,9 @@ lint_response_file() {
   elif [[ "$response_mode" == "execution-decision" ]]; then
     extract_single_fenced_block "$input_path" "$body_tmp"
     check_execution_decision_schema "$body_tmp"
+  elif [[ "$response_mode" == "consult" ]]; then
+    extract_single_fenced_block "$input_path" "$body_tmp"
+    check_consult_body_scope "$body_tmp"
   else
     response_fail "unsupported lint mode: ${response_mode}"
   fi
@@ -733,6 +879,16 @@ run_test() {
   local response_exec_decision_missing_step
   local response_exec_decision_split_block
   local response_exec_decision_label_in_prose
+  local response_consult_valid
+  local response_consult_missing_section
+  local response_consult_out_of_order
+  local response_consult_empty_section
+  local response_consult_over_budget
+  local response_consult_bad_context_mode
+  local response_consult_missing_authority
+  local response_consult_incoherent_disposition
+  local response_consult_unknown_adapter
+  local response_consult_decision_fields
   local failures_local=0
   local saved_mode="$response_mode"
 
@@ -1405,6 +1561,297 @@ EOF_EXEC_DECISION_LABEL_IN_PROSE
     failures_local=1
   fi
 
+  response_mode="consult"
+
+  response_consult_valid="${test_dir}/response-consult-valid.md"
+  cat > "$response_consult_valid" <<'EOF_CONSULT_VALID'
+```
+### CONSULT gemini 2026-11-06
+## C.1 Question
+Which landing shape keeps advisory research output out of canon with the least ceremony?
+## C.2 Attachments
+Budget: 2
+- storage/handoff/PLAN-RUNBOOK.md
+- docs/MANUAL.md
+## C.3 Context Mode
+fresh_thread
+## C.4 Findings
+One handoff file per adapter is enough; the handoff directory is ignored by git.
+## C.5 Recommendation
+Land the output at storage/handoff/CONSULT-gemini.md and lint it before reading.
+## C.6 Authority
+Advisory. Subordinate to RESULTS, CLOSING, audit verdicts, and Operator approval.
+## C.7 Disposition
+Disposition: pending
+Recorded in: none
+```
+EOF_CONSULT_VALID
+  failures=0
+  if ! lint_response_file "$response_consult_valid" >/dev/null 2>&1; then
+    echo "FAIL: --test expected valid consult response to pass" >&2
+    failures_local=1
+  fi
+
+  response_consult_missing_section="${test_dir}/response-consult-missing-section.md"
+  cat > "$response_consult_missing_section" <<'EOF_CONSULT_MISSING_SECTION'
+```
+### CONSULT gemini 2026-11-06
+## C.1 Question
+Which landing shape keeps advisory research output out of canon with the least ceremony?
+## C.2 Attachments
+Budget: 2
+- storage/handoff/PLAN-RUNBOOK.md
+- docs/MANUAL.md
+## C.3 Context Mode
+fresh_thread
+## C.4 Findings
+One handoff file per adapter is enough; the handoff directory is ignored by git.
+## C.6 Authority
+Advisory. Subordinate to RESULTS, CLOSING, audit verdicts, and Operator approval.
+## C.7 Disposition
+Disposition: pending
+Recorded in: none
+```
+EOF_CONSULT_MISSING_SECTION
+  failures=0
+  if lint_response_file "$response_consult_missing_section" >/dev/null 2>&1; then
+    echo "FAIL: --test expected consult response missing a required section to fail" >&2
+    failures_local=1
+  fi
+
+  response_consult_out_of_order="${test_dir}/response-consult-out-of-order.md"
+  cat > "$response_consult_out_of_order" <<'EOF_CONSULT_OUT_OF_ORDER'
+```
+### CONSULT gemini 2026-11-06
+## C.1 Question
+Which landing shape keeps advisory research output out of canon with the least ceremony?
+## C.2 Attachments
+Budget: 2
+- storage/handoff/PLAN-RUNBOOK.md
+- docs/MANUAL.md
+## C.3 Context Mode
+fresh_thread
+## C.5 Recommendation
+Land the output at storage/handoff/CONSULT-gemini.md and lint it before reading.
+## C.4 Findings
+One handoff file per adapter is enough; the handoff directory is ignored by git.
+## C.6 Authority
+Advisory. Subordinate to RESULTS, CLOSING, audit verdicts, and Operator approval.
+## C.7 Disposition
+Disposition: pending
+Recorded in: none
+```
+EOF_CONSULT_OUT_OF_ORDER
+  failures=0
+  if lint_response_file "$response_consult_out_of_order" >/dev/null 2>&1; then
+    echo "FAIL: --test expected consult response with sections out of order to fail" >&2
+    failures_local=1
+  fi
+
+  response_consult_empty_section="${test_dir}/response-consult-empty-section.md"
+  cat > "$response_consult_empty_section" <<'EOF_CONSULT_EMPTY_SECTION'
+```
+### CONSULT gemini 2026-11-06
+## C.1 Question
+Which landing shape keeps advisory research output out of canon with the least ceremony?
+## C.2 Attachments
+Budget: 2
+- storage/handoff/PLAN-RUNBOOK.md
+- docs/MANUAL.md
+## C.3 Context Mode
+fresh_thread
+## C.4 Findings
+## C.5 Recommendation
+Land the output at storage/handoff/CONSULT-gemini.md and lint it before reading.
+## C.6 Authority
+Advisory. Subordinate to RESULTS, CLOSING, audit verdicts, and Operator approval.
+## C.7 Disposition
+Disposition: pending
+Recorded in: none
+```
+EOF_CONSULT_EMPTY_SECTION
+  failures=0
+  if lint_response_file "$response_consult_empty_section" >/dev/null 2>&1; then
+    echo "FAIL: --test expected consult response with an empty section to fail" >&2
+    failures_local=1
+  fi
+
+  response_consult_over_budget="${test_dir}/response-consult-over-budget.md"
+  cat > "$response_consult_over_budget" <<'EOF_CONSULT_OVER_BUDGET'
+```
+### CONSULT gemini 2026-11-06
+## C.1 Question
+Which landing shape keeps advisory research output out of canon with the least ceremony?
+## C.2 Attachments
+Budget: 1
+- storage/handoff/PLAN-RUNBOOK.md
+- docs/MANUAL.md
+## C.3 Context Mode
+fresh_thread
+## C.4 Findings
+One handoff file per adapter is enough; the handoff directory is ignored by git.
+## C.5 Recommendation
+Land the output at storage/handoff/CONSULT-gemini.md and lint it before reading.
+## C.6 Authority
+Advisory. Subordinate to RESULTS, CLOSING, audit verdicts, and Operator approval.
+## C.7 Disposition
+Disposition: pending
+Recorded in: none
+```
+EOF_CONSULT_OVER_BUDGET
+  failures=0
+  if lint_response_file "$response_consult_over_budget" >/dev/null 2>&1; then
+    echo "FAIL: --test expected consult response listing more attachments than its budget to fail" >&2
+    failures_local=1
+  fi
+
+  response_consult_bad_context_mode="${test_dir}/response-consult-bad-context-mode.md"
+  cat > "$response_consult_bad_context_mode" <<'EOF_CONSULT_BAD_CONTEXT_MODE'
+```
+### CONSULT gemini 2026-11-06
+## C.1 Question
+Which landing shape keeps advisory research output out of canon with the least ceremony?
+## C.2 Attachments
+Budget: 2
+- storage/handoff/PLAN-RUNBOOK.md
+- docs/MANUAL.md
+## C.3 Context Mode
+same_thread
+## C.4 Findings
+One handoff file per adapter is enough; the handoff directory is ignored by git.
+## C.5 Recommendation
+Land the output at storage/handoff/CONSULT-gemini.md and lint it before reading.
+## C.6 Authority
+Advisory. Subordinate to RESULTS, CLOSING, audit verdicts, and Operator approval.
+## C.7 Disposition
+Disposition: pending
+Recorded in: none
+```
+EOF_CONSULT_BAD_CONTEXT_MODE
+  failures=0
+  if lint_response_file "$response_consult_bad_context_mode" >/dev/null 2>&1; then
+    echo "FAIL: --test expected consult response with an unknown context mode to fail" >&2
+    failures_local=1
+  fi
+
+  response_consult_missing_authority="${test_dir}/response-consult-missing-authority.md"
+  cat > "$response_consult_missing_authority" <<'EOF_CONSULT_MISSING_AUTHORITY'
+```
+### CONSULT gemini 2026-11-06
+## C.1 Question
+Which landing shape keeps advisory research output out of canon with the least ceremony?
+## C.2 Attachments
+Budget: 2
+- storage/handoff/PLAN-RUNBOOK.md
+- docs/MANUAL.md
+## C.3 Context Mode
+fresh_thread
+## C.4 Findings
+One handoff file per adapter is enough; the handoff directory is ignored by git.
+## C.5 Recommendation
+Land the output at storage/handoff/CONSULT-gemini.md and lint it before reading.
+## C.6 Authority
+Advisory only.
+## C.7 Disposition
+Disposition: pending
+Recorded in: none
+```
+EOF_CONSULT_MISSING_AUTHORITY
+  failures=0
+  if lint_response_file "$response_consult_missing_authority" >/dev/null 2>&1; then
+    echo "FAIL: --test expected consult response without the authority sentence to fail" >&2
+    failures_local=1
+  fi
+
+  response_consult_incoherent_disposition="${test_dir}/response-consult-incoherent-disposition.md"
+  cat > "$response_consult_incoherent_disposition" <<'EOF_CONSULT_INCOHERENT_DISPOSITION'
+```
+### CONSULT gemini 2026-11-06
+## C.1 Question
+Which landing shape keeps advisory research output out of canon with the least ceremony?
+## C.2 Attachments
+Budget: 2
+- storage/handoff/PLAN-RUNBOOK.md
+- docs/MANUAL.md
+## C.3 Context Mode
+fresh_thread
+## C.4 Findings
+One handoff file per adapter is enough; the handoff directory is ignored by git.
+## C.5 Recommendation
+Land the output at storage/handoff/CONSULT-gemini.md and lint it before reading.
+## C.6 Authority
+Advisory. Subordinate to RESULTS, CLOSING, audit verdicts, and Operator approval.
+## C.7 Disposition
+Disposition: adopt
+Recorded in: none
+```
+EOF_CONSULT_INCOHERENT_DISPOSITION
+  failures=0
+  if lint_response_file "$response_consult_incoherent_disposition" >/dev/null 2>&1; then
+    echo "FAIL: --test expected consult response with adopt and no record pointer to fail" >&2
+    failures_local=1
+  fi
+
+  response_consult_unknown_adapter="${test_dir}/response-consult-unknown-adapter.md"
+  cat > "$response_consult_unknown_adapter" <<'EOF_CONSULT_UNKNOWN_ADAPTER'
+```
+### CONSULT execution-decision 2026-11-06
+## C.1 Question
+Which landing shape keeps advisory research output out of canon with the least ceremony?
+## C.2 Attachments
+Budget: 2
+- storage/handoff/PLAN-RUNBOOK.md
+- docs/MANUAL.md
+## C.3 Context Mode
+fresh_thread
+## C.4 Findings
+One handoff file per adapter is enough; the handoff directory is ignored by git.
+## C.5 Recommendation
+Land the output at storage/handoff/CONSULT-gemini.md and lint it before reading.
+## C.6 Authority
+Advisory. Subordinate to RESULTS, CLOSING, audit verdicts, and Operator approval.
+## C.7 Disposition
+Disposition: pending
+Recorded in: none
+```
+EOF_CONSULT_UNKNOWN_ADAPTER
+  failures=0
+  if lint_response_file "$response_consult_unknown_adapter" >/dev/null 2>&1; then
+    echo "FAIL: --test expected consult response naming a non-adapter source to fail" >&2
+    failures_local=1
+  fi
+
+  response_consult_decision_fields="${test_dir}/response-consult-decision-fields.md"
+  cat > "$response_consult_decision_fields" <<'EOF_CONSULT_DECISION_FIELDS'
+```
+### CONSULT gemini 2026-11-06
+## C.1 Question
+Which landing shape keeps advisory research output out of canon with the least ceremony?
+## C.2 Attachments
+Budget: 2
+- storage/handoff/PLAN-RUNBOOK.md
+- docs/MANUAL.md
+## C.3 Context Mode
+fresh_thread
+## C.4 Findings
+One handoff file per adapter is enough; the handoff directory is ignored by git.
+## C.5 Recommendation
+Land the output at storage/handoff/CONSULT-gemini.md and lint it before reading.
+## C.6 Authority
+Advisory. Subordinate to RESULTS, CLOSING, audit verdicts, and Operator approval.
+## C.7 Disposition
+Disposition: pending
+Recorded in: none
+Decision Required: No
+Decision Leaf: None
+```
+EOF_CONSULT_DECISION_FIELDS
+  failures=0
+  if lint_response_file "$response_consult_decision_fields" >/dev/null 2>&1; then
+    echo "FAIL: --test expected consult response carrying decision fields to fail" >&2
+    failures_local=1
+  fi
+
   response_mode="$saved_mode"
   response_skip_dp_delegate=0
 
@@ -1424,7 +1871,7 @@ while (($# > 0)); do
       shift
       if (($# == 0)); then
         usage >&2
-        response_fail "--mode requires one of: dp audit draft planning addenda execution-decision"
+        response_fail "--mode requires one of: dp audit draft planning addenda execution-decision consult"
         exit 1
       fi
       response_mode="$1"
@@ -1455,10 +1902,10 @@ while (($# > 0)); do
 done
 
 case "$response_mode" in
-  dp|audit|draft|planning|addenda|execution-decision) ;;
+  dp|audit|draft|planning|addenda|execution-decision|consult) ;;
   *)
     usage >&2
-    response_fail "invalid mode: ${response_mode}. Use dp, audit, draft, planning, addenda, or execution-decision."
+    response_fail "invalid mode: ${response_mode}. Use dp, audit, draft, planning, addenda, execution-decision, or consult."
     exit 1
     ;;
 esac

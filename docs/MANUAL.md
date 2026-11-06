@@ -8,7 +8,7 @@ The canonical operator shipping chain is:
 
 `TOPIC.md` → `PLAN.md` → `storage/dp/intake/DP.md` (active draft) → Worker execution → `RESULTS` + `CLOSING` → audit bundle → merge
 
-Each stage has one obvious active surface. Secondary lanes (addenda/addendum, execution-decision) are bounded sidepaths, not replacements for RESULTS, CLOSING, or audit truth.
+Each stage has one obvious active surface. Secondary lanes (addenda/addendum, execution-decision, consult) are bounded sidepaths, not replacements for RESULTS, CLOSING, or audit truth.
 
 Active surfaces by stage:
 - **Topic input:** `storage/handoff/TOPIC.md` (latest-wins; operator writes before each planning run)
@@ -57,9 +57,18 @@ This path is separate from bundle-mediated planning, draft, and audit transport;
 - No execution-decision bundle profile exists yet; placement is manual.
 - Validated via `bash tools/lint/response.sh --mode=execution-decision`; checks required constraint-section labels and at least one complete step block.
 
+**Consult Handling:**
+- A consult is a bounded question put to an external runtime adapter (`ops/src/runbook/gpt.yaml`, `claude.yaml`, `gemini.yaml`): bounded question, declared attachment budget, one context mode (`in_thread` or `fresh_thread`), advisory authority, explicit operator disposition.
+- One schema, all adapters: `docs/ops/specs/surfaces/consult.md` (header `### CONSULT <adapter> <date>`, sections C.1 to C.7).
+- Landing: `storage/handoff/CONSULT-<adapter>.md`, latest-wins per adapter, disposable, git-ignored; placement is manual; no consult bundle profile exists yet.
+- Validated via `bash tools/lint/response.sh --mode=consult` before any decision reads it.
+- Disposition rule: `adopt`, `adapt`, or `reject` is recorded in the RESULTS narrative of the packet the consult fed; in that packet's `op` decision leaf when the consult changed its scope; never in SoP.md. The artifact's C.7 lines mirror the record.
+- Consult output stays subordinate to `RESULTS`, `CLOSING`, audit verdicts, and Operator approval.
+
 **Secondary Lanes:**
 - `addenda/addendum`: Intervention path. Worker or Auditor reports `ADDENDUM REQUIRED`. Operator generates an addenda wake-up bundle (`./ops/bin/bundle --profile=addenda --intent="ADDENDUM REQUIRED: <BASE_DP_ID> - <BLOCKER>" --out=auto`), delivers it to the supervisor, and the supervisor builds the addendum case from visible evidence in the dump (RESULTS, OPEN metadata, boundary condition) — no pre-existing decision leaf required. The supervisor issues an authorized addendum. The authorized addendum is handed to the worker as a finished document. Worker does not author addendum content.
 - `execution-decision`: See above.
+- `consult`: See above.
 - Surface and definition rendering is centralized in `ops/bin/template` with YAML metadata parsing, include injection, and strict slot enforcement by default.
 - Bundle stance contract rendering is template-backed via `ops/src/stances/*.md.tpl` and manifest stance keys in `ops/lib/manifests/BUNDLE.md`.
 - Definition registry guidance is canonical in `docs/ops/specs/definitions/agents.md`, `docs/ops/specs/definitions/tasks.md`, and `docs/ops/specs/definitions/skills.md`. `opt/_factory/AGENTS.md`, `opt/_factory/TASKS.md`, and `opt/_factory/SKILLS.md` are pointer heads.
