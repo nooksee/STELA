@@ -6,6 +6,7 @@ Every CbC decision made against a named tool gets a row. Entries are updated whe
 | Tool | Score | Verdict | DP | Status | Leaf |
 | :--- | :---: | :--- | :--- | :--- | :--- |
 | tools/verify.sh | C | Keep; lane-policy manifest and packet-local certify replay adopted | DP-OPS-0101, DP-OPS-0202 | Active | archives/decisions/RoR-2026-03-16-001-cbc-0202.md |
+| tools/verify.sh (records class) | C | Keep; `opt/_research/` admitted as a records class with three name patterns so PDF research records pass the Filing Doctrine checks | DP-OPS-0268 | Active | archives/decisions/RoR-2026-11-06-001-cbc-0268.md |
 | tools/lint/dp.sh | C | Keep; refactor candidate (extract test fixture) | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-004-cbc-0140.md |
 | tools/lint/agent.sh | C | Keep | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-005-cbc-0140.md |
 | tools/lint/context.sh (artifact existence, contamination) | C | Keep | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-006-cbc-0140.md |

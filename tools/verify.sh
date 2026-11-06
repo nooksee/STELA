@@ -941,6 +941,29 @@ for item in storage/*; do
 done
 
 # 3. Filing Doctrine Checks
+# Records class (DP-OPS-0268): opt/_research/ holds research reports as PDF
+# records plus their digest list and one README. It is the only opt/ path that
+# may hold binary or non-markdown files, and it admits exactly three name
+# patterns; any other file under it is a Filing Doctrine violation.
+RECORDS_DIR="opt/_research"
+records_class_member() {
+  local path="$1"
+  case "$path" in
+    "${RECORDS_DIR}"/*.pdf|"${RECORDS_DIR}/SHA256SUMS"|"${RECORDS_DIR}/README.md")
+      return 0
+      ;;
+  esac
+  return 1
+}
+
+if [[ -d "$RECORDS_DIR" ]]; then
+  while IFS= read -r -d '' records_path; do
+    if ! records_class_member "$records_path"; then
+      fail "Filing Doctrine violation: file outside the records class in ${RECORDS_DIR}/: $records_path"
+    fi
+  done < <(find "$RECORDS_DIR" -type f -print0)
+fi
+
 if ! command -v file >/dev/null 2>&1; then
   fail "Missing dependency: file (required for binary checks)"
 else
@@ -950,7 +973,7 @@ else
     if [[ "$encoding" == "binary" ]]; then
       docs_opt_binaries+=("$doc_path")
     fi
-  done < <(find docs opt -type f -print0)
+  done < <(find docs opt -type f ! -path "${RECORDS_DIR}/*" -print0)
 
   if (( ${#docs_opt_binaries[@]} > 0 )); then
     for doc_path in "${docs_opt_binaries[@]}"; do
@@ -980,7 +1003,7 @@ fi
 opt_non_markdown=()
 while IFS= read -r -d '' opt_path; do
   opt_non_markdown+=("$opt_path")
-done < <(find opt -type f ! -name '*.md' -print0)
+done < <(find opt -type f ! -path "${RECORDS_DIR}/*" ! -name '*.md' -print0)
 
 if (( ${#opt_non_markdown[@]} > 0 )); then
   for opt_path in "${opt_non_markdown[@]}"; do

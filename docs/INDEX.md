@@ -24,3 +24,4 @@
 * [ops/specs/definitions/agents.md](ops/specs/definitions/agents.md) — Agent candidate and promotion head-chain specification.
 * [ops/specs/definitions/tasks.md](ops/specs/definitions/tasks.md) — Task candidate and promotion head-chain specification.
 * [ops/specs/definitions/skills.md](ops/specs/definitions/skills.md) — Skill candidate and promotion head-chain specification.
+* [RESEARCH.md](RESEARCH.md) — Research corpus catalog: 156 PDF records under `opt/_research/` in fourteen topic clusters, each with what current main does and where.

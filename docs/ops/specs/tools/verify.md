@@ -16,7 +16,7 @@
    - require `storage/handoff`, `storage/dumps`, and `storage/dp`
    - fail tracked intake DP surfaces under `storage/dp/intake/` (`DP.md`, `ADDENDUM.md`, and any legacy packet-scoped intake packets)
    - require `var/tmp`, `logs`, archive subdirectories, and required `.gitkeep` placeholders
-8. Apply filing doctrine content checks.
+8. Apply filing doctrine content checks: no binary file under `docs/` or `opt/`, no non-markdown file under `docs/` or `opt/`, no markdown under `ops/` outside its manifest and project directories. One records class is admitted: `opt/_research/` may hold `*.pdf` records, `SHA256SUMS`, and `README.md`, and nothing else; the binary and non-markdown checks skip that directory and the records-class check fails any other file inside it (DP-OPS-0268).
 9. Emit warnings for unexpected payload clutter and missing project `README.md` files.
 10. Load lane policy from `ops/etc/verification.manifest`. Each lane definition must declare:
    - `owner`
