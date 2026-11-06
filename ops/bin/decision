@@ -48,6 +48,10 @@ Required flags for create:
   --status=<status>
   --out=auto|PATH
 
+Optional flags for --type=cbc:
+  --tool=<path[, path]>   Tool or binary under review (default: Populate during execution.)
+  --decision=<text>       Decision line (default: Populate during execution.)
+
 Leaf naming: RoR-YYYY-MM-DD-NNN-<type>-<slug>.md under archives/decisions/
 Decision ID: RoR-YYYY-MM-DD-NNN
 On success, RoR.md is updated to the repo-relative path of the written leaf.
@@ -331,6 +335,8 @@ create_decision() {
   local decision_type_input=""
   local status_value=""
   local out_arg=""
+  local cbc_tool_path=""
+  local cbc_decision_text=""
 
   local arg
   for arg in "$@"; do
@@ -346,6 +352,12 @@ create_decision() {
         ;;
       --out=*)
         out_arg="${arg#--out=}"
+        ;;
+      --tool=*)
+        cbc_tool_path="${arg#--tool=}"
+        ;;
+      --decision=*)
+        cbc_decision_text="${arg#--decision=}"
         ;;
       -h|--help)
         usage
@@ -423,8 +435,8 @@ create_decision() {
         "$dp_id" \
         "$created_at" \
         "Operator" \
-        "ops/bin/decision, tools/lint/integrity.sh" \
-        "Proceed with integrity-lint CbC preflight enforcement for DP-OPS-0139." \
+        "${cbc_tool_path:-Populate during execution.}" \
+        "${cbc_decision_text:-Populate during execution.}" \
         "$status_value"
       ;;
     op)

@@ -124,7 +124,7 @@ Executed by the Contractor (§3.2).
 
 
 ## PoW.md
-archives/surfaces/PoW-2026-11-06-9230368f.md
+archives/surfaces/PoW-2026-11-06-1cbb73d2.md
 
 
 ## README.md
@@ -141,11 +141,11 @@ Use [docs/MANUAL.md](docs/MANUAL.md) for command workflow and closeout routing.
 
 
 ## SoP.md
-archives/surfaces/SoP-2026-11-06-9230368f.md
+archives/surfaces/SoP-2026-11-06-1cbb73d2.md
 
 
 ## TASK.md
-archives/surfaces/TASK-DP-OPS-0268-9230368f.md
+archives/surfaces/TASK-DP-OPS-0269-1cbb73d2.md
 
 
 ## docs/INDEX.md
@@ -238,7 +238,7 @@ Use `docs/MANUAL.md` for command procedure details and `docs/CCD.md` for density
 - ops/ - Run (binaries, manifests, automation).
 - tools/ - Lints and verification tooling.
 - docs/ - Manuals, specs, and governance surfaces.
-- opt/ - Isolated definition surfaces (JIT-only, excluded from global context).
+- opt/ - Isolated definition surfaces and research records (JIT-only, excluded from global context).
 - projects/ - Work payload code.
 - storage/ - Payload surfaces (handoff, dumps, dp).
 - var/tmp/ - Resume workspace (ephemeral task scratch).
