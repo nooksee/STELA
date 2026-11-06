@@ -66,6 +66,7 @@
 - `docs/ops/specs/stances/draft.md`
 - `docs/ops/specs/stances/planning.md`
 - `docs/ops/specs/surfaces/addendum.md`
+- `docs/ops/specs/surfaces/consult.md`
 - `docs/ops/specs/surfaces/plan.md`
 - `docs/ops/specs/surfaces/pow.md`
 - `docs/ops/specs/surfaces/results.md`

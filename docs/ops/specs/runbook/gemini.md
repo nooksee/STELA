@@ -17,6 +17,7 @@
    - no synthetic citation tokens, fake references, meta-process lists, or filler,
    - off-topic requests redirected to the research objective.
 5. Research output is advisory. It carries no repository authority and enters the repository only through a packet an Integrator drafts and a Worker executes.
+6. A bounded question to this adapter lands at `storage/handoff/CONSULT-gemini.md` in the consult envelope of `docs/ops/specs/surfaces/consult.md` (header `### CONSULT gemini <date>`, sections C.1 to C.7), validated by `bash tools/lint/response.sh --mode=consult` before it is read for a decision. The operator records the disposition (`adopt`, `adapt`, `reject`) in the RESULTS narrative of the packet the consult fed, or in that packet's `op` leaf when the consult changed its scope, and never in SoP.md; the artifact itself stays disposable and uncommitted.
 
 ## Anecdotal Anchor
 RUNBOOK-03 first carried an experimental Gemini adapter for architect and audit roles with no instruction text; DP-OPS-0188 retired it with the other dead Gemini references (`--format=gemini` in `ops/bin/dump` and `ops/bin/open`). DP-OPS-0267 reintroduced the identifier for a different job, research synthesis, with the directive text the operator already runs.
