@@ -60,7 +60,8 @@ This path is separate from bundle-mediated planning, draft, and audit transport;
 **Consult Handling:**
 - A consult is a bounded question put to an external runtime adapter (`ops/src/runbook/gpt.yaml`, `claude.yaml`, `gemini.yaml`): bounded question, declared attachment budget, one context mode (`in_thread` or `fresh_thread`), advisory authority, explicit operator disposition.
 - One schema, all adapters: `docs/ops/specs/surfaces/consult.md` (header `### CONSULT <adapter> <date>`, sections C.1 to C.7).
-- Landing: `storage/handoff/CONSULT-<adapter>.md`, latest-wins per adapter, disposable, git-ignored; placement is manual; no consult bundle profile exists yet.
+- Transport: the operator writes the question to `storage/handoff/QUESTION.md` and runs `./ops/bin/bundle --profile=consult --intent="CONSULT: <adapter> - <one-line question>" --out=auto`; the `CONSULT-*.txt` bundle carries the question, the core dump, and the consult stance, and names the attachment budget.
+- Landing: `storage/handoff/CONSULT-<adapter>.md`, latest-wins per adapter, disposable, git-ignored; the operator places the answer by hand.
 - Validated via `bash tools/lint/response.sh --mode=consult` before any decision reads it.
 - Disposition rule: `adopt`, `adapt`, or `reject` is recorded in the RESULTS narrative of the packet the consult fed; in that packet's `op` decision leaf when the consult changed its scope; never in SoP.md. The artifact's C.7 lines mirror the record.
 - Consult output stays subordinate to `RESULTS`, `CLOSING`, audit verdicts, and Operator approval.

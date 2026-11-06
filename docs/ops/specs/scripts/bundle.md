@@ -24,7 +24,7 @@ The script provides `bundle_run` plus helpers for:
    - prior local `AUDIT-*` artifacts do not force rerun identity without `--rerun`
    - manifest records submission lineage (`kind`, `resubmission_index`, `supersedes_bundle_path`, `refresh_reason`)
 10. Draft plan-intake request metadata emission.
-11. Planning, draft, and audit exact-file disposable transport.
+11. Planning, draft, audit, and consult exact-file disposable transport; consult also parses the `CONSULT: <adapter> - <question>` intent, validates the adapter source under `ops/src/runbook/`, and emits the `[CONSULT]` block and manifest `consult` object.
 12. Manifest v2 emission and package `.tar` emission with manifest-aligned member list, including OPEN pointer metadata sourced from the real artifact.
 
 ## Persistence Routing Contract

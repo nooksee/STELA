@@ -37,3 +37,4 @@ Metadata rule (DP-OPS-0272): every template declares `template_type`, `template_
 | TPL-26 | ops/src/stances/audit.md.tpl | operator-technical | 25–40% | manifest |
 | TPL-27 | ops/src/stances/addenda.md.tpl | operator-technical | 25–40% | manifest |
 | TPL-28 | ops/src/decisions/dec.md.tpl | operator-technical | 25–40% | decision |
+| TPL-29 | ops/src/stances/consult.md.tpl | operator-technical | 25–40% | manifest |
