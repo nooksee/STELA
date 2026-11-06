@@ -635,3 +635,5 @@ tools/lint/records.sh
 docs/ops/specs/tools/lint/records.md
 archives/decisions/RoR-2026-11-06-005-cbc-0270.md
 archives/decisions/RoR-2026-11-06-006-op-0270.md
+archives/decisions/RoR-2026-11-06-007-cbc-0271.md
+archives/decisions/RoR-2026-11-06-008-op-0271.md

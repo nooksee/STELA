@@ -255,6 +255,109 @@ persistent_policy_path_is_authorized() {
   return 1
 }
 
+# A compile snapshot leaf is emitted by ops/bin/compile on every run, and
+# ops/bin/llms (a mandatory receipt command) runs compile. The leaf name carries
+# a run timestamp and the HEAD short hash, so a packet cannot declare it in
+# advance and 3.4.3 Changelog forbids globs. An untracked leaf stamped with the
+# current HEAD is current-run generated output; a tracked leaf, or one stamped
+# with any other hash, is ordinary archive content and stays packet-gated.
+# Shared by tools/lint/integrity.sh and ops/bin/certify (DP-OPS-0271).
+path_is_current_run_compile_leaf() {
+  local path="$1"
+  local normalized
+  normalized="$(normalize_path "$path")"
+  [[ "$normalized" =~ ^archives/manifests/compile-[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}-([0-9a-f]{7,})\.md$ ]] || return 1
+  local leaf_hash="${BASH_REMATCH[1]}"
+  local head_hash
+  head_hash="$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || true)"
+  [[ -n "$head_hash" && "$head_hash" == "$leaf_hash"* ]] || return 1
+  if git -C "$REPO_ROOT" ls-files --error-unmatch -- "$normalized" >/dev/null 2>&1; then
+    return 1
+  fi
+  return 0
+}
+
+# A tracked path deleted in the staged or unstaged diff. A declared deletion
+# may consult committed HEAD policy while the deletion is visible.
+path_is_deleted_tracked_in_active_diff() {
+  local path="$1"
+  if git -C "$REPO_ROOT" diff --name-only --diff-filter=D -- "$path" | grep -Fxq "$path"; then
+    return 0
+  fi
+  if git -C "$REPO_ROOT" diff --cached --name-only --diff-filter=D -- "$path" | grep -Fxq "$path"; then
+    return 0
+  fi
+  return 1
+}
+
+# The changed-file dual-scope check shared by tools/lint/integrity.sh
+# (pre-certify and gates) and ops/bin/certify (postflight). Every observed path
+# must be authorized by the packet exact mutation scope and by persistent path
+# policy. Paths accepted by the caller's skip predicate (generated surfaces the
+# caller owns) and current-run compile leaves are exempt.
+#
+# Arguments:
+#   1 scope_mode            packet-exact | maintenance-idle
+#   2 packet_scope_name     associative array of declared exact paths
+#   3 allowlist_name        associative array of current persistent exact rows
+#   4 patterns_name         array of current persistent wildcard rows
+#   5 head_allowlist_name   associative array of committed HEAD exact rows
+#   6 head_patterns_name    array of committed HEAD wildcard rows
+#   7 skip_predicate        function name; returns 0 for a path to exempt
+#   8 paths_name            array of observed changed and untracked paths
+# Results (globals): DUAL_SCOPE_MISSING_PACKET_SCOPE, DUAL_SCOPE_MISSING_PERSISTENT_POLICY
+# (arrays, sorted) and DUAL_SCOPE_COMPILE_LEAF_COUNT. Returns 0 when both are empty.
+dual_scope_check_paths() {
+  local scope_mode="$1"
+  local packet_scope_name="$2"
+  local allowlist_name="$3"
+  local patterns_name="$4"
+  local head_allowlist_name="$5"
+  local head_patterns_name="$6"
+  local skip_predicate="$7"
+  local paths_name="$8"
+  local -n dual_scope_paths_ref="$paths_name"
+  local path normalized is_deleted
+  local -a missing_packet=()
+  local -a missing_policy=()
+
+  DUAL_SCOPE_MISSING_PACKET_SCOPE=()
+  DUAL_SCOPE_MISSING_PERSISTENT_POLICY=()
+  DUAL_SCOPE_COMPILE_LEAF_COUNT=0
+
+  for path in "${dual_scope_paths_ref[@]}"; do
+    normalized="$(normalize_path "$path")"
+    [[ -n "$normalized" ]] || continue
+    if [[ -n "$skip_predicate" ]] && "$skip_predicate" "$normalized"; then
+      continue
+    fi
+    if [[ "$scope_mode" == "packet-exact" ]] && path_is_current_run_compile_leaf "$normalized"; then
+      DUAL_SCOPE_COMPILE_LEAF_COUNT=$((DUAL_SCOPE_COMPILE_LEAF_COUNT + 1))
+      continue
+    fi
+    if ! packet_scope_path_is_authorized "$normalized" "$scope_mode" "$packet_scope_name"; then
+      missing_packet+=("$normalized")
+    fi
+    is_deleted=0
+    if path_is_deleted_tracked_in_active_diff "$normalized"; then
+      is_deleted=1
+    fi
+    if ! persistent_policy_path_is_authorized \
+      "$normalized" "$is_deleted" \
+      "$allowlist_name" "$patterns_name" "$head_allowlist_name" "$head_patterns_name"; then
+      missing_policy+=("$normalized")
+    fi
+  done
+
+  if (( ${#missing_packet[@]} > 0 )); then
+    mapfile -t DUAL_SCOPE_MISSING_PACKET_SCOPE < <(printf '%s\n' "${missing_packet[@]}" | sort)
+  fi
+  if (( ${#missing_policy[@]} > 0 )); then
+    mapfile -t DUAL_SCOPE_MISSING_PERSISTENT_POLICY < <(printf '%s\n' "${missing_policy[@]}" | sort)
+  fi
+  (( ${#DUAL_SCOPE_MISSING_PACKET_SCOPE[@]} == 0 && ${#DUAL_SCOPE_MISSING_PERSISTENT_POLICY[@]} == 0 ))
+}
+
 rewrite_task_lifecycle_fields() {
   local source_path="$1"
   local out_path="$2"
