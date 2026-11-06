@@ -1,112 +1,31 @@
-<!-- CCD: ff_target="governance-narrative" ff_band="50-65" -->
-# Project STELA.md
+<!-- CCD: ff_target="operator-technical" ff_band="35-50" -->
+# {{DISPLAY_NAME}} Project Contract
 
-Project-level rules for a single project. Store at `projects/<ID>/STELA.md`.
+Project ID: {{PROJECT_ID}}
+Created: {{CREATED_AT}}
+Authority: advisory. `PoT.md` and the active packet remain the authority; this contract narrows a contractor's attention inside `projects/{{PROJECT_ID}}/` and never widens it.
 
-## Project Overview
-Describe the project purpose, scope, and stack in a short paragraph.
+## Purpose
+State what the project is for in one short paragraph: the payload it holds, who runs it, and what done looks like.
 
-## Critical Rules
+## Target Root
+`projects/{{PROJECT_ID}}/`. A project packet names the files under this root that it may change; everything outside the root belongs to the platform and needs its own packet.
 
-### 1. Code Organization
+## Bindings
+Factory definitions this project may invoke, by identifier as the registries spell them (`R-AGENT-NN`, `B-TASK-NN`, `S-LEARN-NN`), one per line, or `none`. `tools/lint/project.sh` rejects an identifier the registries do not define.
+- none
 
-- Many small files over few large files
-- High cohesion, low coupling
-- 200-400 lines typical, 800 max per file
-- Organize by feature and domain, not by type
+## Entrypoints
+The commands or files a session opens first, one per line, with the directory each lives in.
+- none
 
-### 2. Code Style
+## Allowed Commands
+The commands a contractor may run inside the target root (build, test, lint, serve), one per line. A command outside this list is a packet decision, not a contractor decision.
+- none
 
-- No emojis in code, comments, or documentation
-- Immutability always; never mutate objects or arrays
-- No console.log in production code
-- Proper error handling with try/catch
-- Input validation with Zod or similar
+## Conventions
+Code organization, style, testing, and security rules that hold for this payload. Keep each rule to one line; point at a file under the root for anything longer.
+- none
 
-### 3. Testing
-
-- 80% minimum coverage
-- Unit tests for utilities
-- Integration tests for APIs
-- E2E tests for critical flows
-
-### 4. Security
-
-- No hardcoded secrets
-- Environment variables for sensitive data
-- Validate all user inputs
-- Parameterized queries only
-- CSRF protection enabled
-
-## File Structure
-
-```
-projects/
-|-- app/              # Next.js app router
-|-- components/       # Reusable UI components
-|-- hooks/            # Custom React hooks
-|-- lib/              # Utility libraries
-|-- types/            # TypeScript definitions
-```
-
-## Key Patterns
-
-### API Response Format
-
-```typescript
-interface ApiResponse<T> {
-  success: boolean
-  data?: T
-  error?: string
-}
-```
-
-### Error Handling
-
-```typescript
-try {
-  const result = await operation()
-  return { success: true, data: result }
-} catch (error) {
-  console.error('Operation failed:', error)
-  return { success: false, error: 'User-friendly message' }
-}
-```
-
-## Environment Variables
-
-```bash
-# Required
-DATABASE_URL=
-API_KEY=
-
-# Optional
-DEBUG=false
-```
-
-## Available Commands
-
-- `/plan` - Create implementation plan
-- `/code-review` - Review code quality
-- `/build-fix` - Fix build errors
-
-## Git Workflow
-
-- Conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`
-- Never commit to main directly
-- PRs require review
-- All tests must pass before merge
-
-<!--
-User-level overlay (deprecated).
-Do not create per-user STELA files. Use project-level STELA only.
-
-Legacy outline from user-STELA:
-- Agent-first, parallel execution, plan before execute, test-driven, security-first.
-- Modular rules: security, coding-style, testing, git-workflow, agents, patterns, performance.
-- Preferred agents: integrator, architect, code-reviewer, security-reviewer, build-error-resolver, refactor-cleaner, doc-updater.
-- Code style: no emojis, immutability, many small files, 200-400 lines typical, 800 max.
-- Git: conventional commits; test before commit; small focused commits.
-- Editor: NetBeans with agent panel, command palette, Vim mode.
-- Success metrics: tests pass, no security vulnerabilities, readable, requirements met.
--->
+## Session Classes
+A trusted full-access collaborator session may edit this file through a packet that names it. A repo-resident project contractor session reads it and works under the `dp+allowlist` worker baseline inside the target root; `docs/MANUAL.md` names both classes.

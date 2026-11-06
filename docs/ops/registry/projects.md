@@ -3,7 +3,7 @@
 
 Current: none
 
-Rows are added by hand after `./ops/bin/scaffold <name>` and the project `STELA.md` exist; the lifecycle is in `projects/README.md`. `docs/MAP.md` is regenerated with `./ops/bin/map` after each change here.
+Rows are written by `./ops/bin/scaffold <name>` with the project tree and the `STELA.md` copy (DP-OPS-0273). The lifecycle is in `projects/README.md`. Run `./ops/bin/map` after each scaffold. The `Current:` line names the registered projects, or `none`.
 
 ## Registry
 
