@@ -154,6 +154,7 @@ Certify options:
 - `--narrative-file=PATH` loads the Worker Execution Narrative from a file instead of opening the editor; the file must fill the same four subsections and passes the same validator.
 - `--addendum=A` certifies the base packet together with the active addendum in `storage/dp/intake/ADDENDUM.md`; the receipt plan is the addendum A.5 list, and the run emits `archives/surfaces/ADDENDUM-DP-OPS-XXXX-<git-short-hash>.md` and `archives/surfaces/RESULTS-DP-OPS-XXXX-ADDENDUM-A-<git-short-hash>.md`.
 - `--allow-intake-fallback` is the rerun recovery path described under Certify Rerun.
+- `--dry-run` runs every preflight validation and the changed-file dual-scope check, prints `CERTIFY-DRY-RUN: PASS`, and stops before the replay without emitting a leaf or rewriting a head; use it after `./ops/bin/allowlist` to check the closing sidecar, the authored heads, and the narrative before the live run.
 `ops/bin/certify` now fails in explicit phases: `preflight`, `replay`, `verify`, `postflight`, and `results`. Cheap closeout defects such as malformed closing sidecar content, malformed narrative scaffolds, missing trace / OPEN prerequisites, or obviously stale receipt-command shapes must fail in `preflight` before long replay begins. Certify emits `Certify phase: <phase>` on phase changes and phase-tags hard-fail output as `ERROR [<phase>]`.
 At the end of a run, certify also emits stable timing summaries:
 - `CERTIFY-PHASE: name=<phase> duration_seconds=<N>`

@@ -17,6 +17,8 @@
 9. `packet_scope_path_is_authorized` enforces exact membership in packet mode and permits transparent persistent-policy-only evaluation in maintenance mode.
 10. `persistent_policy_path_is_authorized` requires current policy coverage, except that a visible tracked deletion may use committed `HEAD` policy coverage.
 11. `rewrite_task_lifecycle_fields` accepts only `ACTIVE/ACTIVE` or `IDLE/COMPLETED`, rewrites the TASK lifecycle header and packet identity atomically into a caller-owned temporary file, and verifies exact field cardinality before returning.
+12. `path_is_current_run_compile_leaf` accepts an untracked `archives/manifests/compile-<stamp>-<hash>.md` leaf whose hash prefix matches the current `HEAD`; `path_is_deleted_tracked_in_active_diff` reports a tracked path deleted in the staged or unstaged diff.
+13. `dual_scope_check_paths` runs the changed-file dual-scope loop for a caller-supplied path list: a caller skip predicate exempts generated surfaces, current-run compile leaves are counted and exempted in packet-exact mode, and every other path must satisfy rules 9 and 10. Results return in `DUAL_SCOPE_MISSING_PACKET_SCOPE`, `DUAL_SCOPE_MISSING_PERSISTENT_POLICY`, and `DUAL_SCOPE_COMPILE_LEAF_COUNT`; `tools/lint/integrity.sh` and `ops/bin/certify` are its two callers (DP-OPS-0271).
 12. Timestamp helpers (`timestamp_token_utc`, `utc_now`) emit UTC stamps for leaf filenames and YAML fields.
 13. Hash and slug helpers (`short_hash`, `slugify_token`) derive stable short digests and lowercase filename-safe caller labels.
 14. `emit_binary_leaf` resolves repo root, reads the prior head pointer from `logs/<caller>.telemetry.head`, emits a schema-stamped leaf under `logs/`, then rewrites the head pointer to the new leaf path.

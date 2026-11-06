@@ -8,7 +8,7 @@
 
 ## Fixture Contract
 
-The test creates isolated Git repositories beneath `var/tmp/_smoke/`, copies the live shared helper and integrity lint into each fixture, and removes every fixture at exit. It does not mutate live TASK, policy, or packet surfaces.
+The test creates isolated Git repositories beneath `var/tmp/_smoke/`, copies the live shared helper and integrity lint into each scope fixture, copies the whole working tree into the certify dry-run fixture, and removes every fixture at exit. It does not mutate live TASK, policy, or packet surfaces.
 
 The matrix must prove:
 
@@ -23,5 +23,7 @@ The matrix must prove:
 9. A compile leaf stamped with any other hash fails packet scope.
 10. `IDLE/COMPLETED` maintenance uses persistent policy transparently.
 11. An addendum is rejected while routing is idle.
+12. A certify dry run passes on a synthetic packet (DP-OPS-0271). The test copies the working tree into a fresh repository and commits a baseline. It drafts `DP-OPS-9000` with `ops/bin/open` and `ops/bin/draft` on an `agent/dp-ops-9000-<date>` branch and commits the packet-open state. It stages one declared file, authors the heads, and writes a closing sidecar and a narrative. `./ops/bin/certify --dp=DP-OPS-9000 --dry-run` must print `CERTIFY-DRY-RUN: PASS` and emit no leaf.
+13. The same fixture with one undeclared file fails closed at certify's integrity gate.
 
 Any failed assertion exits nonzero and reports pass and fail counts.
