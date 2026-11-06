@@ -7,6 +7,7 @@ Every CbC decision made against a named tool gets a row. Entries are updated whe
 | :--- | :---: | :--- | :--- | :--- | :--- |
 | tools/verify.sh | C | Keep; lane-policy manifest and packet-local certify replay adopted | DP-OPS-0101, DP-OPS-0202 | Active | archives/decisions/RoR-2026-03-16-001-cbc-0202.md |
 | tools/verify.sh (records class) | C | Keep; `opt/_research/` admitted as a records class with three name patterns so PDF research records pass the Filing Doctrine checks | DP-OPS-0268 | Active | archives/decisions/RoR-2026-11-06-001-cbc-0268.md |
+| ops/bin/certify, ops/bin/decision, tools/lint/dp.sh (closeout residue) | C | Keep; TASK leaf `previous` derived from committed history, addendum-mode idle lifecycle rewrite, nine closing-manifest and wildcard prefixes, cbc leaf slots from flags | DP-OPS-0269 | Active | archives/decisions/RoR-2026-11-06-003-cbc-0269.md |
 | tools/lint/dp.sh | C | Keep; refactor candidate (extract test fixture) | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-004-cbc-0140.md |
 | tools/lint/agent.sh | C | Keep | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-005-cbc-0140.md |
 | tools/lint/context.sh (artifact existence, contamination) | C | Keep | DP-OPS-0101 | Active | archives/decisions/RoR-2026-03-01-006-cbc-0140.md |

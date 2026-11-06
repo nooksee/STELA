@@ -628,3 +628,6 @@ opt/_research/README.md
 docs/RESEARCH.md
 archives/decisions/RoR-2026-11-06-001-cbc-0268.md
 archives/decisions/RoR-2026-11-06-002-op-0268.md
+ops/bin/map
+archives/decisions/RoR-2026-11-06-003-cbc-0269.md
+archives/decisions/RoR-2026-11-06-004-op-0269.md

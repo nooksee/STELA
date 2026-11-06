@@ -57,7 +57,7 @@ Use `docs/MANUAL.md` for command procedure details and `docs/CCD.md` for density
 - ops/ - Run (binaries, manifests, automation).
 - tools/ - Lints and verification tooling.
 - docs/ - Manuals, specs, and governance surfaces.
-- opt/ - Isolated definition surfaces (JIT-only, excluded from global context).
+- opt/ - Isolated definition surfaces and research records (JIT-only, excluded from global context).
 - projects/ - Work payload code.
 - storage/ - Payload surfaces (handoff, dumps, dp).
 - var/tmp/ - Resume workspace (ephemeral task scratch).

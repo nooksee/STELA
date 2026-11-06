@@ -208,6 +208,8 @@ grep -n "^### DP-OPS-XXXX:" storage/dp/intake/DP.md
 
 If `storage/dp/intake/DP.md` is missing or no longer contains the target packet heading, restore the active draft surface first and only then rerun certify.
 
+**Residue after a failed replay.** Certify emits the three surface leaves and rewrites `PoW.md`, `SoP.md`, and `TASK.md` to pointer form once three verification commands have passed. A run that fails after that point leaves `archives/surfaces/PoW-<stamp>-<hash>.md`, `SoP-<stamp>-<hash>.md`, and `TASK-DP-OPS-XXXX-<hash>.md` on disk with the heads pointing at them. Before the rerun: remove those three leaves, restore `TASK.md` with `git checkout -- TASK.md`, and re-author the `SoP.md` and `PoW.md` heads (a `git checkout` of those two restores the previous pointer, not the authored entry). A run that fails before the third command leaves no residue. A rerun on the same `HEAD` emits leaves of the same names; certify preserves the `previous` chain of a leaf it overwrites.
+
 2.5 Post-Work Audit (Auditor; mandatory before COMMIT)
 The Auditor reviews the diff (`git diff --name-only`, `git diff --stat`), the RESULTS receipt at `storage/handoff/RESULTS.md`, and the closing sidecar at `storage/handoff/CLOSING.md` against the DP scope definition (Section 3.3 In scope / Out of scope), then reports PASS or FAIL with exact boundary conditions.
 
@@ -590,7 +592,7 @@ Canonical flow when one session drafts and executes without a separate Integrato
 
 1. `./ops/bin/open --out=auto`, then `./ops/bin/draft --id=DP-OPS-XXXX --title="..." --work-branch=agent/dp-ops-xxxx-YYYY-MM-DD --base-head=<hash> --slots-file=<slots-file>`; validate with `bash tools/lint/dp.sh TASK.md` and `bash tools/lint/task.sh`.
 2. Commit the packet-open state (`TASK.md`, regenerated `llms*.txt`, the compile leaf) so the worker starts from a clean tree; capture the three §3.1 preflight commands before any edit.
-3. Execute; keep `storage/handoff/CLOSING.md` current; declare `SoP.md` and `PoW.md` in `3.4.3 Changelog` and author them before certify.
+3. Execute; keep `storage/handoff/CLOSING.md` current; declare `SoP.md` and `PoW.md` in `3.4.3 Changelog` and author them before certify. Stage every new path (`git add`) before certify: the replayed `./ops/bin/llms` compiles from tracked and staged files, and an untracked new file leaves the generated context stale, which the pre-commit parity gate then refuses. The packet lint reads any `ops/bin/dump` token in a receipt line as a dump invocation, so a receipt that merely mentions dump must not contain that token. The packet lint also limits wildcard rows in `storage/dp/active/allowlist.txt` to the nine approved prefixes (`.github/`, `tools/`, `ops/`, `docs/`, `opt/`, `projects/`, `storage/`, `archives/`, `logs/`); a records class under another prefix needs explicit rows.
 4. `./ops/bin/allowlist`, then `./ops/bin/certify --dp=DP-OPS-XXXX --narrative-file=var/tmp/narrative-XXXX.md --out=auto`; `### Preflight State` in the narrative pastes the verbatim outputs of `git rev-parse --abbrev-ref HEAD`, `git rev-parse --short HEAD`, and `git status --porcelain` captured in step 2.
 5. `bash tools/lint/results.sh storage/handoff/RESULTS.md`, `./ops/bin/bundle --profile=audit --out=auto`, commit, push, open the pull request from the closing sidecar.
 

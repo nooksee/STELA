@@ -1,7 +1,7 @@
 ---
 template_type: surface
 template_id: closing
-template_version: 2
+template_version: 3
 ff_target: operator-technical
 ff_band: "30-45"
 ---
@@ -17,7 +17,7 @@ Create Pull Request (Description): give the reviewer essential context in GitHub
 
 Confirm Merge (Commit Message): frame what has landed on the main branch rather than describing the work done within the branch. The verb and subject must differ from individual commit headers so a branch merge reads differently from simple patches in trunk history. Imperative mood, consistent with Git's automated messages.
 
-Confirm Merge (Extended Description): list file paths only, one per line, repo-relative, under an approved prefix (.github/, tools/, ops/, docs/, storage/, archives/, logs/). No prose, commentary, or headings. Root-level canonical surfaces (PoW.md, SoP.md, TASK.md, llms txt bundles) are accounted for in the RESULTS narrative, not here.
+Confirm Merge (Extended Description): list file paths only, one per line, repo-relative, under an approved prefix (.github/, tools/, ops/, docs/, opt/, projects/, storage/, archives/, logs/). No prose, commentary, or headings. Root-level canonical surfaces (PoW.md, SoP.md, TASK.md, llms txt bundles) are accounted for in the RESULTS narrative, not here.
 
 Confirm Merge (Add a Comment): surface the specific question, trade-off, or risk you want a reviewer to engage with, as one genuine question that ends with a question mark. Avoid generic approval-seeking stems; be explicit about the type of feedback needed.
 

@@ -1188,8 +1188,8 @@ check_allowlist_pointer_integrity() {
 
     if [[ "$normalized" == *"*"* || "$normalized" == *"?"* || "$normalized" == *"["* ]]; then
       case "$normalized" in
-        .github/*|tools/*|ops/*|docs/*|storage/*|archives/*|logs/*)
-          # Wildcard policy entries are allowed for generated artifact families.
+        .github/*|tools/*|ops/*|docs/*|opt/*|projects/*|storage/*|archives/*|logs/*)
+          # Wildcard policy entries are allowed for generated artifact families and records classes.
           continue
           ;;
         *)

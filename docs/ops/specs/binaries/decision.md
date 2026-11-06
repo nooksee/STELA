@@ -106,7 +106,10 @@ DP-OPS-0130 introduced this helper after recurring closeout friction where decis
 records were authored manually with inconsistent filename ordering and section
 content. DP-OPS-0139 extended the helper to support the RoR-D2 decision taxonomy
 (`exec`, `cbc`, `op`), RoR-prefixed leaf naming, and automatic RoR.md pointer
-updates on every successful leaf write.
+updates on every successful leaf write. DP-OPS-0269 added the optional `--tool=` and
+`--decision=` flags for `--type=cbc`, which fill the reviewed tool path and the decision
+line; without them both render as `Populate during execution.` instead of the fixed
+DP-OPS-0139 text the earlier binary wrote into every new leaf.
 
 ## Integrity Filter Warnings
 The binary fails on unknown flags, invalid `--dp` format, empty slug after
